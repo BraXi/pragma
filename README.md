@@ -5,6 +5,18 @@ This is the engine repo, for QC code go to https://github.com/BraXi/pragma_progs
 
 BE WARNED. THIS IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE AND WILL CHANGE DRASTICALLY FROM TIME TO TIME
 
+
+Pros:
+- its super simple even for newbies
+- Q1 modders will instantly feel like at home
+- very scriptable and moddable without touching C code
+- runs well even on Intel N3450 (Acer Travelmate Spin B is the slowest hardware I had offhand to test)
+- could serve as a platform for standalone SP/COOP/MP games
+- *has rotating brushes, origin brushes, colored static lights and infinite hull sizes out of the box* >:) <-- Q1 modders will understand, you don't need to
+
+Cons:
+- it's not ready
+
 So far, some of the changes include:
 
 - adds QuakeC VM (.qc) server and client side scripts
