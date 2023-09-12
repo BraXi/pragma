@@ -1,0 +1,101 @@
+/*
+P R A G M A
+Copyright (C) 2023 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+*/
+// ai/monsters_temp.qc -- this is a placehorder to spawn q2 monsters as props
+
+void() monthink =
+{
+	self.nextthink = g_time + 0.1;
+	self.think = monthink;
+};
+
+void() test_think =
+{
+	self.think = test_think;
+	
+	if( self.velocity == vec3_origin )
+	{
+		self.effects = EF_QUAD | EF_FLAG2;
+self.nextthink = g_time + 0.1;		
+	}
+	else
+	{
+		self.effects = 0; //EF_PENT | EF_FLAG1;	
+	MSG_WriteByte (svc_temp_entity);
+	MSG_WriteByte (TE_BOSSTPORT);
+	MSG_WritePos (self.origin + '0 0 10');
+	MSG_Multicast (self.origin + '0 0 10', MULTICAST_PVS);
+self.nextthink = g_time + 1;	
+	}
+	
+
+};
+
+float(string mdlname) CreateTestDummy = 
+{
+	mdlname = "models/objects/barrels/tris.md2";
+	precache_model(mdlname);
+	
+	setmodel(self, mdlname);
+	setsize(self, '-16 -16 0', '16 16 40');	
+	self.solid = SOLID_BBOX;
+	self.movetype = MOVETYPE_STEP;
+	self.mass = 100;
+	
+	self.takedamage = DAMAGE_YES;
+	self.health = 500;	
+	
+	self.think = test_think;
+	self.nextthink = g_time + 0.1;
+	linkentity(self);
+	return true;
+};
+
+#if 0
+float(string mdlname) CreateTestDummy =
+{
+	if(precache_model(mdlname) == 0)
+		return false;
+	
+	self.movetype = MOVETYPE_TOSS;
+	self.solid = SOLID_BBOX;
+
+	self.mass = 250;
+	self.takedamage = DAMAGE_YES;
+	self.health = 50;	
+	
+	setmodel(self, mdlname);
+	setsize(self, '-16 -16 -12', '16 16 12');
+			
+	self.nextthink = g_time + 0.1;
+	self.think = monthink;
+	
+	linkentity(self);
+	return true;
+};
+#endif
+
+float() SP_monster_berserk = { return CreateTestDummy("models/monsters/berserk/tris.md2"); };
+float() SP_monster_gladiator = { return CreateTestDummy("models/monsters/gladiatr/tris.md2"); };
+float() SP_monster_gunner = { return CreateTestDummy("models/monsters/gunner/tris.md2"); };
+float() SP_monster_infantry = { return CreateTestDummy("models/monsters/infantry/tris.md2"); };
+float() SP_monster_soldier_light = { return CreateTestDummy("models/monsters/soldier/tris.md2"); };
+float() SP_monster_soldier = { return CreateTestDummy("models/monsters/soldier/tris.md2"); };
+float() SP_monster_soldier_ss = { return CreateTestDummy("models/monsters/soldier/tris.md2"); };
+float() SP_monster_tank = { return CreateTestDummy("models/monsters/tank/tris.md2"); };
+float() SP_monster_medic = { return CreateTestDummy("models/monsters/medic/tris.md2"); };
+float() SP_monster_flipper = { return CreateTestDummy("models/monsters/flipper/tris.md2"); };
+float() SP_monster_chick = { return CreateTestDummy("models/monsters/bitch/tris.md2"); };
+float() SP_monster_parasite = { return CreateTestDummy("models/monsters/parasite/tris.md2"); };
+float() SP_monster_flyer = { return CreateTestDummy("models/monsters/flyer/tris.md2"); };
+float() SP_monster_brain = { return CreateTestDummy("models/monsters/brain/tris.md2"); };
+float() SP_monster_floater = { return CreateTestDummy("models/monsters/float/tris.md2"); };
+float() SP_monster_hover = { return CreateTestDummy("models/monsters/hover/tris.md2"); };
+float() SP_monster_mutant = { return CreateTestDummy("models/monsters/mutant/tris.md2"); };
+float() SP_monster_supertank = { return CreateTestDummy("models/monsters/boss1/tris.md2"); };
+float() SP_monster_boss2 = { return CreateTestDummy("models/monsters/boss2/tris.md2"); };
+float() SP_monster_jorg = { return CreateTestDummy("models/monsters/boss3/jorg/tris.md2"); };

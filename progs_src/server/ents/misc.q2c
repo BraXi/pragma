@@ -1,0 +1,24 @@
+// misc.qc
+/*
+
+misc_model
+
+*/
+
+/*QUAKED misc_model (0.5 0.5 0) (-16 -16 -16) (16 16 6)
+Static model for decorations and props.
+*/
+float() SP_misc_model =
+{
+	if( strlen(self.model) == 0 )
+		return false;
+	
+	precache_model(self.model);
+	
+	setmodel(self, self.model);
+	self.movetype = MOVETYPE_NONE;
+	self.solid = SOLID_NOT;
+	
+	linkentity(self);
+	return true;
+};

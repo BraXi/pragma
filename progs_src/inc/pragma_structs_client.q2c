@@ -1,0 +1,23 @@
+// DO. NOT. EDIT.
+// structures shared with engine
+// this must be the first file to compile into client progs!
+// add anything at the *end* of the file, it will help you maintaining parity with current server version
+
+
+// ========================================================
+// begin of engine defs 
+// ========================================================
+
+//
+// clglobalvars_t - server globals
+//
+	float		time;
+	float		frameNum;
+	float		frameTime;
+	void()		main;
+	void()		SpawnWorldEntities;	// client side ents	
+	void(float newState) OnGameStateChange;
+	void()		StartFrame;
+	void()		EndFrame;		
+	float()		ParseEntityEffects; //entity effects
+void end_sys_globals;

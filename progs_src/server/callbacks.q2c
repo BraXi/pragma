@@ -1,0 +1,168 @@
+/*
+pragma engine
+Copyright (C) 2023 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+*/
+// callbacks.qc - functions called by engine
+
+/*
+ClientBeginServerFrame 	-- before physics are run
+ClientEndServerFrame 	-- after all physics are run
+ClientBegin 			-- finished connecting and ready to play
+ClientConnect 			-- connecting to server
+ClientDisconnect 		-- disconnected from server
+ClientCommand 			-- server receives console command from client
+*/
+
+
+/*
+==============
+ClientBeginServerFrame
+
+This will be called once for each server frame, before running
+any other entities in the world.
+==============
+*/
+.float animf;
+
+void() ClientBeginServerFrame =
+{
+	if(isplayer(self) == 0)
+		return;
+	
+	self.animf = self.animf +1;
+	if( self.animf > 30 )
+		self.animf = 8;
+
+	if(self.model == "models/monsters/mutant/tris.md2")
+	{
+		//asdf
+	}
+	else
+	{
+		setviewmodel(self, "models/weapons/v_blast/tris.md2");
+		setviewmodelparms(self, self.animf, vec_null, vec_null);
+	}
+};
+
+/*
+==============
+ClientEndServerFrame
+
+This will be called once for each server frame, before running
+any other entities in the world.
+==============
+*/
+void() Player_ViewEffects;
+
+void(entity inflictor, entity attacker, float damage, entity ignore, float radius, int mod) RadiusDamage;
+
+void() ClientEndServerFrame =
+{
+	if(isplayer(self) == 0)
+		return;	
+	
+	// pmove has been already performed and applied
+	
+	RadiusDamage(self, self, 100, self, 96, 0);
+	Player_ViewEffects();
+	
+	//
+	// set model angles from view angles so other things in
+	// the world can tell which direction you are looking
+	//
+	if (self.v_angle_x > 180)
+		self.angles_x = (-360 + self.v_angle_x) / 3;
+	else
+		self.angles_x = self.v_angle_x / 3;	
+	self.angles_y = self.v_angle_y; //+90;
+	self.angles_z = 0;
+	
+//	self.angles[ROLL] = SV_CalcRoll(ent->v.angles, ent->v.velocity) * 4;	
+};
+
+/*
+============
+ClientThink
+============
+*/
+void() ClientThink =
+{
+	if(isplayer(self) == 0)
+		return;	
+};
+
+
+/*
+============
+ClientBegin
+
+called when a client has finished connecting, and is ready to be placed into the game.
+This will happen every level load and thus also when server changes map.
+============
+*/
+void() SpawnPlayer;
+void() RestoreClientPers;
+
+void() ClientBegin =
+{
+	self.classname = "player";
+	
+	RestoreClientPers();
+	SpawnPlayer();
+
+	bprint(2, "new client connected.\n");
+	
+	MSG_WriteByte( svc_muzzleflash );
+	MSG_WriteShort( getentnum(self) );
+	MSG_WriteByte( MZ_LOGIN );
+	MSG_Multicast(self.origin, MULTICAST_PVS);
+	
+	ClientEndServerFrame();	
+};
+
+/*
+============
+ClientConnect
+
+Called when a player begins connecting to the server.
+Server progs can refuse entrance to a client by returning false.
+If the client is allowed, the connection process will continue and eventually get to ClientBegin()
+Changing levels will NOT cause this to be called again, but loadgames will.
+============
+*/
+float() ClientConnect =
+{
+	return true;
+};
+
+/*
+============
+ClientDisconnect
+
+Called when a player drops from the server.
+Will not be called between levels.
+============
+*/
+void() ClientDisconnect =
+{
+	bprint( 0, "client disconnected.\n");
+};
+
+/*
+==============
+ClientCommand
+
+This is called when client sends command to server
+The progs can issue argc() / argv() commands to get the rest of the parameters
+Note that engine commands like say, say_team.. are in engine and ClientCommand is called if no builtin command exist.
+Return true if progs handle given command, false usually means we shuld print to chat
+==============
+*/
+float() ParseClientCommand; // clcmds.qc
+float() ClientCommand =
+{
+	return ParseClientCommand();
+};

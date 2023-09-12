@@ -1,0 +1,233 @@
+/*
+pragma engine
+Copyright (C) 2023 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+*/
+
+vector anim_mutant_stand = '62 125 0';
+vector anim_mutant_run = '56 61 0';
+vector anim_mutant_jump = '144 148 0';
+vector anim_mutant_walk = '126 148 0';
+
+vector anim_stand = '0 39 0';
+vector anim_run_front = '40 45 0';
+vector anim_attack = '46 53 0';
+
+vector anim_pain1 = '54 57 0';
+vector anim_pain2 = '58 61 0';
+vector anim_pain3 = '62 65 0';
+
+vector anim_jump = '66 71 0';
+
+vector anim_crouch_idle = '135 153 0';
+vector anim_crouch_walk = '154 159 0';
+vector anim_crouch_attack = '160 168 0';
+vector anim_crouch_pain = '169 172 0';
+vector anim_crouch_death = '173 177 0';
+
+vector anim_death = '178 183 0';
+vector anim_death_side = '184 189 0';
+vector anim_death_front = '190 197 0';
+
+.vector playerAnim; 		// current player anim
+.float playerAnimFrame; 	// current animation frame
+.float animPriority;
+
+
+string(vector anim) GetAnimName =
+{
+	if( anim == anim_stand )
+		return "stand";
+	else if( anim == anim_run_front )
+		return "run_front";
+	else if( anim == anim_attack )
+		return "attack";
+	else if( anim == anim_pain1 )
+		return "pain1";	
+	else if( anim == anim_pain2 )
+		return "pain2";	
+	else if( anim == anim_pain3 )
+		return "pain3";
+	else if( anim == anim_jump )
+		return "jump";	
+	else if( anim == anim_crouch_idle )
+		return "crouch_idle";	
+	else if( anim == anim_crouch_walk )
+		return "crouch_walk";	
+	else if( anim == anim_crouch_attack )
+		return "crouch_attack";	
+	else if( anim == anim_crouch_pain )
+		return "crouch_pain";	
+	else if( anim == anim_crouch_death )
+		return "crouch_death";	
+	else if( anim == anim_death )
+		return "death";
+	else if( anim == anim_death_side )
+		return "death_side";	
+	else if( anim == anim_death_front )
+		return "death_front";
+	else
+		return "unknown";
+};
+
+/*
+=======================================
+Player_PlayBodyAnim
+=======================================
+*/
+void() Player_PlayBodyAnimation =
+{
+	if( self.playerAnim_x == 0 && self.playerAnim_y == 0 )
+	{
+		self.animFrame = self.playerAnimFrame = 0; // no anim playing
+		return;
+	}	
+	
+	self.playerAnimFrame = self.playerAnimFrame + 1;
+	if( self.playerAnimFrame > self.playerAnim_y )
+	{
+//		dprint3("anim ", GetAnimName(self.playerAnim), " ended\n");		
+		self.playerAnimFrame = self.playerAnim_y;
+		self.playerAnim = '0 0 0';
+		self.animPriority = 0;
+	}	
+	self.animFrame = self.playerAnimFrame;
+};
+
+void(vector newanim, float priority, float reset) Player_SetAnimation =
+{
+	if( newanim == self.playerAnim && reset == false )
+		return;
+	
+	if( self.animPriority > priority )
+		return;
+
+//	dprint5("Player_SetAnimation: ", GetAnimName(newanim), " - priority ", ftos(priority), "\n");
+	
+	self.animPriority = priority;
+	self.playerAnim = newanim;	 
+	self.animFrame = self.playerAnimFrame = self.playerAnim_x;
+};
+
+/*
+=======================================
+Player_ViewEffects
+=======================================
+*/
+void() Player_ViewEffects =
+{
+	local float		contents;
+	local vector	vieworg;
+	
+	
+	if(self.velocity_z > 20)
+	{
+		if( self.health <= 0 )
+		{
+			Player_SetAnimation(anim_death_side, 999, false);
+		}
+		else
+		{
+			if(self.model == "models/monsters/mutant/tris.md2")
+				Player_SetAnimation(anim_mutant_jump, 20, false);
+			else
+				Player_SetAnimation(anim_jump, 20, false);
+		}
+	}
+	else
+	{
+		if( self.health <= 0 )
+		{
+			Player_SetAnimation(anim_death, 999, false);
+		}
+		else if( self.velocity_x == 0 && self.velocity_y == 0 )
+		{
+			if(self.model == "models/monsters/mutant/tris.md2")
+				Player_SetAnimation(anim_mutant_stand, 11, false);
+			else
+				Player_SetAnimation(anim_stand, 11, false);
+		}	
+		else
+		{
+			if(self.model == "models/monsters/mutant/tris.md2")
+				Player_SetAnimation(anim_mutant_run, 11, false);
+			else
+				Player_SetAnimation(anim_run_front, 11, false);
+		}		
+	}
+	
+	
+	
+	Player_PlayBodyAnimation();
+	
+	vieworg = self.origin + getviewoffset(self);
+	contents = pointcontents(vieworg); // add for contents	
+
+//	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
+//		self.rdflags |= RDF_UNDERWATER;
+//	else
+//		self.rdflags &= ~RDF_UNDERWATER;
+	
+	if (contents & (/*CONTENTS_SOLID|*/CONTENTS_LAVA))
+		setviewblend(self, '1.0 0.3 0.0', 0.6);
+	else if (contents & CONTENTS_SLIME)
+		setviewblend(self, '0.0 0.1 0.05', 0.6);
+	else if (contents & CONTENTS_WATER)
+		setviewblend(self, '0.5 0.3 0.2', 0.4);
+	else
+		setviewblend(self, vec_null, 0);
+	
+	if(self.model == "models/monsters/mutant/tris.md2")
+		setviewblend(self, '0.9 0.2 0.0', 0.35);	
+};
+
+float svc_muzzleflash = 1;
+entity(string spawnpointname) SelectSpawnPoint;
+
+void() SpawnPlayer =
+{
+	entity sp;
+	
+	sp = SelectSpawnPoint("info_player_start");
+	self.angles = sp.angles;
+	setorigin( self, sp.origin );
+	
+	self.takedamage = DAMAGE_AIM;
+	self.movetype = MOVETYPE_WALK;
+	self.viewheight = 22;
+	self.classname = "player";
+	self.mass = 200;
+	self.solid = SOLID_BBOX;
+	self.deadflag = DEAD_NO;
+	self.clipmask = MASK_PLAYERSOLID;
+//	self.pain = player_pain;
+//	self.die = player_die;
+	self.waterlevel = 0;
+	self.watertype = 0;
+	self.health = 100;
+	
+//	self.modelindex = 255;
+//	self.modelindex2 = precache_model("models/player/female/weapon.md2");
+	
+	setviewoffset(self, '0 0 24');
+	setsize(self, '-16 -16 -24', '16 16 32');
+	
+	string modelname;
+	
+	if(getentnum(self) == 1 )	
+		modelname = "models/player/female/tris.md2";
+	else
+		modelname = "models/monsters/mutant/tris.md2";
+	
+	precache_model(modelname);
+	setmodel(self, modelname );
+	
+	if(self.model == "models/monsters/mutant/tris.md2")
+		Player_SetAnimation(anim_mutant_stand, 21, false);	
+	else
+		Player_SetAnimation( anim_stand, 999, true );
+	
+	ClientEndServerFrame();	
+};

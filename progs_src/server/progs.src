@@ -1,0 +1,46 @@
+../../../build/basepr/progs/server.dat
+
+// pragma defs
+../inc/pragma_structs_server.q2c
+../inc/pragma_builtins.q2c
+../inc/pragma_defs.q2c
+
+../inc/shared.q2c 	// shared by client and server
+
+fields.q2c		// additional entity fields used by scripts, all defined and explained in one place
+
+// server logic
+callbacks.q2c	// entry points
+subs.q2c
+clcmds.q2c		// client console commands
+client.q2c		// client code
+damage.q2c
+main.q2c		// .
+pers.q2c		// save/load of persistant data across level changes
+
+
+// server entities
+ents/funcs.q2c
+ents/lights.q2c
+ents/info.q2c
+ents/misc.q2c
+ents/spawnpoints.q2c
+ents/triggers.q2c
+ents/worldspawn.q2c 
+ents/monsters.q2c 
+
+
+/*
+	vector origin = '0 0 0';
+	float radius = 128;
+    entity ent = world;
+	
+    while((ent = findradius(ent, origin, radius)) != world)
+    {
+        // found entity within radius
+    }
+*/
+
+
+
+

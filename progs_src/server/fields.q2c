@@ -1,0 +1,77 @@
+/*
+pragma engine
+Copyright (C) 2023 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+*/
+
+// delete/move these
+.float noise_index;
+.float groundEntityNum;
+.float		mass;
+
+//
+// 'worldspawn' entity
+//
+.string		sky;			// skybox textures to use
+
+
+//
+// damage and pain handling
+//
+.float		takedamage;		// does entity take damage? DAMAGE_NO, DAMAGE_YES, DAMAGE_AIM
+.float		max_health;		// health should be never higher than this 
+
+.float		deadflag;
+.void(entity ent, entity attacker, float damage, float method) pain;
+.void(entity ent, entity attacker, float damage, float method) die;
+
+// 'trigger_hurt': deal dmg damage points
+.float		dmg;
+
+
+// 'light' entity: index to lightstyle
+// 'func_areaportal': toggle between states
+.float		style; 
+
+// 'trigger_counter': when this reaches 0 fire all of its targets
+// 'func_spawner': spawn this number of entities
+.float		count;
+
+//
+// 'light' entity
+//
+.vector		color; 		// light color
+.float		light; 		// light radius
+
+//
+// used by SUB_UseTargets solely
+//
+.entity		activator;		// entity that's going to usetargets after a delay
+.string		target;			// enities with targetname of this will be used
+.string		targetname;		// 'target' name used for targets and killtargets
+.string		killtarget;		// entities with targetname matching this killtarget will be removed
+
+
+// function to call when entity is being used (triggered)
+// self = entity being used, other = activator
+.void(entity a) 	use; 
+
+
+// SUB_UseTargets: targets will be fired after this time
+// 'func_spawner': wait this time before spawning next entity
+.float 		delay;
+
+
+//SUB_UseTargets: play this sound to the activator when firing targets
+.string 	snd;
+
+//'trigger_counter': play this sound when counting
+.string		snd2;
+
+
+// SUB_UseTargets: message to print to user/activator
+// 'worldspawn': name of the level
+// 'func_spawner': spawn entities with this classname
+.string 	message;

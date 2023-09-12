@@ -1,0 +1,1 @@
+copy Quake2's pak0.pak here
