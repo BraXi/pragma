@@ -61,5 +61,6 @@ This script runs FTEQCC in `/progs_src` and copies the compiled QC progs to `bui
 6. Run pragma with `run_pragma.bat` (alternatively start engine.exe with cmdline `+game basepr`)
 
 
+![shot031](https://github.com/BraXi/pragma/assets/6434152/09d30811-2681-418c-8036-bb8622c35fb9)
 
 ![shot009](https://github.com/BraXi/pragma/assets/6434152/f586402a-8bd5-405e-a9ff-9c8cd30deb5c)
