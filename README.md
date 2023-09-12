@@ -60,7 +60,24 @@ This script runs FTEQCC in `/progs_src` and copies the compiled QC progs to `bui
 
 6. Run pragma with `run_pragma.bat` (alternatively start engine.exe with cmdline `+game basepr`)
 
+https://www.youtube.com/watch?v=rLWEsG0bD44
+
+
+# Screenshots and videos of pragma in action
+
+players with diferent models and anims
+
+[![pragma_players](https://img.youtube.com/vi/rLWEsG0bD44/0.jpg)](https://www.youtube.com/watch?v=rLWEsG0bD44)
+
+some random physics test
+
+[![pragma_players](https://img.youtube.com/vi/mbXaEDZLZgE/0.jpg)](https://www.youtube.com/watch?v=mbXaEDZLZgE)
+
+new UI system in action (not on git yet)
 
 ![shot031](https://github.com/BraXi/pragma/assets/6434152/09d30811-2681-418c-8036-bb8622c35fb9)
+
+
+goofing around, QC profiler displayed on the right
 
 ![shot009](https://github.com/BraXi/pragma/assets/6434152/f586402a-8bd5-405e-a9ff-9c8cd30deb5c)
