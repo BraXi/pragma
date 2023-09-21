@@ -560,24 +560,6 @@ void R_SetFrustum (void)
 {
 	int		i;
 
-#if 0
-	/*
-	** this code is wrong, since it presume a 90 degree FOV both in the
-	** horizontal and vertical plane
-	*/
-	// front side is visible
-	VectorAdd (vpn, vright, frustum[0].normal);
-	VectorSubtract (vpn, vright, frustum[1].normal);
-	VectorAdd (vpn, vup, frustum[2].normal);
-	VectorSubtract (vpn, vup, frustum[3].normal);
-
-	// we theoretically don't need to normalize these vectors, but I do it
-	// anyway so that debugging is a little easier
-	VectorNormalize( frustum[0].normal );
-	VectorNormalize( frustum[1].normal );
-	VectorNormalize( frustum[2].normal );
-	VectorNormalize( frustum[3].normal );
-#else
 	// rotate VPN right by FOV_X/2 degrees
 	RotatePointAroundVector( frustum[0].normal, vup, vpn, -(90-r_newrefdef.fov_x / 2 ) );
 	// rotate VPN left by FOV_X/2 degrees
@@ -586,7 +568,6 @@ void R_SetFrustum (void)
 	RotatePointAroundVector( frustum[2].normal, vright, vpn, 90-r_newrefdef.fov_y / 2 );
 	// rotate VPN down by FOV_X/2 degrees
 	RotatePointAroundVector( frustum[3].normal, vright, vpn, -( 90 - r_newrefdef.fov_y / 2 ) );
-#endif
 
 	for (i=0 ; i<4 ; i++)
 	{
@@ -1544,6 +1525,10 @@ void	Draw_TileClear (int x, int y, int w, int h, char *name);
 void	Draw_Fill (int x, int y, int w, int h, int c);
 void	Draw_FadeScreen(float* rgba);
 
+void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+void R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
+void R_DrawFill(rect_t rect, rgba_t color);
+
 /*
 @@@@@@@@@@@@@@@@@@@@@
 GetRefAPI
@@ -1574,8 +1559,13 @@ refexport_t GetRefAPI (refimport_t rimp )
 	re.DrawTileClear = Draw_TileClear;
 	re.DrawFill = Draw_Fill;
 	re.DrawFadeScreen = Draw_FadeScreen;
-
 	re.DrawStretchRaw = Draw_StretchRaw;
+
+	// braxi -- newer replacements
+	re.DrawString = R_DrawString;
+	re.DrawStretchedImage = R_DrawStretchedImage;
+	re.NewDrawFill = R_DrawFill;
+	
 
 	re.Init = R_Init;
 	re.Shutdown = R_Shutdown;

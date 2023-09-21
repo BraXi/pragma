@@ -380,6 +380,10 @@ string strat(string,float index)
 */
 void PF_strat(void)
 {
+#if 1
+	Scr_RunError("PF_strat: borked\n");
+#else
+	char
 	char* str;
 	size_t len;
 	int at;
@@ -395,6 +399,7 @@ void PF_strat(void)
 		return;
 	}
 	Scr_ReturnString("");
+#endif
 }
 
 /*
@@ -407,7 +412,7 @@ float strstr(string a,string b)
 */
 void PF_strstr(void)
 {
-	char* str1, str2;
+	char* str1, *str2;
 	
 	str1 = Scr_GetParmString(0);
 	str2 = Scr_GetParmString(1);

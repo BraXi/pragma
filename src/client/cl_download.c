@@ -97,7 +97,7 @@ static void CL_DownloadModelsWithSkins(float allowDownload, int nextType)
 			{
 				if (!CL_CheckOrDownloadFile(cl.configstrings[precache_check]))
 				{
-					Com_Printf("%s: model %s\n", __FUNCTION__, cl.configstrings[precache_check]); // braxi -- dev
+//					Com_Printf("%s: model %s\n", __FUNCTION__, cl.configstrings[precache_check]); // braxi -- dev
 					precache_model_skin = 1;
 					return; // started a download
 				}

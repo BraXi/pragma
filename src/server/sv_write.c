@@ -155,6 +155,11 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 		|| ps->pmove.velocity[2] != ops->pmove.velocity[2] )
 		pflags |= PS_M_VELOCITY;
 
+	if (ps->pmove.velocity[0] != ops->pmove.velocity[0]
+		|| ps->pmove.velocity[1] != ops->pmove.velocity[1]
+		|| ps->pmove.velocity[2] != ops->pmove.velocity[2])
+		pflags |= PS_M_VELOCITY;
+
 	if (ps->pmove.pm_time != ops->pmove.pm_time)
 		pflags |= PS_M_TIME;
 
@@ -169,6 +174,13 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 		|| ps->pmove.delta_angles[2] != ops->pmove.delta_angles[2] )
 		pflags |= PS_M_DELTA_ANGLES;
 
+	if (ps->pmove.mins[0] != ops->pmove.mins[0]
+		|| ps->pmove.mins[1] != ops->pmove.mins[1]
+		|| ps->pmove.mins[2] != ops->pmove.mins[2]
+		|| ps->pmove.maxs[0] != ops->pmove.maxs[0]
+		|| ps->pmove.maxs[1] != ops->pmove.maxs[1]
+		|| ps->pmove.maxs[2] != ops->pmove.maxs[2])
+		pflags |= PS_M_BBOX_SIZE; //player bbox
 
 	if (ps->viewoffset[0] != ops->viewoffset[0]
 		|| ps->viewoffset[1] != ops->viewoffset[1]
@@ -202,6 +214,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	pflags |= PS_VIEWMODEL_INDEX;
 
+	
 	//
 	// write it
 	//
@@ -242,6 +255,19 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 		MSG_WriteShort (msg, ps->pmove.delta_angles[0]);
 		MSG_WriteShort (msg, ps->pmove.delta_angles[1]);
 		MSG_WriteShort (msg, ps->pmove.delta_angles[2]);
+	}
+
+	// braxi: write bbox size to client for prediction
+	// 
+	if (pflags & PS_M_BBOX_SIZE)
+	{
+		MSG_WriteShort(msg, ps->pmove.mins[0]);
+		MSG_WriteShort(msg, ps->pmove.mins[1]);
+		MSG_WriteShort(msg, ps->pmove.mins[2]);
+
+		MSG_WriteShort(msg, ps->pmove.maxs[0]);
+		MSG_WriteShort(msg, ps->pmove.maxs[1]);
+		MSG_WriteShort(msg, ps->pmove.maxs[2]);
 	}
 
 	//

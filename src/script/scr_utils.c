@@ -184,6 +184,20 @@ float Scr_GetParmFloat(unsigned int parm)
 
 /*
 ============
+Scr_GetParmFloat
+
+Returns param as a int
+============
+*/
+int Scr_GetParmInt(unsigned int parm)
+{
+	int ofs = ScrInternal_GetParmOffset(parm);
+	return G_INT(ofs);
+}
+
+
+/*
+============
 Scr_GetParmString
 
 Returns param as a string

@@ -244,6 +244,11 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	
 	switch (LittleLong(*(unsigned *)buf))
 	{
+//	case BX_MODEL_HEADER:
+//		loadmodel->extradata = Hunk_Begin(0x200000);
+//		Mod_LoadBXModel(mod, buf);
+//		break;
+
 	case IDALIASHEADER:
 		loadmodel->extradata = Hunk_Begin (0x200000);
 		Mod_LoadAliasModel (mod, buf);
@@ -911,6 +916,111 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 
 		starmod->numleafs = bm->visleafs;
 	}
+}
+
+/*
+==============================================================================
+
+SKELETAL MODELS
+
+==============================================================================
+*/
+
+/*
+=================
+Mod_LoadAliasModel
+=================
+*/
+void Mod_LoadBXModel(model_t* mod, void* buffer)
+{
+	mdl_header_t    *in;
+
+	mdl_info_t		*info;
+	mdl_bone_t		*bones;
+	mdl_animbone_t	*animbones;
+	mdl_material_t	*materials;
+	mdl_group_t		*groups;
+	mdl_vert_t		*verts;
+
+	unsigned int    index;
+	unsigned int allocSize = 0;
+	void* data;
+
+	in = (mdl_header_t*)buffer;
+	if (in->version != BX_MODEL_VERSION)
+		ri.Sys_Error(ERR_DROP, "%s has wrong version number (%i should be %i)", mod->name, in->version, BX_MODEL_VERSION);
+
+	info = (mdl_info_t*)((byte*)in += sizeof(mdl_header_t));
+
+	if (!info->numBones)
+		ri.Sys_Error(ERR_DROP, "%s doesn't have bones", mod->name);
+	else if (!info->numGroups)
+		ri.Sys_Error(ERR_DROP, "%s doesn't have groups", mod->name);
+	else if (!info->numMaterials)
+		ri.Sys_Error(ERR_DROP, "%s doesn't have materials", mod->name);
+	else if (3 > info->numVerts)
+		ri.Sys_Error(ERR_DROP, "%s has less thn 3 verticles", mod->name);
+
+	mod->type = mod_bxmdl;
+
+	allocSize += sizeof(mdl_info_t);
+	allocSize += sizeof(mdl_bone_t) * info->numBones;
+	allocSize += sizeof(mdl_animbone_t) * info->numBones;
+	allocSize += sizeof(mdl_material_t) * info->numMaterials;
+	allocSize += sizeof(mdl_group_t) * info->numGroups;
+	allocSize += sizeof(mdl_vert_t) * info->numVerts;
+
+	data = Hunk_Alloc(allocSize);
+
+	bones = (mdl_bone_t*)((byte*)in += sizeof(mdl_info_t));
+	bones = (mdl_bone_t*)((byte*)in += sizeof(mdl_info_t));
+	animbones = (mdl_animbone_t*)((byte*)in += sizeof(mdl_bone_t) * info->numBones);
+	materials = (mdl_material_t*)((byte*)in += sizeof(mdl_animbone_t) * info->numBones);
+	groups = (mdl_group_t*)((byte*)in += sizeof(mdl_material_t) * info->numMaterials);
+	verts = (mdl_vert_t*)((byte*)in += sizeof(mdl_group_t) * info->numGroups);
+
+
+	// calculate bounding box
+	VectorClear(mod->mins);
+	VectorClear(mod->maxs);
+	for (unsigned int i = 0; i < info->numVerts; i++)
+	{
+		if (verts[i].origin[0] < mod->mins[0]) 
+			mod->mins[0] = verts[i].origin[0];
+		if (verts[i].origin[0] > mod->maxs[0]) 
+			mod->maxs[0] = verts[i].origin[0];
+
+		if (verts[i].origin[1] < mod->mins[1]) 
+			mod->mins[1] = verts[i].origin[1];
+		if (verts[i].origin[1] > mod->maxs[1]) 
+			mod->maxs[1] = verts[i].origin[1];
+
+		if (verts[i].origin[2] < mod->mins[2]) 
+			mod->mins[2] = verts[i].origin[2];
+		if (verts[i].origin[2] > mod->maxs[2]) 
+			mod->maxs[2] = verts[i].origin[2];
+	}
+
+
+	// load textures
+	for (index = 0; index < info->numMaterials; index++)
+	{
+		if(!materials[index].name[0])
+			ri.Sys_Error(ERR_DROP, "%s has empty material %i", mod->name, index);
+		mod->skins[index] = GL_FindImage( materials[index].name, it_skin );
+	}
+
+#if 0
+	// upload geometry to gpu
+	vertex_t* p_VBOVerts = new vertex_t[info.numVerts];
+	for (index = 0; index < info.numVerts; index++)
+	{
+		memcpy(&p_VBOVerts[index].origin, &p_Vertices[index].origin, sizeof(vec3));
+		memcpy(&p_VBOVerts[index].normal, &p_Vertices[index].normal, sizeof(vec3));
+		memcpy(&p_VBOVerts[index].uv, &p_Vertices[index].uv, sizeof(vec2));
+	}
+#endif
+	Com_Printf("bbox [%f %f %f]-[%f %f %f]", mod->mins[0], mod->mins[1], mod->mins[2], mod->maxs[0], mod->maxs[1], mod->maxs[2]);
 }
 
 /*

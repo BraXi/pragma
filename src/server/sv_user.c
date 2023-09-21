@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "server.h"
 
+#define	MAX_STRINGCMDS	8 // how many console commands can client issue to server in a single message
+
 gentity_t	*sv_player;
 
 void Scr_ClientBegin(gentity_t* self);
@@ -243,7 +245,7 @@ void SV_Begin_f (void)
 	int i;
 	gentity_t* ent = NULL;
 
-	Com_DPrintf (DP_SV, "Begin() from %s\n", sv_client->name);
+//	Com_DPrintf (DP_SV, "Begin() from %s\n", sv_client->name);
 
 	// handle the case of a level changing while a client was connecting
 	if ( atoi(Cmd_Argv(1)) != svs.spawncount )
@@ -311,9 +313,9 @@ void SV_NextDownload_f (void)
 	if (!size)
 		size = 1;
 	percent = sv_client->downloadcount*100/size;
+
 	MSG_WriteByte (&sv_client->netchan.message, percent);
-	SZ_Write (&sv_client->netchan.message,
-		sv_client->download + sv_client->downloadcount - r, r);
+	SZ_Write (&sv_client->netchan.message, sv_client->download + sv_client->downloadcount - r, r);
 
 	if (sv_client->downloadcount != sv_client->downloadsize)
 		return;
@@ -374,13 +376,12 @@ void SV_BeginDownload_f(void)
 	if (offset > sv_client->downloadsize)
 		sv_client->downloadcount = sv_client->downloadsize;
 
-	if (!sv_client->download
-		// special check for maps, if it came from a pak file, don't allow
-		// download  ZOID
-		|| (strncmp(name, "maps/", 5) == 0 && file_from_pak))
+	// special check for maps, if it came from a pak file, don't allow download  ZOID
+	if (!sv_client->download || (strncmp(name, "maps/", 5) == 0 && file_from_pak))
 	{
 		Com_DPrintf (DP_SV, "Couldn't download %s to %s\n", name, sv_client->name);
-		if (sv_client->download) {
+		if (sv_client->download) 
+		{
 			FS_FreeFile (sv_client->download);
 			sv_client->download = NULL;
 		}
@@ -452,12 +453,13 @@ void SV_Nextserver (void)
 SV_Nextserver_f
 
 A cinematic has completed or been aborted by a client, so move
-to the next server,
+to the next server
 ==================
 */
 void SV_Nextserver_f (void)
 {
-	if ( atoi(Cmd_Argv(1)) != svs.spawncount ) {
+	if ( atoi(Cmd_Argv(1)) != svs.spawncount ) 
+	{
 		Com_DPrintf (DP_SV, "Nextserver() from wrong level, from %s\n", sv_client->name);
 		return;		// leftover from last server
 	}
@@ -466,6 +468,14 @@ void SV_Nextserver_f (void)
 
 	SV_Nextserver ();
 }
+
+/*
+===========================================================================
+
+USER CMD EXECUTION
+
+===========================================================================
+*/
 
 typedef struct
 {
@@ -506,36 +516,23 @@ void SV_ExecuteUserCommand (char *s)
 	Cmd_TokenizeString (s, true);
 	sv_player = sv_client->edict;
 
-//	SV_BeginRedirect (RD_CLIENT);
-
-	for (u=ucmds ; u->name ; u++)
-		if (!strcmp (Cmd_Argv(0), u->name) )
+	for (u = ucmds; u->name; u++)
+	{
+		if (!strcmp(Cmd_Argv(0), u->name))
 		{
-			u->func ();
+			u->func();
 			break;
 		}
-
+	}
+	// handle incomming command from client in progs
 	if (!u->name && sv.state == ss_game)
 		ClientCommand (sv_player);
-
-//	SV_EndRedirect ();
 }
-
-/*
-===========================================================================
-
-USER CMD EXECUTION
-
-===========================================================================
-*/
-
-
 
 void SV_ClientThink (client_t *cl, usercmd_t *cmd)
 
 {
 	cl->commandMsec -= cmd->msec;
-
 	if (cl->commandMsec < 0 && sv_enforcetime->value )
 	{
 		Com_DPrintf (DP_SV, "commandMsec underflow from %s\n", cl->name);
@@ -544,13 +541,9 @@ void SV_ClientThink (client_t *cl, usercmd_t *cmd)
 
 	sv_entity = cl->edict;
 	Scr_ClientThink(cl->edict, cmd);
-
-
 }
 
 
-
-#define	MAX_STRINGCMDS	8
 /*
 ===================
 SV_ExecuteClientMessage
@@ -615,11 +608,12 @@ void SV_ExecuteClientMessage (client_t *cl)
 			checksumIndex = net_message.readcount;
 			checksum = MSG_ReadByte (&net_message);
 			lastframe = MSG_ReadLong (&net_message);
-			if (lastframe != cl->lastframe) {
+			if (lastframe != cl->lastframe) 
+			{
 				cl->lastframe = lastframe;
-				if (cl->lastframe > 0) {
-					cl->frame_latency[cl->lastframe&(LATENCY_COUNTS-1)] = 
-						svs.realtime - cl->frames[cl->lastframe & UPDATE_MASK].senttime;
+				if (cl->lastframe > 0) 
+				{
+					cl->frame_latency[cl->lastframe&(LATENCY_COUNTS-1)] = svs.realtime - cl->frames[cl->lastframe & UPDATE_MASK].senttime;
 				}
 			}
 
@@ -654,9 +648,8 @@ void SV_ExecuteClientMessage (client_t *cl)
 				if (net_drop < 20)
 				{
 
-//if (net_drop > 2)
-
-//	Com_Printf ("drop %i\n", net_drop);
+				//	if (net_drop > 2)
+				//		Com_Printf ("drop %i\n", net_drop);
 					while (net_drop > 2)
 					{
 						SV_ClientThink (cl, &cl->lastcmd);

@@ -29,6 +29,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 =============================================================
 */
 
+void R_DrawBBox(vec3_t mins, vec3_t maxs);
+void R_EmitWirePoint(vec3_t origin);
 #define NUMVERTEXNORMALS	162
 
 float	r_avertexnormals[NUMVERTEXNORMALS][3] = {
@@ -788,6 +790,8 @@ void R_DrawAliasModel (centity_t *e)
 
 	qglPopMatrix ();
 
+
+	
 #if 0
 	qglDisable( GL_CULL_FACE );
 	qglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -836,4 +840,145 @@ void R_DrawAliasModel (centity_t *e)
 	qglColor4f (1,1,1,1);
 }
 
+void R_EmitWireBox(vec3_t mins, vec3_t maxs)
+{
+	qglBegin(GL_QUAD_STRIP);
+	qglVertex3f(mins[0], mins[1], mins[2]);
+	qglVertex3f(mins[0], mins[1], maxs[2]);
+	qglVertex3f(maxs[0], mins[1], mins[2]);
+	qglVertex3f(maxs[0], mins[1], maxs[2]);
+	qglVertex3f(maxs[0], maxs[1], mins[2]);
+	qglVertex3f(maxs[0], maxs[1], maxs[2]);
+	qglVertex3f(mins[0], maxs[1], mins[2]);
+	qglVertex3f(mins[0], maxs[1], maxs[2]);
+	qglVertex3f(mins[0], mins[1], mins[2]);
+	qglVertex3f(mins[0], mins[1], maxs[2]);
+	qglEnd();
+}
 
+void R_EmitWirePoint(vec3_t origin)
+{
+	int size = 8;
+
+	qglBegin(GL_LINES);
+	qglVertex3f(origin[0] - size, origin[1], origin[2]);
+	qglVertex3f(origin[0] + size, origin[1], origin[2]);
+	qglVertex3f(origin[0], origin[1] - size, origin[2]);
+	qglVertex3f(origin[0], origin[1] + size, origin[2]);
+	qglVertex3f(origin[0], origin[1], origin[2] - size);
+	qglVertex3f(origin[0], origin[1], origin[2] + size);
+	qglEnd();
+}
+
+
+void R_DrawBBox(vec3_t mins, vec3_t maxs)
+{
+//	qglDisable(GL_DEPTH_TEST);
+	qglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//	GL_PolygonOffset(OFFSET_SHOWTRIS);
+	qglDisable(GL_TEXTURE_2D);
+	qglDisable(GL_CULL_FACE);
+	qglColor3f(1, 1, 1);
+
+	R_EmitWireBox(mins, maxs);
+
+	qglColor3f(1, 1, 1);
+	qglEnable(GL_TEXTURE_2D);
+	qglEnable(GL_CULL_FACE);
+	qglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//	GL_PolygonOffset(OFFSET_NONE);
+	qglEnable(GL_DEPTH_TEST);
+}
+
+#if 0
+
+void R_EmitWirePoint(vec3_t origin)
+{
+	int size = 8;
+
+	glBegin(GL_LINES);
+	glVertex3f(origin[0] - size, origin[1], origin[2]);
+	glVertex3f(origin[0] + size, origin[1], origin[2]);
+	glVertex3f(origin[0], origin[1] - size, origin[2]);
+	glVertex3f(origin[0], origin[1] + size, origin[2]);
+	glVertex3f(origin[0], origin[1], origin[2] - size);
+	glVertex3f(origin[0], origin[1], origin[2] + size);
+	glEnd();
+}
+
+
+void R_EmitWireBox(vec3_t mins, vec3_t maxs)
+{
+	glBegin(GL_QUAD_STRIP);
+	glVertex3f(mins[0], mins[1], mins[2]);
+	glVertex3f(mins[0], mins[1], maxs[2]);
+	glVertex3f(maxs[0], mins[1], mins[2]);
+	glVertex3f(maxs[0], mins[1], maxs[2]);
+	glVertex3f(maxs[0], maxs[1], mins[2]);
+	glVertex3f(maxs[0], maxs[1], maxs[2]);
+	glVertex3f(mins[0], maxs[1], mins[2]);
+	glVertex3f(mins[0], maxs[1], maxs[2]);
+	glVertex3f(mins[0], mins[1], mins[2]);
+	glVertex3f(mins[0], mins[1], maxs[2]);
+	glEnd();
+}
+
+
+/*
+================
+R_ShowBoundingBoxes -- johnfitz
+
+draw bounding boxes -- the server-side boxes, not the renderer cullboxes
+================
+*/
+void R_ShowBoundingBoxes(void)
+{
+	extern		edict_t* sv_player;
+	vec3_t		mins, maxs;
+	edict_t* ed;
+	int			i;
+
+	if (!r_showbboxes.value || cl.maxclients > 1 || !r_drawentities.value || !sv.active)
+		return;
+
+	glDisable(GL_DEPTH_TEST);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	GL_PolygonOffset(OFFSET_SHOWTRIS);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_CULL_FACE);
+	glColor3f(1, 1, 1);
+
+	for (i = 0, ed = NEXT_EDICT(sv.edicts); i < sv.num_edicts; i++, ed = NEXT_EDICT(ed))
+	{
+		if (ed == sv_player)
+			continue; //don't draw player's own bbox
+
+		//		if (r_showbboxes.value != 2)
+		//			if (!SV_VisibleToClient (sv_player, ed, sv.worldmodel))
+		//				continue; //don't draw if not in pvs
+
+		if (ed->v.mins[0] == ed->v.maxs[0] && ed->v.mins[1] == ed->v.maxs[1] && ed->v.mins[2] == ed->v.maxs[2])
+		{
+			//point entity
+			R_EmitWirePoint(ed->v.origin);
+		}
+		else
+		{
+			//box entity
+			VectorAdd(ed->v.mins, ed->v.origin, mins);
+			VectorAdd(ed->v.maxs, ed->v.origin, maxs);
+			R_EmitWireBox(mins, maxs);
+		}
+	}
+
+	glColor3f(1, 1, 1);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_CULL_FACE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	GL_PolygonOffset(OFFSET_NONE);
+	glEnable(GL_DEPTH_TEST);
+
+	Sbar_Changed(); //so we don't get dots collecting on the statusbar
+}
+
+#endif

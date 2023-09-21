@@ -15,103 +15,31 @@ See the attached GNU General Public License v2 for more details.
 #include "script_internals.h"
 #include "../server/sv_game.h"
 
-static int	type_size[8] = { 1,sizeof(scr_string_t) / 4,1,3,1,1,sizeof(scr_func_t) / 4,sizeof(void*) / 4 };
+
+static int type_size[9] = 
+{ 
+	/*vanilla QC*/
+	1,							// ev_void
+	sizeof(scr_string_t) / 4,	// ev_string
+	1,							// ev_float
+	3,							// ev_vector
+	1,							// ev_entity
+	1,							// ev_field
+	sizeof(scr_func_t) / 4,		// ev_function
+	sizeof(void*) / 4,			// ev_pointer
+	1							// FTEQC: ev_integer
+};
 
 ddef_t* ScrInternal_GlobalAtOfs(int ofs);
 ddef_t* ScrInternal_FieldAtOfs(int ofs);
 
-char* pr_opnames[] = /* same as above, but for debugging */
+#define NO_QC_OPC "unsupported opcode"
+char* qcvm_op_names[] = /* qc op names for debugging */
 {
-"DONE",
-
-"MUL_F",
-"MUL_V",
-"MUL_FV",
-"MUL_VF",
-
-"DIV",
-
-"ADD_F",
-"ADD_V",
-
-"SUB_F",
-"SUB_V",
-
-"EQ_F",
-"EQ_V",
-"EQ_S",
-"EQ_E",
-"EQ_FNC",
-
-"NE_F",
-"NE_V",
-"NE_S",
-"NE_E",
-"NE_FNC",
-
-"LE",
-"GE",
-"LT",
-"GT",
-
-"INDIRECT",
-"INDIRECT",
-"INDIRECT",
-"INDIRECT",
-"INDIRECT",
-"INDIRECT",
-
-"ADDRESS",
-
-"STORE_F",
-"STORE_V",
-"STORE_S",
-"STORE_ENT",
-"STORE_FLD",
-"STORE_FNC",
-
-"STOREP_F",
-"STOREP_V",
-"STOREP_S",
-"STOREP_ENT",
-"STOREP_FLD",
-"STOREP_FNC",
-
-"RETURN",
-
-"NOT_F",
-"NOT_V",
-"NOT_S",
-"NOT_ENT",
-"NOT_FNC",
-
-"IF",
-"IFNOT",
-
-"CALL0",
-"CALL1",
-"CALL2",
-"CALL3",
-"CALL4",
-"CALL5",
-"CALL6",
-"CALL7",
-"CALL8",
-
-"STATE",
-
-"GOTO",
-
-"AND",
-"OR",
-
-"BITAND",
-"BITOR"
+#include "qc_opnames.h"
 };
 
-
-
-inline CheckScriptVM()
+inline void CheckScriptVM()
 {
 #ifdef SCRIPTVM_PARANOID
 	if (ScriptVM == NULL)
@@ -157,6 +85,9 @@ char* Scr_ValueString(etype_t type, eval_t* val)
 		break;
 	case ev_float:
 		sprintf(line, "%5.1f", val->_float);
+		break;
+	case ev_integer:
+		sprintf(line, "%i", val->_int);
 		break;
 	case ev_vector:
 		sprintf(line, "'%5.1f %5.1f %5.1f'", val->vector[0], val->vector[1], val->vector[2]);
@@ -208,6 +139,9 @@ char* Scr_UglyValueString(etype_t type, eval_t* val)
 		break;
 	case ev_float:
 		sprintf(line, "%f", val->_float);
+		break;
+	case ev_integer:
+		sprintf(line, "%i", val->_int);
 		break;
 	case ev_vector:
 		sprintf(line, "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
@@ -287,10 +221,10 @@ void Scr_PrintStatement(dstatement_t* s)
 	int		i;
 	CheckScriptVM();
 
-	if ((unsigned)s->op < sizeof(pr_opnames) / sizeof(pr_opnames[0]))
+	if ((unsigned)s->op < sizeof(qcvm_op_names) / sizeof(qcvm_op_names[0]))
 	{
-		Com_Printf("%s ", pr_opnames[s->op]);
-		i = strlen(pr_opnames[s->op]);
+		Com_Printf("%s ", qcvm_op_names[s->op]);
+		i = strlen(qcvm_op_names[s->op]);
 		for (; i < 10; i++)
 			Com_Printf(" ");
 	}

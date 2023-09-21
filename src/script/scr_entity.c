@@ -174,7 +174,10 @@ char* ED_ParseEdict(char* data, gentity_t* ent)
 
 	// clear it
 	if (ent != sv.edicts)
+	{
 		memset(&ent->v, 0, Scr_GetEntityFieldsSize());
+		SV_InitEntity(ent);
+	}
 
 	// go through all the dictionary pairs
 	while (1)
@@ -224,6 +227,7 @@ char* ED_ParseEdict(char* data, gentity_t* ent)
 //			}
 			continue;
 		}
+		else
 
 		if (anglehack)
 		{
@@ -236,7 +240,6 @@ char* ED_ParseEdict(char* data, gentity_t* ent)
 			Com_Error(ERR_DROP, "%s: parse error", __FUNCTION__);
 	}
 
-	//	if (!init)
 	ent->inuse = init;
 	return data;
 }

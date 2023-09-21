@@ -42,13 +42,28 @@ static float CG_MSG_ReadAngle(void) { return MSG_ReadAngle(&net_message); }
 static float CG_MSG_ReadAngle16(void) { return MSG_ReadAngle16(&net_message); }
 static void CG_MSG_ReadDir(vec3_t vector) { MSG_ReadDir(&net_message, vector); }
 
-
-static void CG_DrawString(int x, int y, int alignx, char* string)
+void CG_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color)
 {
-	UI_DrawString(x, y, (UI_AlignX)alignx, string);
+	re.DrawString(string, x, y, fontSize, alignx, color);
 }
 
+void CG_DrawStretchedImage(rect_t rect, rgba_t color, char* pic)
+{
+	re.DrawStretchedImage(rect, color, pic);
+}
 
+void CG_DrawFill(rect_t rect, rgba_t color)
+{
+	re.NewDrawFill(rect, color);
+}
+
+void CG_GetCursorPos(vec2_t* out)
+{
+}
+
+void CG_SetCursorPos(int x, int y)
+{
+}
 
 //==============================================
 
@@ -67,6 +82,8 @@ void CL_ShutdownClientGame(void)
 	Sys_UnloadClientGame();
 	cgame = NULL;
 }
+
+
 
 /*
 ===============
@@ -105,7 +122,12 @@ void CL_InitClientGame(void)
 	import.MSG_ReadAngle16 = CG_MSG_ReadAngle16;
 	import.MSG_ReadDir = CG_MSG_ReadDir;
 
-	import.DrawString = UI_DrawString;
+	import.DrawString = CG_DrawString;
+	import.DrawStretchedImage = CG_DrawStretchedImage;
+	import.DrawFill = CG_DrawFill;
+
+	import.GetCursorPos = CG_GetCursorPos;
+	import.SetCursorPos = CG_SetCursorPos;
 
 	import.cvar = Cvar_Get;
 	import.cvar_set = Cvar_Set;

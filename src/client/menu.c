@@ -3927,6 +3927,9 @@ M_Draw
 */
 void M_Draw (void)
 {
+//	if (1)
+//		return;
+
 	static float fadeColor[4] = {0,0,0,0.4};
 	if (cls.key_dest != key_menu)
 		return;

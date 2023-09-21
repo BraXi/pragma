@@ -309,13 +309,14 @@ void PFSV_setmodel(void)
 		Scr_RunError("setmodel(): cannot change world model\n");
 		return;
 	}
+
 	name = Scr_GetParmString(1);
 	if (!name || name == "")
 	{
 		Scr_RunError("setmodel(): empty model name for entity %i\n", NUM_FOR_EDICT(ent));
 		return;
 	}
-
+//	name = "*3";
 	i = SV_ModelIndex(name);
 	ent->v.model = Scr_SetString(name);
 	ent->v.modelindex[0] = i;
@@ -334,6 +335,10 @@ void PFSV_setmodel(void)
 /*
 =================
 PFSV_setsize
+
+This will set entity's bbox size and link entity to the world
+For players it additionaly sets bbox size used in prediction and pmove
+
 setsize(entity,vector,vector)
 =================
 */
@@ -352,6 +357,13 @@ void PFSV_setsize(void)
 	VectorCopy(min, ent->v.mins);
 	VectorCopy(max, ent->v.maxs);
 	VectorSubtract(max, min, ent->v.size);
+
+	if (ent->client)
+	{
+		// if entity is a player, set pmove bbox too
+		VectorCopy(min, ent->client->ps.pmove.mins);
+		VectorCopy(max, ent->client->ps.pmove.maxs);
+	}
 
 	SV_LinkEdict(ent);
 }
@@ -424,7 +436,7 @@ void PFSV_trace(void)
 	end = Scr_GetParmVector(3);
 
 	ignoreEnt = Scr_GetParmEdict(4);
-	contentmask = (int)Scr_GetParmFloat(5);
+	contentmask = Scr_GetParmInt(5);
 
 	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask);
 	globals = Scr_GetGlobals();
@@ -1204,6 +1216,146 @@ void PFSV_changemap(void)
 }
 
 /*
+===============
+PFSV_saveglobal
+
+void saveglobal(float index, float val)
+===============
+*/
+void PFSV_setstat(void)
+{
+	gentity_t* ent;
+	gclient_t* cl;
+	int idx;
+
+	ent = Scr_GetParmEdict(0);
+	if (!ent->client || ent->client->pers.connected == false)
+	{
+		Scr_RunError("setstat(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
+		return;
+	}
+	cl = ent->client;
+
+	idx = Scr_GetParmFloat(1);
+	if (idx < 0 || idx >= 32)
+	{
+		Scr_RunError("saveclientfield(): index %i is invaild\n", idx);
+		return;
+	}
+	cl->ps.stats[idx] = Scr_GetParmFloat(2);
+}
+
+/*
+===============
+PFSV_pmove
+
+void pmove(float index, float val)
+===============
+*/
+
+gentity_t* pm_passent;
+// pmove doesn't need to know about passent and contentmask
+trace_t	PM_trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
+{
+	if (pm_passent->v.health > 0)
+		return SV_Trace(start, mins, maxs, end, pm_passent, MASK_PLAYERSOLID);
+	else
+		return SV_Trace(start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
+}
+
+extern usercmd_t* last_ucmd;
+void PFSV_pmove(void)
+{
+	gentity_t* ent;
+	gclient_t* client;
+	float* inmove;
+	float	allowCrouch;
+	pmove_t	pm;
+	int i;
+
+	ent = Scr_GetParmEdict(0);
+	if (!ent->client || ent->client->pers.connected == false)
+	{
+		Scr_RunError("pmove(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
+		return;
+	}
+	client = ent->client;
+
+	inmove = Scr_GetParmVector(1);
+	allowCrouch = Scr_GetParmFloat(2);
+
+	// set up for pmove
+	pm_passent = ent;
+	memset(&pm, 0, sizeof(pm));
+
+	client->ps.pmove.pm_type = ent->v.pm_type;
+	client->ps.pmove.pm_flags = ent->v.pm_flags;
+	client->ps.pmove.gravity = (sv_gravity->value * ent->v.gravity);
+
+	pm.s = client->ps.pmove;
+	for (i = 0; i < 3; i++)
+	{
+		pm.s.origin[i] = ent->v.origin[i] * 8;
+		pm.s.velocity[i] = ent->v.velocity[i] * 8;
+	}
+	if (memcmp(&client->old_pmove, &pm.s, sizeof(pm.s)))
+	{
+		pm.snapinitial = true;
+		Com_Printf("pmove changed!\n");
+	}
+
+	// grab inMove changes from script
+	last_ucmd->forwardmove = inmove[0];
+	last_ucmd->sidemove = inmove[1];
+	last_ucmd->upmove = inmove[2];
+
+	VectorCopy(ent->v.mins, pm.mins);
+	VectorCopy(ent->v.maxs, pm.maxs);
+
+	pm.viewheight = ent->v.viewheight;
+
+	pm.cmd = *last_ucmd;
+	pm.trace = PM_trace;
+	pm.pointcontents = SV_PointContents;
+	Pmove(&pm); // perform a pmove
+
+	// save results of pmove
+	client->ps.pmove = pm.s;
+	client->old_pmove = pm.s;
+
+	for (i = 0; i < 3; i++)
+	{
+		ent->v.origin[i] = pm.s.origin[i] * 0.125;
+		ent->v.velocity[i] = pm.s.velocity[i] * 0.125;
+	}
+
+	VectorCopy(pm.mins, ent->v.mins);
+	VectorCopy(pm.maxs, ent->v.maxs);
+
+	ent->client->ps.viewoffset[2] = pm.viewheight;
+	ent->v.viewheight = pm.viewheight;
+	ent->v.waterlevel = pm.waterlevel;
+	ent->v.watertype = pm.watertype;
+
+	ent->v.pm_type = client->ps.pmove.pm_type;
+	ent->v.pm_flags = client->ps.pmove.pm_flags;
+
+	ent->groundentity = pm.groundentity;
+	if (pm.groundentity)
+		ent->groundentity_linkcount = pm.groundentity->linkcount;
+
+	ent->v.groundEntityNum = (pm.groundentity == NULL ? -1 : pm.groundentity->s.number); 
+	if (pm.groundentity)
+		ent->v.groundEntity_linkcount = pm.groundentity->linkcount;
+
+	VectorCopy(pm.viewangles, ent->v.v_angle);
+	VectorCopy(pm.viewangles, client->ps.viewangles);
+
+	SV_LinkEdict(ent);
+}
+
+
+/*
 =================
 SV_InitScriptBuiltins
 
@@ -1286,4 +1438,7 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_loadglobal, PF_SV, false, "float(float index) loadglobal");
 
 	Scr_DefineBuiltin(PFSV_changemap, PF_SV, false, "float(string nm, float sg, float sc) changemap");
+
+	Scr_DefineBuiltin(PFSV_setstat, PF_SV, false, "float(entity e, float sg, float sc) setstat");
+	Scr_DefineBuiltin(PFSV_pmove, PF_SV, false, "float(entity e, float sg, float sc) pmove");
 }

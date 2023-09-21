@@ -1005,6 +1005,7 @@ void SCR_ExecuteLayoutString (char *s)
 				Com_Error (ERR_DROP, "Pic >= MAX_IMAGES");
 			if (cl.configstrings[CS_IMAGES+value])
 			{
+//				Com_Printf("pic [%i %i] %s\n", x, y, cl.configstrings[CS_IMAGES + value]);
 				SCR_AddDirtyPoint (x, y);
 				SCR_AddDirtyPoint (x+23, y+23);
 				re.DrawPic (x, y, cl.configstrings[CS_IMAGES+value]);
@@ -1234,7 +1235,7 @@ is based on the stats array
 */
 void SCR_DrawStats (void)
 {
-	SCR_ExecuteLayoutString (cl.configstrings[CS_STATUSBAR]);
+	SCR_ExecuteLayoutString (cl.configstrings[CS_HUD]);
 }
 
 
@@ -1429,10 +1430,11 @@ void SCR_UpdateScreen (void)
 			if (cl.frame.playerstate.stats[STAT_LAYOUTS] & 2)
 				CL_DrawInventory ();
 
-			cgame->DrawUI();
 			SCR_DrawNet ();
 			SCR_DrawServerStats();
 			SCR_CheckDrawCenterString ();
+
+			cgame->DrawUI();
 
 			if (scr_timegraph->value)
 				SCR_DebugGraph (cls.frametime*300, 0);

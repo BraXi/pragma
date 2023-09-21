@@ -53,9 +53,12 @@ typedef struct
 	float	(*MSG_ReadAngle16)(void);
 	void	(*MSG_ReadDir)(vec3_t vector);
 
-	// drawning
-	void	(*DrawString)(int x, int y, int alignx, char* string);
+	void	(*DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);
+	void	(*DrawFill) (rect_t rect, rgba_t color);
 
+	void	(*GetCursorPos)(vec2_t *out);
+	void	(*SetCursorPos)(int x, int y);
 
 	// console variable interaction
 	cvar_t* (*cvar) (char* var_name, char* value, int flags);

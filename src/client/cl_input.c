@@ -475,9 +475,9 @@ void CL_SendCmd (void)
 	if (cls.state == ca_disconnected || cls.state == ca_connecting)
 		return;
 
-	if ( cls.state == ca_connected)
+	if (cls.state == ca_connected)
 	{
-		if (cls.netchan.message.cursize	|| curtime - cls.netchan.last_sent > 1000 )
+		if (cls.netchan.message.cursize	|| curtime - cls.netchan.last_sent > 1000)
 			Netchan_Transmit (&cls.netchan, 0, buf.data);	
 		return;
 	}
@@ -488,7 +488,7 @@ void CL_SendCmd (void)
 		CL_FixUpGender();
 		userinfo_modified = false;
 		MSG_WriteByte (&cls.netchan.message, clc_userinfo);
-		MSG_WriteString (&cls.netchan.message, Cvar_Userinfo() );
+		MSG_WriteString (&cls.netchan.message, Cvar_Userinfo());
 	}
 
 	SZ_Init (&buf, data, sizeof(data));

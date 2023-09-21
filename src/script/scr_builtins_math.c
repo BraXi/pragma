@@ -11,6 +11,26 @@ See the attached GNU General Public License v2 for more details.
 
 void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char* qcstring);
 
+/*
+===============
+PF_fabs
+float fabs(float)
+===============
+*/
+void PF_fabs(void)
+{
+	float	f;
+
+	if (Scr_NumArgs() != 1)
+	{
+		Scr_RunError("called with %i arguments\n", Scr_NumArgs());
+		return;
+	}
+
+	f = Scr_GetParmFloat(0);
+
+	Scr_ReturnFloat( fabs(f) );
+}
 
 /*
 ===============
@@ -233,6 +253,31 @@ void PF_random(void)
 }
 
 /*
+=================
+PF_randomint
+
+Returns a integer number between 0 and num
+
+float randomint(float num)
+=================
+*/
+void PF_randomint(void)
+{
+	float	out;
+	int		in;
+
+	in = (int)Scr_GetParmFloat(0);
+	if (in <= 0)
+	{
+		Scr_RunError("randomint(%i) must be called with number greater than 0\n", in);
+		return;
+	}
+
+	out = (rand() % in);
+	Scr_ReturnFloat(out);
+}
+
+/*
 ==============
 PF_anglevectors
 
@@ -245,41 +290,88 @@ void PF_anglevectors(void)
 	AngleVectors(Scr_GetParmVector(0), Scr_GetGlobals()->v_forward, Scr_GetGlobals()->v_right, Scr_GetGlobals()->v_up);
 }
 
-static char* PF_rint_str = "float(float val) rint";
-static char* PF_floor_str = "float(float val) floor";
-static char* PF_ceil_str = "float(float val) ceil";
-static char* PF_sin_str = "float(float val) sin";
-static char* PF_cos_str = "float(float val) cos";
-static char* PF_sqrt_str = "float(float val) sqrt";
-static char* PF_normalize_str = "vector(vector in) normalize";
-static char* PF_vlen_str = "float(vector in) vlen";
-static char* PF_vectoyaw_str = "float(vector in) vectoyaw";
-static char* PF_vectoangles_str = "float(vector in) vectoangles";
-static char* PF_random_str = "float() random";
-static char* PF_anglevectors_str = "void(vector v1) anglevectors";
+/*
+==============
+PF_crossproduct
+vector cross = crossproduct(vector v1, vector v2)
+==============
+*/
+void PF_crossproduct(void)
+{
+	vec3_t cross;
+	CrossProduct(Scr_GetParmVector(0), Scr_GetParmVector(1), cross);
+	Scr_ReturnVector(cross);
+}
+
+/*
+==============
+PF_dotproduct
+float dot = dotproduct(vector v1, vector v2)
+==============
+*/
+void PF_dotproduct(void)
+{
+	float dot = _DotProduct(Scr_GetParmVector(0), Scr_GetParmVector(1));
+	Scr_ReturnFloat(dot);
+}
+
+/*
+==============
+PF_anglemod
+returns angle in range 0-360
+float angle = anglemod(float a)
+==============
+*/
+void PF_anglemod(void)
+{
+	float out;
+	out = anglemod(Scr_GetParmFloat(0));
+	Scr_ReturnFloat(out);
+}
+
+/*
+==============
+PF_lerpangle
+
+float smoothed_angle = lerpangle(float a2, float a1, float frac)
+==============
+*/
+void PF_lerpangle(void)
+{
+	float out;
+	out = LerpAngle(Scr_GetParmFloat(0), Scr_GetParmFloat(1), Scr_GetParmFloat(2));
+	Scr_ReturnFloat(out);
+}
+
 
 /*
 =================
 Scr_InitMathBuiltins
 
-Register mathlib builtins which can be shared by both client and server progs
+Register mathlib builtins which can be shared by all QCVMs
 =================
 */
 void Scr_InitMathBuiltins()
 {
-	Scr_DefineBuiltin(PF_rint, PF_BOTH, false, PF_rint_str);
-	Scr_DefineBuiltin(PF_floor, PF_BOTH, false, PF_floor_str);
-	Scr_DefineBuiltin(PF_ceil, PF_BOTH, false, PF_ceil_str);
-	Scr_DefineBuiltin(PF_sin, PF_BOTH, false, PF_sin_str);
-	Scr_DefineBuiltin(PF_cos, PF_BOTH, false, PF_cos_str);
-	Scr_DefineBuiltin(PF_sqrt, PF_BOTH, false, PF_sqrt_str);
+	Scr_DefineBuiltin(PF_fabs, PF_BOTH, false, "float(float val) fabs");
+	Scr_DefineBuiltin(PF_rint, PF_BOTH, false, "float(float val) rint");
+	Scr_DefineBuiltin(PF_floor, PF_BOTH, false, "float(float val) floor");
+	Scr_DefineBuiltin(PF_ceil, PF_BOTH, false, "float(float val) ceil");
+	Scr_DefineBuiltin(PF_sin, PF_BOTH, false, "float(float val) sin");
+	Scr_DefineBuiltin(PF_cos, PF_BOTH, false, "float(float val) cos");
+	Scr_DefineBuiltin(PF_sqrt, PF_BOTH, false, "float(float val) sqrt");
 
-	Scr_DefineBuiltin(PF_normalize, PF_BOTH, false, PF_normalize_str);
-	Scr_DefineBuiltin(PF_vlen, PF_BOTH, false, PF_vlen_str);
-	Scr_DefineBuiltin(PF_vectoyaw, PF_BOTH, false, PF_vectoyaw_str);
-	Scr_DefineBuiltin(PF_vectoangles, PF_BOTH, false, PF_vectoangles_str);
+	Scr_DefineBuiltin(PF_normalize, PF_BOTH, false, "vector(vector in) normalize");
+	Scr_DefineBuiltin(PF_vlen, PF_BOTH, false, "float(vector in) vectorlength");
+	Scr_DefineBuiltin(PF_vectoyaw, PF_BOTH, false, "float(vector in) vectoyaw");
+	Scr_DefineBuiltin(PF_vectoangles, PF_BOTH, false, "float(vector in) vectoangles");
 
-	Scr_DefineBuiltin(PF_random, PF_BOTH, false, PF_random_str);
+	Scr_DefineBuiltin(PF_random, PF_BOTH, false, "float() random");
+	Scr_DefineBuiltin(PF_randomint, PF_BOTH, false, "float(float n) randomint");
 
-	Scr_DefineBuiltin(PF_anglevectors, PF_BOTH, false, PF_anglevectors_str); //fixme
+	Scr_DefineBuiltin(PF_anglevectors, PF_BOTH, false, "void(vector v1) anglevectors");
+	Scr_DefineBuiltin(PF_crossproduct, PF_BOTH, false, "vector(vector v1, vector v2) crossproduct");
+	Scr_DefineBuiltin(PF_dotproduct, PF_BOTH, false, "float(vector v1, vector v2) dotproduct");
+	Scr_DefineBuiltin(PF_anglemod, PF_BOTH, false, "float(float a) anglemod");
+	Scr_DefineBuiltin(PF_lerpangle, PF_BOTH, false, "float(float a2, float a1, float frac) lerpangle");
 }

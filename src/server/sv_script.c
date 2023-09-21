@@ -234,18 +234,51 @@ This will be called once for each client frame, which will usually be a couple t
 ==============
 */
 void ClientMove(gentity_t* ent, usercmd_t* ucmd);
+
+/*
+typedef struct usercmd_s
+{
+	byte	msec;
+	byte	buttons;
+	short	angles[3];
+	short	forwardmove, sidemove, upmove;
+	byte	impulse;		// remove?
+	byte	lightlevel;		// light level the player is standing on
+} usercmd_t;*/
+
+usercmd_t* last_ucmd;
 void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 {
+	vec3_t move;
+
+	move[0] = ucmd->forwardmove;
+	move[1] = ucmd->sidemove;
+	move[2] = ucmd->upmove;
+
+	last_ucmd = ucmd; // for pmove
+
+	Scr_GetGlobals()->g_frameNum = sv.framenum;
 	Scr_GetGlobals()->self = GENT_TO_PROG(ent);
 	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
+
+	Scr_AddFloat(0, ucmd->buttons);
+	Scr_AddFloat(1, ucmd->impulse);
+	Scr_AddVector(2, move);
+	Scr_AddVector(3, ucmd->angles);
+	Scr_AddFloat(4, ucmd->lightlevel);
+	Scr_AddFloat(5, ucmd->msec);
+
+	// move [forwardmove, sidemove, upmove]
+	// void ClientThink(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime)
 	Scr_Execute(Scr_GetGlobals()->ClientThink, __FUNCTION__);
 
-	ClientMove(ent, ucmd);
+//	ClientMove(ent, ucmd);
 
 	if (ent->v.movetype != MOVETYPE_NOCLIP)
 		SV_TouchEntities(ent, AREA_TRIGGERS);
 }
 
+#if 0
 /*
 ==============
 ClientMove
@@ -275,12 +308,18 @@ void ClientMove(gentity_t* ent, usercmd_t* ucmd)
 	pm_passent = ent;
 	memset(&pm, 0, sizeof(pm));
 
+	client->ps.pmove.pm_type = ent->v.pm_type;
+	client->ps.pmove.pm_flags = ent->v.pm_flags;
+
+
+#if 1
 	if (ent->v.movetype == MOVETYPE_NOCLIP)
 		client->ps.pmove.pm_type = PM_SPECTATOR;
 	else if (ent->v.health <= -50)
 		client->ps.pmove.pm_type = PM_GIB;
 	else
 		client->ps.pmove.pm_type = PM_NORMAL;
+#endif
 
 	client->ps.pmove.gravity = sv_gravity->value;
 	pm.s = client->ps.pmove;
@@ -314,19 +353,26 @@ void ClientMove(gentity_t* ent, usercmd_t* ucmd)
 	VectorCopy(pm.maxs, ent->v.maxs);
 
 	ent->client->ps.viewoffset[2] = pm.viewheight;
-//	ent->v.viewheight = pm.viewheight;
+	ent->v.viewheight = pm.viewheight;
 	ent->v.waterlevel = pm.waterlevel;
 	ent->v.watertype = pm.watertype;
-	ent->groundentity = pm.groundentity;
 
+	ent->v.pm_type = client->ps.pmove.pm_type;
+	ent->v.pm_flags = client->ps.pmove.pm_flags;
+
+	ent->groundentity = pm.groundentity;
 	if (pm.groundentity)
 		ent->groundentity_linkcount = pm.groundentity->linkcount;
+
+	ent->v.groundEntityNum = (pm.groundentity == NULL ? -1 : pm.groundentity->s.number); //ent->groundentity = pm.groundentity;
+	if (pm.groundentity)
+		ent->v.groundEntity_linkcount = pm.groundentity->linkcount; 
 
 	VectorCopy(pm.viewangles, ent->v.v_angle);
 	VectorCopy(pm.viewangles, client->ps.viewangles);
 	SV_LinkEdict(ent);
 }
-
+#endif
 
 void Scr_ClientBeginServerFrame(gentity_t* self)
 {
@@ -334,25 +380,6 @@ void Scr_ClientBeginServerFrame(gentity_t* self)
 	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(Scr_GetGlobals()->ClientBeginServerFrame, __FUNCTION__);
 }
-
-#define STAT_HEALTH_ICON		0
-#define	STAT_HEALTH				1
-#define	STAT_AMMO_ICON			2
-#define	STAT_AMMO				3
-#define	STAT_ARMOR_ICON			4
-#define	STAT_ARMOR				5
-#define	STAT_SELECTED_ICON		6
-#define	STAT_PICKUP_ICON		7
-#define	STAT_PICKUP_STRING		8
-#define	STAT_TIMER_ICON			9
-#define	STAT_TIMER				10
-#define	STAT_HELPICON			11
-#define	STAT_SELECTED_ITEM		12
-#define	STAT_LAYOUTS			13
-#define	STAT_FRAGS				14
-#define	STAT_FLASHES			15		// cleared each frame, 1 = health, 2 = armor
-#define STAT_CHASE				16
-#define STAT_SPECTATOR			17
 
 
 void Scr_ClientEndServerFrame(gentity_t* ent)
@@ -367,18 +394,6 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	// If it wasn't updated here, the view position would lag a frame
 	// behind the body position when pushed -- "sinking into plats"
 	//
-
-	player_state_t* ps = &ent->client->ps;
-
-	ent->client->ps.stats[STAT_HEALTH_ICON] = SV_ImageIndex("i_health");
-	ps->stats[STAT_HEALTH] = 100;
-
-	ps->stats[STAT_AMMO] = 11;
-	ps->stats[STAT_AMMO_ICON] = SV_ImageIndex("w_blaster");
-
-	ps->stats[STAT_ARMOR] = 50;
-	ps->stats[STAT_ARMOR_ICON] = SV_ImageIndex("i_powershield");
-	
 
 	for (i = 0; i < 3; i++)
 	{

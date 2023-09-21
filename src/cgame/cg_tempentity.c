@@ -70,5 +70,5 @@ const char *str_tent[] =
 
 void CG_ParseTempEntityMessage(int type)
 {
-	gi.Printf("CG_ParseTempEntityMessage: %s\n", str_tent[type]);
+//	gi.Printf("CG_ParseTempEntityMessage: %s\n", str_tent[type]);
 }

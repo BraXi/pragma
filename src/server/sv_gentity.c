@@ -21,12 +21,13 @@ void SV_InitEntity(gentity_t* ent)
 {
 	ent->inuse = true;
 
-	memset(&ent->s, 0, sizeof(entity_state_t));
+	//memset(&ent->s, 0, sizeof(entity_state_t));
 	memset(&ent->v, 0, Scr_GetEntityFieldsSize()); // the size is always read from progs
 
 	ent->s.number = NUM_FOR_EDICT(ent);
 	ent->v.classname = Scr_SetString("no_class");
 	ent->v.gravity = 1.0;
+	ent->v.groundEntityNum = -1;
 }
 
 /*

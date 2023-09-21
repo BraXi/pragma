@@ -35,9 +35,10 @@ typedef struct sv_globalvars_s
 	float			trace_allsolid, trace_startsolid, trace_fraction, trace_plane_dist;
 	vec3_t			trace_endpos, trace_plane_normal;
 	scr_entity_t	trace_ent;
-	float			trace_contents;
+	int				trace_contents;
 	scr_string_t	trace_surface_name;
-	float			trace_surface_flags, trace_surface_value;
+	float			trace_surface_flags;
+	float			trace_surface_value;
 
 	scr_func_t		main;
 	scr_func_t		StartFrame;
@@ -68,7 +69,7 @@ typedef struct sv_entvars_s
 	float		effects;
 	float		renderfx;
 
-	float		ps_solid;		// playerstate solid
+	float		ps_solid;		// FIXME REMOVE FROM PROGS
 	float		sound;			// looping sound
 	float		event;			// EV_FOOTSTEP etc
 	// ----------------------------------------------------
@@ -80,9 +81,11 @@ typedef struct sv_entvars_s
 	float			solid;		// SOLID_NOT etc
 	float			movetype;	// MOVETYPE_NONE etc
 	float			gravity;	// [0-1.0]
-	float			clipmask;	
-	vec3_t			size;		// DON'T CHANGE!
-	scr_entity_t	owner;		// DON'T CHANGE!
+	int			clipmask;	
+	float			groundEntityNum; // -1 = in air
+	float			groundEntity_linkcount;
+	vec3_t			size;		// DON'T CHANGE! set by linkentity()
+	scr_entity_t	owner;		
 	scr_entity_t	chain;		// DON'T CHANGE!
 
 	vec3_t			mins, maxs; //setsize() sets this
@@ -112,4 +115,13 @@ typedef struct sv_entvars_s
 	// client fields
 	vec3_t			v_angle;	
 	float			viewheight;
+
+	// pmove vars
+	float		pm_type;		// pmtype_t
+	vec3_t		pm_origin;		// short
+	float		pm_velocity;	// short
+	float		pm_flags;		// byte
+	float		pm_time;		// byte each unit = 8 ms
+	float		pm_gravity;		// short
+	vec3_t		delta_angles;	// short add to command angles to get view direction, changed by spawns, rotating objects, and teleporters
 } sv_entvars_t;

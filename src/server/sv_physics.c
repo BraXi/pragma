@@ -138,7 +138,7 @@ gentity_t* SV_TestEntityPosition(gentity_t* ent)
 	int		mask;
 
 	if (ent->v.clipmask)
-		mask = ent->v.clipmask;
+		mask = (int)ent->v.clipmask;
 	else
 		mask = MASK_SOLID;
 	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask);
@@ -379,7 +379,7 @@ trace_t SV_PushEntity(gentity_t* ent, vec3_t push)
 
 retry:
 	if (ent->v.clipmask)
-		mask = ent->v.clipmask;
+		mask = (int)ent->v.clipmask;
 	else
 		mask = MASK_SOLID;
 
@@ -510,11 +510,18 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			VectorCopy(check->v.angles, pushed_p->angles);
 			pushed_p++;
 
+//	Com_Printf("pushed %s\n", Scr_GetString(check->v.classname));
 			// try moving the contacted entity 
 			VectorAdd(check->v.origin, move, check->v.origin);
 			if (check->client)
-			{	// FIXME: doesn't rotate monsters?
+			{	
+				// FIXME PRAGMA: does not rotate player at all
 				check->client->ps.pmove.delta_angles[YAW] += amove[YAW];
+			}
+			else
+			{
+				// rotate monsters and anything thats standing on it
+				check->v.angles[YAW] += amove[YAW]; // rotate objects standing on a pusher
 			}
 
 			// figure movement due to the pusher's amove

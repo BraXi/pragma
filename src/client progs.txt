@@ -1,0 +1,16 @@
+CL_EntityEvent
+CL_ParseMuzzleFlash
+CL_ParseMuzzleFlash2
+CL_ParseServerMessage
+CL_InitLocal for cvars and stuff
+
+client bultins:
+
+pointcontents
+lightstyle
+playsound S_StartSound
+localsound S_StartLocalSound
+
+
+
+lm blue ks 22 zwrot, 12 ujęte

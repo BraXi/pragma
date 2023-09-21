@@ -26,9 +26,9 @@ typedef enum
 	ex_free, ex_explosion, ex_misc, ex_flash, ex_mflash, ex_poly, ex_poly2
 } exptype_t;
 
-#define	MAX_EXPLOSIONS	32
-#define	MAX_LASERS	32
-#define	MAX_BEAMS	32
+#define	MAX_EXPLOSIONS	64
+#define	MAX_LASERS	64
+#define	MAX_BEAMS	64
 
 typedef struct
 {
@@ -247,8 +247,10 @@ CL_SmokeAndFlash
 */
 void CL_SmokeAndFlash(vec3_t origin)
 {
+
 	explosion_t	*ex;
 
+#if 0
 	ex = CL_AllocExplosion ();
 	VectorCopy (origin, ex->ent.origin);
 	ex->type = ex_misc;
@@ -256,14 +258,48 @@ void CL_SmokeAndFlash(vec3_t origin)
 	ex->ent.flags = RF_TRANSLUCENT;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 	ex->ent.model = cl_mod_smoke;
+#endif
 
 	ex = CL_AllocExplosion ();
 	VectorCopy (origin, ex->ent.origin);
 	ex->type = ex_flash;
-	ex->ent.flags = RF_FULLBRIGHT;
+	ex->ent.flags = (RF_TRANSLUCENT|RF_FULLBRIGHT);
 	ex->frames = 2;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 	ex->ent.model = cl_mod_flash;
+}
+
+/*
+=================
+CL_GunMuzzleFlash
+=================
+*/
+void CL_GunMuzzleFlash(vec3_t origin)
+{
+
+	explosion_t* ex;
+
+#if 0
+	ex = CL_AllocExplosion();
+	VectorCopy(origin, ex->ent.origin);
+	ex->type = ex_misc;
+	ex->frames = 4;
+	ex->ent.flags = RF_TRANSLUCENT;
+	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
+	ex->ent.model = cl_mod_smoke;
+#endif
+	vec3_t dir;
+	dir[1] = 1;
+	dir[2] = 1;
+
+	ex = CL_AllocExplosion();
+	VectorCopy(origin, ex->ent.origin);
+	ex->type = ex_flash;
+	ex->ent.flags = (RF_TRANSLUCENT | RF_FULLBRIGHT);
+	ex->frames = 2;
+	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
+	ex->ent.model = cl_mod_flash;
+	ex->ent.alpha = 0.3;
 }
 
 /*
@@ -737,7 +773,12 @@ void CL_ParseTEnt (void)
 		//FIXME : replace or remove this sound
 		S_StartSound (pos, 0, 0, cl_sfx_lashit, 1, ATTN_NORM, 0);
 		break;
-		
+	
+	case TE_FLAME:
+		MSG_ReadPos(&net_message, pos);
+		CL_FlameEffects(NULL, pos);
+		break;
+
 	case TE_SHOTGUN:			// bullet hitting wall
 		MSG_ReadPos (&net_message, pos);
 		MSG_ReadDir (&net_message, dir);

@@ -259,6 +259,12 @@
     <ClInclude Include="script\scriptvm.h">
       <Filter>script\headers</Filter>
     </ClInclude>
+    <ClInclude Include="script\qc_opnames.h">
+      <Filter>script\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="script\qc_opcodes.h">
+      <Filter>script\headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="platform\q2.rc" />

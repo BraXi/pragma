@@ -79,12 +79,55 @@ void SV_EndWorldFrame(void)
 		ent->s.skinnum = (int)ent->v.modelTexNum;
 		ent->s.effects = (int)ent->v.effects;
 		ent->s.renderfx = (int)ent->v.renderfx;
-		ent->s.solid = (int)ent->v.ps_solid;
+//		ent->s.solid = (int)ent->v.ps_solid;
 		ent->s.sound = (int)ent->v.sound;
 		ent->s.event = (int)ent->v.event;
 	}
 	SV_ScriptEndFrame();
 }
+
+void M_CheckGround(gentity_t* ent)
+{
+	vec3_t		point;
+	trace_t		trace;
+
+	if ((int)ent->v.flags & (FL_SWIM | FL_FLY))
+		return;
+
+	if (ent->v.velocity[2] > 100)
+	{
+		ent->groundentity = NULL;
+		return;
+	}
+
+	// if the hull point one-quarter unit down is solid the entity is on ground
+	point[0] = ent->v.origin[0];
+	point[1] = ent->v.origin[1];
+	point[2] = ent->v.origin[2] - 0.25;
+
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID);
+
+	// check steepness
+	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
+	{
+		ent->groundentity = NULL;
+		return;
+	}
+
+	//	ent->groundentity = trace.ent;
+	//	ent->groundentity_linkcount = trace.ent->linkcount;
+	//	if (!trace.startsolid && !trace.allsolid)
+	//		VectorCopy (trace.endpos, ent->s.origin);
+	if (!trace.startsolid && !trace.allsolid)
+	{
+		VectorCopy(trace.endpos, ent->s.origin);
+		ent->groundentity = trace.ent;
+		ent->groundentity_linkcount = trace.ent->linkcount;
+		ent->v.velocity[2] = 0;
+	}
+}
+
+
 
 /*
 ================
@@ -118,6 +161,16 @@ void SV_RunWorldFrame(void)
 		sv_entity = ent;
 
 		VectorCopy(ent->v.origin, ent->v.old_origin);
+
+		// if the ground entity moved, make sure we are still on it
+		if ((ent->groundentity) && (ent->groundentity->linkcount != ent->groundentity_linkcount))
+		{
+			ent->groundentity = NULL;
+			//if (!((int)ent->v.flags & (FL_SWIM | FL_FLY)))// && (ent->v.svflags & SVF_MONSTER))
+			//{
+			//	M_CheckGround(ent);
+			//}
+		}
 
 		if (i > 0 && i <= svs.max_clients)
 		{
@@ -335,10 +388,10 @@ void SV_LinkEdict (gentity_t *ent)
 		max = 0;
 		for (i=0 ; i<3 ; i++)
 		{
-			v =fabs( ent->v.mins[i]);
+			v = fabs(ent->v.mins[i]);
 			if (v > max)
 				max = v;
-			v =fabs( ent->v.maxs[i]);
+			v = fabs(ent->v.maxs[i]);
 			if (v > max)
 				max = v;
 		}
@@ -369,8 +422,7 @@ void SV_LinkEdict (gentity_t *ent)
 	ent->areanum2 = 0;
 
 	//get all leafs, including solids
-	num_leafs = CM_BoxLeafnums (ent->v.absmin, ent->v.absmax,
-		leafs, MAX_TOTAL_ENT_LEAFS, &topnode);
+	num_leafs = CM_BoxLeafnums (ent->v.absmin, ent->v.absmax, leafs, MAX_TOTAL_ENT_LEAFS, &topnode);
 
 	// set areas
 	for (i=0 ; i<num_leafs ; i++)
@@ -383,7 +435,7 @@ void SV_LinkEdict (gentity_t *ent)
 			if (ent->areanum && ent->areanum != area)
 			{
 				if (ent->areanum2 && ent->areanum2 != area && sv.state == ss_loading)
-					Com_DPrintf (DP_SV, "Object touching 3 areas at %f %f %f\n", ent->v.absmin[0], ent->v.absmin[1], ent->v.absmin[2]);
+					Com_DPrintf(DP_SV, "Object touching 3 areas at %f %f %f\n", ent->v.absmin[0], ent->v.absmin[1], ent->v.absmin[2]);
 				ent->areanum2 = area;
 			}
 			else
@@ -597,19 +649,21 @@ int SV_HullForEntity (gentity_t *ent)
 {
 	cmodel_t	*model;
 
-// decide which clipping hull to use, based on the size
+	// decide which clipping hull to use, based on the size
 	if (ent->v.solid == SOLID_BSP)
 	{	// explicit hulls in the BSP model
 		model = sv.models[ ent->s.modelindex ];
 
 		if (!model)
-			Com_Error (ERR_FATAL, "MOVETYPE_PUSH with a non BSP model for entity %s (%i)\n", Scr_GetString(ent->v.classname), NUM_FOR_EDICT(ent));
+		{
+			Scr_RunError("MOVETYPE_PUSH with a non BSP model for entity %s (%i) at [%i %i %i]\n", Scr_GetString(ent->v.classname),
+				NUM_FOR_EDICT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+		}
 
 		return model->headnode;
 	}
 
 	// create a temp hull from bounding box sizes
-
 	return CM_HeadnodeForBox (ent->v.mins, ent->v.maxs);
 }
 

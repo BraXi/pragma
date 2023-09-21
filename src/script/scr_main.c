@@ -31,7 +31,7 @@ int scr_numBuiltins = 0;
 
 // these indicate prog names and their crc checksums
 static char* progsfile_server = "progs/server.dat";
-const int progsfile_server_crc = 26293;
+const int progsfile_server_crc = 28003;
 static char* progsfile_client = "progs/client.dat";
 const int progsfile_client_crc = 0;
 
@@ -246,8 +246,6 @@ void ScrInternal_LoadProgs(qcvm_t *vm, char* prName, int progsType)
 		return;
 	}
 
-//	memset(vm->gefvCache, 0, sizeof(vm->gefvCache)); // flush the non-C variable lookup cache
-
 	// load file
 	len = FS_LoadFile(prName, (void**)&raw);
 	if (!len || len == -1)
@@ -255,7 +253,7 @@ void ScrInternal_LoadProgs(qcvm_t *vm, char* prName, int progsType)
 		Com_Error(ERR_FATAL, "%s: couldn't load \"%s\"\n", __FUNCTION__, prName);
 		return;
 	}
-	vm->progs = (dprograms_t*)raw; // thats basically it
+	vm->progs = (dprograms_t*)raw;
 	ScriptVM = vm;
 
 	// byte swap the header
@@ -264,6 +262,7 @@ void ScrInternal_LoadProgs(qcvm_t *vm, char* prName, int progsType)
 
 	if (vm->progs->version != PROG_VERSION)
 	{
+		//Com_Printf( "%s: \"%s\" is wrong version %i (should be %i)\n", __FUNCTION__, prName, vm->progs->version, PROG_VERSION);
 		Com_Error(ERR_FATAL, "%s: \"%s\" is wrong version %i (should be %i)\n", __FUNCTION__, prName, vm->progs->version, PROG_VERSION);
 		return;
 	}
@@ -558,7 +557,7 @@ void PR_Profile(int x, int y)
 
 	static char str[10][64];
 
-	if (Sys_Milliseconds() > nexttime + 200)
+	if (Sys_Milliseconds() > nexttime + 100)
 	{
 		nexttime = Sys_Milliseconds();
 		memset(&str, 0, sizeof(str));
@@ -581,6 +580,7 @@ void PR_Profile(int x, int y)
 				if (num < 10)
 				{
 					Com_sprintf(str[num], sizeof(str[num]), "%7i %s in %s", best->profile, ScrInternal_String(best->s_name), ScrInternal_String(best->s_file));
+					Com_sprintf(str[num], sizeof(str[num]), "%7i:%s", best->profile, ScrInternal_String(best->s_name));
 					//Com_Printf(str[num]);
 					//UI_DrawString(x, y, XALIGN_RIGHT, str[num]);
 				}

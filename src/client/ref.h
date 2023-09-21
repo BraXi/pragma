@@ -165,12 +165,20 @@ typedef struct
 	void	(*DrawPic) (int x, int y, char *name);
 	void	(*DrawStretchPic) (int x, int y, int w, int h, char *name);
 	void	(*DrawChar) (int x, int y, int c);
+	void	(*Draw_Char2)(float x, float y, float w, float h, int num, rgba_t color);
 	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
 	void	(*DrawFill) (int x, int y, int w, int h, int c);
 	void	(*DrawFadeScreen) (float *rgba);
 
+	void	(*DrawChar2)(float x, float y, float w, float h, int num, rgba_t color);
+
 	// Draw images for cinematic rendering (which can have a different palette). Note that calls
 	void	(*DrawStretchRaw) (int x, int y, int w, int h, int cols, int rows, byte *data);
+
+	void	(*DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);
+	void	(*NewDrawFill) (rect_t rect, rgba_t color);
+
 
 	/*
 	** video mode and refresh state management entry points

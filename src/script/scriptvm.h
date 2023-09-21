@@ -84,6 +84,7 @@ extern int* Scr_GetGlobal(int num);
 
 extern gentity_t* Scr_GetParmEdict(unsigned int parm);
 extern float Scr_GetParmFloat(unsigned int parm);
+extern int Scr_GetParmInt(unsigned int parm);
 extern char* Scr_GetParmString(unsigned int parm);
 extern float* Scr_GetParmVector(unsigned int parm);
 

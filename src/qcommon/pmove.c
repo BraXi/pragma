@@ -977,6 +977,14 @@ void PM_CheckDuck (void)
 {
 	trace_t	trace;
 
+#if 0
+	if (pm->s.pm_type == PM_NORMAL_NO_CROUCH)
+	{
+		pm->s.pm_flags &= ~PMF_DUCKED;
+		return;
+	}
+#endif 
+
 	pm->mins[0] = -16;
 	pm->mins[1] = -16;
 
@@ -1285,7 +1293,14 @@ void Pmove (pmove_t *pmove)
 	if (pm->s.pm_type == PM_FREEZE)
 		return;		// no movement at all
 
-	// set mins, maxs, and viewheight
+
+	VectorCopy(pm->s.mins, pm->mins);
+	VectorCopy(pm->s.maxs, pm->maxs);
+//	pm->viewheight = 22;
+
+//	Com_Printf("pmove mins [%i %i %i] maxs [%i %i %i]\n", (int)pm->mins[0], (int)pm->mins[1], (int)pm->mins[2], (int)pm->maxs[0], (int)pm->maxs[1], (int)pm->maxs[2]);
+
+	// setmins, maxs, and viewheight
 	PM_CheckDuck ();
 
 	if (pm->snapinitial)

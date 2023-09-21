@@ -169,7 +169,7 @@ typedef struct mleaf_s
 // Whole model
 //
 
-typedef enum {mod_bad, mod_brush, mod_sprite, mod_alias } modtype_t;
+typedef enum {mod_bad, mod_brush, mod_sprite, mod_alias, mod_bxmdl } modtype_t;
 
 typedef struct model_s
 {
@@ -245,7 +245,6 @@ typedef struct model_s
 //============================================================================
 
 void	Mod_Init (void);
-void	Mod_ClearAll (void);
 model_t *Mod_ForName (char *name, qboolean crash);
 mleaf_t *Mod_PointInLeaf (float *p, model_t *model);
 byte	*Mod_ClusterPVS (int cluster, model_t *model);

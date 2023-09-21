@@ -319,11 +319,14 @@ void CL_ParseConfigString (void)
 
 	if (i >= CS_LIGHTS && i < CS_LIGHTS+MAX_LIGHTSTYLES)
 		CL_SetLightstyle (i - CS_LIGHTS);
+
 	else if (i == CS_CDTRACK)
 	{
 		Com_Printf("CS_CDTRACK removed\n");
 //		if (cl.refresh_prepped)
 	}
+
+
 	else if (i >= CS_MODELS && i < CS_MODELS+MAX_MODELS)
 	{
 		if (cl.refresh_prepped)
@@ -552,8 +555,7 @@ void CL_ParseServerMessage (void)
 			CL_ParseMuzzleFlash ();
 			break;
 
-		case svc_muzzleflash2:
-			CL_ParseMuzzleFlash2 ();
+		case svc_unused1: //removed svc_muzzleflash2
 			break;
 
 		case svc_download:

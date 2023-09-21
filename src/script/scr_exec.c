@@ -193,6 +193,7 @@ Scr_Execute
 Execute script program
 ====================
 */
+extern char* qcvm_op_names[];
 void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 {
 	eval_t* a, * b, * c;
@@ -259,15 +260,225 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 
 		switch (st->op)
 		{
-		case OP_ADD_F: // + float
+		case OP_ADD_F: // float + float
 			c->_float = a->_float + b->_float;
 			break;
 
-		case OP_ADD_V: // + vector
+		case OP_ADD_V: // vector + vector
 			c->vector[0] = a->vector[0] + b->vector[0];
 			c->vector[1] = a->vector[1] + b->vector[1];
 			c->vector[2] = a->vector[2] + b->vector[2];
 			break;
+
+/* FTEQC: begin int */
+		case OP_ADD_I: // int + int
+			c->_int = a->_int + b->_int;
+			break;
+
+		case OP_ADD_FI: // float + int
+			c->_float = a->_float + (float)b->_int;
+			break;
+		case OP_ADD_IF: // int + float
+			c->_float = (float)a->_int + b->_float;
+			break;
+
+		case OP_SUB_I: // int - int
+			c->_int = a->_int - b->_int;
+			break;
+		case OP_SUB_FI: // float - int
+			c->_float = a->_float - (float)b->_int;
+			break;
+
+		case OP_SUB_IF: // int - float
+			c->_float = (float)a->_int - b->_float;
+			break;
+
+		case OP_CONV_ITOF:
+			c->_float = (float)a->_int;
+			break;
+		case OP_CONV_FTOI:
+			c->_int = (int)a->_float;
+			break;
+
+		case OP_LOADP_ITOF:
+		case OP_LOADP_FTOI:
+		case OP_LOADA_I:
+		case OP_LOADP_I:
+			Scr_RunError("Unsupported FTEQC opcode: %s", qcvm_op_names[st->op]);
+			break;
+
+		case OP_MUL_I:
+			c->_int = a->_int * b->_int;
+			break;
+
+		case OP_DIV_I:
+			if (b->_int == 0)
+			{
+				Scr_RunError("division by zero");
+//				c->_int = 0;
+			}
+			else
+				c->_int = a->_int / b->_int;
+			break;
+
+		case OP_EQ_I:
+			c->_int = (a->_int == b->_int);
+			break;
+
+		case OP_NE_I:
+			c->_int = (a->_int != b->_int);
+			break;
+
+		case OP_NOT_I:
+			c->_int = !a->_int;
+			break;
+
+		case OP_EQ_IF:
+			c->_int = (float)(a->_int == b->_float);
+			break;
+
+		case OP_EQ_FI:
+			c->_int = (float)(a->_float == b->_int);
+			break;
+
+		case OP_BITXOR_I:
+			c->_int = a->_int ^ b->_int;
+			break;
+
+		case OP_RSHIFT_I:
+			c->_int = a->_int >> b->_int;
+			break;
+
+		case OP_LSHIFT_I:
+			c->_int = a->_int << b->_int;
+			break;
+
+		case OP_LE_I:
+			c->_int = (int)(a->_int <= b->_int);
+			break;
+
+		case OP_LE_IF:
+			c->_int = (int)(a->_int <= b->_float);
+			break;
+
+		case OP_LE_FI:
+			c->_int = (int)(a->_float <= b->_int);
+			break;
+
+		case OP_GT_I:
+			c->_int = (int)(a->_int > b->_int);
+			break;
+
+		case OP_GT_IF:
+			c->_int = (int)(a->_int > b->_float);
+			break;
+
+		case OP_GT_FI:
+			c->_int = (int)(a->_float > b->_int);
+			break;
+
+		case OP_LT_I:
+			c->_int = (int)(a->_int < b->_int);
+			break;
+
+		case OP_LT_IF:
+			c->_int = (int)(a->_int < b->_float);
+			break;
+
+		case OP_LT_FI:
+			c->_int = (int)(a->_float < b->_int);
+			break;
+
+		case OP_GE_I:
+			c->_int = (int)(a->_int >= b->_int);
+			break;
+
+		case OP_GE_IF:
+			c->_int = (int)(a->_int >= b->_float);
+			break;
+
+		case OP_GE_FI:
+			c->_int = (int)(a->_float >= b->_int);
+			break;
+
+
+		case OP_MUL_IF:
+			c->_float = (a->_int * b->_float);
+			break;
+
+		case OP_MUL_FI:
+			c->_float = (a->_float * b->_int);
+			break;
+
+		case OP_MUL_VI:
+			c->vector[0] = a->vector[0] * b->_int;
+			c->vector[1] = a->vector[1] * b->_int;
+			c->vector[2] = a->vector[2] * b->_int;
+			break;
+
+		case OP_MUL_IV:
+			c->vector[0] = a->_int * b->vector[0];
+			c->vector[1] = a->_int * b->vector[1];
+			c->vector[2] = a->_int * b->vector[2];
+			break;
+
+		case OP_DIV_IF:
+			c->_float = (a->_int / b->_float);
+			break;
+
+		case OP_DIV_FI:
+			c->_float = (a->_float / b->_int);
+			break;
+
+		case OP_BITAND_IF:
+			c->_int = (a->_int & (int)b->_float);
+			break;
+
+		case OP_BITOR_IF:
+			c->_int = (a->_int | (int)b->_float);
+			break;
+
+		case OP_BITAND_FI:
+			c->_int = ((int)a->_float & b->_int);
+			break;
+
+		case OP_BITOR_FI:
+			c->_int = ((int)a->_float | b->_int);
+			break;
+
+
+		case OP_AND_I:
+			c->_int = (a->_int && b->_int);
+			break;
+
+		case OP_OR_I:
+			c->_int = (a->_int || b->_int);
+			break;
+
+		case OP_AND_IF:
+			c->_int = (a->_int && b->_float);
+			break;
+
+		case OP_OR_IF:
+			c->_int = (a->_int || b->_float);
+			break;
+
+		case OP_AND_FI:
+			c->_int = (a->_float && b->_int);
+			break;
+
+		case OP_OR_FI:
+			c->_int = (a->_float || b->_int);
+			break;
+
+		case OP_NE_IF:
+			c->_int = (a->_int != b->_float);
+			break;
+
+		case OP_NE_FI:
+			c->_int = (a->_float != b->_int);
+			break;
+/* FTEQC: end int */
 
 		case OP_SUB_F: // - float
 			c->_float = a->_float - b->_float;
@@ -313,6 +524,14 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			c->_float = (int)a->_float | (int)b->_float;
 			break;
 
+		case OP_BITAND_I:
+			c->_int = (a->_int & b->_int);
+			break;
+
+		case OP_BITOR_I:
+			c->_int = (a->_int | b->_int);
+			break;
+
 		case OP_GE: // >= float
 			c->_float = a->_float >= b->_float;
 			break;
@@ -351,52 +570,84 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_EQ_F: // == float
 			c->_float = a->_float == b->_float;
 			break;
+
 		case OP_EQ_V: // == vector
 			c->_float = (a->vector[0] == b->vector[0]) &&
 				(a->vector[1] == b->vector[1]) &&
 				(a->vector[2] == b->vector[2]);
 			break;
+
 		case OP_EQ_S: // == string
 			c->_float = !strcmp(ScrInternal_String(a->string), ScrInternal_String(b->string));
 			break;
+
 		case OP_EQ_E: // equal int
 			c->_float = a->_int == b->_int;
 			break;
+
 		case OP_EQ_FNC: // equal func
 			c->_float = a->function == b->function;
 			break;
+
 		case OP_NE_F: // not equal float
 			c->_float = a->_float != b->_float;
 			break;
+
 		case OP_NE_V: // not equal vector
 			c->_float = (a->vector[0] != b->vector[0]) ||
 				(a->vector[1] != b->vector[1]) ||
 				(a->vector[2] != b->vector[2]);
 			break;
+
 		case OP_NE_S: // not equal string
 			c->_float = strcmp(ScrInternal_String(a->string), ScrInternal_String(b->string));
 			break;
+
 		case OP_NE_E: // not equal int
 			c->_float = a->_int != b->_int;
 			break;
+
 		case OP_NE_FNC: //not equal function
 			c->_float = a->function != b->function;
 			break;
 
 			//==================
+		case OP_STORE_IF: // FTE: int -> float
+			b->_float = (float)a->_int;
+			break;
+		case OP_STORE_FI:  // FTE: float -> int
+			b->_int = (int)a->_float;
+			break;
+
 		case OP_STORE_F:
 		case OP_STORE_ENT:
 		case OP_STORE_FLD:		// integers
 		case OP_STORE_S:
+		case OP_STORE_I:		// FTE: int
 		case OP_STORE_FNC:		// pointers
 			b->_int = a->_int;
 			break;
+
 		case OP_STORE_V: //store vector
 			b->vector[0] = a->vector[0];
 			b->vector[1] = a->vector[1];
 			b->vector[2] = a->vector[2];
 			break;
 
+
+/* FTE: int store a value to a pointer */
+		case OP_STOREP_IF:
+			ptr = (eval_t*)((byte*)sv.edicts + b->_int);
+			ptr->_float = (float)a->_int;
+		break;
+
+		case OP_STOREP_FI:
+			ptr = (eval_t*)((byte*)sv.edicts + b->_int);
+			ptr->_int = (int)a->_float;
+		break;
+/*FTE end of int*/
+
+		case OP_STOREP_I: // FTE
 		case OP_STOREP_F:
 		case OP_STOREP_ENT:
 		case OP_STOREP_FLD:		// integers
@@ -425,7 +676,9 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			c->_int = (byte*)((int*)&ed->v + b->_int) - (byte*)sv.edicts;
 			break;
 
+		//load a field to a value
 		case OP_LOAD_F:
+		case OP_LOAD_I: // FTE
 		case OP_LOAD_FLD:
 		case OP_LOAD_ENT:
 		case OP_LOAD_S:

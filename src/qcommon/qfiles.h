@@ -78,6 +78,87 @@ typedef struct
 /*
 ========================================================================
 
+.MDL skeletal model file format (braxi)
+
+========================================================================
+*/
+#define MAX_BONE_NAME	24
+
+#define BX_MODEL_HEADER	(('L'<<24)+('D'<<16)+('M'<<8)+'B')
+#define BX_MODEL_VERSION	6
+
+#define BX_ANIM_HEADER	(('M'<<24)+('I'<<16)+('N'<<8)+'A')
+#define BX_ANIM_VERSION	1
+
+typedef struct
+{
+	int 	magic;
+	int 	version;
+} mdl_header_t;
+
+typedef struct
+{
+	unsigned int 	numMaterials;
+	unsigned int 	numBones;
+	unsigned int 	numGroups;
+	unsigned int 	numVerts;
+
+} mdl_info_t;
+
+typedef struct
+{
+	unsigned int 	numBones;
+	unsigned int	numFrames;
+	unsigned int	FPS;
+} anim_info_t;
+
+
+typedef struct
+{
+	int		id;
+	char	name[MAX_BONE_NAME];
+	int		owner;
+} mdl_bone_t;
+
+
+typedef struct
+{
+	vec3_t	origin;
+	vec3_t	angles;
+} mdl_animbone_t;
+
+typedef struct
+{
+	int		num;
+	mdl_animbone_t* bones;
+} mdl_animframe_t;
+
+typedef struct
+{
+	int		id;
+	char	name[64];
+} mdl_material_t;
+
+typedef struct
+{
+	int	material;
+	int	firstVert;
+	int	numVerts;
+} mdl_group_t;
+
+
+typedef struct
+{
+	// ORDER MAKES A DIFERENCE! THESE MUST BE IN SAME ORDER AS IN VBO
+	vec3_t	origin;
+	vec3_t	normal;
+	vec2_t	uv;
+	int		boneId;
+} mdl_vert_t;
+
+/*
+========================================================================
+
 .MD2 triangle model file format
 
 ========================================================================

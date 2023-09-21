@@ -1011,7 +1011,7 @@ Adds the given string at the end of the current argument list
 void COM_AddParm (char *parm)
 {
 	if (com_argc == MAX_NUM_ARGVS)
-		Com_Error (ERR_FATAL, "COM_AddParm: MAX_NUM)ARGS");
+		Com_Error (ERR_FATAL, "COM_AddParm: MAX_NUM_ARGS");
 	com_argv[com_argc++] = parm;
 }
 

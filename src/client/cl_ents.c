@@ -411,6 +411,17 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 		state->pmove.delta_angles[2] = MSG_ReadShort (&net_message);
 	}
 
+	if (flags & PS_M_BBOX_SIZE)
+	{
+		state->pmove.mins[0] = MSG_ReadShort(&net_message);
+		state->pmove.mins[1] = MSG_ReadShort(&net_message);
+		state->pmove.mins[2] = MSG_ReadShort(&net_message);
+
+		state->pmove.maxs[0] = MSG_ReadShort(&net_message);
+		state->pmove.maxs[1] = MSG_ReadShort(&net_message);
+		state->pmove.maxs[2] = MSG_ReadShort(&net_message);
+	}
+
 	if (cl.attractloop)
 		state->pmove.pm_type = PM_FREEZE;		// demo playback
 

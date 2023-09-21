@@ -179,7 +179,7 @@ enum svc_ops_e
 	svc_bad,
 
 	svc_muzzleflash,
-	svc_muzzleflash2,
+	svc_unused1,
 	svc_temp_entity,
 	svc_layout,
 	svc_inventory,
@@ -226,15 +226,17 @@ enum clc_ops_e
 #define	PS_M_FLAGS			(1<<4)
 #define	PS_M_GRAVITY		(1<<5)
 #define	PS_M_DELTA_ANGLES	(1<<6)
+#define	PS_M_BBOX_SIZE		(1<<15) // braxi -- added bbox size, maybe make it byte?
 
 #define	PS_VIEWOFFSET		(1<<7)
 #define	PS_VIEWANGLES		(1<<8)
 #define	PS_KICKANGLES		(1<<9)
 #define	PS_BLEND			(1<<10)
 #define	PS_FOV				(1<<11)
-#define	PS_VIEWMODEL_INDEX		(1<<12)
-#define	PS_VIEWMODEL_FRAME		(1<<13)
+#define	PS_VIEWMODEL_INDEX	(1<<12)
+#define	PS_VIEWMODEL_FRAME	(1<<13)
 #define	PS_RDFLAGS			(1<<14)
+
 
 //==============================================
 
