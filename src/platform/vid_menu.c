@@ -34,7 +34,6 @@ extern cvar_t *scr_viewsize;
 static cvar_t *r_mode;
 static cvar_t *gl_driver;
 static cvar_t *r_picmip;
-static cvar_t *gl_ext_palettedtexture;
 static cvar_t *r_finish;
 
 static cvar_t *sw_mode;
@@ -64,7 +63,6 @@ static menuslider_s		s_screensize_slider[2];
 static menuslider_s		s_brightness_slider[2];
 static menulist_s  		s_fs_box[2];
 static menulist_s  		s_stipple_box;
-static menulist_s  		s_paletted_texture_box;
 static menulist_s  		s_finish_box;
 static menuaction_s		s_cancel_action[2];
 static menuaction_s		s_defaults_action[2];
@@ -135,7 +133,6 @@ static void ApplyChanges( void *unused )
 	Cvar_SetValue( "sw_stipplealpha", s_stipple_box.curvalue );
 	Cvar_SetValue( "r_picmip", 3 - s_tq_slider.curvalue );
 	Cvar_SetValue( "r_fullscreen", s_fs_box[s_current_menu_index].curvalue );
-	Cvar_SetValue( "gl_ext_palettedtexture", s_paletted_texture_box.curvalue );
 	Cvar_SetValue( "r_finish", s_finish_box.curvalue );
 	Cvar_SetValue( "sw_mode", s_mode_list[SOFTWARE_MENU].curvalue );
 	Cvar_SetValue( "r_mode", s_mode_list[OPENGL_MENU].curvalue );
@@ -229,8 +226,6 @@ void VID_MenuInit( void )
 		r_mode = Cvar_Get( "r_mode", "0", 0 );
 	if ( !sw_mode )
 		sw_mode = Cvar_Get( "sw_mode", "0", 0 );
-	if ( !gl_ext_palettedtexture )
-		gl_ext_palettedtexture = Cvar_Get( "gl_ext_palettedtexture", "1", CVAR_ARCHIVE );
 	if ( !r_finish )
 		r_finish = Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
 
@@ -336,16 +331,9 @@ void VID_MenuInit( void )
 	s_tq_slider.maxvalue = 3;
 	s_tq_slider.curvalue = 3-r_picmip->value;
 
-	s_paletted_texture_box.generic.type = MTYPE_SPINCONTROL;
-	s_paletted_texture_box.generic.x	= 0;
-	s_paletted_texture_box.generic.y	= 70;
-	s_paletted_texture_box.generic.name	= "8-bit textures";
-	s_paletted_texture_box.itemnames = yesno_names;
-	s_paletted_texture_box.curvalue = gl_ext_palettedtexture->value;
-
 	s_finish_box.generic.type = MTYPE_SPINCONTROL;
 	s_finish_box.generic.x	= 0;
-	s_finish_box.generic.y	= 80;
+	s_finish_box.generic.y	= 70;
 	s_finish_box.generic.name	= "sync every frame";
 	s_finish_box.curvalue = r_finish->value;
 	s_finish_box.itemnames = yesno_names;
@@ -363,7 +351,6 @@ void VID_MenuInit( void )
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_brightness_slider[OPENGL_MENU] );
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_fs_box[OPENGL_MENU] );
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_tq_slider );
-	Menu_AddItem( &s_opengl_menu, ( void * ) &s_paletted_texture_box );
 	Menu_AddItem( &s_opengl_menu, ( void * ) &s_finish_box );
 
 	Menu_AddItem( &s_software_menu, ( void * ) &s_defaults_action[SOFTWARE_MENU] );

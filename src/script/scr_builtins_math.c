@@ -11,6 +11,9 @@ See the attached GNU General Public License v2 for more details.
 
 void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char* qcstring);
 
+#define scr_random()	( ( rand() & 0x7fff ) / ( (float)0x7fff ) )
+#define scr_crandom()	( 2.0 * ( scr_random() - 0.5 ) )
+
 /*
 ===============
 PF_fabs
@@ -236,6 +239,8 @@ void PF_vectoangles(void)
 	Scr_ReturnVector(out);
 }
 
+
+
 /*
 =================
 PF_random
@@ -248,9 +253,26 @@ float random()
 void PF_random(void)
 {
 	float		num;
-	num = (rand() & 0x7fff) / ((float)0x7fff);
+	//num = (rand() & 0x7fff) / ((float)0x7fff);
+	num = scr_random();
 	Scr_ReturnFloat(num);
 }
+
+/*
+=================
+PF_crandom
+Returns a number between -1.0..1.0
+float crandom()
+=================
+*/
+void PF_crandom(void)
+{
+	float		num;
+	//num = (rand() & 0x7fff) / ((float)0x7fff);
+	num = scr_crandom();
+	Scr_ReturnFloat(num);
+}
+
 
 /*
 =================
@@ -367,6 +389,7 @@ void Scr_InitMathBuiltins()
 	Scr_DefineBuiltin(PF_vectoangles, PF_BOTH, false, "float(vector in) vectoangles");
 
 	Scr_DefineBuiltin(PF_random, PF_BOTH, false, "float() random");
+//	Scr_DefineBuiltin(PF_crandom, PF_BOTH, false, "float() crandom");
 	Scr_DefineBuiltin(PF_randomint, PF_BOTH, false, "float(float n) randomint");
 
 	Scr_DefineBuiltin(PF_anglevectors, PF_BOTH, false, "void(vector v1) anglevectors");

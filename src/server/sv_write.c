@@ -180,7 +180,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 		|| ps->pmove.maxs[0] != ops->pmove.maxs[0]
 		|| ps->pmove.maxs[1] != ops->pmove.maxs[1]
 		|| ps->pmove.maxs[2] != ops->pmove.maxs[2])
-		pflags |= PS_M_BBOX_SIZE; //player bbox
+		pflags |= PS_M_BBOX_SIZE;
 
 	if (ps->viewoffset[0] != ops->viewoffset[0]
 		|| ps->viewoffset[1] != ops->viewoffset[1]
@@ -229,16 +229,14 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	if (pflags & PS_M_ORIGIN)
 	{
-		MSG_WriteShort (msg, ps->pmove.origin[0]);
-		MSG_WriteShort (msg, ps->pmove.origin[1]);
-		MSG_WriteShort (msg, ps->pmove.origin[2]);
+		for (i = 0; i < 3; i++)
+			MSG_WriteShort (msg, ps->pmove.origin[i]);
 	}
 
 	if (pflags & PS_M_VELOCITY)
 	{
-		MSG_WriteShort (msg, ps->pmove.velocity[0]);
-		MSG_WriteShort (msg, ps->pmove.velocity[1]);
-		MSG_WriteShort (msg, ps->pmove.velocity[2]);
+		for (i = 0; i < 3; i++)
+			MSG_WriteShort (msg, ps->pmove.velocity[i]);
 	}
 
 	if (pflags & PS_M_TIME)
@@ -252,22 +250,25 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	if (pflags & PS_M_DELTA_ANGLES)
 	{
-		MSG_WriteShort (msg, ps->pmove.delta_angles[0]);
-		MSG_WriteShort (msg, ps->pmove.delta_angles[1]);
-		MSG_WriteShort (msg, ps->pmove.delta_angles[2]);
+		for (i = 0; i < 3; i++)
+			MSG_WriteShort (msg, ps->pmove.delta_angles[i]);
 	}
 
 	// braxi: write bbox size to client for prediction
-	// 
 	if (pflags & PS_M_BBOX_SIZE)
 	{
-		MSG_WriteShort(msg, ps->pmove.mins[0]);
-		MSG_WriteShort(msg, ps->pmove.mins[1]);
-		MSG_WriteShort(msg, ps->pmove.mins[2]);
-
-		MSG_WriteShort(msg, ps->pmove.maxs[0]);
-		MSG_WriteShort(msg, ps->pmove.maxs[1]);
-		MSG_WriteShort(msg, ps->pmove.maxs[2]);
+		for (i = 0; i < 3; i++)
+		{
+			if (ps->pmove.mins[i] > 127 || ps->pmove.mins[i] < -127)
+				Com_Error(ERR_DROP, "%s: ps->pmove.mins[%i] must be in range [-127..127], but is %i\n", __FUNCTION__, i, (int)ps->pmove.mins[i]);
+			MSG_WriteChar(msg, (int)ps->pmove.mins[i]);
+		}
+		for (i = 0; i < 3; i++)
+		{
+			if (ps->pmove.maxs[i] > 127 || ps->pmove.maxs[i] < -127)
+				Com_Error(ERR_DROP, "%s: ps->pmove.mins[%i] must be in range [-127..127], but is %i\n", __FUNCTION__, i, (int)ps->pmove.maxs[i]);
+			MSG_WriteChar(msg, (int)ps->pmove.maxs[i]);
+		}
 	}
 
 	//
@@ -275,23 +276,24 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	//
 	if (pflags & PS_VIEWOFFSET)
 	{
-		MSG_WriteChar (msg, ps->viewoffset[0]*4);
-		MSG_WriteChar (msg, ps->viewoffset[1]*4);
-		MSG_WriteChar (msg, ps->viewoffset[2]*4);
+		for (i = 0; i < 3; i++)
+		{
+			if (ps->viewoffset[i] > 127 || ps->viewoffset[i] < -127)
+				Com_Error(ERR_DROP, "%s: ps->viewoffset[%i] must be in range [-127..127], but is %i\n", __FUNCTION__, i, (int)ps->viewoffset[i]);
+			MSG_WriteChar(msg, (int)ps->viewoffset[i]);
+		}
 	}
 
 	if (pflags & PS_VIEWANGLES)
 	{
-		MSG_WriteAngle16 (msg, ps->viewangles[0]);
-		MSG_WriteAngle16 (msg, ps->viewangles[1]);
-		MSG_WriteAngle16 (msg, ps->viewangles[2]);
+		for (i = 0; i < 3; i++)
+			MSG_WriteAngle16 (msg, ps->viewangles[i]);
 	}
 
 	if (pflags & PS_KICKANGLES)
 	{
-		MSG_WriteChar (msg, ps->kick_angles[0]*4);
-		MSG_WriteChar (msg, ps->kick_angles[1]*4);
-		MSG_WriteChar (msg, ps->kick_angles[2]*4);
+		for (i = 0; i < 3; i++)
+			MSG_WriteChar (msg, ps->kick_angles[i]*4);
 	}
 
 	if (pflags & PS_VIEWMODEL_INDEX)
@@ -302,20 +304,18 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (pflags & PS_VIEWMODEL_FRAME)
 	{
 		MSG_WriteByte (msg, ps->viewmodel_frame);
-		MSG_WriteChar (msg, ps->viewmodel_offset[0]*4);
-		MSG_WriteChar (msg, ps->viewmodel_offset[1]*4);
-		MSG_WriteChar (msg, ps->viewmodel_offset[2]*4);
-		MSG_WriteChar (msg, ps->viewmodel_angles[0]*4);
-		MSG_WriteChar (msg, ps->viewmodel_angles[1]*4);
-		MSG_WriteChar (msg, ps->viewmodel_angles[2]*4);
+
+		for (i = 0; i < 3; i++)
+			MSG_WriteChar (msg, ps->viewmodel_offset[i]*4);
+
+		for (i = 0; i < 3; i++)
+			MSG_WriteChar (msg, ps->viewmodel_angles[i]*4);
 	}
 
 	if (pflags & PS_BLEND)
 	{
-		MSG_WriteByte (msg, ps->blend[0]*255);
-		MSG_WriteByte (msg, ps->blend[1]*255);
-		MSG_WriteByte (msg, ps->blend[2]*255);
-		MSG_WriteByte (msg, ps->blend[3]*255);
+		for (i = 0; i < 4; i++)
+			MSG_WriteByte (msg, ps->blend[i]*255);
 	}
 	if (pflags & PS_FOV)
 		MSG_WriteByte (msg, ps->fov);
@@ -327,9 +327,10 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	for (i=0 ; i<MAX_STATS ; i++)
 		if (ps->stats[i] != ops->stats[i])
 			statbits |= 1<<i;
+
 	MSG_WriteLong (msg, statbits);
 	for (i=0 ; i<MAX_STATS ; i++)
-		if (statbits & (1<<i) )
+		if (statbits & (1<<i))
 			MSG_WriteShort (msg, ps->stats[i]);
 }
 

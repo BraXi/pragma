@@ -435,7 +435,7 @@ void PF_vtos(void)
 {
 	float* vec = Scr_GetParmVector(0);
 	char* string_temp = progstring();
-	sprintf(string_temp, "'%5.1f %5.1f %5.1f'", vec[0], vec[1], vec[2]);
+	sprintf(string_temp, "%5.1f %5.1f %5.1f", vec[0], vec[1], vec[2]);
 	Scr_ReturnString(string_temp);
 }
 

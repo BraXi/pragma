@@ -383,16 +383,14 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 
 	if (flags & PS_M_ORIGIN)
 	{
-		state->pmove.origin[0] = MSG_ReadShort (&net_message);
-		state->pmove.origin[1] = MSG_ReadShort (&net_message);
-		state->pmove.origin[2] = MSG_ReadShort (&net_message);
+		for (i = 0; i < 3; i++)
+			state->pmove.origin[i] = MSG_ReadShort(&net_message);
 	}
 
 	if (flags & PS_M_VELOCITY)
 	{
-		state->pmove.velocity[0] = MSG_ReadShort (&net_message);
-		state->pmove.velocity[1] = MSG_ReadShort (&net_message);
-		state->pmove.velocity[2] = MSG_ReadShort (&net_message);
+		for (i = 0; i < 3; i++)
+			state->pmove.velocity[i] = MSG_ReadShort(&net_message);
 	}
 
 	if (flags & PS_M_TIME)
@@ -406,20 +404,17 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 
 	if (flags & PS_M_DELTA_ANGLES)
 	{
-		state->pmove.delta_angles[0] = MSG_ReadShort (&net_message);
-		state->pmove.delta_angles[1] = MSG_ReadShort (&net_message);
-		state->pmove.delta_angles[2] = MSG_ReadShort (&net_message);
+		for (i = 0; i < 3; i++)
+			state->pmove.delta_angles[i] = MSG_ReadShort(&net_message);
 	}
 
-	if (flags & PS_M_BBOX_SIZE)
+	if (flags & PS_M_BBOX_SIZE) // mins and maxs
 	{
-		state->pmove.mins[0] = MSG_ReadShort(&net_message);
-		state->pmove.mins[1] = MSG_ReadShort(&net_message);
-		state->pmove.mins[2] = MSG_ReadShort(&net_message);
+		for( i = 0; i < 3; i++)
+			state->pmove.mins[i] = MSG_ReadChar(&net_message);
 
-		state->pmove.maxs[0] = MSG_ReadShort(&net_message);
-		state->pmove.maxs[1] = MSG_ReadShort(&net_message);
-		state->pmove.maxs[2] = MSG_ReadShort(&net_message);
+		for (i = 0; i < 3; i++)
+			state->pmove.maxs[i] = MSG_ReadChar(&net_message);
 	}
 
 	if (cl.attractloop)
@@ -430,23 +425,20 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 	//
 	if (flags & PS_VIEWOFFSET)
 	{
-		state->viewoffset[0] = MSG_ReadChar (&net_message) * 0.25;
-		state->viewoffset[1] = MSG_ReadChar (&net_message) * 0.25;
-		state->viewoffset[2] = MSG_ReadChar (&net_message) * 0.25;
+		for (i = 0; i < 3; i++)
+			state->viewoffset[i] = MSG_ReadChar (&net_message);
 	}
 
 	if (flags & PS_VIEWANGLES)
 	{
-		state->viewangles[0] = MSG_ReadAngle16 (&net_message);
-		state->viewangles[1] = MSG_ReadAngle16 (&net_message);
-		state->viewangles[2] = MSG_ReadAngle16 (&net_message);
+		for (i = 0; i < 3; i++)
+			state->viewangles[i] = MSG_ReadAngle16 (&net_message);
 	}
 
 	if (flags & PS_KICKANGLES)
 	{
-		state->kick_angles[0] = MSG_ReadChar (&net_message) * 0.25;
-		state->kick_angles[1] = MSG_ReadChar (&net_message) * 0.25;
-		state->kick_angles[2] = MSG_ReadChar (&net_message) * 0.25;
+		for (i = 0; i < 3; i++)
+			state->kick_angles[i] = MSG_ReadChar (&net_message) * 0.25;
 	}
 
 	if (flags & PS_VIEWMODEL_INDEX)
@@ -457,20 +449,18 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 	if (flags & PS_VIEWMODEL_FRAME)
 	{
 		state->viewmodel_frame = MSG_ReadByte (&net_message);
-		state->viewmodel_offset[0] = MSG_ReadChar (&net_message)*0.25;
-		state->viewmodel_offset[1] = MSG_ReadChar (&net_message)*0.25;
-		state->viewmodel_offset[2] = MSG_ReadChar (&net_message)*0.25;
-		state->viewmodel_angles[0] = MSG_ReadChar (&net_message)*0.25;
-		state->viewmodel_angles[1] = MSG_ReadChar (&net_message)*0.25;
-		state->viewmodel_angles[2] = MSG_ReadChar (&net_message)*0.25;
+
+		for (i = 0; i < 3; i++)
+			state->viewmodel_offset[i] = MSG_ReadChar (&net_message)*0.25;
+
+		for (i = 0; i < 3; i++)
+			state->viewmodel_angles[i] = MSG_ReadChar (&net_message)*0.25;
 	}
 
 	if (flags & PS_BLEND)
 	{
-		state->blend[0] = MSG_ReadByte (&net_message)/255.0;
-		state->blend[1] = MSG_ReadByte (&net_message)/255.0;
-		state->blend[2] = MSG_ReadByte (&net_message)/255.0;
-		state->blend[3] = MSG_ReadByte (&net_message)/255.0;
+		for (i = 0; i < 4; i++)
+			state->blend[i] = MSG_ReadByte (&net_message)/255.0;
 	}
 
 	if (flags & PS_FOV)
@@ -1197,9 +1187,7 @@ void CL_CalcViewValues (void)
 	else
 	{	// just use interpolated values
 		for (i=0 ; i<3 ; i++)
-			cl.refdef.vieworg[i] = ops->pmove.origin[i]*0.125 + ops->viewoffset[i] 
-				+ lerp * (ps->pmove.origin[i]*0.125 + ps->viewoffset[i] 
-				- (ops->pmove.origin[i]*0.125 + ops->viewoffset[i]) );
+			cl.refdef.vieworg[i] = ops->pmove.origin[i]*0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i]*0.125 + ps->viewoffset[i] - (ops->pmove.origin[i]*0.125 + ops->viewoffset[i]) );
 	}
 
 	// if not running a demo or on a locked frame, add the local angle movement

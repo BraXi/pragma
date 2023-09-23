@@ -767,7 +767,10 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		default:
-			Scr_RunError("%s: unknown opcode %i\n", st->op, __FUNCTION__);
+			if(st->op > 0 && st->op < 269)
+				Scr_RunError("%s: unknown opcode %i [%s]\n", __FUNCTION__, st->op, qcvm_op_names[st->op]);
+			else
+				Scr_RunError("%s: unknown opcode %i\n", __FUNCTION__, st->op);
 		}
 	}
 

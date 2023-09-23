@@ -449,6 +449,7 @@ void PFSV_trace(void)
 	VectorCopy(trace.plane.normal, globals->trace_plane_normal);
 	VectorCopy(trace.endpos, globals->trace_endpos);
 	globals->trace_ent = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
+	globals->trace_entnum = (trace.ent == NULL ? -1 : trace.ent->s.number);
 	globals->trace_contents = trace.contents;
 
 	if (trace.surface)

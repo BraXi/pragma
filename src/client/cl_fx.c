@@ -276,7 +276,8 @@ void CL_ParseMuzzleFlash(void)
 		VectorMA(dlight->origin, 44, v_fwd, dlight->origin);
 		VectorMA(dlight->origin, 5, v_right, dlight->origin);
 		VectorMA(dlight->origin, 19, v_up, dlight->origin);
-		CL_GunMuzzleFlash(dlight->origin); //add tent flash model
+// TODO: improve
+//		CL_GunMuzzleFlash(dlight->origin); //add tent flash model
 	}
 	else
 	{
@@ -297,6 +298,11 @@ void CL_ParseMuzzleFlash(void)
 	case FX_MUZZLEFLASH_SHOTGUN:
 		VectorSet(dlight->color, 1, 1, 0.7);
 		S_StartSound (NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/shotgf1b.wav"), volume, ATTN_NORM, 0);
+
+// negative light test
+//		VectorSet(dlight->color, -1, -1, -1);
+//		dlight->radius = 1024;
+//		dlight->die = cl.time + 2000; // + 0.1;
 		break;
 
 	case FX_MUZZLEFLASH_NEGATIVE_LIGHT:

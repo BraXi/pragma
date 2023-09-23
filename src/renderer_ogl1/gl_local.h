@@ -189,8 +189,6 @@ extern	cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light 
 extern cvar_t	*r_vertex_arrays;
 
 extern cvar_t	*gl_ext_swapinterval;
-extern cvar_t	*gl_ext_palettedtexture;
-extern cvar_t	*gl_ext_multitexture;
 extern cvar_t	*gl_ext_pointparameters;
 extern cvar_t	*gl_ext_compiled_vertex_array;
 
@@ -332,8 +330,6 @@ image_t	*GL_FindImage (char *name, imagetype_t type);
 void	GL_TextureMode( char *string );
 void	GL_ImageList_f (void);
 
-void	GL_SetTexturePalette( unsigned palette[256] );
-
 void	GL_InitImages (void);
 void	GL_ShutdownImages (void);
 
@@ -370,8 +366,6 @@ typedef struct
 
 	int     prev_mode;
 
-	unsigned char *d_16to8table;
-
 	int lightmap_textures;
 
 	int	currenttextures[2];
@@ -380,9 +374,6 @@ typedef struct
 	float camera_separation;
 	qboolean stereo_enabled;
 
-	unsigned char originalRedGammaTable[256];
-	unsigned char originalGreenGammaTable[256];
-	unsigned char originalBlueGammaTable[256];
 } glstate_t;
 
 extern glconfig_t  gl_config;

@@ -35,6 +35,8 @@ typedef struct sv_globalvars_s
 	float			trace_allsolid, trace_startsolid, trace_fraction, trace_plane_dist;
 	vec3_t			trace_endpos, trace_plane_normal;
 	scr_entity_t	trace_ent;
+	float			trace_entnum;  	// this is tricky, if nothing is hit trace_ent = world, but 
+									// trace_entnum will be -1, thats because QC's null entity is world
 	int				trace_contents;
 	scr_string_t	trace_surface_name;
 	float			trace_surface_flags;

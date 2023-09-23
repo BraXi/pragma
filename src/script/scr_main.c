@@ -31,7 +31,7 @@ int scr_numBuiltins = 0;
 
 // these indicate prog names and their crc checksums
 static char* progsfile_server = "progs/server.dat";
-const int progsfile_server_crc = 28003;
+const int progsfile_server_crc = 27580;
 static char* progsfile_client = "progs/client.dat";
 const int progsfile_client_crc = 0;
 
@@ -262,9 +262,15 @@ void ScrInternal_LoadProgs(qcvm_t *vm, char* prName, int progsType)
 
 	if (vm->progs->version != PROG_VERSION)
 	{
-		//Com_Printf( "%s: \"%s\" is wrong version %i (should be %i)\n", __FUNCTION__, prName, vm->progs->version, PROG_VERSION);
-		Com_Error(ERR_FATAL, "%s: \"%s\" is wrong version %i (should be %i)\n", __FUNCTION__, prName, vm->progs->version, PROG_VERSION);
-		return;
+		if (vm->progs->version == 7 /*FTEQC*/)
+		{
+			Com_Printf("%s: \"%s\" is FTE version and not all opcodes are supported in pragma\n", __FUNCTION__, prName);
+		}
+		else
+		{
+			Com_Error(ERR_FATAL, "%s: \"%s\" is wrong version %i (should be %i)\n", __FUNCTION__, prName, vm->progs->version, PROG_VERSION);
+			return;
+		}
 	}
 
 	vm->crc = CRC_Block(vm->progs, len);

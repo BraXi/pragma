@@ -376,13 +376,12 @@ extern  void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei
 
 extern	void ( APIENTRY * qglPointParameterfEXT)( GLenum param, GLfloat value );
 extern	void ( APIENTRY * qglPointParameterfvEXT)( GLenum param, const GLfloat *value );
-extern	void ( APIENTRY * qglColorTableEXT)( int, int, int, int, int, const void * );
 
 extern	void ( APIENTRY * qglLockArraysEXT) (int , int);
 extern	void ( APIENTRY * qglUnlockArraysEXT) (void);
 
-extern	void ( APIENTRY * qglMTexCoord2fSGIS)( GLenum, GLfloat, GLfloat );
-extern	void ( APIENTRY * qglSelectTextureSGIS)( GLenum );
+extern	void (APIENTRY* qglActiveTextureARB)(GLenum);
+extern	void (APIENTRY* qglMultiTexCoord2fARB)(GLenum, GLfloat, GLfloat);
 
 #ifdef _WIN32
 
@@ -436,7 +435,10 @@ extern BOOL ( WINAPI * qwglSetDeviceGammaRampEXT ) ( const unsigned char *pRed, 
 #define GL_SHARED_TEXTURE_PALETTE_EXT		0x81FB
 #endif
 
-#define GL_TEXTURE0_SGIS					0x835E
-#define GL_TEXTURE1_SGIS					0x835F
+//#define GL_T1EXTURE0_SGIS					0x835E
+//#define GL_T1EXTURE1_SGIS					0x835F
+
+#define  GL_TEXTURE0_ARB                    0x84C0
+#define  GL_TEXTURE1_ARB                    0x84C1
 
 #endif
