@@ -16,6 +16,8 @@ Pragma so far had introduced following additions and changes to Q2 engine, note 
 - fixed many typos in code and corrected error messages to be [more] understandable and explainatory
 - has no software renderer and OpenGL 1.x is currently the one and only
 - game (.DLL) API has been removed completly
+- supports full RGB(a) TGA textures for BSP and MD2 models - engine will look for TGA, then fall back to WAL if not found
+- multitexture support in GL1.1 renderer
 - small minor bugfixes, but a few galaxies away from being as stable as Yamagi Quake II (pragma is based on original Q2 source release, remember)
 - removed obscure CDAudio and IPX code
 - its super simple even for newbies - all you need to start is a text editor and FTEQCC compiler to get started
