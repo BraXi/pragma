@@ -228,7 +228,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	if (!buf)
 	{
 		if (crash)
-			ri.Sys_Error (ERR_DROP, "Mod_NumForName: %s not found", mod->name);
+			ri.Sys_Error (ERR_DROP, "Mod_ForName: %s not found", mod->name);
 		memset (mod->name, 0, sizeof(mod->name));
 		return NULL;
 	}
@@ -343,7 +343,7 @@ void Mod_LoadVertexes (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadVertexes: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -390,7 +390,7 @@ void Mod_LoadSubmodels (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadSubmodels: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -425,7 +425,7 @@ void Mod_LoadEdges (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadEdges: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( (count + 1) * sizeof(*out));	
 
@@ -454,7 +454,7 @@ void Mod_LoadTexinfo (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadTexinfo: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -472,14 +472,21 @@ void Mod_LoadTexinfo (lump_t *l)
 			out->next = loadmodel->texinfo + next;
 		else
 		    out->next = NULL;
-		Com_sprintf (name, sizeof(name), "textures/%s.wal", in->texture);
 
-		out->image = GL_FindImage (name, it_wall);
+		// see if we have TGA replacement first
+		Com_sprintf(name, sizeof(name), "textures/%s.tga", in->texture);
+		out->image = GL_FindImage(name, it_tga);
 		if (!out->image)
 		{
-			ri.Con_Printf (PRINT_ALL, "Couldn't load %s\n", name);
-			out->image = r_notexture;
+			Com_sprintf (name, sizeof(name), "textures/%s.wal", in->texture);
+			out->image = GL_FindImage(name, it_wall);
+			if (!out->image)
+			{
+				ri.Con_Printf(PRINT_ALL, "Couldn't find texture: %s (no TGA or WAL)\n", in->texture);
+				out->image = r_notexture;
+			}
 		}
+
 	}
 
 	// count animation frames
@@ -567,7 +574,7 @@ void Mod_LoadFaces (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadFaces: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -594,7 +601,7 @@ void Mod_LoadFaces (lump_t *l)
 
 		ti = LittleShort (in->texinfo);
 		if (ti < 0 || ti >= loadmodel->numtexinfo)
-			ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: bad texinfo number");
+			ri.Sys_Error (ERR_DROP, "Mod_LoadFaces: bad texinfo number");
 		out->texinfo = loadmodel->texinfo + ti;
 
 		CalcSurfaceExtents (out);
@@ -662,7 +669,7 @@ void Mod_LoadNodes (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadNodes: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -711,7 +718,7 @@ void Mod_LoadLeafs (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadLeafs: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -764,7 +771,7 @@ void Mod_LoadMarksurfaces (lump_t *l)
 	
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadMarksurfaces: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -792,10 +799,10 @@ void Mod_LoadSurfedges (lump_t *l)
 	
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadSurfedges: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	if (count < 1 || count >= MAX_MAP_SURFEDGES)
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: bad surfedges count in %s: %i",
+		ri.Sys_Error (ERR_DROP, "Mod_LoadSurfedges: bad surfedges count in %s: %i",
 		loadmodel->name, count);
 
 	out = Hunk_Alloc ( count*sizeof(*out));	
@@ -823,7 +830,7 @@ void Mod_LoadPlanes (lump_t *l)
 	
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadPlanes: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*2*sizeof(*out));	
 	

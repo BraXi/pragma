@@ -408,10 +408,10 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(Scr_GetGlobals()->ClientEndServerFrame, __FUNCTION__);
 
-//test
-//	gclient_t* cl;
-//	cl = ent->client;
-//	cl->ps.viewoffset[2] = Cvar_Get("playerz", "22", 0)->value;
+	//test
+	//	gclient_t* cl;
+	//	cl = ent->client;
+	//	cl->ps.viewoffset[2] = Cvar_Get("playerz", "22", 0)->value;
 }
 
 /*

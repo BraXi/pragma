@@ -80,6 +80,7 @@ typedef enum
 {
 	it_skin,
 	it_sprite,
+	it_tga,
 	it_wall,
 	it_pic,
 	it_sky
@@ -264,8 +265,6 @@ extern	unsigned	d_8to24table[256];
 
 extern	int		registration_sequence;
 
-
-void V_AddBlend (float r, float g, float b, float a, float *v_blend);
 
 int 	R_Init( void *hinstance, void *hWnd );
 void	R_Shutdown( void );

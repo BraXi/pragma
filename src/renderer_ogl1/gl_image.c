@@ -281,24 +281,27 @@ void	GL_ImageList_f (void)
 		switch (image->type)
 		{
 		case it_skin:
-			ri.Con_Printf (PRINT_ALL, "M");
+			ri.Con_Printf (PRINT_ALL, "SKIN");
 			break;
 		case it_sprite:
-			ri.Con_Printf (PRINT_ALL, "S");
+			ri.Con_Printf (PRINT_ALL, "SPR ");
 			break;
 		case it_wall:
-			ri.Con_Printf (PRINT_ALL, "W");
+			ri.Con_Printf (PRINT_ALL, "WAL ");
 			break;
 		case it_pic:
-			ri.Con_Printf (PRINT_ALL, "P");
+			ri.Con_Printf (PRINT_ALL, "PIC ");
+			break;
+		case it_tga:
+			ri.Con_Printf(PRINT_ALL, "TEX ");
 			break;
 		default:
-			ri.Con_Printf (PRINT_ALL, " ");
+			ri.Con_Printf (PRINT_ALL, "    ");
 			break;
 		}
 
-		ri.Con_Printf (PRINT_ALL,  " %3i %3i %s: %s\n",
-			image->upload_width, image->upload_height, palstrings[image->paletted], image->name);
+		ri.Con_Printf (PRINT_ALL,  " %3i %3i %s%s: %s\n",
+			image->upload_width, image->upload_height, palstrings[image->paletted], (image->has_alpha ? "A" : " "), image->name);
 	}
 	ri.Con_Printf (PRINT_ALL, "Total texel count (not counting mipmaps): %i\n", texels);
 }
@@ -1168,7 +1171,7 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 	{
 		LoadPCX (name, &pic, &palette, &width, &height);
 		if (!pic)
-			return NULL; // ri.Sys_Error (ERR_DROP, "GL_FindImage: can't load %s", name);
+			return NULL;
 		image = GL_LoadPic (name, pic, width, height, type, 8);
 	}
 	else if (!strcmp(name+len-4, ".wal"))
@@ -1179,7 +1182,7 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 	{
 		LoadTGA (name, &pic, &width, &height);
 		if (!pic)
-			return NULL; // ri.Sys_Error (ERR_DROP, "GL_FindImage: can't load %s", name);
+			return NULL;
 		image = GL_LoadPic (name, pic, width, height, type, 32);
 	}
 	else
@@ -1290,7 +1293,7 @@ void	GL_InitImages (void)
 	registration_sequence = 1;
 
 	// init intensity conversions
-	intensity = ri.Cvar_Get ("intensity", "2", 0);
+	intensity = ri.Cvar_Get ("intensity", "1", 0);
 
 	if ( intensity->value <= 1 )
 		ri.Cvar_Set( "intensity", "1" );

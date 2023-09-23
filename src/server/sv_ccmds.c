@@ -227,6 +227,7 @@ SV_CopySaveGame
 */
 void SV_CopySaveGame (char *src, char *dst)
 {
+#if 0
 	char	name[MAX_OSPATH], name2[MAX_OSPATH];
 	int		l, len;
 	char	*found;
@@ -266,6 +267,7 @@ void SV_CopySaveGame (char *src, char *dst)
 		found = Sys_FindNext( 0, 0 );
 	}
 	Sys_FindClose ();
+#endif
 }
 
 
@@ -277,6 +279,7 @@ SV_WriteLevelFile
 */
 void SV_WriteLevelFile (void)
 {
+#if 0
 	char	name[MAX_OSPATH];
 	FILE	*f;
 
@@ -295,6 +298,7 @@ void SV_WriteLevelFile (void)
 
 	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
 	WriteLevel (name);
+#endif
 }
 
 /*
@@ -334,6 +338,7 @@ autosave is true when changing levels
 */
 void SV_WriteServerFile (qboolean autosave)
 {
+#if 0
 	FILE	*f;
 	cvar_t	*var;
 	char	name[MAX_OSPATH], string[128];
@@ -397,6 +402,7 @@ void SV_WriteServerFile (qboolean autosave)
 	// write game state
 	Com_sprintf (name, sizeof(name), "%s/save/current/game.ssv", FS_Gamedir());
 	WriteGame (name, autosave);
+#endif
 }
 
 /*
