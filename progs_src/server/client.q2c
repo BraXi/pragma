@@ -6,71 +6,161 @@ Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
 */
 
-vector anim_mutant_stand = '62 125 0';
-vector anim_mutant_run = '56 61 0';
-vector anim_mutant_jump = '144 148 0';
-vector anim_mutant_walk = '126 148 0';
 
-vector anim_stand = '0 39 0';
-vector anim_run_front = '40 45 0';
-vector anim_attack = '46 53 0';
+enum
+{
+	AP_LOW = 0,
+	AP_MEDIUM,
+	AP_COMBAT,
+	AP_DEATH,
+	AP_INSTANT
+};
 
-vector anim_pain1 = '54 57 0';
-vector anim_pain2 = '58 61 0';
-vector anim_pain3 = '62 65 0';
+float ANIMTREE_NONE = 0;
+float ANIMTREE_HUMAN = 1;
+float ANIMTREE_MUTANT = 2;
 
-vector anim_jump = '66 71 0';
 
-vector anim_crouch_idle = '135 153 0';
-vector anim_crouch_walk = '154 159 0';
-vector anim_crouch_attack = '160 168 0';
-vector anim_crouch_pain = '169 172 0';
-vector anim_crouch_death = '173 177 0';
+struct playerAnims
+{
+	// [ start, end, notlooping ]
+	vector idle; //idle  stand anim
+	vector walk;
+	
+	vector jump;
+	vector attack;	
+	
+	vector run_front;
+	
+	vector crouch_idle;
+	vector crouch_walk;
+	vector crouch_attack;
+	vector crouch_pain;
+	vector crouch_death;
 
-vector anim_death = '178 183 0';
-vector anim_death_side = '184 189 0';
-vector anim_death_front = '190 197 0';
+	vector pain1;
+	vector pain2;
+	vector pain3;
+	
+	vector death1;
+	vector death2;
+	vector death3;
+	
+	// sounds
+	string snd_jump;
+	
+	string snd_pain1;
+	string snd_pain2;
+	string snd_pain3;
+	
+	string snd_death1;
+	string snd_death2;
+	string snd_death3;
+};
+
+playerAnims animTree[3];
+
+
 
 .vector playerAnim; 		// current player anim
+.float playerAnimTree;
 .float playerAnimFrame; 	// current animation frame
 .float animPriority;
 
-
-string(vector anim) GetAnimName =
+void(string n) safe_precache_sound =
 {
-	if( anim == anim_stand )
-		return "stand";
-	else if( anim == anim_run_front )
-		return "run_front";
-	else if( anim == anim_attack )
-		return "attack";
-	else if( anim == anim_pain1 )
-		return "pain1";	
-	else if( anim == anim_pain2 )
-		return "pain2";	
-	else if( anim == anim_pain3 )
-		return "pain3";
-	else if( anim == anim_jump )
-		return "jump";	
-	else if( anim == anim_crouch_idle )
-		return "crouch_idle";	
-	else if( anim == anim_crouch_walk )
-		return "crouch_walk";	
-	else if( anim == anim_crouch_attack )
-		return "crouch_attack";	
-	else if( anim == anim_crouch_pain )
-		return "crouch_pain";	
-	else if( anim == anim_crouch_death )
-		return "crouch_death";	
-	else if( anim == anim_death )
-		return "death";
-	else if( anim == anim_death_side )
-		return "death_side";	
-	else if( anim == anim_death_front )
-		return "death_front";
-	else
-		return "unknown";
+	if(strlen(n))
+		precache_sound(n);
 };
+
+void(float atr) precacheAnimTree =
+{	
+	safe_precache_sound(animTree[atr].snd_jump);
+	
+	safe_precache_sound(animTree[atr].snd_pain1);
+	safe_precache_sound(animTree[atr].snd_pain2);
+	safe_precache_sound(animTree[atr].snd_pain3);
+	
+	safe_precache_sound(animTree[atr].snd_death1);
+	safe_precache_sound(animTree[atr].snd_death2);
+	safe_precache_sound(animTree[atr].snd_death3);
+};
+
+void() initHumanAnimTree = 
+{	
+	animTree[ANIMTREE_HUMAN].idle = '0 39 0';
+	animTree[ANIMTREE_HUMAN].walk = vec3_origin;
+	
+	animTree[ANIMTREE_HUMAN].jump = '66 71 1';
+	animTree[ANIMTREE_HUMAN].attack = '46 53 0';
+	
+	animTree[ANIMTREE_HUMAN].run_front = '40 45 0';
+	
+	animTree[ANIMTREE_HUMAN].crouch_idle = '135 153 0';
+	animTree[ANIMTREE_HUMAN].crouch_walk = '154 159 0';
+	animTree[ANIMTREE_HUMAN].crouch_attack = '160 168 0';
+	animTree[ANIMTREE_HUMAN].crouch_pain = '169 172 0';
+	animTree[ANIMTREE_HUMAN].crouch_death = '173 177 0';
+
+	animTree[ANIMTREE_HUMAN].pain1 = '54 57 1';
+	animTree[ANIMTREE_HUMAN].pain2 = '58 61 1';
+	animTree[ANIMTREE_HUMAN].pain3 = '62 65 1';
+	
+	animTree[ANIMTREE_HUMAN].death1 = '178 183 1';
+	animTree[ANIMTREE_HUMAN].death2 = '184 189 1';
+	animTree[ANIMTREE_HUMAN].death3 = '190 197 1';	
+	
+	// sounds
+	animTree[ANIMTREE_HUMAN].snd_jump = "player/female/jump1.wav";
+	
+	animTree[ANIMTREE_HUMAN].snd_pain1 = "player/female/pain100_1.wav";
+	animTree[ANIMTREE_HUMAN].snd_pain2 = "player/female/pain75_2.wav";
+	animTree[ANIMTREE_HUMAN].snd_pain3 = "player/female/pain50_2.wav";
+	
+	animTree[ANIMTREE_HUMAN].snd_death1 = "player/female/jump1.wav";
+	animTree[ANIMTREE_HUMAN].snd_death2 = "player/female/jump1.wav";
+	animTree[ANIMTREE_HUMAN].snd_death3 = "player/female/jump1.wav";
+	
+	precacheAnimTree(ANIMTREE_HUMAN);
+};
+
+void() initMonsterAnimTree = 
+{	
+	animTree[ANIMTREE_MUTANT].idle = '62 125 0';
+	animTree[ANIMTREE_MUTANT].walk = '126 148 0';	
+	animTree[ANIMTREE_MUTANT].run_front = '56 61 0';
+	
+	animTree[ANIMTREE_MUTANT].jump = '144 148 1';
+	animTree[ANIMTREE_MUTANT].attack = '5 14 0';
+//	animTree[ANIMTREE_MUTANT].attack = '0 14 0'; // jumping attack
+	
+	animTree[ANIMTREE_MUTANT].pain1 = '34 38 1';
+	animTree[ANIMTREE_MUTANT].pain2 = '39 44 1';
+	animTree[ANIMTREE_MUTANT].pain3 = '45 55 1'; // protective stance?
+	
+	animTree[ANIMTREE_MUTANT].death1 = '15 23 1';
+	animTree[ANIMTREE_MUTANT].death2 = '24 33 1';
+	animTree[ANIMTREE_MUTANT].death3 = '24 33 1'; // copy of death2
+	
+	// sounds
+	animTree[ANIMTREE_MUTANT].snd_jump = "gunner/sight1.wav";
+	animTree[ANIMTREE_MUTANT].snd_pain1 = "mutant/Mutpain1.wav";
+	animTree[ANIMTREE_MUTANT].snd_pain2 = "mutant/Mutpain2.wav";
+	animTree[ANIMTREE_MUTANT].snd_pain3 = animTree[ANIMTREE_MUTANT].snd_pain3;
+	
+	animTree[ANIMTREE_MUTANT].snd_death1 = "mutant/Mutdeth1.wav";
+	animTree[ANIMTREE_MUTANT].snd_death2 = animTree[ANIMTREE_MUTANT].snd_death1;
+	animTree[ANIMTREE_MUTANT].snd_death3 = animTree[ANIMTREE_MUTANT].snd_death1;
+	
+	precacheAnimTree(ANIMTREE_MUTANT);
+};
+
+void() initAnimTrees = 
+{	
+	initHumanAnimTree();
+	initMonsterAnimTree();
+};
+
 
 /*
 =======================================
@@ -85,6 +175,17 @@ void() Player_PlayBodyAnimation =
 		return;
 	}	
 	
+	// '_z' means animation is not looping
+	if( self.playerAnim_z && self.playerAnim_y == self.animFrame )
+		return;
+		
+	if( self.playerAnim_y == self.animFrame )
+	{
+		self.animPriority = 0;
+		//self.playerAnimFrame = self.playerAnim_y;
+		//return;
+	}
+		
 	self.playerAnimFrame = self.playerAnimFrame + 1;
 	if( self.playerAnimFrame > self.playerAnim_y )
 	{
@@ -101,10 +202,13 @@ void(vector newanim, float priority, float reset) Player_SetAnimation =
 	if( newanim == self.playerAnim && reset == false )
 		return;
 	
-	if( self.animPriority > priority )
-		return;
+	if( self.animPriority != priority )
+	{
+		if( self.animPriority > priority )
+			return;
+	}
 
-//	dprint5("Player_SetAnimation: ", GetAnimName(newanim), " - priority ", ftos(priority), "\n");
+//	dprint("Player_SetAnimation\n");
 	
 	self.animPriority = priority;
 	self.playerAnim = newanim;	 
@@ -118,46 +222,41 @@ Player_ViewEffects
 */
 void() Player_ViewEffects =
 {
-	local float		contents;
+	local float	contents;
 	local vector	vieworg;
 	
-	
-	if(self.velocity_z > 20)
+	if( self.deadflag == DEAD_NO )
 	{
-		if( self.health <= 0 )
+		#if 1
+		if(self.velocity_z > 20)
 		{
-			Player_SetAnimation(anim_death_side, 999, false);
+			if( self.health <= 0 )
+			{
+				Player_SetAnimation(animTree[self.playerAnimTree].death2, AP_DEATH, false);
+			}
+			else
+			{
+				Player_SetAnimation(animTree[self.playerAnimTree].jump, AP_MEDIUM, false);
+			}
 		}
 		else
 		{
-			if(self.model == "models/monsters/mutant/tris.md2")
-				Player_SetAnimation(anim_mutant_jump, 20, false);
+			if( self.velocity_x == 0 && self.velocity_y == 0 )
+			{
+				Player_SetAnimation(animTree[self.playerAnimTree].idle, AP_MEDIUM, false);
+			}	
 			else
-				Player_SetAnimation(anim_jump, 20, false);
+			{
+				Player_SetAnimation(animTree[self.playerAnimTree].run_front, AP_MEDIUM, false);
+			}		
 		}
-	}
-	else
-	{
-		if( self.health <= 0 )
-		{
-			Player_SetAnimation(anim_death, 999, false);
-		}
-		else if( self.velocity_x == 0 && self.velocity_y == 0 )
-		{
-			if(self.model == "models/monsters/mutant/tris.md2")
-				Player_SetAnimation(anim_mutant_stand, 11, false);
-			else
-				Player_SetAnimation(anim_stand, 11, false);
-		}	
-		else
-		{
-			if(self.model == "models/monsters/mutant/tris.md2")
-				Player_SetAnimation(anim_mutant_run, 11, false);
-			else
-				Player_SetAnimation(anim_run_front, 11, false);
-		}		
+		#endif
 	}
 	
+	
+//	print4( ftos(self.wpn_fireframe), "-", ftos(g_frameNum),"\n");
+//	if(self.wpn_fireframe == g_frameNum)
+//		Player_SetAnimation(animTree[self.playerAnimTree].attack, 9999, false);
 	
 	
 	Player_PlayBodyAnimation();
@@ -180,12 +279,43 @@ void() Player_ViewEffects =
 		setviewblend(self, vec_null, 0);
 	
 	if(self.model == "models/monsters/mutant/tris.md2")
-		setviewblend(self, '0.9 0.2 0.0', 0.35);	
+		setviewblend(self, '0.8 0.2 0.0', 0.35);	
 };
 
-float svc_muzzleflash = 1;
-entity(string spawnpointname) SelectSpawnPoint;
 
+void(entity attacker, float damage, float method) player_pain =
+{	
+	if( self.playerAnimTree == ANIMTREE_MUTANT && self.health <= self.max_health/2 )
+		self.modelTexNum = 1;
+	
+	// play pain sound
+	if( random() > 0.5 )
+		playsound(vec3_origin, self, CHAN_BODY, animTree[self.playerAnimTree].snd_pain1, 1, ATTN_NORM, 0);
+	else
+		playsound(vec3_origin, self, CHAN_BODY, animTree[self.playerAnimTree].snd_pain2, 1, ATTN_NORM, 0);
+		
+	Player_SetAnimation(animTree[self.playerAnimTree].pain2, AP_MEDIUM, false);
+};
+
+void(entity attacker, float damage, float method) player_die =
+{	
+	self.deadflag = DEAD_DEAD;
+	self.solid = SOLID_NOT;
+	self.movetype = MOVETYPE_NONE;
+	
+	self.pm_type = PM_DEAD;
+	
+	// play pain sound
+	if( random() > 0.5 )
+		playsound(vec3_origin, self, CHAN_BODY, animTree[self.playerAnimTree].snd_death1, 1, ATTN_NORM, 0);
+	else
+		playsound(vec3_origin, self, CHAN_BODY, animTree[self.playerAnimTree].snd_death2, 1, ATTN_NORM, 0);
+	
+	Player_SetAnimation(animTree[self.playerAnimTree].death1, AP_DEATH, false);
+};
+
+
+entity(string spawnpointname) SelectSpawnPoint;
 void() SpawnPlayer =
 {
 	entity sp;
@@ -193,41 +323,68 @@ void() SpawnPlayer =
 	sp = SelectSpawnPoint("info_player_start");
 	self.angles = sp.angles;
 	setorigin( self, sp.origin );
-	
+
+	self.deadflag = DEAD_NO;
 	self.takedamage = DAMAGE_AIM;
+	self.health = self.max_health = 100;	
+	self.pain = player_pain;
+	self.die = player_die;
+
 	self.movetype = MOVETYPE_WALK;
 	self.viewheight = 22;
 	self.classname = "player";
 	self.mass = 200;
 	self.solid = SOLID_BBOX;
-	self.deadflag = DEAD_NO;
 	self.clipmask = MASK_PLAYERSOLID;
-//	self.pain = player_pain;
-//	self.die = player_die;
+
 	self.waterlevel = 0;
 	self.watertype = 0;
-	self.health = 100;
-	
-//	self.modelindex = 255;
-//	self.modelindex2 = precache_model("models/player/female/weapon.md2");
-	
+
 	setviewoffset(self, '0 0 24');
 	setsize(self, '-16 -16 -24', '16 16 32');
 	
+	self.pm_type = PM_NORMAL;
+	
 	string modelname;
 	
-	if(getentnum(self) == 1 )	
-		modelname = "models/player/female/tris.md2";
-	else
-		modelname = "models/monsters/mutant/tris.md2";
 	
+	float human = true;
+	if(getentnum(self) == 1 || human)
+	{
+		modelname = "models/char/female.md2";
+		self.playerAnimTree = ANIMTREE_HUMAN;
+	}
+	else
+	{
+		modelname = "models/monsters/mutant/tris.md2";
+		self.playerAnimTree = ANIMTREE_MUTANT;
+	}
+
+#if defined(POLO_FUNC_VEHICLE)	
+	modelindex_player = precache_model(modelname);
+	modelindex_eyes = modelindex_player;
+#endif	
 	precache_model(modelname);
 	setmodel(self, modelname );
 	
-	if(self.model == "models/monsters/mutant/tris.md2")
-		Player_SetAnimation(anim_mutant_stand, 21, false);	
-	else
-		Player_SetAnimation( anim_stand, 999, true );
-	
+	self.animPriority = 0;
+	Player_SetAnimation(animTree[self.playerAnimTree].idle, AP_MEDIUM, false);	
 	ClientEndServerFrame();	
 };
+
+
+
+
+
+/*
+anims:
+
+stand
+	- idle
+	- attack (one handed)
+	- attack (two handed)
+	- walk front
+	- walk back
+
+
+*/

@@ -6,7 +6,7 @@ Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
 */
 
-// delete/move these
+// TODO move these
 .float noise_index;
 .float groundEntityNum;
 .float		mass;
@@ -15,21 +15,40 @@ Copyright (C) 1997-2001 Id Software, Inc.
 // 'worldspawn' entity
 //
 .string		sky;			// skybox textures to use
+.vector		skyaxis;		// vector axis for rotating sky
+.float		skyrotate;		// speed of rotation in degrees/second
 
+//
+// weapons
+//
+
+.float		weapon;			// current weapon index to g_weapons array
+//.float		wpn_spreadScale;	// increases with every shot
 
 //
 // damage and pain handling
 //
+.float		deadflag;		// DEAD_NO, DEAD_DYING, DEAD_YES
 .float		takedamage;		// does entity take damage? DAMAGE_NO, DAMAGE_YES, DAMAGE_AIM
 .float		max_health;		// health should be never higher than this 
+.float		armor;			// number of armor points for protection
 
-.float		deadflag;
-.void(entity ent, entity attacker, float damage, float method) pain;
-.void(entity ent, entity attacker, float damage, float method) die;
+
+.void(entity attacker, float damage, float method) pain;
+.void(entity attacker, float damage, float method) die;
+
+
+
+// 'target_speaker'
+.float		volume;
+.float		attenuation;
+.float		noise_index;
 
 // 'trigger_hurt': deal dmg damage points
 .float		dmg;
 
+// 'func_barrel': damage radius
+.float		radius;
 
 // 'light' entity: index to lightstyle
 // 'func_areaportal': toggle between states

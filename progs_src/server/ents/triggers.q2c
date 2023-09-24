@@ -220,7 +220,6 @@ If TRIGGERED, this trigger must be triggered before it is live.
 If "delay" is set, the trigger waits some time after activating before firing.
 
 "message" : string to be displayed when triggered
-
 */
 float() SP_trigger_once =
 {
@@ -243,7 +242,6 @@ float() SP_trigger_relay =
 //	linkentity(self); // this never broadcasts so don't link
 	return true;
 };
-
 
 
 /*QUAKED trigger_counter (.5 .5 .5) ? NO_MESSAGE SND_WHEN_COMPLETED
@@ -419,7 +417,7 @@ void() SP_trigger_hurt =
 };
 
 
-/*QUAKED trigger_monsterjump (.5 .5 .5) ?
+/*QUAKED trigger_actorjump (.5 .5 .5) ?
 Walking monsters that touch this will jump in the direction of the trigger's angle
 "speed" default to 200, the speed thrown forward
 "height" default to 200, the speed thrown upwards

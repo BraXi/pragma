@@ -22,8 +22,9 @@ void() null_blocked = {};
 void(float planeDist, vector planeNormal, float surfaceFlags) null_touch = {};
 void(entity activator) null_use = {};
 float(float mod, float damage, float dmgflags) null_dmgmod = { return damage; };
-void(float mod, float damage) null_pain = {};
-void(entity attacker, float damage, vector point) null_die = {};
+
+void(entity attacker, float damage, float method) null_pain = {};
+void(entity attacker, float damage, float method) null_die = {};
 
 float(string str) IsStringEmpty =
 {

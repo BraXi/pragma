@@ -5,19 +5,32 @@ Copyright (C) 2023 BraXi.
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
 */
-// main.qc
 
+void() initAnimTrees;
+
+void() plr_showanim =
+{
+	entity player;
+	player = getent(1);	
+	self.animFrame = player.animFrame;
+	self.angles = player.angles;	
+	self.angles = self.angles - '0 180 0';
+	self.angles_x = 0;
+	//self.modelindex2 = precache_model("models/char/test.md2");
+	self.nextthink = g_time + 0.1;
+};
 
 /*
 =================
 main
 
-called during server initialization after map has loaded
+called during server initialization after map has been
+loaded, but right before entities are allowed to think
 =================
 */
 void() main =
 {
-	dprint("entering main()\n");
+	dprint("*** DEVELOPER MODE ENABLED ***\n");
 
 	cvar_maxclients = cvar("sv_maxclients");
 	cvar_coop = cvar("coop");
@@ -28,9 +41,18 @@ void() main =
 	developer = cvar("developer");
 	developer_script = cvar("developer_script");
 	
-//	InitTriggerVectors(); //calculate movedir for each trigger
+	initAnimTrees();
 	
+	entity e = spawn();
+	setmodel(e, "models/char/female.md2");
+	e.origin = '0 0 34';
+	linkentity(e);
+	e.think = plr_showanim;
+	e.nextthink = g_time + 1;
+
+//	InitTriggerVectors(); //calculate movedir for each trigger	
 };
+
 /*
 =================
 StartFrame
@@ -56,37 +78,3 @@ void() EndFrame =
 };
 
 
-float	SPAWNFLAG_NOT_EASY			= 256;
-float	SPAWNFLAG_NOT_MEDIUM		= 512;
-float	SPAWNFLAG_NOT_HARD			= 1024;
-float	SPAWNFLAG_NOT_DEATHMATCH	= 2048;
-float	SPAWNFLAG_NOT_COOP			= 4096;
-float	SPAWNFLAG_NOT_SINGLEPLAYER	= 8192;
-
-/*
-============
-CheckSpawnFlags
-
-used to discard entities from various gametypes and skill levels, etc.
-============
-*/
-float() CheckSpawnFlags = 
-{
-	if((cvar_deathmatch > 0) && (self.spawnflags & SPAWNFLAG_NOT_DEATHMATCH))
-		return false; // not in deathmatch
-
-	if( (cvar_coop > 0) && (self.spawnflags & SPAWNFLAG_NOT_COOP) )
-		return false; // not in coop
-	
-	if( cvar_coop == 0 && cvar_deathmatch == 0 && (self.spawnflags & SPAWNFLAG_NOT_SINGLEPLAYER) )
-		return false; // not in singleplayer
-	
-	if( cvar_skill == 0 && (self.spawnflags & SPAWNFLAG_NOT_EASY) )
-		return false; // not on EASY
-	if( cvar_skill == 1 && (self.spawnflags & SPAWNFLAG_NOT_MEDIUM) )
-		return false; // not on MEDIUM
-	if( cvar_skill == 2 && (self.spawnflags & SPAWNFLAG_NOT_HARD) )
-		return false; // not on HARD	
-	
-	return true;
-};

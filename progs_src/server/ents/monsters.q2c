@@ -7,77 +7,19 @@ Copyright (C) 1997-2001 Id Software, Inc.
 */
 // ai/monsters_temp.qc -- this is a placehorder to spawn q2 monsters as props
 
-void() monthink =
-{
-	self.nextthink = g_time + 0.1;
-	self.think = monthink;
-};
+//.void(entity ent, entity attacker, float damage, float method) pain;
+//.void(entity ent, entity attacker, float damage, float method) die;
 
-void() test_think =
-{
-	self.think = test_think;
-	
-	if( self.velocity == vec3_origin )
-	{
-		self.effects = EF_QUAD | EF_FLAG2;
-self.nextthink = g_time + 0.1;		
-	}
-	else
-	{
-		self.effects = 0; //EF_PENT | EF_FLAG1;	
-	MSG_WriteByte (svc_temp_entity);
-	MSG_WriteByte (TE_BOSSTPORT);
-	MSG_WritePos (self.origin + '0 0 10');
-	MSG_Multicast (self.origin + '0 0 10', MULTICAST_PVS);
-self.nextthink = g_time + 1;	
-	}
-	
-
-};
 
 float(string mdlname) CreateTestDummy = 
 {
-	mdlname = "models/objects/barrels/tris.md2";
-	precache_model(mdlname);
+	if( !precache_model(mdlname) )
+	return false;
 	
 	setmodel(self, mdlname);
-	setsize(self, '-16 -16 0', '16 16 40');	
-	self.solid = SOLID_BBOX;
-	self.movetype = MOVETYPE_STEP;
-	self.mass = 100;
-	
-	self.takedamage = DAMAGE_YES;
-	self.health = 500;	
-	
-	self.think = test_think;
-	self.nextthink = g_time + 0.1;
 	linkentity(self);
 	return true;
 };
-
-#if 0
-float(string mdlname) CreateTestDummy =
-{
-	if(precache_model(mdlname) == 0)
-		return false;
-	
-	self.movetype = MOVETYPE_TOSS;
-	self.solid = SOLID_BBOX;
-
-	self.mass = 250;
-	self.takedamage = DAMAGE_YES;
-	self.health = 50;	
-	
-	setmodel(self, mdlname);
-	setsize(self, '-16 -16 -12', '16 16 12');
-			
-	self.nextthink = g_time + 0.1;
-	self.think = monthink;
-	
-	linkentity(self);
-	return true;
-};
-#endif
 
 float() SP_monster_berserk = { return CreateTestDummy("models/monsters/berserk/tris.md2"); };
 float() SP_monster_gladiator = { return CreateTestDummy("models/monsters/gladiatr/tris.md2"); };

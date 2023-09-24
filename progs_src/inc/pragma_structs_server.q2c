@@ -32,7 +32,9 @@ Copyright (C) 1997-2001 Id Software, Inc.
 	float		trace_allsolid, trace_startsolid, trace_fraction, trace_plane_dist;
 	vector		trace_endpos, trace_plane_normal;
 	entity		trace_ent;
-	float		trace_contents;
+	float		trace_entnum;  		// this is tricky, if nothing is hit trace_ent = world, but 
+						// trace_entnum will be -1, thats because QC's null entity is world
+	int		trace_contents;
 	string		trace_surface_name;
 	float		trace_surface_flags, trace_surface_value;
 
@@ -42,7 +44,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 	void() 		ClientBeginServerFrame;
 	void() 		ClientEndServerFrame;
-	void() 		ClientThink;
+	void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime)		ClientThink;
 	void() 		ClientBegin;
 	float()		ClientConnect;
 	void()		ClientDisconnect;
@@ -68,7 +70,7 @@ void end_sys_globals; // end of struct
 	.float		renderfx;
 
 	.float		ps_solid;		// playerstate solid
-	.float		sound;			// looping sound
+	.float		loopsound;		// set this to soundindex if you want entity to have constant looping sound
 	.float		event;			// EV_FOOTSTEP etc
 	// ----------------------------------------------------
 
@@ -79,7 +81,9 @@ void end_sys_globals; // end of struct
 	.float			solid;		// SOLID_NOT etc
 	.float			movetype;	// MOVETYPE_NONE etc
 	.float			gravity;	// [0-1.0]
-	.float			clipmask;	
+	.int			clipmask;	
+	.float			groundEntityNum; // -1 = in air
+	.float			groundEntity_linkcount;	
 	.vector			size;		// DON'T CHANGE!
 	.entity			owner;		// DON'T CHANGE!
 	.entity			chain;		// DON'T CHANGE!
@@ -111,6 +115,15 @@ void end_sys_globals; // end of struct
 	// client fields
 	.vector			v_angle;	
 	.float			viewheight;
+	
+	// pmove vars
+	.float		pm_type;		// pmtype_t
+	.vector		pm_origin;		// short
+	.float		pm_velocity;	// short
+	.float		pm_flags;		// byte
+	.float		pm_time;		// byte each unit = 8 ms
+	.float		pm_gravity;		// short
+	.vector		delta_angles;	// short add to command angles to get view direction, changed by spawns, rotating objects, and teleporters	
 void end_sys_fields; // end of struct
 
 

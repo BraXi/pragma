@@ -8,6 +8,16 @@ TODOs:
 - get rid of cl_ cvars controling speed
 */
 
+#if 0
+
+void (vector v1, vector v2, __inout vector cross) CrossProduct =
+{
+	cross[0] = v1[1]*v2[2] - v1[2]*v2[1];
+	cross[1] = v1[2]*v2[0] - v1[0]*v2[2];
+	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
+};
+
+
 // movement parameters
 static float	pm_stopspeed = 100;
 static float	pm_maxspeed = 300;
@@ -47,9 +57,9 @@ pml_t	pml;
 void(vector start, vector mins, vector maxs, vector end) pm_trace =
 {
 	if (pm_passent.health > 0)
-		Trace(start, mins, maxs, end, pm_passent, MASK_PLAYERSOLID);
+		trace(start, mins, maxs, end, pm_passent, MASK_PLAYERSOLID);
 	else
-		Trace(start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
+		trace(start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
 };
 
 vector(float scale, vector veca, vector vecb) VectorMA =
@@ -125,7 +135,7 @@ Does not modify any world state?
 #define	MAX_CLIP_PLANES	5
 void() PM_StepSlideMove_ =
 {
-	local float		bumpcount, numbumps, numplanes;
+	local float	bumpcount, numbumps, numplanes;
 	local vector	planes[MAX_CLIP_PLANES];
 	local vector	primal_velocity;
 	local float		i, j, d;
@@ -208,7 +218,7 @@ void() PM_StepSlideMove_ =
 				pml.velocity = vec3_origin;
 				break;
 			}
-			dir = CrossProduct( planes[0], planes[1] );
+			 CrossProduct( planes[0], planes[1], dir );
 			d = DotProduct2( dir, pml.velocity );
 			pml.velocity = dir * d;
 		}
@@ -796,7 +806,7 @@ void() PM_CheckSpecialMovement =
 	flatforward[0] = pml.forward[0];
 	flatforward[1] = pml.forward[1];
 	flatforward[2] = 0;
-	flatforward = VectorNormalize(flatforward);
+	flatforward = normalize(flatforward);
 
 	spot = VectorMA(pml.origin, 1, flatforward);
 	pm_trace(pml.origin, pm.mins, pm.maxs, spot);
@@ -1305,3 +1315,4 @@ void(/*pmove_t pmove*/) PlayerMove =
 	PM_SnapPosition ();
 };
 
+#endif

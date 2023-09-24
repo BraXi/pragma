@@ -97,8 +97,6 @@ void(float type, vector origin, vector normal, float damage) SpawnDamage =
 };
 
 
-
-
 /*
 ============
 DoDamage
@@ -120,6 +118,7 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 	vector	dir;
 	float	take;
 	float	fx;
+	entity	oldSelf;
 	
 	if( !targ.takedamage )
 		return;
@@ -134,17 +133,16 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 			if(targ.movetype == MOVETYPE_NOCLIP)
 				return;	// noclip cheat
 		}
-		return;
+		//return;
 	}
 	
 	// own explosions do half of damage to self
-	if( method == DMG_EXPLOSIVE && attacker == targ )
-		damage = damage * 0.5;
+//	if( method == DMG_EXPLOSIVE && attacker == targ )
+//		damage = damage * 0.5;
 	
 	if(damage < 1)
 		damage = 1;	
-	
-	
+
 	if( method == DMG_BULLET )
 		fx = TE_BULLET_SPARKS;
 	else if( method == DMG_ENERGY )
@@ -154,7 +152,7 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 	else
 		fx = TE_SPARKS;
 	
-	SpawnDamage(fx, targ.origin, vec3_origin, damage);
+//	SpawnDamage(fx, targ.origin, vec3_origin, damage);
 	
 	dir = targ.origin - inflictor.origin;
 //	dir = inflictor.origin - targ.origin;
@@ -178,9 +176,8 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 			kvel = dir * 200.0;
 			kvel = kvel * (knockback / mass2);
 			
-			targ.gravity = 1;
 			targ.velocity = targ.velocity + kvel;
-			print3("push velocity: ", vtos(targ.velocity), "\n");
+			//print3("push velocity: ", vtos(targ.velocity), "\n");
 		}
 	}
 	
@@ -188,20 +185,22 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 	
 	targ.health = targ.health - take;
 
-	if(targ.deadflag != DEAD_DEAD && targ.health > 0)
-	{
-//		.void(entity ent, entity attacker, float damage, float method) pain;
+	oldSelf = self;
+	self = targ;	
+	if(targ.health > 0)
+	{		
 		if(targ.pain)
-			targ.pain(targ, attacker, take, method);
+			targ.pain(attacker, take, method); // .void(entity attacker, float damage, float method) pain;		
 	}
-	else if( self.deadflag == DEAD_NO )
+	else if(targ.health < 0 && targ.deadflag == DEAD_NO)
 	{
-		self.takedamage = 0;
-		self.deadflag = DEAD_DYING;
-//		.void(entity ent, entity attacker, float damage, float method) die;	
+		targ.deadflag = DEAD_DEAD;
 		if(targ.die)	
-			targ.die(targ, attacker, take, method);
+			targ.die(attacker, take, method); //.void(entity attacker, float damage, float method) die;	
 	}
+	self = oldSelf;
+	
+//	centerprint2(getent(1), "dodamage: health ", ftos(targ.health) );
 };
 
 /*
@@ -212,40 +211,39 @@ RadiusDamage
 void(entity inflictor, entity attacker, float damage, entity ignore, float radius, int mod) RadiusDamage =
 {
 	float	points;
-	entity ent;
+	entity  ent;
 	vector	v;
 	vector	dir;
-
+	vector pos;
+	float dist;
+	
+	pos = SUB_GetCenter(inflictor);
+	
 	ent = world;
 	while((ent = findradius(ent, inflictor.origin, radius)) != world)
 	{
-
 		if(ent == ignore)
+			continue;		
+		if(!ent.takedamage)
 			continue;
 		
-		//if(!ent.takedamage)
-		//	continue;
+		v = ent.origin + '0 0 10';
+		dist = vectorlength(v - pos);
 		
-		
-		DoDamage(attacker, inflictor, ent, 10, DAMAGE_NO_PROTECTION, DMG_EXPLOSIVE);
-		//ent.effects = EF_PENT | EF_FLAG1;
-		//ent.effects = EF_QUAD | EF_FLAG2;
-		
-		v = ent.origin;//SUB_GetCenter(ent);
-		points = damage - (0.5 * vlen(v));
+		points = damage - (0.5 * dist);	
 		
 		if(ent == attacker)
-			points = points * 0.5;
-		
-		//points = rint(points);
-		
+			points = points * 0.5;	
+				
+		points = rint(points);	
 		if(points > 0)
 		{
 			if(CanDamage (ent, inflictor))
 			{
 				dir = ent.origin - inflictor.origin;
-				//dprint3("radius damage to: ", ent.classname, "\n");
-				//T_Damage(ent, inflictor, attacker, dir, inflictor->s.origin, vec3_origin, points, points, DAMAGE_RADIUS, mod);
+				DoDamage(attacker, inflictor, ent, points, DAMAGE_NO_PROTECTION, DMG_EXPLOSIVE);
+				//dprint4( ftos(points), " radius damage to: ", ent.classname, "\n");
+				dprint7( "RadiusDamage: ", ftos(points), " dmg at dist ", ftos(dist), " to ", ent.classname, "\n");
 			}
 		}
 	}

@@ -18,6 +18,15 @@ float() ParseClientCommand =
 	if(g_intermissionTime)
 		return 0;
 
+	if( cmd == "respawn" ) 
+	{
+		if( self.health <= 0 )
+		{
+			SpawnPlayer();
+			sprint(self, PRINT_HIGH, "respawned\n");
+		}
+	}
+	
 	if( cmd == "god" ) /* cheat */
 	{
 		ClientCmd_Cheat(0);

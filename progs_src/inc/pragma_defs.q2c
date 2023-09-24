@@ -12,40 +12,43 @@ float PRINT_MEDIUM	= 1;	// death messages
 float PRINT_HIGH	= 2;	// critical messages
 float PRINT_CHAT	= 3;	// chat message
 
-// contents
-float CONTENTS_SOLID		= 1; 	// an eye is never valid in a solid
-float CONTENTS_WINDOW		= 2;	// translucent, but not watery
-float CONTENTS_AUX			= 4;
-float CONTENTS_LAVA			= 8;
-float CONTENTS_SLIME		= 16;
-float CONTENTS_WATER		= 32;
-float CONTENTS_MIST			= 64;
-float CONTENTS_AREAPORTAL	= 32768;
-float CONTENTS_PLAYERCLIP	= 65536;
-float CONTENTS_MONSTERCLIP	= 131072;
+#define	CONTENTS_SOLID			1i		// an eye is never valid in a solid
+#define	CONTENTS_WINDOW			2i		// translucent, but not watery
+#define	CONTENTS_AUX			4i
+#define	CONTENTS_LAVA			8i
+#define	CONTENTS_SLIME			16i
+#define	CONTENTS_WATER			32i
+#define	CONTENTS_MIST			64i
+#define	LAST_VISIBLE_CONTENTS		64i
+// remaining contents are non-visible, and don't eat brushes
+#define	CONTENTS_AREAPORTAL		0x8000i
+#define	CONTENTS_PLAYERCLIP		0x10000i
+#define	CONTENTS_MONSTERCLIP		0x20000i
 // currents can be added to any other contents, and may be mixed
-float CONTENTS_CURRENT_0	= 0x40000;
-float CONTENTS_CURRENT_90	= 0x80000;
-float CONTENTS_CURRENT_180	= 0x100000;
-float CONTENTS_CURRENT_270	= 0x200000;
-float CONTENTS_CURRENT_UP	= 0x400000;
-float CONTENTS_CURRENT_DOWN	= 0x800000;
-float CONTENTS_MONSTER		= 33554432;		// should never be on a brush, only in game
-float CONTENTS_DEADMONSTER	= 67108864;
-float CONTENTS_DETAIL		= 134217728;	// brushes to be added after vis leafs
-float CONTENTS_TRANSLUCENT	= 268435456;	// auto set if any surface has trans
-float CONTENTS_LADDER		= 536870912;
+#define	CONTENTS_CURRENT_0		0x40000i
+#define	CONTENTS_CURRENT_90		0x80000i
+#define	CONTENTS_CURRENT_180		0x100000i
+#define	CONTENTS_CURRENT_270		0x200000i
+#define	CONTENTS_CURRENT_UP		0x400000i
+#define	CONTENTS_CURRENT_DOWN		0x800000i
+#define	CONTENTS_ORIGIN			0x1000000i	// removed before bsping an entity
+#define	CONTENTS_MONSTER		0x2000000i	// should never be on a brush, only in game
+#define	CONTENTS_DEADMONSTER		0x4000000i
+#define	CONTENTS_DETAIL			0x8000000i	// brushes to be added after vis leafs
+#define	CONTENTS_TRANSLUCENT		0x10000000i	// auto set if any surface has trans
+#define	CONTENTS_LADDER			0x20000000i
 
 // content masks
-float MASK_ALL				= -1;
-float MASK_SOLID			= (CONTENTS_SOLID|CONTENTS_WINDOW);
-float MASK_PLAYERSOLID		= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
-float MASK_DEADSOLID		= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW);
-float MASK_MONSTERSOLID		= (CONTENTS_SOLID|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
-float MASK_WATER			= (CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME);
-float MASK_OPAQUE			= (CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA);
-float MASK_SHOT				= (CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER);
-float MASK_CURRENT			= (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN);
+int MASK_ALL			= -1;
+int MASK_SOLID			= (CONTENTS_SOLID|CONTENTS_WINDOW);
+int MASK_PLAYERSOLID		= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
+int MASK_DEADSOLID		= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW);
+int MASK_MONSTERSOLID		= (CONTENTS_SOLID|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
+int MASK_WATER			= (CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME);
+int MASK_OPAQUE			= (CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA);
+int MASK_SHOT			= (CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER);
+int MASK_CURRENT		= (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN);
+
 //surface flags
 float SURF_LIGHT		= 0x1;		// value will hold the light strength
 float SURF_SLICK		= 0x2;		// effects game physics (pmove.qc)
@@ -121,36 +124,23 @@ float RF_USE_DISGUISE	= 0x00040000;	// end ROGUE
 //
 // muzzle flashes / player effects
 //
-float MZ_BLASTER			= 0;
-float MZ_MACHINEGUN			= 1;
-float MZ_SHOTGUN			= 2;
-float MZ_CHAINGUN1			= 3;
-float MZ_CHAINGUN2			= 4;
-float MZ_CHAINGUN3			= 5;
-float MZ_RAILGUN			= 6;
-float MZ_ROCKET				= 7;
-float MZ_GRENADE			= 8;
-float MZ_LOGIN				= 9;
-float MZ_LOGOUT				= 10;
-float MZ_RESPAWN			= 11;
-float MZ_BFG				= 12;
-float MZ_SSHOTGUN			= 13;
-float MZ_HYPERBLASTER		= 14;
-float MZ_ITEMRESPAWN		= 15;
-float MZ_IONRIPPER			= 16;	/* begin RAFAEL */
-float MZ_BLUEHYPERBLASTER 	= 17;
-float MZ_PHALANX			= 18;
-float MZ_SILENCED			= 128;	/* end RAFAEL */	// bit flag ORed with one of the above numbers
-float MZ_ETF_RIFLE			= 30; 	/* begin ROGUE */
-float MZ_UNUSED				= 31;
-float MZ_SHOTGUN2			= 32;
-float MZ_HEATBEAM			= 33;
-float MZ_BLASTER2			= 34;
-float MZ_TRACKER			= 35;
-float MZ_NUKE1				= 36;
-float MZ_NUKE2				= 37;
-float MZ_NUKE4				= 38;
-float MZ_NUKE8				= 39; 	/* end ROGUE */
+//
+// muzzle flashes / player effects
+//
+enum
+{
+	FX_MUZZLEFLASH_PISTOL,
+	FX_MUZZLEFLASH_RIFLE,
+	FX_MUZZLEFLASH_SHOTGUN,
+	FX_MUZZLEFLASH_NEGATIVE_LIGHT,
+
+	// MOVE THESE SOMEWHERE ELSE
+	FX_MUZZLEFLASH_LOGIN,
+	FX_MUZZLEFLASH_LOGOUT,
+	FX_MUZZLEFLASH_RESPAWN,
+	FX_MUZZLEFLASH_ITEMRESPAWN,
+	FX_MUZZLEFLASH_SILENCED = 128		// bit flag ORed with one of the above numbers
+};
 
 // temp entity events
 // typedef enum temp_event_t
