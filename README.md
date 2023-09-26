@@ -59,18 +59,15 @@ You'll need Visual Studio 2019 or Visual Studio 2022 to compile the engine (engi
 
 2. Open VC2019 solution `src/pragma.sln` and compile every project for `x86`
 
-If compilation is succesfull, the `engine.exe` and `renderer_ogl1.dll` will be created in `/build` directory.
+> If compilation is succesfull, the `engine.exe`, `cgame.dll` and `renderer_ogl1.dll` will be created in `/build` directory.
 
 4. Run `build_scripts_server.bat` to compile server QC scripts
 
-This script runs FTEQCC in `/progs_src` and copies the compiled QC progs to `build/basepr/progs`
+> This script runs FTEQCC in `/progs_src` and copies the compiled QC progs to `build/basepr/progs`
 
 5. Copy over Quake 2's retail or demo `pak0.pak` to `build/baseq2/`
 
 6. Run pragma with `run_pragma.bat` (alternatively start engine.exe with cmdline `+game basepr`)
-
-https://www.youtube.com/watch?v=rLWEsG0bD44
-
 
 # Screenshots and videos of pragma in action
 
