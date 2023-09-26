@@ -1,5 +1,5 @@
 # pragma
-Pragma is an custom Quake2 derived engine with strong focus on QC scripting and modding capabilities, due to heavy redesign it is not compatible with vanilla Q2 and by design _it will not run Q2 game_.
+Pragma is an custom Quake2 derived engine with strong focus on QC scripting and to serve as a clean base for stand alone projects, due to heavy redesign it is not compatible with vanilla Q2, and by design _it will not run Q2 game_.
 
 `BE WARNED. THIS IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE AND WILL CHANGE DRASTICALLY FROM TIME TO TIME. I DO NOT GUARANTEE THAT VERSION B WILL BE COMPATIBLE WITH VERSION A, KEEPING COMPATIBILITY IS NOT MANDATORY YET`
 
