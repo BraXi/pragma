@@ -1,9 +1,9 @@
 # pragma
 Pragma is an custom Quake2 derived engine with strong focus on QC scripting and modding capabilities, due to heavy redesign it is not compatible with vanilla Q2 and by design _it will not run Q2 game_.
 
-BE WARNED. THIS IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE AND WILL CHANGE DRASTICALLY FROM TIME TO TIME
+`BE WARNED. THIS IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE AND WILL CHANGE DRASTICALLY FROM TIME TO TIME. I DO NOT GUARANTEE THAT VERSION B WILL BE COMPATIBLE WITH VERSION A, KEEPING COMPATIBILITY IS NOT MANDATORY YET`
 
-The most drastical change is the complete removal of game dll (the Q2's C modding API), which was replaced with QuakeC virtual machine, compiled 'progs' will run across all supported operating systems and are being overall more secure, allowing users to run various mods and not worry about any malicious code.
+The most drastical change is the complete removal of game dll (the Q2's C modding API), which was replaced with QuakeC virtual machine, compiled 'progs' will run across all supported operating systems and are being overall more secure, allowing users to run various mods and not worry about any malicious code. While QC is not as fast and convinient as native C, it allows for easier iterations and faster development of a project, while also being easier to enter and understand.
 
 The second (in progress), yet very important change is the implementation of client game module, which introduces client-side QC scripting that will allow mods to implement new effects, menus, prediction, etc - untill now this could only be done by shipping custom builds of client EXE and is totally not the right way for mods
 
@@ -11,16 +11,16 @@ Project has a simple rule - *no bloat*, all the changes and additions should not
 
 ## Features:
 Pragma so far had introduced following additions and changes to Q2 engine, note that `experimental` features may be implemented partialy or currently not in this repo:
-- completly platform independant QuakeC Virtual Machine (.qc)
+- completly platform independant QuakeC Virtual Machine
 - server-side and (soon) client-side QC
-- fixed many typos in code and corrected error messages to be [more] understandable and explainatory
+- fixed many typos in code and corrected error messages to be more understandable and explainatory
 - has no software renderer and OpenGL 1.x is currently the one and only
-- game (.DLL) API has been removed completly
-- supports full RGB(a) TGA textures for BSP and MD2 models - engine will look for TGA, then fall back to WAL if not found
-- multitexture support in GL1.1 renderer
-- small minor bugfixes, but a few galaxies away from being as stable as Yamagi Quake II (pragma is based on original Q2 source release, remember)
+- game library C API has been removed completly
+- supports full RGB(a) TGA textures for BSP and MD2 models (it may use WALs as a fallback, but that is deprecated)
+- multitexture support and lots of crusty code removal in GL 1.1 renderer
+- small minor bugfixes, but a few galaxies away from being as stable as Yamagi Quake II or any other mature source port (pragma is based on original Q2 source release, remember)
 - removed obscure CDAudio and IPX code
-- its super simple even for newbies - all you need to start is a text editor and FTEQCC compiler to get started
+- its super simple even for newbies - all you need is a text editor and FTEQCC compiler to create your first mod
 - [experimental] new UI (HUD/MENU) system that is fully editable by mods, lightweight and scalable to all resolutions
 - [experimental] player movement (pmove) is fully editable in mods - unlike other Q2 engines that require client EXE to be recompiled
 
@@ -33,7 +33,7 @@ In vanilla Q2 anytime you changed something in game.dll the code needed to be co
 - removal of MD2 models in favour of MD3
 - support for BSPs with increased limits, lightgrids, vertexnormals and lightmapped turb (liquid) surfaces
 - linux & dedicated server support
-- port modern renderer (Vulkan or OGL4+)
+- modern renderer (Vulkan or OGL4+)
 - rewrite of net parsing of certain packets like ``svc_muzzleflash`` and ``svc_temp_entity``, parsing being a lot more versatile and engine less likely crash when something unexpected happens or when server asks for something client doesn't have
 - implementation of client game progs allowing for custom made effects, client-side entities (decorations, static models, etc), menus, pmove prediction and smoothing
 
@@ -46,6 +46,7 @@ In vanilla Q2 anytime you changed something in game.dll the code needed to be co
 | `build`        | this is where exe and dll's will be copied to |
 | `build/basepr` | where pragma specific assets should be put    |
 | `build/baseq2` | where you should copy Q2's `pak0.pak`         |
+| `stuff`        | contains dev textures and netradiant gamepack |
 
 
 ## Build instructions:
