@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!--
+build commands
+[RadiantPath]: path to Radiant .. C:\Program Files\Gtkradiant
+[EnginePath]: path to the engine .. C:\quake3\ C:\Program Files\Quake III Arena\ /usr/local/games/quake3/
+-->
+<project version="2.0">
+  <var name="q2map">"[RadiantPath]q2map" -fs_basepath "[EnginePath]"<cond value="[MonitorAddress]"> -connect [MonitorAddress]</cond></var>
+
+  <build name="Entities">
+    <command>[q2map] -bsp -onlyents "[MapFile]"</command>
+  </build>
+
+  <build name="Relight Qrad">
+    <command>[q2map] -bsp -onlyents -rad "[MapFile]"</command>
+  </build>
+
+  <build name="NoVis">
+    <command>[q2map] -bsp "[MapFile]"</command>
+  </build>
+
+  <build name="FullVis (No Water)">
+    <command>[q2map] -bsp -nowater -vis -rad "[MapFile]"</command>
+  </build>
+
+  <build name="FullVis">
+    <command>[q2map] -bsp -vis -rad "[MapFile]"</command>
+  </build>
+
+  <build name="FullVis (No Qrad)">
+    <command>[q2map] -bsp -vis "[MapFile]"</command>
+  </build>
+
+  <build name="FullVis (Qrad -extra)">
+    <command>[q2map] -bsp -vis -rad -extra "[MapFile]"</command>
+  </build>
+
+  <build name="FullVis (Qrad -maxlt -extra)">
+    <command>[q2map] -bsp -vis -rad -maxlight 1 -extra "[MapFile]"</command>
+  </build>
+
+  <build name="FullVis (Qbsp -nodetail, Qrad -extra)">
+    <command>[q2map] -bsp -nodetail -vis -rad -extra "[MapFile]"</command>
+  </build>
+
+  <build name="FastVis">
+    <command>[q2map] -bsp -vis -fast -rad "[MapFile]"</command>
+  </build>
+
+  <build name="FastVis (No Water)">
+    <command>[q2map] -bsp -nowater -vis -fast -rad "[MapFile]"</command>
+  </build>
+
+</project>
+
+
