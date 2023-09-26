@@ -95,7 +95,7 @@ void(entity p, float idx, float val) saveclientfield = #85; // sv
 float(entity player, float index) loadclientfield = #86; // sv
 void(float idx, float val) saveglobal = #87; // sv
 float(float index) loadglobal = #88; // sv
-float(string nm, float sg, float sc) changemap = #89; // sv
+float(string nm, float sp) changemap = #89; // sv
 float(entity e, float sg, float sc) setstat = #90; // sv
 float(entity e, vector im, float cc) pmove = #91; // sv
 

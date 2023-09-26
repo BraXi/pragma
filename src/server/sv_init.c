@@ -483,9 +483,9 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame, qboolea
 	else
 		Cvar_Set ("nextserver", "");
 
-	//ZOID special hack for end game screen in coop mode
-	if (Cvar_VariableValue ("coop") && !Q_stricmp(level, "victory.pcx"))
-		Cvar_Set ("nextserver", "gamemap \"*base1\"");
+// leaving here just for later reference so I don't forget about it
+//	if (Cvar_VariableValue ("coop") && !Q_stricmp(level, "victory.pcx"))
+	//	Cvar_Set ("nextserver", "gamemap \"*base1\"");
 
 	// if there is a $, use the remainder as a spawnpoint
 	ch = strstr(level, "$");

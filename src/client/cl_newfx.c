@@ -282,7 +282,8 @@ void CL_FlameEffects (ccentity_t *ent, vec3_t origin)
 	int			j;
 	cparticle_t	*p;
 
-	count = rand() & 0xF;
+#if 1
+	count = 14 + (rand() & 5);
 
 	for(n=0;n<count;n++)
 	{
@@ -302,14 +303,17 @@ void CL_FlameEffects (ccentity_t *ent, vec3_t origin)
 		p->color = 226 + (rand() % 4);
 		for (j=0 ; j<3 ; j++)
 		{
-			p->org[j] = origin[j] + crand()*5;
+			if(j==2)
+				p->org[j] = origin[j] + crand()*4;
+			else
+				p->org[j] = origin[j] + crand() * 9;
 			p->vel[j] = crand()*5;
 		}
-		p->vel[2] = crand() * -10;
-		p->accel[2] = -PARTICLE_GRAVITY;
+		p->vel[2] = 16;// crand() * -3;
+		p->accel[2] = -5; // -PARTICLE_GRAVITY;
 	}
-
-	count = rand() & 0x7;
+#endif
+	count = 6 + (rand() & 0x7);
 
 	for(n=0;n<count;n++)
 	{
@@ -328,7 +332,10 @@ void CL_FlameEffects (ccentity_t *ent, vec3_t origin)
 		p->color = 0 + (rand() % 4);
 		for (j=0 ; j<3 ; j++)
 		{
-			p->org[j] = origin[j] + crand()*3;
+			if (j == 2)
+				p->org[j] = origin[j] + crand() * 4;
+			else
+				p->org[j] = origin[j] + crand() * 8;
 		}
 		p->vel[2] = 20 + crand()*5;
 	}

@@ -20,6 +20,7 @@ void(entity who) target_changelevel_use =
 	
 	if(g_intermissionTime > 0)
 		return;	//activated
+// commented out for testing TODO: uncomment later
 //	if(cvar_deathmatch)
 //		return; //not in multiplayer
 	if( !isplayer(who) )

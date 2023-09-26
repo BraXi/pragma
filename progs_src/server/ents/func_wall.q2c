@@ -10,14 +10,14 @@ Copyright (C) 1997-2001 Id Software, Inc.
 This is just a solid wall if not inhibited
 
 TRIGGER_SPAWN	the wall will not be present until triggered
-				it will then blink in to existance; it will
-				kill anything that was in it's way
+		it will then blink in to existance; it will
+		kill anything that was in it's way
 
-TOGGLE			only valid for TRIGGER_SPAWN walls
-				this allows the wall to be turned on and off
+TOGGLE		only valid for TRIGGER_SPAWN walls
+		this allows the wall to be turned on and off
 
-START_ON		only valid for TRIGGER_SPAWN walls
-				the wall will initially be present
+START_ON	only valid for TRIGGER_SPAWN walls
+		the wall will initially be present
 */
 
 //func_wall & func_object

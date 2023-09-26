@@ -475,13 +475,29 @@ SCR_DrawLoading
 void SCR_DrawLoading (void)
 {
 	int		w, h;
+	rgba_t rect_fullscreen;
+	rgba_t color;
 		
 	if (!scr_draw_loading)
 		return;
 
 	scr_draw_loading = false;
-	re.DrawGetPicSize (&w, &h, "loading");
-	re.DrawPic ((viddef.width-w)/2, (viddef.height-h)/2, "loading");
+
+	rect_fullscreen[0] = rect_fullscreen[1] = 0;
+	rect_fullscreen[2] = 800;
+	rect_fullscreen[3] = 600;
+
+	VectorSet(color, 0, 0, 0);
+	color[3] = 0.5;
+	re.NewDrawFill(rect_fullscreen, color);
+
+	VectorSet(color, 1, 1, 1);
+	color[3] = 1;
+	re.DrawString("loading", 400, 280, 2, 2, color);
+
+
+//	re.DrawGetPicSize (&w, &h, "loading");
+//	re.DrawPic ((viddef.width-w)/2, (viddef.height-h)/2, "loading");
 }
 
 //=============================================================================
@@ -557,18 +573,24 @@ void SCR_DrawConsole (void)
 SCR_BeginLoadingPlaque
 ================
 */
-void SCR_BeginLoadingPlaque (void)
+void SCR_BeginLoadingPlaque(void)
 {
-	S_StopAllSounds ();
+	S_StopAllSounds();
 	cl.sound_prepped = false;		// don't play ambients
 	if (cls.disable_screen)
 		return;
-	if (developer->value)
-		return;
+	//	if (developer->value)
+	//		return; //not needed, printing to remote console
 	if (cls.state == ca_disconnected)
-		return;	// if at console, don't bring up the plaque
+		return;	
+
+	// close console
 	if (cls.key_dest == key_console)
+	{
+		cls.key_dest = key_game;
 		return;
+	}
+
 	if (cl.cinematictime > 0)
 		scr_draw_loading = 2;	// clear to balack first
 	else
@@ -1320,6 +1342,7 @@ void SCR_UpdateScreen (void)
 	int numframes;
 	int i;
 	float separation[2] = { 0, 0 };
+	float color[4];
 
 	// if the screen is disabled (loading plaque is up, or vid mode changing)
 	// do nothing at all
@@ -1363,18 +1386,15 @@ void SCR_UpdateScreen (void)
 		re.BeginFrame( separation[i] );
 
 		if (scr_draw_loading == 2)
-		{	//  loading plaque over black screen
-			int		w, h;
-
+		{	
+			//loading plaque over black screen
 			re.CinematicSetPalette(NULL);
 			scr_draw_loading = false;
-			re.DrawGetPicSize (&w, &h, "loading");
-			re.DrawPic ((viddef.width-w)/2, (viddef.height-h)/2, "loading");
-//			re.EndFrame();
-//			return;
+			VectorSet(color, 1, 1, 1);
+			color[3] = 1;
+			re.DrawString("loading", 400, 280, 2, 2, color);
 		} 
-		// if a cinematic is supposed to be running, handle menus
-		// and console specially
+		// if a cinematic is supposed to be running, handle menus and console specially
 		else if (cl.cinematictime > 0)
 		{
 			if (cls.key_dest == key_menu)

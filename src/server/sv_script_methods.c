@@ -1191,7 +1191,7 @@ void PFSV_loadglobal(void)
 ===============
 PFSV_changemap
 
-float changemap(string nextmap, float saveGlobals, float saveClients)
+float changemap(string nextmap, float savepers)
 ===============
 */
 void PFSV_changemap(void)
@@ -1201,19 +1201,29 @@ void PFSV_changemap(void)
 
 	nextmap = Scr_GetParmString(0);
 
+	// make sure the map exists on server, return false to script if it 
+	// doesn't so server can try to recover and pick a diferent map at last
 	if (!strstr(nextmap, "."))
 	{
 		Com_sprintf(expanded, sizeof(expanded), "maps/%s.bsp", nextmap);
 		if (FS_LoadFile(expanded, NULL) == -1)
 		{
-			Com_Printf("changemap(): can't change map to %s\n", expanded);
+			Com_Printf("changemap(): can't change map to %s, map not on the server\n", expanded);
 			Scr_ReturnFloat(0);
 			return;
 		}
 	}
 
-	Scr_ReturnFloat(1); // this is unnecessary as map is about to change
-	SV_Map(false, nextmap, false, Scr_GetParmFloat(1), Scr_GetParmFloat(2));
+	// not the best place to call it
+	//	SV_Map(false, nextmap, false, Scr_GetParmFloat(1), Scr_GetParmFloat(2)); 
+
+	if(Scr_GetParmFloat(1) > 0)
+		Cbuf_ExecuteText(EXEC_APPEND, va("gamemap %s", nextmap));
+	else
+		Cbuf_ExecuteText(EXEC_APPEND, va("map %s", nextmap));
+
+	Scr_ReturnFloat(1);
+
 }
 
 /*
@@ -1438,7 +1448,7 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_saveglobal, PF_SV, false, "void(float idx, float val) saveglobal");
 	Scr_DefineBuiltin(PFSV_loadglobal, PF_SV, false, "float(float index) loadglobal");
 
-	Scr_DefineBuiltin(PFSV_changemap, PF_SV, false, "float(string nm, float sg, float sc) changemap");
+	Scr_DefineBuiltin(PFSV_changemap, PF_SV, false, "float(string nm, float sp) changemap");
 
 	Scr_DefineBuiltin(PFSV_setstat, PF_SV, false, "float(entity e, float sg, float sc) setstat");
 	Scr_DefineBuiltin(PFSV_pmove, PF_SV, false, "float(entity e, float sg, float sc) pmove");
