@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 // r_main.c
-#include "gl_local.h"
+#include "r_local.h"
 
 void R_Clear (void);
 
@@ -1201,10 +1201,10 @@ int R_Init( void *hinstance, void *hWnd )
 		ri.Con_Printf( PRINT_ALL, "...GL_EXT_point_parameters not found\n" );
 	}
 
+
+	// GL_ARB_multitexture is mandatory
 	if ( strstr( gl_config.extensions_string, "GL_ARB_multitexture" ) )
 	{
-		ri.Con_Printf( PRINT_ALL, "...using GL_ARB_multitexture\n" );
-
 		qglActiveTextureARB = (void*)qwglGetProcAddress("glActiveTextureARB");
 		qglMultiTexCoord2fARB = (void*)qwglGetProcAddress("glMultiTexCoord2fARB");
 	}

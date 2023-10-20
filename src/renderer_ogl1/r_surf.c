@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // GL_RSURF.C: surface-related refresh code
 #include <assert.h>
 
-#include "gl_local.h"
+#include "r_local.h"
 
 static vec3_t	modelorg;		// relative to viewpoint
 
@@ -317,9 +317,11 @@ void R_BlendLightmaps (void)
 	int			i;
 	msurface_t	*surf, *newdrawsurf = 0;
 
+
 	// don't bother if we're set to fullbright
 	if (r_fullbright->value)
 		return;
+
 	if (!r_worldmodel->lightdata)
 		return;
 
@@ -892,8 +894,7 @@ void R_DrawInlineBModel (void)
 		dot = DotProduct (modelorg, pplane->normal) - pplane->dist;
 
 	// draw the polygon
-		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) ||
-			(!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
+		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
 			if (psurf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66) )
 			{	// add to the translucent chain
@@ -979,13 +980,13 @@ void R_DrawBrushModel (centity_t *e)
 	}
 
     qglPushMatrix ();
-e->angles[0] = -e->angles[0];	// stupid quake bug
-e->angles[2] = -e->angles[2];	// stupid quake bug
+	e->angles[0] = -e->angles[0];	// stupid quake bug
+	e->angles[2] = -e->angles[2];	// stupid quake bug
 	R_RotateForEntity (e);
-e->angles[0] = -e->angles[0];	// stupid quake bug
-e->angles[2] = -e->angles[2];	// stupid quake bug
+	e->angles[0] = -e->angles[0];	// stupid quake bug
+	e->angles[2] = -e->angles[2];	// stupid quake bug
 
-	GL_EnableMultitexture( true );
+	GL_EnableMultitexture( !r_fullbright->value );
 	GL_SelectTexture( GL_TEXTURE0_ARB );
 	GL_TexEnv( GL_REPLACE );
 	GL_SelectTexture( GL_TEXTURE1_ARB );
@@ -1198,7 +1199,7 @@ void R_DrawWorld (void)
 
 	if ( qglMultiTexCoord2fARB )
 	{
-		GL_EnableMultitexture( true );
+		GL_EnableMultitexture( !r_fullbright->value );
 
 		GL_SelectTexture( GL_TEXTURE0_ARB );
 		GL_TexEnv( GL_REPLACE );

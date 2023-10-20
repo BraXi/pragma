@@ -18,11 +18,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#include "gl_local.h"
+#include "r_local.h"
 
 image_t		gltextures[MAX_GLTEXTURES];
 int			numgltextures;
-int			base_textureid;		// gltextures[i] = base_textureid+i
 
 static byte			 intensitytable[256];
 static unsigned char gammatable[256];
@@ -496,6 +495,10 @@ TARGA LOADING
 =========================================================
 */
 
+#define TGA_TYPE_RAW_RGB 2 // Uncompressed, RGB images
+#define TGA_TYPE_RUNLENGHT_RGB 10 // Runlength encoded RGB images
+
+
 typedef struct _TargaHeader {
 	unsigned char 	id_length, colormap_type, image_type;
 	unsigned short	colormap_index, colormap_length;
@@ -560,12 +563,10 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 	targa_header.pixel_size = *buf_p++;
 	targa_header.attributes = *buf_p++;
 
-	if (targa_header.image_type!=2 
-		&& targa_header.image_type!=10) 
+	if (targa_header.image_type != TGA_TYPE_RAW_RGB && targa_header.image_type != TGA_TYPE_RUNLENGHT_RGB)
 		ri.Sys_Error (ERR_DROP, "LoadTGA: Only type 2 and 10 targa RGB images supported\n");
 
-	if (targa_header.colormap_type !=0 
-		|| (targa_header.pixel_size!=32 && targa_header.pixel_size!=24))
+	if (targa_header.colormap_type !=0 || (targa_header.pixel_size != 32 && targa_header.pixel_size != 24))
 		ri.Sys_Error (ERR_DROP, "LoadTGA: Only 32 or 24 bit images supported (no colormaps)\n");
 
 	columns = targa_header.width;
@@ -583,12 +584,16 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 	if (targa_header.id_length != 0)
 		buf_p += targa_header.id_length;  // skip TARGA image comment
 	
-	if (targa_header.image_type==2) {  // Uncompressed, RGB images
-		for(row=rows-1; row>=0; row--) {
+	if (targa_header.image_type == TGA_TYPE_RAW_RGB)
+	{  
+		for(row=rows-1; row>=0; row--) 
+		{
 			pixbuf = targa_rgba + row*columns*4;
-			for(column=0; column<columns; column++) {
+			for(column=0; column<columns; column++) 
+			{
 				unsigned char red,green,blue,alphabyte;
-				switch (targa_header.pixel_size) {
+				switch (targa_header.pixel_size) 
+				{
 					case 24:
 							
 							blue = *buf_p++;
@@ -613,15 +618,20 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 			}
 		}
 	}
-	else if (targa_header.image_type==10) {   // Runlength encoded RGB images
+	else if (targa_header.image_type == TGA_TYPE_RUNLENGHT_RGB) 
+	{   
 		unsigned char red,green,blue,alphabyte,packetHeader,packetSize,j;
-		for(row=rows-1; row>=0; row--) {
+		for(row=rows-1; row>=0; row--) 
+		{
 			pixbuf = targa_rgba + row*columns*4;
-			for(column=0; column<columns; ) {
+			for(column=0; column<columns; ) 
+			{
 				packetHeader= *buf_p++;
 				packetSize = 1 + (packetHeader & 0x7f);
-				if (packetHeader & 0x80) {        // run-length packet
-					switch (targa_header.pixel_size) {
+				if (packetHeader & 0x80) // run-length packet
+				{
+					switch (targa_header.pixel_size) 
+					{
 						case 24:
 								blue = *buf_p++;
 								green = *buf_p++;
@@ -636,13 +646,15 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 								break;
 					}
 	
-					for(j=0;j<packetSize;j++) {
+					for(j=0;j<packetSize;j++) 
+					{
 						*pixbuf++=red;
 						*pixbuf++=green;
 						*pixbuf++=blue;
 						*pixbuf++=alphabyte;
 						column++;
-						if (column==columns) { // run spans across rows
+						if (column==columns) // run spans across rows
+						{ 
 							column=0;
 							if (row>0)
 								row--;
@@ -652,9 +664,12 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 						}
 					}
 				}
-				else {                            // non run-length packet
-					for(j=0;j<packetSize;j++) {
-						switch (targa_header.pixel_size) {
+				else // non run-length packet
+				{
+					for(j=0;j<packetSize;j++) 
+					{
+						switch (targa_header.pixel_size) 
+						{
 							case 24:
 									blue = *buf_p++;
 									green = *buf_p++;
@@ -676,7 +691,8 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 									break;
 						}
 						column++;
-						if (column==columns) { // pixel packet run spans across rows
+						if (column == columns)  // pixel packet run spans across rows
+						{ 
 							column=0;
 							if (row>0)
 								row--;
@@ -690,7 +706,6 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 			breakOut:;
 		}
 	}
-
 	ri.FS_FreeFile (buffer);
 }
 
@@ -700,7 +715,7 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 GL_ResampleTexture
 ================
 */
-void GL_ResampleTexture (unsigned *in, int inwidth, int inheight, unsigned *out,  int outwidth, int outheight)
+void GL_ResampleTexture (unsigned *in, int inwidth, int inheight, unsigned *out, int outwidth, int outheight)
 {
 	int		i, j;
 	unsigned	*inrow, *inrow2;
@@ -821,7 +836,7 @@ Returns has_alpha
 int		upload_width, upload_height;
 qboolean uploaded_paletted;
 
-qboolean GL_Upload32 (unsigned *data, int width, int height,  qboolean mipmap)
+qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 {
 	int			samples;
 	unsigned	scaled[256*256];
@@ -884,8 +899,7 @@ qboolean GL_Upload32 (unsigned *data, int width, int height,  qboolean mipmap)
 	    comp = gl_tex_alpha_format;
 	else 
 	{
-	    ri.Con_Printf (PRINT_ALL, "Unknown number of texture components %i\n",
- samples);
+	    ri.Con_Printf (PRINT_ALL, "Unknown number of texture components %i\n", samples);
 	    comp = samples;
 	}
 
@@ -1117,7 +1131,7 @@ image_t *GL_LoadWal (char *name)
 	ri.FS_LoadFile (name, (void **)&mt);
 	if (!mt)
 	{
-		ri.Con_Printf (PRINT_ALL, "GL_FindImage: can't load %s\n", name);
+		ri.Con_Printf (PRINT_ALL, "GL_LoadWal: can't load %s\n", name);
 		return r_notexture;
 	}
 

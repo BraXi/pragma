@@ -1,4 +1,4 @@
-#include "gl_local.h"
+#include "r_local.h"
 
 extern image_t* draw_chars;
 

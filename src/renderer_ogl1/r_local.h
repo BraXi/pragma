@@ -120,10 +120,7 @@ typedef enum
 	rserr_unknown
 } rserr_t;
 
-#include "gl_model.h"
-
-void GL_BeginRendering (int *x, int *y, int *width, int *height);
-void GL_EndRendering (void);
+#include "r_model.h"
 
 void GL_SetDefaultState( void );
 void GL_UpdateSwapInterval( void );
@@ -217,11 +214,8 @@ extern	cvar_t	*r_finish;
 extern	cvar_t	*r_ztrick;
 extern	cvar_t	*r_clear;
 extern	cvar_t	*r_cull;
-extern	cvar_t	*gl_poly;
-extern	cvar_t	*gl_texsort;
 extern	cvar_t	*r_polyblend;
 extern	cvar_t	*r_flashblend;
-extern	cvar_t	*gl_lightmaptype;
 extern	cvar_t	*r_modulate;
 extern	cvar_t	*r_drawbuffer;
 extern  cvar_t  *gl_driver;

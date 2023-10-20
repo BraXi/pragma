@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // r_misc.c
 
-#include "gl_local.h"
+#include "r_local.h"
 
 /*
 ==================
@@ -108,7 +108,7 @@ void GL_ScreenShot_f (void)
 	buffer = malloc(vid.width * vid.height * 3 + 18);
 	if (!buffer)
 	{
-		ri.Con_Printf(PRINT_ALL, "SCR_ScreenShot_f: failed to allocate pixels\n");
+		ri.Con_Printf(PRINT_ALL, "GL_ScreenShot_f: failed to allocate pixels\n");
 		return;
 	}
 
@@ -133,7 +133,7 @@ void GL_ScreenShot_f (void)
 	} 
 	if (i==1000) 
 	{
-		ri.Con_Printf (PRINT_ALL, "SCR_ScreenShot_f: Couldn't create a file\n"); 
+		ri.Con_Printf (PRINT_ALL, "GL_ScreenShot_f: Couldn't create a file\n"); 
 		free(buffer);
 		return;
  	}

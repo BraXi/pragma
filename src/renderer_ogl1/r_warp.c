@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // gl_warp.c -- sky and water polygons
 
-#include "gl_local.h"
+#include "r_local.h"
 
 extern	model_t	*loadmodel;
 
@@ -311,16 +311,18 @@ void DrawSkyPolygon (int nump, vec3_t vecs)
 	float	*vp;
 
 	c_sky++;
+
 #if 0
-glBegin (GL_POLYGON);
-for (i=0 ; i<nump ; i++, vecs+=3)
-{
-	VectorAdd(vecs, r_origin, v);
-	qglVertex3fv (v);
-}
-glEnd();
-return;
+	qglBegin (GL_POLYGON);
+	for (i=0 ; i<nump ; i++, vecs+=3)
+	{
+		VectorAdd(vecs, r_origin, v);
+		qglVertex3fv (v);
+	}
+	qglEnd();
+	return;
 #endif
+
 	// decide which face it maps to
 	VectorCopy (vec3_origin, v);
 	for (i=0, vp=vecs ; i<nump ; i++, vp+=3)
@@ -548,7 +550,7 @@ void MakeSkyVec (float s, float t, int axis)
 	else if (t > sky_max)
 		t = sky_max;
 
-	t = 1.0 - t;
+//	t = 1.0 - t;	// braxi -- commented out, TGAs were upside down
 	qglTexCoord2f (s, t);
 	qglVertex3fv (v);
 }
@@ -579,9 +581,9 @@ qglDisable (GL_DEPTH_TEST);
 			return;		// nothing visible
 	}
 
-qglPushMatrix ();
-qglTranslatef (r_origin[0], r_origin[1], r_origin[2]);
-qglRotatef (r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
+	qglPushMatrix ();
+	qglTranslatef (r_origin[0], r_origin[1], r_origin[2]);
+	qglRotatef (r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
 
 	for (i=0 ; i<6 ; i++)
 	{
@@ -593,8 +595,7 @@ qglRotatef (r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
 			skymaxs[1][i] = 1;
 		}
 
-		if (skymins[0][i] >= skymaxs[0][i]
-		|| skymins[1][i] >= skymaxs[1][i])
+		if (skymins[0][i] >= skymaxs[0][i] || skymins[1][i] >= skymaxs[1][i])
 			continue;
 
 		GL_Bind (sky_images[skytexorder[i]]->texnum);
@@ -606,12 +607,13 @@ qglRotatef (r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
 		MakeSkyVec (skymaxs[0][i], skymins[1][i], i);
 		qglEnd ();
 	}
-qglPopMatrix ();
+	qglPopMatrix ();
+
 #if 0
-glDisable (GL_BLEND);
-glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-glColor4f (1,1,1,0.5);
-glEnable (GL_DEPTH_TEST);
+	glDisable (GL_BLEND);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glColor4f (1,1,1,0.5);
+	glEnable (GL_DEPTH_TEST);
 #endif
 }
 
@@ -621,8 +623,9 @@ glEnable (GL_DEPTH_TEST);
 R_SetSky
 ============
 */
-// 3dstudio environment map names
-char	*suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"};
+
+//#define SKY_CHOPSIZE
+static char	*suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"}; // 3dstudio environment map names
 void R_SetSky (char *name, float rotate, vec3_t axis)
 {
 	int		i;
@@ -634,16 +637,19 @@ void R_SetSky (char *name, float rotate, vec3_t axis)
 
 	for (i=0 ; i<6 ; i++)
 	{
+
+#ifdef SKY_CHOPSIZE
 		// chop down rotating skies for less memory
 		if (r_skymip->value || skyrotate)
 			r_picmip->value++;
-
+#endif
 		Com_sprintf (pathname, sizeof(pathname), "env/%s_%s.tga", skyname, suf[i]);
 
 		sky_images[i] = GL_FindImage (pathname, it_sky);
 		if (!sky_images[i])
 			sky_images[i] = r_notexture;
 
+#ifdef SKY_CHOPSIZE
 		if (r_skymip->value || skyrotate)
 		{	// take less memory
 			r_picmip->value--;
@@ -651,6 +657,7 @@ void R_SetSky (char *name, float rotate, vec3_t axis)
 			sky_max = 255.0/256;
 		}
 		else	
+#endif 
 		{
 			sky_min = 1.0/512;
 			sky_max = 511.0/512;

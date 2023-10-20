@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // draw.c
 
-#include "gl_local.h"
+#include "r_local.h"
 
 image_t		*draw_chars;
 
@@ -40,6 +40,7 @@ void Draw_InitLocal (void)
 	GL_Bind( draw_chars->texnum );
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	GL_Bind(0);
 }
 
 
@@ -240,15 +241,16 @@ void Draw_Fill (int x, int y, int w, int h, int c)
 		byte		v[4];
 	} color;
 
-	if ( (unsigned)c > 255)
-		ri.Sys_Error (ERR_FATAL, "Draw_Fill: bad color");
+	if ((unsigned)c > 255)
+	{
+		ri.Sys_Error(ERR_FATAL, "Draw_Fill: bad color");
+		return; // braxi -- shut up msvc warning d_8to24table
+	}
 
 	qglDisable (GL_TEXTURE_2D);
 
 	color.c = d_8to24table[c];
-	qglColor3f (color.v[0]/255.0,
-		color.v[1]/255.0,
-		color.v[2]/255.0);
+	qglColor3f (color.v[0]/255.0, color.v[1]/255.0, color.v[2]/255.0);
 
 	qglBegin (GL_QUADS);
 
@@ -276,15 +278,14 @@ void Draw_FadeScreen (float *rgba)
 	qglDisable (GL_TEXTURE_2D);
 	qglAlphaFunc(GL_GREATER, 0.1);
 	qglColor4f(rgba[0], rgba[1], rgba[2], rgba[3]);
+
 	qglBegin (GL_QUADS);
-
-	qglVertex2f (0,0);
-	qglVertex2f (vid.width, 0);
-	qglVertex2f (vid.width, vid.height);
-	qglVertex2f (0, vid.height);
-
+		qglVertex2f (0,0);
+		qglVertex2f (vid.width, 0);
+		qglVertex2f (vid.width, vid.height);
+		qglVertex2f (0, vid.height);
 	qglEnd ();
-	qglColor4f (1,1,1,1);
+	qglColor4f(1,1,1,1);
 	qglAlphaFunc(GL_GREATER, 0.666);
 	qglEnable (GL_TEXTURE_2D);
 	qglDisable (GL_BLEND);
