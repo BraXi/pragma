@@ -1,5 +1,5 @@
 # pragma
-Pragma is an custom Quake2 derived engine with strong focus on QC scripting and to serve as a clean base for stand alone projects, due to heavy redesign it is not compatible with vanilla Q2, and by design _it will not run Q2 game_.
+Pragma is an custom Quake2 derived engine with strong focus on QC scripting and to serve as a clean base for stand alone projects, due to heavy redesign it is not compatible with vanilla Q2, and by design _it will not run Q2 game_. It's completly standalone, meaning you don't need Quake2 files to get started.
 
 `BE WARNED. THIS IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE AND WILL CHANGE DRASTICALLY FROM TIME TO TIME. I DO NOT GUARANTEE THAT VERSION B WILL BE COMPATIBLE WITH VERSION A, KEEPING COMPATIBILITY IS NOT MANDATORY YET`
 
@@ -12,12 +12,13 @@ Project has a simple rule - *no bloat*, all the changes and additions should not
 ## Features:
 Pragma so far had introduced following additions and changes to Q2 engine, note that `experimental` features may be implemented partialy or currently not in this repo:
 - completly platform independant QuakeC Virtual Machine
+- It's completly standalone, does not require Quake2 assets
 - server-side and (soon) client-side QC
 - fixed many typos in code and corrected error messages to be more understandable and explainatory
 - has no software renderer and OpenGL 1.x is currently the one and only
 - game library C API has been removed completly
-- supports full RGB(a) TGA textures for BSP and MD2 models (it may use WALs as a fallback, but that is deprecated)
-- multitexture support and lots of crusty code removal in GL 1.1 renderer
+- complete removal of color palette and 8bit textures in favour of TGA format that supports full RGBA
+- multitexture support and lots of crusty code removal in GL 1.4 renderer
 - small minor bugfixes, but a few galaxies away from being as stable as Yamagi Quake II or any other mature source port (pragma is based on original Q2 source release, remember)
 - removed obscure CDAudio and IPX code
 - its super simple even for newbies - all you need is a text editor and FTEQCC compiler to create your first mod
@@ -29,7 +30,6 @@ In vanilla Q2 anytime you changed something in game.dll the code needed to be co
 
 
 ## Other notable planned changes:
-- complete removal of color palette and 8bit textures
 - removal of MD2 models in favour of MD3
 - support for BSPs with increased limits, lightgrids, vertexnormals and lightmapped turb (liquid) surfaces
 - linux & dedicated server support
@@ -44,8 +44,7 @@ In vanilla Q2 anytime you changed something in game.dll the code needed to be co
 | `src`          | pragma's C source code and VC2019 projects    |
 | `progs_src`    | QC script sources for game and cgame          |
 | `build`        | this is where exe and dll's will be copied to |
-| `build/basepr` | where pragma specific assets should be put    |
-| `build/baseq2` | where you should copy Q2's `pak0.pak`         |
+| `build/main`   | where pragma specific assets should be put    |
 | `stuff`        | contains dev textures and netradiant gamepack |
 
 
