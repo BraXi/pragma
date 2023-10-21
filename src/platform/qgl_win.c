@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ** QGL_Shutdown() - unloads libraries, NULLs function pointers
 */
 #include <float.h>
-#include "../renderer_ogl1/gl_local.h"
+#include "../renderer_ogl1/r_local.h"
 #include "glw_win.h"
 
 int   ( WINAPI * qwglChoosePixelFormat )(HDC, CONST PIXELFORMATDESCRIPTOR *);

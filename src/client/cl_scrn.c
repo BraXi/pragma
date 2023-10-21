@@ -94,16 +94,19 @@ void CL_AddNetgraph (void)
 	int		in;
 	int		ping;
 
+	static vec3_t c1 = { 0.654902, 0.231373, 0.168627 };
+	static vec3_t c2 = { 1.000000, 0.749020, 0.058824 };
+
 	// if using the debuggraph for something else, don't
 	// add the net lines
 	if (scr_debuggraph->value || scr_timegraph->value)
 		return;
 
 	for (i=0 ; i<cls.netchan.dropped ; i++)
-		SCR_DebugGraph (30, 0x40);
+		SCR_DebugGraph (30, c1);
 
 	for (i=0 ; i<cl.surpressCount ; i++)
-		SCR_DebugGraph (30, 0xdf);
+		SCR_DebugGraph (30, c2);
 
 	// see what the latency was on this packet
 	in = cls.netchan.incoming_acknowledged & (CMD_BACKUP-1);
@@ -111,14 +114,16 @@ void CL_AddNetgraph (void)
 	ping /= 30;
 	if (ping > 30)
 		ping = 30;
-	SCR_DebugGraph (ping, 0xd0);
+
+	static vec3_t c = { 0.000000, 1.000000, 0.000000 };
+	SCR_DebugGraph (ping, c);
 }
 
 
 typedef struct
 {
 	float	value;
-	int		color;
+	vec3_t	color; //was int
 } graphsamp_t;
 
 static	int			current;
@@ -129,10 +134,10 @@ static	graphsamp_t	values[1024];
 SCR_DebugGraph
 ==============
 */
-void SCR_DebugGraph (float value, int color)
+void SCR_DebugGraph(float value, vec3_t color)
 {
 	values[current&1023].value = value;
-	values[current&1023].color = color;
+	VectorCopy(color, values[current & 1023].color);
 	current++;
 }
 
@@ -145,8 +150,9 @@ void SCR_DrawDebugGraph (void)
 {
 	int		a, x, y, w, i, h;
 	float	v;
-	int		color;
+	vec3_t	color;
 
+	static vec3_t c = { 0.482353, 0.482353,0.482353 };
 	//
 	// draw the graph
 	//
@@ -154,14 +160,13 @@ void SCR_DrawDebugGraph (void)
 
 	x = scr_vrect.x;
 	y = scr_vrect.y+scr_vrect.height;
-	re.DrawFill (x, y-scr_graphheight->value,
-		w, scr_graphheight->value, 8);
+	re.DrawFill (x, y-scr_graphheight->value, w, scr_graphheight->value, c);
 
 	for (a=0 ; a<w ; a++)
 	{
 		i = (current-1-a+1024) & 1023;
 		v = values[i].value;
-		color = values[i].color;
+		VectorCopy(values[i].color, color);
 		v = v*scr_graphscale->value + scr_graphshift->value;
 		
 		if (v < 0)
@@ -474,7 +479,7 @@ SCR_DrawLoading
 */
 void SCR_DrawLoading (void)
 {
-	int		w, h;
+//	int		w, h;
 	rgba_t rect_fullscreen;
 	rgba_t color;
 		

@@ -995,22 +995,25 @@ void CL_AddPacketEntities (frame_t *frame)
 				CL_TrapParticles (&ent);
 				i = (rand()%100) + 100;
 				V_AddLight (ent.origin, i, 1, 0.8, 0.1);
-			}
+			}	
 			else if (effects & EF_FLAG1)
 			{
-				CL_FlagTrail (cent->lerp_origin, ent.origin, 242);
+				vec3_t c = { 1.000000, 0.000000, 0.000000 }; //242
+				CL_FlagTrail (cent->lerp_origin, ent.origin, c);
 				V_AddLight (ent.origin, 225, 1, 0.1, 0.1);
 			}
 			else if (effects & EF_FLAG2)
 			{
-				CL_FlagTrail (cent->lerp_origin, ent.origin, 115);
+				vec3_t c = { 0.184314, 0.403922, 0.498039 }; //115
+				CL_FlagTrail (cent->lerp_origin, ent.origin, c);
 				V_AddLight (ent.origin, 225, 0.1, 0.1, 1);
 			}
 //======
 //ROGUE
 			else if (effects & EF_TAGTRAIL)
 			{
-				CL_TagTrail (cent->lerp_origin, ent.origin, 220);
+				vec3_t c = { 1.000000, 1.000000, 0.152941 }; //220
+				CL_TagTrail (cent->lerp_origin, ent.origin, c);
 				V_AddLight (ent.origin, 225, 1.0, 1.0, 0.0);
 			}
 			else if (effects & EF_TRACKERTRAIL)
@@ -1034,7 +1037,8 @@ void CL_AddPacketEntities (frame_t *frame)
 			}
 			else if (effects & EF_TRACKER)
 			{
-				CL_TrackerTrail (cent->lerp_origin, ent.origin, 0);
+				vec3_t c = { 0,0,0 };
+				CL_TrackerTrail (cent->lerp_origin, ent.origin, c);
 				// FIXME - check out this effect in rendition
 				if(vidref_val == VIDREF_GL)
 					V_AddLight (ent.origin, 200, -1, -1, -1);

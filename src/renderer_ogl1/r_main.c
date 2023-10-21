@@ -427,10 +427,8 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 		else
 			scale = 1 + scale * 0.004;
 
-//		*(float *)color = p->color;
-//		color[3] = p->alpha*255;
 		VectorCopy(p->color, color);
-		color[3] = p->alpha * 255;
+		color[3] = p->alpha;
 
 		qglColor4fv( color );
 

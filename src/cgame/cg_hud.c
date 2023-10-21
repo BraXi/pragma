@@ -49,7 +49,7 @@ static void HudElem_Layout_Operator_IF(void)
 static void HudElem_Layout_Pic(void)
 {
 	int		value;
-	char*	name;
+//	char*	name;
 
 	value = ps_stats[atoi(layout_token)];
 	if (value >= MAX_IMAGES)

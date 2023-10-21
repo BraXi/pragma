@@ -291,7 +291,6 @@ void CL_ParseClientinfo (int player)
 	clientinfo_t	*ci;
 
 	s = cl.configstrings[player+CS_PLAYERSKINS];
-
 	ci = &cl.clientinfo[player];
 
 	CL_LoadClientinfo (ci, s);
@@ -310,7 +309,10 @@ void CL_ParseConfigString (void)
 
 	i = MSG_ReadShort (&net_message);
 	if (i < 0 || i >= MAX_CONFIGSTRINGS)
-		Com_Error (ERR_DROP, "configstring > MAX_CONFIGSTRINGS");
+	{
+		Com_Error(ERR_DROP, "configstring > MAX_CONFIGSTRINGS");
+		return; //silence compiler warning
+	}
 
 	s = MSG_ReadString(&net_message);
 	strcpy (cl.configstrings[i], s);

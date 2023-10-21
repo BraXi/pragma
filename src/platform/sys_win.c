@@ -488,7 +488,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	global_hInstance = hInstance;
 
-#if 0//_DEBUG
+#if 1//_DEBUG
 	if (!Cvar_VariableValue("dedicated"))
 	{
 		HWND consoleHandle;

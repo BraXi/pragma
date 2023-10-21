@@ -88,7 +88,7 @@ V_AddParticle
 
 =====================
 */
-void V_AddParticle (vec3_t org, int color, float alpha)
+void V_AddParticle (vec3_t org, vec3_t color, float alpha)
 {
 	particle_t	*p;
 
@@ -96,7 +96,7 @@ void V_AddParticle (vec3_t org, int color, float alpha)
 		return;
 	p = &r_particles[r_numparticles++];
 	VectorCopy (org, p->origin);
-	p->color = color;
+	VectorCopy(color, p->color);
 	p->alpha = alpha;
 }
 
@@ -166,7 +166,7 @@ void V_TestParticles (void)
 			p->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*d +
 			cl.v_right[j]*r + cl.v_up[j]*u;
 
-		p->color = 8;
+		VectorSet(p->color, 0.482353, 0.482353, 0.482353);//p->color = 8;
 		p->alpha = cl_testparticles->value;
 	}
 }

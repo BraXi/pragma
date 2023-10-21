@@ -749,7 +749,7 @@ void Qcommon_Shutdown (void);
 extern	vec3_t	bytedirs[NUMVERTEXNORMALS];
 
 // this is in the client code, but can be used for debugging from server
-void SCR_DebugGraph (float value, int color);
+void SCR_DebugGraph (float value, vec3_t color);
 
 
 /*

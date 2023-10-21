@@ -404,7 +404,7 @@ CL_ParticleEffect
 Wall impact puffs
 ===============
 */
-void CL_ParticleEffect (vec3_t org, vec3_t dir, int color, int count)
+void CL_ParticleEffect (vec3_t org, vec3_t dir, vec3_t color, int count)
 {
 	int			i, j;
 	cparticle_t	*p;
@@ -420,7 +420,7 @@ void CL_ParticleEffect (vec3_t org, vec3_t dir, int color, int count)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = color + (rand()&7);
+		VectorCopy(color, p->color); //p->color = color + (rand()&7); // FIXME this was the only diference between ParticleEffect & 2
 
 		d = rand()&31;
 		for (j=0 ; j<3 ; j++)
@@ -443,7 +443,7 @@ void CL_ParticleEffect (vec3_t org, vec3_t dir, int color, int count)
 CL_ParticleEffect2
 ===============
 */
-void CL_ParticleEffect2 (vec3_t org, vec3_t dir, int color, int count)
+void CL_ParticleEffect2 (vec3_t org, vec3_t dir, vec3_t color, int count)
 {
 	int			i, j;
 	cparticle_t	*p;
@@ -459,7 +459,7 @@ void CL_ParticleEffect2 (vec3_t org, vec3_t dir, int color, int count)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = color;
+		VectorCopy(color, p->color); //p->color = color;
 
 		d = rand()&7;
 		for (j=0 ; j<3 ; j++)
@@ -483,7 +483,7 @@ void CL_ParticleEffect2 (vec3_t org, vec3_t dir, int color, int count)
 CL_ParticleEffect3
 ===============
 */
-void CL_ParticleEffect3 (vec3_t org, vec3_t dir, int color, int count)
+void CL_ParticleEffect3 (vec3_t org, vec3_t dir, vec3_t color, int count)
 {
 	int			i, j;
 	cparticle_t	*p;
@@ -499,7 +499,7 @@ void CL_ParticleEffect3 (vec3_t org, vec3_t dir, int color, int count)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = color;
+		VectorCopy(color, p->color); //p->color = color;
 
 		d = rand()&7;
 		for (j=0 ; j<3 ; j++)
@@ -536,7 +536,7 @@ void CL_TeleporterParticles (entity_state_t *ent)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = 0xdb;
+		VectorSet(p->color, 1.0, 1.0, 0.325490); //p->color = 0xdb;
 
 		for (j=0 ; j<2 ; j++)
 		{
@@ -579,11 +579,11 @@ void CL_LogoutEffect (vec3_t org, int type)
 		p->time = cl.time;
 
 		if (type == FX_MUZZLEFLASH_LOGIN)
-			p->color = 0xd0 + (rand()&7);	// green
+			VectorSet(p->color, 0.0, 1.0, 0.0); // p->color = 0xd0 + (rand() & 7);	// green
 		else if (type == FX_MUZZLEFLASH_LOGOUT)
-			p->color = 0x40 + (rand()&7);	// red
+			VectorSet(p->color, 0.654902, 0.231373, 0.168627); //p->color = 0x40 + (rand()&7);	// red
 		else
-			p->color = 0xe0 + (rand()&7);	// yellow
+			VectorSet(p->color, 1.0, 0.670588, 0.027451); //p->color = 0xe0 + (rand()&7);	// yellow
 
 		p->org[0] = org[0] - 16 + frand()*32;
 		p->org[1] = org[1] - 16 + frand()*32;
@@ -623,7 +623,7 @@ void CL_ItemRespawnParticles (vec3_t org)
 
 		p->time = cl.time;
 
-		p->color = 0xd4 + (rand()&3);	// green
+		VectorSet(p->color, 0.372549, 0.654902, 0.184314);// p->color = 0xd4 + (rand() & 3);	// green
 
 		p->org[0] = org[0] + crand()*8;
 		p->org[1] = org[1] + crand()*8;
@@ -661,7 +661,7 @@ void CL_ExplosionParticles (vec3_t org)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = 0xe0 + (rand()&7);
+		VectorSet(p->color, 1.000000, 0.670588, 0.027451); //  0xe0 + (rand() & 7);
 
 		for (j=0 ; j<3 ; j++)
 		{
@@ -688,7 +688,13 @@ void CL_BigTeleportParticles (vec3_t org)
 	int			i;
 	cparticle_t	*p;
 	float		angle, dist;
-	static int colortable[4] = {2*8,13*8,21*8,18*8};
+	//static int colortable[4] = {2*8,13*8,21*8,18*8};
+	vec3_t colortable[4];
+
+	VectorSet(colortable[0], 0.388235, 0.294118, 0.137255);
+	VectorSet(colortable[1], 0.701961, 0.356863, 0.309804);
+	VectorSet(colortable[2], 0.309804, 0.105882, 0.058824);
+	VectorSet(colortable[3], 0.592157, 0.623529, 0.482353);
 
 	for (i=0 ; i<4096 ; i++)
 	{
@@ -701,7 +707,9 @@ void CL_BigTeleportParticles (vec3_t org)
 
 		p->time = cl.time;
 
-		p->color = colortable[rand()&3];
+		//p->color = colortable[rand()&3];
+		int r = rand() & 3;
+		VectorCopy(colortable[r], p->color);
 
 		angle = M_PI*2*(rand()&1023)/1023.0;
 		dist = rand()&31;
@@ -748,7 +756,7 @@ void CL_BlasterParticles (vec3_t org, vec3_t dir)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = 0xe0 + (rand()&7);
+		VectorSet(p->color, 1.000000, 0.670588, 0.027451); // = 0xe0 + (rand() & 7);
 
 		d = rand()&15;
 		for (j=0 ; j<3 ; j++)
@@ -805,7 +813,7 @@ void CL_BlasterTrail (vec3_t start, vec3_t end)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (0.3+frand()*0.2);
-		p->color = 0xe0;
+		VectorSet(p->color, 1.000000, 0.670588, 0.027451);// = 0xe0;
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand();
@@ -855,7 +863,7 @@ void CL_QuadTrail (vec3_t start, vec3_t end)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (0.8+frand()*0.2);
-		p->color = 115;
+		VectorSet(p->color, 0.184314, 0.403922, 0.498039);// = 115;
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand()*16;
@@ -873,7 +881,7 @@ CL_FlagTrail
 
 ===============
 */
-void CL_FlagTrail (vec3_t start, vec3_t end, float color)
+void CL_FlagTrail (vec3_t start, vec3_t end, vec3_t color)
 {
 	vec3_t		move;
 	vec3_t		vec;
@@ -904,8 +912,8 @@ void CL_FlagTrail (vec3_t start, vec3_t end, float color)
 		p->time = cl.time;
 
 		p->alpha = 1.0;
-		p->alphavel = -1.0 / (0.8+frand()*0.2);
-		p->color = color;
+		p->alphavel = -1.0 / (0.8+frand()*0.2);	
+		VectorCopy(color, p->color); //p->color = color;
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand()*16;
@@ -979,7 +987,7 @@ void CL_DiminishingTrail (vec3_t start, vec3_t end, ccentity_t *old, int flags)
 			{
 				p->alpha = 1.0;
 				p->alphavel = -1.0 / (1+frand()*0.4);
-				p->color = 0xe8 + (rand()&7);
+				VectorSet(p->color, 0.607843, 0.121569, 0.000000);//p->color = 0xe8 + (rand()&7);
 				for (j=0 ; j<3 ; j++)
 				{
 					p->org[j] = move[j] + crand()*orgscale;
@@ -992,7 +1000,7 @@ void CL_DiminishingTrail (vec3_t start, vec3_t end, ccentity_t *old, int flags)
 			{
 				p->alpha = 1.0;
 				p->alphavel = -1.0 / (1+frand()*0.4);
-				p->color = 0xdb + (rand()&7);
+				VectorSet(p->color, 1.000000, 1.000000, 0.325490); // p->color = 0xdb + (rand() & 7);
 				for (j=0; j< 3; j++)
 				{
 					p->org[j] = move[j] + crand()*orgscale;
@@ -1005,7 +1013,7 @@ void CL_DiminishingTrail (vec3_t start, vec3_t end, ccentity_t *old, int flags)
 			{
 				p->alpha = 1.0;
 				p->alphavel = -1.0 / (1+frand()*0.2);
-				p->color = 4 + (rand()&7);
+				VectorSet(p->color, 0.247059, 0.247059, 0.247059); //p->color = 4 + (rand()&7);
 				for (j=0 ; j<3 ; j++)
 				{
 					p->org[j] = move[j] + crand()*orgscale;
@@ -1083,7 +1091,7 @@ void CL_RocketTrail (vec3_t start, vec3_t end, ccentity_t *old)
 
 			p->alpha = 1.0;
 			p->alphavel = -1.0 / (1+frand()*0.2);
-			p->color = 0xdc + (rand()&3);
+			VectorSet(p->color, 1.000000, 1.000000, 0.152941);//p->color = 0xdc + (rand()&3);
 			for (j=0 ; j<3 ; j++)
 			{
 				p->org[j] = move[j] + crand()*5;
@@ -1113,7 +1121,7 @@ void CL_RailTrail (vec3_t start, vec3_t end)
 	int			i;
 	float		d, c, s;
 	vec3_t		dir;
-	byte		clr = 0x74;
+//	byte		clr = 0x74;
 
 	VectorCopy (start, move);
 	VectorSubtract (end, start, vec);
@@ -1143,7 +1151,7 @@ void CL_RailTrail (vec3_t start, vec3_t end)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (1+frand()*0.2);
-		p->color = clr + (rand()&7);
+		VectorSet(p->color, 0.090196, 0.325490, 0.435294); // p->color = clr + (rand() & 7);
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + dir[j]*3;
@@ -1173,7 +1181,7 @@ void CL_RailTrail (vec3_t start, vec3_t end)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (0.6+frand()*0.2);
-		p->color = 0x0 + rand()&15;
+		VectorSet(p->color, 0.184314, 0.184314, 0.184314);//p->color = 0x0 + rand()&15;
 
 		for (j=0 ; j<3 ; j++)
 		{
@@ -1224,7 +1232,7 @@ void CL_IonripperTrail (vec3_t start, vec3_t ent)
 		p->time = cl.time;
 		p->alpha = 0.5;
 		p->alphavel = -1.0 / (0.3 + frand() * 0.2);
-		p->color = 0xe4 + (rand()&3);
+		VectorSet(p->color, 0.827451, 0.341176, 0.000000);//p->color = 0xe4 + (rand()&3);
 
 		for (j=0; j<3; j++)
 		{
@@ -1287,7 +1295,7 @@ void CL_BubbleTrail (vec3_t start, vec3_t end)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (1+frand()*0.2);
-		p->color = 4 + (rand()&7);
+		VectorSet(p->color, 0.294118, 0.294118, 0.294118);// = 4 + (rand() & 7);
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand()*2;
@@ -1362,7 +1370,7 @@ void CL_FlyParticles (vec3_t origin, int count)
 		VectorClear (p->vel);
 		VectorClear (p->accel);
 
-		p->color = 0;
+		VectorSet(p->color, 0, 0, 0);// = 0;
 		p->colorvel = 0;
 
 		p->alpha = 1;
@@ -1463,7 +1471,7 @@ void CL_BfgParticles (centity_t *ent)
 
 		VectorSubtract (p->org, ent->origin, v);
 		dist = VectorLength(v) / 90.0;
-		p->color = floor (0xd0 + dist * 7);
+		VectorSet(p->color, 0.000000, 1.000000, 0.000000);// = floor (0xd0 + dist * 7);
 		p->colorvel = 0;
 
 		p->alpha = 1.0 - dist;
@@ -1517,7 +1525,7 @@ void CL_TrapParticles (centity_t *ent)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (0.3+frand()*0.2);
-		p->color = 0xe0;
+		VectorSet(p->color, 1.000000, 0.670588, 0.027451);// = 0xe0;
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand();
@@ -1555,7 +1563,7 @@ void CL_TrapParticles (centity_t *ent)
 				active_particles = p;
 
 				p->time = cl.time;
-				p->color = 0xe0 + (rand()&3);
+				VectorSet(p->color, 1.000000, 0.576471, 0.000000);// = 0xe0 + (rand() & 3);
 
 				p->alpha = 1.0;
 				p->alphavel = -1.0 / (0.3 + (rand()&7) * 0.02);
@@ -1600,7 +1608,7 @@ void CL_BFGExplosionParticles (vec3_t org)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = 0xd0 + (rand()&7);
+		VectorSet(p->color, 0.137255, 0.905882, 0.058824); //= 0xd0 + (rand() & 7);
 
 		for (j=0 ; j<3 ; j++)
 		{
@@ -1642,7 +1650,7 @@ void CL_TeleportParticles (vec3_t org)
 				active_particles = p;
 
 				p->time = cl.time;
-				p->color = 7 + (rand()&7);
+				VectorSet(p->color, 0.733333, 0.733333, 0.733333); //= 7 + (rand() & 7);
 
 				p->alpha = 1.0;
 				p->alphavel = -1.0 / (0.3 + (rand()&7) * 0.02);
@@ -1676,7 +1684,7 @@ void CL_AddParticles (void)
 	float			alpha;
 	float			time, time2;
 	vec3_t			org;
-	int				color;
+	vec3_t			color;
 	cparticle_t		*active, *tail;
 
 	active = NULL;
@@ -1714,7 +1722,9 @@ void CL_AddParticles (void)
 
 		if (alpha > 1.0)
 			alpha = 1;
-		color = p->color;
+
+		VectorCopy(p->color, color);
+//		color = p->color;
 
 		time2 = time*time;
 

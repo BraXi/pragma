@@ -158,17 +158,7 @@ void FS_FCloseFile (FILE *f)
 */
 int	Developer_searchpath (int who)
 {
-	
-	int		ch;
-	// PMM - warning removal
-//	char	*start;
 	searchpath_t	*search;
-	
-	if (who == 1) // xatrix
-		ch = 'x';
-	else if (who == 2)
-		ch = 'r';
-
 	for (search = fs_searchpaths ; search ; search = search->next)
 	{
 		if (strstr (search->filename, "xatrix"))
@@ -176,15 +166,6 @@ int	Developer_searchpath (int who)
 
 		if (strstr (search->filename, "rogue"))
 			return 2;
-/*
-		start = strchr (search->filename, ch);
-
-		if (start == NULL)
-			continue;
-
-		if (strcmp (start ,"xatrix") == 0)
-			return (1);
-*/
 	}
 	return (0);
 

@@ -584,7 +584,7 @@ void Con_DrawConsole (float frac)
 
 // draw the background
 //	re.DrawTileClear(0, -viddef.height + lines, viddef.width, viddef.height, "backtile");
-	re.DrawStretchPic (0, -viddef.height+lines, viddef.width, viddef.height, "backtile");
+	re.DrawStretchPic (0, -viddef.height+lines, viddef.width, viddef.height, "console_bg");
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
 

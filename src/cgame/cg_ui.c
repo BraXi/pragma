@@ -559,7 +559,7 @@ void CG_DrawUI(void)
 	img[2] = img[3] = 200;
 	gi.DrawFill(img, c_yellowa);
 #endif
-	//CG_UI_DrawMenus();
+//	CG_UI_DrawMenus();
 }
 
 void menu_main_init();

@@ -29,7 +29,7 @@ void	SCR_CenterPrint (char *str);
 void	SCR_BeginLoadingPlaque (void);
 void	SCR_EndLoadingPlaque (void);
 
-void	SCR_DebugGraph (float value, int color);
+void	SCR_DebugGraph (float value, vec3_t color);
 
 void	SCR_TouchPics (void);
 

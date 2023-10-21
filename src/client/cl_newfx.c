@@ -164,7 +164,7 @@ void CL_DebugTrail (vec3_t start, vec3_t end)
 		p->alpha = 1.0;
 		p->alphavel = -0.1;
 //		p->alphavel = 0;
-		p->color = 0x74 + (rand()&7);
+		VectorSet(p->color, 0.090196, 0.325490, 0.435294);// = 0x74 + (rand() & 7);
 		VectorCopy (move, p->org);
 /*
 		for (j=0 ; j<3 ; j++)
@@ -215,7 +215,7 @@ void CL_SmokeTrail (vec3_t start, vec3_t end, int colorStart, int colorRun, int 
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (1+frand()*0.5);
-		p->color = colorStart + (rand() % colorRun);
+		VectorSet(p->color, 0.2, 0.1, 0.1);//p->color = colorStart + (rand() % colorRun); // BRAXI FIXME
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand()*3;
@@ -227,7 +227,7 @@ void CL_SmokeTrail (vec3_t start, vec3_t end, int colorStart, int colorRun, int 
 	}
 }
 
-void CL_ForceWall (vec3_t start, vec3_t end, int color)
+void CL_ForceWall (vec3_t start, vec3_t end, vec3_t color)
 {
 	vec3_t		move;
 	vec3_t		vec;
@@ -261,7 +261,7 @@ void CL_ForceWall (vec3_t start, vec3_t end, int color)
 
 			p->alpha = 1.0;
 			p->alphavel =  -1.0 / (3.0+frand()*0.5);
-			p->color = color;
+			VectorCopy(color, p->color);
 			for (j=0 ; j<3 ; j++)
 			{
 				p->org[j] = move[j] + crand()*3;
@@ -300,7 +300,7 @@ void CL_FlameEffects (ccentity_t *ent, vec3_t origin)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (1+frand()*0.2);
-		p->color = 226 + (rand() % 4);
+		VectorSet(p->color, 0.937255, 0.498039, 0.000000); // p->color = 226 + (rand() % 4);
 		for (j=0 ; j<3 ; j++)
 		{
 			if(j==2)
@@ -329,7 +329,7 @@ void CL_FlameEffects (ccentity_t *ent, vec3_t origin)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (1+frand()*0.5);
-		p->color = 0 + (rand() % 4);
+		VectorSet(p->color, 0.184314, 0.184314, 0.184314); //p->color = 0 + (rand() % 4);
 		for (j=0 ; j<3 ; j++)
 		{
 			if (j == 2)
@@ -348,7 +348,7 @@ void CL_FlameEffects (ccentity_t *ent, vec3_t origin)
 CL_GenericParticleEffect
 ===============
 */
-void CL_GenericParticleEffect (vec3_t org, vec3_t dir, int color, int count, int numcolors, int dirspread, float alphavel)
+void CL_GenericParticleEffect (vec3_t org, vec3_t dir, vec3_t color, int count, int dirspread, float alphavel)
 {
 	int			i, j;
 	cparticle_t	*p;
@@ -364,11 +364,7 @@ void CL_GenericParticleEffect (vec3_t org, vec3_t dir, int color, int count, int
 		active_particles = p;
 
 		p->time = cl.time;
-		if (numcolors > 1)
-			p->color = color + (rand() & numcolors);
-		else
-			p->color = color;
-
+		VectorCopy(color, p->color);
 		d = rand() & dirspread;
 		for (j=0 ; j<3 ; j++)
 		{
@@ -423,7 +419,7 @@ void CL_BubbleTrail2 (vec3_t start, vec3_t end, int dist)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (1+frand()*0.1);
-		p->color = 4 + (rand()&7);
+		VectorSet(p->color, 0.545098, 0.545098, 0.545098);// = 4 + (rand() & 7);
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand()*2;
@@ -611,14 +607,11 @@ void CL_Heatbeam (vec3_t start, vec3_t forward)
 			}
 		
 			p->alpha = 0.5;
-	//		p->alphavel = -1.0 / (1+frand()*0.2);
 			p->alphavel = -1000.0;
-	//		p->color = 0x74 + (rand()&7);
-			p->color = 223 - (rand()&7);
+			VectorSet(p->color, 0.827451, 0.341176, 0.000000);// = 223 - (rand() & 7);
 			for (j=0 ; j<3 ; j++)
 			{
 				p->org[j] = move[j] + dir[j]*3;
-	//			p->vel[j] = dir[j]*6;
 				p->vel[j] = 0;
 			}
 		}
@@ -753,7 +746,7 @@ CL_ParticleSteamEffect
 Puffs with velocity along direction, with some randomness thrown in
 ===============
 */
-void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, int color, int count, int magnitude)
+void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, vec3_t color, int count, int magnitude)
 {
 	int			i, j;
 	cparticle_t	*p;
@@ -775,7 +768,7 @@ void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, int color, int count, int m
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = color + (rand()&7);
+		VectorCopy(color, p->color);// = color + (rand() & 7);
 
 		for (j=0 ; j<3 ; j++)
 		{
@@ -821,7 +814,7 @@ void CL_ParticleSteamEffect2 (cl_sustain_t *self)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = self->color + (rand()&7);
+		VectorCopy(self->color, p->color); //p->color = self->color + (rand() & 7);	
 
 		for (j=0 ; j<3 ; j++)
 		{
@@ -848,7 +841,7 @@ void CL_ParticleSteamEffect2 (cl_sustain_t *self)
 CL_TrackerTrail
 ===============
 */
-void CL_TrackerTrail (vec3_t start, vec3_t end, int particleColor)
+void CL_TrackerTrail (vec3_t start, vec3_t end, vec3_t particleColor)
 {
 	vec3_t		move;
 	vec3_t		vec;
@@ -887,7 +880,7 @@ void CL_TrackerTrail (vec3_t start, vec3_t end, int particleColor)
 
 		p->alpha = 1.0;
 		p->alphavel = -2.0;
-		p->color = particleColor;
+		VectorCopy(particleColor, p->color);
 		dist = DotProduct(move, forward);
 		VectorMA(move, 8 * cos(dist), up, p->org);
 		for (j=0 ; j<3 ; j++)
@@ -922,7 +915,7 @@ void CL_Tracker_Shell(vec3_t origin)
 
 		p->alpha = 1.0;
 		p->alphavel = INSTANT_PARTICLE;
-		p->color = 0;
+		VectorSet(p->color, 0, 0, 0);;
 
 		dir[0] = crand();
 		dir[1] = crand();
@@ -953,7 +946,7 @@ void CL_MonsterPlasma_Shell(vec3_t origin)
 
 		p->alpha = 1.0;
 		p->alphavel = INSTANT_PARTICLE;
-		p->color = 0xe0;
+		VectorSet(p->color, 1.000000, 0.670588, 0.027451);// = 0xe0;
 
 		dir[0] = crand();
 		dir[1] = crand();
@@ -970,8 +963,13 @@ void CL_Widowbeamout (cl_sustain_t *self)
 	vec3_t			dir;
 	int				i;
 	cparticle_t		*p;
-	static int colortable[4] = {2*8,13*8,21*8,18*8};
 	float			ratio;
+
+	vec3_t colortable[4];
+	VectorSet(colortable[0], 0.388235, 0.294118, 0.137255);
+	VectorSet(colortable[1], 0.701961, 0.356863, 0.309804);
+	VectorSet(colortable[2], 0.309804, 0.105882, 0.058824);
+	VectorSet(colortable[3], 0.592157, 0.623529, 0.482353);
 
 	ratio = 1.0 - (((float)self->endtime - (float)cl.time)/2100.0);
 
@@ -989,7 +987,9 @@ void CL_Widowbeamout (cl_sustain_t *self)
 
 		p->alpha = 1.0;
 		p->alphavel = INSTANT_PARTICLE;
-		p->color = colortable[rand()&3];
+
+		int r = rand() & 3;
+		VectorCopy(colortable[r], p->color);
 
 		dir[0] = crand();
 		dir[1] = crand();
@@ -1006,8 +1006,9 @@ void CL_Nukeblast (cl_sustain_t *self)
 	vec3_t			dir;
 	int				i;
 	cparticle_t		*p;
-	static int colortable[4] = {110, 112, 114, 116};
+//	static int colortable[4] = {110, 112, 114, 116};
 	float			ratio;
+
 
 	ratio = 1.0 - (((float)self->endtime - (float)cl.time)/1000.0);
 
@@ -1025,7 +1026,7 @@ void CL_Nukeblast (cl_sustain_t *self)
 
 		p->alpha = 1.0;
 		p->alphavel = INSTANT_PARTICLE;
-		p->color = colortable[rand()&3];
+		VectorSet(p->color, 0.450980, 0.592157, 0.654902);//p->color = colortable[rand()&3];
 
 		dir[0] = crand();
 		dir[1] = crand();
@@ -1039,10 +1040,15 @@ void CL_Nukeblast (cl_sustain_t *self)
 
 void CL_WidowSplash (vec3_t org)
 {
-	static int colortable[4] = {2*8,13*8,21*8,18*8};
 	int			i;
 	cparticle_t	*p;
 	vec3_t		dir;
+
+	vec3_t colortable[4];
+	VectorSet(colortable[0], 0.388235, 0.294118, 0.137255);
+	VectorSet(colortable[1], 0.701961, 0.356863, 0.309804);
+	VectorSet(colortable[2], 0.309804, 0.105882, 0.058824);
+	VectorSet(colortable[3], 0.592157, 0.623529, 0.482353);
 
 	for (i=0 ; i<256 ; i++)
 	{
@@ -1054,7 +1060,9 @@ void CL_WidowSplash (vec3_t org)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = colortable[rand()&3];
+
+		int r = rand() & 3;
+		VectorCopy(colortable[r], p->color);
 
 		dir[0] = crand();
 		dir[1] = crand();
@@ -1091,7 +1099,7 @@ void CL_Tracker_Explode(vec3_t	origin)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0;
-		p->color = 0;
+		VectorClear(p->color);// = 0;
 
 		dir[0] = crand();
 		dir[1] = crand();
@@ -1111,7 +1119,7 @@ CL_TagTrail
 
 ===============
 */
-void CL_TagTrail (vec3_t start, vec3_t end, float color)
+void CL_TagTrail (vec3_t start, vec3_t end, vec3_t color)
 {
 	vec3_t		move;
 	vec3_t		vec;
@@ -1143,7 +1151,7 @@ void CL_TagTrail (vec3_t start, vec3_t end, float color)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (0.8+frand()*0.2);
-		p->color = color;
+		VectorCopy(color, p->color);// p->color = color;
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand()*16;
@@ -1160,7 +1168,7 @@ void CL_TagTrail (vec3_t start, vec3_t end, float color)
 CL_ColorExplosionParticles
 ===============
 */
-void CL_ColorExplosionParticles (vec3_t org, int color, int run)
+void CL_ColorExplosionParticles (vec3_t org, vec3_t color)
 {
 	int			i, j;
 	cparticle_t	*p;
@@ -1175,7 +1183,7 @@ void CL_ColorExplosionParticles (vec3_t org, int color, int run)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = color + (rand() % run);
+		VectorCopy(color, p->color);// = color + (rand() % run);
 
 		for (j=0 ; j<3 ; j++)
 		{
@@ -1196,7 +1204,7 @@ void CL_ColorExplosionParticles (vec3_t org, int color, int run)
 CL_ParticleSmokeEffect - like the steam effect, but unaffected by gravity
 ===============
 */
-void CL_ParticleSmokeEffect (vec3_t org, vec3_t dir, int color, int count, int magnitude)
+void CL_ParticleSmokeEffect (vec3_t org, vec3_t dir, vec3_t color, int count, int magnitude)
 {
 	int			i, j;
 	cparticle_t	*p;
@@ -1215,7 +1223,7 @@ void CL_ParticleSmokeEffect (vec3_t org, vec3_t dir, int color, int count, int m
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = color + (rand()&7);
+		VectorCopy(color, p->color);// = color + (rand() & 7);
 
 		for (j=0 ; j<3 ; j++)
 		{
@@ -1242,7 +1250,7 @@ CL_BlasterParticles2
 Wall impact puffs (Green)
 ===============
 */
-void CL_BlasterParticles2 (vec3_t org, vec3_t dir, unsigned int color)
+void CL_BlasterParticles2 (vec3_t org, vec3_t dir, vec3_t color)
 {
 	int			i, j;
 	cparticle_t	*p;
@@ -1260,7 +1268,7 @@ void CL_BlasterParticles2 (vec3_t org, vec3_t dir, unsigned int color)
 		active_particles = p;
 
 		p->time = cl.time;
-		p->color = color + (rand()&7);
+		VectorCopy(color, p->color);// = color + (rand() & 7);
 
 		d = rand()&15;
 		for (j=0 ; j<3 ; j++)
@@ -1317,7 +1325,7 @@ void CL_BlasterTrail2 (vec3_t start, vec3_t end)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (0.3+frand()*0.2);
-		p->color = 0xd0;
+		VectorSet(p->color, 0.000000, 1.000000, 0.000000);// = 0xd0;
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = move[j] + crand();

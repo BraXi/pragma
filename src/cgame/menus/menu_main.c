@@ -25,7 +25,7 @@ static void ButtonFocus(ItemDef* self, qboolean state)
 	}
 }
 
-
+extern void CG_UI_CloseMenu(char* name);
 static void ButtonPlayAction(ItemDef* self)
 {
 	CG_UI_CloseMenu("main");
@@ -43,7 +43,7 @@ static void ButtonExitAction(ItemDef* self)
 	CG_UI_OpenMenu("exit");
 }
 
-static void Update(MenuDef_t* self)
+static void Update(struct MenuDef_t* self)
 {
 	if (title != NULL)
 		title->fontSize = (float)(3.0f + (cos(loc.time / 500) * 0.3f));
@@ -63,6 +63,7 @@ void menu_main_init()
 	menu->OnOpen = OnOpen;
 	menu->OnClose = OnClose;
 
+#if 0
 	item = Menu_AddItem(menu, ITYPE_DEFAULT, ITEMFLAG_IMAGE, "background");
 	{
 		item->mat = "backtile";
@@ -74,7 +75,7 @@ void menu_main_init()
 		item->color[3] = 0.7;
 		item->visible = true;
 	}
-
+#endif
 	item = Menu_AddItem(menu, ITYPE_DEFAULT, (ITEMFLAG_TEXT), "title");
 	{
 		item->fontSize = 3.0;
@@ -88,11 +89,11 @@ void menu_main_init()
 
 	item = Menu_AddItem(menu, ITYPE_DEFAULT, (ITEMFLAG_TEXT), "title2");
 	{
-		item->fontSize = 0.9;
+		item->fontSize = 1;
 		item->textOffset[0] = 450;
-		item->textOffset[1] = 230;
+		item->textOffset[1] = 240;
 		item->textAlign = XALIGN_CENTER;
-		item->text = "now with menus!";
+		item->text = "now in truecolor RGBA!";
 		item->textColor[3] = 0.5;
 	}
 
