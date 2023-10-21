@@ -3951,7 +3951,7 @@ void M_Draw (void)
 	}
 		
 
-	m_drawfunc ();
+//	m_drawfunc ();
 
 	// delay playing the enter sound until after the
 	// menu has been drawn, to avoid delay while

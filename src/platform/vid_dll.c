@@ -123,6 +123,8 @@ void VID_Printf (int print_level, char *fmt, ...)
 	vsnprintf (msg,sizeof(msg),fmt,argptr);
 	va_end (argptr);
 
+	printf("%s", msg);
+
 	if (print_level == PRINT_ALL)
 	{
 		Com_Printf ("%s", msg);
@@ -662,7 +664,7 @@ void VID_CheckChanges (void)
 		if ( !VID_LoadRefresh( name ) )
 		{
 			if ( strcmp (r_renderer->string, "ogl1") == 0 )
-				Com_Error (ERR_FATAL, "Couldn't start renderer!");
+				Com_Error (ERR_FATAL, "Couldn't start %s renderer!", r_renderer->string);
 			Cvar_Set( "r_renderer", "ogl1" );
 
 			/*
@@ -697,7 +699,7 @@ VID_Init
 void VID_Init (void)
 {
 	/* Create the video variables so we know how to start the graphics drivers */
-	r_renderer = Cvar_Get ("r_renderer", "gl", CVAR_ARCHIVE);
+	r_renderer = Cvar_Get ("r_renderer", "ogl1", CVAR_ARCHIVE);
 	r_xpos = Cvar_Get ("r_xpos", "3", CVAR_ARCHIVE);
 	r_ypos = Cvar_Get ("r_ypos", "22", CVAR_ARCHIVE);
 	r_fullscreen = Cvar_Get ("r_fullscreen", "0", CVAR_ARCHIVE);
