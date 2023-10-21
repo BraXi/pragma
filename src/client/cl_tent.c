@@ -157,7 +157,7 @@ void CL_RegisterTEntModels (void)
 {
 	cl_mod_explode = re.RegisterModel ("models/objects/explode/tris.md2");
 	cl_mod_smoke = re.RegisterModel ("models/objects/smoke/tris.md2");
-	cl_mod_flash = re.RegisterModel ("models/objects/flash/tris.md2");
+	cl_mod_flash = re.RegisterModel ("models/fx/impact_small.md2");
 	cl_mod_parasite_segment = re.RegisterModel ("models/monsters/parasite/segment/tris.md2");
 	cl_mod_grapple_cable = re.RegisterModel ("models/ctf/segment/tris.md2");
 	cl_mod_parasite_tip = re.RegisterModel ("models/monsters/parasite/tip/tris.md2");
@@ -747,7 +747,7 @@ void CL_ParseTEnt (void)
 		MSG_ReadDir (&net_message, dir);
 		if (type == TE_GUNSHOT)
 		{
-			VectorSet(color, 0, 0, 0);
+			VectorSet(color, 0.6, 0.5, 0.5);
 			CL_ParticleEffect(pos, dir, color, 40);
 		}		
 		else
@@ -994,7 +994,7 @@ void CL_ParseTEnt (void)
 	case TE_BOSSTPORT:			// boss teleporting to station
 		MSG_ReadPos (&net_message, pos);
 		CL_BigTeleportParticles (pos);
-		S_StartSound (pos, 0, 0, S_RegisterSound ("misc/bigtele.wav"), 1, ATTN_NONE, 0);
+		S_StartSound (pos, 0, 0, S_RegisterSound ("effects/teleport.wav"), 1, ATTN_NONE, 0);
 		break;
 
 	case TE_GRAPPLE_CABLE:

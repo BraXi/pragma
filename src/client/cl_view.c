@@ -166,7 +166,7 @@ void V_TestParticles (void)
 			p->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*d +
 			cl.v_right[j]*r + cl.v_up[j]*u;
 
-		VectorSet(p->color, 0.482353, 0.482353, 0.482353);//p->color = 8;
+		VectorSet(p->color, 0.382353, 0.882353, 0.482353);//p->color = 8;
 		p->alpha = cl_testparticles->value;
 	}
 }
@@ -420,6 +420,7 @@ void SCR_DrawCrosshair (void)
 {
 	if (!crosshair->value)
 		return;
+
 	// todo: dont draw crosshair in menus m_menudepth
 
 	if (crosshair->modified)
@@ -431,8 +432,7 @@ void SCR_DrawCrosshair (void)
 	if (!crosshair_pic[0])
 		return;
 
-	re.DrawPic (scr_vrect.x + ((scr_vrect.width - crosshair_width)>>1)
-	, scr_vrect.y + ((scr_vrect.height - crosshair_height)>>1), crosshair_pic);
+	re.DrawPic (scr_vrect.x + ((scr_vrect.width - crosshair_width)>>1), scr_vrect.y + ((scr_vrect.height - crosshair_height)>>1), crosshair_pic);
 }
 
 /*

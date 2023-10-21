@@ -297,7 +297,7 @@ void CL_ParseMuzzleFlash(void)
 	case FX_MUZZLEFLASH_RIFLE:
 	case FX_MUZZLEFLASH_SHOTGUN:
 		VectorSet(dlight->color, 1, 1, 0.7);
-		S_StartSound (NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/shotgf1b.wav"), volume, ATTN_NORM, 0);
+		S_StartSound (NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/ak47/shot.wav"), volume, ATTN_NORM, 0);
 
 // negative light test
 //		VectorSet(dlight->color, -1, -1, -1);
@@ -313,19 +313,19 @@ void CL_ParseMuzzleFlash(void)
 	case FX_MUZZLEFLASH_LOGIN:
 		VectorSet(dlight->color, 0, 1, 0);
 		dlight->die = cl.time + 1.0;
-		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav"), 1, ATTN_NORM, 0);
+		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/login.wav"), 1, ATTN_NORM, 0);
 		CL_LogoutEffect(cent->current.origin, effectNum);
 		break;
 	case FX_MUZZLEFLASH_LOGOUT:
 		VectorSet(dlight->color, 1, 0, 0);
 		dlight->die = cl.time + 1.0;
-		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav"), 1, ATTN_NORM, 0);
+		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/logout.wav"), 1, ATTN_NORM, 0);
 		CL_LogoutEffect(cent->current.origin, effectNum);
 		break;
 	case FX_MUZZLEFLASH_RESPAWN:
 		VectorSet(dlight->color, 1, 1, 0);
 		dlight->die = cl.time + 1.0;
-		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav"), 1, ATTN_NORM, 0);
+		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/respawn.wav"), 1, ATTN_NORM, 0);
 		CL_LogoutEffect(cent->current.origin, effectNum);
 		break;
 	}
