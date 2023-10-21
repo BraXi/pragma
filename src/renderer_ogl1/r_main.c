@@ -989,7 +989,7 @@ void R_Register( void )
 	r_texturesolidmode = ri.Cvar_Get( "r_texturesolidmode", "default", CVAR_ARCHIVE );
 	r_lockpvs = ri.Cvar_Get( "r_lockpvs", "0", 0 );
 
-	r_vertex_arrays = ri.Cvar_Get( "r_vertex_arrays", "1", CVAR_ARCHIVE );
+	r_vertex_arrays = ri.Cvar_Get( "r_vertex_arrays", "0", CVAR_ARCHIVE ); // disabled by default, breaks MD2 rendering on RX 7900 XT - Reki
 
 	gl_ext_swapinterval = ri.Cvar_Get( "gl_ext_swapinterval", "1", CVAR_ARCHIVE );
 	gl_ext_pointparameters = ri.Cvar_Get( "gl_ext_pointparameters", "1", CVAR_ARCHIVE );
