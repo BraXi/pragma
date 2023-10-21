@@ -398,13 +398,13 @@ void R_DrawEntitiesOnList (void)
 ** GL_DrawParticles
 **
 */
-void GL_DrawParticles( int num_particles, const particle_t particles[], const unsigned colortable[768] )
+void GL_DrawParticles( int num_particles, const particle_t particles[] )
 {
 	const particle_t *p;
 	int				i;
 	vec3_t			up, right;
 	float			scale;
-	byte			color[4];
+	float			color[4];
 
     GL_Bind(r_particletexture->texnum);
 	qglDepthMask( GL_FALSE );		// no z buffering
@@ -427,10 +427,12 @@ void GL_DrawParticles( int num_particles, const particle_t particles[], const un
 		else
 			scale = 1 + scale * 0.004;
 
-		*(int *)color = colortable[p->color];
-		color[3] = p->alpha*255;
+//		*(float *)color = p->color;
+//		color[3] = p->alpha*255;
+		VectorCopy(p->color, color);
+		color[3] = p->alpha * 255;
 
-		qglColor4ubv( color );
+		qglColor4fv( color );
 
 		qglTexCoord2f( 0.0625, 0.0625 );
 		qglVertex3fv( p->origin );
@@ -460,6 +462,7 @@ R_DrawParticles
 */
 void R_DrawParticles (void)
 {
+#if 0
 	if ( gl_ext_pointparameters->value && qglPointParameterfEXT )
 	{
 		int i;
@@ -475,10 +478,10 @@ void R_DrawParticles (void)
 		qglBegin( GL_POINTS );
 		for ( i = 0, p = r_newrefdef.particles; i < r_newrefdef.num_particles; i++, p++ )
 		{
-			*(int *)color = d_8to24table[p->color];
+			*(int *)color = p->color;
 			color[3] = p->alpha*255;
 
-			qglColor4ubv( color );
+			qglColor4fv( color );
 
 			qglVertex3fv( p->origin );
 		}
@@ -491,8 +494,9 @@ void R_DrawParticles (void)
 
 	}
 	else
+#endif
 	{
-		GL_DrawParticles( r_newrefdef.num_particles, r_newrefdef.particles, d_8to24table );
+		GL_DrawParticles( r_newrefdef.num_particles, r_newrefdef.particles);
 	}
 }
 
@@ -1374,35 +1378,8 @@ void R_BeginFrame( float camera_separation )
 R_SetPalette
 =============
 */
-unsigned r_rawpalette[256];
-
 void R_SetPalette ( const unsigned char *palette)
 {
-	int		i;
-
-	byte *rp = ( byte * ) r_rawpalette;
-
-	if ( palette )
-	{
-		for ( i = 0; i < 256; i++ )
-		{
-			rp[i*4+0] = palette[i*3+0];
-			rp[i*4+1] = palette[i*3+1];
-			rp[i*4+2] = palette[i*3+2];
-			rp[i*4+3] = 0xff;
-		}
-	}
-	else
-	{
-		for ( i = 0; i < 256; i++ )
-		{
-			rp[i*4+0] = d_8to24table[i] & 0xff;
-			rp[i*4+1] = ( d_8to24table[i] >> 8 ) & 0xff;
-			rp[i*4+2] = ( d_8to24table[i] >> 16 ) & 0xff;
-			rp[i*4+3] = 0xff;
-		}
-	}
-
 	qglClearColor (0,0,0,0);
 	qglClear (GL_COLOR_BUFFER_BIT);
 	qglClearColor (1,0, 0.5 , 0.5);
@@ -1452,9 +1429,9 @@ void R_DrawBeam( centity_t *e )
 	qglEnable( GL_BLEND );
 	qglDepthMask( GL_FALSE );
 
-	r = ( d_8to24table[e->skinnum & 0xFF] ) & 0xFF;
-	g = ( d_8to24table[e->skinnum & 0xFF] >> 8 ) & 0xFF;
-	b = ( d_8to24table[e->skinnum & 0xFF] >> 16 ) & 0xFF;
+//	r = ( d_8to24table[e->skinnum & 0xFF] ) & 0xFF;
+//	g = ( d_8to24table[e->skinnum & 0xFF] >> 8 ) & 0xFF;
+//	b = ( d_8to24table[e->skinnum & 0xFF] >> 16 ) & 0xFF;
 
 	r *= 1/255.0F;
 	g *= 1/255.0F;
@@ -1493,7 +1470,7 @@ struct image_s	*Draw_FindPic (char *name);
 void	Draw_Pic (int x, int y, char *name);
 void	Draw_Char (int x, int y, int c);
 void	Draw_TileClear (int x, int y, int w, int h, char *name);
-void	Draw_Fill (int x, int y, int w, int h, int c);
+void	Draw_Fill (int x, int y, int w, int h, vec3_t c);
 void	Draw_FadeScreen(float* rgba);
 
 void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);

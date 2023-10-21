@@ -1,6 +1,6 @@
 #include "r_local.h"
 
-extern image_t* draw_chars;
+extern image_t* font_current;
 
 image_t* Draw_FindPic(char* name);
 
@@ -45,7 +45,7 @@ void R_DrawSingleChar(float x, float y, float w, float h, int num)
 	fcol = col * 0.0625;
 	size = 0.0625;
 
-	GL_Bind(draw_chars->texnum);
+	GL_Bind(font_current->texnum);
 
 	qglBegin(GL_QUADS);
 	qglTexCoord2f(fcol, frow);

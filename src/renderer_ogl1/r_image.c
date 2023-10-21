@@ -28,8 +28,6 @@ static unsigned char gammatable[256];
 
 cvar_t		*intensity;
 
-unsigned	d_8to24table[256];
-
 qboolean GL_Upload8 (byte *data, int width, int height,  qboolean mipmap, qboolean is_sky );
 qboolean GL_Upload32 (unsigned *data, int width, int height,  qboolean mipmap);
 
@@ -94,10 +92,10 @@ void GL_TexEnv( GLenum mode )
 
 void GL_Bind (int texnum)
 {
-	extern	image_t	*draw_chars;
+	extern	image_t	*font_current;
 
-	if (r_nobind->value && draw_chars)		// performance evaluation option
-		texnum = draw_chars->texnum;
+	if (r_nobind->value && font_current && texnum == font_current->texnum) // performance evaluation option
+		texnum = font_current->texnum;
 	if ( gl_state.currenttextures[gl_state.currenttmu] == texnum)
 		return;
 	gl_state.currenttextures[gl_state.currenttmu] = texnum;
@@ -263,11 +261,6 @@ void	GL_ImageList_f (void)
 	int		i;
 	image_t	*image;
 	int		texels;
-	const char *palstrings[2] =
-	{
-		"RGB",
-		"PAL"
-	};
 
 	ri.Con_Printf (PRINT_ALL, "------------------\n");
 	texels = 0;
@@ -299,8 +292,8 @@ void	GL_ImageList_f (void)
 			break;
 		}
 
-		ri.Con_Printf (PRINT_ALL,  " %3i %3i %s%s: %s\n",
-			image->upload_width, image->upload_height, palstrings[image->paletted], (image->has_alpha ? "A" : " "), image->name);
+		ri.Con_Printf (PRINT_ALL,  " %3i %3i %s: %s\n",
+			image->upload_width, image->upload_height, (image->has_alpha ? "A" : " "), image->name);
 	}
 	ri.Con_Printf (PRINT_ALL, "Total texel count (not counting mipmaps): %i\n", texels);
 }
@@ -564,7 +557,9 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 	targa_header.attributes = *buf_p++;
 
 	if (targa_header.image_type != TGA_TYPE_RAW_RGB && targa_header.image_type != TGA_TYPE_RUNLENGHT_RGB)
-		ri.Sys_Error (ERR_DROP, "LoadTGA: Only type 2 and 10 targa RGB images supported\n");
+	{
+		ri.Sys_Error(ERR_DROP, "LoadTGA: Only type 2 and 10 targa RGB images supported\n");
+	}
 
 	if (targa_header.colormap_type !=0 || (targa_header.pixel_size != 32 && targa_header.pixel_size != 24))
 		ri.Sys_Error (ERR_DROP, "LoadTGA: Only 32 or 24 bit images supported (no colormaps)\n");
@@ -834,7 +829,6 @@ Returns has_alpha
 */
 
 int		upload_width, upload_height;
-qboolean uploaded_paletted;
 
 qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 {
@@ -844,8 +838,6 @@ qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 	int			i, c;
 	byte		*scan;
 	int comp;
-
-	uploaded_paletted = false;
 
 	for (scaled_width = 1 ; scaled_width < width ; scaled_width<<=1)
 		;
@@ -975,61 +967,10 @@ GL_Upload8
 Returns has_alpha
 ===============
 */
-/*
-static qboolean IsPowerOf2( int value )
-{
-	int i = 1;
-
-
-	while ( 1 )
-	{
-		if ( value == i )
-			return true;
-		if ( i > value )
-			return false;
-		i <<= 1;
-	}
-}
-*/
-
 qboolean GL_Upload8 (byte *data, int width, int height,  qboolean mipmap, qboolean is_sky )
 {
-	unsigned	trans[512*256];
-	int			i, s;
-	int			p;
-
-	s = width*height;
-
-	if (s > sizeof(trans)/4)
-		ri.Sys_Error (ERR_DROP, "GL_Upload8: too large");
-
-	for (i = 0; i < s; i++)
-	{
-		p = data[i];
-		trans[i] = d_8to24table[p];
-
-		if (p == 255)
-		{	// transparent, so scan around for another color
-			// to avoid alpha fringes
-			// FIXME: do a full flood fill so mips work...
-			if (i > width && data[i - width] != 255)
-				p = data[i - width];
-			else if (i < s - width && data[i + width] != 255)
-				p = data[i + width];
-			else if (i > 0 && data[i - 1] != 255)
-				p = data[i - 1];
-			else if (i < s - 1 && data[i + 1] != 255)
-				p = data[i + 1];
-			else
-				p = 0;
-			// copy rgb components
-			((byte*)&trans[i])[0] = ((byte*)&d_8to24table[p])[0];
-			((byte*)&trans[i])[1] = ((byte*)&d_8to24table[p])[1];
-			((byte*)&trans[i])[2] = ((byte*)&d_8to24table[p])[2];
-		}
-	}
-	return GL_Upload32 (trans, width, height, mipmap);
-//	return false;
+//	ri.Sys_Error(ERR_FATAL, "%s\n", __FUNCTION__);
+	return false;
 }
 
 
@@ -1106,7 +1047,6 @@ nonscrap:
 			image->has_alpha = GL_Upload32 ((unsigned *)pic, width, height, (image->type != it_pic && image->type != it_sky) );
 		image->upload_width = upload_width;		// after power of 2 and scales
 		image->upload_height = upload_height;
-		image->paletted = uploaded_paletted;
 		image->sl = 0;
 		image->sh = 1;
 		image->tl = 0;
@@ -1157,7 +1097,7 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 {
 	image_t	*image;
 	int		i, len;
-	byte	*pic, *palette;
+	byte	*pic;
 	int		width, height;
 
 	if (!name)
@@ -1176,37 +1116,30 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 		}
 	}
 
+
 	//
 	// load the pic from disk
 	//
 	pic = NULL;
-	palette = NULL;
-	if (!strcmp(name+len-4, ".pcx"))
-	{
-		LoadPCX (name, &pic, &palette, &width, &height);
-		if (!pic)
-			return NULL;
-		image = GL_LoadPic (name, pic, width, height, type, 8);
-	}
-	else if (!strcmp(name+len-4, ".wal"))
-	{
-		image = GL_LoadWal (name);
-	}
-	else if (!strcmp(name+len-4, ".tga"))
+	if (!strcmp(name+len-4, ".tga"))
 	{
 		LoadTGA (name, &pic, &width, &height);
 		if (!pic)
-			return NULL;
+			return r_notexture;
 		image = GL_LoadPic (name, pic, width, height, type, 32);
 	}
+	else if (!strcmp(name + len - 4, ".wal"))
+	{
+		image = GL_LoadWal(name);
+	}
 	else
-		return NULL;	//	ri.Sys_Error (ERR_DROP, "GL_FindImage: bad extension on: %s", name);
-
+	{
+		ri.Con_Printf(PRINT_LOW, "GL_FindImage: bad extension on: %s\n", name);
+		return r_notexture;
+	}
 
 	if (pic)
 		free(pic);
-	if (palette)
-		free(palette);
 
 	return image;
 }
@@ -1263,33 +1196,6 @@ Draw_GetPalette
 */
 int Draw_GetPalette (void)
 {
-	int		i;
-	int		r, g, b;
-	unsigned	v;
-	byte	*pic, *pal;
-	int		width, height;
-
-	// get the palette
-
-	LoadPCX ("pics/colormap.pcx", &pic, &pal, &width, &height);
-	if (!pal)
-		ri.Sys_Error (ERR_FATAL, "Couldn't load pics/colormap.pcx");
-
-	for (i=0 ; i<256 ; i++)
-	{
-		r = pal[i*3+0];
-		g = pal[i*3+1];
-		b = pal[i*3+2];
-		
-		v = (255<<24) + (r<<0) + (g<<8) + (b<<16);
-		d_8to24table[i] = LittleLong(v);
-	}
-
-	d_8to24table[255] &= LittleLong(0xffffff);	// 255 is transparent
-
-	free (pic);
-	free (pal);
-
 	return 0;
 }
 

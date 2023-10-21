@@ -65,9 +65,9 @@ void R_InitParticleTexture (void)
 	{
 		for (y=0 ; y<8 ; y++)
 		{
-			data[y][x][0] = dottexture[x&3][y&3]*255;
-			data[y][x][1] = 0; // dottexture[x&3][y&3]*255;
-			data[y][x][2] = 0; //dottexture[x&3][y&3]*255;
+			data[y][x][0] = 0;// dottexture[x & 3][y & 3] * 255;
+			data[y][x][1] = dottexture[x&3][y&3]*255;
+			data[y][x][2] = 0;// dottexture[x & 3][y & 3] * 255;
 			data[y][x][3] = 255;
 		}
 	}

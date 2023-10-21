@@ -150,6 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\client\ref.h" />
     <ClInclude Include="..\game\q_shared.h" />
     <ClInclude Include="..\platform\glw_win.h" />
     <ClInclude Include="anorms.h" />

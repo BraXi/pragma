@@ -98,8 +98,6 @@ typedef struct image_s
 	float	sl, tl, sh, th;				// 0,0 - 1,1 unless part of the scrap
 	qboolean	scrap;
 	qboolean	has_alpha;
-
-	qboolean paletted;
 } image_t;
 
 #define	TEXNUM_LIGHTMAPS	1024
@@ -255,8 +253,6 @@ void R_PushDlights (void);
 
 extern	model_t	*r_worldmodel;
 
-extern	unsigned	d_8to24table[256];
-
 extern	int		registration_sequence;
 
 
@@ -304,7 +300,7 @@ void	Draw_Pic (int x, int y, char *name);
 void	Draw_StretchPic (int x, int y, int w, int h, char *name);
 void	Draw_Char (int x, int y, int c);
 void	Draw_TileClear (int x, int y, int w, int h, char *name);
-void	Draw_Fill (int x, int y, int w, int h, int c);
+void	Draw_Fill (int x, int y, int w, int h, vec3_t c);
 void	Draw_FadeScreen(float* rgba);
 void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
 
@@ -334,7 +330,7 @@ void GL_TextureSolidMode( char *string );
 /*
 ** GL extension emulation functions
 */
-void GL_DrawParticles( int n, const particle_t particles[], const unsigned colortable[768] );
+void GL_DrawParticles( int n, const particle_t particles[] );
 
 /*
 ** GL config stuff
@@ -357,12 +353,12 @@ typedef struct
 	float inverse_intensity;
 	qboolean fullscreen;
 
-	int     prev_mode;
+	int     prev_mode;			// previous r_mode->value
 
-	int lightmap_textures;
+	int lightmap_textures;		// TEXNUM_LIGHTMAPS + NUM_LIGHTMAPS
 
-	int	currenttextures[2];
-	int currenttmu;
+	int	currenttextures[2];		// currently bound textures [TEX0, TEX1]
+	int currenttmu;				// GL_TEXTURE0 or GL_TEXTURE1
 
 	float camera_separation;
 	qboolean stereo_enabled;

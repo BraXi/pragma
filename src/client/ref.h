@@ -18,6 +18,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
+//
+// THIS FILE IS SHARED BETWEEN RENDERER AND CLIENT (KERNEL)
+//
+
 #include "../qcommon/qcommon.h"
 
 #define	MAX_DLIGHTS		32
@@ -44,6 +48,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define SHELL_WHITE_COLOR	0xD7
 
+//
+// CLIENT ENTITY
+//
 typedef struct centity_s
 {
 	struct model_s		*model;			// opaque type outside refresh
@@ -65,7 +72,8 @@ typedef struct centity_s
 	** misc
 	*/
 	float	backlerp;				// 0.0 = current, 1.0 = old
-	int		skinnum;				// also used as RF_BEAM's palette index
+	int		skinnum;				// braxi -- WAS used as RF_BEAM's palette index
+	vec4_t	color;
 
 	int		lightstyle;				// for flashing entities
 	float	alpha;					// ignore if RF_TRANSLUCENT isn't set
@@ -75,7 +83,6 @@ typedef struct centity_s
 
 } centity_t;
 
-#define ENTITY_FLAGS  68
 
 typedef struct
 {
@@ -87,7 +94,7 @@ typedef struct
 typedef struct
 {
 	vec3_t	origin;
-	int		color;
+	vec3_t	color; // braxi -- was int
 	float	alpha;
 } particle_t;
 
@@ -99,31 +106,44 @@ typedef struct
 
 typedef struct
 {
-	int			x, y, width, height;// in virtual screen coordinates
-	float		fov_x, fov_y;
-	float		vieworg[3];
-	float		viewangles[3];
-	float		blend[4];			// rgba 0-1 full screen blend
-	float		time;				// time is uesed to auto animate
-	int			rdflags;			// RDF_UNDERWATER, etc
+	vec3_t		start;
+	vec3_t		end;
+	vec3_t		color;
+	byte		depthtest;
+//	vec3_t		*points;
+//	unsigned int numpoints;
+} debugline_t;
 
-	byte		*areabits;			// if not NULL, only areas with set bits will be drawn
+typedef struct
+{
+	int				x, y, width, height;// in virtual screen coordinates
+	float			fov_x, fov_y;
+
+	float			vieworg[3];
+	float			viewangles[3];
+	float			blend[4];			// rgba 0-1 full screen blend
+	float			time;				// time is uesed to auto animate
+	int				rdflags;			// RDF_UNDERWATER, etc
+
+	byte			*areabits;			// if not NULL, only areas with set bits will be drawn
 
 	lightstyle_t	*lightstyles;	// [MAX_LIGHTSTYLES]
 
-	int			num_entities;
-	centity_t	*entities;
+	int				num_entities;
+	centity_t		*entities;
 
-	int			num_dlights;
-	dlight_t	*dlights;
+	int				num_dlights;
+	dlight_t		*dlights;
 
-	int			num_particles;
-	particle_t	*particles;
+	int				num_particles;
+	particle_t		*particles;
+
+	int				num_debuglines;
+	debugline_t		*debuglines;
 } refdef_t;
 
 
-
-#define	API_VERSION		4
+#define	API_VERSION		('B'+'X'+'I'+'1')
 
 //
 // these are the functions exported by the refresh module
@@ -167,10 +187,9 @@ typedef struct
 	void	(*DrawChar) (int x, int y, int c);
 	void	(*Draw_Char2)(float x, float y, float w, float h, int num, rgba_t color);
 	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
-	void	(*DrawFill) (int x, int y, int w, int h, int c);
+	void	(*DrawFill) (int x, int y, int w, int h, vec3_t c);
 	void	(*DrawFadeScreen) (float *rgba);
 
-	void	(*DrawChar2)(float x, float y, float w, float h, int num, rgba_t color);
 
 	// Draw images for cinematic rendering (which can have a different palette). Note that calls
 	void	(*DrawStretchRaw) (int x, int y, int w, int h, int cols, int rows, byte *data);

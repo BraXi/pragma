@@ -22,7 +22,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
-image_t		*draw_chars;
+enum
+{
+	FONT_SMALL,
+//	FONT_CONSOLE,
+//	FONT_CONSOLE_BOLD,
+	NUM_FONTS
+};
+
+static image_t* font_textures[NUM_FONTS];
+image_t* font_current;
 
 extern	qboolean	scrap_dirty;
 void Scrap_Upload (void);
@@ -35,12 +44,30 @@ Draw_InitLocal
 */
 void Draw_InitLocal (void)
 {
-	// load console characters (don't bilerp characters)
-	draw_chars = GL_FindImage ("pics/conchars.pcx", it_pic);
-	GL_Bind( draw_chars->texnum );
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// load fonts
+	font_textures[FONT_SMALL] = GL_FindImage ("guipics/fonts/q2.tga", it_pic);
+	if (font_textures[FONT_SMALL] == r_notexture)
+	{
+		ri.Sys_Error(ERR_FATAL, "failed to load default font guipics/fonts/q2.tga\n");
+		return;
+	}
+
+//	font_textures[FONT_CONSOLE] = GL_FindImage("pics/font_console.tga", it_pic);
+
+	for (unsigned int i = 0; i < NUM_FONTS; i++)
+	{
+//		if (font_textures[i] == r_notexture)
+//		{
+//			font_textures[i] = font_textures[FONT_SMALL]; //fixup
+//		}
+
+		GL_Bind(font_textures[i]->texnum);
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
 	GL_Bind(0);
+
+	font_current = font_textures[FONT_SMALL];
 }
 
 
@@ -59,6 +86,8 @@ void Draw_Char (int x, int y, int num)
 	int				row, col;
 	float			frow, fcol, size;
 
+	qglDisable(GL_BLEND);
+	qglColor4f(1, 0, 0, 1);
 	num &= 255;
 	
 	if ( (num&127) == 32 )
@@ -74,7 +103,7 @@ void Draw_Char (int x, int y, int num)
 	fcol = col*0.0625;
 	size = 0.0625;
 
-	GL_Bind (draw_chars->texnum);
+	GL_Bind (font_current->texnum);
 
 	qglBegin (GL_QUADS);
 	qglTexCoord2f (fcol, frow);
@@ -100,7 +129,7 @@ image_t	*Draw_FindPic (char *name)
 
 	if (name[0] != '/' && name[0] != '\\')
 	{
-		Com_sprintf (fullname, sizeof(fullname), "pics/%s.pcx", name);
+		Com_sprintf (fullname, sizeof(fullname), "guipics/%s.tga", name);
 		gl = GL_FindImage (fullname, it_pic);
 	}
 	else
@@ -233,24 +262,13 @@ Draw_Fill
 Fills a box of pixels with a single color
 =============
 */
-void Draw_Fill (int x, int y, int w, int h, int c)
+void Draw_Fill (int x, int y, int w, int h, vec3_t color)
 {
-	union
-	{
-		unsigned	c;
-		byte		v[4];
-	} color;
-
-	if ((unsigned)c > 255)
-	{
-		ri.Sys_Error(ERR_FATAL, "Draw_Fill: bad color");
-		return; // braxi -- shut up msvc warning d_8to24table
-	}
-
+	if (1)
+		return;
 	qglDisable (GL_TEXTURE_2D);
 
-	color.c = d_8to24table[c];
-	qglColor3f (color.v[0]/255.0, color.v[1]/255.0, color.v[2]/255.0);
+	qglColor3f (color[0], color[1], color[2]);
 
 	qglBegin (GL_QUADS);
 
@@ -277,14 +295,15 @@ void Draw_FadeScreen (float *rgba)
 	qglEnable (GL_BLEND);
 	qglDisable (GL_TEXTURE_2D);
 	qglAlphaFunc(GL_GREATER, 0.1);
-	qglColor4f(rgba[0], rgba[1], rgba[2], rgba[3]);
+	qglColor4fv(rgba);
 
 	qglBegin (GL_QUADS);
 		qglVertex2f (0,0);
 		qglVertex2f (vid.width, 0);
 		qglVertex2f (vid.width, vid.height);
 		qglVertex2f (0, vid.height);
-	qglEnd ();
+	qglEnd();
+
 	qglColor4f(1,1,1,1);
 	qglAlphaFunc(GL_GREATER, 0.666);
 	qglEnable (GL_TEXTURE_2D);
@@ -301,10 +320,10 @@ void Draw_FadeScreen (float *rgba)
 Draw_StretchRaw
 =============
 */
-extern unsigned	r_rawpalette[256];
 
 void Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data)
 {
+#if 0
 	unsigned	image32[256*256];
 
 	int			i, j, trows;
@@ -363,5 +382,6 @@ void Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data
 	qglTexCoord2f (0, t);
 	qglVertex2f (x, y+h);
 	qglEnd ();
+#endif
 }
 

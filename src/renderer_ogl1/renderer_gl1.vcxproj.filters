@@ -25,6 +25,9 @@
     <ClInclude Include="qgl.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\client\ref.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="r_draw.c" />
