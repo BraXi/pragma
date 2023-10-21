@@ -1,4 +1,4 @@
-../../build/basepr/progs/server.dat
+../../build/main/progs/server.dat
 
 //#pragma target dp
 #include "fteqc_ext.qch"
