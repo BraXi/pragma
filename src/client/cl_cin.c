@@ -47,101 +47,6 @@ typedef struct
 
 cinematics_t	cin;
 
-/*
-=================================================================
-
-PCX LOADING
-
-=================================================================
-*/
-
-
-/*
-==============
-SCR_LoadPCX
-==============
-*/
-void SCR_LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *height)
-{
-	byte	*raw;
-	pcx_t	*pcx;
-	int		x, y;
-	int		len;
-	int		dataByte, runLength;
-	byte	*out, *pix;
-
-	*pic = NULL;
-
-	//
-	// load the file
-	//
-	len = FS_LoadFile (filename, (void **)&raw);
-	if (!raw)
-		return;	// Com_Printf ("Bad pcx file %s\n", filename);
-
-	//
-	// parse the PCX file
-	//
-	pcx = (pcx_t *)raw;
-	raw = &pcx->data;
-
-	if (pcx->manufacturer != 0x0a
-		|| pcx->version != 5
-		|| pcx->encoding != 1
-		|| pcx->bits_per_pixel != 8
-		|| pcx->xmax >= 640
-		|| pcx->ymax >= 480)
-	{
-		Com_Printf ("Bad pcx file %s\n", filename);
-		return;
-	}
-
-	out = Z_Malloc ( (pcx->ymax+1) * (pcx->xmax+1) );
-
-	*pic = out;
-
-	pix = out;
-
-	if (palette)
-	{
-		*palette = Z_Malloc(768);
-		memcpy (*palette, (byte *)pcx + len - 768, 768);
-	}
-
-	if (width)
-		*width = pcx->xmax+1;
-	if (height)
-		*height = pcx->ymax+1;
-
-	for (y=0 ; y<=pcx->ymax ; y++, pix += pcx->xmax+1)
-	{
-		for (x=0 ; x<=pcx->xmax ; )
-		{
-			dataByte = *raw++;
-
-			if((dataByte & 0xC0) == 0xC0)
-			{
-				runLength = dataByte & 0x3F;
-				dataByte = *raw++;
-			}
-			else
-				runLength = 1;
-
-			while(runLength-- > 0)
-				pix[x++] = dataByte;
-		}
-
-	}
-
-	if ( raw - (byte *)pcx > len)
-	{
-		Com_Printf ("PCX file %s was malformed", filename);
-		Z_Free (*pic);
-		*pic = NULL;
-	}
-
-	FS_FreeFile (pcx);
-}
 
 //=============================================================
 
@@ -575,6 +480,9 @@ SCR_PlayCinematic
 */
 void SCR_PlayCinematic (char *arg)
 {
+#if 1
+	Com_Printf("SCR_PlayCinematic currently not implemented\n");
+#else
 	int		width, height;
 	byte	*palette;
 	char	name[MAX_OSPATH], *dot;
@@ -582,10 +490,11 @@ void SCR_PlayCinematic (char *arg)
 
 	cl.cinematicframe = 0;
 	dot = strstr (arg, ".");
-	if (dot && !strcmp (dot, ".pcx"))
+
+	if (dot && !strcmp (dot, ".tga"))
 	{	// static pcx image
-		Com_sprintf (name, sizeof(name), "pics/%s", arg);
-		SCR_LoadPCX (name, &cin.pic, &palette, &cin.width, &cin.height);
+		Com_sprintf (name, sizeof(name), "guipics/cin/%s", arg);
+//		SCR_LoadPCX (name, &cin.pic, &palette, &cin.width, &cin.height);
 		cl.cinematicframe = -1;
 		cl.cinematictime = 1;
 		SCR_EndLoadingPlaque ();
@@ -644,4 +553,5 @@ void SCR_PlayCinematic (char *arg)
 	cl.cinematicframe = 0;
 	cin.pic = SCR_ReadNextFrame ();
 	cl.cinematictime = Sys_Milliseconds ();
+#endif
 }

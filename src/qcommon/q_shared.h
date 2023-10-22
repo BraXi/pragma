@@ -400,24 +400,20 @@ COLLISION DETECTION
 #define	CONTENTS_ORIGIN			0x1000000	// removed before bsping an entity
 
 #define	CONTENTS_MONSTER		0x2000000	// should never be on a brush, only in game
-#define	CONTENTS_DEADMONSTER	0x4000000
+#define	CONTENTS_DEADMONSTER	0x4000000	// should never be on a brush, only in game
 #define	CONTENTS_DETAIL			0x8000000	// brushes to be added after vis leafs
-#define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
+#define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has SURF_TRANSxx flag
 #define	CONTENTS_LADDER			0x20000000
 
 
-
 #define	SURF_LIGHT		0x1		// value will hold the light strength
-
 #define	SURF_SLICK		0x2		// effects game physics
-
 #define	SURF_SKY		0x4		// don't draw, but add to skybox
 #define	SURF_WARP		0x8		// turbulent water warp
 #define	SURF_TRANS33	0x10
 #define	SURF_TRANS66	0x20
 #define	SURF_FLOWING	0x40	// scroll towards angle
 #define	SURF_NODRAW		0x80	// don't bother referencing the texture
-
 
 
 // content masks

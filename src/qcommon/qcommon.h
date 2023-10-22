@@ -151,7 +151,7 @@ PROTOCOL
 
 // protocol.h -- communications protocols
 
-#define	PROTOCOL_VERSION	('b'+'x'+'1')
+#define	PROTOCOL_VERSION	('B'+'X'+'1')
 
 //=========================================
 

@@ -52,33 +52,7 @@ typedef struct
 /*
 ========================================================================
 
-PCX files are used for as many images as possible
-
-========================================================================
-*/
-
-typedef struct
-{
-    char	manufacturer;
-    char	version;
-    char	encoding;
-    char	bits_per_pixel;
-    unsigned short	xmin,ymin,xmax,ymax;
-    unsigned short	hres,vres;
-    unsigned char	palette[48];
-    char	reserved;
-    char	color_planes;
-    unsigned short	bytes_per_line;
-    unsigned short	palette_type;
-    char	filler[58];
-    unsigned char	data;			// unbounded
-} pcx_t;
-
-
-/*
-========================================================================
-
-.MDL skeletal model file format (braxi)
+.BMDL skeletal model file format (braxi)
 
 ========================================================================
 */
@@ -102,7 +76,6 @@ typedef struct
 	unsigned int 	numBones;
 	unsigned int 	numGroups;
 	unsigned int 	numVerts;
-
 } mdl_info_t;
 
 typedef struct
@@ -112,14 +85,12 @@ typedef struct
 	unsigned int	FPS;
 } anim_info_t;
 
-
 typedef struct
 {
 	int		id;
 	char	name[MAX_BONE_NAME];
 	int		owner;
 } mdl_bone_t;
-
 
 typedef struct
 {
@@ -146,7 +117,6 @@ typedef struct
 	int	numVerts;
 } mdl_group_t;
 
-
 typedef struct
 {
 	// ORDER MAKES A DIFERENCE! THESE MUST BE IN SAME ORDER AS IN VBO
@@ -156,6 +126,7 @@ typedef struct
 	int		boneId;
 } mdl_vert_t;
 
+
 /*
 ========================================================================
 
@@ -164,7 +135,7 @@ typedef struct
 ========================================================================
 */
 
-#define IDALIASHEADER		(('2'<<24)+('P'<<16)+('D'<<8)+'I')
+#define IDALIASHEADER	(('2'<<24)+('P'<<16)+('D'<<8)+'I')
 #define ALIAS_VERSION	8
 
 #define	MAX_TRIANGLES	4096
@@ -205,7 +176,6 @@ typedef struct
 	dtrivertx_t	verts[1];	// variable sized
 } daliasframe_t;
 
-
 // the glcmd format:
 // a positive integer starts a tristrip command, followed by that many
 // vertex structures.
@@ -213,7 +183,6 @@ typedef struct
 // a zero indicates the end of the command list.
 // a vertex consists of a floating point s, a floating point t,
 // and an integer vertex index.
-
 
 typedef struct
 {
@@ -251,20 +220,22 @@ typedef struct
 #define IDSPRITEHEADER	(('2'<<24)+('S'<<16)+('D'<<8)+'I')
 		// little-endian "IDS2"
 #define SPRITE_VERSION	2
-
+#define SPRITE_PICNAME	64
 typedef struct
 {
 	int		width, height;
 	int		origin_x, origin_y;		// raster coordinates inside pic
-	char	name[MAX_SKINNAME];		// name of pcx file
+	char	name[SPRITE_PICNAME];	// name of TGA file
 } dsprframe_t;
 
-typedef struct {
+typedef struct 
+{
 	int			ident;
 	int			version;
 	int			numframes;
 	dsprframe_t	frames[1];			// variable sized
 } dsprite_t;
+
 
 /*
 ==============================================================================
@@ -273,7 +244,6 @@ typedef struct {
 
 ==============================================================================
 */
-
 
 #define	MIPLEVELS	4
 typedef struct miptex_s
@@ -286,7 +256,6 @@ typedef struct miptex_s
 	int			contents;
 	int			value;
 } miptex_t;
-
 
 
 /*
@@ -470,7 +439,7 @@ typedef struct texinfo_s
 	float		vecs[2][4];		// [s/t][xyz offset]
 	int			flags;			// miptex flags + overrides
 	int			value;			// light emission, etc
-	char		texture[32];	// texture name (textures/*.tga) or (textures/*.wal)
+	char		texture[32];	// texture name (textures/*.tga)
 	int			nexttexinfo;	// for animations, -1 = end of chain
 } texinfo_t;
 

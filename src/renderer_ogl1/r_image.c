@@ -371,116 +371,6 @@ void Scrap_Upload (void)
 }
 
 /*
-=================================================================
-
-PCX LOADING
-
-=================================================================
-*/
-
-
-/*
-==============
-LoadPCX
-==============
-*/
-void LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *height)
-{
-	byte	*raw;
-	pcx_t	*pcx;
-	int		x, y;
-	int		len;
-	int		dataByte, runLength;
-	byte	*out, *pix;
-
-	*pic = NULL;
-	*palette = NULL;
-
-	//
-	// load the file
-	//
-	len = ri.FS_LoadFile (filename, (void **)&raw);
-	if (!raw)
-	{
-		ri.Con_Printf (PRINT_DEVELOPER, "Bad pcx file %s\n", filename);
-		return;
-	}
-
-	//
-	// parse the PCX file
-	//
-	pcx = (pcx_t *)raw;
-
-    pcx->xmin = LittleShort(pcx->xmin);
-    pcx->ymin = LittleShort(pcx->ymin);
-    pcx->xmax = LittleShort(pcx->xmax);
-    pcx->ymax = LittleShort(pcx->ymax);
-    pcx->hres = LittleShort(pcx->hres);
-    pcx->vres = LittleShort(pcx->vres);
-    pcx->bytes_per_line = LittleShort(pcx->bytes_per_line);
-    pcx->palette_type = LittleShort(pcx->palette_type);
-
-	raw = &pcx->data;
-
-	if (pcx->manufacturer != 0x0a
-		|| pcx->version != 5
-		|| pcx->encoding != 1
-		|| pcx->bits_per_pixel != 8
-		|| pcx->xmax >= 640
-		|| pcx->ymax >= 480)
-	{
-		ri.Con_Printf (PRINT_ALL, "Bad pcx file %s\n", filename);
-		return;
-	}
-
-	out = malloc ( (pcx->ymax+1) * (pcx->xmax+1) );
-
-	*pic = out;
-
-	pix = out;
-
-	if (palette)
-	{
-		*palette = malloc(768);
-		memcpy (*palette, (byte *)pcx + len - 768, 768);
-	}
-
-	if (width)
-		*width = pcx->xmax+1;
-	if (height)
-		*height = pcx->ymax+1;
-
-	for (y=0 ; y<=pcx->ymax ; y++, pix += pcx->xmax+1)
-	{
-		for (x=0 ; x<=pcx->xmax ; )
-		{
-			dataByte = *raw++;
-
-			if((dataByte & 0xC0) == 0xC0)
-			{
-				runLength = dataByte & 0x3F;
-				dataByte = *raw++;
-			}
-			else
-				runLength = 1;
-
-			while(runLength-- > 0)
-				pix[x++] = dataByte;
-		}
-
-	}
-
-	if ( raw - (byte *)pcx > len)
-	{
-		ri.Con_Printf (PRINT_DEVELOPER, "PCX file %s was malformed", filename);
-		free (*pic);
-		*pic = NULL;
-	}
-
-	ri.FS_FreeFile (pcx);
-}
-
-/*
 =========================================================
 
 TARGA LOADING
@@ -526,7 +416,7 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 	length = ri.FS_LoadFile (name, (void **)&buffer);
 	if (!buffer)
 	{
-		ri.Con_Printf (PRINT_DEVELOPER, "Bad tga file %s\n", name);
+//		ri.Con_Printf (PRINT_DEVELOPER, "Bad tga file %s\n", name);
 		return;
 	}
 
@@ -1056,36 +946,6 @@ nonscrap:
 	return image;
 }
 
-
-/*
-================
-GL_LoadWal
-================
-*/
-image_t *GL_LoadWal (char *name)
-{
-	miptex_t	*mt;
-	int			width, height, ofs;
-	image_t		*image;
-
-	ri.FS_LoadFile (name, (void **)&mt);
-	if (!mt)
-	{
-		ri.Con_Printf (PRINT_ALL, "GL_LoadWal: can't load %s\n", name);
-		return r_notexture;
-	}
-
-	width = LittleLong (mt->width);
-	height = LittleLong (mt->height);
-	ofs = LittleLong (mt->offsets[0]);
-
-	image = GL_LoadPic (name, (byte *)mt + ofs, width, height, it_wall, 8);
-
-	ri.FS_FreeFile ((void *)mt);
-
-	return image;
-}
-
 /*
 ===============
 GL_FindImage
@@ -1101,7 +961,10 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 	int		width, height;
 
 	if (!name)
-		return NULL;	//	ri.Sys_Error (ERR_DROP, "GL_FindImage: NULL name");
+	{
+		//	ri.Sys_Error (ERR_DROP, "GL_FindImage: NULL name");
+		return NULL;
+	}
 	len = strlen(name);
 	if (len<5)
 		return NULL;	//	ri.Sys_Error (ERR_DROP, "GL_FindImage: bad name: %s", name);
@@ -1116,7 +979,6 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 		}
 	}
 
-
 	//
 	// load the pic from disk
 	//
@@ -1125,16 +987,15 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 	{
 		LoadTGA (name, &pic, &width, &height);
 		if (!pic)
+		{
+			ri.Con_Printf(PRINT_LOW, "GL_FindImage: couldn't load %s\n", name);
 			return r_notexture;
+		}
 		image = GL_LoadPic (name, pic, width, height, type, 32);
-	}
-	else if (!strcmp(name + len - 4, ".wal"))
-	{
-		image = GL_LoadWal(name);
 	}
 	else
 	{
-		ri.Con_Printf(PRINT_LOW, "GL_FindImage: bad extension on: %s\n", name);
+		ri.Con_Printf(PRINT_LOW, "GL_FindImage: weird file %s\n", name);
 		return r_notexture;
 	}
 

@@ -938,6 +938,7 @@ SCR_TouchPics
 Allows rendering code to cache all needed sbar graphics
 ===============
 */
+static const int num_crosshairs = 1;	// number of crosshair pics
 void SCR_TouchPics (void)
 {
 	int		i, j;
@@ -948,8 +949,8 @@ void SCR_TouchPics (void)
 
 	if (crosshair->value)
 	{
-		if (crosshair->value > 3 || crosshair->value < 0)
-			crosshair->value = 3;
+		if (crosshair->value > num_crosshairs || crosshair->value < 0)
+			crosshair->value = num_crosshairs;
 
 		Com_sprintf (crosshair_pic, sizeof(crosshair_pic), "hud/crosshair_%i", (int)(crosshair->value));
 		re.DrawGetPicSize (&crosshair_width, &crosshair_height, crosshair_pic);
