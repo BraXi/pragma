@@ -24,9 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../qcommon/qcommon.h"
 
-#define	MAX_DLIGHTS		32
-#define	MAX_ENTITIES	128
-#define	MAX_PARTICLES	4096
+#define	MAX_DLIGHTS		64		// was 32
+#define	MAX_ENTITIES	512		// max visible entities, was 128 [previously MAX_ENTITIES]
+#define	MAX_PARTICLES	8192	// was 4096
 #define	MAX_LIGHTSTYLES	256
 
 #define POWERSUIT_SCALE		4.0F

@@ -74,10 +74,13 @@ V_AddEntity
 
 =====================
 */
-void V_AddEntity (centity_t *ent)
+void V_AddEntity(centity_t* ent)
 {
 	if (r_numentities >= MAX_ENTITIES)
+	{
+		Com_DPrintf("V_AddEntity: r_numentities >= MAX_ENTITIES\n");
 		return;
+	}
 	r_entities[r_numentities++] = *ent;
 }
 
