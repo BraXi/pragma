@@ -43,7 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "qgl.h"
 
-#define	REF_VERSION	"0.02"
+#define	REF_VERSION	"0.3"
 
 // up / down
 #define	PITCH	0
@@ -95,13 +95,11 @@ typedef struct image_s
 	int		registration_sequence;		// 0 = free
 	struct msurface_s	*texturechain;	// for sort-by-texture world drawing
 	int		texnum;						// gl texture binding
-	float	sl, tl, sh, th;				// 0,0 - 1,1 unless part of the scrap
-	qboolean	scrap;
+	float	sl, tl, sh, th;				// 0,0 - 1,1
 	qboolean	has_alpha;
 } image_t;
 
 #define	TEXNUM_LIGHTMAPS	1024
-#define	TEXNUM_SCRAPS		1152
 #define	TEXNUM_IMAGES		1153
 
 #define		MAX_GLTEXTURES	1024
@@ -132,8 +130,6 @@ typedef struct
 	float	r, g, b;
 } glvert_t;
 
-
-#define	MAX_LBM_HEIGHT		480
 
 #define BACKFACE_EPSILON	0.01
 
@@ -254,7 +250,7 @@ extern	model_t	*r_worldmodel;
 
 extern	int		registration_sequence;
 
-
+// r_init.c
 int 	R_Init( void *hinstance, void *hWnd );
 void	R_Shutdown( void );
 
@@ -304,15 +300,11 @@ void	Draw_FadeScreen(float* rgba);
 void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
 
 void	R_BeginFrame( float camera_separation );
-void	R_SetPalette ( const unsigned char *palette);
-
-int		Draw_GetPalette (void);
 
 void GL_ResampleTexture (unsigned *in, int inwidth, int inheight, unsigned *out,  int outwidth, int outheight);
 
 struct image_s *R_RegisterSkin (char *name);
 
-void LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *height);
 image_t *GL_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type, int bits);
 image_t	*GL_FindImage (char *name, imagetype_t type);
 void	GL_TextureMode( char *string );
@@ -334,7 +326,10 @@ void GL_DrawParticles( int n, const particle_t particles[] );
 /*
 ** GL config stuff
 */
-#define GL_RENDERER_OTHER		0x80000000
+#define GL_RENDERER_OTHER		0
+#define GL_RENDERER_NVIDIA		1
+#define GL_RENDERER_AMD			2
+#define GL_RENDERER_INTEL		3
 
 typedef struct
 {
@@ -343,8 +338,6 @@ typedef struct
 	const char *vendor_string;
 	const char *version_string;
 	const char *extensions_string;
-
-	qboolean	allow_cds;
 } glconfig_t;
 
 typedef struct

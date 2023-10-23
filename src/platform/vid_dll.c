@@ -18,8 +18,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 // Main windowed and fullscreen graphics interface module. This module
-// is used for both the software and OpenGL rendering versions of the
-// Quake refresh engine.
+// is used for OpenGL rendering version of the Quake refresh engine.
+
 #include <assert.h>
 #include <float.h>
 
@@ -609,10 +609,8 @@ qboolean VID_LoadRefresh( char *name )
 	vidref_val = VIDREF_OTHER;
 	if(r_renderer)
 	{
-		if(!strcmp (r_renderer->string, "ogl1"))
+		if(!strcmp (r_renderer->string, DEFAULT_RENDERER))
 			vidref_val = VIDREF_GL;
-		else if(!strcmp(r_renderer->string, "soft"))
-			vidref_val = VIDREF_SOFT;
 	}
 
 
@@ -663,9 +661,9 @@ void VID_CheckChanges (void)
 		Com_sprintf(name, sizeof(name), "renderer_%s.dll", r_renderer->string );
 		if ( !VID_LoadRefresh( name ) )
 		{
-			if ( strcmp (r_renderer->string, "ogl1") == 0 )
+			if ( strcmp (r_renderer->string, DEFAULT_RENDERER) == 0 )
 				Com_Error (ERR_FATAL, "Couldn't start %s renderer!", r_renderer->string);
-			Cvar_Set( "r_renderer", "ogl1" );
+			Cvar_Set( "r_renderer", DEFAULT_RENDERER);
 
 			/*
 			** drop the console if we fail to load a refresh
@@ -699,9 +697,9 @@ VID_Init
 void VID_Init (void)
 {
 	/* Create the video variables so we know how to start the graphics drivers */
-	r_renderer = Cvar_Get ("r_renderer", "ogl1", CVAR_ARCHIVE);
-	r_xpos = Cvar_Get ("r_xpos", "3", CVAR_ARCHIVE);
-	r_ypos = Cvar_Get ("r_ypos", "22", CVAR_ARCHIVE);
+	r_renderer = Cvar_Get ("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE);
+	r_xpos = Cvar_Get ("r_xpos", "20", CVAR_ARCHIVE);
+	r_ypos = Cvar_Get ("r_ypos", "20", CVAR_ARCHIVE);
 	r_fullscreen = Cvar_Get ("r_fullscreen", "0", CVAR_ARCHIVE);
 	r_gamma = Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE );
 	win_noalttab = Cvar_Get( "win_noalttab", "0", CVAR_ARCHIVE );

@@ -89,8 +89,7 @@ struct sfx_s	*cl_sfx_plasexp;
 struct sfx_s	*cl_sfx_footsteps[4];
 
 struct model_s	*cl_mod_explode;
-struct model_s	*cl_mod_smoke;
-struct model_s	*cl_mod_flash;
+struct model_s	*cl_mod_impact_small;
 struct model_s	*cl_mod_parasite_segment;
 struct model_s	*cl_mod_grapple_cable;
 struct model_s	*cl_mod_parasite_tip;
@@ -155,9 +154,9 @@ CL_RegisterTEntModels
 */
 void CL_RegisterTEntModels (void)
 {
+	cl_mod_impact_small = re.RegisterModel("models/fx/impact_small.md2");
+
 	cl_mod_explode = re.RegisterModel ("models/objects/explode/tris.md2");
-	cl_mod_smoke = re.RegisterModel ("models/objects/smoke/tris.md2");
-	cl_mod_flash = re.RegisterModel ("models/fx/impact_small.md2");
 	cl_mod_parasite_segment = re.RegisterModel ("models/monsters/parasite/segment/tris.md2");
 	cl_mod_grapple_cable = re.RegisterModel ("models/ctf/segment/tris.md2");
 	cl_mod_parasite_tip = re.RegisterModel ("models/monsters/parasite/tip/tris.md2");
@@ -235,23 +234,13 @@ void CL_SmokeAndFlash(vec3_t origin)
 
 	explosion_t	*ex;
 
-#if 0
-	ex = CL_AllocExplosion ();
-	VectorCopy (origin, ex->ent.origin);
-	ex->type = ex_misc;
-	ex->frames = 4;
-	ex->ent.flags = RF_TRANSLUCENT;
-	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
-	ex->ent.model = cl_mod_smoke;
-#endif
-
 	ex = CL_AllocExplosion ();
 	VectorCopy (origin, ex->ent.origin);
 	ex->type = ex_flash;
 	ex->ent.flags = (RF_TRANSLUCENT|RF_FULLBRIGHT);
 	ex->frames = 2;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
-	ex->ent.model = cl_mod_flash;
+	ex->ent.model = cl_mod_impact_small;
 }
 
 /*
@@ -264,15 +253,6 @@ void CL_GunMuzzleFlash(vec3_t origin)
 
 	explosion_t* ex;
 
-#if 0
-	ex = CL_AllocExplosion();
-	VectorCopy(origin, ex->ent.origin);
-	ex->type = ex_misc;
-	ex->frames = 4;
-	ex->ent.flags = RF_TRANSLUCENT;
-	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
-	ex->ent.model = cl_mod_smoke;
-#endif
 	vec3_t dir;
 	dir[1] = 1;
 	dir[2] = 1;
@@ -283,7 +263,7 @@ void CL_GunMuzzleFlash(vec3_t origin)
 	ex->ent.flags = (RF_TRANSLUCENT | RF_FULLBRIGHT);
 	ex->frames = 2;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
-	ex->ent.model = cl_mod_flash;
+	ex->ent.model = cl_mod_impact_small;
 	ex->ent.alpha = 0.3;
 }
 
@@ -1022,7 +1002,7 @@ void CL_ParseTEnt (void)
 		ex->lightcolor[0] = 1.0;
 		ex->lightcolor[1] = 1.0;
 		ex->lightcolor[2] = 0.3;
-		ex->ent.model = cl_mod_flash;
+		ex->ent.model = cl_mod_impact_small;
 		ex->frames = 2;
 		break;
 

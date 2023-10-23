@@ -593,7 +593,6 @@ void CL_Disconnect (void)
 	}
 
 	VectorClear (cl.refdef.blend);
-	re.CinematicSetPalette(NULL);
 
 	M_ForceMenuOff ();
 
@@ -614,7 +613,8 @@ void CL_Disconnect (void)
 	CL_ClearState ();
 
 	// stop download
-	if (cls.download) {
+	if (cls.download) 
+	{
 		fclose(cls.download);
 		cls.download = NULL;
 	}
@@ -1441,14 +1441,10 @@ void CL_Init (void)
 	// all archived variables will now be loaded
 
 	Con_Init ();	
-#if defined __linux__ || defined __sgi
-	S_Init ();	
-	VID_Init ();
-#else
+
 	VID_Init ();
 	S_Init ();	// sound must be initialized after window is created
-#endif
-	
+
 	V_Init ();
 	
 	net_message.data = net_message_buffer;

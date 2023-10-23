@@ -487,9 +487,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         return 0;
 
 	global_hInstance = hInstance;
+	ParseCommandLine (lpCmdLine);
+
+	Qcommon_Init (argc, argv);
+	oldtime = Sys_Milliseconds ();
 
 #if 1//_DEBUG
-	if (!Cvar_VariableValue("dedicated"))
+	if (Cvar_VariableValue("debugcon"))
 	{
 		HWND consoleHandle;
 		AllocConsole();
@@ -498,13 +502,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		freopen("conout$", "w", stderr);
 		consoleHandle = GetConsoleWindow();
 		MoveWindow(consoleHandle, 1, 1, 680, 480, 1);
-		printf("[sys_win.c] Console initialized.\n");
+		printf("[debugcon enabled]\n");
 	}
 #endif
-	ParseCommandLine (lpCmdLine);
-
-	Qcommon_Init (argc, argv);
-	oldtime = Sys_Milliseconds ();
 
     /* main window message loop */
 	while (1)

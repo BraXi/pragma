@@ -1405,18 +1405,13 @@ void Qcommon_Init (int argc, char **argv)
 	if (dedicated->value)
 	{
 		Cmd_AddCommand("quit", Com_Quit);
+		Com_Printf("pragma %s dedicated server\n", PRAGMA_VERSION);
+		Com_Printf("build: %s\n", PRAGMA_TIMESTAMP);
+		Com_Printf("------------------------------\n");
 	}
 
 
 	Sys_Init ();
-
-	if (dedicated->value)
-	{
-		Com_Printf("pragma %s dedicated server\n", PRAGMA_VERSION);
-		Com_Printf("build: %s\n",  PRAGMA_TIMESTAMP);
-		Com_Printf("------------------------------\n");
-	}
-
 	NET_Init ();
 	Netchan_Init ();
 

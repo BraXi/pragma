@@ -24,7 +24,7 @@ void R_Clear (void);
 
 viddef_t	vid;
 
-refimport_t	ri;
+
 
 model_t		*r_worldmodel;
 
@@ -48,7 +48,7 @@ int			c_brush_polys, c_alias_polys;
 
 float		v_blend[4];			// final blending color
 
-void GL_Strings_f( void );
+
 
 //
 // view origin
@@ -68,62 +68,7 @@ refdef_t	r_newrefdef;
 
 int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
-cvar_t	*r_norefresh;
-cvar_t	*r_drawentities;
-cvar_t	*r_drawworld;
-cvar_t	*r_speeds;
-cvar_t	*r_fullbright;
-cvar_t	*r_novis;
-cvar_t	*r_nocull;
-cvar_t	*r_lerpmodels;
-cvar_t	*r_lefthand;
 
-cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light level
-
-cvar_t	*r_vertex_arrays;
-
-cvar_t	*r_particle_min_size;
-cvar_t	*r_particle_max_size;
-cvar_t	*r_particle_size;
-cvar_t	*r_particle_att_a;
-cvar_t	*r_particle_att_b;
-cvar_t	*r_particle_att_c;
-
-cvar_t	*gl_ext_swapinterval;
-cvar_t	*gl_ext_pointparameters;
-cvar_t	*gl_ext_compiled_vertex_array;
-
-cvar_t	*r_log;
-cvar_t	*r_bitdepth;
-cvar_t	*r_drawbuffer;
-cvar_t  *gl_driver;
-cvar_t	*r_lightmap;
-cvar_t	*r_shadows;
-cvar_t	*r_mode;
-cvar_t	*r_dynamic;
-cvar_t  *r_monolightmap;
-cvar_t	*r_modulate;
-cvar_t	*r_nobind;
-cvar_t	*r_round_down;
-cvar_t	*r_picmip;
-cvar_t	*r_skymip;
-cvar_t	*r_showtris;
-cvar_t	*r_ztrick;
-cvar_t	*r_finish;
-cvar_t	*r_clear;
-cvar_t	*r_cull;
-cvar_t	*r_polyblend;
-cvar_t	*r_flashblend;
-cvar_t  *r_saturatelighting;
-cvar_t	*r_swapinterval;
-cvar_t	*r_texturemode;
-cvar_t	*r_texturealphamode;
-cvar_t	*r_texturesolidmode;
-cvar_t	*r_lockpvs;
-
-cvar_t	*r_fullscreen;
-cvar_t	*r_gamma;
-cvar_t	*r_renderer;
 
 /*
 =================
@@ -183,7 +128,7 @@ void R_DrawSpriteModel (centity_t *e)
 
 	psprite = (dsprite_t *)currentmodel->extradata;
 
-#if 0
+#if 1
 	if (e->frame < 0 || e->frame >= psprite->numframes)
 	{
 		ri.Con_Printf (PRINT_ALL, "no such sprite frame %i\n", e->frame);
@@ -265,9 +210,11 @@ void R_DrawSpriteModel (centity_t *e)
 /*
 =============
 R_DrawNullModel
+
+Draw the default model
 =============
 */
-void R_DrawNullModel (void)
+static void R_DrawNullModel (void)
 {
 	vec3_t	shadelight;
 	int		i;
@@ -458,42 +405,7 @@ R_DrawParticles
 */
 void R_DrawParticles (void)
 {
-#if 0
-	if ( gl_ext_pointparameters->value && qglPointParameterfEXT )
-	{
-		int i;
-		unsigned char color[4];
-		const particle_t *p;
-
-		qglDepthMask( GL_FALSE );
-		qglEnable( GL_BLEND );
-		qglDisable( GL_TEXTURE_2D );
-
-		qglPointSize( r_particle_size->value );
-
-		qglBegin( GL_POINTS );
-		for ( i = 0, p = r_newrefdef.particles; i < r_newrefdef.num_particles; i++, p++ )
-		{
-			*(int *)color = p->color;
-			color[3] = p->alpha*255;
-
-			qglColor4fv( color );
-
-			qglVertex3fv( p->origin );
-		}
-		qglEnd();
-
-		qglDisable( GL_BLEND );
-		qglColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
-		qglDepthMask( GL_TRUE );
-		qglEnable( GL_TEXTURE_2D );
-
-	}
-	else
-#endif
-	{
-		GL_DrawParticles( r_newrefdef.num_particles, r_newrefdef.particles);
-	}
+	GL_DrawParticles( r_newrefdef.num_particles, r_newrefdef.particles);
 }
 
 /*
@@ -505,8 +417,9 @@ void R_PolyBlend (void)
 {
 	if (!r_polyblend->value)
 		return;
+
 	if (!v_blend[3])
-		return;
+		return; // transparent
 
 	qglDisable (GL_ALPHA_TEST);
 	qglEnable (GL_BLEND);
@@ -538,7 +451,7 @@ void R_PolyBlend (void)
 
 //=======================================================================
 
-int SignbitsForPlane (cplane_t *out)
+static int SignbitsForPlane (cplane_t *out)
 {
 	int	bits, j;
 
@@ -646,8 +559,7 @@ void R_SetupFrame (void)
 }
 
 
-void MYgluPerspective( GLdouble fovy, GLdouble aspect,
-		     GLdouble zNear, GLdouble zFar )
+void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar )
 {
    GLdouble xmin, xmax, ymin, ymax;
 
@@ -662,7 +574,6 @@ void MYgluPerspective( GLdouble fovy, GLdouble aspect,
 
    qglFrustum( xmin, xmax, ymin, ymax, zNear, zFar );
 }
-
 
 /*
 =============
@@ -709,8 +620,6 @@ void R_SetupGL (void)
     qglRotatef (-r_newrefdef.viewangles[1],  0, 0, 1);
     qglTranslatef (-r_newrefdef.vieworg[0],  -r_newrefdef.vieworg[1],  -r_newrefdef.vieworg[2]);
 
-//	if ( gl_state.camera_separation != 0 && gl_state.stereo_enabled )
-//		qglTranslatef ( gl_state.camera_separation, 0, 0 );
 
 	qglGetFloatv (GL_MODELVIEW_MATRIX, r_world_matrix);
 
@@ -770,7 +679,7 @@ void R_Clear (void)
 
 }
 
-void R_Flash( void )
+void R_Flash(void)
 {
 	R_PolyBlend ();
 }
@@ -834,7 +743,7 @@ void R_RenderView (refdef_t *fd)
 }
 
 
-void	R_SetGL2D (void)
+void R_SetGL2D(void)
 {
 	// set 2D virtual screen size
 	qglViewport (0,0, vid.width, vid.height);
@@ -938,329 +847,6 @@ void R_RenderFrame (refdef_t *fd)
 	R_SetGL2D ();
 }
 
-
-void R_Register( void )
-{
-	r_lefthand = ri.Cvar_Get( "hand", "0", CVAR_USERINFO | CVAR_ARCHIVE );
-	r_norefresh = ri.Cvar_Get ("r_norefresh", "0", 0);
-	r_fullbright = ri.Cvar_Get ("r_fullbright", "0", 0);
-	r_drawentities = ri.Cvar_Get ("r_drawentities", "1", 0);
-	r_drawworld = ri.Cvar_Get ("r_drawworld", "1", 0);
-	r_novis = ri.Cvar_Get ("r_novis", "0", 0);
-	r_nocull = ri.Cvar_Get ("r_nocull", "0", 0);
-	r_lerpmodels = ri.Cvar_Get ("r_lerpmodels", "1", 0);
-	r_speeds = ri.Cvar_Get ("r_speeds", "0", 0);
-
-	r_lightlevel = ri.Cvar_Get ("r_lightlevel", "0", 0);
-
-	r_particle_min_size = ri.Cvar_Get( "r_particle_min_size", "2", CVAR_ARCHIVE );
-	r_particle_max_size = ri.Cvar_Get( "r_particle_max_size", "40", CVAR_ARCHIVE );
-	r_particle_size = ri.Cvar_Get( "r_particle_size", "40", CVAR_ARCHIVE );
-	r_particle_att_a = ri.Cvar_Get( "r_particle_att_a", "0.01", CVAR_ARCHIVE );
-	r_particle_att_b = ri.Cvar_Get( "r_particle_att_b", "0.0", CVAR_ARCHIVE );
-	r_particle_att_c = ri.Cvar_Get( "r_particle_att_c", "0.01", CVAR_ARCHIVE );
-
-	r_modulate = ri.Cvar_Get ("r_modulate", "1", CVAR_ARCHIVE );
-	r_log = ri.Cvar_Get( "r_log", "0", 0 );
-	r_bitdepth = ri.Cvar_Get( "r_bitdepth", "0", 0 );
-	r_mode = ri.Cvar_Get( "r_mode", "3", CVAR_ARCHIVE );
-	r_lightmap = ri.Cvar_Get ("r_lightmap", "0", 0);
-	r_shadows = ri.Cvar_Get ("r_shadows", "0", CVAR_ARCHIVE );
-	r_dynamic = ri.Cvar_Get ("r_dynamic", "1", 0);
-	r_nobind = ri.Cvar_Get ("r_nobind", "0", 0);
-	r_round_down = ri.Cvar_Get ("r_round_down", "0", 0);
-	r_picmip = ri.Cvar_Get ("r_picmip", "0", 0);
-	r_skymip = ri.Cvar_Get ("r_skymip", "0", 0);
-	r_showtris = ri.Cvar_Get ("r_showtris", "0", 0);
-	r_ztrick = ri.Cvar_Get ("r_ztrick", "0", 0);
-	r_finish = ri.Cvar_Get ("r_finish", "0", CVAR_ARCHIVE);
-	r_clear = ri.Cvar_Get ("r_clear", "0", 0);
-	r_cull = ri.Cvar_Get ("r_cull", "1", 0);
-	r_polyblend = ri.Cvar_Get ("r_polyblend", "1", 0);
-	r_flashblend = ri.Cvar_Get ("r_flashblend", "0", 0);
-	r_monolightmap = ri.Cvar_Get( "r_monolightmap", "0", 0 );
-	gl_driver = ri.Cvar_Get( "gl_driver", "opengl32", CVAR_ARCHIVE );
-	r_texturemode = ri.Cvar_Get( "r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE );
-	r_texturealphamode = ri.Cvar_Get( "r_texturealphamode", "default", CVAR_ARCHIVE );
-	r_texturesolidmode = ri.Cvar_Get( "r_texturesolidmode", "default", CVAR_ARCHIVE );
-	r_lockpvs = ri.Cvar_Get( "r_lockpvs", "0", 0 );
-
-	r_vertex_arrays = ri.Cvar_Get( "r_vertex_arrays", "0", CVAR_ARCHIVE ); // disabled by default, breaks MD2 rendering on RX 7900 XT - Reki
-
-	gl_ext_swapinterval = ri.Cvar_Get( "gl_ext_swapinterval", "1", CVAR_ARCHIVE );
-	gl_ext_pointparameters = ri.Cvar_Get( "gl_ext_pointparameters", "1", CVAR_ARCHIVE );
-	gl_ext_compiled_vertex_array = ri.Cvar_Get( "gl_ext_compiled_vertex_array", "1", CVAR_ARCHIVE );
-
-	r_drawbuffer = ri.Cvar_Get( "r_drawbuffer", "GL_BACK", 0 );
-	r_swapinterval = ri.Cvar_Get( "r_swapinterval", "1", CVAR_ARCHIVE );
-
-	r_saturatelighting = ri.Cvar_Get( "r_saturatelighting", "0", 0 );
-
-	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "0", CVAR_ARCHIVE );
-	r_gamma = ri.Cvar_Get( "r_gamma", "1.0", CVAR_ARCHIVE );
-	r_renderer = ri.Cvar_Get( "r_renderer", "ogl1", CVAR_ARCHIVE );
-
-	ri.Cmd_AddCommand( "imagelist", GL_ImageList_f );
-	ri.Cmd_AddCommand( "screenshot", GL_ScreenShot_f );
-	ri.Cmd_AddCommand( "modellist", Mod_Modellist_f );
-	ri.Cmd_AddCommand( "gl_strings", GL_Strings_f );
-}
-
-/*
-==================
-R_SetMode
-==================
-*/
-qboolean R_SetMode (void)
-{
-	rserr_t err;
-	qboolean fullscreen;
-
-	if ( r_fullscreen->modified && !gl_config.allow_cds )
-	{
-		ri.Con_Printf( PRINT_ALL, "R_SetMode() - CDS not allowed with this driver\n" );
-		ri.Cvar_SetValue( "r_fullscreen", !r_fullscreen->value );
-		r_fullscreen->modified = false;
-	}
-
-	fullscreen = r_fullscreen->value;
-
-	r_fullscreen->modified = false;
-	r_mode->modified = false;
-
-	if ( ( err = GLimp_SetMode( &vid.width, &vid.height, r_mode->value, fullscreen ) ) == rserr_ok )
-	{
-		gl_state.prev_mode = r_mode->value;
-	}
-	else
-	{
-		if ( err == rserr_invalid_fullscreen )
-		{
-			ri.Cvar_SetValue( "r_fullscreen", 0);
-			r_fullscreen->modified = false;
-			ri.Con_Printf( PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n" );
-			if ( ( err = GLimp_SetMode( &vid.width, &vid.height, r_mode->value, false ) ) == rserr_ok )
-				return true;
-		}
-		else if ( err == rserr_invalid_mode )
-		{
-			ri.Cvar_SetValue( "gl_mode", gl_state.prev_mode );
-			r_mode->modified = false;
-			ri.Con_Printf( PRINT_ALL, "ref_gl::R_SetMode() - invalid mode\n" );
-		}
-
-		// try setting it back to something safe
-		if ( ( err = GLimp_SetMode( &vid.width, &vid.height, gl_state.prev_mode, false ) ) != rserr_ok )
-		{
-			ri.Con_Printf( PRINT_ALL, "ref_gl::R_SetMode() - could not revert to safe mode\n" );
-			return false;
-		}
-	}
-	return true;
-}
-
-/*
-===============
-R_Init
-===============
-*/
-int R_Init( void *hinstance, void *hWnd )
-{	
-	char renderer_buffer[1000];
-	char vendor_buffer[1000];
-	int		err;
-	int		j;
-	extern float r_turbsin[256];
-
-	for ( j = 0; j < 256; j++ )
-	{
-		r_turbsin[j] *= 0.5;
-	}
-
-	ri.Con_Printf (PRINT_ALL, "OpenGL 1.x renderer version :"REF_VERSION"\n");
-
-	Draw_GetPalette ();
-
-	R_Register();
-
-	// initialize our QGL dynamic bindings
-	if ( !QGL_Init( gl_driver->string ) )
-	{
-		QGL_Shutdown();
-        ri.Con_Printf (PRINT_ALL, "ref_gl::R_Init() - could not load \"%s\"\n", gl_driver->string );
-		return -1;
-	}
-
-	// initialize OS-specific parts of OpenGL
-	if ( !GLimp_Init( hinstance, hWnd ) )
-	{
-		QGL_Shutdown();
-		return -1;
-	}
-
-	// set our "safe" modes
-	gl_state.prev_mode = 3;
-
-	// create the window and set up the context
-	if ( !R_SetMode () )
-	{
-		QGL_Shutdown();
-        ri.Con_Printf (PRINT_ALL, "ref_gl::R_Init() - could not R_SetMode()\n" );
-		return -1;
-	}
-
-	ri.Vid_MenuInit();
-
-	/*
-	** get our various GL strings
-	*/
-	gl_config.vendor_string = qglGetString (GL_VENDOR);
-	ri.Con_Printf (PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string );
-	gl_config.renderer_string = qglGetString (GL_RENDERER);
-	ri.Con_Printf (PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string );
-	gl_config.version_string = qglGetString (GL_VERSION);
-	ri.Con_Printf (PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string );
-	gl_config.extensions_string = qglGetString (GL_EXTENSIONS);
-//	ri.Con_Printf (PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
-
-	strcpy( renderer_buffer, gl_config.renderer_string );
-	_strlwr( renderer_buffer );
-
-	strcpy( vendor_buffer, gl_config.vendor_string );
-	_strlwr( vendor_buffer );
-
-
-//	if ( strstr( renderer_buffer, "nvidia" ) )
-//		gl_config.renderer = GL_RENDERER_NVIDIA;
-//	else if ( strstr( renderer_buffer, "amd" ) )
-//		gl_config.renderer = GL_RENDERER_AMD; 
-//	else if ( strstr( renderer_buffer, "intel" ) )
-//		gl_config.renderer = GL_RENDERER_INTEL; 
-//	else
-		gl_config.renderer = GL_RENDERER_OTHER;
-
-	if ( toupper( r_monolightmap->string[1] ) != 'F' )
-	{
-		ri.Cvar_Set( "r_monolightmap", "0" );
-
-	}
-
-	ri.Cvar_Set( "scr_drawall", "1" );
-
-	gl_config.allow_cds = true;
-
-
-	if ( gl_config.allow_cds )
-		ri.Con_Printf( PRINT_ALL, "...allowing CDS\n" );
-	else
-		ri.Con_Printf( PRINT_ALL, "...disabling CDS\n" );
-
-	/*
-	** grab extensions
-	*/
-#ifdef WIN32
-	if ( strstr( gl_config.extensions_string, "GL_EXT_compiled_vertex_array" ) || 
-		 strstr( gl_config.extensions_string, "GL_SGI_compiled_vertex_array" ) )
-	{
-		ri.Con_Printf( PRINT_ALL, "...enabling GL_EXT_compiled_vertex_array\n" );
-		qglLockArraysEXT = ( void * ) qwglGetProcAddress( "glLockArraysEXT" );
-		qglUnlockArraysEXT = ( void * ) qwglGetProcAddress( "glUnlockArraysEXT" );
-	}
-	else
-	{
-		ri.Con_Printf( PRINT_ALL, "...GL_EXT_compiled_vertex_array not found\n" );
-	}
-
-	if ( strstr( gl_config.extensions_string, "WGL_EXT_swap_control" ) )
-	{
-		qwglSwapIntervalEXT = ( BOOL (WINAPI *)(int)) qwglGetProcAddress( "wglSwapIntervalEXT" );
-		ri.Con_Printf( PRINT_ALL, "...enabling WGL_EXT_swap_control\n" );
-	}
-	else
-	{
-		ri.Con_Printf( PRINT_ALL, "...WGL_EXT_swap_control not found\n" );
-	}
-
-	if ( strstr( gl_config.extensions_string, "GL_EXT_point_parameters" ) )
-	{
-		if ( gl_ext_pointparameters->value )
-		{
-			qglPointParameterfEXT = ( void (APIENTRY *)( GLenum, GLfloat ) ) qwglGetProcAddress( "glPointParameterfEXT" );
-			qglPointParameterfvEXT = ( void (APIENTRY *)( GLenum, const GLfloat * ) ) qwglGetProcAddress( "glPointParameterfvEXT" );
-			ri.Con_Printf( PRINT_ALL, "...using GL_EXT_point_parameters\n" );
-		}
-		else
-		{
-			ri.Con_Printf( PRINT_ALL, "...ignoring GL_EXT_point_parameters\n" );
-		}
-	}
-	else
-	{
-		ri.Con_Printf( PRINT_ALL, "...GL_EXT_point_parameters not found\n" );
-	}
-
-
-	// GL_ARB_multitexture is mandatory
-	if ( strstr( gl_config.extensions_string, "GL_ARB_multitexture" ) )
-	{
-		qglActiveTextureARB = (void*)qwglGetProcAddress("glActiveTextureARB");
-		qglMultiTexCoord2fARB = (void*)qwglGetProcAddress("glMultiTexCoord2fARB");
-	}
-	else
-	{
-		ri.Sys_Error(ERR_FATAL, "GL_ARB_multitexture not found\n");
-	}
-#endif
-
-	GL_SetDefaultState();
-
-	/*
-	** draw our stereo patterns
-	*/
-#if 0
-	GL_DrawStereoPattern();
-#endif
-
-	GL_InitImages ();
-	Mod_Init ();
-	R_InitParticleTexture ();
-	Draw_InitLocal ();
-
-	err = qglGetError();
-	if ( err != GL_NO_ERROR )
-		ri.Con_Printf (PRINT_ALL, "glGetError() = 0x%x\n", err);
-	return 1;
-}
-
-/*
-===============
-R_Shutdown
-===============
-*/
-void R_Shutdown (void)
-{	
-	ri.Cmd_RemoveCommand ("modellist");
-	ri.Cmd_RemoveCommand ("screenshot");
-	ri.Cmd_RemoveCommand ("imagelist");
-	ri.Cmd_RemoveCommand ("gl_strings");
-
-	Mod_FreeAll ();
-
-	GL_ShutdownImages ();
-
-	/*
-	** shut down OS specific OpenGL stuff like contexts, etc.
-	*/
-	GLimp_Shutdown();
-
-	/*
-	** shutdown our QGL subsystem
-	*/
-	QGL_Shutdown();
-}
-
-
-
 /*
 @@@@@@@@@@@@@@@@@@@@@
 R_BeginFrame
@@ -1278,7 +864,7 @@ void R_BeginFrame( float camera_separation )
 	{	// FIXME: only restart if CDS is required
 		cvar_t	*ref;
 
-		ref = ri.Cvar_Get ("r_renderer", "ogl1", 0);
+		ref = ri.Cvar_Get ("r_renderer", DEFAULT_RENDERER, 0);
 		ref->modified = true;
 	}
 
@@ -1293,10 +879,6 @@ void R_BeginFrame( float camera_separation )
 		GLimp_LogNewFrame();
 	}
 
-	/*
-	** update 3Dfx gamma -- it is expected that a user will do a vid_restart
-	** after tweaking this value
-	*/
 	if ( r_gamma->modified )
 	{
 		r_gamma->modified = false;
@@ -1365,18 +947,6 @@ void R_BeginFrame( float camera_separation )
 	// clear screen if desired
 	//
 	R_Clear ();
-}
-
-/*
-=============
-R_SetPalette
-=============
-*/
-void R_SetPalette ( const unsigned char *palette)
-{
-	qglClearColor (0,0,0,0);
-	qglClear (GL_COLOR_BUFFER_BIT);
-	qglClearColor (1,0, 0.5 , 0.5);
 }
 
 /*
@@ -1449,106 +1019,3 @@ void R_DrawBeam( centity_t *e )
 	qglDepthMask( GL_TRUE );
 }
 
-//===================================================================
-
-
-void	R_BeginRegistration (char *map);
-struct model_s	*R_RegisterModel (char *name);
-struct image_s	*R_RegisterSkin (char *name);
-void R_SetSky (char *name, float rotate, vec3_t axis);
-void	R_EndRegistration (void);
-
-void	R_RenderFrame (refdef_t *fd);
-
-struct image_s	*Draw_FindPic (char *name);
-
-void	Draw_Pic (int x, int y, char *name);
-void	Draw_Char (int x, int y, int c);
-void	Draw_TileClear (int x, int y, int w, int h, char *name);
-void	Draw_Fill (int x, int y, int w, int h, vec3_t c);
-void	Draw_FadeScreen(float* rgba);
-
-void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
-void R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
-void R_DrawFill(rect_t rect, rgba_t color);
-
-/*
-@@@@@@@@@@@@@@@@@@@@@
-GetRefAPI
-
-@@@@@@@@@@@@@@@@@@@@@
-*/
-refexport_t GetRefAPI (refimport_t rimp )
-{
-	refexport_t	re;
-
-	ri = rimp;
-
-	re.api_version = API_VERSION;
-
-	re.BeginRegistration = R_BeginRegistration;
-	re.RegisterModel = R_RegisterModel;
-	re.RegisterSkin = R_RegisterSkin;
-	re.RegisterPic = Draw_FindPic;
-	re.SetSky = R_SetSky;
-	re.EndRegistration = R_EndRegistration;
-
-	re.RenderFrame = R_RenderFrame;
-
-	re.DrawGetPicSize = Draw_GetPicSize;
-	re.DrawPic = Draw_Pic;
-	re.DrawStretchPic = Draw_StretchPic;
-	re.DrawChar = Draw_Char;
-	re.DrawTileClear = Draw_TileClear;
-	re.DrawFill = Draw_Fill;
-	re.DrawFadeScreen = Draw_FadeScreen;
-	re.DrawStretchRaw = Draw_StretchRaw;
-
-	// braxi -- newer replacements
-	re.DrawString = R_DrawString;
-	re.DrawStretchedImage = R_DrawStretchedImage;
-	re.NewDrawFill = R_DrawFill;
-	
-
-	re.Init = R_Init;
-	re.Shutdown = R_Shutdown;
-
-	re.CinematicSetPalette = R_SetPalette;
-	re.BeginFrame = R_BeginFrame;
-	re.EndFrame = GLimp_EndFrame;
-
-	re.AppActivate = GLimp_AppActivate;
-
-	Swap_Init ();
-
-	return re;
-}
-
-
-#ifndef REF_HARD_LINKED
-// this is only here so the functions in q_shared.c and q_shwin.c can link
-void Sys_Error (char *error, ...)
-{
-	va_list		argptr;
-	char		text[1024];
-
-	va_start (argptr, error);
-	vsprintf (text, error, argptr);
-	va_end (argptr);
-
-	ri.Sys_Error (ERR_FATAL, "%s", text);
-}
-
-void Com_Printf (char *fmt, ...)
-{
-	va_list		argptr;
-	char		text[1024];
-
-	va_start (argptr, fmt);
-	vsprintf (text, fmt, argptr);
-	va_end (argptr);
-
-	ri.Con_Printf (PRINT_ALL, "%s", text);
-}
-
-#endif

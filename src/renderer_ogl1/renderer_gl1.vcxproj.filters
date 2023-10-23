@@ -44,6 +44,7 @@
     <ClCompile Include="..\platform\q_shwin.c" />
     <ClCompile Include="..\qcommon\q_shared.c" />
     <ClCompile Include="r_draw_new.c" />
+    <ClCompile Include="r_init.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

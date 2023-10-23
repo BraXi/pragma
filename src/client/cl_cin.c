@@ -19,6 +19,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "client.h"
 
+#define CINEMATICS_DISABLED 1
+
 typedef struct
 {
 	byte	*data;
@@ -57,6 +59,9 @@ SCR_StopCinematic
 */
 void SCR_StopCinematic (void)
 {
+#ifdef CINEMATICS_DISABLED
+	Com_Printf("%s not implemented, CINEMATICS_DISABLED\n", __FUNCTION__);
+#else
 	cl.cinematictime = 0;	// done
 	if (cin.pic)
 	{
@@ -67,11 +72,6 @@ void SCR_StopCinematic (void)
 	{
 		Z_Free (cin.pic_pending);
 		cin.pic_pending = NULL;
-	}
-	if (cl.cinematicpalette_active)
-	{
-		re.CinematicSetPalette(NULL);
-		cl.cinematicpalette_active = false;
 	}
 	if (cl.cinematic_file)
 	{
@@ -90,7 +90,7 @@ void SCR_StopCinematic (void)
 		cin.restart_sound = false;
 		CL_Snd_Restart_f ();
 	}
-
+#endif
 }
 
 /*
@@ -331,58 +331,8 @@ SCR_ReadNextFrame
 */
 byte *SCR_ReadNextFrame (void)
 {
-	int		r;
-	int		command;
-	byte	samples[22050/14*4];
-	byte	compressed[0x20000];
-	int		size;
-	byte	*pic;
-	cblock_t	in, huf1;
-	int		start, end, count;
-
-	// read the next frame
-	r = (int)fread (&command, (size_t)4, (size_t)1, cl.cinematic_file);
-	if (r == 0)		// we'll give it one more chance
-		r = (int)fread (&command, 4, 1, cl.cinematic_file);
-
-	if (r != 1)
-		return NULL;
-	command = LittleLong(command);
-	if (command == 2)
-		return NULL;	// last frame marker
-
-	if (command == 1)
-	{	// read palette
-		FS_Read (cl.cinematicpalette, sizeof(cl.cinematicpalette), cl.cinematic_file);
-		cl.cinematicpalette_active=0;	// dubious....  exposes an edge case
-	}
-
-	// decompress the next frame
-	FS_Read (&size, 4, cl.cinematic_file);
-	size = LittleLong(size);
-	if (size > sizeof(compressed) || size < 1)
-		Com_Error (ERR_DROP, "Bad compressed frame size");
-	FS_Read (compressed, size, cl.cinematic_file);
-
-	// read sound
-	start = cl.cinematicframe*cin.s_rate/14;
-	end = (cl.cinematicframe+1)*cin.s_rate/14;
-	count = end - start;
-
-	FS_Read (samples, count*cin.s_width*cin.s_channels, cl.cinematic_file);
-
-	S_RawSamples (count, cin.s_rate, cin.s_width, cin.s_channels, samples);
-
-	in.data = compressed;
-	in.count = size;
-
-	huf1 = Huff1Decompress (in);
-
-	pic = huf1.data;
-
 	cl.cinematicframe++;
-
-	return pic;
+	return NULL;
 }
 
 
@@ -394,6 +344,7 @@ SCR_RunCinematic
 */
 void SCR_RunCinematic (void)
 {
+#ifndef CINEMATICS_DISABLED
 	int		frame;
 
 	if (cl.cinematictime <= 0)
@@ -433,6 +384,7 @@ void SCR_RunCinematic (void)
 		cl.cinematictime = 0;
 		return;
 	}
+#endif
 }
 
 /*
@@ -452,22 +404,13 @@ qboolean SCR_DrawCinematic (void)
 
 	if (cls.key_dest == key_menu)
 	{	// blank screen and pause if menu is up
-		re.CinematicSetPalette(NULL);
-		cl.cinematicpalette_active = false;
 		return true;
-	}
-
-	if (!cl.cinematicpalette_active)
-	{
-		re.CinematicSetPalette(cl.cinematicpalette);
-		cl.cinematicpalette_active = true;
 	}
 
 	if (!cin.pic)
 		return true;
 
-	re.DrawStretchRaw (0, 0, viddef.width, viddef.height,
-		cin.width, cin.height, cin.pic);
+	re.DrawStretchRaw(0, 0, viddef.width, viddef.height,cin.width, cin.height, cin.pic);
 
 	return true;
 }
@@ -480,8 +423,8 @@ SCR_PlayCinematic
 */
 void SCR_PlayCinematic (char *arg)
 {
-#if 1
-	Com_Printf("SCR_PlayCinematic currently not implemented\n");
+#ifdef CINEMATICS_DISABLED
+	Com_Printf("%s currently not implemented\n", __FUNCTION__);
 #else
 	int		width, height;
 	byte	*palette;

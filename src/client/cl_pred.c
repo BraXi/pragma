@@ -117,12 +117,9 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 		if (tr->allsolid)
 			return;
 
-		trace = CM_TransformedBoxTrace (start, end,
-			mins, maxs, headnode,  MASK_PLAYERSOLID,
-			ent->origin, angles);
+		trace = CM_TransformedBoxTrace (start, end, mins, maxs, headnode,  MASK_PLAYERSOLID, ent->origin, angles);
 
-		if (trace.allsolid || trace.startsolid ||
-		trace.fraction < tr->fraction)
+		if (trace.allsolid || trace.startsolid || trace.fraction < tr->fraction)
 		{
 			trace.ent = (struct gentity_s *)ent;
 		 	if (tr->startsolid)

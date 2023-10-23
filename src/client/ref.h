@@ -94,7 +94,7 @@ typedef struct
 typedef struct
 {
 	vec3_t	origin;
-	vec3_t	color; // braxi -- was int
+	vec3_t	color;
 	float	alpha;
 } particle_t;
 
@@ -202,7 +202,6 @@ typedef struct
 	/*
 	** video mode and refresh state management entry points
 	*/
-	void	(*CinematicSetPalette)( const unsigned char *palette);	// NULL = game palette
 	void	(*BeginFrame)( float camera_separation );
 	void	(*EndFrame) (void);
 

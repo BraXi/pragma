@@ -965,11 +965,9 @@ typedef struct
 
 
 // ==================
-// PGM 
+#define DEFAULT_RENDERER "ogl1"
 #define VIDREF_GL		1
-#define VIDREF_SOFT		2
-#define VIDREF_OTHER	3
+#define VIDREF_OTHER	2
 
 extern int vidref_val;
-// PGM
 // ==================

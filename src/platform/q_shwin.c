@@ -36,7 +36,7 @@ byte	*membase;
 int		hunkmaxsize;
 int		cursize;
 
-#define	VIRTUAL_ALLOC
+//#define	VIRTUAL_ALLOC
 
 void *Hunk_Begin (int maxsize)
 {
@@ -56,12 +56,11 @@ void *Hunk_Begin (int maxsize)
 
 void *Hunk_Alloc (int size)
 {
-	void	*buf;
-
 	// round to cacheline
 	size = (size+31)&~31;
 
 #ifdef VIRTUAL_ALLOC
+	void* buf;
 	// commit pages as needed
 //	buf = VirtualAlloc (membase+cursize, size, MEM_COMMIT, PAGE_READWRITE);
 	buf = VirtualAlloc (membase, cursize+size, MEM_COMMIT, PAGE_READWRITE);

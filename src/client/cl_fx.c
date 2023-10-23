@@ -27,7 +27,7 @@ void CL_ItemRespawnParticles (vec3_t org);
 static vec3_t avelocities [NUMVERTEXNORMALS];
 
 extern	struct model_s	*cl_mod_smoke;
-extern	struct model_s	*cl_mod_flash;
+extern	struct model_s	*cl_mod_impact_small;
 
 /*
 ==============================================================

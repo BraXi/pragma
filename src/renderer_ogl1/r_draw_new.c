@@ -2,7 +2,7 @@
 
 extern image_t* font_current;
 
-image_t* Draw_FindPic(char* name);
+image_t* R_RegisterPic(char* name);
 
 typedef enum
 {
@@ -93,7 +93,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 {
 	image_t* gl;
 
-	gl = Draw_FindPic(pic);
+	gl = R_RegisterPic(pic);
 	if (!gl)
 	{
 		ri.Con_Printf(PRINT_ALL, "R_DrawStretchedImage: no %s\n", pic);

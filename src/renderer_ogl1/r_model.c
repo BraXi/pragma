@@ -27,7 +27,6 @@ int		modfilelen;
 void Mod_LoadSpriteModel (model_t *mod, void *buffer);
 void Mod_LoadBrushModel (model_t *mod, void *buffer);
 void Mod_LoadAliasModel (model_t *mod, void *buffer);
-model_t *Mod_LoadModel (model_t *mod, qboolean crash);
 
 byte	mod_novis[MAX_MAP_LEAFS/8];
 
@@ -216,7 +215,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	if (i == mod_numknown)
 	{
 		if (mod_numknown == MAX_MOD_KNOWN)
-			ri.Sys_Error (ERR_DROP, "mod_numknown == MAX_MOD_KNOWN");
+			ri.Sys_Error (ERR_DROP, "Mod_ForName: hit limit of %d models", MAX_MOD_KNOWN);
 		mod_numknown++;
 	}
 	strcpy (mod->name, name);
@@ -265,11 +264,11 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		break;
 
 	default:
-		ri.Sys_Error (ERR_DROP,"Mod_NumForName: unknown fileid for %s", mod->name);
+		ri.Sys_Error (ERR_DROP,"Mod_ForName: file %s is not a vaild BSP, MD2 or SP2", mod->name);
 		break;
 	}
 
-	loadmodel->extradatasize = Hunk_End ();
+	loadmodel->extradatasize = Hunk_End();
 
 	ri.FS_FreeFile (buf);
 
@@ -343,7 +342,7 @@ void Mod_LoadVertexes (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadVertexes: funny lump size in %s",loadmodel->name);
+		ri.Sys_Error (ERR_DROP, "Mod_LoadVertexes: funny lump size in %s", loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -363,7 +362,7 @@ void Mod_LoadVertexes (lump_t *l)
 RadiusFromBounds
 =================
 */
-float RadiusFromBounds (vec3_t mins, vec3_t maxs)
+static float RadiusFromBounds (vec3_t mins, vec3_t maxs)
 {
 	int		i;
 	vec3_t	corner;
@@ -714,7 +713,7 @@ void Mod_LoadLeafs (lump_t *l)
 	dleaf_t 	*in;
 	mleaf_t 	*out;
 	int			i, j, count, p;
-//	glpoly_t	*poly;
+	glpoly_t	*poly;
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
@@ -744,8 +743,8 @@ void Mod_LoadLeafs (lump_t *l)
 		out->nummarksurfaces = LittleShort(in->numleaffaces);
 		
 		// gl underwater warp
-#if 0
-		if (out->contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_THINWATER) )
+#if 1
+		if (out->contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA) )
 		{
 			for (j=0 ; j<out->nummarksurfaces ; j++)
 			{
@@ -1057,8 +1056,7 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 
 	version = LittleLong (pinmodel->version);
 	if (version != ALIAS_VERSION)
-		ri.Sys_Error (ERR_DROP, "%s has wrong version number (%i should be %i)",
-				 mod->name, version, ALIAS_VERSION);
+		ri.Sys_Error (ERR_DROP, "%s has wrong version number (%i should be %i)", mod->name, version, ALIAS_VERSION);
 
 	pheader = Hunk_Alloc (LittleLong(pinmodel->ofs_end));
 	
@@ -1066,9 +1064,8 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 	for (i=0 ; i<sizeof(dmdl_t)/4 ; i++)
 		((int *)pheader)[i] = LittleLong (((int *)buffer)[i]);
 
-	if (pheader->skinheight > MAX_LBM_HEIGHT)
-		ri.Sys_Error (ERR_DROP, "model %s has a skin taller than %d", mod->name,
-				   MAX_LBM_HEIGHT);
+	if (pheader->skinheight > 480)
+		ri.Sys_Error (ERR_DROP, "model %s has a skin taller than %d", mod->name, 480);
 
 	if (pheader->num_xyz <= 0)
 		ri.Sys_Error (ERR_DROP, "model %s has no vertices", mod->name);
@@ -1146,12 +1143,10 @@ void Mod_LoadAliasModel (model_t *mod, void *buffer)
 
 
 	// register all skins
-	memcpy ((char *)pheader + pheader->ofs_skins, (char *)pinmodel + pheader->ofs_skins,
-		pheader->num_skins*MAX_SKINNAME);
+	memcpy ((char *)pheader + pheader->ofs_skins, (char *)pinmodel + pheader->ofs_skins, pheader->num_skins*MAX_SKINNAME);
 	for (i=0 ; i<pheader->num_skins ; i++)
 	{
-		mod->skins[i] = GL_FindImage ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME
-			, it_skin);
+		mod->skins[i] = GL_FindImage ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME, it_skin);
 	}
 
 	mod->mins[0] = -32;

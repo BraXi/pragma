@@ -33,10 +33,6 @@ enum
 static image_t* font_textures[NUM_FONTS];
 image_t* font_current;
 
-extern	qboolean	scrap_dirty;
-void Scrap_Upload (void);
-
-
 /*
 ===============
 Draw_InitLocal
@@ -122,7 +118,7 @@ void Draw_Char (int x, int y, int num)
 Draw_FindPic
 =============
 */
-image_t	*Draw_FindPic (char *name)
+image_t	*R_RegisterPic (char *name)
 {
 	image_t *gl;
 	char	fullname[MAX_QPATH];
@@ -147,7 +143,7 @@ void Draw_GetPicSize (int *w, int *h, char *pic)
 {
 	image_t *gl;
 
-	gl = Draw_FindPic (pic);
+	gl = R_RegisterPic (pic);
 	if (!gl)
 	{
 		*w = *h = -1;
@@ -166,15 +162,12 @@ void Draw_StretchPic (int x, int y, int w, int h, char *pic)
 {
 	image_t *gl;
 
-	gl = Draw_FindPic (pic);
+	gl = R_RegisterPic (pic);
 	if (!gl)
 	{
 		ri.Con_Printf (PRINT_ALL, "Can't find pic: %s\n", pic);
 		return;
 	}
-
-	if (scrap_dirty)
-		Scrap_Upload ();
 
 	GL_Bind (gl->texnum);
 	qglBegin (GL_QUADS);
@@ -200,14 +193,12 @@ void Draw_Pic (int x, int y, char *pic)
 {
 	image_t *gl;
 
-	gl = Draw_FindPic (pic);
+	gl = R_RegisterPic (pic);
 	if (!gl)
 	{
 		ri.Con_Printf (PRINT_ALL, "Can't find pic: %s\n", pic);
 		return;
 	}
-	if (scrap_dirty)
-		Scrap_Upload ();
 
 	GL_Bind (gl->texnum);
 	qglBegin (GL_QUADS);
@@ -234,7 +225,7 @@ void Draw_TileClear (int x, int y, int w, int h, char *pic)
 {
 	image_t	*image;
 
-	image = Draw_FindPic (pic);
+	image = R_RegisterPic (pic);
 	if (!image)
 	{
 		ri.Con_Printf (PRINT_ALL, "Can't find pic: %s\n", pic);

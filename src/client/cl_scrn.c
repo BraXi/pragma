@@ -938,7 +938,7 @@ SCR_TouchPics
 Allows rendering code to cache all needed sbar graphics
 ===============
 */
-static const int num_crosshairs = 1;	// number of crosshair pics
+static const int num_crosshairs = 1; // number of crosshair pics
 void SCR_TouchPics (void)
 {
 	int		i, j;
@@ -1394,7 +1394,6 @@ void SCR_UpdateScreen (void)
 		if (scr_draw_loading == 2)
 		{	
 			//loading plaque over black screen
-			re.CinematicSetPalette(NULL);
 			scr_draw_loading = false;
 			VectorSet(color, 1, 1, 1);
 			color[3] = 1;
@@ -1405,22 +1404,12 @@ void SCR_UpdateScreen (void)
 		{
 			if (cls.key_dest == key_menu)
 			{
-				if (cl.cinematicpalette_active)
-				{
-					re.CinematicSetPalette(NULL);
-					cl.cinematicpalette_active = false;
-				}
 				M_Draw ();
 //				re.EndFrame();
 //				return;
 			}
 			else if (cls.key_dest == key_console)
 			{
-				if (cl.cinematicpalette_active)
-				{
-					re.CinematicSetPalette(NULL);
-					cl.cinematicpalette_active = false;
-				}
 				SCR_DrawConsole ();
 //				re.EndFrame();
 //				return;
@@ -1434,14 +1423,6 @@ void SCR_UpdateScreen (void)
 		}
 		else 
 		{
-
-			// make sure the game palette is active
-			if (cl.cinematicpalette_active)
-			{
-				re.CinematicSetPalette(NULL);
-				cl.cinematicpalette_active = false;
-			}
-
 			// do 3D refresh drawing, and then update the screen
 			SCR_CalcVrect ();
 

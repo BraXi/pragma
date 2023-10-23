@@ -111,8 +111,7 @@
     <ClCompile Include="platform\vid_menu.c" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="platform\q2.ico" />
-    <Image Include="platform\qe3.ico" />
+    <Image Include="platform\pragma.ico" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="platform\q2.rc" />
