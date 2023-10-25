@@ -14,6 +14,7 @@ Pragma so far had introduced following additions and changes to Q2 engine, note 
 - completly platform independant QuakeC Virtual Machine
 - It's completly standalone, does not require Quake2 assets
 - server-side and (soon) client-side QC
+- MD3 model format
 - fixed many typos in code and corrected error messages to be more understandable and explainatory
 - has no software renderer and OpenGL 1.x is currently the one and only
 - game library C API has been removed completly
