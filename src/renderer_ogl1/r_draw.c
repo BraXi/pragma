@@ -41,14 +41,14 @@ Draw_InitLocal
 void Draw_InitLocal (void)
 {
 	// load fonts
-	font_textures[FONT_SMALL] = GL_FindImage ("guipics/fonts/q2.tga", it_pic);
+	font_textures[FONT_SMALL] = GL_FindImage ("guipics/fonts/q2.tga", it_gui);
 	if (font_textures[FONT_SMALL] == r_notexture)
 	{
 		ri.Sys_Error(ERR_FATAL, "failed to load default font guipics/fonts/q2.tga\n");
 		return;
 	}
 
-//	font_textures[FONT_CONSOLE] = GL_FindImage("pics/font_console.tga", it_pic);
+//	font_textures[FONT_CONSOLE] = GL_FindImage("pics/font_console.tga", it_gui);
 
 	for (unsigned int i = 0; i < NUM_FONTS; i++)
 	{
@@ -126,10 +126,10 @@ image_t	*R_RegisterPic (char *name)
 	if (name[0] != '/' && name[0] != '\\')
 	{
 		Com_sprintf (fullname, sizeof(fullname), "guipics/%s.tga", name);
-		gl = GL_FindImage (fullname, it_pic);
+		gl = GL_FindImage (fullname, it_gui);
 	}
 	else
-		gl = GL_FindImage (name+1, it_pic);
+		gl = GL_FindImage (name+1, it_gui);
 
 	return gl;
 }

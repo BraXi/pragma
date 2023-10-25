@@ -76,7 +76,7 @@ static qboolean CL_DownloadFiles(float allowDownload, int assetType, int maxAsse
 
 static void CL_DownloadModelsWithSkins(float allowDownload, int nextType)
 {
-	dmdl_t* pheader;
+	md2Header_t* pheader;
 
 	if (precache_check >= CS_MODELS && precache_check < CS_MODELS + MAX_MODELS)
 	{
@@ -114,7 +114,7 @@ static void CL_DownloadModelsWithSkins(float allowDownload, int nextType)
 					precache_check++;
 					continue; // couldn't load it
 				}
-				if (LittleLong(*(unsigned*)precache_model) != IDALIASHEADER)
+				if (LittleLong(*(unsigned*)precache_model) != MD2_IDENT)
 				{
 					// not an alias model
 					FS_FreeFile(precache_model);
@@ -123,19 +123,19 @@ static void CL_DownloadModelsWithSkins(float allowDownload, int nextType)
 					precache_check++;
 					continue;
 				}
-				pheader = (dmdl_t*)precache_model;
-				if (LittleLong(pheader->version) != ALIAS_VERSION)
+				pheader = (md2Header_t*)precache_model;
+				if (LittleLong(pheader->version) != MD2_VERSION)
 				{
 					precache_check++;
 					precache_model_skin = 0;
 					continue; // couldn't load it
 				}
 
-				pheader = (dmdl_t*)precache_model;
+				pheader = (md2Header_t*)precache_model;
 
 				while (precache_model_skin - 1 < LittleLong(pheader->num_skins))
 				{
-					char* skinname = (char*)precache_model + LittleLong(pheader->ofs_skins) + (precache_model_skin - 1) * MAX_SKINNAME;
+					char* skinname = (char*)precache_model + LittleLong(pheader->ofs_skins) + (precache_model_skin - 1) * MD2_MAX_SKINNAME;
 
 					Com_Printf("%s: %s - %s\n", __FUNCTION__, cl.configstrings[precache_check], skinname); // braxi -- dev
 					if (!CL_CheckOrDownloadFile(skinname));

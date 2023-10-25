@@ -170,6 +170,8 @@
     <ClCompile Include="r_image.c" />
     <ClCompile Include="r_init.c" />
     <ClCompile Include="r_light.c" />
+    <ClCompile Include="r_md2.c" />
+    <ClCompile Include="r_md3.c" />
     <ClCompile Include="r_mesh.c" />
     <ClCompile Include="r_model.c" />
     <ClCompile Include="r_main.c" />

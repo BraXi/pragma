@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 void CL_LogoutEffect (vec3_t org, int type);
 void CL_ItemRespawnParticles (vec3_t org);
 
-static vec3_t avelocities [NUMVERTEXNORMALS];
+static vec3_t avelocities [MD2_NUMVERTEXNORMALS];
 
 extern	struct model_s	*cl_mod_smoke;
 extern	struct model_s	*cl_mod_impact_small;
@@ -1326,12 +1326,12 @@ void CL_FlyParticles (vec3_t origin, int count)
 	float		ltime;
 
 
-	if (count > NUMVERTEXNORMALS)
-		count = NUMVERTEXNORMALS;
+	if (count > MD2_NUMVERTEXNORMALS)
+		count = MD2_NUMVERTEXNORMALS;
 
 	if (!avelocities[0][0])
 	{
-		for (i=0 ; i<NUMVERTEXNORMALS*3 ; i++)
+		for (i=0 ; i<MD2_NUMVERTEXNORMALS*3 ; i++)
 			avelocities[0][i] = (rand()&255) * 0.01;
 	}
 
@@ -1430,13 +1430,13 @@ void CL_BfgParticles (centity_t *ent)
 	
 	if (!avelocities[0][0])
 	{
-		for (i=0 ; i<NUMVERTEXNORMALS*3 ; i++)
+		for (i=0 ; i<MD2_NUMVERTEXNORMALS*3 ; i++)
 			avelocities[0][i] = (rand()&255) * 0.01;
 	}
 
 
 	ltime = (float)cl.time / 1000.0;
-	for (i=0 ; i<NUMVERTEXNORMALS ; i++)
+	for (i=0 ; i<MD2_NUMVERTEXNORMALS ; i++)
 	{
 		angle = ltime * avelocities[i][0];
 		sy = sin(angle);

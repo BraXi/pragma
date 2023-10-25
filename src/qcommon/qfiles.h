@@ -130,37 +130,154 @@ typedef struct
 /*
 ========================================================================
 
+.MD3 triangle model file format
+
+========================================================================
+*/
+
+typedef enum {LOD_HIGH, LOD_MEDIUM, LOD_LOW, NUM_LODS} lod_t;
+//float lodDist[NUM_LODS] = { 0.0f, 512.0f, 1024.0f };
+
+#define MD3_IDENT			(('3'<<24)+('P'<<16)+('D'<<8)+'I')
+#define MD3_VERSION			15
+
+// limits
+#define MD3_MAX_LODS		NUM_LODS // was 4, but we want NUM_LODS in pragma
+#define	MD3_MAX_TRIANGLES	8192	// per surface
+#define MD3_MAX_VERTS		4096	// per surface
+#define MD3_MAX_SHADERS		256		// per surface
+#define MD3_MAX_FRAMES		1024	// per model
+#define	MD3_MAX_SURFACES	32		// per model
+#define MD3_MAX_TAGS		16		// per frame
+#define MD3_MAX_NAME		64		// max tag and skin names len, this was MAX_QPATH
+
+#define	MD3_XYZ_SCALE		(1.0/64) // vertex scales
+
+typedef struct md3Frame_s 
+{
+	vec3_t		bounds[2];
+	vec3_t		localOrigin;
+	float		radius;
+	char		name[16];
+} md3Frame_t;
+
+typedef struct md3Tag_s 
+{
+	char		name[MD3_MAX_NAME];	// tag name
+	vec3_t		origin;
+	vec3_t		axis[3];
+} md3Tag_t;
+
+/*
+** md3Surface_t
+**
+** CHUNK			SIZE
+** header			sizeof( md3Surface_t )
+** shaders			sizeof( md3Shader_t ) * numShaders
+** triangles[0]		sizeof( md3Triangle_t ) * numTriangles
+** st				sizeof( md3St_t ) * numVerts
+** XyzNormals		sizeof( md3XyzNormal_t ) * numVerts * numFrames
+*/
+typedef struct 
+{
+	int		ident;				
+
+	char	name[MD3_MAX_NAME];	// polyset name
+
+	int		flags;
+
+	int		numFrames;			// all surfaces in a model should have the same
+	int		numShaders;			// all surfaces in a model should have the same
+	int		numVerts;
+	int		numTriangles;
+
+	int		ofsTriangles;
+
+	int		ofsShaders;			// offset from start of md3Surface_t
+	int		ofsSt;				// texture coords are common for all frames
+	int		ofsXyzNormals;		// numVerts * numFrames
+
+	int		ofsEnd;				// next surface follows
+} md3Surface_t;
+
+typedef struct 
+{
+	char			name[MAX_QPATH];
+	int				shaderIndex;	// for in-game use
+} md3Shader_t;
+
+typedef struct
+{
+	int			indexes[3];
+} md3Triangle_t;
+
+typedef struct 
+{
+	float		st[2];
+} md3St_t;
+
+typedef struct 
+{
+	short		xyz[3];
+	short		normal;
+} md3XyzNormal_t;
+
+typedef struct 
+{
+	int			ident;				// == MD3_IDENT
+	int			version;			// == MD3_VERSION
+
+	char		name[MAX_QPATH];	// model name
+
+	int			flags;
+
+	int			numFrames;
+	int			numTags;
+	int			numSurfaces;
+
+	int			numSkins;
+
+	int			ofsFrames;			// offset for first frame
+	int			ofsTags;			// numFrames * numTags
+	int			ofsSurfaces;		// first surface, others follow
+
+	int			ofsEnd;				// end of file
+} md3Header_t;
+
+/*
+========================================================================
+
 .MD2 triangle model file format
 
 ========================================================================
 */
 
-#define IDALIASHEADER	(('2'<<24)+('P'<<16)+('D'<<8)+'I')
-#define ALIAS_VERSION	8
+#define MD2_IDENT			(('2'<<24)+('P'<<16)+('D'<<8)+'I')
+#define MD2_VERSION			8
 
-#define	MAX_TRIANGLES	4096
-#define MAX_VERTS		2048
-#define MAX_FRAMES		512
-#define MAX_MD2SKINS	32
-#define	MAX_SKINNAME	64
+//#define MD2_MAX_TRIANGLES	4096	// not referenced anywhere
+#define MD2_MAX_VERTS		2048
+#define MD2_MAX_FRAMES		512
+#define MD2_MAX_SKINS		32
+#define	MD2_MAX_SKINNAME	64
 
 typedef struct
 {
 	short	s;
 	short	t;
-} dstvert_t;
+} md2St_t;
 
 typedef struct 
 {
 	short	index_xyz[3];
 	short	index_st[3];
-} dtriangle_t;
+} md2Triangle_t;
 
 typedef struct
 {
 	byte	v[3];			// scaled byte to fit in frame mins/maxs
 	byte	lightnormalindex;
-} dtrivertx_t;
+} md2Vertex_t;
 
 #define DTRIVERTX_V0   0
 #define DTRIVERTX_V1   1
@@ -173,8 +290,8 @@ typedef struct
 	float		scale[3];	// multiply byte verts by this
 	float		translate[3];	// then add this
 	char		name[16];	// frame name from grabbing
-	dtrivertx_t	verts[1];	// variable sized
-} daliasframe_t;
+	md2Vertex_t	verts[1];	// variable sized
+} md2Frame_t;
 
 // the glcmd format:
 // a positive integer starts a tristrip command, followed by that many
@@ -207,7 +324,7 @@ typedef struct
 	int			ofs_glcmds;	
 	int			ofs_end;		// end of file
 
-} dmdl_t;
+} md2Header_t;
 
 /*
 ========================================================================
@@ -217,45 +334,24 @@ typedef struct
 ========================================================================
 */
 
-#define IDSPRITEHEADER	(('2'<<24)+('S'<<16)+('D'<<8)+'I')
-		// little-endian "IDS2"
-#define SPRITE_VERSION	2
-#define SPRITE_PICNAME	64
+#define SP2_IDENT			(('2'<<24)+('S'<<16)+('D'<<8)+'I') // little-endian "IDS2"
+#define SP2_VERSION			2
+#define SP2_MAX_PICNAME		64
+
 typedef struct
 {
 	int		width, height;
 	int		origin_x, origin_y;		// raster coordinates inside pic
-	char	name[SPRITE_PICNAME];	// name of TGA file
-} dsprframe_t;
+	char	name[SP2_MAX_PICNAME];	// name of TGA file
+} sp2Frame_t;
 
 typedef struct 
 {
 	int			ident;
 	int			version;
 	int			numframes;
-	dsprframe_t	frames[1];			// variable sized
-} dsprite_t;
-
-
-/*
-==============================================================================
-
-  .WAL texture file format
-
-==============================================================================
-*/
-
-#define	MIPLEVELS	4
-typedef struct miptex_s
-{
-	char		name[32];
-	unsigned	width, height;
-	unsigned	offsets[MIPLEVELS];		// four mip maps stored
-	char		animname[32];			// next frame in animation chain
-	int			flags;
-	int			contents;
-	int			value;
-} miptex_t;
+	sp2Frame_t	frames[1];			// variable sized
+} sp2Header_t;
 
 
 /*
@@ -266,10 +362,8 @@ typedef struct miptex_s
 ==============================================================================
 */
 
-#define IDBSPHEADER	(('P'<<24)+('S'<<16)+('B'<<8)+'I')
-		// little-endian "IBSP"
-
-#define BSPVERSION	38
+#define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I') // little-endian "IBSP"
+#define BSP_VERSION	38
 
 
 // upper design bounds

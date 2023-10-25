@@ -597,8 +597,12 @@ cmodel_t *CM_LoadMap (char *name, qboolean clientload, unsigned *checksum)
 	for (i=0 ; i<sizeof(dheader_t)/4 ; i++)
 		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
 
-	if (header.version != BSPVERSION)
-		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number %i (should be %i)", name, header.version, BSPVERSION);
+
+	if (header.ident != BSP_IDENT)
+		Com_Error(ERR_DROP, "CM_LoadMap: %s is not a Q2BSP", name);
+
+	if (header.version != BSP_VERSION)
+		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number %i (should be %i)", name, header.version, BSP_VERSION);
 
 	cmod_base = (byte *)buf;
 

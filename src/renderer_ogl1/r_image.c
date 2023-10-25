@@ -193,7 +193,7 @@ void GL_TextureMode( char *string )
 	// change all the existing mipmap texture objects
 	for (i=0, glt=gltextures ; i<numgltextures ; i++, glt++)
 	{
-		if (glt->type != it_pic && glt->type != it_sky )
+		if (glt->type != it_gui && glt->type != it_sky )
 		{
 			GL_Bind (glt->texnum);
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -271,30 +271,34 @@ void	GL_ImageList_f (void)
 		texels += image->upload_width*image->upload_height;
 		switch (image->type)
 		{
-		case it_skin:
-			ri.Con_Printf (PRINT_ALL, "SKIN");
+		case it_model:
+			ri.Con_Printf (PRINT_ALL, "MDL ");
 			break;
 		case it_sprite:
 			ri.Con_Printf (PRINT_ALL, "SPR ");
 			break;
-		case it_wall:
-			ri.Con_Printf (PRINT_ALL, "WAL ");
+		case it_texture:
+			ri.Con_Printf (PRINT_ALL, "TEX ");
 			break;
-		case it_pic:
-			ri.Con_Printf (PRINT_ALL, "PIC ");
+		case it_gui:
+			ri.Con_Printf (PRINT_ALL, "GUI ");
 			break;
 		case it_tga:
-			ri.Con_Printf(PRINT_ALL, "TEX ");
+			ri.Con_Printf(PRINT_ALL, "TGA ");
+			break;
+		case it_sky:
+			ri.Con_Printf(PRINT_ALL, "SKY ");
 			break;
 		default:
-			ri.Con_Printf (PRINT_ALL, "    ");
+			ri.Con_Printf (PRINT_ALL, "?   ");
 			break;
 		}
 
-		ri.Con_Printf (PRINT_ALL,  " %3i %3i %s: %s\n",
-			image->upload_width, image->upload_height, (image->has_alpha ? "A" : " "), image->name);
+		ri.Con_Printf (PRINT_ALL, "%i: [%ix%i %s]: %s\n",
+			i, image->upload_width, image->upload_height, (image->has_alpha ? "RGBA" : "RGB"), image->name);
 	}
-	ri.Con_Printf (PRINT_ALL, "Total texel count (not counting mipmaps): %i\n", texels);
+	ri.Con_Printf (PRINT_ALL, "\nTotal texel count (not counting mipmaps): %i\n", texels);
+	ri.Con_Printf(PRINT_ALL, "Total %i out of %i textures in use\n\n", numgltextures, MAX_GLTEXTURES);
 }
 
 /*
@@ -830,7 +834,7 @@ image_t *GL_LoadPic (char *name, byte *pic, int width, int height, imagetype_t t
 
 	image->texnum = TEXNUM_IMAGES + (image - gltextures);
 	GL_Bind(image->texnum);
-	image->has_alpha = GL_Upload32 ((unsigned *)pic, width, height, (image->type != it_pic && image->type != it_sky) );
+	image->has_alpha = GL_Upload32 ((unsigned *)pic, width, height, (image->type != it_gui && image->type != it_sky) );
 	image->upload_width = upload_width;		// after power of 2 and scales
 	image->upload_height = upload_height;
 	image->sl = 0;
@@ -910,7 +914,7 @@ R_RegisterSkin
 */
 struct image_s *R_RegisterSkin (char *name)
 {
-	return GL_FindImage (name, it_skin);
+	return GL_FindImage (name, it_model);
 }
 
 
@@ -937,7 +941,7 @@ void GL_FreeUnusedImages (void)
 			continue;		// used this sequence
 		if (!image->registration_sequence)
 			continue;		// free image_t slot
-		if (image->type == it_pic)
+		if (image->type == it_gui)
 			continue;		// don't free pics
 		// free it
 		qglDeleteTextures (1, &image->texnum);

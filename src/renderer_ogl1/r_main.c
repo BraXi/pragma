@@ -24,7 +24,7 @@ void R_Clear (void);
 
 viddef_t	vid;
 
-
+void R_DrawMD3Model(centity_t* ent);
 
 model_t		*r_worldmodel;
 
@@ -48,7 +48,8 @@ int			c_brush_polys, c_alias_polys;
 
 float		v_blend[4];			// final blending color
 
-
+extern vec3_t	model_shadevector;
+extern float	model_shadelight[3];
 
 //
 // view origin
@@ -119,14 +120,14 @@ void R_DrawSpriteModel (centity_t *e)
 {
 	float alpha = 1.0F;
 	vec3_t	point;
-	dsprframe_t	*frame;
+	sp2Frame_t	*frame;
 	float		*up, *right;
-	dsprite_t		*psprite;
+	sp2Header_t		*psprite;
 
 	// don't even bother culling, because it's just a single
 	// polygon without a surface cache
 
-	psprite = (dsprite_t *)currentmodel->extradata;
+	psprite = (sp2Header_t *)currentmodel->extradata;
 
 #if 1
 	if (e->frame < 0 || e->frame >= psprite->numframes)
@@ -220,7 +221,7 @@ static void R_DrawNullModel (void)
 	int		i;
 
 	if ( currententity->flags & RF_FULLBRIGHT )
-		shadelight[0] = shadelight[1] = shadelight[2] = 1.0F;
+		model_shadelight[0] = model_shadelight[1] = model_shadelight[2] = 1.0F;
 	else
 		R_LightPoint (currententity->origin, shadelight);
 
@@ -280,13 +281,16 @@ void R_DrawEntitiesOnList (void)
 			}
 			switch (currentmodel->type)
 			{
-			case mod_alias:
-				R_DrawAliasModel (currententity);
+			case MOD_MD3:
+				R_DrawMD3Model (currententity);
 				break;
-			case mod_brush:
+			case MOD_MD2:
+				R_DrawMD2Model (currententity);
+				break;
+			case MOD_BRUSH:
 				R_DrawBrushModel (currententity);
 				break;
-			case mod_sprite:
+			case MOD_SPRITE:
 				R_DrawSpriteModel (currententity);
 				break;
 			default:
@@ -320,13 +324,16 @@ void R_DrawEntitiesOnList (void)
 			}
 			switch (currentmodel->type)
 			{
-			case mod_alias:
-				R_DrawAliasModel (currententity);
+			case MOD_MD3:
+				R_DrawMD3Model(currententity);
 				break;
-			case mod_brush:
+			case MOD_MD2:
+				R_DrawMD2Model (currententity);
+				break;
+			case MOD_BRUSH:
 				R_DrawBrushModel (currententity);
 				break;
-			case mod_sprite:
+			case MOD_SPRITE:
 				R_DrawSpriteModel (currententity);
 				break;
 			default:
@@ -817,19 +824,19 @@ void R_SetLightLevel (void)
 
 	// pick the greatest component, which should be the same
 	// as the mono value returned by software
-	if (shadelight[0] > shadelight[1])
+	if (model_shadelight[0] > model_shadelight[1])
 	{
-		if (shadelight[0] > shadelight[2])
-			r_lightlevel->value = 150*shadelight[0];
+		if (model_shadelight[0] > model_shadelight[2])
+			r_lightlevel->value = 150*model_shadelight[0];
 		else
-			r_lightlevel->value = 150*shadelight[2];
+			r_lightlevel->value = 150*model_shadelight[2];
 	}
 	else
 	{
-		if (shadelight[1] > shadelight[2])
-			r_lightlevel->value = 150*shadelight[1];
+		if (model_shadelight[1] > model_shadelight[2])
+			r_lightlevel->value = 150*model_shadelight[1];
 		else
-			r_lightlevel->value = 150*shadelight[2];
+			r_lightlevel->value = 150*model_shadelight[2];
 	}
 
 }

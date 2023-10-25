@@ -71,7 +71,7 @@ void R_InitParticleTexture (void)
 			data[y][x][3] = 255;
 		}
 	}
-	r_notexture = GL_LoadPic ("***r_notexture***", (byte *)data, 8, 8, it_wall, 32);
+	r_notexture = GL_LoadPic ("***r_notexture***", (byte *)data, 8, 8, it_texture, 32);
 }
 
 

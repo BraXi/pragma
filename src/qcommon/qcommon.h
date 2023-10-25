@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "q_shared.h"
 
+#define USE_GLFW 0
 
 #define	BASEDIRNAME	"main" //main engine directory to load assets from, the default 'game'
 
@@ -745,8 +746,8 @@ void Qcommon_Init (int argc, char **argv);
 void Qcommon_Frame (int msec);
 void Qcommon_Shutdown (void);
 
-#define NUMVERTEXNORMALS	162
-extern	vec3_t	bytedirs[NUMVERTEXNORMALS];
+#define MD2_NUMVERTEXNORMALS	162
+extern	vec3_t	bytedirs[MD2_NUMVERTEXNORMALS];
 
 // this is in the client code, but can be used for debugging from server
 void SCR_DebugGraph (float value, vec3_t color);

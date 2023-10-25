@@ -477,6 +477,7 @@ WinMain
 */
 HINSTANCE	global_hInstance;
 
+#ifndef USE_GLFW
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     MSG				msg;
@@ -528,10 +529,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		{
 			newtime = Sys_Milliseconds ();
 			time = newtime - oldtime;
-		} while (time < 1);
-//			Con_Printf ("time:%5.2f - %5.2f = %5.2f\n", newtime, oldtime, time);
+		} 
+		while (time < 1);
 
-		//	_controlfp( ~( _EM_ZERODIVIDE /*| _EM_INVALID*/ ), _MCW_EM );
 		_controlfp( _PC_24, _MCW_PC );
 		Qcommon_Frame (time);
 
@@ -541,3 +541,68 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// never gets here
     return TRUE;
 }
+#else
+#include "../libs/include/GLFW/glfw3.h"
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+	MSG				msg;
+	int				time, oldtime, newtime;
+
+	/* previous instances do not exist in Win32 */
+	if (hPrevInstance)
+		return 0;
+
+	global_hInstance = hInstance;
+	ParseCommandLine(lpCmdLine);
+
+	Qcommon_Init(argc, argv);
+	oldtime = Sys_Milliseconds();
+
+#if 1
+	if (Cvar_VariableValue("debugcon"))
+	{
+		HWND consoleHandle;
+		AllocConsole();
+		freopen("conin$", "r", stdin);
+		freopen("conout$", "w", stdout);
+		freopen("conout$", "w", stderr);
+		consoleHandle = GetConsoleWindow();
+		MoveWindow(consoleHandle, 1, 1, 680, 480, 1);
+		printf("[debugcon enabled]\n");
+	}
+#endif
+
+	/* main window message loop */
+	while (1)
+	{
+		// if at a full screen console, don't update unless needed
+		if (Minimized || (dedicated && dedicated->value))
+		{
+			Sleep(1);
+		}
+
+		while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+		{
+			if (!GetMessage(&msg, NULL, 0, 0))
+				Com_Quit();
+			sys_msg_time = msg.time;
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		do
+		{
+			newtime = Sys_Milliseconds();
+			time = newtime - oldtime;
+		} while (time < 1);
+
+		_controlfp(_PC_24, _MCW_PC);
+		Qcommon_Frame(time);
+
+		oldtime = newtime;
+	}
+
+	// never gets here
+	return TRUE;
+}
+#endif

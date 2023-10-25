@@ -429,14 +429,7 @@ extern BOOL ( WINAPI * qwglSetDeviceGammaRampEXT ) ( const unsigned char *pRed, 
 #define GL_POINT_FADE_THRESHOLD_SIZE_EXT	0x8128
 #define GL_DISTANCE_ATTENUATION_EXT			0x8129
 
-#ifdef __sgi
-#define GL_SHARED_TEXTURE_PALETTE_EXT		GL_TEXTURE_COLOR_TABLE_SGI
-#else
 #define GL_SHARED_TEXTURE_PALETTE_EXT		0x81FB
-#endif
-
-//#define GL_T1EXTURE0_SGIS					0x835E
-//#define GL_T1EXTURE1_SGIS					0x835F
 
 #define  GL_TEXTURE0_ARB                    0x84C0
 #define  GL_TEXTURE1_ARB                    0x84C1

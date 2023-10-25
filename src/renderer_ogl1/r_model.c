@@ -24,9 +24,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 model_t	*loadmodel;
 int		modfilelen;
 
-void Mod_LoadSpriteModel (model_t *mod, void *buffer);
-void Mod_LoadBrushModel (model_t *mod, void *buffer);
-void Mod_LoadAliasModel (model_t *mod, void *buffer);
+void Mod_LoadSP2 (model_t *mod, void *buffer);
+void Mod_LoadBSP (model_t *mod, void *buffer);
+void Mod_LoadMD2 (model_t *mod, void *buffer);
+extern void Mod_LoadMD3 (model_t *mod, void *buffer, lod_t lod);
 
 byte	mod_novis[MAX_MAP_LEAFS/8];
 
@@ -38,6 +39,27 @@ int		mod_numknown;
 model_t	mod_inline[MAX_MOD_KNOWN];
 
 int		registration_sequence;
+
+
+
+/*
+** Mod_ForNum
+*/
+model_t* Mod_ForNum(int index) 
+{
+	model_t* mod;
+
+	// out of range gets the defualt model
+	if (index < 1 || index >= mod_numknown)
+	{
+		return &mod_known[0];
+	}
+
+	mod = &mod_known[index];
+
+	return mod;
+}
+
 
 /*
 ===============
@@ -142,16 +164,19 @@ void Mod_Modellist_f (void)
 	model_t	*mod;
 	int		total;
 
+	static char mtypes[6][8] = { "BAD", "BSP", "SPRITE", "MD2", "MD3", "BXMDL" };
+
 	total = 0;
 	ri.Con_Printf (PRINT_ALL,"Loaded models:\n");
 	for (i=0, mod=mod_known ; i < mod_numknown ; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;
-		ri.Con_Printf (PRINT_ALL, "%8i : %s\n",mod->extradatasize, mod->name);
+		ri.Con_Printf (PRINT_ALL, "%i: %s '%s' [%d bytes]\n", i, mtypes[mod->type], mod->name, mod->extradatasize);
 		total += mod->extradatasize;
 	}
-	ri.Con_Printf (PRINT_ALL, "Total resident: %i\n", total);
+	ri.Con_Printf (PRINT_ALL, "\nTotal resident: %i\n", total);
+	ri.Con_Printf(PRINT_ALL, "Total %i out of %i models in use\n\n", i, MAX_MOD_KNOWN);
 }
 
 /*
@@ -243,28 +268,28 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	
 	switch (LittleLong(*(unsigned *)buf))
 	{
-//	case BX_MODEL_HEADER:
-//		loadmodel->extradata = Hunk_Begin(0x200000);
-//		Mod_LoadBXModel(mod, buf);
-//		break;
+	case MD3_IDENT: /* Quake3 .md3 model */
+		loadmodel->extradata = Hunk_Begin(0x200000); // is 2MB enuff?
+		Mod_LoadMD3(mod, buf, LOD_HIGH);
+		break;
 
-	case IDALIASHEADER:
+	case MD2_IDENT: /* Quake2 .md2 model */
 		loadmodel->extradata = Hunk_Begin (0x200000);
-		Mod_LoadAliasModel (mod, buf);
+		Mod_LoadMD2(mod, buf);
 		break;
 		
-	case IDSPRITEHEADER:
+	case SP2_IDENT: /* Quake2 .sp2 sprite */
 		loadmodel->extradata = Hunk_Begin (0x10000);
-		Mod_LoadSpriteModel (mod, buf);
+		Mod_LoadSP2(mod, buf);
 		break;
 	
-	case IDBSPHEADER:
+	case BSP_IDENT: /* Quake2 .bsp */
 		loadmodel->extradata = Hunk_Begin (0x1000000);
-		Mod_LoadBrushModel (mod, buf);
+		Mod_LoadBSP(mod, buf);
 		break;
 
 	default:
-		ri.Sys_Error (ERR_DROP,"Mod_ForName: file %s is not a vaild BSP, MD2 or SP2", mod->name);
+		ri.Sys_Error (ERR_DROP,"Mod_ForName: file %s is not a vaild BSP, MD2, MD3 or SP2", mod->name);
 		break;
 	}
 
@@ -472,18 +497,13 @@ void Mod_LoadTexinfo (lump_t *l)
 		else
 		    out->next = NULL;
 
-		// see if we have TGA replacement first
+		// load up texture
 		Com_sprintf(name, sizeof(name), "textures/%s.tga", in->texture);
-		out->image = GL_FindImage(name, it_tga);
+		out->image = GL_FindImage(name, it_texture);
 		if (!out->image)
 		{
-			Com_sprintf (name, sizeof(name), "textures/%s.wal", in->texture);
-			out->image = GL_FindImage(name, it_wall);
-			if (!out->image)
-			{
-				ri.Con_Printf(PRINT_ALL, "Couldn't find texture: %s (no TGA or WAL)\n", in->texture);
-				out->image = r_notexture;
-			}
+			ri.Con_Printf(PRINT_ALL, "Mod_LoadTexinfo: couldn't load '%s'\n", name);
+			out->image = r_notexture;
 		}
 
 	}
@@ -854,24 +874,24 @@ void Mod_LoadPlanes (lump_t *l)
 
 /*
 =================
-Mod_LoadBrushModel
+Mod_LoadBSP
 =================
 */
-void Mod_LoadBrushModel (model_t *mod, void *buffer)
+void Mod_LoadBSP(model_t *mod, void *buffer)
 {
 	int			i;
 	dheader_t	*header;
 	mmodel_t 	*bm;
 	
-	loadmodel->type = mod_brush;
+	loadmodel->type = MOD_BRUSH;
 	if (loadmodel != mod_known)
-		ri.Sys_Error (ERR_DROP, "Loaded a brush model after the world");
+		ri.Sys_Error (ERR_DROP, "Mod_LoadBSP: Loaded a brush model after the world");
 
 	header = (dheader_t *)buffer;
 
 	i = LittleLong (header->version);
-	if (i != BSPVERSION)
-		ri.Sys_Error (ERR_DROP, "Mod_LoadBrushModel: %s has wrong version number (%i should be %i)", mod->name, i, BSPVERSION);
+	if (i != BSP_VERSION)
+		ri.Sys_Error (ERR_DROP, "Mod_LoadBSP: %s is wrong version", mod->name);
 
 // swap all the lumps
 	mod_base = (byte *)header;
@@ -911,7 +931,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 		starmod->nummodelsurfaces = bm->numfaces;
 		starmod->firstnode = bm->headnode;
 		if (starmod->firstnode >= loadmodel->numnodes)
-			ri.Sys_Error (ERR_DROP, "Inline model %i has bad firstnode", i);
+			ri.Sys_Error (ERR_DROP, "Mod_LoadBSP: Inline model %i has bad firstnode", i);
 
 		VectorCopy (bm->maxs, starmod->maxs);
 		VectorCopy (bm->mins, starmod->mins);
@@ -967,7 +987,7 @@ void Mod_LoadBXModel(model_t* mod, void* buffer)
 	else if (3 > info->numVerts)
 		ri.Sys_Error(ERR_DROP, "%s has less thn 3 verticles", mod->name);
 
-	mod->type = mod_bxmdl;
+	mod->type = MOD_BXMDL;
 
 	allocSize += sizeof(mdl_info_t);
 	allocSize += sizeof(mdl_bone_t) * info->numBones;
@@ -1013,7 +1033,7 @@ void Mod_LoadBXModel(model_t* mod, void* buffer)
 	{
 		if(!materials[index].name[0])
 			ri.Sys_Error(ERR_DROP, "%s has empty material %i", mod->name, index);
-		mod->skins[index] = GL_FindImage( materials[index].name, it_skin );
+		mod->skins[index] = GL_FindImage( materials[index].name, it_gui );
 	}
 
 #if 0
@@ -1029,138 +1049,21 @@ void Mod_LoadBXModel(model_t* mod, void* buffer)
 	Com_Printf("bbox [%f %f %f]-[%f %f %f]", mod->mins[0], mod->mins[1], mod->mins[2], mod->maxs[0], mod->maxs[1], mod->maxs[2]);
 }
 
+
 /*
 ==============================================================================
 
-ALIAS MODELS
+QUAKE2 MD2 MODELS
 
 ==============================================================================
 */
 
-/*
-=================
-Mod_LoadAliasModel
-=================
-*/
-void Mod_LoadAliasModel (model_t *mod, void *buffer)
-{
-	int					i, j;
-	dmdl_t				*pinmodel, *pheader;
-	dstvert_t			*pinst, *poutst;
-	dtriangle_t			*pintri, *pouttri;
-	daliasframe_t		*pinframe, *poutframe;
-	int					*pincmd, *poutcmd;
-	int					version;
 
-	pinmodel = (dmdl_t *)buffer;
-
-	version = LittleLong (pinmodel->version);
-	if (version != ALIAS_VERSION)
-		ri.Sys_Error (ERR_DROP, "%s has wrong version number (%i should be %i)", mod->name, version, ALIAS_VERSION);
-
-	pheader = Hunk_Alloc (LittleLong(pinmodel->ofs_end));
-	
-	// byte swap the header fields and sanity check
-	for (i=0 ; i<sizeof(dmdl_t)/4 ; i++)
-		((int *)pheader)[i] = LittleLong (((int *)buffer)[i]);
-
-	if (pheader->skinheight > 480)
-		ri.Sys_Error (ERR_DROP, "model %s has a skin taller than %d", mod->name, 480);
-
-	if (pheader->num_xyz <= 0)
-		ri.Sys_Error (ERR_DROP, "model %s has no vertices", mod->name);
-
-	if (pheader->num_xyz > MAX_VERTS)
-		ri.Sys_Error (ERR_DROP, "model %s has too many vertices", mod->name);
-
-	if (pheader->num_st <= 0)
-		ri.Sys_Error (ERR_DROP, "model %s has no st vertices", mod->name);
-
-	if (pheader->num_tris <= 0)
-		ri.Sys_Error (ERR_DROP, "model %s has no triangles", mod->name);
-
-	if (pheader->num_frames <= 0)
-		ri.Sys_Error (ERR_DROP, "model %s has no frames", mod->name);
-
-//
-// load base s and t vertices (not used in gl version)
-//
-	pinst = (dstvert_t *) ((byte *)pinmodel + pheader->ofs_st);
-	poutst = (dstvert_t *) ((byte *)pheader + pheader->ofs_st);
-
-	for (i=0 ; i<pheader->num_st ; i++)
-	{
-		poutst[i].s = LittleShort (pinst[i].s);
-		poutst[i].t = LittleShort (pinst[i].t);
-	}
-
-//
-// load triangle lists
-//
-	pintri = (dtriangle_t *) ((byte *)pinmodel + pheader->ofs_tris);
-	pouttri = (dtriangle_t *) ((byte *)pheader + pheader->ofs_tris);
-
-	for (i=0 ; i<pheader->num_tris ; i++)
-	{
-		for (j=0 ; j<3 ; j++)
-		{
-			pouttri[i].index_xyz[j] = LittleShort (pintri[i].index_xyz[j]);
-			pouttri[i].index_st[j] = LittleShort (pintri[i].index_st[j]);
-		}
-	}
-
-//
-// load the frames
-//
-	for (i=0 ; i<pheader->num_frames ; i++)
-	{
-		pinframe = (daliasframe_t *) ((byte *)pinmodel 
-			+ pheader->ofs_frames + i * pheader->framesize);
-		poutframe = (daliasframe_t *) ((byte *)pheader 
-			+ pheader->ofs_frames + i * pheader->framesize);
-
-		memcpy (poutframe->name, pinframe->name, sizeof(poutframe->name));
-		for (j=0 ; j<3 ; j++)
-		{
-			poutframe->scale[j] = LittleFloat (pinframe->scale[j]);
-			poutframe->translate[j] = LittleFloat (pinframe->translate[j]);
-		}
-		// verts are all 8 bit, so no swapping needed
-		memcpy (poutframe->verts, pinframe->verts, 
-			pheader->num_xyz*sizeof(dtrivertx_t));
-
-	}
-
-	mod->type = mod_alias;
-
-	//
-	// load the glcmds
-	//
-	pincmd = (int *) ((byte *)pinmodel + pheader->ofs_glcmds);
-	poutcmd = (int *) ((byte *)pheader + pheader->ofs_glcmds);
-	for (i=0 ; i<pheader->num_glcmds ; i++)
-		poutcmd[i] = LittleLong (pincmd[i]);
-
-
-	// register all skins
-	memcpy ((char *)pheader + pheader->ofs_skins, (char *)pinmodel + pheader->ofs_skins, pheader->num_skins*MAX_SKINNAME);
-	for (i=0 ; i<pheader->num_skins ; i++)
-	{
-		mod->skins[i] = GL_FindImage ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME, it_skin);
-	}
-
-	mod->mins[0] = -32;
-	mod->mins[1] = -32;
-	mod->mins[2] = -32;
-	mod->maxs[0] = 32;
-	mod->maxs[1] = 32;
-	mod->maxs[2] = 32;
-}
 
 /*
 ==============================================================================
 
-SPRITE MODELS
+QUAKE2 SP2 MODELS
 
 ==============================================================================
 */
@@ -1170,25 +1073,25 @@ SPRITE MODELS
 Mod_LoadSpriteModel
 =================
 */
-void Mod_LoadSpriteModel (model_t *mod, void *buffer)
+void Mod_LoadSP2 (model_t *mod, void *buffer)
 {
-	dsprite_t	*sprin, *sprout;
+	sp2Header_t	*sprin, *sprout;
 	int			i;
 
-	sprin = (dsprite_t *)buffer;
+	sprin = (sp2Header_t *)buffer;
 	sprout = Hunk_Alloc (modfilelen);
 
 	sprout->ident = LittleLong (sprin->ident);
 	sprout->version = LittleLong (sprin->version);
 	sprout->numframes = LittleLong (sprin->numframes);
 
-	if (sprout->version != SPRITE_VERSION)
+	if (sprout->version != SP2_VERSION)
 		ri.Sys_Error (ERR_DROP, "%s has wrong version number (%i should be %i)",
-				 mod->name, sprout->version, SPRITE_VERSION);
+				 mod->name, sprout->version, SP2_VERSION);
 
-	if (sprout->numframes > MAX_MD2SKINS)
+	if (sprout->numframes > MD2_MAX_SKINS)
 		ri.Sys_Error (ERR_DROP, "%s has too many frames (%i > %i)",
-				 mod->name, sprout->numframes, MAX_MD2SKINS);
+				 mod->name, sprout->numframes, MD2_MAX_SKINS);
 
 	// byte swap everything
 	for (i=0 ; i<sprout->numframes ; i++)
@@ -1197,12 +1100,12 @@ void Mod_LoadSpriteModel (model_t *mod, void *buffer)
 		sprout->frames[i].height = LittleLong (sprin->frames[i].height);
 		sprout->frames[i].origin_x = LittleLong (sprin->frames[i].origin_x);
 		sprout->frames[i].origin_y = LittleLong (sprin->frames[i].origin_y);
-		memcpy (sprout->frames[i].name, sprin->frames[i].name, MAX_SKINNAME);
+		memcpy (sprout->frames[i].name, sprin->frames[i].name, MD2_MAX_SKINNAME);
 		mod->skins[i] = GL_FindImage (sprout->frames[i].name,
 			it_sprite);
 	}
 
-	mod->type = mod_sprite;
+	mod->type = MOD_SPRITE;
 }
 
 //=============================================================================
@@ -1244,9 +1147,13 @@ R_RegisterModel
 struct model_s *R_RegisterModel (char *name)
 {
 	model_t	*mod;
-	int		i;
-	dsprite_t	*sprout;
-	dmdl_t		*pheader;
+	int		i, j;
+	sp2Header_t		*sp2Header;
+	md2Header_t		*md2Header;
+	md3Header_t		*md3Header;
+
+	md3Surface_t* surf;
+	md3Shader_t* shader;
 
 	mod = Mod_ForName (name, false);
 	if (mod)
@@ -1254,22 +1161,36 @@ struct model_s *R_RegisterModel (char *name)
 		mod->registration_sequence = registration_sequence;
 
 		// register any images used by the models
-		if (mod->type == mod_sprite)
+		if (mod->type == MOD_SPRITE)
 		{
-			sprout = (dsprite_t *)mod->extradata;
-			for (i=0 ; i<sprout->numframes ; i++)
-				mod->skins[i] = GL_FindImage (sprout->frames[i].name, it_sprite);
+			sp2Header = (sp2Header_t *)mod->extradata;
+			mod->numframes = sp2Header->numframes;
+			for (i=0 ; i< sp2Header->numframes ; i++)
+				mod->skins[i] = GL_FindImage (sp2Header->frames[i].name, it_sprite);
 		}
-		else if (mod->type == mod_alias)
+		else if (mod->type == MOD_MD2)
 		{
-			pheader = (dmdl_t *)mod->extradata;
-			for (i=0 ; i<pheader->num_skins ; i++)
-				mod->skins[i] = GL_FindImage ((char *)pheader + pheader->ofs_skins + i*MAX_SKINNAME, it_skin);
-//PGM
-			mod->numframes = pheader->num_frames;
-//PGM
+			md2Header = (md2Header_t *)mod->extradata;
+			mod->numframes = md2Header->num_frames;
+			for (i=0 ; i< md2Header->num_skins ; i++)
+				mod->skins[i] = GL_FindImage ((char *)md2Header + md2Header->ofs_skins + i*MD2_MAX_SKINNAME, it_model);
 		}
-		else if (mod->type == mod_brush)
+		else if (mod->type == MOD_MD3)
+		{
+			md3Header = (md2Header_t*)mod->extradata;
+			mod->numframes = md3Header->numFrames;
+			surf = (md3Surface_t*)((byte*)mod->md3[LOD_HIGH] + mod->md3[LOD_HIGH]->ofsSurfaces);
+			for (i = 0; i < mod->md3[LOD_HIGH]->numSurfaces; i++)
+			{
+				shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
+				for (j = 0; j < surf->numShaders; j++, shader++)
+				{
+					mod->skins[i] = GL_FindImage(shader->name, it_model);
+					shader->shaderIndex = mod->skins[i]->texnum;
+				}
+			}
+		}
+		else if (mod->type == MOD_BRUSH)
 		{
 			for (i=0 ; i<mod->numtexinfo ; i++)
 				mod->texinfo[i].image->registration_sequence = registration_sequence;
@@ -1314,7 +1235,18 @@ Mod_Free
 */
 void Mod_Free (model_t *mod)
 {
-	Hunk_Free (mod->extradata);
+
+#if 0
+	if (mod->type == MOD_MD3)
+	{
+		for( int i = 0; i < NUM_LODS; i++)
+			if (mod->md3[i])
+				Hunk_Free(mod->md3[i]);
+	}
+#endif
+	if(mod->extradata)
+		Hunk_Free(mod->extradata);
+
 	memset (mod, 0, sizeof(*mod));
 }
 

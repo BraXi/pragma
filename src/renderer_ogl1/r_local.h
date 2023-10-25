@@ -78,11 +78,11 @@ extern	viddef_t	vid;
 
 typedef enum 
 {
-	it_skin,
+	it_model,
 	it_sprite,
 	it_tga,
-	it_wall,
-	it_pic,
+	it_texture,
+	it_gui,
 	it_sky
 } imagetype_t;
 
@@ -256,7 +256,7 @@ void	R_Shutdown( void );
 
 void R_RenderView (refdef_t *fd);
 void GL_ScreenShot_f (void);
-void R_DrawAliasModel (centity_t *e);
+void R_DrawMD2Model (centity_t *e);
 void R_DrawBrushModel (centity_t *e);
 void R_DrawSpriteModel (centity_t *e);
 void R_DrawBeam( centity_t *e );

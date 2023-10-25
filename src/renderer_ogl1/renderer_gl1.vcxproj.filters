@@ -45,6 +45,8 @@
     <ClCompile Include="..\qcommon\q_shared.c" />
     <ClCompile Include="r_draw_new.c" />
     <ClCompile Include="r_init.c" />
+    <ClCompile Include="r_md3.c" />
+    <ClCompile Include="r_md2.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
