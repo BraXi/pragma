@@ -9,6 +9,28 @@ The second (in progress), yet very important change is the implementation of cli
 
 Project has a simple rule - *no bloat*, all the changes and additions should not add unnecessary complexity, no plethora of fileformats and very limited dependencies to the code, the smaller the code is, the better.
 
+## pragma vs. IdTech2 (Quake2) comparision, goals and current state
+(* means the initial work has been done but its not usable in current form or incomplete, ** feature will be removed completly, *** feature will be implemented or needs to be reimplemented because current implementation is bad)
+| Feature            | pragma | idTech2 (Q2) |
+|----------------|--------|--------------|
+| Server game | QuakeC progs file | Native library |
+| Client game | QuakeC progs file* (partialy in cgame.dll**) | Hardcoded in engine |
+| GUI (menus, hud)| QuakeC progs file* (currently in cgame.dll**) | Hardcoded in engine |
+| Pmove | Full editable by mods (QC)*** | Hardcoded in engine |
+| Renderers | OpenGL 2.1 with shaders* | OpenGL 1.1, Software |
+| Color palette | RGBA | colormap.pcx dependant (256 colors)|
+| Image formats | TGA | TGA (sky only), PCX, WAL |
+| Model formats | MD3, extended SP2*** | MD2, SP2 |
+| Map format | Q2 BSP V.38*** | Q2 BSP V.38 |
+| IPX | No, nobody uses it | Yes |
+| CDAudio | No, who still has cd drive? | Yes |
+| Cinematics | No*** | Yes (.cin format) |
+| savegames | No*** | Yes (prone to bugs, OS dependant) |
+| Game "hot reload" | Recompile QC and restart map | No, needs engine restart |
+| Asset limits (net) | will be increased | 256 models, 256 sounds, 256 images |
+| Renderer limits | 64 dlights, 512 models, 8192 particles | 32 dlights, 128 models, 4096 particles |
+
+
 ## Features:
 Pragma so far had introduced following additions and changes to Q2 engine, note that `experimental` features may be implemented partialy or currently not in this repo:
 - completly platform independant QuakeC Virtual Machine
@@ -85,6 +107,7 @@ new UI system in action (not on git yet)
 
 
 goofing around, QC profiler displayed on the right
+
 
 ![shot009](https://github.com/BraXi/pragma/assets/6434152/f586402a-8bd5-405e-a9ff-9c8cd30deb5c)
 
