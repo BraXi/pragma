@@ -9,6 +9,38 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 void(float cheat) ClientCmd_Cheat;
 
+entity testmodel;
+void() testmodel_rotate = 
+{
+//	self.avelocity = '0 90 0';
+
+	self.animFrame ++;
+	if( self.animFrame > 153 )
+		self.animFrame = 0;
+	self.nextthink = g_time + 0.1;
+	self.think = testmodel_rotate;	
+	
+};
+void() ClientCmd_TestModel =
+{
+	if(!testmodel)
+	{
+		testmodel = spawn();
+		setmodel(testmodel, "models/mutant.md3");
+		testmodel.think = testmodel_rotate;
+		testmodel.nextthink = g_time + 0.1;
+	}
+	setorigin(testmodel, self.origin + '0 0 0' );
+	
+	testmodel.renderFlags = RF_FULLBRIGHT | RF_COLOR | RF_SCALE; //| RF_TRANSLUCENT;
+	testmodel.renderColor = '0 1 0';
+	testmodel.renderScale = 3;
+	testmodel.renderAlpha = 0.8;	
+	testmodel.angles = self.angles - '0 180 0';
+	testmodel.angles_x = testmodel.angles_z = 0;
+	testmodel.origin_z = testmodel.origin_z + (24 * (testmodel.renderScale-1));
+};
+
 float() ParseClientCommand =
 {
 	local string cmd;
@@ -26,7 +58,12 @@ float() ParseClientCommand =
 			sprint(self, PRINT_HIGH, "respawned\n");
 		}
 	}
-	
+
+	if( cmd == "mdl" ) /* cheat */
+	{
+		ClientCmd_TestModel();
+	}
+		
 	if( cmd == "god" ) /* cheat */
 	{
 		ClientCmd_Cheat(0);
@@ -50,7 +87,6 @@ float() ParseClientCommand =
 	
 	return 1;
 };
-
 
 // ========================================================== 
 // client commands

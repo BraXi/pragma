@@ -102,31 +102,24 @@ float EF_TRACKERTRAIL	= 0x80000000; //end ROGUE
 //ROGUE
 
 // entity_state_t->renderfx flags
-float RF_MINLIGHT		= 1;			// allways have some light (viewmodel)
-float RF_VIEWERMODEL	= 2;			// don't draw through eyes, only mirrors
-float RF_WEAPONMODEL	= 4;			// only draw through eyes
-float RF_FULLBRIGHT		= 8;			// allways draw full intensity
-float RF_DEPTHHACK		= 16;			// for view weapon Z crunching
-float RF_TRANSLUCENT	= 32;
-float RF_FRAMELERP		= 64;
-float RF_BEAM			= 128;
-float RF_CUSTOMSKIN		= 256;			// skin is an index in image_precache
-float RF_GLOW			= 512;			// pulse lighting for bonus items
-float RF_SHELL_RED		= 1024;
-float RF_SHELL_GREEN	= 2048;
-float RF_SHELL_BLUE		= 4096;
-float RF_IR_VISIBLE		= 0x00008000;	// 32768 -- begin ROGUE
-float RF_SHELL_DOUBLE	= 0x00010000;	// 65536
-float RF_SHELL_HALF_DAM	= 0x00020000;
-float RF_USE_DISGUISE	= 0x00040000;	// end ROGUE
+#define	RF_MINLIGHT			1		// allways have some light, never go full dark
+#define	RF_VIEWERMODEL		2		// don't draw through eyes, only mirrors
+#define	RF_VIEW_MODEL		4		// only draw through eyes
+#define	RF_FULLBRIGHT		8		// allways draw full intensity
+#define	RF_DEPTHHACK		16		// for view weapon Z crunching
+#define	RF_TRANSLUCENT		32		// entity uses .renderAlpha
+#define	RF_FRAMELERP		64
+#define RF_BEAM				128
+#define	RF_COLOR			256		// entity uses .renderColor, was RF_CUSTOMSKIN
+#define	RF_GLOW				512		// pulse lighting for bonus items
+#define RF_SHELL_RED		1024
+#define	RF_SHELL_GREEN		2048
+#define RF_SHELL_BLUE		4096
+#define RF_SCALE			8192	// entity uses .renderScale for rendering
+#define RF_NOANIMLERP		16384	// animation is not lerped (software q1 style)
+#define RF_UNUSED1			32768	
 
-// braxi - @fixme - move these to aproppriate files? its not good place here, these could have been in weapon/ai/player defs
-//
-// muzzle flashes / player effects
-//
-//
-// muzzle flashes / player effects
-//
+
 enum
 {
 	FX_MUZZLEFLASH_PISTOL,

@@ -31,7 +31,7 @@ float BARREL_SPAWNFLAG_NO_IGNITION = 2;
 float BARREL_SPAWNFLAG_NO_DEBRIS = 4;
 
 // default model and its animations
-string prop_barrel_defaultmodel =  "models/barrels/barrel_red.md2";
+string prop_barrel_defaultmodel =  "models/barrel_red.md3";
 $frame idle explo0 explo1 explo2 explo3 explo4 explo5 explo6 explo7 explo8
 
 void(entity e) barrel_debris;
@@ -54,7 +54,7 @@ void(entity e) barrel_debris =
 	
 	entity ent = spawn();
 	ent.classname = "barrel_debris";		
-	setmodel(ent, "models/barrels/barrel_debris.md2");
+	setmodel(ent, "models/barrel_debris.md3");
 	setsize(ent, '-4 -4 0', '4 4 4');
 	
 	setorigin( ent, e.origin + '0 0 1');
@@ -143,7 +143,7 @@ float() SP_prop_barrel =
 	if( self.takedamage )
 	{
 		if( !(self.spawnflags & BARREL_SPAWNFLAG_NO_DEBRIS) )
-			precache_model("models/barrels/barrel_debris.md2");
+			precache_model("models/barrel_debris.md3");
 		
 		self.takedamage = DAMAGE_YES;
 		self.pain = prop_barrel_pain;

@@ -53,12 +53,12 @@ void() ClientBeginServerFrame =
 		return;
 		
 	}
-	if(self.model == "models/monsters/mutant/tris.md2")
+	if(self.model == "models/mutant.md3")
 	{
 	}
 	else
 	{
-		setviewmodel(self, "models/weapons/v_ak47.md2");
+		setviewmodel(self, "models/v_ak47.md3");
 		setviewmodelparms(self, self.animf, vec_null, vec_null);
 	}
 };

@@ -68,7 +68,7 @@ void() W_InitWeapons =
 	g_weapons[i].clipAmmo = 30; 
 	g_weapons[i].maxAmmo = 90;
 	
-	g_weapons[i].viewModel = precache_model("models/weapons/v_ak47.md2");
+	g_weapons[i].viewModel = precache_model("models/v_ak47.md3");
 	g_weapons[i].worldModel = 0;
 	g_weapons[i].muzzleflash = FX_MUZZLEFLASH_RIFLE;
 	
@@ -124,7 +124,7 @@ void(entity who, vector start, vector end, float weaponnum) FireBullet =
 		
 	if((trace_surface_flags & SURF_WARP))
 	{	
-		print("water splash\n");
+//		print("water splash\n");
 		float c;
 		if (trace_contents & CONTENTS_WATER)
 			c = SPLASH_BLUE_WATER;				
@@ -137,7 +137,7 @@ void(entity who, vector start, vector end, float weaponnum) FireBullet =
 		
 		if (color != SPLASH_UNKNOWN)
 		{
-			MSG_WriteByte (svc_temp_entity);
+			MSG_WriteByte (SVC_TEMP_ENTITY);
 			MSG_WriteByte (TE_SPLASH);
 			MSG_WriteByte (24);
 			MSG_WritePos(trace_endpos);

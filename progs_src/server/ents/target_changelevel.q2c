@@ -34,7 +34,7 @@ void(entity who) target_changelevel_use =
 		savepers = false;
 	
 	g_intermissionTime = g_time;	
-	changemap(self.message, savepers, savepers); // TODO: for now just change to next map
+	changemap(self.message, savepers);
 };
 
 float() SP_target_changelevel =

@@ -207,8 +207,6 @@ void(vector newanim, float priority, float reset) Player_SetAnimation =
 		if( self.animPriority > priority )
 			return;
 	}
-
-//	dprint("Player_SetAnimation\n");
 	
 	self.animPriority = priority;
 	self.playerAnim = newanim;	 
@@ -252,18 +250,13 @@ void() Player_ViewEffects =
 		}
 		#endif
 	}
-	
-	
-//	print4( ftos(self.wpn_fireframe), "-", ftos(g_frameNum),"\n");
-//	if(self.wpn_fireframe == g_frameNum)
-//		Player_SetAnimation(animTree[self.playerAnimTree].attack, 9999, false);
-	
-	
+
 	Player_PlayBodyAnimation();
 	
 	vieworg = self.origin + getviewoffset(self);
 	contents = pointcontents(vieworg); // add for contents	
 
+// not used in gl renderer :v
 //	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
 //		self.rdflags |= RDF_UNDERWATER;
 //	else
@@ -278,7 +271,7 @@ void() Player_ViewEffects =
 	else
 		setviewblend(self, vec_null, 0);
 	
-	if(self.model == "models/monsters/mutant/tris.md2")
+	if(self.model == "models/mutant.md3")
 		setviewblend(self, '0.8 0.2 0.0', 0.35);	
 };
 
@@ -286,7 +279,7 @@ void() Player_ViewEffects =
 void(entity attacker, float damage, float method) player_pain =
 {	
 	if( self.playerAnimTree == ANIMTREE_MUTANT && self.health <= self.max_health/2 )
-		self.modelTexNum = 1;
+		self.skinnum = 1;
 	
 	// play pain sound
 	if( random() > 0.5 )
@@ -305,7 +298,7 @@ void(entity attacker, float damage, float method) player_die =
 	
 	self.pm_type = PM_DEAD;
 	
-	// play pain sound
+	// play death sound
 	if( random() > 0.5 )
 		playsound(vec3_origin, self, CHAN_BODY, animTree[self.playerAnimTree].snd_death1, 1, ATTN_NORM, 0);
 	else
@@ -319,7 +312,8 @@ entity(string spawnpointname) SelectSpawnPoint;
 void() SpawnPlayer =
 {
 	entity sp;
-	
+	string modelname;
+		
 	sp = SelectSpawnPoint("info_player_start");
 	self.angles = sp.angles;
 	setorigin( self, sp.origin );
@@ -345,18 +339,16 @@ void() SpawnPlayer =
 	
 	self.pm_type = PM_NORMAL;
 	
-	string modelname;
-	
 	
 	float human = true;
 	if(getentnum(self) == 1 || human)
 	{
-		modelname = "models/char/female.md2";
+		modelname = "models/female.md3";
 		self.playerAnimTree = ANIMTREE_HUMAN;
 	}
 	else
 	{
-		modelname = "models/monsters/mutant/tris.md2";
+		modelname = "models/mutant.md3";
 		self.playerAnimTree = ANIMTREE_MUTANT;
 	}
 
@@ -365,7 +357,7 @@ void() SpawnPlayer =
 	modelindex_eyes = modelindex_player;
 #endif	
 	precache_model(modelname);
-	setmodel(self, modelname );
+	setmodel(self, modelname);
 	
 	self.animPriority = 0;
 	Player_SetAnimation(animTree[self.playerAnimTree].idle, AP_MEDIUM, false);	

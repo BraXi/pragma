@@ -88,7 +88,7 @@ void(float type, vector origin, vector normal, float damage) SpawnDamage =
 	if (damage > 255)
 		damage = 255;
 	
-	MSG_WriteByte(svc_temp_entity);
+	MSG_WriteByte(SVC_TEMP_ENTITY);
 	MSG_WriteByte(type);
 //	MSG_WriteByte(damage);
 	MSG_WritePos(origin);

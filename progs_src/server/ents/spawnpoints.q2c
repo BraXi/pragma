@@ -17,28 +17,9 @@ potential spawning position for coop games
 potential spawning position for deathmatch games
 */
 
-void(vector pos, vector rot) dmspot =
-{
-	entity ent;
-	
-	precache_model("models/objects/dmspot/tris.md2");
-	
-	ent = spawn();
-	ent.classname = "dmspot";
-	//ent.sound = precache_sound("world/amb10.wav");
-	ent.angles = rot + '0 180 0';	
-	setmodel(ent, "models/objects/dmspot/tris.md2");
-	ent.modelTexNum = 1;
-	ent.effects = EF_TELEPORTER;
-	ent.renderfx = RF_GLOW;
-	setorigin(ent, pos - '0 0 8');
-	linkentity(ent);
-};
-
 
 float() SP_info_player_start =
 {
-//	dmspot(self.origin, self.angles);
 	return true;
 };
 

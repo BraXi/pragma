@@ -9,14 +9,14 @@ Copyright (C) 1997-2001 Id Software, Inc.
 void() initAnimTrees;
 
 void() plr_showanim =
-{
+{	
 	entity player;
 	player = getent(1);	
 	self.animFrame = player.animFrame;
 	self.angles = player.angles;	
 	self.angles = self.angles - '0 180 0';
 	self.angles_x = 0;
-	//self.modelindex2 = precache_model("models/char/test.md2");
+	self.modelindex2 = precache_model("models/md3_test.md3");
 	self.nextthink = g_time + 0.1;
 };
 
@@ -24,8 +24,8 @@ void() plr_showanim =
 =================
 main
 
-called during server initialization after map has been
-loaded, but right before entities are allowed to think
+called during server initialization after map has been loaded and
+level entities spawned, but right before entities are allowed to think
 =================
 */
 void() main =
@@ -42,14 +42,20 @@ void() main =
 	developer_script = cvar("developer_script");
 	
 	initAnimTrees();
-	
-	entity e = spawn();
-	setmodel(e, "models/char/female.md2");
-	e.origin = '0 0 34';
-	linkentity(e);
-	e.think = plr_showanim;
-	e.nextthink = g_time + 1;
-
+#if 1	
+	// this is not really a good idea for dedicated server
+	if(cvar("dedicated") == 0)
+	{
+		entity e = spawn();
+		//setmodel(e, "models/md3_test.md3");
+		setmodel(e, "models/female.md3");
+		e.origin = '0 0 24';
+//		e.avelocity = '0 90 0';
+		linkentity(e);
+		e.think = plr_showanim;
+		e.nextthink = g_time + 1;
+	}
+#endif
 //	InitTriggerVectors(); //calculate movedir for each trigger	
 };
 

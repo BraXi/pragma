@@ -15,7 +15,7 @@ Fire an origin based temp entity event to the clients.
 
 void(entity user) target_temp_use =
 {
-	MSG_WriteByte(svc_temp_entity);
+	MSG_WriteByte(SVC_TEMP_ENTITY);
 	MSG_WriteByte(self.style);
 	MSG_WritePos(self.origin);
 	MSG_Multicast(self.origin, MULTICAST_PVS);

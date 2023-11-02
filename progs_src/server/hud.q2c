@@ -106,7 +106,7 @@ void(entity who, string hudprogram) HUD_SetLayout =
 {
 	if(isplayer(who))
 	{
-		MSG_WriteByte(svc_layout);
+		MSG_WriteByte(SVC_LAYOUT);
 		MSG_WriteString(hudprogram);
 		MSG_Unicast(who, true); // send reliable message
 	}

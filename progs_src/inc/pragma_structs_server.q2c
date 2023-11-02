@@ -55,23 +55,33 @@ void end_sys_globals; // end of struct
 //
 	// ----------------------------------------------------
 	// these are copied to entity_state_t
-	.vector		origin, old_origin;
-	.vector		angles;
-	
-	.float		modelindex;		// setmodel() sets these 4
-	.float		modelindex2;
-	.float		modelindex3;
-	.float		modelindex4;
-	
-	.float		animFrame;		// current keyframe
-	.float		modelTexNum;	// model's 'skin'
+	.vector		origin;			// current origin
+	.vector		angles;			// current angles
+	.vector		old_origin;		// for lerping
 
-	.float		effects;
-	.float		renderfx;
+	.int		modelindex;		// main model
+	.int		modelindex2;	// attached model
+	.int		modelindex3;	// attached model
+	.int		modelindex4;	// attached model
 
-	.float		ps_solid;		// playerstate solid
-	.float		loopsound;		// set this to soundindex if you want entity to have constant looping sound
-	.float		event;			// EV_FOOTSTEP etc
+	.int		animFrame;		// current animation frame
+	.int		skinnum;		// for MD3 this should be index to .skin file, otherwise ignored
+	.int		effects;
+
+	.int		renderFlags;	// RF_ flags
+	.float		renderScale;	// used when renderFlags & RF_SCALE 
+	.vector		renderColor;	// used when renderFlags & RF_COLOR
+	.float		renderAlpha;	// used when renderFlags & RF_TRANSLUCENT
+	
+	// used when renderFlags & RF_LIGHT*
+	.vector		lightColor;		// if RF_LIGHT_NEGATIVE, it will substract this ammount of color
+	.float		lightRadius;	// in quake units
+	.int		lightStyle;		// index to lightstyle (see server/ents/lights.q2c:InitLightStyles)
+
+	.int		loopsound;		// index to sound from precache_sound() that will constantly loop
+	.int		loopsound_att;	// sound attenuation, one of ATT_
+
+	.int		event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 	// ----------------------------------------------------
 
 	.string			classname;	// for spawn functions 
@@ -83,9 +93,9 @@ void end_sys_globals; // end of struct
 	.float			gravity;	// [0-1.0]
 	.int			clipmask;	
 	.float			groundEntityNum; // -1 = in air
-	.float			groundEntity_linkcount;	
-	.vector			size;		// DON'T CHANGE!
-	.entity			owner;		// DON'T CHANGE!
+	.float			groundEntity_linkcount;
+	.vector			size;		// DON'T CHANGE! set by linkentity()
+	.entity			owner;		
 	.entity			chain;		// DON'T CHANGE!
 
 	.vector			mins, maxs; //setsize() sets this
@@ -115,7 +125,7 @@ void end_sys_globals; // end of struct
 	// client fields
 	.vector			v_angle;	
 	.float			viewheight;
-	
+
 	// pmove vars
 	.float		pm_type;		// pmtype_t
 	.vector		pm_origin;		// short
@@ -123,7 +133,7 @@ void end_sys_globals; // end of struct
 	.float		pm_flags;		// byte
 	.float		pm_time;		// byte each unit = 8 ms
 	.float		pm_gravity;		// short
-	.vector		delta_angles;	// short add to command angles to get view direction, changed by spawns, rotating objects, and teleporters	
+	.vector		delta_angles;	// short add to command angles to get view direction, changed by spawns, rotating objects, and teleporters
 void end_sys_fields; // end of struct
 
 
@@ -177,12 +187,13 @@ float SOLID_BSP			= 3;	// bsp clip, touch on edge
 
 
 // defines from q_shared.h
-
-float svc_muzzleflash = 1;
-float svc_muzzleflash2 = 2;
-float svc_temp_entity = 3;
-float svc_layout = 4;
-float svc_inventory = 5;
+enum 
+{
+	SVC_MUZZLEFLASH = 1,
+	SVC_TEMP_ENTITY,
+	SVC_LAYOUT,
+	SVC_INVENTORY,
+};
 	
 // typedef enum multicast_t
 float MULTICAST_ALL 	= 0;
