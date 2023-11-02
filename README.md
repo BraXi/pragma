@@ -20,14 +20,14 @@ Project has a simple rule - *no bloat*, all the changes and additions should not
 | Renderers | OpenGL 2.1 with shaders* | OpenGL 1.1, Software |
 | Color palette | RGBA | colormap.pcx dependant (256 colors)|
 | Image formats | TGA | TGA (sky only), PCX, WAL |
-| Model formats | MD3, extended SP2*** | MD2, SP2 |
+| Model formats | MD3, SP2 | MD2, SP2 |
 | Map format | Q2 BSP V.38*** | Q2 BSP V.38 |
 | IPX | No, nobody uses it | Yes |
 | CDAudio | No, who still has cd drive? | Yes |
 | Cinematics | No*** | Yes (.cin format) |
 | savegames | No*** | Yes (prone to bugs, OS dependant) |
 | Game "hot reload" | Recompile QC and restart map | No, needs engine restart |
-| Asset limits (net) | will be increased | 256 models, 256 sounds, 256 images |
+| Asset limits (net) | up to 32768 models and sounds, 256 gui images | 256 models, 256 sounds, 256 images |
 | Renderer limits | 64 dlights, 512 models, 8192 particles | 32 dlights, 128 models, 4096 particles |
 
 
