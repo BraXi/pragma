@@ -477,91 +477,109 @@ Can delta from either a baseline or a previous packet_entity
 */
 void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *msg, qboolean force, qboolean newentity)
 {
-	int		bits;
+	int		bits, i;
 
 	if (!to->number)
-		Com_Error (ERR_FATAL, "Unset entity number");
+		Com_Error (ERR_FATAL, "MSG_WriteDeltaEntity: Unset entity number");
 	if (to->number >= MAX_GENTITIES)
-		Com_Error (ERR_FATAL, "Entity number >= MAX_EDICTS");
+		Com_Error (ERR_FATAL, "MSG_WriteDeltaEntity: Entity number >= MAX_GENTITIES");
 
 // send an update
 	bits = 0;
 
 	if (to->number >= 256)
-		bits |= U_NUMBER16;		// number8 is implicit otherwise
+		bits |= U_NUMBER_16;		// number8 is implicit otherwise
 
+	// origin
 	if (to->origin[0] != from->origin[0])
-		bits |= U_ORIGIN1;
+		bits |= U_ORIGIN_X;
 	if (to->origin[1] != from->origin[1])
-		bits |= U_ORIGIN2;
+		bits |= U_ORIGIN_Y;
 	if (to->origin[2] != from->origin[2])
-		bits |= U_ORIGIN3;
+		bits |= U_ORIGIN_Z;
 
+	// angles
 	if ( to->angles[0] != from->angles[0] )
-		bits |= U_ANGLE1;		
+		bits |= U_ANGLE_X;		
 	if ( to->angles[1] != from->angles[1] )
-		bits |= U_ANGLE2;
+		bits |= U_ANGLE_Y;
 	if ( to->angles[2] != from->angles[2] )
-		bits |= U_ANGLE3;
+		bits |= U_ANGLE_Z;
 		
 	if ( to->skinnum != from->skinnum )
-	{
-		if ((unsigned)to->skinnum < 256)
-			bits |= U_SKIN8;
-		else if ((unsigned)to->skinnum < 0x10000)
-			bits |= U_SKIN16;
-		else
-			bits |= (U_SKIN8|U_SKIN16);
-	}
+		bits |= U_SKIN_8;
 		
 	if ( to->frame != from->frame )
 	{
 		if (to->frame < 256)
-			bits |= U_FRAME8;
+			bits |= U_FRAME_8;
 		else
-			bits |= U_FRAME16;
+			bits |= U_FRAME_16;
 	}
 
 	if ( to->effects != from->effects )
 	{
 		if (to->effects < 256)
-			bits |= U_EFFECTS8;
-		else if (to->effects < 0x8000)
-			bits |= U_EFFECTS16;
+			bits |= U_EFFECTS_8;
+		else if (to->effects < 32768)
+			bits |= U_EFFECTS_16; 
 		else
-			bits |= U_EFFECTS8|U_EFFECTS16;
+			bits |= U_EFFECTS_8|U_EFFECTS_16;
 	}
 	
-	if ( to->renderfx != from->renderfx )
+	if ( to->renderFlags != from->renderFlags )
 	{
-		if (to->renderfx < 256)
-			bits |= U_RENDERFX8;
-		else if (to->renderfx < 0x8000)
-			bits |= U_RENDERFX16;
+		if (to->renderFlags < 256)
+			bits |= U_RENDERFLAGS_8;
+		else if (to->renderFlags < 32768)
+			bits |= U_RENDERFLAGS_16;
 		else
-			bits |= U_RENDERFX8|U_RENDERFX16;
+			bits |= U_RENDERFLAGS_8|U_RENDERFLAGS_16;
 	}
 	
 	if ( to->solid != from->solid )
-		bits |= U_SOLID;
+		bits |= U_PACKEDSOLID;
 
 	// event is not delta compressed, just 0 compressed
 	if ( to->event  )
 		bits |= U_EVENT;
 	
-	if ( to->modelindex != from->modelindex )
-		bits |= U_MODEL;
+	// main model
+	if (to->modelindex != from->modelindex)
+	{
+		if (to->modelindex < 256)
+			bits |= U_MODELINDEX_8; // byte
+		else 
+			bits |= U_MODELINDEX_16; // short
+	}
+	
+	// attached models
 	if ( to->modelindex2 != from->modelindex2 )
-		bits |= U_MODEL2;
+		bits |= U_MODELINDEX2_8;
 	if ( to->modelindex3 != from->modelindex3 )
-		bits |= U_MODEL3;
+		bits |= U_MODELINDEX3_8;
 	if ( to->modelindex4 != from->modelindex4 )
-		bits |= U_MODEL4;
+		bits |= U_MODELINDEX4_8;
 
-	if ( to->sound != from->sound )
-		bits |= U_SOUND;
+	// looping sound
+	if ( to->loopingSound != from->loopingSound )
+		bits |= U_LOOPSOUND;
 
-	if (newentity || (to->renderfx & RF_BEAM))
+	// render scale
+	if (to->renderScale != from->renderScale)
+		bits |= U_RENDERSCALE;
+
+	// render alpha
+	if (to->renderAlpha != from->renderAlpha)
+		bits |= U_RENDERALPHA;
+
+	// render color
+	if (to->renderColor[0] != from->renderColor[0] ||
+		to->renderColor[1] != from->renderColor[1] ||
+		to->renderColor[2] != from->renderColor[2])
+		bits |= U_RENDERCOLOR;
+
+	if (newentity || (to->renderFlags & RF_BEAM))
 		bits |= U_OLDORIGIN;
 
 	//
@@ -599,61 +617,101 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 
 	//----------
 
-	if (bits & U_NUMBER16)
+	// ENT NUMBER
+	if (bits & U_NUMBER_16)
 		MSG_WriteShort (msg, to->number);
 	else
 		MSG_WriteByte (msg,	to->number);
 
-	if (bits & U_MODEL)
+	// main model
+	if (bits & U_MODELINDEX_8)
 		MSG_WriteByte (msg,	to->modelindex);
-	if (bits & U_MODEL2)
+	if (bits & U_MODELINDEX_16)
+		MSG_WriteShort(msg, to->modelindex);
+
+	// attached models
+	if (bits & U_MODELINDEX2_8)
 		MSG_WriteByte (msg,	to->modelindex2);
-	if (bits & U_MODEL3)
+	if (bits & U_MODELINDEX3_8)
 		MSG_WriteByte (msg,	to->modelindex3);
-	if (bits & U_MODEL4)
+	if (bits & U_MODELINDEX4_8)
 		MSG_WriteByte (msg,	to->modelindex4);
 
-	if (bits & U_FRAME8)
+	// animation frame
+	if (bits & U_FRAME_8)
 		MSG_WriteByte (msg, to->frame);
-	if (bits & U_FRAME16)
+	if (bits & U_FRAME_16)
 		MSG_WriteShort (msg, to->frame);
 
-	if ((bits & U_SKIN8) && (bits & U_SKIN16))		//used for laser colors
-		MSG_WriteLong (msg, to->skinnum);
-	else if (bits & U_SKIN8)
+	// index to model skin
+	if (bits & U_SKIN_8)
 		MSG_WriteByte (msg, to->skinnum);
-	else if (bits & U_SKIN16)
-		MSG_WriteShort (msg, to->skinnum);
 
-
-	if ( (bits & (U_EFFECTS8|U_EFFECTS16)) == (U_EFFECTS8|U_EFFECTS16) )
+	// effects
+	if ( (bits & (U_EFFECTS_8|U_EFFECTS_16)) == (U_EFFECTS_8|U_EFFECTS_16) )
 		MSG_WriteLong (msg, to->effects);
-	else if (bits & U_EFFECTS8)
+	else if (bits & U_EFFECTS_8)
 		MSG_WriteByte (msg, to->effects);
-	else if (bits & U_EFFECTS16)
+	else if (bits & U_EFFECTS_16)
 		MSG_WriteShort (msg, to->effects);
 
-	if ( (bits & (U_RENDERFX8|U_RENDERFX16)) == (U_RENDERFX8|U_RENDERFX16) )
-		MSG_WriteLong (msg, to->renderfx);
-	else if (bits & U_RENDERFX8)
-		MSG_WriteByte (msg, to->renderfx);
-	else if (bits & U_RENDERFX16)
-		MSG_WriteShort (msg, to->renderfx);
+	// render flags
+	if ( (bits & (U_RENDERFLAGS_8|U_RENDERFLAGS_16)) == (U_RENDERFLAGS_8|U_RENDERFLAGS_16) )
+		MSG_WriteLong (msg, to->renderFlags);
+	else if (bits & U_RENDERFLAGS_8)
+		MSG_WriteByte (msg, to->renderFlags);
+	else if (bits & U_RENDERFLAGS_16)
+		MSG_WriteShort (msg, to->renderFlags);
 
-	if (bits & U_ORIGIN1)
+	// render scale
+	if (bits & U_RENDERSCALE)
+	{
+		if (to->renderScale > 15 || to->renderScale <= 0)
+		{
+			Com_Printf("%s: to->renderScale %f out of scale [0.0-15.0]\n", __FUNCTION__, to->renderScale);
+			to->renderScale = 1.0f;
+		}
+
+		MSG_WriteByte(msg, (int)(to->renderScale * 16));
+	}
+
+	// render color
+	if (bits & U_RENDERCOLOR)
+	{
+		for (i = 0; i < 3; i++)
+		{
+			if (to->renderColor[i] > 1.0f || to->renderColor[1] < 0.0f)
+			{
+				Com_Printf("%s: to->renderColor[%i] %f out of scale [0.0-1.0]\n", __FUNCTION__, i, to->renderColor[i]);
+				to->renderScale = 1.0f;
+			}
+		}
+		MSG_WriteByte(msg, (to->renderColor[0] * 255));
+		MSG_WriteByte(msg, (to->renderColor[1] * 255));
+		MSG_WriteByte(msg, (to->renderColor[2] * 255));
+	}
+
+	// render alpha
+	if (bits & U_RENDERALPHA)
+		MSG_WriteByte(msg, (to->renderAlpha*255));
+
+	// current origin
+	if (bits & U_ORIGIN_X)
 		MSG_WriteCoord (msg, to->origin[0]);		
-	if (bits & U_ORIGIN2)
+	if (bits & U_ORIGIN_Y)
 		MSG_WriteCoord (msg, to->origin[1]);
-	if (bits & U_ORIGIN3)
+	if (bits & U_ORIGIN_Z)
 		MSG_WriteCoord (msg, to->origin[2]);
 
-	if (bits & U_ANGLE1)
+	// current angles
+	if (bits & U_ANGLE_X)
 		MSG_WriteAngle(msg, to->angles[0]);
-	if (bits & U_ANGLE2)
+	if (bits & U_ANGLE_Y)
 		MSG_WriteAngle(msg, to->angles[1]);
-	if (bits & U_ANGLE3)
+	if (bits & U_ANGLE_Z)
 		MSG_WriteAngle(msg, to->angles[2]);
 
+	// old origin (used for smoothing move)
 	if (bits & U_OLDORIGIN)
 	{
 		MSG_WriteCoord (msg, to->old_origin[0]);
@@ -661,11 +719,16 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 		MSG_WriteCoord (msg, to->old_origin[2]);
 	}
 
-	if (bits & U_SOUND)
-		MSG_WriteByte (msg, to->sound);
+	// looping sound
+	if (bits & U_LOOPSOUND)
+		MSG_WriteByte (msg, to->loopingSound);
+
+	// event
 	if (bits & U_EVENT)
 		MSG_WriteByte (msg, to->event);
-	if (bits & U_SOLID)
+
+	// solid
+	if (bits & U_PACKEDSOLID)
 		MSG_WriteShort (msg, to->solid);
 }
 

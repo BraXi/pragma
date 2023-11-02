@@ -208,7 +208,7 @@ void CL_Record_f (void)
 	SZ_Init (&buf, buf_data, sizeof(buf_data));
 
 	// send the serverdata
-	MSG_WriteByte (&buf, svc_serverdata);
+	MSG_WriteByte (&buf, SVC_SERVERDATA);
 	MSG_WriteLong (&buf, PROTOCOL_VERSION);
 	MSG_WriteLong (&buf, 0x10000 + cl.servercount);
 	MSG_WriteByte (&buf, 1);	// demos are always attract loops
@@ -230,7 +230,7 @@ void CL_Record_f (void)
 				buf.cursize = 0;
 			}
 
-			MSG_WriteByte (&buf, svc_configstring);
+			MSG_WriteByte (&buf, SVC_CONFIGSTRING);
 			MSG_WriteShort (&buf, i);
 			MSG_WriteString (&buf, cl.configstrings[i]);
 		}
@@ -253,11 +253,11 @@ void CL_Record_f (void)
 			buf.cursize = 0;
 		}
 
-		MSG_WriteByte (&buf, svc_spawnbaseline);		
+		MSG_WriteByte (&buf, SVC_SPAWNBASELINE);		
 		MSG_WriteDeltaEntity (&nullstate, &cl_entities[i].baseline, &buf, true, true);
 	}
 
-	MSG_WriteByte (&buf, svc_stufftext);
+	MSG_WriteByte (&buf, SVC_STUFFTEXT);
 	MSG_WriteString (&buf, "precache\n");
 
 	// write it to the demo file

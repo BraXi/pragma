@@ -49,6 +49,8 @@ cvar_t	*sv_maxentities;
 cvar_t	*sv_showclamp;
 cvar_t	*sv_cheats;
 
+cvar_t *sv_nolateloading;
+
 cvar_t	*hostname;
 cvar_t	*public_server;			// should heartbeats be sent
 
@@ -101,7 +103,7 @@ This is NOT called if the entire server is quiting or crashing.
 void SV_DropClient (client_t *drop)
 {
 	// add the disconnect
-	MSG_WriteByte (&drop->netchan.message, svc_disconnect);
+	MSG_WriteByte (&drop->netchan.message, SVC_DISCONNECT);
 
 	if (drop->state == cs_spawned)
 	{
@@ -962,6 +964,8 @@ void SV_Init (void)
 
 	Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO|CVAR_NOSET);
 
+	sv_nolateloading = Cvar_Get("sv_nolateloading", "0", 0);
+
 	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO | CVAR_LATCH);
 	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
 	sv_password = Cvar_Get("sv_password", "", 0);
@@ -1016,14 +1020,14 @@ void SV_FinalMessage (char *message, qboolean reconnect)
 	client_t	*cl;
 	
 	SZ_Clear (&net_message);
-	MSG_WriteByte (&net_message, svc_print);
+	MSG_WriteByte (&net_message, SVC_PRINT);
 	MSG_WriteByte (&net_message, PRINT_HIGH);
 	MSG_WriteString (&net_message, message);
 
 	if (reconnect)
-		MSG_WriteByte (&net_message, svc_reconnect);
+		MSG_WriteByte (&net_message, SVC_RECONNECT);
 	else
-		MSG_WriteByte (&net_message, svc_disconnect);
+		MSG_WriteByte (&net_message, SVC_DISCONNECT);
 
 	// send it twice
 	// stagger the packets to crutch operating system limited buffers
@@ -1066,6 +1070,8 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 
 	if (svs.gclients)
 		Z_Free(svs.gclients);
+
+	Z_FreeTags(TAG_SVMODELDATA);
 
 	memset (&sv, 0, sizeof(sv));
 

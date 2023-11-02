@@ -841,7 +841,7 @@ void S_AddLoopSounds (void)
 	{
 		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
 		ent = &cl_parse_entities[num];
-		sounds[i] = ent->sound;
+		sounds[i] = ent->loopingSound;
 	}
 
 	for (i=0 ; i<cl.frame.num_entities ; i++)

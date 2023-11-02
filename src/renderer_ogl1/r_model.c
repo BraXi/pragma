@@ -26,12 +26,15 @@ int		modfilelen;
 
 void Mod_LoadSP2 (model_t *mod, void *buffer);
 void Mod_LoadBSP (model_t *mod, void *buffer);
-void Mod_LoadMD2 (model_t *mod, void *buffer);
 extern void Mod_LoadMD3 (model_t *mod, void *buffer, lod_t lod);
 
 byte	mod_novis[MAX_MAP_LEAFS/8];
 
-#define	MAX_MOD_KNOWN	512
+#ifdef EXTENDED_ASSET_LIMITS
+	#define	MAX_MOD_KNOWN	1024
+#else
+	#define	MAX_MOD_KNOWN	512
+#endif
 model_t	mod_known[MAX_MOD_KNOWN];
 int		mod_numknown;
 
@@ -164,7 +167,7 @@ void Mod_Modellist_f (void)
 	model_t	*mod;
 	int		total;
 
-	static char mtypes[6][8] = { "BAD", "BSP", "SPRITE", "MD2", "MD3", "BXMDL" };
+	static char mtypes[6][8] = { "BAD", "BSP", "SPRITE", "MD3", "BXMDL" };
 
 	total = 0;
 	ri.Con_Printf (PRINT_ALL,"Loaded models:\n");
@@ -172,7 +175,7 @@ void Mod_Modellist_f (void)
 	{
 		if (!mod->name[0])
 			continue;
-		ri.Con_Printf (PRINT_ALL, "%i: %s '%s' [%d bytes]\n", i, mtypes[mod->type], mod->name, mod->extradatasize);
+		ri.Con_Printf (PRINT_ALL, "%i: %s '%s' [%d frames, %d bytes]\n", i, mtypes[mod->type], mod->name, mod->numframes, mod->extradatasize);
 		total += mod->extradatasize;
 	}
 	ri.Con_Printf (PRINT_ALL, "\nTotal resident: %i\n", total);
@@ -269,13 +272,8 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	switch (LittleLong(*(unsigned *)buf))
 	{
 	case MD3_IDENT: /* Quake3 .md3 model */
-		loadmodel->extradata = Hunk_Begin(0x200000); // is 2MB enuff?
+		loadmodel->extradata = Hunk_Begin(0x400000); // is 2MB enuff?
 		Mod_LoadMD3(mod, buf, LOD_HIGH);
-		break;
-
-	case MD2_IDENT: /* Quake2 .md2 model */
-		loadmodel->extradata = Hunk_Begin (0x200000);
-		Mod_LoadMD2(mod, buf);
 		break;
 		
 	case SP2_IDENT: /* Quake2 .sp2 sprite */
@@ -289,7 +287,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		break;
 
 	default:
-		ri.Sys_Error (ERR_DROP,"Mod_ForName: file %s is not a vaild BSP, MD2, MD3 or SP2", mod->name);
+		ri.Sys_Error (ERR_DROP,"Mod_ForName: file %s is not a vaild model", mod->name);
 		break;
 	}
 
@@ -1053,16 +1051,6 @@ void Mod_LoadBXModel(model_t* mod, void* buffer)
 /*
 ==============================================================================
 
-QUAKE2 MD2 MODELS
-
-==============================================================================
-*/
-
-
-
-/*
-==============================================================================
-
 QUAKE2 SP2 MODELS
 
 ==============================================================================
@@ -1089,9 +1077,9 @@ void Mod_LoadSP2 (model_t *mod, void *buffer)
 		ri.Sys_Error (ERR_DROP, "%s has wrong version number (%i should be %i)",
 				 mod->name, sprout->version, SP2_VERSION);
 
-	if (sprout->numframes > MD2_MAX_SKINS)
+	if (sprout->numframes > 32)
 		ri.Sys_Error (ERR_DROP, "%s has too many frames (%i > %i)",
-				 mod->name, sprout->numframes, MD2_MAX_SKINS);
+				 mod->name, sprout->numframes, 32);
 
 	// byte swap everything
 	for (i=0 ; i<sprout->numframes ; i++)
@@ -1100,7 +1088,7 @@ void Mod_LoadSP2 (model_t *mod, void *buffer)
 		sprout->frames[i].height = LittleLong (sprin->frames[i].height);
 		sprout->frames[i].origin_x = LittleLong (sprin->frames[i].origin_x);
 		sprout->frames[i].origin_y = LittleLong (sprin->frames[i].origin_y);
-		memcpy (sprout->frames[i].name, sprin->frames[i].name, MD2_MAX_SKINNAME);
+		memcpy (sprout->frames[i].name, sprin->frames[i].name, MAX_QPATH);
 		mod->skins[i] = GL_FindImage (sprout->frames[i].name,
 			it_sprite);
 	}
@@ -1149,7 +1137,6 @@ struct model_s *R_RegisterModel (char *name)
 	model_t	*mod;
 	int		i, j;
 	sp2Header_t		*sp2Header;
-	md2Header_t		*md2Header;
 	md3Header_t		*md3Header;
 
 	md3Surface_t* surf;
@@ -1168,16 +1155,9 @@ struct model_s *R_RegisterModel (char *name)
 			for (i=0 ; i< sp2Header->numframes ; i++)
 				mod->skins[i] = GL_FindImage (sp2Header->frames[i].name, it_sprite);
 		}
-		else if (mod->type == MOD_MD2)
-		{
-			md2Header = (md2Header_t *)mod->extradata;
-			mod->numframes = md2Header->num_frames;
-			for (i=0 ; i< md2Header->num_skins ; i++)
-				mod->skins[i] = GL_FindImage ((char *)md2Header + md2Header->ofs_skins + i*MD2_MAX_SKINNAME, it_model);
-		}
 		else if (mod->type == MOD_MD3)
 		{
-			md3Header = (md2Header_t*)mod->extradata;
+			md3Header = (md3Header_t*)mod->extradata;
 			mod->numframes = md3Header->numFrames;
 			surf = (md3Surface_t*)((byte*)mod->md3[LOD_HIGH] + mod->md3[LOD_HIGH]->ofsSurfaces);
 			for (i = 0; i < mod->md3[LOD_HIGH]->numSurfaces; i++)

@@ -76,12 +76,17 @@ void SV_EndWorldFrame(void)
 		ent->s.modelindex4 = ent->v.modelindex[3];
 
 		ent->s.frame = (int)ent->v.animFrame;
-		ent->s.skinnum = (int)ent->v.modelTexNum;
-		ent->s.effects = (int)ent->v.effects;
-		ent->s.renderfx = (int)ent->v.renderfx;
-//		ent->s.solid = (int)ent->v.ps_solid;
-		ent->s.sound = (int)ent->v.sound;
+		ent->s.skinnum = (int)ent->v.skinnum;
+		ent->s.effects = ent->v.effects;
+
+		ent->s.renderFlags = ent->v.renderFlags;
+		ent->s.renderScale = ent->v.renderScale;
+		VectorCopy(ent->v.renderColor, ent->s.renderColor);
+		ent->s.renderAlpha = ent->v.renderAlpha;
+
+		ent->s.loopingSound = (int)ent->v.loopsound;
 		ent->s.event = (int)ent->v.event;
+
 	}
 	SV_ScriptEndFrame();
 }
@@ -299,7 +304,7 @@ void SV_ClearWorld (void)
 {
 	memset (sv_areanodes, 0, sizeof(sv_areanodes));
 	sv_numareanodes = 0;
-	SV_CreateAreaNode (0, sv.models[1]->mins, sv.models[1]->maxs);
+	SV_CreateAreaNode (0, sv.models[1].bmodel->mins, sv.models[1].bmodel->maxs);
 }
 
 
@@ -597,7 +602,7 @@ int SV_PointContents (vec3_t p)
 	float		*angles;
 
 	// get base contents from world
-	contents = CM_PointContents (p, sv.models[1]->headnode);
+	contents = CM_PointContents (p, sv.models[1].bmodel->headnode);
 
 	// or in contents from all the other entities
 	num = SV_AreaEdicts (p, p, touch, MAX_GENTITIES, AREA_SOLID);
@@ -651,8 +656,9 @@ int SV_HullForEntity (gentity_t *ent)
 
 	// decide which clipping hull to use, based on the size
 	if (ent->v.solid == SOLID_BSP)
-	{	// explicit hulls in the BSP model
-		model = sv.models[ ent->s.modelindex ];
+	{	
+		// explicit hulls in the BSP model
+		model = &sv.models[ ent->s.modelindex ];
 
 		if (!model)
 		{

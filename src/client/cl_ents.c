@@ -73,7 +73,7 @@ int CL_ParseEntityBits (unsigned *bits)
 		if (total&(1<<i))
 			bitcounts[i]++;
 
-	if (total & U_NUMBER16)
+	if (total & U_NUMBER_16)
 		number = MSG_ReadShort (&net_message);
 	else
 		number = MSG_ReadByte (&net_message);
@@ -98,67 +98,95 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 	VectorCopy (from->origin, to->old_origin);
 	to->number = number;
 
-	if (bits & U_MODEL)
+
+	// main model
+	if (bits & U_MODELINDEX_8)
 		to->modelindex = MSG_ReadByte (&net_message);
-	if (bits & U_MODEL2)
+	if (bits & U_MODELINDEX_16)
+		to->modelindex = MSG_ReadShort(&net_message);
+
+	// attached models
+	if (bits & U_MODELINDEX2_8)
 		to->modelindex2 = MSG_ReadByte (&net_message);
-	if (bits & U_MODEL3)
+	if (bits & U_MODELINDEX3_8)
 		to->modelindex3 = MSG_ReadByte (&net_message);
-	if (bits & U_MODEL4)
+	if (bits & U_MODELINDEX4_8)
 		to->modelindex4 = MSG_ReadByte (&net_message);
-		
-	if (bits & U_FRAME8)
+	
+	// animation frame
+	if (bits & U_FRAME_8)
 		to->frame = MSG_ReadByte (&net_message);
-	if (bits & U_FRAME16)
+	if (bits & U_FRAME_16)
 		to->frame = MSG_ReadShort (&net_message);
 
-	if ((bits & U_SKIN8) && (bits & U_SKIN16))		//used for laser colors
-		to->skinnum = MSG_ReadLong(&net_message);
-	else if (bits & U_SKIN8)
+	// index to model skin
+	if (bits & U_SKIN_8)
 		to->skinnum = MSG_ReadByte(&net_message);
-	else if (bits & U_SKIN16)
-		to->skinnum = MSG_ReadShort(&net_message);
 
-	if ( (bits & (U_EFFECTS8|U_EFFECTS16)) == (U_EFFECTS8|U_EFFECTS16) )
+	// effects
+	if ( (bits & (U_EFFECTS_8|U_EFFECTS_16)) == (U_EFFECTS_8|U_EFFECTS_16) )
 		to->effects = MSG_ReadLong(&net_message);
-	else if (bits & U_EFFECTS8)
+	else if (bits & U_EFFECTS_8)
 		to->effects = MSG_ReadByte(&net_message);
-	else if (bits & U_EFFECTS16)
+	else if (bits & U_EFFECTS_16)
 		to->effects = MSG_ReadShort(&net_message);
 
-	if ( (bits & (U_RENDERFX8|U_RENDERFX16)) == (U_RENDERFX8|U_RENDERFX16) )
-		to->renderfx = MSG_ReadLong(&net_message);
-	else if (bits & U_RENDERFX8)
-		to->renderfx = MSG_ReadByte(&net_message);
-	else if (bits & U_RENDERFX16)
-		to->renderfx = MSG_ReadShort(&net_message);
+	// render flags
+	if ( (bits & (U_RENDERFLAGS_8|U_RENDERFLAGS_16)) == (U_RENDERFLAGS_8|U_RENDERFLAGS_16) )
+		to->renderFlags = MSG_ReadLong(&net_message);
+	else if (bits & U_RENDERFLAGS_8)
+		to->renderFlags = MSG_ReadByte(&net_message);
+	else if (bits & U_RENDERFLAGS_16)
+		to->renderFlags = MSG_ReadShort(&net_message);
 
-	if (bits & U_ORIGIN1)
+	// render scale
+	if (bits & U_RENDERSCALE)
+		to->renderScale = MSG_ReadByte(&net_message) * (1.0f / 16.0f);
+
+	// render color
+	if (bits & U_RENDERCOLOR)
+	{
+		to->renderColor[0] = MSG_ReadByte(&net_message) * (1.0f / 255.0f);
+		to->renderColor[1] = MSG_ReadByte(&net_message) * (1.0f / 255.0f);
+		to->renderColor[2] = MSG_ReadByte(&net_message) * (1.0f / 255.0f);
+	}
+
+	// render alpha
+	if (bits & U_RENDERALPHA)
+		to->renderAlpha = MSG_ReadByte(&net_message) * (1.0f / 255.0f);
+
+	// current origin
+	if (bits & U_ORIGIN_X)
 		to->origin[0] = MSG_ReadCoord (&net_message);
-	if (bits & U_ORIGIN2)
+	if (bits & U_ORIGIN_Y)
 		to->origin[1] = MSG_ReadCoord (&net_message);
-	if (bits & U_ORIGIN3)
+	if (bits & U_ORIGIN_Z)
 		to->origin[2] = MSG_ReadCoord (&net_message);
-		
-	if (bits & U_ANGLE1)
+
+	// current angles
+	if (bits & U_ANGLE_X)
 		to->angles[0] = MSG_ReadAngle(&net_message);
-	if (bits & U_ANGLE2)
+	if (bits & U_ANGLE_Y)
 		to->angles[1] = MSG_ReadAngle(&net_message);
-	if (bits & U_ANGLE3)
+	if (bits & U_ANGLE_Z)
 		to->angles[2] = MSG_ReadAngle(&net_message);
 
+	// old origin (used for smoothing move)
 	if (bits & U_OLDORIGIN)
 		MSG_ReadPos (&net_message, to->old_origin);
 
-	if (bits & U_SOUND)
-		to->sound = MSG_ReadByte (&net_message);
+	// looping sound
+	if (bits & U_LOOPSOUND)
+		to->loopingSound = MSG_ReadByte (&net_message);
 
+	// event
 	if (bits & U_EVENT)
 		to->event = MSG_ReadByte (&net_message);
 	else
 		to->event = 0;
 
-	if (bits & U_SOLID)
+	// solid
+	if (bits & U_PACKEDSOLID)
 		to->solid = MSG_ReadShort (&net_message);
 }
 
@@ -567,14 +595,14 @@ void CL_ParseFrame (void)
 	// read playerinfo
 	cmd = MSG_ReadByte (&net_message);
 	SHOWNET(svc_strings[cmd]);
-	if (cmd != svc_playerinfo)
+	if (cmd != SVC_PLAYERINFO)
 		Com_Error (ERR_DROP, "CL_ParseFrame: not playerinfo");
 	CL_ParsePlayerstate (old, &cl.frame);
 
 	// read packet entities
 	cmd = MSG_ReadByte (&net_message);
 	SHOWNET(svc_strings[cmd]);
-	if (cmd != svc_packetentities)
+	if (cmd != SVC_PACKET_ENTITIES)
 		Com_Error (ERR_DROP, "CL_ParseFrame: not packetentities");
 	CL_ParsePacketEntities (old, &cl.frame);
 
@@ -647,7 +675,7 @@ void CL_AddPacketEntities (frame_t *frame)
 		cent = &cl_entities[(int)s1->number];
 
 		effects = s1->effects;
-		renderfx = s1->renderfx;
+		renderfx = s1->renderFlags;
 
 			// set frame
 		if (effects & EF_ANIM01)
@@ -660,6 +688,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			ent.frame = cl.time / SV_FRAMETIME_MSEC;
 		else
 			ent.frame = s1->frame;
+
 
 		// quad and pent can do different things on client
 		if (effects & EF_PENT)
@@ -694,6 +723,8 @@ void CL_AddPacketEntities (frame_t *frame)
 //======
 		ent.oldframe = cent->prev.frame;
 		ent.backlerp = 1.0 - cl.lerpfrac;
+
+		ent.alpha = cent->current.renderAlpha;
 
 		if (renderfx & (RF_FRAMELERP|RF_BEAM))
 		{	// step origin discretely, because the frames
@@ -767,15 +798,16 @@ void CL_AddPacketEntities (frame_t *frame)
 			}
 		}
 
-		// only used for black hole model right now, FIXME: do better
-		if (renderfx == RF_TRANSLUCENT)
-			ent.alpha = 0.70;
+
+		//if (renderfx == RF_TRANSLUCENT)
+		//	ent.alpha = s1->renderAlpha;
+
 
 		// render effects (fullbright, translucent, etc)
 		if ((effects & EF_COLOR_SHELL))
-			ent.flags = 0;	// renderfx go on color shell entity
+			ent.renderfx = 0;	// renderfx go on color shell entity
 		else
-			ent.flags = renderfx;
+			ent.renderfx = renderfx;
 
 		// calculate angles
 		if (effects & EF_ROTATE)
@@ -813,7 +845,7 @@ void CL_AddPacketEntities (frame_t *frame)
 
 		if (s1->number == cl.playernum+1)
 		{
-			ent.flags |= RF_VIEWERMODEL;	// only draw from mirrors
+			ent.renderfx |= RF_VIEWERMODEL;	// only draw from mirrors
 			// FIXME: still pass to refresh
 
 			if (effects & EF_FLAG1)
@@ -834,20 +866,20 @@ void CL_AddPacketEntities (frame_t *frame)
 
 		if (effects & EF_BFG)
 		{
-			ent.flags |= RF_TRANSLUCENT;
+			ent.renderfx |= RF_TRANSLUCENT;
 			ent.alpha = 0.30;
 		}
 
 		// RAFAEL
 		if (effects & EF_PLASMA)
 		{
-			ent.flags |= RF_TRANSLUCENT;
+			ent.renderfx |= RF_TRANSLUCENT;
 			ent.alpha = 0.6;
 		}
 
 		if (effects & EF_SPHERETRANS)
 		{
-			ent.flags |= RF_TRANSLUCENT;
+			ent.renderfx |= RF_TRANSLUCENT;
 			// PMM - *sigh*  yet more EF overloading
 			if (effects & EF_TRACKERTRAIL)
 				ent.alpha = 0.6;
@@ -855,6 +887,11 @@ void CL_AddPacketEntities (frame_t *frame)
 				ent.alpha = 0.3;
 		}
 //pmm
+		ent.renderfx = cent->current.renderFlags;
+		ent.alpha = cent->current.renderAlpha;
+		VectorCopy(cent->current.renderColor, ent.renderColor);
+		ent.scale = cent->current.renderScale;
+		
 
 		// add to refresh list
 		V_AddEntity (&ent);
@@ -862,14 +899,14 @@ void CL_AddPacketEntities (frame_t *frame)
 		// color shells generate a seperate entity for the main model
 		if (effects & EF_COLOR_SHELL)
 		{
-			ent.flags = renderfx | RF_TRANSLUCENT;
+			ent.renderfx = renderfx | RF_TRANSLUCENT;
 			ent.alpha = 0.30;
 			V_AddEntity (&ent);
 		}
 
 		ent.skin = NULL;		// never use a custom skin on others
 		ent.skinnum = 0;
-		ent.flags = 0;
+		ent.renderfx = 0;
 		ent.alpha = 0;
 
 		// duplicate for linked models
@@ -895,7 +932,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			{
 				ent.model = cl.model_draw[(int)s1->modelindex2 & 0x7F];
 				ent.alpha = 0.32;
-				ent.flags = RF_TRANSLUCENT;
+				ent.renderfx = RF_TRANSLUCENT;
 			}
 			//PGM
 			else
@@ -903,7 +940,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			V_AddEntity (&ent);
 
 			//PGM - make sure these get reset.
-			ent.flags = 0;
+			ent.renderfx = 0;
 			ent.alpha = 0;
 			//PGM
 		}
@@ -923,7 +960,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			ent.model = cl_mod_powerscreen;
 			ent.oldframe = 0;
 			ent.frame = 0;
-			ent.flags |= (RF_TRANSLUCENT | RF_SHELL_GREEN);
+			ent.renderfx |= (RF_TRANSLUCENT | RF_SHELL_GREEN);
 			ent.alpha = 0.30;
 			V_AddEntity (&ent);
 		}
@@ -1131,7 +1168,7 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 			gun.oldframe = ops->viewmodel_frame;
 	}
 
-	gun.flags = RF_MINLIGHT | RF_DEPTHHACK | RF_WEAPONMODEL;
+	gun.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
 	gun.backlerp = 1.0 - cl.lerpfrac;
 	VectorCopy (gun.origin, gun.oldorigin);	// don't lerp at all
 	V_AddEntity (&gun);
@@ -1254,14 +1291,10 @@ void CL_AddEntities (void)
 	if (cl_timedemo->value)
 		cl.lerpfrac = 1.0;
 
-//	CL_AddPacketEntities (&cl.frame);
-//	CL_AddTEnts ();
-//	CL_AddParticles ();
-//	CL_AddDLights ();
-//	CL_AddLightStyles ();
 
+	// calculate view first so the heat beam has the right values for the vieworg, and can lock the beam to the gun
 	CL_CalcViewValues ();
-	// PMM - moved this here so the heat beam has the right values for the vieworg, and can lock the beam to the gun
+
 	CL_AddPacketEntities (&cl.frame);
 	CL_AddTEnts ();
 	CL_AddParticles ();

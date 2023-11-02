@@ -77,9 +77,12 @@ typedef struct centity_s
 
 	int		lightstyle;				// for flashing entities
 	float	alpha;					// ignore if RF_TRANSLUCENT isn't set
+	float	scale;					// ignore if RF_SCALE isn't set, MD3 only
+	vec3_t	renderColor;
+	
 
 	struct image_s	*skin;			// NULL for inline skin
-	int		flags;
+	int		renderfx;
 
 } centity_t;
 
@@ -143,7 +146,7 @@ typedef struct
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'1')
+#define	API_VERSION		('B'+'X'+'I'+'2')
 
 //
 // these are the functions exported by the refresh module

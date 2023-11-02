@@ -155,7 +155,6 @@
     <ClInclude Include="..\game\q_shared.h" />
     <ClInclude Include="..\platform\glw_win.h" />
     <ClInclude Include="anorms.h" />
-    <ClInclude Include="anormtab.h" />
     <ClInclude Include="r_local.h" />
     <ClInclude Include="r_model.h" />
     <ClInclude Include="qgl.h" />
@@ -170,12 +169,12 @@
     <ClCompile Include="r_image.c" />
     <ClCompile Include="r_init.c" />
     <ClCompile Include="r_light.c" />
-    <ClCompile Include="r_md2.c" />
     <ClCompile Include="r_md3.c" />
     <ClCompile Include="r_mesh.c" />
     <ClCompile Include="r_model.c" />
     <ClCompile Include="r_main.c" />
     <ClCompile Include="r_misc.c" />
+    <ClCompile Include="r_sprite.c" />
     <ClCompile Include="r_surf.c" />
     <ClCompile Include="r_warp.c" />
     <ClCompile Include="r_draw_new.c" />

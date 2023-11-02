@@ -29,7 +29,27 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //=============================================================================
 
+#define TAG_SVMODELDATA 123
 #define	MAX_MASTERS	8				// max recipients for heartbeat packets
+
+
+typedef struct svmodel_s
+{
+	char			name[MAX_QPATH];
+	modtype_t		type;
+
+	 cmodel_t	*bmodel; // only if type == MOD_BRUSH
+
+	// only if type == MOD_MD3
+	char			tagNames[MD3_MAX_TAGS][MD3_MAX_NAME];
+	orientation_t* tagFrames;	// numTags * numFrames
+
+
+	// common
+	int				numFrames;
+	int				numTags;
+	int				numSurfaces;
+} svmodel_t;
 
 
 typedef enum 
@@ -55,8 +75,11 @@ typedef struct
 	unsigned			time;					// always sv.framenum * 100 msec
 	int					framenum;
 
-	char				name[MAX_QPATH];		// map name, or cinematic name
-	struct cmodel_s		*models[MAX_MODELS];
+	char				name[MAX_QPATH];		// BSP map name, or cinematic name
+
+	svmodel_t			models[MAX_MODELS];		// md3, sprites, brushmodels
+	int					num_models;
+
 
 	gentity_t			*edicts;				// [sv_maxentities]
 	int					max_edicts;				// [sv_maxentities]
@@ -213,6 +236,7 @@ extern	server_t		sv;					// local server
 
 extern	cvar_t		*sv_paused;
 extern	cvar_t		*sv_password;
+extern  cvar_t		*sv_nolateloading;
 extern	cvar_t		*sv_cheats;
 extern	cvar_t		*sv_maxclients;
 extern	cvar_t		*sv_maxentities;
@@ -232,14 +256,19 @@ extern	gentity_t	*sv_entity;
 //===========================================================
 
 //
+// sv_load.c
+//
+int SV_ModelIndex(char* name);
+int SV_SoundIndex(char* name);
+int SV_ImageIndex(char* name);
+svmodel_t* SV_ModelForNum(unsigned int index);
+
+
+//
 // sv_main.c
 //
 void SV_FinalMessage (char *message, qboolean reconnect);
 void SV_DropClient (client_t *drop);
-
-int SV_ModelIndex (char *name);
-int SV_SoundIndex (char *name);
-int SV_ImageIndex (char *name);
 
 void SV_ExecuteUserCommand (char *s);
 void SV_InitOperatorCommands (void);

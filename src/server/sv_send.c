@@ -39,7 +39,7 @@ void SV_FlushRedirect (int sv_redirected, char *outputbuf)
 	}
 	else if (sv_redirected == RD_CLIENT)
 	{
-		MSG_WriteByte (&sv_client->netchan.message, svc_print);
+		MSG_WriteByte (&sv_client->netchan.message, SVC_PRINT);
 		MSG_WriteByte (&sv_client->netchan.message, PRINT_HIGH);
 		MSG_WriteString (&sv_client->netchan.message, outputbuf);
 	}
@@ -74,7 +74,7 @@ void SV_ClientPrintf(client_t *cl, int level, char *fmt, ...)
 	vsprintf (string, fmt,argptr);
 	va_end (argptr);
 	
-	MSG_WriteByte (&cl->netchan.message, svc_print);
+	MSG_WriteByte (&cl->netchan.message, SVC_PRINT);
 	MSG_WriteByte (&cl->netchan.message, level);
 	MSG_WriteString (&cl->netchan.message, string);
 }
@@ -116,7 +116,7 @@ void SV_BroadcastPrintf (int level, char *fmt, ...)
 			continue;
 		if (cl->state != cs_spawned)
 			continue;
-		MSG_WriteByte (&cl->netchan.message, svc_print);
+		MSG_WriteByte (&cl->netchan.message, SVC_PRINT);
 		MSG_WriteByte (&cl->netchan.message, level);
 		MSG_WriteString (&cl->netchan.message, string);
 	}
@@ -140,7 +140,7 @@ void SV_BroadcastCommand (char *fmt, ...)
 	vsprintf (string, fmt,argptr);
 	va_end (argptr);
 
-	MSG_WriteByte (&sv.multicast, svc_stufftext);
+	MSG_WriteByte (&sv.multicast, SVC_STUFFTEXT);
 	MSG_WriteString (&sv.multicast, string);
 	SV_Multicast (NULL, MULTICAST_ALL_R);
 }
@@ -313,6 +313,9 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 	// always send the entity number for channel overrides
 	flags |= SND_ENT;
 
+	if (soundindex > 255)
+		flags |= SND_INDEX_16;
+
 	if (timeofs)
 		flags |= SND_OFFSET;
 
@@ -331,9 +334,13 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 		}
 	}
 
-	MSG_WriteByte (&sv.multicast, svc_sound);
+	MSG_WriteByte (&sv.multicast, SVC_SOUND);
 	MSG_WriteByte (&sv.multicast, flags);
-	MSG_WriteByte (&sv.multicast, soundindex);
+
+	if(flags & SND_INDEX_16)
+		MSG_WriteShort(&sv.multicast, soundindex);
+	else
+		MSG_WriteShort(&sv.multicast, soundindex);
 
 	if (flags & SND_VOLUME)
 		MSG_WriteByte (&sv.multicast, volume*255);

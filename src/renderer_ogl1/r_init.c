@@ -22,6 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 refimport_t	ri;
 
+
+cvar_t* r_md3shading; 
+cvar_t* r_md3scale;
+
 cvar_t* r_norefresh;
 cvar_t* r_drawentities;
 cvar_t* r_drawworld;
@@ -79,6 +83,8 @@ cvar_t* r_fullscreen;
 cvar_t* r_gamma;
 cvar_t* r_renderer;
 
+float sinTable[FUNCTABLE_SIZE];
+
 void GL_Strings_f(void);
 
 /*
@@ -90,13 +96,16 @@ register all cvars and commands
 */
 void R_RegisterCvarsAndCommands(void)
 {
+	r_md3shading = ri.Cvar_Get("r_md3shading", "0", CVAR_CHEAT);
+	r_md3scale = ri.Cvar_Get("r_md3scale", "1", CVAR_CHEAT);
+
 	r_lefthand = ri.Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0);
-	r_fullbright = ri.Cvar_Get("r_fullbright", "0", 0);
-	r_drawentities = ri.Cvar_Get("r_drawentities", "1", 0);
-	r_drawworld = ri.Cvar_Get("r_drawworld", "1", 0);
-	r_novis = ri.Cvar_Get("r_novis", "0", 0);
-	r_nocull = ri.Cvar_Get("r_nocull", "0", 0);
+	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
+	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);
+	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT);
+	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT);
+	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT);
 	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", 0);
 	r_speeds = ri.Cvar_Get("r_speeds", "0", 0);
 
@@ -109,41 +118,39 @@ void R_RegisterCvarsAndCommands(void)
 	r_particle_att_b = ri.Cvar_Get("r_particle_att_b", "0.0", CVAR_ARCHIVE);
 	r_particle_att_c = ri.Cvar_Get("r_particle_att_c", "0.01", CVAR_ARCHIVE);
 
-	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_ARCHIVE);
+	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_ARCHIVE | CVAR_CHEAT);
 	r_log = ri.Cvar_Get("r_log", "0", 0);
 	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0);
 	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
-	r_lightmap = ri.Cvar_Get("r_lightmap", "0", 0);
+	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT);
 	r_shadows = ri.Cvar_Get("r_shadows", "0", CVAR_ARCHIVE);
 	r_dynamic = ri.Cvar_Get("r_dynamic", "1", 0);
-	r_nobind = ri.Cvar_Get("r_nobind", "0", 0);
+	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT);
 	r_round_down = ri.Cvar_Get("r_round_down", "0", 0);
 	r_picmip = ri.Cvar_Get("r_picmip", "0", 0);
 	r_skymip = ri.Cvar_Get("r_skymip", "0", 0);
-	r_showtris = ri.Cvar_Get("r_showtris", "0", 0);
+	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT);
 	r_ztrick = ri.Cvar_Get("r_ztrick", "0", 0);
 	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE);
 	r_clear = ri.Cvar_Get("r_clear", "0", 0);
-	r_cull = ri.Cvar_Get("r_cull", "1", 0);
+	r_cull = ri.Cvar_Get("r_cull", "1", CVAR_CHEAT);
 	r_polyblend = ri.Cvar_Get("r_polyblend", "1", 0);
 	r_flashblend = ri.Cvar_Get("r_flashblend", "0", 0);
-	r_monolightmap = ri.Cvar_Get("r_monolightmap", "0", 0);
+	r_monolightmap = ri.Cvar_Get("r_monolightmap", "0", CVAR_CHEAT);
 	gl_driver = ri.Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE);
 	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
 	r_texturesolidmode = ri.Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE);
-	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", 0);
-
-	r_vertex_arrays = ri.Cvar_Get("r_vertex_arrays", "0", CVAR_ARCHIVE); // disabled by default, breaks MD2 rendering on RX 7900 XT - Reki
+	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT);
 
 	gl_ext_swapinterval = ri.Cvar_Get("gl_ext_swapinterval", "1", CVAR_ARCHIVE);
 	gl_ext_pointparameters = ri.Cvar_Get("gl_ext_pointparameters", "1", CVAR_ARCHIVE);
 	gl_ext_compiled_vertex_array = ri.Cvar_Get("gl_ext_compiled_vertex_array", "1", CVAR_ARCHIVE);
 
-	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", 0);
+	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT);
 	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
 
-	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", 0);
+	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", CVAR_CHEAT);
 
 	r_fullscreen = ri.Cvar_Get("r_fullscreen", "0", CVAR_ARCHIVE);
 	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE);
@@ -363,6 +370,9 @@ int R_Init(void* hinstance, void* hWnd)
 #if 0
 	GL_DrawStereoPattern();
 #endif
+
+	for (int i = 0; i < FUNCTABLE_SIZE; i++)
+		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
 	GL_InitImages();
 	Mod_Init();

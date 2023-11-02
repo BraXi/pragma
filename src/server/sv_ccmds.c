@@ -29,6 +29,44 @@ These commands can only be entered from stdin or by a remote operator datagram
 ===============================================================================
 */
 
+
+void SV_ModelList_f(void)
+{
+	int		i, nonbmodels = 0;
+	svmodel_t	* mod;
+	qboolean detailed = Cmd_Argc() > 1 ? true : false;
+
+	static char mtypes[5][4] = { "BAD", "BSP", "SPR", "MD3", "BXM" };
+
+	if (sv.state == ss_dead)
+	{
+		Com_Printf("server must be running for sv_modelindex");
+		return;
+	}
+
+	Com_Printf("\nserver models:\n");
+	Com_Printf("==============\n");
+
+	for (i = 0, mod = &sv.models[i]; i < sv.num_models; i++, mod++)
+	{
+		if (!mod->name[0])
+			continue;
+
+		if (mod->type != MOD_BRUSH && mod->type != MOD_BAD)
+		{
+			nonbmodels++;
+			Com_Printf("%i: %s '%s' [%i frames, %i tags]\n", i, mtypes[mod->type], mod->name, mod->numFrames, mod->numTags);
+		}
+		else
+			Com_Printf("%i: %s '%s' \n", i, mtypes[mod->type], mod->name);
+	}
+
+	Com_Printf("\n");
+	Com_Printf("%i brush models, %i models\n", CM_NumInlineModels(), nonbmodels);
+	Com_Printf("used %i out of %i model slots\n", sv.num_models, MAX_MODELS);
+}
+
+
 /*
 ====================
 SV_SetMaster_f
@@ -68,7 +106,6 @@ void SV_SetMaster_f (void)
 			master_adr[slot].port = BigShort (PORT_MASTER);
 
 		Com_Printf ("Master server at %s\n", NET_AdrToString (master_adr[slot]));
-
 		Com_Printf ("Sending a ping.\n");
 
 		Netchan_OutOfBandPrint (NS_SERVER, master_adr[slot], "ping");
@@ -949,7 +986,7 @@ void SV_ServerRecord_f (void)
 	// to make sure the protocol is right, and to set the gamedir
 	//
 	// send the serverdata
-	MSG_WriteByte (&buf, svc_serverdata);
+	MSG_WriteByte (&buf, SVC_SERVERDATA);
 	MSG_WriteLong (&buf, PROTOCOL_VERSION);
 	MSG_WriteLong (&buf, svs.spawncount);
 	// 2 means server demo
@@ -963,7 +1000,7 @@ void SV_ServerRecord_f (void)
 	{
 		if (sv.configstrings[i][0]) // braxi -- fix
 		{
-			MSG_WriteByte(&buf, svc_configstring);
+			MSG_WriteByte(&buf, SVC_CONFIGSTRING);
 			MSG_WriteShort(&buf, i);
 			MSG_WriteString(&buf, sv.configstrings[i]);
 		}
@@ -1052,6 +1089,8 @@ void SV_InitOperatorCommands (void)
 	Cmd_AddCommand ("demomap", SV_DemoMap_f);
 	Cmd_AddCommand ("gamemap", SV_GameMap_f);
 	Cmd_AddCommand ("setmaster", SV_SetMaster_f);
+
+	Cmd_AddCommand("sv_modellist", SV_ModelList_f);
 
 	if ( dedicated->value )
 		Cmd_AddCommand ("say", SV_ConSay_f);

@@ -88,7 +88,7 @@ void SV_New_f (void)
 	gamedir = Cvar_VariableString ("gamedir");
 
 	// send the serverdata
-	MSG_WriteByte (&sv_client->netchan.message, svc_serverdata);
+	MSG_WriteByte (&sv_client->netchan.message, SVC_SERVERDATA);
 	MSG_WriteLong (&sv_client->netchan.message, PROTOCOL_VERSION);
 	MSG_WriteLong (&sv_client->netchan.message, svs.spawncount);
 	MSG_WriteByte (&sv_client->netchan.message, sv.attractloop);
@@ -115,7 +115,7 @@ void SV_New_f (void)
 		memset (&sv_client->lastcmd, 0, sizeof(sv_client->lastcmd));
 
 		// begin fetching configstrings
-		MSG_WriteByte (&sv_client->netchan.message, svc_stufftext);
+		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
 		MSG_WriteString (&sv_client->netchan.message, va("cmd configstrings %i 0\n",svs.spawncount) );
 	}
 
@@ -155,7 +155,7 @@ void SV_Configstrings_f (void)
 	{
 		if (sv.configstrings[start][0])
 		{
-			MSG_WriteByte (&sv_client->netchan.message, svc_configstring);
+			MSG_WriteByte (&sv_client->netchan.message, SVC_CONFIGSTRING);
 			MSG_WriteShort (&sv_client->netchan.message, start);
 			MSG_WriteString (&sv_client->netchan.message, sv.configstrings[start]);
 		}
@@ -166,12 +166,12 @@ void SV_Configstrings_f (void)
 
 	if (start == MAX_CONFIGSTRINGS)
 	{
-		MSG_WriteByte (&sv_client->netchan.message, svc_stufftext);
+		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
 		MSG_WriteString (&sv_client->netchan.message, va("cmd baselines %i 0\n",svs.spawncount) );
 	}
 	else
 	{
-		MSG_WriteByte (&sv_client->netchan.message, svc_stufftext);
+		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
 		MSG_WriteString (&sv_client->netchan.message, va("cmd configstrings %i %i\n",svs.spawncount, start) );
 	}
 }
@@ -213,9 +213,9 @@ void SV_Baselines_f (void)
 		&& start < MAX_GENTITIES)
 	{
 		base = &sv.baselines[start];
-		if (base->modelindex || base->sound || base->effects)
+		if (base->modelindex || base->loopingSound || base->effects)
 		{
-			MSG_WriteByte (&sv_client->netchan.message, svc_spawnbaseline);
+			MSG_WriteByte (&sv_client->netchan.message, SVC_SPAWNBASELINE);
 			MSG_WriteDeltaEntity (&nullstate, base, &sv_client->netchan.message, true, true);
 		}
 		start++;
@@ -225,12 +225,12 @@ void SV_Baselines_f (void)
 
 	if (start == MAX_GENTITIES)
 	{
-		MSG_WriteByte (&sv_client->netchan.message, svc_stufftext);
+		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
 		MSG_WriteString (&sv_client->netchan.message, va("precache %i\n", svs.spawncount) );
 	}
 	else
 	{
-		MSG_WriteByte (&sv_client->netchan.message, svc_stufftext);
+		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
 		MSG_WriteString (&sv_client->netchan.message, va("cmd baselines %i %i\n",svs.spawncount, start) );
 	}
 }
@@ -305,7 +305,7 @@ void SV_NextDownload_f (void)
 	if (r > 1024)
 		r = 1024;
 
-	MSG_WriteByte (&sv_client->netchan.message, svc_download);
+	MSG_WriteByte (&sv_client->netchan.message, SVC_DOWNLOAD);
 	MSG_WriteShort (&sv_client->netchan.message, r);
 
 	sv_client->downloadcount += r;
@@ -360,7 +360,7 @@ void SV_BeginDownload_f(void)
 		// MUST be in a subdirectory	
 		|| !strstr (name, "/") )	
 	{	// don't allow anything with .. path
-		MSG_WriteByte (&sv_client->netchan.message, svc_download);
+		MSG_WriteByte (&sv_client->netchan.message, SVC_DOWNLOAD);
 		MSG_WriteShort (&sv_client->netchan.message, -1);
 		MSG_WriteByte (&sv_client->netchan.message, 0);
 		return;
@@ -386,7 +386,7 @@ void SV_BeginDownload_f(void)
 			sv_client->download = NULL;
 		}
 
-		MSG_WriteByte (&sv_client->netchan.message, svc_download);
+		MSG_WriteByte (&sv_client->netchan.message, SVC_DOWNLOAD);
 		MSG_WriteShort (&sv_client->netchan.message, -1);
 		MSG_WriteByte (&sv_client->netchan.message, 0);
 		return;

@@ -76,6 +76,7 @@ static qboolean CL_DownloadFiles(float allowDownload, int assetType, int maxAsse
 
 static void CL_DownloadModelsWithSkins(float allowDownload, int nextType)
 {
+#if 0
 	md2Header_t* pheader;
 
 	if (precache_check >= CS_MODELS && precache_check < CS_MODELS + MAX_MODELS)
@@ -156,6 +157,7 @@ static void CL_DownloadModelsWithSkins(float allowDownload, int nextType)
 		}
 		precache_check = nextType;
 	}
+#endif
 }
 
 static void CL_DownloadSkyImages(float allowDownload, int nextType)

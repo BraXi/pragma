@@ -31,7 +31,7 @@ int scr_numBuiltins = 0;
 
 // these indicate prog names and their crc checksums
 static char* progsfile_server = "progs/server.dat";
-const int progsfile_server_crc = 17492;
+const int progsfile_server_crc = 32763;
 static char* progsfile_client = "progs/client.dat";
 const int progsfile_client_crc = 0;
 

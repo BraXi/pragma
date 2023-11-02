@@ -90,6 +90,7 @@
     <ClCompile Include="script\scr_main.c" />
     <ClCompile Include="script\scr_builtins_shared.c" />
     <ClCompile Include="script\scr_utils.c" />
+    <ClCompile Include="server\sv_load.c" />
     <ClCompile Include="server\sv_gentity.c" />
     <ClCompile Include="server\sv_physics.c" />
     <ClCompile Include="server\sv_script.c" />
@@ -142,7 +143,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">

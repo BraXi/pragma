@@ -178,6 +178,9 @@
     <ClCompile Include="client\cl_tent.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
+    <ClCompile Include="server\sv_load.c">
+      <Filter>server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="platform\resource.h" />

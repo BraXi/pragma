@@ -165,17 +165,9 @@ typedef struct mleaf_s
 
 //===================================================================
 
-typedef struct 
-{
-	vec3_t		origin;
-	vec3_t		axis[3];
-} orientation_t;
-
 //
 // Whole model
 //
-
-typedef enum {MOD_BAD, MOD_BRUSH, MOD_SPRITE, MOD_MD2, MOD_MD3, MOD_BXMDL } modtype_t;
 
 typedef struct bmodel_s
 {
@@ -247,13 +239,15 @@ typedef struct model_s
 	byte		*lightdata;
 
 	// for alias models and skins
-	image_t		*skins[MD2_MAX_SKINS];
+	image_t		*skins[32];
 
 	int			extradatasize;
 	void		*extradata;
 
 
-	md3Header_t* md3[MD3_MAX_LODS];	// only if type == MOD_MD3
+	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MD3
+	int			nv [MD3_MAX_SURFACES];
+	vec3_t		 *normals[MD3_MAX_SURFACES];
 } model_t;
 
 //============================================================================

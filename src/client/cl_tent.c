@@ -130,10 +130,9 @@ void CL_RegisterTEntSounds (void)
 	cl_sfx_rockexp = S_RegisterSound ("weapons/rocklx1a.wav");
 	cl_sfx_grenexp = S_RegisterSound ("weapons/grenlx1a.wav");
 	cl_sfx_watrexp = S_RegisterSound ("weapons/xpld_wat.wav");
-	// RAFAEL
-	// cl_sfx_plasexp = S_RegisterSound ("weapons/plasexpl.wav");
-	S_RegisterSound ("player/land1.wav");
 
+
+	S_RegisterSound ("player/land1.wav");
 	S_RegisterSound ("player/fall2.wav");
 	S_RegisterSound ("player/fall1.wav");
 
@@ -154,7 +153,7 @@ CL_RegisterTEntModels
 */
 void CL_RegisterTEntModels (void)
 {
-	cl_mod_impact_small = re.RegisterModel("models/fx/impact_small.md2");
+	cl_mod_impact_small = re.RegisterModel("models/fx/impact_small.md3");
 
 	cl_mod_explode = re.RegisterModel ("models/objects/explode/tris.md2");
 	cl_mod_parasite_segment = re.RegisterModel ("models/monsters/parasite/segment/tris.md2");
@@ -164,7 +163,6 @@ void CL_RegisterTEntModels (void)
 	cl_mod_bfg_explo = re.RegisterModel ("sprites/s_bfg2.sp2");
 	cl_mod_powerscreen = re.RegisterModel ("models/items/armor/effect/tris.md2");
 
-//ROGUE
 	cl_mod_explo4_big = re.RegisterModel ("models/objects/r_explode2/tris.md2");
 	cl_mod_lightning = re.RegisterModel ("models/proj/lightning/tris.md2");
 	cl_mod_heatbeam = re.RegisterModel ("models/proj/beam/tris.md2");
@@ -237,7 +235,7 @@ void CL_SmokeAndFlash(vec3_t origin)
 	ex = CL_AllocExplosion ();
 	VectorCopy (origin, ex->ent.origin);
 	ex->type = ex_flash;
-	ex->ent.flags = (RF_TRANSLUCENT|RF_FULLBRIGHT);
+	ex->ent.renderfx = (RF_TRANSLUCENT|RF_FULLBRIGHT);
 	ex->frames = 2;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 	ex->ent.model = cl_mod_impact_small;
@@ -260,7 +258,7 @@ void CL_GunMuzzleFlash(vec3_t origin)
 	ex = CL_AllocExplosion();
 	VectorCopy(origin, ex->ent.origin);
 	ex->type = ex_flash;
-	ex->ent.flags = (RF_TRANSLUCENT | RF_FULLBRIGHT);
+	ex->ent.renderfx = (RF_TRANSLUCENT | RF_FULLBRIGHT);
 	ex->frames = 2;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 	ex->ent.model = cl_mod_impact_small;
@@ -529,7 +527,7 @@ void CL_ParseLaser (int colors)
 	{
 		if (l->endtime < cl.time)
 		{
-			l->ent.flags = RF_TRANSLUCENT | RF_BEAM;
+			l->ent.renderfx = RF_TRANSLUCENT | RF_BEAM;
 			VectorCopy (start, l->ent.origin);
 			VectorCopy (end, l->ent.oldorigin);
 			l->ent.alpha = 0.30;
@@ -839,7 +837,7 @@ void CL_ParseTEnt (void)
 			ex->ent.angles[1] = 0;
 
 		ex->type = ex_misc;
-		ex->ent.flags = RF_FULLBRIGHT|RF_TRANSLUCENT;
+		ex->ent.renderfx = RF_FULLBRIGHT|RF_TRANSLUCENT;
 		ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 		ex->light = 150;
 		ex->lightcolor[0] = 1;
@@ -864,7 +862,7 @@ void CL_ParseTEnt (void)
 		ex = CL_AllocExplosion ();
 		VectorCopy (pos, ex->ent.origin);
 		ex->type = ex_poly;
-		ex->ent.flags = RF_FULLBRIGHT;
+		ex->ent.renderfx = RF_FULLBRIGHT;
 		ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 		ex->light = 350;
 		ex->lightcolor[0] = 1.0;
@@ -887,7 +885,7 @@ void CL_ParseTEnt (void)
 		ex = CL_AllocExplosion ();
 		VectorCopy (pos, ex->ent.origin);
 		ex->type = ex_poly;
-		ex->ent.flags = RF_FULLBRIGHT;
+		ex->ent.renderfx = RF_FULLBRIGHT;
 		ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 		ex->light = 350;
 		ex->lightcolor[0] = 1.0; 
@@ -912,7 +910,7 @@ void CL_ParseTEnt (void)
 		ex = CL_AllocExplosion ();
 		VectorCopy (pos, ex->ent.origin);
 		ex->type = ex_poly;
-		ex->ent.flags = RF_FULLBRIGHT;
+		ex->ent.renderfx = RF_FULLBRIGHT;
 		ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 		ex->light = 350;
 		ex->lightcolor[0] = 1.0;
@@ -939,14 +937,14 @@ void CL_ParseTEnt (void)
 		ex = CL_AllocExplosion ();
 		VectorCopy (pos, ex->ent.origin);
 		ex->type = ex_poly;
-		ex->ent.flags = RF_FULLBRIGHT;
+		ex->ent.renderfx = RF_FULLBRIGHT;
 		ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 		ex->light = 350;
 		ex->lightcolor[0] = 0.0;
 		ex->lightcolor[1] = 1.0;
 		ex->lightcolor[2] = 0.0;
 		ex->ent.model = cl_mod_bfg_explo;
-		ex->ent.flags |= RF_TRANSLUCENT;
+		ex->ent.renderfx |= RF_TRANSLUCENT;
 		ex->ent.alpha = 0.30;
 		ex->frames = 4;
 		break;
@@ -996,7 +994,7 @@ void CL_ParseTEnt (void)
 		ex->type = ex_flash;
 		// note to self
 		// we need a better no draw flag
-		ex->ent.flags = RF_BEAM;
+		ex->ent.renderfx = RF_BEAM;
 		ex->start = cl.frame.servertime - 0.1;
 		ex->light = 100 + (rand()%75);
 		ex->lightcolor[0] = 1.0;
@@ -1054,7 +1052,7 @@ void CL_ParseTEnt (void)
 			ex->ent.angles[1] = 0;
 
 		ex->type = ex_misc;
-		ex->ent.flags = RF_FULLBRIGHT|RF_TRANSLUCENT;
+		ex->ent.renderfx = RF_FULLBRIGHT|RF_TRANSLUCENT;
 
 		// PMM
 		if (type == TE_BLASTER2)
@@ -1096,7 +1094,7 @@ void CL_ParseTEnt (void)
 		ex = CL_AllocExplosion ();
 		VectorCopy (pos, ex->ent.origin);
 		ex->type = ex_poly;
-		ex->ent.flags = RF_FULLBRIGHT;
+		ex->ent.renderfx = RF_FULLBRIGHT;
 		ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 		ex->light = 350;
 		ex->lightcolor[0] = 1.0;
@@ -1313,7 +1311,7 @@ void CL_AddBeams (void)
 //			for (j=0 ; j<3 ; j++)
 //				ent.origin[j] -= dist[j]*10.0;
 			ent.model = b->model;
-			ent.flags = RF_FULLBRIGHT;
+			ent.renderfx = RF_FULLBRIGHT;
 			ent.angles[0] = pitch;
 			ent.angles[1] = yaw;
 			ent.angles[2] = rand()%360;
@@ -1326,7 +1324,7 @@ void CL_AddBeams (void)
 			ent.model = b->model;
 			if (b->model == cl_mod_lightning)
 			{
-				ent.flags = RF_FULLBRIGHT;
+				ent.renderfx = RF_FULLBRIGHT;
 				ent.angles[0] = -pitch;
 				ent.angles[1] = yaw + 180.0;
 				ent.angles[2] = rand()%360;
@@ -1569,7 +1567,7 @@ void CL_AddPlayerBeams (void)
 //			for (j=0 ; j<3 ; j++)
 //				ent.origin[j] -= dist[j]*10.0;
 			ent.model = b->model;
-			ent.flags = RF_FULLBRIGHT;
+			ent.renderfx = RF_FULLBRIGHT;
 			ent.angles[0] = pitch;
 			ent.angles[1] = yaw;
 			ent.angles[2] = rand()%360;
@@ -1584,7 +1582,7 @@ void CL_AddPlayerBeams (void)
 			{
 //				ent.flags = RF_FULLBRIGHT|RF_TRANSLUCENT;
 //				ent.alpha = 0.3;
-				ent.flags = RF_FULLBRIGHT;
+				ent.renderfx = RF_FULLBRIGHT;
 				ent.angles[0] = -pitch;
 				ent.angles[1] = yaw + 180.0;
 				ent.angles[2] = (cl.time) % 360;
@@ -1593,7 +1591,7 @@ void CL_AddPlayerBeams (void)
 			}
 			else if (b->model == cl_mod_lightning)
 			{
-				ent.flags = RF_FULLBRIGHT;
+				ent.renderfx = RF_FULLBRIGHT;
 				ent.angles[0] = -pitch;
 				ent.angles[1] = yaw + 180.0;
 				ent.angles[2] = rand()%360;
@@ -1678,7 +1676,7 @@ void CL_AddExplosions (void)
 			}
 			else
 			{
-				ent->flags |= RF_TRANSLUCENT;
+				ent->renderfx |= RF_TRANSLUCENT;
 				if (f < 13)
 					ent->skinnum = 5;
 				else
@@ -1694,7 +1692,7 @@ void CL_AddExplosions (void)
 
 			ent->alpha = (5.0 - (float)f)/5.0;
 			ent->skinnum = 0;
-			ent->flags |= RF_TRANSLUCENT;
+			ent->renderfx |= RF_TRANSLUCENT;
 			break;
 		}
 

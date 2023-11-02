@@ -25,59 +25,6 @@ server_t		sv;					// local server
 
 void SV_ScriptMain();
 
-/*
-================
-SV_FindIndex
-
-================
-*/
-int SV_FindIndex (char *name, int start, int max, qboolean create)
-{
-	int		i;
-	
-	if (!name || !name[0])
-		return 0;
-
-	for (i = 1; i < max && sv.configstrings[start+i][0]; i++)
-		if (!strcmp(sv.configstrings[start+i], name))
-			return i;
-
-	if (!create)
-		return 0;
-
-	if (i == max)
-		Com_Error (ERR_DROP, "*Index: overflow");
-
-	strncpy (sv.configstrings[start+i], name, sizeof(sv.configstrings[i]));
-
-	if (sv.state != ss_loading)
-	{	// send the update to everyone
-		SZ_Clear (&sv.multicast);
-		MSG_WriteChar (&sv.multicast, svc_configstring);
-		MSG_WriteShort (&sv.multicast, start+i);
-		MSG_WriteString (&sv.multicast, name);
-		SV_Multicast (vec3_origin, MULTICAST_ALL_R);
-	}
-
-	return i;
-}
-
-
-int SV_ModelIndex (char *name)
-{
-	return SV_FindIndex (name, CS_MODELS, MAX_MODELS, true);
-}
-
-int SV_SoundIndex (char *name)
-{
-	return SV_FindIndex (name, CS_SOUNDS, MAX_SOUNDS, true);
-}
-
-int SV_ImageIndex (char *name)
-{
-	return SV_FindIndex (name, CS_IMAGES, MAX_IMAGES, true);
-}
-
 
 /*
 ================
@@ -98,7 +45,7 @@ void SV_CreateBaseline (void)
 		svent = EDICT_NUM(entnum);
 		if (!svent->inuse)
 			continue;
-		if (!svent->s.modelindex && !svent->s.sound && !svent->s.effects)
+		if (!svent->s.modelindex && !svent->s.loopingSound && !svent->s.effects)
 			continue;
 		svent->s.number = entnum;
 
@@ -191,6 +138,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	if (sv.edicts)
 		Z_Free(sv.edicts);
 
+	Z_FreeTags(TAG_SVMODELDATA);
 	memset (&sv, 0, sizeof(sv));
 
 	svs.realtime = 0;
@@ -231,14 +179,24 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	strcpy (sv.name, server);
 	strcpy (sv.configstrings[CS_NAME], server);
 
+	//sv.models[0] is null model
+	sv.models[0].type = MOD_BAD;
+	strcpy(sv.models[0].name, "nomodel");
+
+	//sv.models[1] is world
+	sv.models[1].type = MOD_BRUSH;
+	sv.num_models = 2;
 	if (serverstate != ss_game)
 	{
-		sv.models[1] = CM_LoadMap ("", false, &checksum);	// no real map
+		sv.models[1].bmodel = CM_LoadMap ("", false, &checksum);	// no real map
 	}
 	else
 	{
+		//set configstring
 		Com_sprintf (sv.configstrings[CS_MODELS+1],sizeof(sv.configstrings[CS_MODELS+1]), "maps/%s.bsp", server);
-		sv.models[1] = CM_LoadMap (sv.configstrings[CS_MODELS+1], false, &checksum);
+
+		strcpy(sv.models[1].name, sv.configstrings[CS_MODELS + 1]); 
+		sv.models[1].bmodel = CM_LoadMap (sv.models[1].name, false, &checksum);
 	}
 	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
 
@@ -274,7 +232,12 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	for (i=1 ; i< CM_NumInlineModels() ; i++)
 	{
 		Com_sprintf(sv.configstrings[CS_MODELS+1+i], sizeof(sv.configstrings[CS_MODELS+1+i]), "*%i", i);
-		sv.models[i+1] = CM_InlineModel(sv.configstrings[CS_MODELS+1+i]);
+
+		sv.models[i + 1].type = MOD_BRUSH;
+		strcpy(sv.models[i+1].name, sv.configstrings[CS_MODELS + 1 + i]);
+		sv.models[i+1].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS+1+i]);
+
+		sv.num_models++;
 	}
 
 	//

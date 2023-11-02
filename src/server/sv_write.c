@@ -43,7 +43,7 @@ void SV_EmitPacketEntities (client_frame_t *from, client_frame_t *to, sizebuf_t 
 	int		from_num_entities;
 	int		bits;
 
-	MSG_WriteByte (msg, svc_packetentities);
+	MSG_WriteByte (msg, SVC_PACKET_ENTITIES);
 
 	if (!from)
 		from_num_entities = 0;
@@ -93,13 +93,13 @@ void SV_EmitPacketEntities (client_frame_t *from, client_frame_t *to, sizebuf_t 
 		{	// the old entity isn't present in the new message
 			bits = U_REMOVE;
 			if (oldnum >= 256)
-				bits |= U_NUMBER16 | U_MOREBITS1;
+				bits |= U_NUMBER_16 | U_MOREBITS1;
 
 			MSG_WriteByte (msg,	bits&255 );
 			if (bits & 0x0000ff00)
 				MSG_WriteByte (msg,	(bits>>8)&255 );
 
-			if (bits & U_NUMBER16)
+			if (bits & U_NUMBER_16)
 				MSG_WriteShort (msg, oldnum);
 			else
 				MSG_WriteByte (msg, oldnum);
@@ -218,7 +218,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	//
 	// write it
 	//
-	MSG_WriteByte (msg, svc_playerinfo);
+	MSG_WriteByte (msg, SVC_PLAYERINFO);
 	MSG_WriteShort (msg, pflags);
 
 	//
@@ -366,7 +366,7 @@ void SV_WriteFrameToClient (client_t *client, sizebuf_t *msg)
 		lastframe = client->lastframe;
 	}
 
-	MSG_WriteByte (msg, svc_frame);
+	MSG_WriteByte (msg, SVC_FRAME);
 	MSG_WriteLong (msg, sv.framenum);
 	MSG_WriteLong (msg, lastframe);	// what we are delta'ing from
 	MSG_WriteByte (msg, client->surpressCount);	// rate dropped packets
@@ -509,7 +509,7 @@ void SV_BuildClientFrame (client_t *client)
 			continue;
 
 		// ignore ents without visible models unless they have an effect
-		if (!ent->s.modelindex && !ent->s.effects && !ent->s.sound && !ent->s.event)
+		if (!ent->s.modelindex && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)
 			continue;
 
 		// ignore if not touching a PV leaf
@@ -523,7 +523,7 @@ void SV_BuildClientFrame (client_t *client)
 			}
 
 			// beams just check one point for PHS
-			if (ent->s.renderfx & RF_BEAM)
+			if (ent->s.renderFlags & RF_BEAM)
 			{
 				l = ent->clusternums[0];
 				if ( !(clientphs[l >> 3] & (1 << (l&7) )) )
@@ -533,7 +533,7 @@ void SV_BuildClientFrame (client_t *client)
 			{
 				// FIXME: if an ent has a model and a sound, but isn't
 				// in the PVS, only the PHS, clear the model
-				if (ent->s.sound)
+				if (ent->s.loopingSound)
 				{
 					bitvector = fatpvs;	//clientphs;
 				}
@@ -614,10 +614,10 @@ void SV_RecordDemoMessage (void)
 	SZ_Init (&buf, buf_data, sizeof(buf_data));
 
 	// write a frame message that doesn't contain a player_state_t
-	MSG_WriteByte (&buf, svc_frame);
+	MSG_WriteByte (&buf, SVC_FRAME);
 	MSG_WriteLong (&buf, sv.framenum);
 
-	MSG_WriteByte (&buf, svc_packetentities);
+	MSG_WriteByte (&buf, SVC_PACKET_ENTITIES);
 
 	e = 1;
 	ent = EDICT_NUM(e);
@@ -626,7 +626,7 @@ void SV_RecordDemoMessage (void)
 		// ignore ents without visible models unless they have an effect
 		if (ent->inuse &&
 			ent->s.number && 
-			(ent->s.modelindex || ent->s.effects || ent->s.sound || ent->s.event) && 
+			(ent->s.modelindex || ent->s.effects || ent->s.loopingSound || ent->s.event) && 
 			!((int)ent->v.svflags & SVF_NOCLIENT))
 			MSG_WriteDeltaEntity (&nostate, &ent->s, &buf, false, true);
 

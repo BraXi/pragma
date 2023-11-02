@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "q_shared.h"
 
-#define USE_GLFW 0
+#define USE_GLFW 1
 
 #define	BASEDIRNAME	"main" //main engine directory to load assets from, the default 'game'
 
@@ -46,6 +46,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 //============================================================================
+
+typedef enum { MOD_BAD, MOD_BRUSH, MOD_SPRITE, MOD_MD3, MOD_BXMDL } modtype_t;
+
 
 typedef struct sizebuf_s
 {
@@ -152,7 +155,13 @@ PROTOCOL
 
 // protocol.h -- communications protocols
 
-#define	PROTOCOL_VERSION	('B'+'X'+'1')
+#define PROTOCOL_REVISION 1
+#ifdef EXTENDED_ASSET_LIMITS
+	#define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION)
+#else
+	#define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION+'X')
+#endif
+
 
 //=========================================
 
@@ -177,29 +186,28 @@ PROTOCOL
 //
 enum svc_ops_e
 {
-	svc_bad,
+	SVC_BAD,
 
-	svc_muzzleflash,
-	svc_unused1,
-	svc_temp_entity,
-	svc_layout,
-	svc_inventory,
+	SVC_MUZZLEFLASH,
+	SVC_TEMP_ENTITY,
+	SVC_LAYOUT,
+	SVC_INVENTORY,
 
-	svc_nop,
-	svc_disconnect,
-	svc_reconnect,
-	svc_sound,					// <see code>
-	svc_print,					// [byte] id [string] null terminated string
-	svc_stufftext,				// [string] stuffed into client's console buffer, should be \n terminated
-	svc_serverdata,				// [long] protocol ...
-	svc_configstring,			// [short] [string]
-	svc_spawnbaseline,		
-	svc_centerprint,			// [string] to put in center of the screen
-	svc_download,				// [short] size [size bytes]
-	svc_playerinfo,				// variable
-	svc_packetentities,			// [...]
-	svc_deltapacketentities,	// [...]
-	svc_frame
+	SVC_NOP,
+	SVC_DISCONNECT,
+	SVC_RECONNECT,
+	SVC_SOUND,					// <see code>
+	SVC_PRINT,					// [byte] id [string] null terminated string
+	SVC_STUFFTEXT,				// [string] stuffed into client's console buffer, should be \n terminated
+	SVC_SERVERDATA,				// [long] protocol ...
+	SVC_CONFIGSTRING,			// [short] [string]
+	SVC_SPAWNBASELINE,		
+	SVC_CENTERPRINT,			// [string] to put in center of the screen
+	SVC_DOWNLOAD,				// [short] size [size bytes]
+	SVC_PLAYERINFO,				// variable
+	SVC_PACKET_ENTITIES,			// [...]
+	SVC_DELTA_PACKET_ENTITIES,	// [...]
+	SVC_FRAME
 };
 
 //==============================================
@@ -261,6 +269,7 @@ enum clc_ops_e
 #define	SND_POS			(1<<2)		// three coordinates
 #define	SND_ENT			(1<<3)		// a short 0-2: channel, 3-12: entity
 #define	SND_OFFSET		(1<<4)		// a byte, msec offset from frame start
+#define	SND_INDEX_16	(1<<5)		// soundnum is > 255
 
 #define DEFAULT_SOUND_PACKET_VOLUME	1.0
 #define DEFAULT_SOUND_PACKET_ATTENUATION 1.0
@@ -269,42 +278,49 @@ enum clc_ops_e
 
 // entity_state_t communication
 
+// _8 = byte
+// _16 = short
+
 // try to pack the common update flags into the first byte
-#define	U_ORIGIN1	(1<<0)
-#define	U_ORIGIN2	(1<<1)
-#define	U_ANGLE2	(1<<2)
-#define	U_ANGLE3	(1<<3)
-#define	U_FRAME8	(1<<4)		// frame is a byte
-#define	U_EVENT		(1<<5)
-#define	U_REMOVE	(1<<6)		// REMOVE this entity, don't add it
-#define	U_MOREBITS1	(1<<7)		// read one additional byte
+#define	U_ORIGIN_X			(1<<0)		// current origin
+#define	U_ORIGIN_Y			(1<<1)		// current origin
+#define	U_ANGLE_Y			(1<<2)		// current angles
+#define	U_ANGLE_Z			(1<<3)		// current angles
+#define	U_FRAME_8			(1<<4)		// anim frame is a byte
+#define	U_EVENT				(1<<5)		// byte
+#define	U_REMOVE			(1<<6)		// REMOVE this entity, don't add it
+#define	U_MOREBITS1			(1<<7)		// read one additional byte
 
 // second byte
-#define	U_NUMBER16	(1<<8)		// NUMBER8 is implicit if not set
-#define	U_ORIGIN3	(1<<9)
-#define	U_ANGLE1	(1<<10)
-#define	U_MODEL		(1<<11)
-#define U_RENDERFX8	(1<<12)		// fullbright, etc
-#define	U_EFFECTS8	(1<<14)		// autorotate, trails, etc
-#define	U_MOREBITS2	(1<<15)		// read one additional byte
+#define	U_NUMBER_16			(1<<8)		// NUMBER8 is implicit if not set
+#define	U_ORIGIN_Z			(1<<9)
+#define	U_ANGLE_X			(1<<10)
+#define	U_MODELINDEX_8		(1<<11)		// BYTE
+#define U_RENDERFLAGS_8		(1<<12)		// fullbright, etc
+#define U_MODELINDEX_16		(1<<13)		// short, when modelindex > 255
+#define	U_EFFECTS_8			(1<<14)		// effects - EF_ flags
+#define	U_MOREBITS2			(1<<15)		// read one additional byte
 
 // third byte
-#define	U_SKIN8		(1<<16)
-#define	U_FRAME16	(1<<17)		// frame is a short
-#define	U_RENDERFX16 (1<<18)	// 8 + 16 = 32
-#define	U_EFFECTS16	(1<<19)		// 8 + 16 = 32
-#define	U_MODEL2	(1<<20)		// weapons, flags, etc
-#define	U_MODEL3	(1<<21)
-#define	U_MODEL4	(1<<22)
-#define	U_MOREBITS3	(1<<23)		// read one additional byte
+#define	U_SKIN_8			(1<<16)		// TODO: index to entry in .skin file
+#define	U_FRAME_16			(1<<17)		// frame is a short
+#define	U_RENDERFLAGS_16	(1<<18)		// 8 + 16 = 32
+#define	U_EFFECTS_16		(1<<19)		// effects - EF_ flags, 8 + 16 = 32
+#define	U_MODELINDEX2_8		(1<<20)		// weapons, flags, etc
+#define	U_MODELINDEX3_8		(1<<21)
+#define	U_MODELINDEX4_8		(1<<22)
+#define	U_MOREBITS3			(1<<23)		// read one additional byte
 
 // fourth byte
-#define	U_OLDORIGIN	(1<<24)		// FIXME: get rid of this
-#define	U_SKIN16	(1<<25)
-#define	U_SOUND		(1<<26)
-#define	U_SOLID		(1<<27)
+#define	U_OLDORIGIN			(1<<24)		// id: FIXME: get rid of this, braxi: WHY?
+#define	U_SKIN_16			(1<<25)
+#define	U_LOOPSOUND			(1<<26)		// byte, index to sounds
+#define	U_PACKEDSOLID		(1<<27)
+#define	U_RENDERSCALE		(1<<28)
+#define	U_RENDERALPHA		(1<<29)
+#define	U_RENDERCOLOR		(1<<30)
 
-
+#define	U_FREE4				(1<<31)
 /*
 ==============================================================
 

@@ -204,6 +204,7 @@ void SV_CallSpawn(gentity_t* ent)
 	{
 		// worldspawn hack
 		ent->inuse = 1;
+		ent->v.modelindex[0] = 1;
 		sv.num_edicts++;
 	}
 

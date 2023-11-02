@@ -24,7 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // q_shared.h -- included first by ALL program modules
 #pragma once
 
-#define PRAGMA_VERSION "0.15"
+#define EXTENDED_ASSET_LIMITS 1
+
+#define PRAGMA_VERSION "0.17"
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
 //experimental stuff
@@ -100,8 +102,14 @@ typedef enum {false, true}	qboolean;
 #define	MAX_CLIENTS			128		// absolute limit, [braxi -- was 256]
 #define	MAX_GENTITIES		1024	// must change protocol to increase more
 #define	MAX_LIGHTSTYLES		256
-#define	MAX_MODELS			256		// these are sent over the net as bytes
-#define	MAX_SOUNDS			256		// so they cannot be blindly increased
+
+#ifdef EXTENDED_ASSET_LIMITS
+	#define	MAX_MODELS			1024	// these can be sent over the net as shorts
+	#define	MAX_SOUNDS			1024	// so theoretical limit is 23768 for each
+#else
+	#define	MAX_MODELS			256		// these are sent over the net as bytes
+	#define	MAX_SOUNDS			256		// so they cannot be higher than 255
+#endif
 #define	MAX_IMAGES			256
 #define	MAX_ITEMS			256
 #define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
@@ -176,6 +184,12 @@ typedef	int	fixed16_t;
 struct cplane_s;
 
 extern vec3_t vec3_origin;
+
+typedef struct
+{
+	vec3_t		origin;
+	vec3_t		axis[3];
+} orientation_t;
 
 #define	nanmask (255<<23)
 
@@ -350,6 +364,7 @@ CVARS (console variables)
 #define	CVAR_NOSET		8	// don't allow change from console at all,
 							// but can be set from the command line
 #define	CVAR_LATCH		16	// save changes until server restart
+#define	CVAR_CHEAT		32	// set only when cheats are enabled, unused yet
 
 // nothing outside the Cvar_*() functions should modify these fields!
 typedef struct cvar_s
@@ -627,36 +642,39 @@ typedef struct
 #define EF_TRACKERTRAIL		0x80000000
 //ROGUE
 
+// not implemented
+#define RF_NODEPTHTEST	64	// entity is not depthtested(can not be occluded by other geometry)
+
 // entity_state_t->renderfx flags
-#define	RF_MINLIGHT			1		// allways have some light (viewmodel)
+#define	RF_MINLIGHT			1		// allways have some light, never go full dark
 #define	RF_VIEWERMODEL		2		// don't draw through eyes, only mirrors
-#define	RF_WEAPONMODEL		4		// only draw through eyes
+#define	RF_VIEW_MODEL		4		// only draw through eyes
 #define	RF_FULLBRIGHT		8		// allways draw full intensity
 #define	RF_DEPTHHACK		16		// for view weapon Z crunching
-#define	RF_TRANSLUCENT		32
+#define	RF_TRANSLUCENT		32		// entity uses .renderAlpha
 #define	RF_FRAMELERP		64
 #define RF_BEAM				128
-#define	RF_CUSTOMSKIN		256		// skin is an index in image_precache
+#define	RF_COLOR			256		// entity uses .renderColor, was RF_CUSTOMSKIN
 #define	RF_GLOW				512		// pulse lighting for bonus items
 #define RF_SHELL_RED		1024
 #define	RF_SHELL_GREEN		2048
 #define RF_SHELL_BLUE		4096
+#define RF_SCALE			8192	// entity uses .renderScale for rendering
+#define RF_NOANIMLERP		16384	// animation is not lerped (software q1 style)
+#define RF_UNUSED1			32768	
 
-//ROGUE
+
+//R
 #define RF_IR_VISIBLE		0x00008000		// 32768
 #define	RF_SHELL_DOUBLE		0x00010000		// 65536
 #define	RF_SHELL_HALF_DAM	0x00020000
-#define RF_USE_DISGUISE		0x00040000
-//ROGUE
 
 // player_state_t->refdef flags
 #define	RDF_UNDERWATER		1		// warp the screen as apropriate
 #define RDF_NOWORLDMODEL	2		// used for player configuration screen
-
-//ROGUE
 #define	RDF_IRGOGGLES		4
 #define RDF_UVGOGGLES		8
-//ROGUE
+
 
 //
 // muzzle flashes / player effects
@@ -914,24 +932,32 @@ typedef enum
 
 typedef struct entity_state_s
 {
-	int		number;			// edict index
+	int			number;			// edict index
 
-	vec3_t	origin;
-	vec3_t	angles;
-	vec3_t	old_origin;		// for lerping
-	int		modelindex;
-	int		modelindex2, modelindex3, modelindex4;	// weapons, CTF flags, etc
-	int		frame;
-	int		skinnum;
-	unsigned int		effects;		// PGM - we're filling it, so it needs to be unsigned
-	int		renderfx;
-	int		solid;			// for client side prediction, 8*(bits 0-4) is x/y radius
-							// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
-							// SV_LinkEdict sets this properly
-	int		sound;			// for looping sounds, to guarantee shutoff
-	int		event;			// impulse events -- muzzle flashes, footsteps, etc
-							// events only go out for a single frame, they
-							// are automatically cleared each frame
+	vec3_t		origin;
+	vec3_t		angles;
+	vec3_t		old_origin;		// for lerping
+
+	int			modelindex;		// main model
+
+	int			modelindex2, modelindex3, modelindex4;	// attachments
+
+	int			frame;			// current animation frame
+	int			skinnum;		// for MD3 this should be index to .skin file
+
+	int			effects;		// PGM - we're filling it, so it needs to be unsigned
+	int			renderFlags;	// RF_ flags
+	float		renderScale;	// used when renderFlags & RF_SCALE 
+	vec3_t		renderColor;	// used when renderFlags & RF_COLOR
+	float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
+
+	int			loopingSound;	// for looping sounds, to guarantee shutoff
+
+	int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
+
+	int			solid;			// for client side prediction, 8*(bits 0-4) is x/y radius
+								// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
+								// SV_LinkEdict sets this properly
 } entity_state_t;
 //==============================================
 

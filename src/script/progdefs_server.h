@@ -61,19 +61,30 @@ typedef struct sv_entvars_s
 {
 	// ----------------------------------------------------
 	// these are copied to entity_state_t
-	vec3_t		origin, old_origin;
+	vec3_t		origin;
 	vec3_t		angles;
-	float		modelindex[4];	// setmodel() sets this
+	vec3_t		old_origin;		// for lerping
 
-	float		animFrame;		// current keyframe
-	float		modelTexNum;	// model's 'skin'
+	int			modelindex[4];	// models
 
-	float		effects;
-	float		renderfx;
+	int			animFrame;		// current animation frame
+	int			skinnum;		// for MD3 this should be index to .skin file
+	int			effects;		// PGM - we're filling it, so it needs to be unsigned
 
-	float		ps_solid;		// FIXME REMOVE FROM PROGS
-	float		sound;			// looping sound
-	float		event;			// EV_FOOTSTEP etc
+	int			renderFlags;	// RF_ flags
+	float		renderScale;	// used when renderFlags & RF_SCALE 
+	vec3_t		renderColor;	// used when renderFlags & RF_COLOR
+	float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
+
+	// used when renderFlags & RF_LIGHT*
+	vec3_t		lightColor;		// if RF_LIGHT_NEGATIVE, it will substract this ammount of color
+	float		lightRadius;	// in quake units
+	int			lightStyle;		// index to lightstyle (see server/ents/lights.q2c:InitLightStyles)
+
+	int			loopsound;		// index to sound from precache_sound() that will constantly loop
+	int			loopsound_att;	// sound attenuation, one of ATT_
+
+	int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 	// ----------------------------------------------------
 
 	scr_string_t	classname;	// for spawn functions 

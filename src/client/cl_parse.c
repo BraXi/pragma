@@ -26,7 +26,6 @@ char *svc_strings[256] =
 	"svc_bad",
 
 	"svc_muzzleflash",
-	"svc_muzzlflash2",
 	"svc_temp_entity",
 	"svc_layout",
 	"svc_inventory",
@@ -43,8 +42,8 @@ char *svc_strings[256] =
 	"svc_centerprint",
 	"svc_download",
 	"svc_playerinfo",
-	"svc_packetentities",
-	"svc_deltapacketentities",
+	"svc_packet_entities",
+	"svc_delta_packet_entities",
 	"svc_frame"
 };
 
@@ -61,7 +60,7 @@ void CL_RegisterSounds (void)
 
 	S_BeginRegistration ();
 	CL_RegisterTEntSounds ();
-	for (i=1 ; i<MAX_SOUNDS ; i++)
+	for (i=1 ; i<MAX_SOUNDS; i++)
 	{
 		if (!cl.configstrings[CS_SOUNDS+i][0])
 			break;
@@ -383,7 +382,11 @@ void CL_ParseStartSoundPacket(void)
 	float	ofs;
 
 	flags = MSG_ReadByte (&net_message);
-	sound_num = MSG_ReadByte (&net_message);
+
+	if (flags & SND_INDEX_16)
+		sound_num = MSG_ReadShort(&net_message);
+	else
+		sound_num = MSG_ReadByte(&net_message);
 
     if (flags & SND_VOLUME)
 		volume = MSG_ReadByte (&net_message) / 255.0;
@@ -491,15 +494,15 @@ void CL_ParseServerMessage (void)
 			Com_Error (ERR_DROP,"CL_ParseServerMessage: Illegible server message\n");
 			break;
 			
-		case svc_nop:
+		case SVC_NOP:
 //			Com_Printf ("svc_nop\n");
 			break;
 			
-		case svc_disconnect:
+		case SVC_DISCONNECT:
 			Com_Error(ERR_DISCONNECT, "Server disconnected\n");
 			break;
 
-		case svc_reconnect:
+		case SVC_RECONNECT:
 			Com_Printf ("Server disconnected, reconnecting\n");
 			if (cls.download) 
 			{
@@ -511,7 +514,7 @@ void CL_ParseServerMessage (void)
 			cls.connect_time = -99999;	// CL_CheckForResend() will fire immediately
 			break;
 
-		case svc_print:
+		case SVC_PRINT:
 			i = MSG_ReadByte (&net_message);
 			if (i == PRINT_CHAT)
 			{
@@ -522,64 +525,61 @@ void CL_ParseServerMessage (void)
 			con.ormask = 0;
 			break;
 			
-		case svc_centerprint:
+		case SVC_CENTERPRINT:
 			SCR_CenterPrint (MSG_ReadString (&net_message));
 			break;
 			
-		case svc_stufftext:
+		case SVC_STUFFTEXT:
 			s = MSG_ReadString (&net_message);
-			Com_DPrintf (DP_NET,"stufftext: %s\n", s);
+//			Com_DPrintf (DP_NET,"SVC_STUFFTEXT: %s\n", s);
 			Cbuf_AddText (s);
 			break;
 			
-		case svc_serverdata:
+		case SVC_SERVERDATA:
 			Cbuf_Execute ();		// make sure any stuffed commands are done
 			CL_ParseServerData ();
 			break;
 			
-		case svc_configstring:
+		case SVC_CONFIGSTRING:
 			CL_ParseConfigString ();
 			break;
 			
-		case svc_sound:
+		case SVC_SOUND:
 			CL_ParseStartSoundPacket();
 			break;
 			
-		case svc_spawnbaseline:
+		case SVC_SPAWNBASELINE:
 			CL_ParseBaseline ();
 			break;
 
-		case svc_temp_entity:
+		case SVC_TEMP_ENTITY:
 			CL_ParseTEnt ();
 			break;
 
-		case svc_muzzleflash:
+		case SVC_MUZZLEFLASH:
 			CL_ParseMuzzleFlash ();
 			break;
-
-		case svc_unused1: //removed svc_muzzleflash2
-			break;
-
-		case svc_download:
+\
+		case SVC_DOWNLOAD:
 			CL_ParseDownload ();
 			break;
 
-		case svc_frame:
+		case SVC_FRAME:
 			CL_ParseFrame ();
 			break;
 
-		case svc_inventory:
+		case SVC_INVENTORY:
 			CL_ParseInventory ();
 			break;
 
-		case svc_layout:
+		case SVC_LAYOUT:
 			s = MSG_ReadString (&net_message);
 			strncpy (cl.layout, s, sizeof(cl.layout)-1);
 			break;
 
-		case svc_playerinfo:
-		case svc_packetentities:
-		case svc_deltapacketentities:
+		case SVC_PLAYERINFO:
+		case SVC_PACKET_ENTITIES:
+		case SVC_DELTA_PACKET_ENTITIES:
 			Com_Error (ERR_DROP, "Out of place frame data");
 			break;
 		}

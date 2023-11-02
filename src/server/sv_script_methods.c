@@ -633,7 +633,7 @@ static void SV_Configstring(int index, char *val) //move to sv_main
 	if (sv.state != ss_loading)
 	{
 		SZ_Clear(&sv.multicast);
-		MSG_WriteChar(&sv.multicast, svc_configstring);
+		MSG_WriteChar(&sv.multicast, SVC_CONFIGSTRING);
 		MSG_WriteShort(&sv.multicast, index);
 		MSG_WriteString(&sv.multicast, val);
 		SV_Multicast(vec3_origin, MULTICAST_ALL_R); // send the update to everyone
@@ -797,7 +797,7 @@ void PFSV_stuffcmd(void)
 		return;
 	}
 
-	MSG_WriteByte(&sv.multicast, svc_stufftext);
+	MSG_WriteByte(&sv.multicast, SVC_STUFFTEXT);
 	MSG_WriteString(&sv.multicast, va("%s\n", cmd));
 
 	if(entnum == 0)
@@ -871,7 +871,7 @@ void PFSV_centerprint(void)
 		return;
 	}
 
-	MSG_WriteByte(&sv.multicast, svc_centerprint);
+	MSG_WriteByte(&sv.multicast, SVC_CENTERPRINT);
 	MSG_WriteString(&sv.multicast, msg);
 
 	if (entnum == 0)

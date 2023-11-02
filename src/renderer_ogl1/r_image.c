@@ -888,7 +888,7 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 		LoadTGA (name, &pic, &width, &height);
 		if (!pic)
 		{
-			ri.Con_Printf(PRINT_LOW, "GL_FindImage: couldn't load %s\n", name);
+//			ri.Con_Printf(PRINT_LOW, "GL_FindImage: couldn't load %s\n", name);
 			return r_notexture;
 		}
 		image = GL_LoadPic (name, pic, width, height, type, 32);

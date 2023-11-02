@@ -1261,9 +1261,9 @@ The status bar is a small layout program that
 is based on the stats array
 ================
 */
-void SCR_DrawStats(void)
+void SCR_DrawStats (void)
 {
-	SCR_ExecuteLayoutString(cl.configstrings[CS_HUD]);
+	SCR_ExecuteLayoutString (cl.configstrings[CS_HUD]);
 }
 
 

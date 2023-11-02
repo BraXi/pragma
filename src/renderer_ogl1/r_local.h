@@ -45,6 +45,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define	REF_VERSION	"0.3"
 
+
+// -- sin table --
+//#define RAD2DEG( a ) ( ( (a) * 180.0f ) / M_PI )
+#define DEG2RAD( a ) ( ( (a) * M_PI ) / 180.0F )
+
+#define FUNCTABLE_SIZE		1024
+#define FUNCTABLE_MASK		(FUNCTABLE_SIZE-1)
+// -- sin table --
+
 // up / down
 #define	PITCH	0
 
@@ -256,7 +265,6 @@ void	R_Shutdown( void );
 
 void R_RenderView (refdef_t *fd);
 void GL_ScreenShot_f (void);
-void R_DrawMD2Model (centity_t *e);
 void R_DrawBrushModel (centity_t *e);
 void R_DrawSpriteModel (centity_t *e);
 void R_DrawBeam( centity_t *e );
@@ -354,6 +362,7 @@ typedef struct
 
 	float camera_separation;
 	qboolean stereo_enabled;
+
 
 } glstate_t;
 
