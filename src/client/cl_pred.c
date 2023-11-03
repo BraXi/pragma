@@ -57,10 +57,18 @@ void CL_CheckPredictionError (void)
 		VectorCopy (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
 
 		// save for error itnerpolation
-		for (i=0 ; i<3 ; i++)
-			cl.prediction_error[i] = delta[i]*0.125;
+#if PROTOCOL_FLOAT_COORDS == 1
+		for (i = 0; i < 3; i++)
+			cl.prediction_error[i] = delta[i];
+#else
+		for (i = 0; i < 3; i++)
+			cl.prediction_error[i] = delta[i] * 0.125;
+#endif
 	}
 }
+
+
+
 
 
 /*
@@ -71,7 +79,6 @@ CL_ClipMoveToEntities
 */
 void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, trace_t *tr )
 {
-	int			i, x, zd, zu;
 	trace_t		trace;
 	int			headnode;
 	float		*angles;
@@ -79,7 +86,7 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 	int			num;
 	cmodel_t		*cmodel;
 	vec3_t		bmins, bmaxs;
-
+	int i;
 	for (i=0 ; i<cl.frame.num_entities ; i++)
 	{
 		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
@@ -91,7 +98,7 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 		if (ent->number == cl.playernum+1)
 			continue;
 
-		if (ent->solid == 31)
+		if (ent->solid == PACKED_BSP)
 		{	// special value for bmodel
 			cmodel = cl.model_clip[(int)ent->modelindex];
 			if (!cmodel)
@@ -101,14 +108,11 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 		}
 		else
 		{	// encoded bbox
-			x = 8*((int)ent->solid & 31);
-			zd = 8*(((int)ent->solid>>5) & 31);
-			zu = 8*(((int)ent->solid>>10) & 63) - 32;
-
-			bmins[0] = bmins[1] = -x;
-			bmaxs[0] = bmaxs[1] = x;
-			bmins[2] = -zd;
-			bmaxs[2] = zu;
+#if PROTOCOL_FLOAT_COORDS == 1
+			MSG_UnpackSolid32_Ver2(ent->solid, bmins, bmaxs);
+#else
+			MSG_UnpackSolid16(ent->solid, bmins, bmaxs);
+#endif
 
 			headnode = CM_HeadnodeForBox (bmins, bmaxs);
 			angles = vec3_origin;	// boxes don't rotate
@@ -260,15 +264,27 @@ void CL_PredictMovement (void)
 	step = pm.s.origin[2] - oldz;
 	if (step > 63 && step < 160 && (pm.s.pm_flags & PMF_ON_GROUND) )
 	{
+#if PROTOCOL_FLOAT_COORDS == 1
+		cl.predicted_step = step;
+#else
 		cl.predicted_step = step * 0.125;
+#endif
+		
 		cl.predicted_step_time = cls.realtime - cls.frametime * 500;
 	}
 
 
 	// copy results out for rendering
-	cl.predicted_origin[0] = pm.s.origin[0]*0.125;
-	cl.predicted_origin[1] = pm.s.origin[1]*0.125;
-	cl.predicted_origin[2] = pm.s.origin[2]*0.125;
+#if PROTOCOL_FLOAT_COORDS == 1
+	cl.predicted_origin[0] = pm.s.origin[0];
+	cl.predicted_origin[1] = pm.s.origin[1];
+	cl.predicted_origin[2] = pm.s.origin[2];
+#else
+	cl.predicted_origin[0] = pm.s.origin[0] * 0.125;
+	cl.predicted_origin[1] = pm.s.origin[1] * 0.125;
+	cl.predicted_origin[2] = pm.s.origin[2] * 0.125;
+#endif
+
 
 	VectorCopy (pm.viewangles, cl.predicted_angles);
 }

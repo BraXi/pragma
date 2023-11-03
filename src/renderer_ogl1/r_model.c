@@ -30,7 +30,7 @@ extern void Mod_LoadMD3 (model_t *mod, void *buffer, lod_t lod);
 
 byte	mod_novis[MAX_MAP_LEAFS/8];
 
-#ifdef EXTENDED_ASSET_LIMITS
+#ifdef PROTOCOL_EXTENDED_ASSETS
 	#define	MAX_MOD_KNOWN	1024
 #else
 	#define	MAX_MOD_KNOWN	512

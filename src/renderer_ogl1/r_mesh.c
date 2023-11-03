@@ -38,7 +38,7 @@ decides whenever entity is visible and should be drawn
 */
 static qboolean R_EntityShouldRender(centity_t* ent)
 {
-	vec3_t	bbox[8];
+//	vec3_t	bbox[8];
 
 	if (ent->model->type == MOD_SPRITE)
 		return true;

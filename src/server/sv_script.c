@@ -395,11 +395,19 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	// behind the body position when pushed -- "sinking into plats"
 	//
 
+#if PROTOCOL_FLOAT_COORDS == 1
+	for (i = 0; i < 3; i++)
+	{
+		ent->client->ps.pmove.origin[i] = ent->v.origin[i];
+		ent->client->ps.pmove.velocity[i] = ent->v.velocity[i];
+	}
+#else
 	for (i = 0; i < 3; i++)
 	{
 		ent->client->ps.pmove.origin[i] = ent->v.origin[i] * 8.0;
 		ent->client->ps.pmove.velocity[i] = ent->v.velocity[i] * 8.0;
 	}
+#endif
 	AngleVectors(ent->v.v_angle, forward, right, up);
 
 //	cl->ps.viewoffset[2] = 128;

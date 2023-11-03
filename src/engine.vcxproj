@@ -34,6 +34,7 @@
     <ClInclude Include="client\snd_loc.h" />
     <ClInclude Include="client\sound.h" />
     <ClInclude Include="client\vid.h" />
+    <ClInclude Include="pragma_config.h" />
     <ClInclude Include="qcommon\crc.h" />
     <ClInclude Include="qcommon\qcommon.h" />
     <ClInclude Include="qcommon\qfiles.h" />

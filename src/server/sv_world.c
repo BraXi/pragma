@@ -322,6 +322,70 @@ void SV_UnlinkEdict (gentity_t *ent)
 	ent->area.prev = ent->area.next = NULL;
 }
 
+#if PROTOCOL_FLOAT_COORDS == 1
+static int SV_PackSolid32(gentity_t* ent)
+{
+	int packedsolid;
+
+	packedsolid = MSG_PackSolid32_Ver2(ent->v.mins, ent->v.maxs);
+
+	if (packedsolid == PACKED_BSP)
+		packedsolid = 0;  // can happen in pathological case if z mins > maxs
+
+
+	if (developer->value)
+	{
+		vec3_t mins, maxs;
+
+		MSG_UnpackSolid32_Ver2(packedsolid, mins, maxs);
+
+		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
+			Com_Printf("Bad mins/maxs on entity %d\n", NUM_FOR_EDICT(ent));
+	}
+
+	return packedsolid;
+}
+#else
+static int SV_PackSolid16(gentity_t* ent)
+{
+	int packedsolid;
+	// assume that x/y are equal and symetric
+	i = ent->v.maxs[0] / 8;
+	if (i < 1)
+		i = 1;
+	if (i > 31)
+		i = 31;
+
+	// z is not symetric
+	j = (-ent->v.mins[2]) / 8;
+	if (j < 1)
+		j = 1;
+	if (j > 31)
+		j = 31;
+
+	// and z maxs can be negative...
+	k = (ent->v.maxs[2] + 32) / 8;
+	if (k < 1)
+		k = 1;
+	if (k > 63)
+		k = 63;
+
+	packedsolid = (k << 10) | (j << 5) | i;
+
+	if (developer->value)
+	{
+		vec3_t mins, maxs;
+
+		MSG_UnpackSolid32_Ver2(solid32, mins, maxs);
+
+		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
+			Com_LPrintf(PRINT_DEVELOPER, "Bad mins/maxs on entity %d: %s %s\n",
+				NUM_FOR_EDICT(ent), vtos(ent->v.mins), vtos(ent->v.maxs));
+	}
+
+	return packedsolid;
+}
+#endif
 
 /*
 ===============
@@ -336,7 +400,7 @@ void SV_LinkEdict (gentity_t *ent)
 	int			leafs[MAX_TOTAL_ENT_LEAFS];
 	int			clusters[MAX_TOTAL_ENT_LEAFS];
 	int			num_leafs;
-	int			i, j, k;
+	int			i, j;
 	int			area;
 	int			topnode;
 
@@ -351,31 +415,35 @@ void SV_LinkEdict (gentity_t *ent)
 
 	// set the size
 	VectorSubtract (ent->v.maxs, ent->v.mins, ent->v.size);
-	
+
+	// encode the size into the entity_state for client prediction
+	switch ((int)ent->v.solid)
+	{
+	case SOLID_BBOX:
+		if (((int)ent->v.svflags & SVF_DEADMONSTER) || VectorCompare(ent->v.mins, ent->v.maxs))
+		{
+			ent->s.solid = 0;
+		}
+		else
+		{
+#if PROTOCOL_FLOAT_COORDS == 1
+			ent->s.solid = SV_PackSolid32(ent);
+#else
+			ent->s.solid = SV_PackSolid16(ent);
+#endif
+		}
+		break;
+	case SOLID_BSP:
+		ent->s.solid = PACKED_BSP;      // a SOLID_BBOX will never create this value
+		break;
+	default:
+		ent->s.solid = 0;
+		break;
+	}
+
 	// encode the size into the centity_state for client prediction
 	if (ent->v.solid == SOLID_BBOX && !((int)ent->v.svflags & SVF_DEADMONSTER))
-	{	// assume that x/y are equal and symetric
-		i = ent->v.maxs[0]/8;
-		if (i<1)
-			i = 1;
-		if (i>31)
-			i = 31;
-
-		// z is not symetric
-		j = (-ent->v.mins[2])/8;
-		if (j<1)
-			j = 1;
-		if (j>31)
-			j = 31;
-
-		// and z maxs can be negative...
-		k = (ent->v.maxs[2]+32)/8;
-		if (k<1)
-			k = 1;
-		if (k>63)
-			k = 63;
-
-		ent->s.solid = (k<<10) | (j<<5) | i;
+	{	
 	}
 	else if (ent->v.solid == SOLID_BSP)
 	{

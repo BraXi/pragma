@@ -22,10 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "q_shared.h"
 
-#define USE_GLFW 1
-
-#define	BASEDIRNAME	"main" //main engine directory to load assets from, the default 'game'
-
 #ifdef _WIN32
 
 #ifndef _DEBUG
@@ -71,6 +67,48 @@ void SZ_Print (sizebuf_t *buf, char *data);	// strcats onto the sizebuf
 struct usercmd_s;
 struct entity_state_s;
 
+#if PROTOCOL_FLOAT_COORDS == 1
+static inline int MSG_PackSolid32_Ver2(const vec3_t mins, const vec3_t maxs)
+{
+	int x = maxs[0];
+	int y = maxs[1];
+	int zd = -mins[2];
+	int zu = maxs[2] + 32;
+
+	clamp(x, 1, 255);
+	clamp(y, 1, 255);
+	clamp(zd, 0, 255);
+	clamp(zu, 0, 255);
+
+	return MakeLittleLong(x, y, zd, zu);
+}
+
+static inline void MSG_UnpackSolid32_Ver2(int packedsolid, vec3_t mins, vec3_t maxs)
+{
+	int x = packedsolid & 255;
+	int y = (packedsolid >> 8) & 255;
+	int zd = (packedsolid >> 16) & 255;
+	int zu = ((packedsolid >> 24) & 255) - 32;
+
+	VectorSet(mins, -x, -y, -zd);
+	VectorSet(maxs, x, y, zu);
+}
+#else
+static inline void MSG_UnpackSolid16(int packedsolid, vec3_t bmins, vec3_t bmaxs)
+{
+	int		i, x, zd, zu;
+	// encoded bbox
+	x = 8 * ((int)packedsolid & 31);
+	zd = 8 * (((int)packedsolid >> 5) & 31);
+	zu = 8 * (((int)packedsolid >> 10) & 63) - 32;
+
+	bmins[0] = bmins[1] = -x;
+	bmaxs[0] = bmaxs[1] = x;
+	bmins[2] = -zd;
+	bmaxs[2] = zu;
+}
+#endif
+
 void MSG_WriteChar (sizebuf_t *sb, int c);
 void MSG_WriteByte (sizebuf_t *sb, int c);
 void MSG_WriteShort (sizebuf_t *sb, int c);
@@ -84,6 +122,7 @@ void MSG_WriteAngle16 (sizebuf_t *sb, float f);
 void MSG_WriteDeltaUsercmd (sizebuf_t *sb, struct usercmd_s *from, struct usercmd_s *cmd);
 void MSG_WriteDeltaEntity (struct entity_state_s *from, struct entity_state_s *to, sizebuf_t *msg, qboolean force, qboolean newentity);
 void MSG_WriteDir (sizebuf_t *sb, vec3_t vector);
+
 
 
 void	MSG_BeginReading (sizebuf_t *sb);
@@ -156,7 +195,7 @@ PROTOCOL
 // protocol.h -- communications protocols
 
 #define PROTOCOL_REVISION 1
-#ifdef EXTENDED_ASSET_LIMITS
+#ifdef PROTOCOL_EXTENDED_ASSETS
 	#define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION)
 #else
 	#define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION+'X')

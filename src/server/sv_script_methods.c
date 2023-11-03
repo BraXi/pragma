@@ -1306,8 +1306,13 @@ void PFSV_pmove(void)
 	pm.s = client->ps.pmove;
 	for (i = 0; i < 3; i++)
 	{
+#if PROTOCOL_FLOAT_COORDS == 1
+		pm.s.origin[i] = ent->v.origin[i];
+		pm.s.velocity[i] = ent->v.velocity[i];
+#else
 		pm.s.origin[i] = ent->v.origin[i] * 8;
 		pm.s.velocity[i] = ent->v.velocity[i] * 8;
+#endif
 	}
 	if (memcmp(&client->old_pmove, &pm.s, sizeof(pm.s)))
 	{
@@ -1336,8 +1341,13 @@ void PFSV_pmove(void)
 
 	for (i = 0; i < 3; i++)
 	{
+#if PROTOCOL_FLOAT_COORDS == 1
+		ent->v.origin[i] = pm.s.origin[i];
+		ent->v.velocity[i] = pm.s.velocity[i];
+#else
 		ent->v.origin[i] = pm.s.origin[i] * 0.125;
 		ent->v.velocity[i] = pm.s.velocity[i] * 0.125;
+#endif
 	}
 
 	VectorCopy(pm.mins, ent->v.mins);

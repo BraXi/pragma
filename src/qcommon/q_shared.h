@@ -24,28 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // q_shared.h -- included first by ALL program modules
 #pragma once
 
-#define EXTENDED_ASSET_LIMITS 1
-
-#define PRAGMA_VERSION "0.17"
-#define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
-
-//experimental stuff
-#define SERVER_FPS 10
-//#define SERVER_FPS 20
-//#define SERVER_FPS 40
-
-#if SERVER_FPS == 10
-	#define SV_FRAMETIME 0.1
-	#define SV_FRAMETIME_MSEC 100
-#elif SERVER_FPS == 20
-	#define SV_FRAMETIME 0.05
-	#define SV_FRAMETIME_MSEC 50
-#elif SERVER_FPS == 40
-	#define SV_FRAMETIME 0.025
-	#define SV_FRAMETIME_MSEC 25
-#else
-	#pragma error "wrong server fps"
-#endif
+#include "../pragma_config.h"
 
 #ifdef _WIN32
 // unknown pragmas are SUPPOSED to be ignored, but....
@@ -103,7 +82,7 @@ typedef enum {false, true}	qboolean;
 #define	MAX_GENTITIES		1024	// must change protocol to increase more
 #define	MAX_LIGHTSTYLES		256
 
-#ifdef EXTENDED_ASSET_LIMITS
+#ifdef PROTOCOL_EXTENDED_ASSETS
 	#define	MAX_MODELS			1024	// these can be sent over the net as shorts
 	#define	MAX_SOUNDS			1024	// so theoretical limit is 23768 for each
 #else
@@ -204,6 +183,8 @@ extern long Q_ftol( float f );
 #define Q_ftol( f ) ( long ) (f)
 #endif
 
+#define clamp(a,b,c)    ((a)<(b)?(a)=(b):(a)>(c)?(a)=(c):(a)) // Q2PRO
+
 #define DotProduct(x,y)			(x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
 #define VectorSubtract(a,b,c)	(c[0]=a[0]-b[0],c[1]=a[1]-b[1],c[2]=a[2]-b[2])
 #define VectorAdd(a,b,c)		(c[0]=a[0]+b[0],c[1]=a[1]+b[1],c[2]=a[2]+b[2])
@@ -283,6 +264,8 @@ int Q_strcasecmp (char *s1, char *s2);
 int Q_strncasecmp (char *s1, char *s2, int n);
 
 //=============================================
+
+#define MakeLittleLong(b1,b2,b3,b4) (((unsigned)(b4)<<24)|((b3)<<16)|((b2)<<8)|(b1)) // Q2PRO
 
 short	BigShort(short l);
 short	LittleShort(short l);
@@ -538,11 +521,19 @@ typedef struct
 {
 	pmtype_t	pm_type;
 
+#if PROTOCOL_FLOAT_COORDS == 1
+	vec3_t		origin;
+	vec3_t		velocity;
+
+	vec3_t		mins;
+	vec3_t		maxs;
+#else
 	short		origin[3];		// 12.3
 	short		velocity[3];	// 12.3
 
 	short		mins[3];	// 12.3
 	short		maxs[3];	// 12.3
+#endif
 
 	byte		pm_flags;		// ducked, jump_held, etc
 	byte		pm_time;		// each unit = 8 ms
@@ -551,6 +542,7 @@ typedef struct
 									// changed by spawns, rotating objects, and teleporters
 } pmove_state_t;
 
+#define PACKED_BSP 31
 
 //
 // button bits

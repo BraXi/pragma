@@ -187,7 +187,13 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 
 	// solid
 	if (bits & U_PACKEDSOLID)
-		to->solid = MSG_ReadShort (&net_message);
+	{
+#if PROTOCOL_FLOAT_COORDS == 1
+		to->solid = MSG_ReadLong(&net_message);
+#else
+		to->solid = MSG_ReadShort(&net_message);
+#endif
+	}
 }
 
 /*
@@ -411,14 +417,24 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 
 	if (flags & PS_M_ORIGIN)
 	{
+#if PROTOCOL_FLOAT_COORDS == 1
+		for (i = 0; i < 3; i++)
+			state->pmove.origin[i] = MSG_ReadFloat(&net_message);
+#else
 		for (i = 0; i < 3; i++)
 			state->pmove.origin[i] = MSG_ReadShort(&net_message);
+#endif
 	}
 
 	if (flags & PS_M_VELOCITY)
 	{
+#if PROTOCOL_FLOAT_COORDS == 1
+		for (i = 0; i < 3; i++)
+			state->pmove.velocity[i] = MSG_ReadFloat(&net_message);
+#else
 		for (i = 0; i < 3; i++)
 			state->pmove.velocity[i] = MSG_ReadShort(&net_message);
+#endif
 	}
 
 	if (flags & PS_M_TIME)
@@ -616,10 +632,17 @@ void CL_ParseFrame (void)
 		{
 			cls.state = ca_active;
 			cl.force_refdef = true;
-			cl.predicted_origin[0] = cl.frame.playerstate.pmove.origin[0]*0.125;
-			cl.predicted_origin[1] = cl.frame.playerstate.pmove.origin[1]*0.125;
-			cl.predicted_origin[2] = cl.frame.playerstate.pmove.origin[2]*0.125;
-			
+
+#if PROTOCOL_FLOAT_COORDS == 1
+			cl.predicted_origin[0] = cl.frame.playerstate.pmove.origin[0];
+			cl.predicted_origin[1] = cl.frame.playerstate.pmove.origin[1];
+			cl.predicted_origin[2] = cl.frame.playerstate.pmove.origin[2];
+#else
+			cl.predicted_origin[0] = cl.frame.playerstate.pmove.origin[0] * 0.125;
+			cl.predicted_origin[1] = cl.frame.playerstate.pmove.origin[1] * 0.125;
+			cl.predicted_origin[2] = cl.frame.playerstate.pmove.origin[2] * 0.125;
+#endif
+
 			VectorCopy (cl.frame.playerstate.viewangles, cl.predicted_angles);
 			
 			if (cls.disable_servercount != cl.servercount && cl.refresh_prepped)
@@ -1199,10 +1222,18 @@ void CL_CalcViewValues (void)
 	ops = &oldframe->playerstate;
 
 	// see if the player entity was teleported this frame
-	if ( fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256*8
-		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256*8
-		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256*8)
+#if PROTOCOL_FLOAT_COORDS == 1
+	if (fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256
+		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256
+		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256)
 		ops = ps;		// don't interpolate
+#else
+	if (fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256 * 8
+		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256 * 8
+		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256 * 8)
+		ops = ps;		// don't interpolate
+#endif
+
 
 	ent = &cl_entities[cl.playernum+1];
 	lerp = cl.lerpfrac;
@@ -1227,8 +1258,13 @@ void CL_CalcViewValues (void)
 	}
 	else
 	{	// just use interpolated values
-		for (i=0 ; i<3 ; i++)
-			cl.refdef.vieworg[i] = ops->pmove.origin[i]*0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i]*0.125 + ps->viewoffset[i] - (ops->pmove.origin[i]*0.125 + ops->viewoffset[i]) );
+#if PROTOCOL_FLOAT_COORDS == 1
+		for (i = 0; i < 3; i++)
+			cl.refdef.vieworg[i] = ops->pmove.origin[i] + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] + ps->viewoffset[i] - (ops->pmove.origin[i] + ops->viewoffset[i]));
+#else
+		for (i = 0; i < 3; i++)
+			cl.refdef.vieworg[i] = ops->pmove.origin[i] * 0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] * 0.125 + ps->viewoffset[i] - (ops->pmove.origin[i] * 0.125 + ops->viewoffset[i]));
+#endif
 	}
 
 	// if not running a demo or on a locked frame, add the local angle movement
