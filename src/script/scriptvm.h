@@ -37,29 +37,33 @@ typedef enum
 {
 	SCRVM_NONE,		// no program execution at all
 	SCRVM_SERVER,	// server
-	SCRVM_CLIENT	// client
+	SCRVM_CLIENT,	// client
+	SCRVM_MENU,
+	NUM_SCRIPT_VMS
 } scrvmtype_t;
 
 
 typedef union eval_s
 {
-	scr_string_t		string;
+	scr_string_t	string;
 	float			_float;
 	float			vector[3];
-	scr_func_t			function;
+	scr_func_t		function;
 	int				_int;
-	int				edict;
+	scr_entity_t	edict;
 } eval_t;
 
 
 // scr_main.c
 
-extern qboolean Scr_CreateScriptVM(scrvmtype_t vm);
-extern void Scr_DestroyScriptVM(scrvmtype_t vm);
-extern qboolean Scr_BindVM(scrvmtype_t vm);
+extern void Scr_CreateScriptVM(scrvmtype_t vm, int numEntities, int entitySize);
+extern void Scr_FreeScriptVM(scrvmtype_t vm);
+extern void Scr_BindVM(scrvmtype_t vm);
 extern int Scr_GetEntitySize();
-extern sv_globalvars_t* Scr_GetGlobals();
+extern void* Scr_GetEntityPtr();
+extern void* Scr_GetGlobals();
 extern int Scr_GetEntityFieldsSize();
+
 extern void Scr_Init();
 extern void Scr_Shutdown();
 
@@ -80,7 +84,6 @@ extern int Scr_SetString(char* str);
 extern char* Scr_GetString(int num);
 extern char* Scr_VarString(int first);
 
-extern int* Scr_GetGlobal(int num);
 
 extern gentity_t* Scr_GetParmEdict(unsigned int parm);
 extern float Scr_GetParmFloat(unsigned int parm);

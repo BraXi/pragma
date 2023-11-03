@@ -19,12 +19,12 @@ See the attached GNU General Public License v2 for more details.
 #include "script_internals.h"
 
 
-#define	G_INT(o)			(*(int *)&ScriptVM->globals[o])
-#define	G_EDICT(o)			((gentity_t *)((byte *)sv.edicts + *(int *)&ScriptVM->globals[o]))
-#define	G_FLOAT(o)			(ScriptVM->globals[o])
-#define	G_STRING(o)			(ScriptVM->strings + *(scr_string_t *)&ScriptVM->globals[o])
-#define	G_VECTOR(o)			(&ScriptVM->globals[o])
-#define	RETURN_EDICT(e)		(((int *)ScriptVM->globals)[OFS_RETURN] = GENT_TO_PROG(e))
+#define	G_INT(o)			(*(int *)&active_qcvm->globals[o])
+#define	G_EDICT(o)			((gentity_t *)((byte *)sv.edicts + *(int *)&active_qcvm->globals[o]))
+#define	G_FLOAT(o)			(active_qcvm->globals[o])
+#define	G_STRING(o)			(active_qcvm->strings + *(scr_string_t *)&active_qcvm->globals[o])
+#define	G_VECTOR(o)			(&active_qcvm->globals[o])
+#define	RETURN_EDICT(e)		(((int *)active_qcvm->globals)[OFS_RETURN] = GENT_TO_PROG(e))
 
 
 // unused
@@ -76,7 +76,7 @@ scr_func_t Scr_FindFunction(char* funcname)
 {
 	dfunction_t* f = NULL;
 	if (funcname && funcname != "" && (f = ScrInternal_FindFunction(funcname)) != NULL)
-		return (scr_func_t)(f - ScriptVM->functions);
+		return (scr_func_t)(f - active_qcvm->functions);
 	return -1;
 }
 
@@ -89,7 +89,7 @@ Returns string from script
 */
 char* ScrInternal_String(int str)
 {
-	return ScriptVM->strings + str;
+	return active_qcvm->strings + str;
 }
 
 /*
@@ -101,7 +101,7 @@ Returns string from script
 */
 char* Scr_GetString(int str)
 {
-	return ScriptVM->strings + str;
+	return active_qcvm->strings + str;
 }
 
 /*
@@ -113,7 +113,7 @@ Sets string in script
 */
 int Scr_SetString(char* str)
 {
-	return (int)(str - ScriptVM->strings);
+	return (int)(str - active_qcvm->strings);
 }
 
 /*
@@ -148,12 +148,6 @@ char* Scr_VarString(int first)
 		strcat(out, G_STRING(param));
 	}
 	return out;
-}
-
-#define	G_INT(o) (*(int *)&ScriptVM->globals[o])
-int* Scr_GetGlobal(int num)
-{
-	return G_INT(ScrInternal_GetParmOffset(num));
 }
 
 /*
@@ -231,7 +225,7 @@ Grabs return value from script
 */
 float Scr_RetVal()
 {
-	return ScriptVM->globals[OFS_RETURN];
+	return active_qcvm->globals[OFS_RETURN];
 }
 
 /*
@@ -267,7 +261,7 @@ Returns string to script
 */
 void Scr_ReturnString(char* str)
 {
-	G_INT(OFS_RETURN) = (str - ScriptVM->strings);
+	G_INT(OFS_RETURN) = (str - active_qcvm->strings);
 }
 
 /*

@@ -15,18 +15,18 @@ See the attached GNU General Public License v2 for more details.
 #include "../server/server.h"
 #include "script_internals.h"
 
-qcvm_t* ScriptVM = NULL;
+qcvm_t* active_qcvm = NULL;
 
 ddef_t* ScrInternal_GlobalAtOfs(int ofs);
 ddef_t* Scr_FindEntityField(char* name);
 
 void Scr_PrintServerEdict(gentity_t* ed);
 
-inline CheckScriptVM()
+static void CheckScriptVM(const char* func)
 {
 #ifdef SCRIPTVM_PARANOID
-	if (ScriptVM == NULL)
-		Com_Error(ERR_FATAL, "Script VM is NULL in %s\n", __FUNCTION__);
+	if (active_qcvm == NULL)
+		Com_Error(ERR_FATAL, "Script VM is NULL in %s\n", func);
 #endif
 }
 
@@ -42,12 +42,12 @@ eval_t* Scr_GetEntityFieldValue(gentity_t *ed, char* field)
 	int				i;
 	static int		rep = 0;
 
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 	for (i = 0; i < SCR_GEFV_CACHESIZE; i++)
 	{
-		if (!strcmp(field, ScriptVM->gefvCache[i].field))
+		if (!strcmp(field, active_qcvm->gefvCache[i].field))
 		{
-			def = ScriptVM->gefvCache[i].pcache;
+			def = active_qcvm->gefvCache[i].pcache;
 			goto Done;
 		}
 	}
@@ -55,8 +55,8 @@ eval_t* Scr_GetEntityFieldValue(gentity_t *ed, char* field)
 	def = Scr_FindEntityField(field);
 	if (strlen(field) < SCR_MAX_FIELD_LEN)
 	{
-		ScriptVM->gefvCache[rep].pcache = def;
-		strcpy(ScriptVM->gefvCache[rep].field, field);
+		active_qcvm->gefvCache[rep].pcache = def;
+		strcpy(active_qcvm->gefvCache[rep].field, field);
 		rep ^= 1;
 	}
 
@@ -85,11 +85,11 @@ void Scr_RunError(char* error, ...)
 	vsprintf(string, error, argptr);
 	va_end(argptr);
 
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
-	Scr_PrintStatement(ScriptVM->statements + ScriptVM->xstatement);
+	Scr_PrintStatement(active_qcvm->statements + active_qcvm->xstatement);
 	Scr_StackTrace();
-	ScriptVM->stackDepth = 0;
+	active_qcvm->stackDepth = 0;
 
 #ifdef _DEBUG
 	printf("%s\n", string);
@@ -106,7 +106,7 @@ Returns argc of currently entered function
 */
 int Scr_NumArgs()
 {
-	return ScriptVM->argc;
+	return active_qcvm->argc;
 }
 
 /*
@@ -120,23 +120,23 @@ int ScrInternal_EnterFunction(dfunction_t* f)
 {
 	int		i, j, c, o;
 
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
-	ScriptVM->stack[ScriptVM->stackDepth].s = ScriptVM->xstatement;
-	ScriptVM->stack[ScriptVM->stackDepth].f = ScriptVM->xfunction;
+	active_qcvm->stack[active_qcvm->stackDepth].s = active_qcvm->xstatement;
+	active_qcvm->stack[active_qcvm->stackDepth].f = active_qcvm->xfunction;
 
-	ScriptVM->stackDepth++;
-	if (ScriptVM->stackDepth >= SCR_MAX_STACK_DEPTH)
+	active_qcvm->stackDepth++;
+	if (active_qcvm->stackDepth >= SCR_MAX_STACK_DEPTH)
 		Scr_RunError("script stack overflow\n");
 
 	// save off any locals that the new function steps on
 	c = f->locals;
-	if (ScriptVM->localstack_used + c > SCR_LOCALSTACK_SIZE)
+	if (active_qcvm->localstack_used + c > SCR_LOCALSTACK_SIZE)
 		Scr_RunError("script locals stack overflow\n");
 
 	for (i = 0; i < c; i++)
-		ScriptVM->localstack[ScriptVM->localstack_used + i] = ((int*)ScriptVM->globals)[f->parm_start + i];
-	ScriptVM->localstack_used += c;
+		active_qcvm->localstack[active_qcvm->localstack_used + i] = ((int*)active_qcvm->globals)[f->parm_start + i];
+	active_qcvm->localstack_used += c;
 
 //	printf("EnterFunction: %s:%s\n", Scr_GetString(f->s_file), Scr_GetString(f->s_name));
 
@@ -146,12 +146,12 @@ int ScrInternal_EnterFunction(dfunction_t* f)
 	{
 		for (j = 0; j < f->parm_size[i]; j++)
 		{
-			((int*)ScriptVM->globals)[o] = ((int*)ScriptVM->globals)[OFS_PARM0 + i * 3 + j];
+			((int*)active_qcvm->globals)[o] = ((int*)active_qcvm->globals)[OFS_PARM0 + i * 3 + j];
 			o++;
 		}
 	}
 
-	ScriptVM->xfunction = f;
+	active_qcvm->xfunction = f;
 	return f->first_statement - 1;	// offset the s++
 }
 
@@ -164,26 +164,26 @@ int ScrInternal_LeaveFunction()
 {
 	int		i, c;
 
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
-	if (ScriptVM->stackDepth <= 0)
+	if (active_qcvm->stackDepth <= 0)
 	{
 		Scr_RunError("script stack underflow\n");
 	}
 
 	// restore locals from the stack
-	c = ScriptVM->xfunction->locals;
-	ScriptVM->localstack_used -= c;
-	if (ScriptVM->localstack_used < 0)
+	c = active_qcvm->xfunction->locals;
+	active_qcvm->localstack_used -= c;
+	if (active_qcvm->localstack_used < 0)
 		Scr_RunError("locals stack underflow\n");
 
 	for (i = 0; i < c; i++)
-		((int*)ScriptVM->globals)[ScriptVM->xfunction->parm_start + i] = ScriptVM->localstack[ScriptVM->localstack_used + i];
+		((int*)active_qcvm->globals)[active_qcvm->xfunction->parm_start + i] = active_qcvm->localstack[active_qcvm->localstack_used + i];
 
 	// up stack
-	ScriptVM->stackDepth--;
-	ScriptVM->xfunction = ScriptVM->stack[ScriptVM->stackDepth].f;
-	return ScriptVM->stack[ScriptVM->stackDepth].s;
+	active_qcvm->stackDepth--;
+	active_qcvm->xfunction = active_qcvm->stack[active_qcvm->stackDepth].f;
+	return active_qcvm->stack[active_qcvm->stackDepth].s;
 }
 
 /*
@@ -205,24 +205,25 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 	int		exitdepth;
 	eval_t* ptr;
 
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
-	ScriptVM->callFromFuncName = callFromFuncName;
-	if (!fnum || fnum >= ScriptVM->progs->numFunctions)
+	active_qcvm->callFromFuncName = callFromFuncName;
+	if (!fnum || fnum >= active_qcvm->progs->numFunctions)
 	{
-		if (ScriptVM->globals_struct->self)
-			Scr_PrintServerEdict(PROG_TO_GENT(ScriptVM->globals_struct->self));
+//#fixme
+//		if (ScriptVM->globals_struct->self)
+//			Scr_PrintServerEdict(PROG_TO_GENT(ScriptVM->globals_struct->self));
 		Scr_RunError("%s: !fnum || fnum >= QC_VM->progs->numfunctions\n", __FUNCTION__);
 		return;
 	}
 
-	f = &ScriptVM->functions[fnum];
+	f = &active_qcvm->functions[fnum];
 
-	ScriptVM->runawayCounter = SCRIPTVM_INSTRUCTIONS_LIMIT;
-	ScriptVM->traceEnabled = false;
+	active_qcvm->runawayCounter = SCRIPTVM_INSTRUCTIONS_LIMIT;
+	active_qcvm->traceEnabled = false;
 
 	// make a stack frame
-	exitdepth = ScriptVM->stackDepth;
+	exitdepth = active_qcvm->stackDepth;
 
 	s = ScrInternal_EnterFunction(f);
 
@@ -230,18 +231,18 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 	{
 		s++;	// next statement
 
-		st = &ScriptVM->statements[s];
-		a = (eval_t*)&ScriptVM->globals[st->a];
-		b = (eval_t*)&ScriptVM->globals[st->b];
-		c = (eval_t*)&ScriptVM->globals[st->c];
+		st = &active_qcvm->statements[s];
+		a = (eval_t*)&active_qcvm->globals[st->a];
+		b = (eval_t*)&active_qcvm->globals[st->b];
+		c = (eval_t*)&active_qcvm->globals[st->c];
 
-		if (!--ScriptVM->runawayCounter)
+		if (!--active_qcvm->runawayCounter)
 			Scr_RunError("runaway loop error in script function %s", ScrInternal_String(f->s_name));
 
-		ScriptVM->xfunction->profile++;
-		ScriptVM->xstatement = s;
+		active_qcvm->xfunction->profile++;
+		active_qcvm->xstatement = s;
 
-		if (ScriptVM->traceEnabled)
+		if (active_qcvm->traceEnabled)
 		{
 			Scr_PrintStatement(st);
 			int addr[] = { st->a, st->b, st->c };
@@ -558,7 +559,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			c->_float = !a->vector[0] && !a->vector[1] && !a->vector[2];
 			break;
 		case OP_NOT_S: // not string
-			c->_float = !a->string || !ScriptVM->strings[a->string];
+			c->_float = !a->string || !active_qcvm->strings[a->string];
 			break;
 		case OP_NOT_FNC: // not function
 			c->_float = !a->function;
@@ -727,11 +728,11 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_CALL6:
 		case OP_CALL7:
 		case OP_CALL8:
-			ScriptVM->argc = st->op - OP_CALL0; //sets the number of arguments a function takes
+			active_qcvm->argc = st->op - OP_CALL0; //sets the number of arguments a function takes
 			if (!a->function)
 				Scr_RunError("%s: NULL function\n", __FUNCTION__);
 
-			newf = &ScriptVM->functions[a->function];
+			newf = &active_qcvm->functions[a->function];
 
 			if (newf->first_statement < 0)
 			{	// negative statements are built in functions
@@ -747,23 +748,23 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 
 		case OP_DONE:
 		case OP_RETURN:
-			ScriptVM->globals[OFS_RETURN] = ScriptVM->globals[st->a];
-			ScriptVM->globals[OFS_RETURN + 1] = ScriptVM->globals[st->a + 1];
-			ScriptVM->globals[OFS_RETURN + 2] = ScriptVM->globals[st->a + 2];
+			active_qcvm->globals[OFS_RETURN] = active_qcvm->globals[st->a];
+			active_qcvm->globals[OFS_RETURN + 1] = active_qcvm->globals[st->a + 1];
+			active_qcvm->globals[OFS_RETURN + 2] = active_qcvm->globals[st->a + 2];
 
 			s = ScrInternal_LeaveFunction();
-			if (ScriptVM->stackDepth == exitdepth)
+			if (active_qcvm->stackDepth == exitdepth)
 				return;		// all done
 			break;
 
 		case OP_STATE:
-			ed = PROG_TO_GENT(ScriptVM->globals_struct->self);
-			ed->v.nextthink = ScriptVM->globals_struct->g_time + 0.1;
-			if (a->_float != ed->v.animFrame)
-			{
-				ed->v.animFrame = a->_float;
-			}
-			ed->v.think = b->function;
+//			ed = PROG_TO_GENT(ScriptVM->globals_struct->self);
+//			ed->v.nextthink = ScriptVM->globals_struct->g_time + 0.1;
+//			if (a->_float != ed->v.animFrame)
+//			{
+//				ed->v.animFrame = a->_float;
+//			}
+//			ed->v.think = b->function;
 			break;
 
 		default:
@@ -801,12 +802,12 @@ void Scr_PrintServerEdict(gentity_t* ed)
 		return;
 	}
 
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
 	Com_Printf("\nENTITY #%i:\n", NUM_FOR_EDICT(ed));
-	for (i = 1; i < ScriptVM->progs->numFieldDefs; i++)
+	for (i = 1; i < active_qcvm->progs->numFieldDefs; i++)
 	{
-		d = &ScriptVM->fieldDefs[i];
+		d = &active_qcvm->fieldDefs[i];
 		name = Scr_GetString(d->s_name);
 		if (name[strlen(name) - 2] == '_')
 			continue;	// skip _x, _y, _z vars

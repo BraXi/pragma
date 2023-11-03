@@ -153,43 +153,6 @@ entity find(entity start, .string field, string match);
 */
 void PFSV_find(void)
 {
-	int			entnum;
-	int			field;
-	char		*match, *val = NULL;
-	gentity_t	*ent;
-
-	entnum = NUM_FOR_EDICT(Scr_GetParmEdict(0));
-	field = (int)Scr_GetGlobal(1);
-	match = Scr_GetParmString(2);
-
-	if (!match)
-	{
-		Scr_RunError("find(): bad search string\n");
-		return;
-	}
-
-	if (entnum < 0 || entnum >= sv.max_edicts)
-	{
-		Scr_RunError("find(): entnum %i is out of range [0-%i]\n", entnum, sv.max_edicts);
-		return;
-	}
-
-	for(; entnum < sv.max_edicts; entnum++)//sv.num_edicts
-	{
-		ent = EDICT_NUM(entnum);
-		if (!ent->inuse)
-			continue;
-		Scr_RunError("find(): not implemented\n");
-	//	val = E_STRING(ent, field);
-		if (!val)
-			continue;
-
-		if (!strcmp(val, match))
-		{
-			Scr_ReturnEntity(ent);
-			return;
-		}
-	}
 	Scr_ReturnEntity(sv.edicts);
 }
 
@@ -428,7 +391,6 @@ void PFSV_trace(void)
 	float		*start, *end, *min, *max;
 	gentity_t	*ignoreEnt;
 	int			contentmask;
-	sv_globalvars_t* globals;
 
 	start = Scr_GetParmVector(0);
 	min = Scr_GetParmVector(1);
@@ -439,30 +401,29 @@ void PFSV_trace(void)
 	contentmask = Scr_GetParmInt(5);
 
 	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask);
-	globals = Scr_GetGlobals();
 
 	// set globals in progs
-	globals->trace_allsolid = trace.allsolid;
-	globals->trace_startsolid = trace.startsolid;
-	globals->trace_fraction = trace.fraction;
-	globals->trace_plane_dist = trace.plane.dist;
-	VectorCopy(trace.plane.normal, globals->trace_plane_normal);
-	VectorCopy(trace.endpos, globals->trace_endpos);
-	globals->trace_ent = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
-	globals->trace_entnum = (trace.ent == NULL ? -1 : trace.ent->s.number);
-	globals->trace_contents = trace.contents;
+	sv.script_globals->trace_allsolid = trace.allsolid;
+	sv.script_globals->trace_startsolid = trace.startsolid;
+	sv.script_globals->trace_fraction = trace.fraction;
+	sv.script_globals->trace_plane_dist = trace.plane.dist;
+	VectorCopy(trace.plane.normal, sv.script_globals->trace_plane_normal);
+	VectorCopy(trace.endpos, sv.script_globals->trace_endpos);
+	sv.script_globals->trace_ent = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
+	sv.script_globals->trace_entnum = (trace.ent == NULL ? -1 : trace.ent->s.number);
+	sv.script_globals->trace_contents = trace.contents;
 
 	if (trace.surface)
 	{
-		globals->trace_surface_name = Scr_SetString(trace.surface->name);
-		globals->trace_surface_flags = trace.surface->flags;
-		globals->trace_surface_value = trace.surface->value;
+		sv.script_globals->trace_surface_name = Scr_SetString(trace.surface->name);
+		sv.script_globals->trace_surface_flags = trace.surface->flags;
+		sv.script_globals->trace_surface_value = trace.surface->value;
 	}
 	else
 	{
-		globals->trace_surface_name = Scr_SetString("");
-		globals->trace_surface_flags = 0;
-		globals->trace_surface_value = 0;
+		sv.script_globals->trace_surface_name = Scr_SetString("");
+		sv.script_globals->trace_surface_flags = 0;
+		sv.script_globals->trace_surface_value = 0;
 	}
 }
 

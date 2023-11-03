@@ -17,8 +17,8 @@ void Scr_EntityPreThink(gentity_t* self)
 	if (!self->v.prethink)
 		return;
 
-	Scr_GetGlobals()->self = GENT_TO_PROG(self);
-	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = GENT_TO_PROG(self);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(self->v.prethink, __FUNCTION__);
 }
 
@@ -31,9 +31,10 @@ void Scr_Think(gentity_t* self)
 	}
 
 	self->v.nextthink = 0;
-	Scr_GetGlobals()->g_time = sv.gameTime;
-	Scr_GetGlobals()->self = GENT_TO_PROG(self);
-	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
+
+	sv.script_globals->g_time = sv.gameTime;
+	sv.script_globals->self = GENT_TO_PROG(self);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(self->v.think, __FUNCTION__);
 }
 
@@ -50,26 +51,22 @@ void Scr_Event_Impact(gentity_t* self, trace_t* trace)
 //SV_Physics_Pusher
 void Scr_Event_Blocked(gentity_t* self, gentity_t* other)
 {
-	sv_globalvars_t* globals;
 	if (!self->v.blocked)
 		return;
 
-	globals = Scr_GetGlobals();
-	globals->self = GENT_TO_PROG(self);
-	globals->other = GENT_TO_PROG(other);
+	sv.script_globals->self = GENT_TO_PROG(self);
+	sv.script_globals->other = GENT_TO_PROG(other);
 	Scr_Execute(self->v.blocked, __FUNCTION__);
 }
 
 void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurface_t* surf)
 {
-	sv_globalvars_t* globals;
-
 	if (!self->v.touch || self->v.solid == SOLID_NOT)
 		return;
 
-	globals = Scr_GetGlobals();
-	globals->self = GENT_TO_PROG(self);
-	globals->other = GENT_TO_PROG(other);
+	sv.script_globals = Scr_GetGlobals();
+	sv.script_globals->self = GENT_TO_PROG(self);
+	sv.script_globals->other = GENT_TO_PROG(other);
 
 	//float planeDist, vector planeNormal, float surfaceFlags
 	if (plane)
@@ -91,45 +88,36 @@ void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurfac
 
 void SV_ScriptMain()
 {
-	sv_globalvars_t* globals;	
-	globals = Scr_GetGlobals();
+	sv.script_globals->worldspawn = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = sv.script_globals->worldspawn;
+	sv.script_globals->other = sv.script_globals->worldspawn;
 
-	globals->worldspawn = GENT_TO_PROG(sv.edicts);
-	globals->self = globals->worldspawn;
-	globals->other = globals->worldspawn;
+	sv.script_globals->g_time = sv.gameTime;
+	sv.script_globals->g_frameNum = sv.gameFrame;
+	sv.script_globals->g_frameTime = SV_FRAMETIME;
 
-	globals->g_time = sv.gameTime;
-	globals->g_frameNum = sv.gameFrame;
-	globals->g_frameTime = SV_FRAMETIME;
-
-	Scr_Execute(globals->main, __FUNCTION__);
+	Scr_Execute(sv.script_globals->main, __FUNCTION__);
 }
 
 void SV_ScriptStartFrame()
 {
-	sv_globalvars_t* globals;
-	globals = Scr_GetGlobals();
-
 	// let the progs know that a new frame has started
-	globals->worldspawn = GENT_TO_PROG(sv.edicts);
-	globals->self = globals->worldspawn;
-	globals->other = globals->worldspawn;
-	globals->g_time = sv.gameTime;
-	globals->g_frameNum = sv.gameFrame;
-	globals->g_frameTime = SV_FRAMETIME;
-	Scr_Execute(globals->StartFrame, __FUNCTION__);
+	sv.script_globals->worldspawn = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = sv.script_globals->worldspawn;
+	sv.script_globals->other = sv.script_globals->worldspawn;
+	sv.script_globals->g_time = sv.gameTime;
+	sv.script_globals->g_frameNum = sv.gameFrame;
+	sv.script_globals->g_frameTime = SV_FRAMETIME;
+	Scr_Execute(sv.script_globals->StartFrame, __FUNCTION__);
 }
 
 void SV_ScriptEndFrame()
 {
-	sv_globalvars_t* globals;
-	globals = Scr_GetGlobals();
-
-	globals->worldspawn = GENT_TO_PROG(sv.edicts);
-	globals->self = globals->worldspawn;
-	globals->other = globals->worldspawn;
-	globals->g_time = sv.gameTime;
-	Scr_Execute(globals->EndFrame, __FUNCTION__);
+	sv.script_globals->worldspawn = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = sv.script_globals->worldspawn;
+	sv.script_globals->other = sv.script_globals->worldspawn;
+	sv.script_globals->g_time = sv.gameTime;
+	Scr_Execute(sv.script_globals->EndFrame, __FUNCTION__);
 }
 
 // -----------------------------------------------------------------
@@ -144,9 +132,9 @@ This will happen every level load.
 */
 void Scr_ClientBegin(gentity_t* self)
 {
-	Scr_GetGlobals()->self = GENT_TO_PROG(self);
-	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(Scr_GetGlobals()->ClientBegin, __FUNCTION__);
+	sv.script_globals->self = GENT_TO_PROG(self);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
+	Scr_Execute(sv.script_globals->ClientBegin, __FUNCTION__);
 }
 
 
@@ -182,9 +170,9 @@ qboolean Scr_ClientConnect(gentity_t* ent, char* userinfo)
 
 	ClientUserinfoChanged(ent, userinfo);
 
-	Scr_GetGlobals()->self = GENT_TO_PROG(ent);
-	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(Scr_GetGlobals()->ClientConnect, __FUNCTION__);
+	sv.script_globals->self = GENT_TO_PROG(ent);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
+	Scr_Execute(sv.script_globals->ClientConnect, __FUNCTION__);
 
 	allowed = Scr_RetVal();
 
@@ -206,11 +194,11 @@ void Scr_ClientDisconnect(gentity_t* ent)
 	if (!ent->client)
 		return;
 
-	Scr_GetGlobals()->self = GENT_TO_PROG(ent);
-	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(Scr_GetGlobals()->ClientDisconnect, __FUNCTION__);
+	sv.script_globals->self = GENT_TO_PROG(ent);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
+	Scr_Execute(sv.script_globals->ClientDisconnect, __FUNCTION__);
 
-	Scr_GetGlobals()->self = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = GENT_TO_PROG(sv.edicts);
 
 	SV_UnlinkEdict(ent);
 
@@ -257,9 +245,9 @@ void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 
 	last_ucmd = ucmd; // for pmove
 
-	Scr_GetGlobals()->g_frameNum = sv.framenum;
-	Scr_GetGlobals()->self = GENT_TO_PROG(ent);
-	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->g_frameNum = sv.framenum;
+	sv.script_globals->self = GENT_TO_PROG(ent);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 
 	Scr_AddFloat(0, ucmd->buttons);
 	Scr_AddFloat(1, ucmd->impulse);
@@ -270,7 +258,7 @@ void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 
 	// move [forwardmove, sidemove, upmove]
 	// void ClientThink(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime)
-	Scr_Execute(Scr_GetGlobals()->ClientThink, __FUNCTION__);
+	Scr_Execute(sv.script_globals->ClientThink, __FUNCTION__);
 
 //	ClientMove(ent, ucmd);
 
@@ -376,9 +364,9 @@ void ClientMove(gentity_t* ent, usercmd_t* ucmd)
 
 void Scr_ClientBeginServerFrame(gentity_t* self)
 {
-	Scr_GetGlobals()->self = GENT_TO_PROG(self);
-	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(Scr_GetGlobals()->ClientBeginServerFrame, __FUNCTION__);
+	sv.script_globals->self = GENT_TO_PROG(self);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
+	Scr_Execute(sv.script_globals->ClientBeginServerFrame, __FUNCTION__);
 }
 
 
@@ -412,9 +400,9 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 
 //	cl->ps.viewoffset[2] = 128;
 
-	Scr_GetGlobals()->self = GENT_TO_PROG(ent);
-	Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(Scr_GetGlobals()->ClientEndServerFrame, __FUNCTION__);
+	sv.script_globals->self = GENT_TO_PROG(ent);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
+	Scr_Execute(sv.script_globals->ClientEndServerFrame, __FUNCTION__);
 
 	//test
 	//	gclient_t* cl;
@@ -536,7 +524,6 @@ void Cmd_Say_f(gentity_t* ent, qboolean team, qboolean arg0)
 void ClientCommand(gentity_t* ent)
 {
 	char* cmd;
-	sv_globalvars_t* globals;
 
 	if (!ent->client)
 		return;		// not fully in game yet
@@ -554,10 +541,9 @@ void ClientCommand(gentity_t* ent)
 		return;
 	}
 
-	globals = Scr_GetGlobals();
-	globals->self = GENT_TO_PROG(ent);
-	globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(globals->ClientCommand, __FUNCTION__);
+	sv.script_globals->self = GENT_TO_PROG(ent);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
+	Scr_Execute(sv.script_globals->ClientCommand, __FUNCTION__);
 
 	if (Scr_RetVal() > 0)
 		return;

@@ -76,7 +76,7 @@ char* ED_NewString(char* string)
 }
 
 
-#define	G_INT(o)			(*(int *)&ScriptVM->globals[o])
+#define	G_INT(o)			(*(int *)&active_qcvm->globals[o])
 
 /*
 =============
@@ -100,7 +100,7 @@ qboolean ED_ParseEpair(void* base, ddef_t* key, char* s)
 	switch (key->type & ~DEF_SAVEGLOBAL)
 	{
 	case ev_string:
-		*(scr_string_t*)d = ED_NewString(s) - ScriptVM->strings;
+		*(scr_string_t*)d = ED_NewString(s) - active_qcvm->strings;
 		break;
 
 	case ev_float:

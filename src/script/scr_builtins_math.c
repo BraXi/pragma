@@ -309,7 +309,7 @@ anglevectors(vector)
 */
 void PF_anglevectors(void)
 {
-	AngleVectors(Scr_GetParmVector(0), Scr_GetGlobals()->v_forward, Scr_GetGlobals()->v_right, Scr_GetGlobals()->v_up);
+	AngleVectors(Scr_GetParmVector(0), sv.script_globals->v_forward, sv.script_globals->v_right, sv.script_globals->v_up);
 }
 
 /*

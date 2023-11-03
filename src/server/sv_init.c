@@ -135,9 +135,6 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	Com_SetServerState (sv.state);
 
 	// wipe the entire per-level structure
-	if (sv.edicts)
-		Z_Free(sv.edicts);
-
 	Z_FreeTags(TAG_SVMODELDATA);
 	memset (&sv, 0, sizeof(sv));
 
@@ -200,17 +197,15 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	}
 	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
 
-	Scr_DestroyScriptVM(SCRVM_SERVER);
-
-	if (!Scr_CreateScriptVM(SCRVM_SERVER))
-		Com_Error(ERR_DROP, "failed to initialize server scripts");
-
-	Scr_BindVM(SCRVM_SERVER); // so we can get proper entity size
+	Scr_CreateScriptVM(SCRVM_SERVER, sv_maxentities->value, (sizeof(gentity_t) - sizeof(sv_entvars_t)));
+	Scr_BindVM(SCRVM_SERVER); // so we can get proper entity size and ptrs
 
 	// initialize all entities for this game
 	sv.max_edicts = sv_maxentities->value;
-	sv.entity_size = (Scr_GetEntityFieldsSize() + sizeof(gentity_t) - sizeof(sv_entvars_t));
-	sv.edicts = Z_Malloc(sv.max_edicts * sv.entity_size);
+	sv.entity_size = Scr_GetEntitySize();
+	sv.edicts = ((gentity_t*)((byte*)Scr_GetEntityPtr()));
+
+	sv.script_globals = Scr_GetGlobals();
 
 	Com_Printf("max entities: %i\n", sv.max_edicts);
 	Com_Printf("max players: %i\n", svs.max_clients);

@@ -56,8 +56,6 @@ enum
 #include "qc_opcodes.h"
 };
 
-//char* pr_opnames[];
-
 // =============================================================
 
 #define	MAX_PARMS		8
@@ -92,10 +90,10 @@ typedef struct
 
 typedef struct
 {
-	void (*func)(void);
-	qboolean devmode;
-	pb_t execon; // client, server or both
-	char* qcstring;
+	void		(*func)(void);
+	qboolean	devmode;
+	pb_t		execon; // client, server or both
+	char*		qcstring;
 	struct builtin_t* next;
 } builtin_t;
 
@@ -135,7 +133,7 @@ typedef struct
 typedef struct
 {
 	int				s;
-	dfunction_t* f;
+	dfunction_t		*f;
 } prstack_t;
 
 
@@ -151,12 +149,16 @@ typedef struct qcvm_s
 	ddef_t			*fieldDefs;	
 	dstatement_t	*statements;
 
-	sv_globalvars_t	*globals_struct;
+//	sv_globalvars_t	*globals_struct;
+	void			*entities;
+	int				entity_size;		// size of single entity
+	int				num_entities;		// number of allocated entities
+
+	void			*globals_struct;	// sv_globalvars_t
 
 	float			*globals;
-	int				entity_size;	// size in bytes
 
-	unsigned short	crc;			// crc checksum
+	unsigned short	crc;			// crc checksum of entire progs file
 
 	gefv_cache		gefvCache[SCR_GEFV_CACHESIZE];
 
@@ -175,13 +177,20 @@ typedef struct qcvm_s
 	int				runawayCounter;	// runaway loop counter
 	int				pr_numparms;
 
-	char* callFromFuncName;			// printtrace
+	char			*callFromFuncName;			// printtrace
 }qcvm_t;
 
+typedef struct
+{
+	int vmtype;
+	const char* filename;
+	int defs_crc_checksum;
+	const char* name;
+} qcvmdef_t;
 
 extern builtin_t	*scr_builtins;
 extern int			scr_numBuiltins;
-extern qcvm_t		*ScriptVM;
+extern qcvm_t		*active_qcvm;
 
 extern char* ScrInternal_String(int str);
 extern void Scr_InitSharedBuiltins();

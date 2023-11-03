@@ -89,10 +89,10 @@ void SV_FreeEntity(gentity_t* ent)
 	if (ent != sv.edicts)
 	{
 		// dereference self and other globals in script if they're us
-		if (PROG_TO_GENT(Scr_GetGlobals()->self) == ent)
-			Scr_GetGlobals()->self = GENT_TO_PROG(sv.edicts);
-		if (PROG_TO_GENT(Scr_GetGlobals()->other) == ent)
-			Scr_GetGlobals()->other = GENT_TO_PROG(sv.edicts);
+		if (PROG_TO_GENT(sv.script_globals->self) == ent)
+			sv.script_globals->self = GENT_TO_PROG(sv.edicts);
+		if (PROG_TO_GENT(sv.script_globals->other) == ent)
+			sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	}
 
 	if(ent->inuse)
@@ -181,7 +181,6 @@ void SV_CallSpawn(gentity_t* ent)
 	gentity_t	*oldSelf, *oldOther;
 	char		*classname;
 	scr_func_t	spawnfunc;
-	sv_globalvars_t* globals;
 
 	static char spawnFuncName[64];
 	
@@ -225,15 +224,13 @@ void SV_CallSpawn(gentity_t* ent)
 		return;
 	}
 
-	globals = Scr_GetGlobals();
-
 	// backup script's 'self' and 'other'
-	oldSelf = PROG_TO_GENT(globals->self);
-	oldOther = PROG_TO_GENT(globals->other);
+	oldSelf = PROG_TO_GENT(sv.script_globals->self);
+	oldOther = PROG_TO_GENT(sv.script_globals->other);
 
 	// call spawn function
-	globals->self = GENT_TO_PROG(ent);
-	globals->other = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = GENT_TO_PROG(ent);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(spawnfunc, __FUNCTION__);
 
 	// an entity may refuse to spawn (requires coop, certain skill level, etc..)
@@ -248,8 +245,8 @@ void SV_CallSpawn(gentity_t* ent)
 //		printf("spawned %i:\"%s\" at (%i %i %i)\n",  NUM_FOR_EDICT(ent), classname, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 
 	//restore self & other
-	globals->self = GENT_TO_PROG(oldSelf);
-	globals->other = GENT_TO_PROG(oldOther);
+	sv.script_globals->self = GENT_TO_PROG(oldSelf);
+	sv.script_globals->other = GENT_TO_PROG(oldOther);
 }
 
 

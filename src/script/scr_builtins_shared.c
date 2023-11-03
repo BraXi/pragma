@@ -94,7 +94,7 @@ Resets the infinite loop check counter, to prevent an incorrect 'runaway infinit
 */
 void PF_resetrunaway(void)
 {
-	ScriptVM->runawayCounter = SCRIPTVM_INSTRUCTIONS_LIMIT;
+	active_qcvm->runawayCounter = SCRIPTVM_INSTRUCTIONS_LIMIT;
 }
 
 /*
@@ -109,7 +109,7 @@ void traceon()
 */
 void PF_traceon(void)
 {
-	ScriptVM->traceEnabled = true;
+	active_qcvm->traceEnabled = true;
 }
 
 /*
@@ -123,7 +123,7 @@ void traceoff()
 */
 void PF_traceoff(void)
 {
-	ScriptVM->traceEnabled = false;
+	active_qcvm->traceEnabled = false;
 }
 
 /*

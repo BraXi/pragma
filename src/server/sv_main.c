@@ -1065,9 +1065,6 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 		fclose (sv.demofile);
 
 	// wipe per level data
-	if (sv.edicts)
-		Z_Free(sv.edicts);
-
 	if (svs.gclients)
 		Z_Free(svs.gclients);
 

@@ -38,17 +38,6 @@ typedef struct cl_globalvars_s
 typedef struct cl_entvars_s
 {
 	// these are copied from entity_state_t
-	scr_vec_t		origin, old_origin;
-	scr_vec_t		angles;
-	float			modelindex[4];
-
-	float			animFrame;
-	float			modelTexNum;
-
-	float			effects;
-	float			renderfx;
-
-	float			ps_solid;
-	float			sound;
-	float			event;
+	scr_string_t	str;
+	float			var;
 } cl_entvars_t;

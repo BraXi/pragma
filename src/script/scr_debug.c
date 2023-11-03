@@ -39,11 +39,11 @@ char* qcvm_op_names[] = /* qc op names for debugging */
 #include "qc_opnames.h"
 };
 
-inline void CheckScriptVM()
+static void CheckScriptVM(const char *func)
 {
 #ifdef SCRIPTVM_PARANOID
-	if (ScriptVM == NULL)
-		Com_Error(ERR_FATAL, "Script VM is NULL in %s\n", __FUNCTION__);
+	if (active_qcvm == NULL)
+		Com_Error(ERR_FATAL, "Script VM is NULL in %s\n", func);
 #endif
 }
 
@@ -62,7 +62,7 @@ char* Scr_ValueString(etype_t type, eval_t* val)
 
 	type &= ~DEF_SAVEGLOBAL;
 
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
 	switch (type)
 	{
@@ -73,7 +73,7 @@ char* Scr_ValueString(etype_t type, eval_t* val)
 		//sprintf(line, "entity %i", NUM_FOR_EDICT(PROG_TO_GENT(val->edict))); // braxi -- fixme
 		break;
 	case ev_function:
-		f = ScriptVM->functions + val->function;
+		f = active_qcvm->functions + val->function;
 		sprintf(line, "%s()", ScrInternal_String(f->s_name));
 		break;
 	case ev_field:
@@ -117,7 +117,7 @@ char* Scr_UglyValueString(etype_t type, eval_t* val)
 	ddef_t* def;
 	dfunction_t* f;
 	type &= ~DEF_SAVEGLOBAL;
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 	switch (type)
 	{
 	case ev_string:
@@ -127,7 +127,7 @@ char* Scr_UglyValueString(etype_t type, eval_t* val)
 		//sprintf(line, "%i", NUM_FOR_EDICT(PROG_TO_GENT(val->edict))); // braxi -- fixme
 		break;
 	case ev_function:
-		f = ScriptVM->functions + val->function;
+		f = active_qcvm->functions + val->function;
 		sprintf(line, "%s", ScrInternal_String(f->s_name));
 		break;
 	case ev_field:
@@ -169,9 +169,9 @@ char* Scr_GlobalString(int ofs)
 	ddef_t* def;
 	void* val;
 	static char	line[128];
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
-	val = (void*)&ScriptVM->globals[ofs];
+	val = (void*)&active_qcvm->globals[ofs];
 	def = ScrInternal_GlobalAtOfs(ofs);
 	if (!def)
 		sprintf(line, "%i(???)", ofs);
@@ -194,7 +194,7 @@ char* Scr_GlobalStringNoContents(int ofs)
 	int		i;
 	ddef_t* def;
 	static char	line[128];
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
 	def = ScrInternal_GlobalAtOfs(ofs);
 	if (!def)
@@ -219,7 +219,7 @@ PR_PrintStatement
 void Scr_PrintStatement(dstatement_t* s)
 {
 	int		i;
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
 	if ((unsigned)s->op < sizeof(qcvm_op_names) / sizeof(qcvm_op_names[0]))
 	{
@@ -263,23 +263,23 @@ void Scr_StackTrace()
 	dfunction_t* f;
 	int			i;
 
-	CheckScriptVM();
+	CheckScriptVM(__FUNCTION__);
 
-	if (ScriptVM->stackDepth == 0)
+	if (active_qcvm->stackDepth == 0)
 	{
 		Com_Printf("<NO STACK>\n");
 		return;
 	}
 
-	ScriptVM->stack[ScriptVM->stackDepth].f = ScriptVM->xfunction;
-	for (i = ScriptVM->stackDepth; i >= 0; i--)
+	active_qcvm->stack[active_qcvm->stackDepth].f = active_qcvm->xfunction;
+	for (i = active_qcvm->stackDepth; i >= 0; i--)
 	{
-		f = ScriptVM->stack[i].f;
+		f = active_qcvm->stack[i].f;
 
 		if (!f)
 		{
-			if (ScriptVM->callFromFuncName != NULL)
-				Com_Printf("%i: <pragma:%s>\n", i, ScriptVM->callFromFuncName);
+			if (active_qcvm->callFromFuncName != NULL)
+				Com_Printf("%i: <pragma:%s>\n", i, active_qcvm->callFromFuncName);
 			else
 				Com_Printf("%i: <NO FUNCTION>\n", i);
 		}
