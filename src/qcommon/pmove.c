@@ -1159,10 +1159,12 @@ void PM_SnapPosition()
 	// go back to the last position if position is wrong
 	VectorCopy(pml.previous_origin, pm->s.origin);
 
+	// kex
 	//	if (G_FixStuckObject_Generic(pm->s.origin, pm->mins, pm->maxs, PM_Trace_Auto) == stuck_result_t::NO_GOOD_POSITION) {
 	//		pm->s.origin = pml.previous_origin;
 	//		return;
 	//	}
+	// kex
 }
 #endif
 #if 0

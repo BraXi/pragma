@@ -68,8 +68,9 @@ struct usercmd_s;
 struct entity_state_s;
 
 #if PROTOCOL_FLOAT_COORDS == 1
-static inline int MSG_PackSolid32_Ver2(const vec3_t mins, const vec3_t maxs)
+static inline int MSG_PackSolid32(const vec3_t mins, const vec3_t maxs)
 {
+	// Q2PRO code
 	int x = maxs[0];
 	int y = maxs[1];
 	int zd = -mins[2];
@@ -83,8 +84,9 @@ static inline int MSG_PackSolid32_Ver2(const vec3_t mins, const vec3_t maxs)
 	return MakeLittleLong(x, y, zd, zu);
 }
 
-static inline void MSG_UnpackSolid32_Ver2(int packedsolid, vec3_t mins, vec3_t maxs)
+static inline void MSG_UnpackSolid32(int packedsolid, vec3_t mins, vec3_t maxs)
 {
+	// Q2PRO code
 	int x = packedsolid & 255;
 	int y = (packedsolid >> 8) & 255;
 	int zd = (packedsolid >> 16) & 255;

@@ -109,7 +109,7 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 		else
 		{	// encoded bbox
 #if PROTOCOL_FLOAT_COORDS == 1
-			MSG_UnpackSolid32_Ver2(ent->solid, bmins, bmaxs);
+			MSG_UnpackSolid32(ent->solid, bmins, bmaxs);
 #else
 			MSG_UnpackSolid16(ent->solid, bmins, bmaxs);
 #endif

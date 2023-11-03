@@ -325,23 +325,25 @@ void SV_UnlinkEdict (gentity_t *ent)
 #if PROTOCOL_FLOAT_COORDS == 1
 static int SV_PackSolid32(gentity_t* ent)
 {
+	// Q2PRO code
 	int packedsolid;
 
-	packedsolid = MSG_PackSolid32_Ver2(ent->v.mins, ent->v.maxs);
+	packedsolid = MSG_PackSolid32(ent->v.mins, ent->v.maxs); //Q2PRO's MSG_PackSolid32_Ver2
 
 	if (packedsolid == PACKED_BSP)
 		packedsolid = 0;  // can happen in pathological case if z mins > maxs
 
-
+#ifdef _DEBUG
 	if (developer->value)
 	{
 		vec3_t mins, maxs;
 
-		MSG_UnpackSolid32_Ver2(packedsolid, mins, maxs);
+		MSG_UnpackSolid32(packedsolid, mins, maxs);// // Q2PRO's MSG_UnpackSolid32_Ver2 for those curious
 
 		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
-			Com_Printf("Bad mins/maxs on entity %d\n", NUM_FOR_EDICT(ent));
+			Com_Printf("%s: bad mins/maxs on entity %d\n", __FUNCTION__, NUM_FOR_EDICT(ent));
 	}
+#endif
 
 	return packedsolid;
 }
@@ -376,11 +378,10 @@ static int SV_PackSolid16(gentity_t* ent)
 	{
 		vec3_t mins, maxs;
 
-		MSG_UnpackSolid32_Ver2(solid32, mins, maxs);
+		MSG_UnpackSolid16(solid32, mins, maxs);
 
 		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
-			Com_LPrintf(PRINT_DEVELOPER, "Bad mins/maxs on entity %d: %s %s\n",
-				NUM_FOR_EDICT(ent), vtos(ent->v.mins), vtos(ent->v.maxs));
+			Com_Printf("%s: bad mins/maxs on entity %d\n", __FUNCTION__, NUM_FOR_EDICT(ent));
 	}
 
 	return packedsolid;
