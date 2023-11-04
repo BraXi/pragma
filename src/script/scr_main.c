@@ -21,7 +21,7 @@ qcvm_t* active_qcvm; // qcvm currently in use
 builtin_t* scr_builtins;
 int scr_numBuiltins = 0;
 
-static const qcvmdef_t vmDefs[] =
+const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 {
 	{SCRVM_NONE, NULL, 0, "none"},
 	{SCRVM_SERVER, "progs/server.dat", 32763, "game"},

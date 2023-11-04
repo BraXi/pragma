@@ -742,6 +742,16 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		case OP_STATE:
+			if (vm->progsType == SCRVM_SERVER)
+			{
+				extern void Scr_SV_OP(eval_t * a, eval_t * b, eval_t * c);
+				Scr_SV_OP(a, b, c);
+			}
+			else
+			{
+				Scr_RunError("OP_STATE not implemented for %s", vmDefs[vm->progsType].name);
+			}
+
 //			ent = PROG_TO_GENT(ScriptVM->globals_struct->self);
 //			ent->v.nextthink = ScriptVM->globals_struct->g_time + 0.1;
 //			if (a->_float != ent->v.animFrame)

@@ -8,7 +8,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 #include "../qcommon/qcommon.h"
-
+#include "script_internals.h"
 void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char* qcstring);
 
 #define scr_random()	( ( rand() & 0x7fff ) / ( (float)0x7fff ) )
@@ -307,9 +307,19 @@ Writes new values for v_forward, v_up, and v_right based on angles
 anglevectors(vector)
 ==============
 */
+extern void PFSV_AngleVectors(void);
 void PF_anglevectors(void)
 {
 //	AngleVectors(Scr_GetParmVector(0), sv.script_globals->v_forward, sv.script_globals->v_right, sv.script_globals->v_up);
+	switch (active_qcvm->progsType)
+	{
+	case SCRVM_SERVER:
+		PFSV_AngleVectors();
+		break;
+	default:
+		Scr_RunError("PF_anglevectors not implemented for this qcvm");
+		break;
+	}
 }
 
 /*

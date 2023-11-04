@@ -19,6 +19,15 @@ static void CheckEmptyString(char* s)
 
 /*
 =================
+PFSV_AngleVectors
+=================
+*/
+void PFSV_AngleVectors(void)
+{
+	AngleVectors(Scr_GetParmVector(0), sv.script_globals->v_forward, sv.script_globals->v_right, sv.script_globals->v_up);
+}
+/*
+=================
 index precache_model(string)
 =================
 */

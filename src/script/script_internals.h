@@ -193,6 +193,7 @@ typedef struct
 extern builtin_t	*scr_builtins;
 extern int			scr_numBuiltins;
 extern qcvm_t		*active_qcvm;
+extern const qcvmdef_t vmDefs[NUM_SCRIPT_VMS];
 
 extern char* ScrInternal_String(int str);
 extern void Scr_InitSharedBuiltins();
