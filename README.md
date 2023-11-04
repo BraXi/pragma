@@ -2,11 +2,10 @@
 Pragma is an highly modified and upgraded IdTech2 engine with strong focus on QC scripting and a clean base for standalone projects.
 It does not require Quake2 game data to launch.
 
-`BE WARNED. 
 
-THIS IS NOT ANOTHER SOURCE PORT AND YOU CANNOT PLAY QUAKE 2 WITH IT. 
-
-IT IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE, THAT MEANS DRASTIC CHANGES TO CODE AND APIs HAPPEN`
+> THIS IS NOT ANOTHER SOURCE PORT AND YOU CANNOT PLAY QUAKE 2 WITH IT. 
+>
+> IT IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE, THAT MEANS DRASTIC CHANGES TO CODE AND APIs HAPPEN
 
 The biggest change is the complete removal of native game code (the Q2's game library), which was replaced with QuakeC VM, that is QC programs run across all supported operating systems and are being more secure, allowing users to run various mods and not worry about any malicious code.
 
