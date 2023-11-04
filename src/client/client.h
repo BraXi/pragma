@@ -190,7 +190,8 @@ of server connections
 ==================================================================
 */
 
-typedef enum {
+typedef enum 
+{
 	ca_uninitialized,
 	ca_disconnected, 	// not talking to a server
 	ca_connecting,		// sending request packets to the server

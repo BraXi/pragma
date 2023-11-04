@@ -140,7 +140,8 @@ typedef struct
 
 typedef struct qcvm_s
 {
-	scrvmtype_t		progsType;		// SCRVM_CLIENT or SCRVM_SERVER
+	scrvmtype_t		progsType;		// SCRVM_
+	int				progsSize;
 	dprograms_t		*progs;
 
 	dfunction_t		*functions;
@@ -150,9 +151,10 @@ typedef struct qcvm_s
 	dstatement_t	*statements;
 
 //	sv_globalvars_t	*globals_struct;
-	void			*entities;
-	int				entity_size;		// size of single entity
-	int				num_entities;		// number of allocated entities
+	unsigned int	num_entities;		// number of allocated entities
+	vm_entity_t		*entities;
+	size_t			entity_size;		// size of single entity
+	size_t			offsetToEntVars;	// *ptr + ofs = ent->v
 
 	void			*globals_struct;	// sv_globalvars_t
 
@@ -194,3 +196,4 @@ extern qcvm_t		*active_qcvm;
 
 extern char* ScrInternal_String(int str);
 extern void Scr_InitSharedBuiltins();
+extern void CheckScriptVM(const char* func);

@@ -12,6 +12,17 @@ See the attached GNU General Public License v2 for more details.
 #include "server.h"
 
 
+void Scr_SV_OP(void *entPtr, eval_t *a, eval_t* b, eval_t* c)
+{
+	gentity_t *ed = PROG_TO_GENT(sv.script_globals->self);
+	ed->v.nextthink = sv.script_globals->g_time + 0.1;
+	if (a->_float != ed->v.animFrame)
+	{
+			ed->v.animFrame = a->_float;
+	}
+	ed->v.think = b->function;
+}
+
 void Scr_EntityPreThink(gentity_t* self)
 {
 	if (!self->v.prethink)

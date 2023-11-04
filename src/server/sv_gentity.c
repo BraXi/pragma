@@ -8,7 +8,12 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 // sv_gentity.c
+
 #include "server.h"
+#include "../script/script_internals.h"
+
+extern ddef_t* Scr_FindEntityField(char* name); //scr_main.c
+extern qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s); //scr_main.c
 
 /*
 =================
@@ -95,7 +100,7 @@ void SV_FreeEntity(gentity_t* ent)
 			sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	}
 
-	if(ent->inuse)
+	if(ent && ent->inuse)
 		sv.num_edicts--;
 
 //	memset(ent, 0, Scr_GetEntitySize()); // clear whole entity
@@ -251,13 +256,102 @@ void SV_CallSpawn(gentity_t* ent)
 
 
 /*
+====================
+SV_ParseEntity
+
+Parses an edict out of the given string, returning the new 
+positioned should be a properly initialized empty edict.
+Used for initial level loadand for savegames.
+====================
+*/
+char* SV_ParseEntity(char* data, gentity_t * ent)
+{
+	ddef_t* key;
+	qboolean	init;
+	char		keyname[256];
+	char* token;
+	qboolean		anglehack;
+
+	init = false;
+
+	// clear it
+	if (ent != sv.edicts)
+	{
+		memset(&ent->v, 0, Scr_GetEntityFieldsSize());
+		SV_InitEntity(ent);
+	}
+
+	// go through all the dictionary pairs
+	while (1)
+	{
+		// parse key
+		token = COM_Parse(&data);
+
+		if (token[0] == '}')
+			break;
+
+		if (!data)
+			Com_Error(ERR_DROP, "%s: EOF without closing brace\n", __FUNCTION__);
+
+		// anglehack is to allow QuakeEd to write single scalar angles
+		// and allow them to be turned into vectors. (FIXME...)
+		if (!strcmp(token, "angle"))
+		{
+			strcpy(token, "angles");
+			anglehack = true;
+		}
+		else
+			anglehack = false;
+
+		strcpy(keyname, token);
+
+		// parse value
+		token = COM_Parse(&data);
+		if (!token)
+			Com_Error(ERR_DROP, "%s: !token\n", __FUNCTION__);
+
+		if (token[0] == '}')
+			Com_Error(ERR_DROP, "%s: closing brace without data\n", __FUNCTION__);
+
+		init = true;
+
+		// skip utility coments
+		if (keyname[0] == '_')
+			continue;
+
+		key = Scr_FindEntityField(keyname);
+		if (!key)
+		{
+			Com_Printf("%s: \"%s\" is not a field\n", __FUNCTION__, keyname);
+			//			if (strncmp(keyname, "sky", 3))
+			//			{
+			//				gi.dprintf("\"%s\" is not a field\n", keyname);
+			//			}
+			continue;
+		}
+		else
+
+			if (anglehack)
+			{
+				char	temp[32];
+				strcpy(temp, token);
+				sprintf(token, "0 %s 0", temp);
+			}
+
+		if (!Scr_ParseEpair((void*)&ent->v, key, token))
+			Com_Error(ERR_DROP, "%s: parse error", __FUNCTION__);
+	}
+
+	ent->inuse = init;
+	return data;
+}
+/*
 ==============
 SpawnEntities
 
 Creates a server's entity / program execution context by parsing textual entity definitions out of an ent file.
 ==============
 */
-char* ED_ParseEdict(char* data, gentity_t* ent);
 void SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 {
 	gentity_t	*ent;
@@ -299,7 +393,7 @@ void SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 			ent = SV_SpawnEntity();
 		}
 
-		entities = ED_ParseEdict(entities, ent);
+		entities = SV_ParseEntity(entities, ent);
 		//printf("ent %s\n", Scr_GetString(ent->v.classname));
 		SV_CallSpawn(ent);
 

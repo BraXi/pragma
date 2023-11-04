@@ -101,6 +101,17 @@ extern void CL_Precache_f(void); //cl_download.c
 
 //======================================================================
 
+/*
+=====================
+Com_IsClientActive
+
+Returns true if game views should be displayed and client is fully connected to server
+=====================
+*/
+qboolean Con_IsClientActive()
+{
+	return cls.state == ca_active;
+}
 
 /*
 ====================

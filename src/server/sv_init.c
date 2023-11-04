@@ -197,7 +197,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	}
 	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
 
-	Scr_CreateScriptVM(SCRVM_SERVER, sv_maxentities->value, (sizeof(gentity_t) - sizeof(sv_entvars_t)));
+	Scr_CreateScriptVM(SCRVM_SERVER, sv_maxentities->value, (sizeof(gentity_t) - sizeof(sv_entvars_t)), offsetof(gentity_t,v));
 	Scr_BindVM(SCRVM_SERVER); // so we can get proper entity size and ptrs
 
 	// initialize all entities for this game
@@ -207,8 +207,9 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 
 	sv.script_globals = Scr_GetGlobals();
 
-	Com_Printf("max entities: %i\n", sv.max_edicts);
 	Com_Printf("max players: %i\n", svs.max_clients);
+
+	Com_Printf("\n\n", svs.max_clients);
 
 	for (i = 0; i < sv_maxclients->value; i++)
 	{

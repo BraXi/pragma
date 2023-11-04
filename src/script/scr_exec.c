@@ -10,33 +10,22 @@ See the attached GNU General Public License v2 for more details.
 
 // scr_execution.c
 
-//#include "../qcommon/qcommon.h"
-//#include "scriptvm.h"
-#include "../server/server.h"
+#include "../qcommon/qcommon.h"
 #include "script_internals.h"
 
-qcvm_t* active_qcvm = NULL;
+extern ddef_t* ScrInternal_GlobalAtOfs(int ofs);
+extern ddef_t* Scr_FindEntityField(char* name);
+extern void Scr_PrintEntityFields(vm_entity_t* ent);
 
-ddef_t* ScrInternal_GlobalAtOfs(int ofs);
-ddef_t* Scr_FindEntityField(char* name);
-
-void Scr_PrintServerEdict(gentity_t* ed);
-
-static void CheckScriptVM(const char* func)
-{
-#ifdef SCRIPTVM_PARANOID
-	if (active_qcvm == NULL)
-		Com_Error(ERR_FATAL, "Script VM is NULL in %s\n", func);
-#endif
-}
-
+//#define ENTVARSOFFSET(a) ((int*)&a->v)
+#define ENTVARSOFFSET(a) ((int*)&a[0] + active_qcvm->offsetToEntVars)
 
 /*
 ============
 Scr_GetEntityFieldValue
 ============
 */
-eval_t* Scr_GetEntityFieldValue(gentity_t *ed, char* field)
+eval_t* Scr_GetEntityFieldValue(vm_entity_t *ed, char* field)
 {
 	ddef_t* def = NULL;
 	int				i;
@@ -64,7 +53,7 @@ Done:
 	if (!def)
 		return NULL;
 
-	return (eval_t*)((char*)&ed->v + def->ofs * 4);
+	return (eval_t*)((char*)ENTVARSOFFSET(ed) + def->ofs * 4);
 }
 
 /*
@@ -127,12 +116,12 @@ int ScrInternal_EnterFunction(dfunction_t* f)
 
 	active_qcvm->stackDepth++;
 	if (active_qcvm->stackDepth >= SCR_MAX_STACK_DEPTH)
-		Scr_RunError("script stack overflow\n");
+		Scr_RunError("qcvm: stack overflow\n");
 
 	// save off any locals that the new function steps on
 	c = f->locals;
 	if (active_qcvm->localstack_used + c > SCR_LOCALSTACK_SIZE)
-		Scr_RunError("script locals stack overflow\n");
+		Scr_RunError("qcvm: locals stack overflow\n");
 
 	for (i = 0; i < c; i++)
 		active_qcvm->localstack[active_qcvm->localstack_used + i] = ((int*)active_qcvm->globals)[f->parm_start + i];
@@ -193,37 +182,41 @@ Scr_Execute
 Execute script program
 ====================
 */
+
 extern char* qcvm_op_names[];
 void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 {
-	eval_t* a, * b, * c;
-	int			s;
-	dstatement_t* st;
-	dfunction_t* f, * newf;
-	int		i;
-	gentity_t* ed;
-	int		exitdepth;
-	eval_t* ptr;
+	eval_t			*a, *b, *c, *ptr;
+	int				s, i, exitdepth;
+	dstatement_t	*st;
+	dfunction_t		*f, *newf;
+	qcvm_t			*vm;
+	vm_entity_t		*ent;
 
 	CheckScriptVM(__FUNCTION__);
+	vm = active_qcvm;
 
-	active_qcvm->callFromFuncName = callFromFuncName;
-	if (!fnum || fnum >= active_qcvm->progs->numFunctions)
+	vm->callFromFuncName = callFromFuncName;
+	if (!fnum || fnum >= vm->progs->numFunctions)
 	{
-//#fixme
-//		if (ScriptVM->globals_struct->self)
-//			Scr_PrintServerEdict(PROG_TO_GENT(ScriptVM->globals_struct->self));
-		Scr_RunError("%s: !fnum || fnum >= QC_VM->progs->numfunctions\n", __FUNCTION__);
+		if (vm->progsType == SCRVM_SERVER)
+		{
+			sv_globalvars_t *g = vm->globals_struct;
+			if (g->self)
+				Scr_PrintEntityFields(PROG_TO_ENT(g->self));
+		}
+
+		Scr_RunError("%s: incorrect function index %i\n", __FUNCTION__, fnum);
 		return;
 	}
 
-	f = &active_qcvm->functions[fnum];
+	f = &vm->functions[fnum];
 
-	active_qcvm->runawayCounter = SCRIPTVM_INSTRUCTIONS_LIMIT;
-	active_qcvm->traceEnabled = false;
+	vm->runawayCounter = SCRIPTVM_INSTRUCTIONS_LIMIT;
+	vm->traceEnabled = false;
 
 	// make a stack frame
-	exitdepth = active_qcvm->stackDepth;
+	exitdepth = vm->stackDepth;
 
 	s = ScrInternal_EnterFunction(f);
 
@@ -231,18 +224,18 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 	{
 		s++;	// next statement
 
-		st = &active_qcvm->statements[s];
-		a = (eval_t*)&active_qcvm->globals[st->a];
-		b = (eval_t*)&active_qcvm->globals[st->b];
-		c = (eval_t*)&active_qcvm->globals[st->c];
+		st = &vm->statements[s];
+		a = (eval_t*)&vm->globals[st->a];
+		b = (eval_t*)&vm->globals[st->b];
+		c = (eval_t*)&vm->globals[st->c];
 
-		if (!--active_qcvm->runawayCounter)
+		if (!--vm->runawayCounter)
 			Scr_RunError("runaway loop error in script function %s", ScrInternal_String(f->s_name));
 
-		active_qcvm->xfunction->profile++;
-		active_qcvm->xstatement = s;
+		vm->xfunction->profile++;
+		vm->xstatement = s;
 
-		if (active_qcvm->traceEnabled)
+		if (vm->traceEnabled)
 		{
 			Scr_PrintStatement(st);
 			int addr[] = { st->a, st->b, st->c };
@@ -559,13 +552,13 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			c->_float = !a->vector[0] && !a->vector[1] && !a->vector[2];
 			break;
 		case OP_NOT_S: // not string
-			c->_float = !a->string || !active_qcvm->strings[a->string];
+			c->_float = !a->string || !vm->strings[a->string];
 			break;
 		case OP_NOT_FNC: // not function
 			c->_float = !a->function;
-			break;
+			break; 
 		case OP_NOT_ENT: // not entity
-			c->_float = (PROG_TO_GENT(a->edict) == sv.edicts);
+			c->_float = (PROG_TO_ENT(a->edict) == vm->entities);
 			break;
 
 		case OP_EQ_F: // == float
@@ -638,12 +631,12 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 
 /* FTE: int store a value to a pointer */
 		case OP_STOREP_IF:
-			ptr = (eval_t*)((byte*)sv.edicts + b->_int);
+			ptr = (eval_t*)((byte*)vm->entities + b->_int);
 			ptr->_float = (float)a->_int;
 		break;
 
 		case OP_STOREP_FI:
-			ptr = (eval_t*)((byte*)sv.edicts + b->_int);
+			ptr = (eval_t*)((byte*)vm->entities + b->_int);
 			ptr->_int = (int)a->_float;
 		break;
 /*FTE end of int*/
@@ -654,27 +647,24 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_STOREP_FLD:		// integers
 		case OP_STOREP_S:
 		case OP_STOREP_FNC:		// pointers
-			ptr = (eval_t*)((byte*)sv.edicts + b->_int);
+			ptr = (eval_t*)((byte*)vm->entities + b->_int);
 			ptr->_int = a->_int;
 			break;
 		case OP_STOREP_V:
-			ptr = (eval_t*)((byte*)sv.edicts + b->_int);
+			ptr = (eval_t*)((byte*)vm->entities + b->_int);
 			ptr->vector[0] = a->vector[0];
 			ptr->vector[1] = a->vector[1];
 			ptr->vector[2] = a->vector[2];
 			break;
 
 		case OP_ADDRESS:
-			ed = PROG_TO_GENT(a->edict);
-#ifdef SCRIPTVM_PARANOID
-			NUM_FOR_EDICT(ed);		// make sure it's in range
-#endif
-			if (ed == (gentity_t*)sv.edicts && sv.state == ss_game)
+			ent = PROG_TO_ENT(a->edict);
+			if (ent == vm->entities && (vm->progsType == SCRVM_SERVER && Com_IsServerActive()))
 			{
 				Scr_StackTrace();
-				Scr_RunError("worldspawn fields are read only and script just tried to modify its field\n");
+				Scr_RunError("zero entity fields are read only\n");
 			}
-			c->_int = (byte*)((int*)&ed->v + b->_int) - (byte*)sv.edicts;
+			c->_int = (byte*)(ENTVARSOFFSET(ent) + b->_int) - (byte*)vm->entities;
 			break;
 
 		//load a field to a value
@@ -684,20 +674,14 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_LOAD_ENT:
 		case OP_LOAD_S:
 		case OP_LOAD_FNC:
-			ed = PROG_TO_GENT(a->edict);
-#ifdef SCRIPTVM_PARANOID
-			NUM_FOR_EDICT(ed);		// make sure it's in range
-#endif
-			a = (eval_t*)((int*)&ed->v + b->_int);
+			ent = PROG_TO_ENT(a->edict);
+			a = (eval_t*)(ENTVARSOFFSET(ent) + b->_int);
 			c->_int = a->_int;
 			break;
 
 		case OP_LOAD_V:
-			ed = PROG_TO_GENT(a->edict);
-#ifdef SCRIPTVM_PARANOID
-			NUM_FOR_EDICT(ed);		// make sure it's in range
-#endif
-			a = (eval_t*)((int*)&ed->v + b->_int);
+			ent = PROG_TO_ENT(a->edict);
+			a = (eval_t*)(ENTVARSOFFSET(ent) + b->_int);
 			c->vector[0] = a->vector[0];
 			c->vector[1] = a->vector[1];
 			c->vector[2] = a->vector[2];
@@ -728,11 +712,11 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_CALL6:
 		case OP_CALL7:
 		case OP_CALL8:
-			active_qcvm->argc = st->op - OP_CALL0; //sets the number of arguments a function takes
+			vm->argc = st->op - OP_CALL0; //sets the number of arguments a function takes
 			if (!a->function)
 				Scr_RunError("%s: NULL function\n", __FUNCTION__);
 
-			newf = &active_qcvm->functions[a->function];
+			newf = &vm->functions[a->function];
 
 			if (newf->first_statement < 0)
 			{	// negative statements are built in functions
@@ -748,23 +732,23 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 
 		case OP_DONE:
 		case OP_RETURN:
-			active_qcvm->globals[OFS_RETURN] = active_qcvm->globals[st->a];
-			active_qcvm->globals[OFS_RETURN + 1] = active_qcvm->globals[st->a + 1];
-			active_qcvm->globals[OFS_RETURN + 2] = active_qcvm->globals[st->a + 2];
+			vm->globals[OFS_RETURN] = vm->globals[st->a];
+			vm->globals[OFS_RETURN + 1] = vm->globals[st->a + 1];
+			vm->globals[OFS_RETURN + 2] = vm->globals[st->a + 2];
 
 			s = ScrInternal_LeaveFunction();
-			if (active_qcvm->stackDepth == exitdepth)
+			if (vm->stackDepth == exitdepth)
 				return;		// all done
 			break;
 
 		case OP_STATE:
-//			ed = PROG_TO_GENT(ScriptVM->globals_struct->self);
-//			ed->v.nextthink = ScriptVM->globals_struct->g_time + 0.1;
-//			if (a->_float != ed->v.animFrame)
+//			ent = PROG_TO_GENT(ScriptVM->globals_struct->self);
+//			ent->v.nextthink = ScriptVM->globals_struct->g_time + 0.1;
+//			if (a->_float != ent->v.animFrame)
 //			{
-//				ed->v.animFrame = a->_float;
+//				ent->v.animFrame = a->_float;
 //			}
-//			ed->v.think = b->function;
+//			ent->v.think = b->function;
 			break;
 
 		default:
@@ -780,14 +764,14 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 
 /*
 =============
-Scr_PrintServerEdict
+Scr_PrintEntityFields
 
 For debugging
 =============
 */
 static int	type_size[8] = { 1,sizeof(scr_string_t) / 4,1,3,1,1,sizeof(scr_func_t) / 4,sizeof(void*) / 4 };
 char* Scr_ValueString(etype_t type, eval_t* val);
-void Scr_PrintServerEdict(gentity_t* ed)
+void Scr_PrintEntityFields(vm_entity_t* ent)
 {
 	int		l;
 	ddef_t* d;
@@ -796,15 +780,15 @@ void Scr_PrintServerEdict(gentity_t* ed)
 	char* name;
 	int		type;
 
-	if (!ed->inuse)
-	{
-		Com_Printf("Scr_PrintServerEdict: entity not in use\n");
-		return;
-	}
+//	if (!ed->inuse)
+//	{
+//		Com_Printf("Scr_PrintEntityFields: entity not in use\n");
+//		return;
+//	}
 
 	CheckScriptVM(__FUNCTION__);
 
-	Com_Printf("\nENTITY #%i:\n", NUM_FOR_EDICT(ed));
+//	Com_Printf("\nENTITY #%i:\n", NUM_FOR_EDICT(ed));
 	for (i = 1; i < active_qcvm->progs->numFieldDefs; i++)
 	{
 		d = &active_qcvm->fieldDefs[i];
@@ -812,7 +796,7 @@ void Scr_PrintServerEdict(gentity_t* ed)
 		if (name[strlen(name) - 2] == '_')
 			continue;	// skip _x, _y, _z vars
 
-		v = (int*)((char*)&ed->v + d->ofs * 4);
+		v = (int*)((char*)ENTVARSOFFSET(ent) + d->ofs * 4);
 
 		// if the value is still all 0, skip the field
 		type = d->type & ~DEF_SAVEGLOBAL;
@@ -834,6 +818,7 @@ void Scr_PrintServerEdict(gentity_t* ed)
 
 void cmd_printedict_f(void)
 {
+#if 0
 	if (Cmd_Argc() != 2)
 	{
 		Com_Printf("usage: edict entitynum\n");
@@ -842,11 +827,13 @@ void cmd_printedict_f(void)
 	int num;
 
 	num = atoi(Cmd_Argv(1));
-	Scr_PrintServerEdict(EDICT_NUM(num));
+	Scr_PrintServerEdict(ENT_FOR_NUM(num));
+#endif
 }
 
 void cmd_printedicts_f(void)
 {
+#if 0
 	int y = 0;
 	int num;
 	gentity_t * ent;
@@ -870,6 +857,7 @@ void cmd_printedicts_f(void)
 		}	
 	}
 	Com_Printf("%i (%i) out of %i entities in use\n", sv.num_edicts,y, sv.max_edicts);
+#endif
 }
 
 

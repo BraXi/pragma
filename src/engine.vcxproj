@@ -86,7 +86,6 @@
     <ClCompile Include="qcommon\q_shared.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_debug.c" />
-    <ClCompile Include="script\scr_entity.c" />
     <ClCompile Include="script\scr_exec.c" />
     <ClCompile Include="script\scr_main.c" />
     <ClCompile Include="script\scr_builtins_shared.c" />

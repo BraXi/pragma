@@ -8,7 +8,6 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 #include "../qcommon/qcommon.h"
-#include "scriptvm.h"
 #include "script_internals.h"
 
 void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char* qcstring);

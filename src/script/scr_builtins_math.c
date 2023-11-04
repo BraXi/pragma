@@ -7,7 +7,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 See the attached GNU General Public License v2 for more details.
 */
-#include "../server/server.h"
+#include "../qcommon/qcommon.h"
 
 void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char* qcstring);
 
@@ -309,7 +309,7 @@ anglevectors(vector)
 */
 void PF_anglevectors(void)
 {
-	AngleVectors(Scr_GetParmVector(0), sv.script_globals->v_forward, sv.script_globals->v_right, sv.script_globals->v_up);
+//	AngleVectors(Scr_GetParmVector(0), sv.script_globals->v_forward, sv.script_globals->v_right, sv.script_globals->v_up);
 }
 
 /*

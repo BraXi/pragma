@@ -9,18 +9,14 @@ See the attached GNU General Public License v2 for more details.
 */
 // scr_main.c
 
-/*
-TODO:
-
-	- fix quakeworld strings
-*/
+#define PROGS_CHECK_CRC 1
 
 #include "../qcommon/qcommon.h"
-#include "scriptvm.h"
 #include "script_internals.h"
-#include "../server/sv_game.h"
+//#include "../server/sv_game.h"
 
-#define PROGS_CHECK_CRC 1
+qcvm_t* qcvm[NUM_SCRIPT_VMS];
+qcvm_t* active_qcvm; // qcvm currently in use
 
 builtin_t* scr_builtins;
 int scr_numBuiltins = 0;
@@ -33,21 +29,8 @@ static const qcvmdef_t vmDefs[] =
 	{SCRVM_MENU, "progs/menus.dat", 0, "gui"}
 };
 
-qcvm_t* qcvm[NUM_SCRIPT_VMS];
-qcvm_t* active_qcvm; // qcvm currently in use
-
-/*
-============
-CheckScriptVM
-============
-*/
-void CheckScriptVM(const char *func)
-{
-#ifdef SCRIPTVM_PARANOID
-	if (active_qcvm == NULL)
-		Com_Error(ERR_FATAL, "Script VM is NULL in %s\n", func);
-#endif
-}
+#define TAG_LEVEL 778
+#define	G_INT(o)	(*(int *)&active_qcvm->globals[o])
 
 
 static const char* Scr_VMName(scrvmtype_t vm)
@@ -82,8 +65,8 @@ ED_FieldAtOfs
 */
 ddef_t* ScrInternal_FieldAtOfs(int ofs)
 {
-	ddef_t* def;
-	int			i;
+	ddef_t	*def;
+	int		i;
 
 	CheckScriptVM(__FUNCTION__);
 	for (i = 0; i < active_qcvm->progs->numFieldDefs; i++)
@@ -102,8 +85,8 @@ Scr_FindEdictField
 */
 ddef_t* Scr_FindEntityField(char* name)
 {
-	ddef_t* def;
-	int			i;
+	ddef_t	*def;
+	int		i;
 
 	CheckScriptVM(__FUNCTION__);
 	for (i = 0; i < active_qcvm->progs->numFieldDefs; i++)
@@ -117,6 +100,112 @@ ddef_t* Scr_FindEntityField(char* name)
 	return NULL;
 }
 
+/*
+=============
+Scr_NewString
+=============
+*/
+char* Scr_NewString(char* string)
+{
+	char* newb, * new_p;
+	int		i, l;
+
+	l = strlen(string) + 1;
+
+	newb = Z_TagMalloc(l, TAG_LEVEL);
+
+	new_p = newb;
+
+	for (i = 0; i < l; i++)
+	{
+		if (string[i] == '\\' && i < l - 1)
+		{
+			i++;
+			if (string[i] == 'n')
+				*new_p++ = '\n';
+			else
+				*new_p++ = '\\';
+		}
+		else
+			*new_p++ = string[i];
+	}
+
+	return newb;
+}
+
+/*
+=============
+Scr_ParseEpair
+
+Can parse either fields or globals
+returns false if error
+=============
+*/
+qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s)
+{
+	int		i;
+	char	string[128];
+	ddef_t* def;
+	char* v, * w;
+	void* d;
+	scr_func_t func;
+
+	d = (void*)((int*)base + key->ofs);
+
+	switch (key->type & ~DEF_SAVEGLOBAL)
+	{
+	case ev_string:
+		*(scr_string_t*)d = Scr_NewString(s) - active_qcvm->strings;
+		break;
+
+	case ev_float:
+		*(float*)d = atof(s);
+		break;
+
+	case ev_vector:
+		strcpy(string, s);
+		v = string;
+		w = string;
+		for (i = 0; i < 3; i++)
+		{
+			while (*v && *v != ' ')
+				v++;
+			*v = 0;
+			((float*)d)[i] = atof(w);
+			w = v = v + 1;
+		}
+		break;
+
+	case ev_entity:
+		*(int*)d = ENT_TO_PROG(ENT_FOR_NUM(atoi(s)));
+		break;
+
+	case ev_field:
+		def = Scr_FindEntityField(s);
+		if (!def)
+		{
+			//			if (strncmp(s, "sky", 3) && strcmp(s, "fog"))
+			//				Com_DPrintf(DP_ALL, "Can't find field %s\n", s);
+			return false;
+		}
+		*(int*)d = G_INT(def->ofs);
+		break;
+
+	case ev_function:
+		func = Scr_FindFunction(s);
+		if (func == -1)
+		{
+			Com_Error(ERR_FATAL, "Can't find function %s\n", s);
+			return false;
+		}
+		*(scr_func_t*)d = func;
+		break;
+
+	default:
+		break;
+	}
+	return true;
+}
 
 /*
 ============
@@ -228,7 +317,7 @@ Scr_LoadProgs
 Loads progs .dat file, sets edict size
 ===============
 */
-void Scr_LoadProgs(qcvm_t *vm, char* prName)
+void Scr_LoadProgs(qcvm_t *vm, const char* filename)
 {
 	int		len, i;
 	byte	*raw;
@@ -240,13 +329,15 @@ void Scr_LoadProgs(qcvm_t *vm, char* prName)
 		Com_Error(ERR_FATAL, "%s: tried to load second instance of %s script\n", __FUNCTION__, Scr_VMName(vm->progsType));
 
 	// load file
-	len = FS_LoadFile(prName, (void**)&raw);
+	len = FS_LoadFile(filename, (void**)&raw);
 	if (!len || len == -1)
 	{
-		Com_Error(ERR_FATAL, "%s: couldn't load \"%s\"\n", __FUNCTION__, prName);
+		Com_Error(ERR_FATAL, "%s: couldn't load \"%s\"\n", __FUNCTION__, filename);
 		return;
 	}
 
+	vm->offsetToEntVars = 56;
+	vm->progsSize = len;
 	vm->progs = (dprograms_t*)raw;
 	active_qcvm = vm; // just in case..
 
@@ -257,9 +348,9 @@ void Scr_LoadProgs(qcvm_t *vm, char* prName)
 	if (vm->progs->version != PROG_VERSION)
 	{
 		if (vm->progs->version == 7 /*FTEQC*/)
-			Com_Printf("%s: \"%s\" is FTE version and not all opcodes are supported in pragma\n", __FUNCTION__, prName);
+			Com_Printf("%s: \"%s\" is FTE version and not all opcodes are supported in pragma\n", __FUNCTION__, filename);
 		else
-			Com_Error(ERR_FATAL, "%s: \"%s\" is wrong version %i (should be %i)\n", __FUNCTION__, prName, vm->progs->version, PROG_VERSION);
+			Com_Error(ERR_FATAL, "%s: \"%s\" is wrong version %i (should be %i)\n", __FUNCTION__, filename, vm->progs->version, PROG_VERSION);
 	}
 
 	vm->crc = CRC_Block(vm->progs, len);
@@ -267,7 +358,7 @@ void Scr_LoadProgs(qcvm_t *vm, char* prName)
 #if PROGS_CHECK_CRC == 1
 	if (vm->progs->crc != vmDefs[vm->progsType].defs_crc_checksum )
 	{
-		Com_Error(ERR_DROP, "\"%s\" has wrong defs crc = '%i' (recompile progs with up to date headers)\n", prName, vm->progs->crc);
+		Com_Error(ERR_DROP, "\"%s\" has wrong defs crc = '%i' (recompile progs with up to date headers)\n", filename, vm->progs->crc);
 		return;
 	}
 #else
@@ -324,8 +415,6 @@ void Scr_LoadProgs(qcvm_t *vm, char* prName)
 	for (i = 0; i < vm->progs->numGlobals; i++)
 		((int*)vm->globals)[i] = LittleLong(((int*)vm->globals)[i]);
 
-	Com_Printf("Loaded %s progs: \"%s\" (CRC %i, size %iK.)\n", Scr_VMName(vm->progsType), prName, vm->crc, len / 1024);
-
 #ifdef _DEBUG
 	Scr_GenerateBuiltinsDefs(NULL);
 #endif
@@ -342,34 +431,54 @@ Create script execution context
 void cmd_printedict_f(void);
 void cmd_printedicts_f(void);
 
-void Scr_CreateScriptVM(scrvmtype_t progsType, int numEntities, int entitySize)
+void Scr_CreateScriptVM(scrvmtype_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs)
 {
-	Scr_FreeScriptVM(progsType);
+	Scr_FreeScriptVM(vmType);
 //	if (qcvm[progsType] != NULL)
 //		Com_Error(ERR_FATAL, "Tried to create second instance of %s script VM\n", Scr_VMName(progsType));
 
-	qcvm[progsType] = Z_Malloc(sizeof(qcvm_t));
+	qcvm[vmType] = Z_Malloc(sizeof(qcvm_t));
 	if (qcvm == NULL)
-		Com_Error(ERR_FATAL, "Couldn't allocate %s script VM\n", Scr_VMName(progsType));
+		Com_Error(ERR_FATAL, "Couldn't allocate %s script VM\n", Scr_VMName(vmType));
 
-	active_qcvm = qcvm[progsType];
-	active_qcvm->progsType = progsType;
-	active_qcvm->num_entities = numEntities;
-	active_qcvm->entity_size = entitySize; // invaild now, will be set properly in loadprogs
+	qcvm_t* vm = qcvm[vmType];
+	vm = qcvm[vmType];
+	vm->progsType = vmType;
+
+	vm->num_entities = numEntities;
+	vm->offsetToEntVars = entvarOfs;
+	vm->entity_size = entitySize; // invaild now, will be set properly in loadprogs
 
 	// load progs from file
-	Scr_LoadProgs(active_qcvm, vmDefs[progsType].filename);
+	Scr_LoadProgs(vm, vmDefs[vmType].filename);
 
 	// allocate entities
-	active_qcvm->entities = Z_Malloc(active_qcvm->num_entities * active_qcvm->entity_size);
-	if (active_qcvm->entities == NULL)
-		Com_Error(ERR_FATAL, "Couldn't allocate entities for %s script VM\n", Scr_VMName(progsType));
+	vm->entities = (vm_entity_t*)Z_Malloc(vm->num_entities * vm->entity_size);
+	if (vm->entities == NULL)
+		Com_Error(ERR_FATAL, "Couldn't allocate entities for %s script VM\n", Scr_VMName(vmType));
 
-	if (progsType == SCRVM_SERVER)
+	// add developer comands
+	if (vmType == SCRVM_SERVER)
 	{
 		Cmd_AddCommand("edict", cmd_printedict_f);
 		Cmd_AddCommand("edicts", cmd_printedicts_f);
 	}
+
+	// print statistics
+	dprograms_t* progs = vm->progs;
+	Com_Printf("-------------------------------------\n");
+	Com_Printf("%s qcvm: '%s'\n", Scr_VMName(vm->progsType), vmDefs[vmType].filename);
+	Com_Printf("          Functions: %i\n", progs->numFunctions);
+	Com_Printf("         Statements: %i\n", progs->numStatements);
+	Com_Printf("         GlobalDefs: %i\n", progs->numGlobalDefs);
+	Com_Printf("            Globals: %i\n", progs->numGlobals);
+	Com_Printf("      Entity fields: %i\n", progs->numFieldDefs);
+	Com_Printf(" Allocated entities: %i, %i bytes\n", vm->num_entities, vm->num_entities * Scr_GetEntitySize());
+	Com_Printf("        Entity size: %i bytes\n", Scr_GetEntitySize());
+	Com_Printf("\n");
+	Com_Printf("       CRC checksum: %i\n", vm->crc);
+	Com_Printf("      Programs size: %i bytes (%iKb)\n", vm->progsSize, vm->progsSize / 1024);
+	Com_Printf("-------------------------------------\n");
 }
 
 /*

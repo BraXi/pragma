@@ -20,7 +20,7 @@ See the attached GNU General Public License v2 for more details.
 
 
 #define	G_INT(o)			(*(int *)&active_qcvm->globals[o])
-#define	G_EDICT(o)			((gentity_t *)((byte *)sv.edicts + *(int *)&active_qcvm->globals[o]))
+#define	G_EDICT(o)			((gentity_t *)((byte *)active_qcvm->entities + *(int *)&active_qcvm->globals[o]))
 #define	G_FLOAT(o)			(active_qcvm->globals[o])
 #define	G_STRING(o)			(active_qcvm->strings + *(scr_string_t *)&active_qcvm->globals[o])
 #define	G_VECTOR(o)			(&active_qcvm->globals[o])
@@ -33,7 +33,7 @@ See the attached GNU General Public License v2 for more details.
 //#define E_VECTOR(e,o)		(&((float*)&e->v)[o])
 //#define E_STRING(e,o)		(ScriptVM->strings + *(string_t *)&((float*)&e->v)[o])
 //#define E_STRING(e,o)		(Scr_GetString(*(string_t *)&((float*)&e->v)[o])) // QuakeWorld
-#define	RETURN_STRING(s) (((int *)pr_globals)[OFS_RETURN] = PR_SetString(s))
+//#define	RETURN_STRING(s) (((int *)pr_globals)[OFS_RETURN] = PR_SetString(s))
 
 
 /*
@@ -286,7 +286,7 @@ Scr_AddEntity
 Add entity to call args
 ============
 */
-void Scr_AddEntity(unsigned int parm, void* ed)
+void Scr_AddEntity(unsigned int parm, vm_entity_t* ed)
 {
 	int ofs = ScrInternal_GetParmOffset(parm);
 	G_INT(ofs) = GENT_TO_PROG(ed);

@@ -9,13 +9,15 @@ See the attached GNU General Public License v2 for more details.
 */
 #pragma once
 
-#define SCRIPTVM_INSTRUCTIONS_LIMIT 100000	// number of instructions a single program can execute before it throws infinite loop error
+#define SCRIPTVM_INSTRUCTIONS_LIMIT 500000	// number of instructions a single program can execute before it throws infinite loop error
 #define SCRIPTVM_MAXBUILTINS		96		// maximum number of builtins FIXME -- get rid if this
 
 #ifdef _DEBUG
 	#define SCRIPTVM_PARANOID	1			// paranoia is a lifestyle, enable checks which shouldn't be in RELEASE
 #endif
 
+
+typedef byte vm_entity_t;
 
 // FIXME -- move server and client stuff out of here
 typedef struct gentity_s gentity_t;
@@ -56,9 +58,9 @@ typedef union eval_s
 
 // scr_main.c
 
-extern void Scr_CreateScriptVM(scrvmtype_t vm, int numEntities, int entitySize);
-extern void Scr_FreeScriptVM(scrvmtype_t vm);
-extern void Scr_BindVM(scrvmtype_t vm);
+extern void Scr_CreateScriptVM(scrvmtype_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs);
+extern void Scr_FreeScriptVM(scrvmtype_t vmType);
+extern void Scr_BindVM(scrvmtype_t vmType);
 extern int Scr_GetEntitySize();
 extern void* Scr_GetEntityPtr();
 extern void* Scr_GetGlobals();
@@ -74,7 +76,7 @@ void Scr_StackTrace();
 extern void Scr_RunError(char* error, ...);
 extern void Scr_Execute(scr_func_t fnum, char* callFromFuncName);
 extern int Scr_NumArgs();
-extern eval_t* Scr_GetEntityFieldValue(gentity_t* ed, char* field); // FIXME 
+extern eval_t* Scr_GetEntityFieldValue(vm_entity_t* ed, char* field); // FIXME 
 
 
 // scr_utils.c
@@ -98,12 +100,15 @@ extern void Scr_ReturnFloat(float val);
 extern void Scr_ReturnString(char* str);
 extern void Scr_ReturnVector(float* val);
 
-extern void Scr_AddEntity(unsigned int parm, void* ed);
+extern void Scr_AddEntity(unsigned int parm, vm_entity_t* ed);
 extern void Scr_AddFloat(unsigned int parm, float val);
 extern void Scr_AddString(unsigned int parm, char* str);
 extern void Scr_AddVector(unsigned int parm, float* vec);
 
 
+#define	ENT_TO_PROG(e) ((vm_entity_t *)e - (vm_entity_t *)Scr_GetEntityPtr())
+#define ENT_FOR_NUM(n) (((vm_entity_t*)Scr_GetEntityPtr() + Scr_GetEntitySize()*(n)))
+#define PROG_TO_ENT(e) (((vm_entity_t*)Scr_GetEntityPtr() + e))
 
 #if 0
 #define	GENT_TO_PROG(e) ((byte *)e - (byte *)sv.edicts)

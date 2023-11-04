@@ -94,6 +94,18 @@ void ShowServerStats(int x, int y)
 
 /*
 =====================
+Com_IsServerActive
+
+Returns true if server has loaded map and is fully active
+=====================
+*/
+qboolean Com_IsServerActive()
+{
+// return (sv.state >= ss_game);
+	return (sv.state == ss_game);
+}
+/*
+=====================
 SV_DropClient
 
 Called when the player is totally leaving the server, either willingly or unwillingly.  

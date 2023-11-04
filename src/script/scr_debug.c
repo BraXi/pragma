@@ -11,9 +11,7 @@ See the attached GNU General Public License v2 for more details.
 // scr_debug.c
 
 #include "../qcommon/qcommon.h"
-#include "scriptvm.h"
 #include "script_internals.h"
-#include "../server/sv_game.h"
 
 
 static int type_size[9] = 
@@ -39,7 +37,15 @@ char* qcvm_op_names[] = /* qc op names for debugging */
 #include "qc_opnames.h"
 };
 
-static void CheckScriptVM(const char *func)
+
+/*
+============
+CheckScriptVM
+
+for debugging
+=============
+*/
+void CheckScriptVM(const char *func)
 {
 #ifdef SCRIPTVM_PARANOID
 	if (active_qcvm == NULL)
