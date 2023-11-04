@@ -1,11 +1,16 @@
 # pragma
-Pragma is an custom Quake2 derived engine with strong focus on QC scripting and to serve as a clean base for stand alone projects, due to heavy redesign it is not compatible with vanilla Q2, and by design _it will not run Q2 game_. It's completly standalone, meaning you don't need Quake2 files to get started.
+Pragma is an highly modified and upgraded IdTech2 engine with strong focus on QC scripting and a clean base for standalone projects.
+It does not require Quake2 game data to launch.
 
-`BE WARNED. THIS IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE AND WILL CHANGE DRASTICALLY FROM TIME TO TIME. I DO NOT GUARANTEE THAT VERSION B WILL BE COMPATIBLE WITH VERSION A, KEEPING COMPATIBILITY IS NOT MANDATORY YET`
+`BE WARNED. 
 
-The most drastical change is the complete removal of game dll (the Q2's C modding API), which was replaced with QuakeC virtual machine, compiled 'progs' will run across all supported operating systems and are being overall more secure, allowing users to run various mods and not worry about any malicious code. While QC is not as fast and convinient as native C, it allows for easier iterations and faster development of a project, while also being easier to enter and understand.
+THIS IS NOT ANOTHER SOURCE PORT AND YOU CANNOT PLAY QUAKE 2 WITH IT. 
 
-The second (in progress), yet very important change is the implementation of client game module, which introduces client-side QC scripting that will allow mods to implement new effects, menus, prediction, etc - untill now this could only be done by shipping custom builds of client EXE and is totally not the right way for mods
+IT IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE, THAT MEANS DRASTIC CHANGES TO CODE AND APIs HAPPEN`
+
+The biggest change is the complete removal of native game code (the Q2's game library), which was replaced with QuakeC VM, that is QC programs run across all supported operating systems and are being more secure, allowing users to run various mods and not worry about any malicious code.
+
+The second, yet very important change is the implementation of client game module, which introduces client-side QC scripting that allows mods to implement new effects, menus, player physics and much more beyond what could be changed in Q2 mods.
 
 Project has a simple rule - *no bloat*, all the changes and additions should not add unnecessary complexity, no plethora of fileformats and very limited dependencies to the code, the smaller the code is, the better.
 
@@ -13,9 +18,9 @@ Project has a simple rule - *no bloat*, all the changes and additions should not
 (* means the initial work has been done but its not usable in current form or incomplete, ** feature will be removed completly, *** feature will be implemented or needs to be reimplemented because current implementation is bad)
 | Feature            | pragma | idTech2 (Q2) |
 |----------------|--------|--------------|
-| Server game | QuakeC progs file | Native library |
-| Client game | QuakeC progs file* (partialy in cgame.dll**) | Hardcoded in engine |
-| GUI (menus, hud)| QuakeC progs file* (currently in cgame.dll**) | Hardcoded in engine |
+| Server game | SVQuakeC progs | Native library |
+| Client game | CLQuakeC progs | Hardcoded in engine |
+| GUI (menus, hud)| MenuQuakeC progs | Hardcoded in engine |
 | Pmove | Full editable by mods (QC)*** | Hardcoded in engine |
 | Renderers | OpenGL 2.1 with shaders* | OpenGL 1.1, Software |
 | Color palette | RGBA | colormap.pcx dependant (256 colors)|
@@ -32,64 +37,54 @@ Project has a simple rule - *no bloat*, all the changes and additions should not
 
 
 ## Features:
-Pragma so far had introduced following additions and changes to Q2 engine, note that `experimental` features may be implemented partialy or currently not in this repo:
-- completly platform independant QuakeC Virtual Machine
+Pragma so far had introduced following additions and changes to Q2 engine:
+- completly platform independant QuakeC Virtual Machine instead of native game library
 - It's completly standalone, does not require Quake2 assets
-- server-side and (soon) client-side QC
-- MD3 model format
-- fixed many typos in code and corrected error messages to be more understandable and explainatory
-- has no software renderer and OpenGL 1.x is currently the one and only
-- game library C API has been removed completly
+- server-side, client-side and menu QC
+- MD3 models
+- updated OpenGL renderer with multitexture and (soon) glsl shaders
 - complete removal of color palette and 8bit textures in favour of TGA format that supports full RGBA
-- multitexture support and lots of crusty code removal in GL 1.4 renderer
 - small minor bugfixes, but a few galaxies away from being as stable as Yamagi Quake II or any other mature source port (pragma is based on original Q2 source release, remember)
 - removed obscure CDAudio and IPX code
 - its super simple even for newbies - all you need is a text editor and FTEQCC compiler to create your first mod
-- [experimental] new UI (HUD/MENU) system that is fully editable by mods, lightweight and scalable to all resolutions
-- [experimental] player movement (pmove) is fully editable in mods - unlike other Q2 engines that require client EXE to be recompiled
-
 
 In vanilla Q2 anytime you changed something in game.dll the code needed to be compiled and quake2 restarted (which took some time), in pragma you can recompile scripts on the fly and your changes will be present when you reload a map
 
 
 ## Other notable planned changes:
-- removal of MD2 models in favour of MD3
 - support for BSPs with increased limits, lightgrids, vertexnormals and lightmapped turb (liquid) surfaces
 - linux & dedicated server support
 - modern renderer (Vulkan or OGL4+)
 - rewrite of net parsing of certain packets like ``svc_muzzleflash`` and ``svc_temp_entity``, parsing being a lot more versatile and engine less likely crash when something unexpected happens or when server asks for something client doesn't have
-- implementation of client game progs allowing for custom made effects, client-side entities (decorations, static models, etc), menus, pmove prediction and smoothing
 
 ## Directory overview:
 
 | Dir            | what should be there?                         |
 |----------------|-----------------------------------------------|
 | `src`          | pragma's C source code and VC2019 projects    |
-| `progs_src`    | QC script sources for game and cgame          |
+| `progs_src`    | QC script sources for game, cgame and menus    |
 | `build`        | this is where exe and dll's will be copied to |
 | `build/main`   | where pragma specific assets should be put    |
 | `stuff`        | contains dev textures and netradiant gamepack |
 
 
 ## Build instructions:
-Currently the only supported platform is Windows and the project build *must* be set to `x86`, while this is quite unfortunate, this project is based on id's code release with outdated platform targets that were cut.
+Currently the only supported platform is Windows and the project build *must* be set to `x86`, while this is quite unfortunate, this project is based on id's original code release with outdated platform targets that were cut.
 In future the project should move to GLFW or SDL, allowing pragma to be built for linux and other platforms.
 
-You'll need Visual Studio 2019 or Visual Studio 2022 to compile the engine (engine.exe) and renderer (renderer_ogl1.dll) projects, and FTEQCC to compile QC scripts.
+You'll need Visual Studio 2019 or Visual Studio 2022 to compile the engine (engine.exe) and renderer (renderer_ogl1.dll) projects, and FTEQCC to compile QC scripts (included in this repo).
 
 1. Download ZIP or clone this repo.
 
 2. Open VC2019 solution `src/pragma.sln` and compile every project for `x86`
 
-> If compilation is succesfull, the `engine.exe`, `cgame.dll` and `renderer_ogl1.dll` will be created in `/build` directory.
+> If compilation is succesfull, the `engine.exe` and `renderer_ogl1.dll` will be created in `/build` directory.
 
-4. Run `build_scripts_server.bat` to compile server QC scripts
+4. Run `build_game.bat`, `build_cgame.bat` and `build_gui.bat` to compile all QC scripts.. too much clicking? then use 'build_all.bat' :)
 
-> This script runs FTEQCC in `/progs_src` and copies the compiled QC progs to `build/basepr/progs`
+> These scripts compile QC with FTEQCC and copy compiled binaries to gamedir
 
-5. Copy over Quake 2's retail or demo `pak0.pak` to `build/baseq2/`
-
-6. Run pragma with `run_pragma.bat` (alternatively start engine.exe with cmdline `+game basepr`)
+5. Run pragma with `run_pragma.bat` :)
 
 # Screenshots and videos of pragma in action
 
