@@ -340,7 +340,7 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 	if(flags & SND_INDEX_16)
 		MSG_WriteShort(&sv.multicast, soundindex);
 	else
-		MSG_WriteShort(&sv.multicast, soundindex);
+		MSG_WriteByte(&sv.multicast, soundindex);
 
 	if (flags & SND_VOLUME)
 		MSG_WriteByte (&sv.multicast, volume*255);
