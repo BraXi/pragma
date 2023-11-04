@@ -177,6 +177,15 @@ typedef struct
 
 	clientinfo_t	clientinfo[MAX_CLIENTS];
 	clientinfo_t	baseclientinfo;
+
+	// --- client QC ---
+	qboolean			qcvm_active;
+	cl_globalvars_t		*script_globals;	// qcvm globals
+	centity_t			*entities;			// allocated by qcvm
+	int					max_entities;
+	int					entity_size;		// retrieved from progs
+	int					num_edicts;			// increases towards MAX_EDICTS
+
 } client_state_t;
 
 extern	client_state_t	cl;
@@ -208,6 +217,12 @@ typedef enum {
 } dltype_t;		// download type
 
 typedef enum {key_game, key_console, key_message, key_menu} keydest_t;
+
+typedef struct clentity_s
+{
+	int	dummy;
+	cl_entvars_t v;
+}clentity_t;
 
 typedef struct
 {

@@ -79,6 +79,7 @@ typedef struct
 	svmodel_t			models[MAX_MODELS];		// md3, sprites, brushmodels
 	int					num_models;
 
+	qboolean			qcvm_active;
 	sv_globalvars_t*	script_globals;			// qcvm globals
 	gentity_t			*edicts;				// allocated by qcvm
 	int					max_edicts;				// [sv_maxentities]

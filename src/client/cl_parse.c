@@ -135,6 +135,16 @@ void CL_ParseServerData (void)
 		// need to prep refresh at next oportunity
 		cl.refresh_prepped = false;
 	}
+
+	// TEST
+	Scr_CreateScriptVM(SCRVM_CLIENT, 512, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
+	Scr_BindVM(SCRVM_CLIENT); // so we can get proper entity size and ptrs
+
+	cl.max_entities = 512;
+	cl.entity_size = Scr_GetEntitySize();
+	cl.entities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
+	cl.qcvm_active = true;
+	cl.script_globals = Scr_GetGlobals();
 }
 
 /*

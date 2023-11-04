@@ -204,7 +204,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	sv.max_edicts = sv_maxentities->value;
 	sv.entity_size = Scr_GetEntitySize();
 	sv.edicts = ((gentity_t*)((byte*)Scr_GetEntityPtr()));
-
+	sv.qcvm_active = true;
 	sv.script_globals = Scr_GetGlobals();
 
 	Com_Printf("max players: %i\n", svs.max_clients);

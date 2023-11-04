@@ -9,7 +9,7 @@ See the attached GNU General Public License v2 for more details.
 */
 // scr_main.c
 
-#define PROGS_CHECK_CRC 1
+#define PROGS_CHECK_CRC 0
 
 #include "../qcommon/qcommon.h"
 #include "script_internals.h"

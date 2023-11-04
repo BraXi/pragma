@@ -11,13 +11,17 @@
 //
 // clglobalvars_t - server globals
 //
-	float		time;
-	float		frameNum;
-	float		frameTime;
-	void()		main;
-	void()		SpawnWorldEntities;	// client side ents	
-	void(float newState) OnGameStateChange;
-	void()		StartFrame;
-	void()		EndFrame;		
-	float()		ParseEntityEffects; //entity effects
+	float frametime;
+	int time; 
+	int realtime; 
+	int vid_width;
+	int vid_height;
+
+	void() main;
+	
 void end_sys_globals;
+
+	.string	str;
+	.float	var;
+	.entity	ent;
+void end_sys_fields;

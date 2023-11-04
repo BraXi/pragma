@@ -796,6 +796,9 @@ void SV_Frame (int msec)
 	if (!svs.initialized)
 		return;
 
+	if (sv.qcvm_active)
+		Scr_BindVM(SCRVM_SERVER);
+
     svs.realtime += msec;
 
 	

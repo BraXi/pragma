@@ -569,6 +569,8 @@ void CL_ClearState (void)
 	CL_ClearEffects ();
 	CL_ClearTEnts ();
 
+	Scr_FreeScriptVM(SCRVM_CLIENT);
+
 // wipe the entire cl structure
 	memset (&cl, 0, sizeof(cl));
 	memset (&cl_entities, 0, sizeof(cl_entities));
@@ -1346,6 +1348,9 @@ void CL_Frame (int msec)
 	if (dedicated->value)
 		return;
 
+	if (cl.qcvm_active)
+		Scr_BindVM(SCRVM_CLIENT);
+
 	extratime += msec;
 
 	if (!cl_timedemo->value)
@@ -1382,6 +1387,9 @@ void CL_Frame (int msec)
 
 	// run cgame
 	cgame->Frame(cls.frametime, cl.time, cls.realtime, viddef.width, viddef.height);
+
+	if (cl.qcvm_active)
+		Scr_Execute(cl.script_globals->main, __FUNCTION__);
 
 	// send a new command message to the server
 	CL_SendCommand ();
@@ -1460,6 +1468,17 @@ void CL_Init (void)
 	
 	net_message.data = net_message_buffer;
 	net_message.maxsize = sizeof(net_message_buffer);
+
+	// TEST
+	Scr_CreateScriptVM(SCRVM_CLIENT, 512, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
+	Scr_BindVM(SCRVM_CLIENT); // so we can get proper entity size and ptrs
+
+	cl.max_entities = 512;
+	cl.entity_size = Scr_GetEntitySize();
+	cl.entities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
+	cl.qcvm_active = true;
+	cl.script_globals = Scr_GetGlobals();
+
 
 	M_Init ();	
 	

@@ -22,22 +22,21 @@ typedef struct cl_globalvars_s
 {
 	int	pad[28];
 
-	float			g_time;
-	float			g_frameNum;
-	float			g_frameTime;
+	float frametime;
+	int time; 
+	int realtime; 
+	int vid_width;
+	int vid_height;
 
-	scr_vec_t		v_forward, v_up, v_right;
+	scr_func_t main;
 
-	scr_func_t		main;
-	scr_func_t		StartFrame;
-	scr_func_t		EndFrame;
 } cl_globalvars_t;
 
 
 // gentity_t prog fields
 typedef struct cl_entvars_s
 {
-	// these are copied from entity_state_t
 	scr_string_t	str;
 	float			var;
+	scr_entity_t	ent;
 } cl_entvars_t;
