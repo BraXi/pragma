@@ -105,7 +105,7 @@ void PFSV_getent(void)
 	ent = EDICT_NUM(entnum);
 	if (!ent->inuse)
 	{
-	//	ent = sv.edicts;
+		ent = sv.edicts;
 		Com_Printf("getent(): %i is not in use\n", entnum);
 	}
 
