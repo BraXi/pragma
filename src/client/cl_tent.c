@@ -707,7 +707,7 @@ void CL_ParseTEnt (void)
 
 	type = MSG_ReadByte (&net_message);
 
-	cgame->ParseTempEnt(type);
+//	cgame->ParseTempEnt(type);
 
 	switch (type)
 	{

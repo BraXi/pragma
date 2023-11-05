@@ -973,7 +973,6 @@ void SV_Init (void)
 	Cvar_Get ("fraglimit", "0", CVAR_SERVERINFO);
 	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 
-	Scr_Init();
 
 //	sv_cheats = Cvar_Get ("sv_cheats", "0", CVAR_SERVERINFO|CVAR_LATCH);
 
@@ -1079,12 +1078,14 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 	if (sv.demofile)
 		fclose (sv.demofile);
 
+	// free svgame qcvm
+	Scr_FreeScriptVM(VM_SVGAME);
+
 	// wipe per level data
 	if (svs.gclients)
 		Z_Free(svs.gclients);
 
 	Z_FreeTags(TAG_SVMODELDATA);
-
 	memset (&sv, 0, sizeof(sv));
 
 	Com_SetServerState (sv.state);

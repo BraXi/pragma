@@ -108,6 +108,26 @@ void SV_CheckForSavegame (void)
 
 /*
 ================
+SV_InitGameProgs
+
+Create QCVM and entities
+================
+*/
+static void SV_InitGameProgs()
+{
+	Scr_CreateScriptVM(VM_SVGAME, sv_maxentities->value, (sizeof(gentity_t) - sizeof(sv_entvars_t)), offsetof(gentity_t, v));
+	Scr_BindVM(VM_SVGAME); // so we can get proper entity size and ptrs
+
+	// initialize all entities for this game
+	sv.max_edicts = sv_maxentities->value;
+	sv.entity_size = Scr_GetEntitySize();
+	sv.edicts = ((gentity_t*)((byte*)Scr_GetEntityPtr()));
+	sv.qcvm_active = true;
+	sv.script_globals = Scr_GetGlobals();
+}
+
+/*
+================
 SV_SpawnServer
 
 Change the server to a new map, taking all connected
@@ -197,19 +217,11 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	}
 	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
 
-	Scr_CreateScriptVM(VM_SVGAME, sv_maxentities->value, (sizeof(gentity_t) - sizeof(sv_entvars_t)), offsetof(gentity_t,v));
-	Scr_BindVM(VM_SVGAME); // so we can get proper entity size and ptrs
+	//
+	// create qcvm for svgame progs
+	//
+	SV_InitGameProgs();
 
-	// initialize all entities for this game
-	sv.max_edicts = sv_maxentities->value;
-	sv.entity_size = Scr_GetEntitySize();
-	sv.edicts = ((gentity_t*)((byte*)Scr_GetEntityPtr()));
-	sv.qcvm_active = true;
-	sv.script_globals = Scr_GetGlobals();
-
-	Com_Printf("max players: %i\n", svs.max_clients);
-
-	Com_Printf("\n\n", svs.max_clients);
 
 	for (i = 0; i < sv_maxclients->value; i++)
 	{

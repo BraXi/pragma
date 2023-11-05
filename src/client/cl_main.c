@@ -633,6 +633,8 @@ void CL_Disconnect (void)
 	}
 
 	cls.state = ca_disconnected;
+
+	Scr_FreeScriptVM(VM_CLGAME);
 }
 
 void CL_Disconnect_f (void)
@@ -1386,8 +1388,6 @@ void CL_Frame (int msec)
 	CL_ReadPackets ();
 
 	// run cgame
-	cgame->Frame(cls.frametime, cl.time, cls.realtime, viddef.width, viddef.height);
-
 //	if (cl.qcvm_active)
 //		Scr_Execute(cl.script_globals->main, __FUNCTION__);
 
@@ -1445,8 +1445,8 @@ void CL_Frame (int msec)
 
 //============================================================================
 
-extern void CL_InitClientGame(void);
-extern void CL_ShutdownClientGame(void);
+extern void CL_InitClientGameProgs(void);
+extern void CL_ShutdownClientGameProgs(void);
 /*
 ====================
 CL_Init
@@ -1492,7 +1492,7 @@ void CL_Init (void)
 	FS_ExecAutoexec ();
 	Cbuf_Execute ();
 
-	CL_InitClientGame();
+	CL_InitClientGameProgs();
 
 }
 
@@ -1518,7 +1518,7 @@ void CL_Shutdown(void)
 
 	CL_WriteConfiguration (); 
 
-	CL_ShutdownClientGame();
+	CL_ShutdownClientGameProgs();
 
 	S_Shutdown();
 	IN_Shutdown ();

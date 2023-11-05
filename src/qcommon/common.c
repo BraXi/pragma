@@ -1505,6 +1505,8 @@ void Qcommon_Init (int argc, char **argv)
 	NET_Init ();
 	Netchan_Init ();
 
+	Scr_PreInitVMs();
+
 	SV_Init ();
 	CL_Init ();
 

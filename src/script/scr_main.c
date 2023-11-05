@@ -499,7 +499,7 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 	Com_Printf("freed %s script vm...\n", Scr_VMName(vmtype));
 }
 
-
+#if 0
 void Cmd_Script_PrintFunctions(void)
 {
 	qcvm_t* vm = active_qcvm;
@@ -517,6 +517,7 @@ void Cmd_Script_PrintFunctions(void)
 			printf("#%i %s:%s()\n", i, srcFile, funcName);
 	}
 }
+#endif
 
 /*
 ===============
@@ -575,7 +576,14 @@ void cmd_vm_generatedefs_f(void)
 
 extern void SV_InitScriptBuiltins();
 
-void Scr_Init()
+/*
+===============
+Scr_PreInitVMs
+
+initialize qcvms builtin functions, commands and cvars
+===============
+*/
+void Scr_PreInitVMs()
 {
 	vmType_t type;
 	active_qcvm = NULL;
@@ -593,6 +601,13 @@ void Scr_Init()
 	Cmd_AddCommand("vm_generatedefs", cmd_vm_generatedefs_f);
 }
 
+/*
+===============
+Scr_Shutdown
+
+free all qcvms and associated builtins
+===============
+*/
 void Scr_Shutdown()
 {
 	Scr_BindVM(VM_NONE);

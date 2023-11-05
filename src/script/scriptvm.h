@@ -68,7 +68,7 @@ extern vm_entity_t* Scr_GetEntityPtr();
 extern void* Scr_GetGlobals();
 extern int Scr_GetEntityFieldsSize();
 
-extern void Scr_Init();
+extern void Scr_PreInitVMs();
 extern void Scr_Shutdown();
 
 // scr_debug.c
