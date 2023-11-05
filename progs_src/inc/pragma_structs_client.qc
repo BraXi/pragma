@@ -18,6 +18,7 @@
 	int vid_height;
 
 	void() main;
+	void() Draw2D;
 	
 void end_sys_globals;
 

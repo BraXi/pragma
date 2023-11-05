@@ -1441,7 +1441,10 @@ void SCR_UpdateScreen (void)
 			SCR_DrawServerStats();
 			SCR_CheckDrawCenterString ();
 
-//			cgame->DrawUI();
+
+			//clqc
+			extern void CG_Draw2D();
+			CG_Draw2D();
 
 			if (scr_timegraph->value)
 				SCR_DebugGraph (cls.frametime*300, 0);

@@ -12,7 +12,7 @@ See the attached GNU General Public License v2 for more details.
 #define VM_DEFAULT_RUNAWAY 500000	// number of instructions a single program can execute before it throws infinite loop error
 									// use vm_runaway cvar
 
-#define SCRIPTVM_MAXBUILTINS		96		// maximum number of builtins FIXME -- get rid if this
+#define SCRIPTVM_MAXBUILTINS	160			// maximum number of builtins FIXME -- get rid if this
 
 #ifdef _DEBUG
 	#define SCRIPTVM_PARANOID	1			// paranoia is a lifestyle, enable checks which shouldn't be in RELEASE
@@ -94,11 +94,13 @@ extern float Scr_GetParmFloat(unsigned int parm);
 extern int Scr_GetParmInt(unsigned int parm);
 extern char* Scr_GetParmString(unsigned int parm);
 extern float* Scr_GetParmVector(unsigned int parm);
+extern void Scr_GetParmVector2(unsigned int parm, float* x, float* y, float* z);
 
 extern float Scr_GetReturnFloat();
 
 extern void Scr_ReturnEntity(void *ed);
 extern void Scr_ReturnFloat(float val);
+extern void Scr_ReturnInt(int val);
 extern void Scr_ReturnString(char* str);
 extern void Scr_ReturnVector(float* val);
 

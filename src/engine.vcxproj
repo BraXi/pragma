@@ -51,6 +51,7 @@
     <ClInclude Include="platform\resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cgame\cg_builtins.c" />
     <ClCompile Include="cgame\cg_main.c" />
     <ClCompile Include="client\cl_cin.c" />
     <ClCompile Include="client\cl_download.c" />

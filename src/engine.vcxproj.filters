@@ -178,6 +178,9 @@
     <ClCompile Include="cgame\cg_main.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
+    <ClCompile Include="cgame\cg_builtins.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="platform\resource.h" />

@@ -446,7 +446,7 @@ Register builtins which can be shared by both client and server progs
 */
 void Scr_InitSharedBuiltins()
 {
-	// function, execute on,  qc string for autogeneration of pragma_builtins.qc
+	// this should always error
 	Scr_DefineBuiltin(PF_none, PF_ALL, "NONE", "NULL");
 
 	// text prints

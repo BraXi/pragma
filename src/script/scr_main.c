@@ -574,8 +574,8 @@ void cmd_vm_generatedefs_f(void)
 	}
 }
 
+extern void CG_InitScriptBuiltins();
 extern void SV_InitScriptBuiltins();
-
 /*
 ===============
 Scr_PreInitVMs
@@ -593,6 +593,7 @@ void Scr_PreInitVMs()
 
 	scr_numBuiltins = 0;
 	Scr_InitSharedBuiltins();
+	CG_InitScriptBuiltins();
 	SV_InitScriptBuiltins();
 
 	vm_runaway = Cvar_Get("vm_runaway", va("%i", VM_DEFAULT_RUNAWAY), 0);

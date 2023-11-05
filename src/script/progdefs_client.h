@@ -29,6 +29,7 @@ typedef struct cl_globalvars_s
 	int vid_height;
 
 	scr_func_t main;
+	scr_func_t Draw2D;
 
 } cl_globalvars_t;
 

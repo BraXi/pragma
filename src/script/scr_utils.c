@@ -218,6 +218,21 @@ float* Scr_GetParmVector(unsigned int parm)
 
 /*
 ============
+Scr_GetParmVector2
+
+Returns param as a vector
+============
+*/
+void Scr_GetParmVector2(unsigned int parm, float *x, float *y, float *z)
+{
+	int ofs = ScrInternal_GetParmOffset(parm);
+	*x = G_VECTOR(ofs)[0];
+	*y = G_VECTOR(ofs)[1];
+	*z = G_VECTOR(ofs)[2];
+}
+
+/*
+============
 Scr_GetReturnFloat
 
 Grabs returned float from script
@@ -248,6 +263,18 @@ Returns float to script
 ============
 */
 void Scr_ReturnFloat(float val)
+{
+	G_FLOAT(OFS_RETURN) = val;
+}
+
+/*
+============
+Scr_ReturnFloat
+
+Returns int to script
+============
+*/
+void Scr_ReturnInt(int val)
 {
 	G_FLOAT(OFS_RETURN) = val;
 }
