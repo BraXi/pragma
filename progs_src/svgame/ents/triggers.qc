@@ -117,7 +117,7 @@ void() InitTrigger =
 	if( strlen(self.snd) > 0 )
 	{
 		if( precache_sound(self.snd) == 0 )
-			dprint6( self.classname, " at ", vtos(self.origin), " has snd set to '", self.snd, "' but cannot load file\n" );
+			dprint( self.classname, " at ", vtos(self.origin), " has snd set to '", self.snd, "' but cannot load file\n" );
 	}
 };
 
@@ -267,7 +267,7 @@ void(entity user) trigger_counter_use =
 	{
 		if (!(self.spawnflags & TRIG_SPAWNFLAG_NO_MESSAGE))
 		{
-			centerprint2(other, ftos(self.count), " more to go...");		
+			centerprint(other, ftos(self.count), " more to go...");		
 			playsound(vec3_origin, other, CHAN_AUTO, self.snd, 1, ATTN_NORM, 0);
 		}
 		return;
@@ -330,7 +330,7 @@ float() SP_trigger_gravity =
 {
 	if (self.gravity == 0)
 	{
-		dprint3("trigger_gravity without gravity set at ", vtos(self.origin), "\n");
+		dprint("trigger_gravity without gravity set at ", vtos(self.origin), "\n");
 		return false;
 	}
 

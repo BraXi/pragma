@@ -1,0 +1,64 @@
+svgame.dat
+
+// qc extensions
+#include "fteqc_ext.qc"
+
+//
+// includes
+//
+../inc/pragma_structs_server.qc
+../inc/pragma_funcs_shared.qc
+../inc/pragma_funcs_svgame.qc
+../inc/pragma_defs.qc
+
+../inc/shared.qc 	// shared by client and server
+
+//
+// server game
+//
+fields.qc			// additional entity fields used by scripts
+
+subs.qc
+// server logic
+effects.qc
+callbacks.qc	// entry points
+
+clcmds.qc		// client console commands
+client.qc		// client code
+damage.qc
+main.qc
+pers.qc		// save/load of persistant data across level changes
+hud.qc
+
+//
+// entities
+//
+ents/spawnflags.qc //entity spawnflags 
+ents/func_areaportal.qc
+ents/func_group.qc
+ents/func_object.qc
+ents/func_rotating.qc
+ents/func_wall.qc
+
+ents/light.qc // also creates lightstyles
+ents/info.qc
+
+ents/prop_barrel.qc
+ents/prop_model.qc
+
+ents/spawnpoints.qc
+
+ents/target_changelevel.qc
+ents/target_explosion.qc
+ents/target_speaker.qc
+ents/target_tent.qc
+
+ents/triggers.qc
+ents/worldspawn.qc
+ents/monsters.qc
+
+//
+// weapons and their logic
+//
+weapons/weaponlogic.qc
+weapons/weapon_ar.qc

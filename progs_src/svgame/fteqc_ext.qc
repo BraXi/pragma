@@ -10,9 +10,9 @@
 #pragma opcode enable SUB_FI
 #pragma opcode enable SUB_IF
 
-#pragma opcode enable CONV_ITOF
-#pragma opcode enable CONV_FTOI
-#pragma opcode enable LOAD_I
+#pragma opcode enable C_ITOF //CONV_ITOF
+#pragma opcode enable C_FTOI //CONV_FTOI
+#pragma opcode enable LOADF_I //LOAD_I
 #pragma opcode enable STOREP_I
 #pragma opcode enable STOREP_IF
 #pragma opcode enable STOREP_FI

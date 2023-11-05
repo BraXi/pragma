@@ -10,9 +10,7 @@ See the attached GNU General Public License v2 for more details.
 #include "../qcommon/qcommon.h"
 #include "script_internals.h"
 
-void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char* qcstring);
-void Scr_InitMathBuiltins();
-void SV_InitScriptBuiltins();
+extern void Scr_InitMathBuiltins();
 
 static char* retstr_none = "none"; // the 'none' string
 
@@ -448,42 +446,39 @@ Register builtins which can be shared by both client and server progs
 */
 void Scr_InitSharedBuiltins()
 {
-	// function, execute on, is developer only?, qc string for autogeneration of pragma_builtins.qc
-	Scr_DefineBuiltin(PF_none, PF_ALL, false, NULL);
+	// function, execute on,  qc string for autogeneration of pragma_builtins.qc
+	Scr_DefineBuiltin(PF_none, PF_ALL, "NONE", "NULL");
 
 	// text prints
-	Scr_DefineBuiltin(PF_print, PF_ALL, false, "void(string s) print");
-	Scr_DefineBuiltin(PF_dprint, PF_ALL, false, "void(string s) dprint");
+	Scr_DefineBuiltin(PF_print, PF_ALL, "print", "void(string s, ...)");
+	Scr_DefineBuiltin(PF_dprint, PF_ALL, "dprint", "void(string s, ...)");
 
 	// script virtual machine
-	Scr_DefineBuiltin(PF_resetrunaway, PF_ALL, false, "void() resetrunaway");
-	Scr_DefineBuiltin(PF_traceon, PF_ALL, true, "void() traceon"); // developer mode
-	Scr_DefineBuiltin(PF_traceoff, PF_ALL, true, "void() traceoff"); // developer mode
-	Scr_DefineBuiltin(PF_crash, PF_ALL, true, "void() crash"); // crashes hard :) developer mode
-	Scr_DefineBuiltin(PF_printstack, PF_ALL, true, "void() printstack"); // developer mode
+	Scr_DefineBuiltin(PF_resetrunaway, PF_ALL, "resetrunaway", "void()");
+	Scr_DefineBuiltin(PF_traceon, PF_ALL, "traceon", "void()");
+	Scr_DefineBuiltin(PF_traceoff, PF_ALL, "traceoff", "void()");
+	Scr_DefineBuiltin(PF_crash, PF_ALL, "crash", "void()");
+	Scr_DefineBuiltin(PF_printstack, PF_ALL, "printstack", "void()");
 
 	// command buffer
-	Scr_DefineBuiltin(PF_localcmd, PF_ALL, false, "void(string str) localcmd");
-	Scr_DefineBuiltin(PF_argc, PF_ALL, false, "float() argc");
-	Scr_DefineBuiltin(PF_argv, PF_ALL, false, "string(float idx) argv");
+	Scr_DefineBuiltin(PF_localcmd, PF_ALL, "localcmd", "void(string str)");
+	Scr_DefineBuiltin(PF_argc, PF_ALL, "argc", "float()");
+	Scr_DefineBuiltin(PF_argv, PF_ALL, "argv", "string(float idx)");
 
 	// cvars
-	Scr_DefineBuiltin(PF_cvar, PF_ALL, false, "float(string str) cvar");
-	Scr_DefineBuiltin(PF_cvarstring, PF_ALL, false, "string(string str) cvarstring");
-	Scr_DefineBuiltin(PF_cvarset, PF_ALL, false, "void(string str, string val) cvarset");
-	Scr_DefineBuiltin(PF_cvarforceset, PF_ALL, false, "void(string str, string val) cvarforceset"); // does script really need this?
+	Scr_DefineBuiltin(PF_cvar, PF_ALL, "cvar", "float(string str)");
+	Scr_DefineBuiltin(PF_cvarstring, PF_ALL, "cvarstring", "string(string str)");
+	Scr_DefineBuiltin(PF_cvarset, PF_ALL, "cvarset", "void(string str, string val)");
+	Scr_DefineBuiltin(PF_cvarforceset, PF_ALL, "cvarforceset", "void(string str, string val)");
 
 	// strings
-	Scr_DefineBuiltin(PF_strlen, PF_ALL, false, "float(string s) strlen");
-	Scr_DefineBuiltin(PF_strat, PF_ALL, false, "string(string s, float idx) strat");
-	Scr_DefineBuiltin(PF_strstr, PF_ALL, false, "float(string s1, string s2) issubstr");
-	Scr_DefineBuiltin(PF_ftos, PF_ALL, false, "string(float f) ftos");
-	Scr_DefineBuiltin(PF_stof, PF_ALL, false, "float(string s) stof");
-	Scr_DefineBuiltin(PF_vtos, PF_ALL, false, "string(vector v1) vtos");
+	Scr_DefineBuiltin(PF_strlen, PF_ALL, "strlen", "float(string s)");
+	Scr_DefineBuiltin(PF_strat, PF_ALL, "strat", "string(string s, float idx)");
+	Scr_DefineBuiltin(PF_strstr, PF_ALL, "issubstr", "float(string s1, string s2)");
+	Scr_DefineBuiltin(PF_ftos, PF_ALL, "ftos", "string(float f)");
+	Scr_DefineBuiltin(PF_stof, PF_ALL, "stof", "float(string s)");
+	Scr_DefineBuiltin(PF_vtos, PF_ALL, "vtos", "string(vector v1)");
 
 	// math
 	Scr_InitMathBuiltins();
-
-	// server
-	SV_InitScriptBuiltins(); // FIXME this shouldn't be really here
 }

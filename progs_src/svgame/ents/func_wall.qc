@@ -67,7 +67,7 @@ float() SP_func_wall =
 	// it must be TRIGGER_SPAWN
 	if (!(self.spawnflags & FUNC_SPAWNFLAG_TRIGGER_SPAWN))
 	{
-		dprint3("func_wall at ", vtos(self.origin), " missing TRIGGER_SPAWN\n");
+		dprint("func_wall at ", vtos(self.origin), " missing TRIGGER_SPAWN\n");
 		self.spawnflags |= FUNC_SPAWNFLAG_TRIGGER_SPAWN;
 	}
 

@@ -37,7 +37,7 @@ float() SP_prop_model =
 {
 	if( !strlen(self.model) )
 	{
-		dprint3("prop_model with no model at ", vtos(self.origin), ", removed\n");
+		dprint("prop_model with no model at ", vtos(self.origin), ", removed\n");
 		return false;
 	}
 	
@@ -45,7 +45,7 @@ float() SP_prop_model =
 	{
 		if( !strlen(self.targetname) )
 		{
-			dprint3("prop_model with START_HIDDEN flag at ", vtos(self.origin), " has no targetname, removed\n");
+			dprint("prop_model with START_HIDDEN flag at ", vtos(self.origin), " has no targetname, removed\n");
 			return false;
 		}	
 		self.svflags = SVF_NOCLIENT;

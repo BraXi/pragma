@@ -67,7 +67,7 @@ entity(string spawnpointname) SelectSpawnPoint =
 	
 	if( ent == world )
 	{
-		print2( spawnpointname, " not found :c\n");
+		print( spawnpointname, " not found :c\n");
 	}
 	
 	return ent;

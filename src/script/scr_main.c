@@ -25,9 +25,9 @@ int scr_numBuiltins = 0;
 const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 {
 	{VM_NONE, NULL, 0, "shared"},
-	{VM_SVGAME, "progs/server.dat", 32763, "svgame"},
-	{VM_CLGAME, "progs/client.dat", 0, "clgame"},
-	{VM_GUI, "progs/menus.dat", 0, "gui"}
+	{VM_SVGAME, "progs/svgame.dat", 32763, "svgame"},
+	{VM_CLGAME, "progs/cgame.dat", 0, "clgame"},
+	{VM_GUI, "progs/guis.dat", 0, "gui"}
 };
 
 #define TAG_LEVEL 778
@@ -288,7 +288,7 @@ void Scr_GenerateBuiltinsDefs(char *filename, pb_t execon)
 		if (scr_builtins[i].execon != execon)
 			continue;
 
-		fprintf(file, "%s = #%i;\n", scr_builtins[i].qcstring, i);
+		fprintf(file, "%s %s = #%i;\n", scr_builtins[i].qcstring, scr_builtins[i].name, i);
 	}
 
 	fclose(file);
@@ -567,8 +567,13 @@ void cmd_vm_generatedefs_f(void)
 	}
 
 	for (vmType_t type = 0; type < NUM_SCRIPT_VMS; type++)
-		Scr_GenerateBuiltinsDefs(va("%s/progs_src/inc/pragma_builtins_%s.qc", FS_Gamedir(), vmDefs[type].name), type);
+	{
+		// always write to current gamedir/moddir
+		Scr_GenerateBuiltinsDefs(va("%s/progs_src/inc/pragma_funcs_%s.qc", FS_Gamedir(), vmDefs[type].name), type);
+	}
 }
+
+extern void SV_InitScriptBuiltins();
 
 void Scr_Init()
 {
@@ -580,6 +585,7 @@ void Scr_Init()
 
 	scr_numBuiltins = 0;
 	Scr_InitSharedBuiltins();
+	SV_InitScriptBuiltins();
 
 	vm_runaway = Cvar_Get("vm_runaway", va("%i", VM_DEFAULT_RUNAWAY), 0);
 
@@ -594,7 +600,7 @@ void Scr_Shutdown()
 	if (scr_builtins)
 	{
 		Z_Free(scr_builtins);
-		Com_DPrintf(DP_SCRIPT, "Freed script vm builtins...\n");
+		Com_DPrintf(DP_SCRIPT, "Freed script VM builtins...\n");
 	}
 
 	for (vmType_t i = 1; i < NUM_SCRIPT_VMS; i++)

@@ -43,7 +43,7 @@ Scr_DefineBuiltin
 Adds new builtin method
 ============
 */
-void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char* qcstring)
+void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcstring)
 {
 	builtin_t* func;
 
@@ -56,9 +56,9 @@ void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char
 		Com_Error(ERR_FATAL, "increase pr_maxbuiltins\n");
 
 	func = &scr_builtins[scr_numBuiltins];
-	func->devmode = devmode;
 	func->execon = type;
 	func->func = function;
+	func->name = fname;
 	func->qcstring = qcstring;
 	scr_numBuiltins++;
 }

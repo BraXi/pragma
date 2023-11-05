@@ -75,9 +75,9 @@ void() W_InitWeapons =
 	
 	for( i = 0; i <	NUM_WEAPON_DEFS; i++ )
 	{
-		print5("W_InitWeapons: ", ftos(i), " ", g_weapons[i].name, "\n");
+		print("W_InitWeapons: ", ftos(i), " ", g_weapons[i].name, "\n");
 	}
-	print3("W_InitWeapons: ", ftos(NUM_WEAPON_DEFS), " weapons total\n");	
+	print("W_InitWeapons: ", ftos(NUM_WEAPON_DEFS), " weapons total\n");	
 };
 
 /*

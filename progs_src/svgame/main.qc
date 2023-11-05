@@ -68,7 +68,7 @@ Called at the beginning of each server frame before physics
 */
 void() StartFrame =
 {
-//	dprint3("StartFrame: ", ftos(g_frameNum), "\n");	
+//	dprint("StartFrame: ", ftos(g_frameNum), "\n");	
 };
 
 

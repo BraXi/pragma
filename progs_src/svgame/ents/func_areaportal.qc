@@ -20,7 +20,7 @@ void(entity activator) func_areaportal_use =
 	self.count ^= 1; // toggle state
 	
 	if( cvar("developer_script") > 0 )
-		dprint5("portalstate: ", ftos(self.style)," = ", ftos(self.count), ";\n");
+		dprint("portalstate: ", ftos(self.style)," = ", ftos(self.count), ";\n");
 
 	SetAreaPortalState(self.style, self.count);
 };

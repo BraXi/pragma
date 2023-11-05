@@ -8,6 +8,7 @@
 *.lib
 *.exp
 
+*.lno
 
 build/main/*
 

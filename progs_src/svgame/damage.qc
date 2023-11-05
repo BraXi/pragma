@@ -177,7 +177,7 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 			kvel = kvel * (knockback / mass2);
 			
 			targ.velocity = targ.velocity + kvel;
-			//print3("push velocity: ", vtos(targ.velocity), "\n");
+			//print("push velocity: ", vtos(targ.velocity), "\n");
 		}
 	}
 	
@@ -200,7 +200,7 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 	}
 	self = oldSelf;
 	
-//	centerprint2(getent(1), "dodamage: health ", ftos(targ.health) );
+//	centerprint(getent(1), "dodamage: health ", ftos(targ.health) );
 };
 
 /*
@@ -243,7 +243,7 @@ void(entity inflictor, entity attacker, float damage, entity ignore, float radiu
 				dir = ent.origin - inflictor.origin;
 				DoDamage(attacker, inflictor, ent, points, DAMAGE_NO_PROTECTION, DMG_EXPLOSIVE);
 				//dprint4( ftos(points), " radius damage to: ", ent.classname, "\n");
-				dprint7( "RadiusDamage: ", ftos(points), " dmg at dist ", ftos(dist), " to ", ent.classname, "\n");
+				dprint( "RadiusDamage: ", ftos(points), " dmg at dist ", ftos(dist), " to ", ent.classname, "\n");
 			}
 		}
 	}

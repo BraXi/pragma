@@ -1,0 +1,19 @@
+cgame.dat
+
+// qc extensions
+#include "fteqc_ext.qc"
+
+//
+// includes
+//
+../inc/pragma_structs_client.qc
+../inc/pragma_funcs_shared.qc
+../inc/pragma_funcs_clgame.qc
+../inc/pragma_defs.qc
+
+../inc/shared.qc 	// shared by client and server
+
+//
+// client game
+//
+cg_main.qc

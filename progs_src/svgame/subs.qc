@@ -29,7 +29,7 @@ void(entity attacker, float damage, float method) null_die = {};
 float(string str) IsStringEmpty =
 {
 	float len = strlen(str);
-//	dprint5("strempty: ", str, " - ", ftos(len), "\n");
+//	dprint("strempty: ", str, " - ", ftos(len), "\n");
 	if( len == 0 )
 		return true;
 	if(!str)
@@ -127,7 +127,7 @@ void(entity user, entity who) SUB_UseTargets =
 			if( ent.targetname == user.killtarget )
 			{	
 				if(ent == user)
-					dprint5( "WARNING: Entity ", ent.classname, " at ", vtos(ent.origin), " killtriggered itself!\n");				
+					dprint( "WARNING: Entity ", ent.classname, " at ", vtos(ent.origin), " killtriggered itself!\n");				
 				remove(ent);
 			}
 		}
@@ -147,7 +147,7 @@ void(entity user, entity who) SUB_UseTargets =
 			
 			if(ent == user)
 			{
-				dprint5( "WARNING: Entity ", ent.classname, " at ", vtos(ent.origin), " tried to use itself\n");
+				dprint( "WARNING: Entity ", ent.classname, " at ", vtos(ent.origin), " tried to use itself\n");
 				continue;
 			}
 			

@@ -55,7 +55,7 @@ float() SP_target_speaker =
 {
 	if(!strlen(self.message))
 	{
-		print3("target_speaker with no sound ('message' key) set at ", vtos(self.origin), "\n");
+		print("target_speaker with no sound ('message' key) set at ", vtos(self.origin), "\n");
 		return false;
 	}
 
@@ -70,14 +70,14 @@ float() SP_target_speaker =
 		self.attenuation = ATTN_NONE;
 	else
 	{
-		print5("target_speaker at ", vtos(self.origin), " has attenuation set to unknown value ", ftos(self.attenuation), "\n");
+		print("target_speaker at ", vtos(self.origin), " has attenuation set to unknown value ", ftos(self.attenuation), "\n");
 		return false;
 	}
 	
 	self.noise_index = precache_sound(self.message);		
 	if(!self.noise_index)
 	{
-		print5("target_speaker at ", vtos(self.origin), " has unknown sound ", self.message, "\n");
+		print("target_speaker at ", vtos(self.origin), " has unknown sound ", self.message, "\n");
 		return false;
 	}
 //	self.message = "";

@@ -189,7 +189,7 @@ void() Player_PlayBodyAnimation =
 	self.playerAnimFrame = self.playerAnimFrame + 1;
 	if( self.playerAnimFrame > self.playerAnim_y )
 	{
-//		dprint3("anim ", GetAnimName(self.playerAnim), " ended\n");		
+//		dprint("anim ", GetAnimName(self.playerAnim), " ended\n");		
 		self.playerAnimFrame = self.playerAnim_y;
 		self.playerAnim = '0 0 0';
 		self.animPriority = 0;

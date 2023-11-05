@@ -10,7 +10,6 @@ Copyright (C) 1997-2001 Id Software, Inc.
 // this must be the first file to compile .entityo server progs!
 // add anything at the *end* of the file, it will help you ma.entityaining parity with current server version
 
-
 // ========================================================
 // begin of engine defs 
 // ========================================================

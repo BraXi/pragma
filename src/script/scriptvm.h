@@ -82,7 +82,7 @@ extern eval_t* Scr_GetEntityFieldValue(vm_entity_t* ent, char* field); // FIXME
 
 
 // scr_utils.c
-extern void Scr_DefineBuiltin(void (*function)(void), pb_t type, qboolean devmode, char* qcstring);
+extern void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcstring);
 extern scr_func_t Scr_FindFunction(char* funcname);
 extern int Scr_SetString(char* str);
 extern char* Scr_GetString(int num);

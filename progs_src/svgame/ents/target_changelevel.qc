@@ -41,7 +41,7 @@ float() SP_target_changelevel =
 {
 	if(!strlen(self.message))
 	{
-		print3("target_changelevel with no map ('message' key) at ", vtos(self.origin), "\n");
+		print("target_changelevel with no map ('message' key) at ", vtos(self.origin), "\n");
 		return false;
 	}
 	
