@@ -197,8 +197,8 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	}
 	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
 
-	Scr_CreateScriptVM(SCRVM_SERVER, sv_maxentities->value, (sizeof(gentity_t) - sizeof(sv_entvars_t)), offsetof(gentity_t,v));
-	Scr_BindVM(SCRVM_SERVER); // so we can get proper entity size and ptrs
+	Scr_CreateScriptVM(VM_SVGAME, sv_maxentities->value, (sizeof(gentity_t) - sizeof(sv_entvars_t)), offsetof(gentity_t,v));
+	Scr_BindVM(VM_SVGAME); // so we can get proper entity size and ptrs
 
 	// initialize all entities for this game
 	sv.max_edicts = sv_maxentities->value;

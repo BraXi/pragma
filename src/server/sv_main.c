@@ -797,7 +797,7 @@ void SV_Frame (int msec)
 		return;
 
 	if (sv.qcvm_active)
-		Scr_BindVM(SCRVM_SERVER);
+		Scr_BindVM(VM_SVGAME);
 
     svs.realtime += msec;
 

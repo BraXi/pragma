@@ -94,6 +94,7 @@ typedef struct
 	qboolean	devmode;
 	pb_t		execon; // client, server or both
 	char*		qcstring;
+	char* name;
 	struct builtin_t* next;
 } builtin_t;
 
@@ -140,7 +141,7 @@ typedef struct
 
 typedef struct qcvm_s
 {
-	scrvmtype_t		progsType;		// SCRVM_
+	vmType_t		progsType;		// SCRVM_
 	int				progsSize;
 	dprograms_t		*progs;
 

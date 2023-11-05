@@ -24,7 +24,7 @@ See the attached GNU General Public License v2 for more details.
 #define	G_FLOAT(o)			(active_qcvm->globals[o])
 #define	G_STRING(o)			(active_qcvm->strings + *(scr_string_t *)&active_qcvm->globals[o])
 #define	G_VECTOR(o)			(&active_qcvm->globals[o])
-#define	RETURN_EDICT(e)		(((int *)active_qcvm->globals)[OFS_RETURN] = GENT_TO_PROG(e))
+#define	RETURN_EDICT(e)		(((int *)active_qcvm->globals)[OFS_RETURN] = ENT_TO_VM(e))
 
 
 // unused
@@ -218,12 +218,12 @@ float* Scr_GetParmVector(unsigned int parm)
 
 /*
 ============
-Scr_RetVal
+Scr_GetReturnFloat
 
-Grabs return value from script
+Grabs returned float from script
 ============
 */
-float Scr_RetVal()
+float Scr_GetReturnFloat()
 {
 	return active_qcvm->globals[OFS_RETURN];
 }
@@ -304,6 +304,19 @@ void Scr_AddFloat(unsigned int parm, float val)
 {
 	int ofs = ScrInternal_GetParmOffset(parm);
 	G_FLOAT(ofs) = val;
+}
+
+/*
+============
+Scr_AddFloat
+
+Add int to call args
+============
+*/
+void Scr_AddInt(unsigned int parm, int val)
+{
+	int ofs = ScrInternal_GetParmOffset(parm);
+	G_INT(ofs) = val;
 }
 
 /*

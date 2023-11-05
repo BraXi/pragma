@@ -14,7 +14,7 @@ See the attached GNU General Public License v2 for more details.
 
 void Scr_SV_OP(eval_t *a, eval_t* b, eval_t* c)
 {
-	gentity_t *ed = PROG_TO_ENT(sv.script_globals->self);
+	gentity_t *ed = VM_TO_ENT(sv.script_globals->self);
 	ed->v.nextthink = sv.script_globals->g_time + 0.1;
 	if (a->_float != ed->v.animFrame)
 	{
@@ -185,7 +185,7 @@ qboolean Scr_ClientConnect(gentity_t* ent, char* userinfo)
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(sv.script_globals->ClientConnect, __FUNCTION__);
 
-	allowed = Scr_RetVal();
+	allowed = Scr_GetReturnFloat();
 
 	ent->client->pers.connected = allowed;
 	return allowed;
@@ -556,7 +556,7 @@ void ClientCommand(gentity_t* ent)
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(sv.script_globals->ClientCommand, __FUNCTION__);
 
-	if (Scr_RetVal() > 0)
+	if (Scr_GetReturnFloat() > 0)
 		return;
 
 	Cmd_Say_f(ent, false, false);

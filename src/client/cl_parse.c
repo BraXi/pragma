@@ -137,8 +137,8 @@ void CL_ParseServerData (void)
 	}
 
 	// TEST
-	Scr_CreateScriptVM(SCRVM_CLIENT, 512, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
-	Scr_BindVM(SCRVM_CLIENT); // so we can get proper entity size and ptrs
+	Scr_CreateScriptVM(VM_CLGAME, 512, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
+	Scr_BindVM(VM_CLGAME); // so we can get proper entity size and ptrs
 
 	cl.max_entities = 512;
 	cl.entity_size = Scr_GetEntitySize();

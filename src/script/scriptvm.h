@@ -9,13 +9,16 @@ See the attached GNU General Public License v2 for more details.
 */
 #pragma once
 
-#define SCRIPTVM_INSTRUCTIONS_LIMIT 500000	// number of instructions a single program can execute before it throws infinite loop error
+#define VM_DEFAULT_RUNAWAY 500000	// number of instructions a single program can execute before it throws infinite loop error
+									// use vm_runaway cvar
+
 #define SCRIPTVM_MAXBUILTINS		96		// maximum number of builtins FIXME -- get rid if this
 
 #ifdef _DEBUG
 	#define SCRIPTVM_PARANOID	1			// paranoia is a lifestyle, enable checks which shouldn't be in RELEASE
 #endif
 
+extern cvar_t* vm_runaway;
 
 typedef byte vm_entity_t;
 
@@ -27,23 +30,24 @@ typedef struct centity_s centity_t;
 
 
 // used to define in which VM a builtin can be used
+// THESE MUST MATCH vmType_t
 typedef enum
 {
-	PF_BOTH,		// can be called from anywhere
-	PF_SV,			// server only
-	PF_CL			// client only
+	PF_ALL,		// can be called from anywhere
+	PF_SV,		// server only
+	PF_CL,		// client only
+	PF_GUI		// client GUI only
 } pb_t;
 
 // script virtual machines
 typedef enum
 {
-	SCRVM_NONE,		// no program execution at all
-	SCRVM_SERVER,	// server
-	SCRVM_CLIENT,	// client
-	SCRVM_MENU,
+	VM_NONE,	// no program execution at all
+	VM_SVGAME,	// server
+	VM_CLGAME,	// client
+	VM_GUI,		// client gui
 	NUM_SCRIPT_VMS
-} scrvmtype_t;
-
+} vmType_t;
 
 typedef union eval_s
 {
@@ -56,13 +60,11 @@ typedef union eval_s
 } eval_t;
 
 
-// scr_main.c
-
-extern void Scr_CreateScriptVM(scrvmtype_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs);
-extern void Scr_FreeScriptVM(scrvmtype_t vmType);
-extern void Scr_BindVM(scrvmtype_t vmType);
+extern void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs);
+extern void Scr_FreeScriptVM(vmType_t vmType);
+extern void Scr_BindVM(vmType_t vmType);
 extern int Scr_GetEntitySize();
-extern void* Scr_GetEntityPtr();
+extern vm_entity_t* Scr_GetEntityPtr();
 extern void* Scr_GetGlobals();
 extern int Scr_GetEntityFieldsSize();
 
@@ -76,7 +78,7 @@ void Scr_StackTrace();
 extern void Scr_RunError(char* error, ...);
 extern void Scr_Execute(scr_func_t fnum, char* callFromFuncName);
 extern int Scr_NumArgs();
-extern eval_t* Scr_GetEntityFieldValue(vm_entity_t* ed, char* field); // FIXME 
+extern eval_t* Scr_GetEntityFieldValue(vm_entity_t* ent, char* field); // FIXME 
 
 
 // scr_utils.c
@@ -93,7 +95,7 @@ extern int Scr_GetParmInt(unsigned int parm);
 extern char* Scr_GetParmString(unsigned int parm);
 extern float* Scr_GetParmVector(unsigned int parm);
 
-extern float Scr_RetVal();
+extern float Scr_GetReturnFloat();
 
 extern void Scr_ReturnEntity(void *ed);
 extern void Scr_ReturnFloat(float val);
@@ -102,58 +104,26 @@ extern void Scr_ReturnVector(float* val);
 
 extern void Scr_AddEntity(unsigned int parm, vm_entity_t* ed);
 extern void Scr_AddFloat(unsigned int parm, float val);
+extern void Scr_AddInt(unsigned int parm, int val);
 extern void Scr_AddString(unsigned int parm, char* str);
 extern void Scr_AddVector(unsigned int parm, float* vec);
 
 
-#define	ENT_TO_PROG(e) ((vm_entity_t *)e - (vm_entity_t *)Scr_GetEntityPtr())
-#define ENT_FOR_NUM(n) (((vm_entity_t*)Scr_GetEntityPtr() + Scr_GetEntitySize()*(n)))
-#define PROG_TO_ENT(e) (((vm_entity_t*)Scr_GetEntityPtr() + e))
+//
+// MACROS FOR CONVINIENCE
+// 
 
-#if 0
-#define	GENT_TO_PROG(e) ((byte *)e - (byte *)sv.edicts)
-#define PROG_TO_GENT(e) ((gentity_t *)((byte *)sv.edicts + e))
-#define STRING_TO_PROG(str) ((str - ScriptVM->strings))
-#define PROG_TO_STRING(str) ((ScriptVM->strings + str))
+// pass entity to script vm
+#define	ENT_TO_VM(ent)		((vm_entity_t*)ent - (vm_entity_t*)Scr_GetEntityPtr())
 
-#define	NEXT_EDICT(e) ((gentity_t *)( (byte *)e + ScriptVM->gentity_size))
-#endif
+// grab entity from script vm
+#define VM_TO_ENT(ent)		((vm_entity_t*)Scr_GetEntityPtr() + ent)
 
+// grab entity by index
+#define ENT_FOR_NUM(num)	((vm_entity_t*)Scr_GetEntityPtr() + Scr_GetEntitySize()*(num))
 
+// grab next entity
+#define	NEXT_ENT(ent)		((vm_entity_t*)ent + Scr_GetEntitySize())
 
-/*
-
-.qc:
-
-void(entity e, float t) testfunc = 
-{ 
-	e.time = t; 
-	return 1337;
-};
-
-.c:
-Scr_Init();
-if( Scr_CreateScriptVM(SCRVM_SERVER) )
-{
-	if( !Scr_BindVM(SCRVM_SERVER) )
-		return;
-
-	scr_func_t test;
-	if( (test = Scr_FindFunction("testfunc")) != -1 )
-	{
-		Scr_AddEntity( EDICT_NUM(0) );
-		Scr_AddFloat( sv.time );
-
-		Scr_Execute( test, __FUNCTION__ );
-
-		printf("worldspawn.time=%f\n", Scr_GetEntityFieldValue(EDICT_NUM(0), "time")->_float );
-		printf("return=%f\n", Scr_RetVal() );
-	}
-}
-
-
-extern void Scr_DestroyScriptVM(scrvmtype_t vm);
-extern qboolean Scr_BindVM(scrvmtype_t vm);
-extern void Scr_Init();
-extern void Scr_Shutdown();
-*/
+// get entity index
+#define NUM_FOR_ENT(ent)	( ((vm_entity_t*)(ent)- Scr_GetEntityPtr()) / Scr_GetEntitySize())

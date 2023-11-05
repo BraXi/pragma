@@ -25,7 +25,7 @@ extern void Scr_PrintEntityFields(vm_entity_t* ent);
 Scr_GetEntityFieldValue
 ============
 */
-eval_t* Scr_GetEntityFieldValue(vm_entity_t *ed, char* field)
+eval_t* Scr_GetEntityFieldValue(vm_entity_t *ent, char* field)
 {
 	ddef_t* def = NULL;
 	int				i;
@@ -53,7 +53,7 @@ Done:
 	if (!def)
 		return NULL;
 
-	return (eval_t*)((char*)ENTVARSOFFSET(ed) + def->ofs * 4);
+	return (eval_t*)((char*)ENTVARSOFFSET(ent) + def->ofs * 4);
 }
 
 /*
@@ -199,11 +199,11 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 	vm->callFromFuncName = callFromFuncName;
 	if (!fnum || fnum >= vm->progs->numFunctions)
 	{
-		if (vm->progsType == SCRVM_SERVER)
+		if (vm->progsType == VM_SVGAME)
 		{
 			sv_globalvars_t *g = vm->globals_struct;
 			if (g->self)
-				Scr_PrintEntityFields(PROG_TO_ENT(g->self));
+				Scr_PrintEntityFields(VM_TO_ENT(g->self));
 		}
 
 		Scr_RunError("%s: incorrect function index %i\n", __FUNCTION__, fnum);
@@ -212,7 +212,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 
 	f = &vm->functions[fnum];
 
-	vm->runawayCounter = SCRIPTVM_INSTRUCTIONS_LIMIT;
+	vm->runawayCounter = (int)vm_runaway->value;
 	vm->traceEnabled = false;
 
 	// make a stack frame
@@ -558,7 +558,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			c->_float = !a->function;
 			break; 
 		case OP_NOT_ENT: // not entity
-			c->_float = (PROG_TO_ENT(a->edict) == vm->entities);
+			c->_float = (VM_TO_ENT(a->edict) == vm->entities);
 			break;
 
 		case OP_EQ_F: // == float
@@ -658,11 +658,11 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		case OP_ADDRESS:
-			ent = PROG_TO_ENT(a->edict);
-			if (ent == vm->entities && (vm->progsType == SCRVM_SERVER && Com_IsServerActive()))
+			ent = VM_TO_ENT(a->edict);
+			if (ent == vm->entities && (vm->progsType == VM_SVGAME && Com_IsServerActive()))
 			{
 				Scr_StackTrace();
-				Scr_RunError("zero entity fields are read only\n");
+				Scr_RunError("worldspawn entity fields are read only\n");
 			}
 			c->_int = (byte*)(ENTVARSOFFSET(ent) + b->_int) - (byte*)vm->entities;
 			break;
@@ -674,13 +674,13 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_LOAD_ENT:
 		case OP_LOAD_S:
 		case OP_LOAD_FNC:
-			ent = PROG_TO_ENT(a->edict);
+			ent = VM_TO_ENT(a->edict);
 			a = (eval_t*)(ENTVARSOFFSET(ent) + b->_int);
 			c->_int = a->_int;
 			break;
 
 		case OP_LOAD_V:
-			ent = PROG_TO_ENT(a->edict);
+			ent = VM_TO_ENT(a->edict);
 			a = (eval_t*)(ENTVARSOFFSET(ent) + b->_int);
 			c->vector[0] = a->vector[0];
 			c->vector[1] = a->vector[1];
@@ -723,6 +723,10 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 				i = -newf->first_statement;
 				if (i >= scr_numBuiltins)
 					Scr_RunError("%s: unknown builtin function (funcnum = %i)\n", __FUNCTION__, i);
+
+				if(scr_builtins[i].execon != PF_ALL && vm->progsType != scr_builtins[i].execon)
+					Scr_RunError("%s: call to '%s' builtin in %s VM not allowed\n", __FUNCTION__, scr_builtins[i].name, vmDefs[vm->progsType]);
+
 				scr_builtins[i].func();
 				break;
 			}
@@ -742,7 +746,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		case OP_STATE:
-			if (vm->progsType == SCRVM_SERVER)
+			if (vm->progsType == VM_SVGAME)
 			{
 				extern void Scr_SV_OP(eval_t * a, eval_t * b, eval_t * c);
 				Scr_SV_OP(a, b, c);
@@ -790,7 +794,7 @@ void Scr_PrintEntityFields(vm_entity_t* ent)
 	char* name;
 	int		type;
 
-//	if (!ed->inuse)
+//	if (!ent->inuse)
 //	{
 //		Com_Printf("Scr_PrintEntityFields: entity not in use\n");
 //		return;
@@ -798,7 +802,7 @@ void Scr_PrintEntityFields(vm_entity_t* ent)
 
 	CheckScriptVM(__FUNCTION__);
 
-//	Com_Printf("\nENTITY #%i:\n", NUM_FOR_EDICT(ed));
+//	Com_Printf("\nENTITY #%i:\n", NUM_FOR_EDICT(ent));
 	for (i = 1; i < active_qcvm->progs->numFieldDefs; i++)
 	{
 		d = &active_qcvm->fieldDefs[i];

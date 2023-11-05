@@ -1,7 +1,7 @@
 #pragma once
 
 // version string
-#define PRAGMA_VERSION "0.18"
+#define PRAGMA_VERSION "0.19"
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
 // net protocol will use floats for coordinates instead of shorts, this applies to pmove too

@@ -240,7 +240,7 @@ void SV_CallSpawn(gentity_t* ent)
 
 	// an entity may refuse to spawn (requires coop, certain skill level, etc..)
 	// if returned value from prog is false we delete entity right now (unless its world)
-	if (ent != sv.edicts && Scr_RetVal() <= 0)
+	if (ent != sv.edicts && Scr_GetReturnFloat() <= 0)
 	{
 		printf("CallSpawn: \"%s\" at (%i %i %i) discarded\n", classname, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 		SV_FreeEntity(ent);
