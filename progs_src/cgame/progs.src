@@ -16,4 +16,6 @@ cgame.dat
 //
 // client game
 //
+cg_crosshair.qc
+cg_load.qc
 cg_main.qc

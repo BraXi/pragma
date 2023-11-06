@@ -381,7 +381,7 @@ contents pointcontents(vector)
 void PFSV_contents(void)
 {
 	float* point = Scr_GetParmVector(0);
-	Scr_ReturnFloat( SV_PointContents(point) );
+	Scr_ReturnInt( SV_PointContents(point) );
 }
 
 /*
@@ -1377,8 +1377,8 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_unlinkentity, PF_SV, "unlinkentity", "void(entity e)");
 
 	// collision
-	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector v)");
-	Scr_DefineBuiltin(PFSV_trace, PF_SV, "trace", "void(vector p1, vector v1, vector v2, vector p2, entity e, float c)");
+	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "int(vector v)");
+	Scr_DefineBuiltin(PFSV_trace, PF_SV, "trace", "void(vector p1, vector v1, vector v2, vector p2, entity e, int c)");
 
 	// sound
 	Scr_DefineBuiltin(PFSV_sound, PF_SV, "playsound", "void(vector v, entity e, float ch, string snd, float vol, float att, float tofs)");

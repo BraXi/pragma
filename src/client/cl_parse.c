@@ -136,15 +136,7 @@ void CL_ParseServerData (void)
 		cl.refresh_prepped = false;
 	}
 
-	// TEST
-	Scr_CreateScriptVM(VM_CLGAME, 512, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
-	Scr_BindVM(VM_CLGAME); // so we can get proper entity size and ptrs
-
-	cl.max_entities = 512;
-	cl.entity_size = Scr_GetEntitySize();
-	cl.entities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
-	cl.qcvm_active = true;
-	cl.script_globals = Scr_GetGlobals();
+	CL_InitClientGame();
 }
 
 /*

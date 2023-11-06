@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cgame\cgame.h" />
     <ClInclude Include="client\adivtab.h" />
     <ClInclude Include="client\anorms.h" />
     <ClInclude Include="client\asm_i386.h" />

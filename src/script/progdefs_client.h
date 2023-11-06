@@ -24,13 +24,13 @@ typedef struct cl_globalvars_s
 
 	float frametime;
 	int time; 
-	int realtime; 
+	float realtime; 
 	int vid_width;
 	int vid_height;
 
-	scr_func_t main;
-	scr_func_t Draw2D;
-
+	scr_func_t CG_Main;
+	scr_func_t CG_Frame;
+	scr_func_t CG_DrawGUI;
 } cl_globalvars_t;
 
 

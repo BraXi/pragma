@@ -643,7 +643,7 @@ void PR_Profile(int x, int y)
 	int			i;
 	static int nexttime = 0;
 
-	static char str[10][64];
+	static char str[10][96];
 
 	if (Sys_Milliseconds() > nexttime + 100)
 	{

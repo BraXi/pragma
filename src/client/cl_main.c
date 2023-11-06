@@ -569,7 +569,7 @@ void CL_ClearState (void)
 	CL_ClearEffects ();
 	CL_ClearTEnts ();
 
-//	Scr_FreeScriptVM(VM_CLGAME);
+	CL_ShutdownClientGame();
 
 // wipe the entire cl structure
 	memset (&cl, 0, sizeof(cl));
@@ -633,8 +633,6 @@ void CL_Disconnect (void)
 	}
 
 	cls.state = ca_disconnected;
-
-//	Scr_FreeScriptVM(VM_CLGAME);
 }
 
 void CL_Disconnect_f (void)
@@ -1350,9 +1348,6 @@ void CL_Frame (int msec)
 	if (dedicated->value)
 		return;
 
-	if (cl.qcvm_active)
-		Scr_BindVM(VM_CLGAME);
-
 	extratime += msec;
 
 	if (!cl_timedemo->value)
@@ -1388,8 +1383,7 @@ void CL_Frame (int msec)
 	CL_ReadPackets ();
 
 	// run cgame
-	if (cl.qcvm_active)
-		Scr_Execute(cl.script_globals->main, __FUNCTION__);
+	CG_Frame(cls.frametime, cl.time, cls.realtime);
 
 	// send a new command message to the server
 	CL_SendCommand ();
@@ -1445,8 +1439,6 @@ void CL_Frame (int msec)
 
 //============================================================================
 
-extern void CL_InitClientGameProgs(void);
-extern void CL_ShutdownClientGameProgs(void);
 /*
 ====================
 CL_Init
@@ -1480,9 +1472,6 @@ void CL_Init (void)
 //	Cbuf_AddText ("exec autoexec.cfg\n");
 	FS_ExecAutoexec ();
 	Cbuf_Execute ();
-
-	CL_InitClientGameProgs();
-
 }
 
 
@@ -1507,7 +1496,7 @@ void CL_Shutdown(void)
 
 	CL_WriteConfiguration (); 
 
-	CL_ShutdownClientGameProgs();
+	CL_ShutdownClientGame();
 
 	S_Shutdown();
 	IN_Shutdown ();

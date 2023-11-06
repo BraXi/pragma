@@ -13,12 +13,13 @@
 //
 	float frametime;
 	int time; 
-	int realtime; 
+	float realtime; 
 	int vid_width;
 	int vid_height;
 
-	void() main;
-	void() Draw2D;
+	void() CG_Main;
+	void() CG_Frame;	
+	void() CG_DrawGUI;
 	
 void end_sys_globals;
 

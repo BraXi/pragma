@@ -22,6 +22,25 @@ static void PFCG_getconfigstring(void)
 	Scr_ReturnString(cl.configstrings[idx]);
 }
 
+/*
+=================
+PFCG_getstat
+
+get stat
+=================
+*/
+static void PFCG_getstat()
+{
+	int index = Scr_GetParmFloat(0);
+	if (index < 0 || index >= MAX_STATS)
+	{
+		Com_Printf("getstat(): out of range %i [0-%i]\n", index, MAX_STATS);
+		Scr_ReturnFloat(0);
+		return;
+	}
+	Scr_ReturnFloat(cl.frame.playerstate.stats[index]);
+}
+
 // read network packets
 static void PFCG_MSG_ReadChar(void)		{ Scr_ReturnInt(MSG_ReadChar(&net_message)); }
 static void PFCG_MSG_ReadByte(void)		{ Scr_ReturnInt(MSG_ReadByte(&net_message)); }
@@ -119,6 +138,7 @@ Register builtins which can be shared by both client and server progs
 void CG_InitScriptBuiltins()
 {
 	Scr_DefineBuiltin(PFCG_getconfigstring, PF_CL, "getconfigstring", "string(int idx)");
+	Scr_DefineBuiltin(PFCG_getstat, PF_CL, "getstat", "float(float idx)");
 
 	Scr_DefineBuiltin(PFCG_MSG_ReadChar, PF_CL, "MSG_ReadChar", "int()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadByte, PF_CL, "MSG_ReadByte", "int()");

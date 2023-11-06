@@ -269,6 +269,9 @@
       <Filter>script\headers</Filter>
     </ClInclude>
     <ClInclude Include="pragma_config.h" />
+    <ClInclude Include="cgame\cgame.h">
+      <Filter>client\cgame</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="platform\q2.rc" />
