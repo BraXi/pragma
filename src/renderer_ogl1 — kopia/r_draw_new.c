@@ -45,7 +45,7 @@ void R_DrawSingleChar(float x, float y, float w, float h, int num)
 	fcol = col * 0.0625;
 	size = 0.0625;
 
-	GL_Bind(font_current->texnum);
+	R_BindTextureToCurrentTMU(font_current->texnum);
 
 	qglBegin(GL_QUADS);
 	qglTexCoord2f(fcol, frow);
@@ -79,6 +79,11 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	else if (alignx == XALIGN_RIGHT)
 		ofs_x -= ((strlen(string) * CHAR_SIZEX));
 
+	GL_TexEnv(GL_MODULATE);
+	qglAlphaFunc(GL_GREATER, 0.05);
+	R_Blend(true);
+	R_SetColor(color[0], color[1], color[2], color[3]);
+
 	// draw string
 	while (*string)
 	{
@@ -86,6 +91,11 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 		x += CHAR_SIZEX;
 		string++;
 	}
+
+	R_SetColor(1, 1, 1, 1);
+	R_Blend(false);
+	GL_TexEnv(GL_REPLACE);
+	qglAlphaFunc(GL_GREATER, 0.666);
 }
 
 
@@ -112,11 +122,10 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 
 
 	R_Blend(true);
-	//R_BlendFunc(GL_ONE, GL_ONE);;
 	qglAlphaFunc(GL_GREATER, 0.05);
-	qglColor4f(color[0], color[1], color[2], color[3]);
+	R_SetColor(color[0], color[1], color[2], color[3]);
 
-	GL_Bind(gl->texnum);
+	R_BindTextureToCurrentTMU(gl->texnum);
 	qglBegin(GL_QUADS);
 	{
 		qglTexCoord2f(gl->sl, gl->tl);
@@ -132,7 +141,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 
 	R_Blend(false);
 	qglAlphaFunc(GL_GREATER, 0.666);
-	qglColor4f(1, 1, 1, 1);
+	R_SetColor(1, 1, 1, 1);
 
 }
 
@@ -148,10 +157,10 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	R_AdjustToVirtualScreenSize(&rect[2], &rect[3]); // w/h
 
 	R_Blend(true);
-	qglDisable(GL_TEXTURE_2D);
+	R_Texturing(false);
 
 	qglAlphaFunc(GL_GREATER, 0.05);
-	qglColor4f(color[0], color[1], color[2], color[3]);
+	R_SetColor(color[0], color[1], color[2], color[3]);
 
 	qglBegin(GL_QUADS);
 	{
@@ -163,8 +172,8 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	qglEnd();
 
 	R_Blend(false);
-	qglEnable(GL_TEXTURE_2D);
+	R_Texturing(true);
 
 	qglAlphaFunc(GL_GREATER, 0.666);
-	qglColor4f(1, 1, 1, 1);
+	R_SetColor(1, 1, 1, 1);
 }

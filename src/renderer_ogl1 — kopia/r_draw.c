@@ -57,11 +57,11 @@ void Draw_InitLocal (void)
 //			font_textures[i] = font_textures[FONT_SMALL]; //fixup
 //		}
 
-		GL_Bind(font_textures[i]->texnum);
+		R_BindTextureToCurrentTMU(font_textures[i]->texnum);
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
-	GL_Bind(0);
+	R_BindTextureToCurrentTMU(0);
 
 	font_current = font_textures[FONT_SMALL];
 }
@@ -83,7 +83,6 @@ void Draw_Char (int x, int y, int num)
 	float			frow, fcol, size;
 
 	R_Blend(false);
-	qglColor4f(1, 0, 0, 1);
 	num &= 255;
 	
 	if ( (num&127) == 32 )
@@ -99,7 +98,7 @@ void Draw_Char (int x, int y, int num)
 	fcol = col*0.0625;
 	size = 0.0625;
 
-	GL_Bind (font_current->texnum);
+	R_BindTextureToCurrentTMU(font_current->texnum);
 
 	qglBegin (GL_QUADS);
 	qglTexCoord2f (fcol, frow);
@@ -169,7 +168,7 @@ void Draw_StretchPic (int x, int y, int w, int h, char *pic)
 		return;
 	}
 
-	GL_Bind (gl->texnum);
+	R_BindTextureToCurrentTMU(gl->texnum);
 	qglBegin (GL_QUADS);
 	qglTexCoord2f (gl->sl, gl->tl);
 	qglVertex2f (x, y);
@@ -200,7 +199,7 @@ void Draw_Pic (int x, int y, char *pic)
 		return;
 	}
 
-	GL_Bind (gl->texnum);
+	R_BindTextureToCurrentTMU(gl->texnum);
 	qglBegin (GL_QUADS);
 	qglTexCoord2f (gl->sl, gl->tl);
 	qglVertex2f (x, y);
@@ -232,7 +231,7 @@ void Draw_TileClear (int x, int y, int w, int h, char *pic)
 		return;
 	}
 
-	GL_Bind (image->texnum);
+	R_BindTextureToCurrentTMU(image->texnum);
 	qglBegin (GL_QUADS);
 	qglTexCoord2f (x/64.0, y/64.0);
 	qglVertex2f (x, y);
@@ -257,9 +256,9 @@ void Draw_Fill (int x, int y, int w, int h, vec3_t color)
 {
 	if (1)
 		return;
-	qglDisable (GL_TEXTURE_2D);
 
-	qglColor3f (color[0], color[1], color[2]);
+	R_Texturing(false);
+	R_SetColor(color[0], color[1], color[2], 1);
 
 	qglBegin (GL_QUADS);
 
@@ -269,8 +268,8 @@ void Draw_Fill (int x, int y, int w, int h, vec3_t color)
 	qglVertex2f (x, y+h);
 
 	qglEnd ();
-	qglColor3f (1,1,1);
-	qglEnable (GL_TEXTURE_2D);
+	R_SetColor(1, 1, 1, 1);
+	R_Texturing(true);
 }
 
 //=============================================================================
@@ -284,9 +283,10 @@ Draw_FadeScreen
 void Draw_FadeScreen (float *rgba)
 {
 	R_Blend(true);
-	qglDisable (GL_TEXTURE_2D);
+	R_Texturing(false);
 	qglAlphaFunc(GL_GREATER, 0.1);
-	qglColor4fv(rgba);
+
+	R_SetColor(rgba[0], rgba[1], rgba[2], rgba[3]);
 
 	qglBegin (GL_QUADS);
 		qglVertex2f (0,0);
@@ -295,9 +295,9 @@ void Draw_FadeScreen (float *rgba)
 		qglVertex2f (0, vid.height);
 	qglEnd();
 
-	qglColor4f(1,1,1,1);
+	R_SetColor(1, 1, 1, 1);
 	qglAlphaFunc(GL_GREATER, 0.666);
-	qglEnable (GL_TEXTURE_2D);
+	R_Texturing(true);
 	R_Blend(false);
 
 }
@@ -324,7 +324,7 @@ void Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data
 	int			row;
 	float		t;
 
-	GL_Bind (0);
+	R_BindTextureToCurrentTMU(0);
 
 	if (rows<=256)
 	{

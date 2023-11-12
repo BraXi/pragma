@@ -307,6 +307,7 @@ anglevectors(vector)
 ==============
 */
 extern void PFSV_AngleVectors(void);
+extern void PFCG_AngleVectors(void);
 void PF_anglevectors(void)
 {
 //	AngleVectors(Scr_GetParmVector(0), sv.script_globals->v_forward, sv.script_globals->v_right, sv.script_globals->v_up);
@@ -314,6 +315,9 @@ void PF_anglevectors(void)
 	{
 	case VM_SVGAME:
 		PFSV_AngleVectors();
+		break;
+	case VM_CLGAME:
+		PFCG_AngleVectors();
 		break;
 	default:
 		Scr_RunError("PF_anglevectors not implemented for this qcvm");

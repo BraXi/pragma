@@ -24,7 +24,7 @@ void R_Clear (void);
 
 viddef_t	vid;
 
-void R_DrawMD3Model(centity_t* ent);
+//void R_DrawMD3Model(centity_t* ent);
 
 model_t		*r_worldmodel;
 
@@ -159,14 +159,14 @@ void R_DrawSpriteModel (centity_t *e)
 	if ( e->renderfx & RF_TRANSLUCENT )
 		alpha = e->alpha;
 
-	R_Blend(alpha != 1.0F);
+	R_Blend((alpha != 1.0F));
 
-	qglColor4f( 1, 1, 1, alpha );
+	R_SetColor( 1, 1, 1, alpha );
 
-    GL_Bind(currentmodel->skins[e->frame]->texnum);
+	R_BindTextureToCurrentTMU(currentmodel->skins[e->frame]->texnum);
 	GL_TexEnv( GL_MODULATE );
 
-	R_AlphaTest(true); // IS THIS REALY CORRECT?
+	R_AlphaTest(alpha == 1.0 ? true : false); // is this really vaild?
 
 	qglBegin (GL_QUADS);
 
@@ -197,7 +197,7 @@ void R_DrawSpriteModel (centity_t *e)
 
 	R_Blend(false);
 
-	qglColor4f( 1, 1, 1, 1 );
+	R_SetColor( 1, 1, 1, 1 );
 }
 
 //==================================================================================
@@ -222,8 +222,8 @@ static void R_DrawNullModel (void)
     qglPushMatrix ();
 	R_RotateForEntity (currententity);
 
-	qglDisable (GL_TEXTURE_2D);
-	qglColor3fv (shadelight);
+	R_Texturing(false);
+	R_SetColor(shadelight[0], shadelight[1], shadelight[2], 1.0f);
 
 	qglBegin (GL_TRIANGLE_FAN);
 	qglVertex3f (0, 0, -16);
@@ -237,9 +237,9 @@ static void R_DrawNullModel (void)
 		qglVertex3f (16*cos(i*M_PI/2), 16*sin(i*M_PI/2), 0);
 	qglEnd ();
 
-	qglColor3f (1,1,1);
+	R_SetColor(1,1,1,1);
 	qglPopMatrix ();
-	qglEnable (GL_TEXTURE_2D);
+	R_Texturing(true);
 }
 
 /*
@@ -307,7 +307,7 @@ void R_DrawEntitiesOnList (void)
 
 	// draw transparent entities
 	// todo: sort them
-	R_WriteToDepthBuffer(GL_FALSE);	// no z writes
+	R_WriteToDepthBuffer(GL_FALSE);		// no z writes
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
@@ -420,8 +420,8 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 	float			scale;
 	float			color[4];
 
-    GL_Bind(r_particletexture->texnum);
-	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
+	R_BindTextureToCurrentTMU(r_particletexture->texnum);
+	R_WriteToDepthBuffer(GL_FALSE);	// no z buffering
 	R_Blend(true);
 	GL_TexEnv( GL_MODULATE );
 	qglBegin( GL_TRIANGLES );
@@ -444,7 +444,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 		VectorCopy(p->color, color);
 		color[3] = p->alpha;
 
-		qglColor4fv( color );
+		R_SetColor( color[0], color[1], color[2], color[3] );
 
 		qglTexCoord2f( 0.0625, 0.0625 );
 		qglVertex3fv( p->origin );
@@ -462,8 +462,8 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 
 	qglEnd ();
 	R_Blend(false);
-	qglColor4f( 1,1,1,1 );
-	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
+	R_SetColor( 1,1,1,1 );
+	R_WriteToDepthBuffer( GL_TRUE ); // back to normal Z buffering
 	GL_TexEnv( GL_REPLACE );
 }
 
@@ -493,7 +493,7 @@ void R_PolyBlend (void)
 	R_AlphaTest(false);
 	R_Blend(true);
 	R_DepthTest(false);
-	qglDisable (GL_TEXTURE_2D);
+	R_Texturing(false);
 
     qglLoadIdentity ();
 
@@ -501,7 +501,7 @@ void R_PolyBlend (void)
     qglRotatef (-90,  1, 0, 0);	    // put Z going up
     qglRotatef (90,  0, 0, 1);	    // put Z going up
 
-	qglColor4fv (v_blend);
+	R_SetColor(v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
 
 	qglBegin (GL_QUADS);
 
@@ -512,9 +512,10 @@ void R_PolyBlend (void)
 	qglEnd ();
 
 	R_Blend(false);
-	qglEnable (GL_TEXTURE_2D);
+	R_Texturing(true);
 	R_AlphaTest(true);
-	qglColor4f(1,1,1,1);
+
+	R_SetColor(1,1,1,1);
 }
 
 //=======================================================================
@@ -618,10 +619,10 @@ void R_SetupFrame (void)
 	if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL )
 	{
 		qglEnable( GL_SCISSOR_TEST );
-		qglClearColor( 0.3, 0.3, 0.3, 1 );
+		R_SetClearColor( 0.3, 0.3, 0.3, 1 );
 		qglScissor( r_newrefdef.x, vid.height - r_newrefdef.height - r_newrefdef.y, r_newrefdef.width, r_newrefdef.height );
 		qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		qglClearColor( 1, 0, 0.5, 0.5 );
+		R_SetClearColor( 1, 0, 0.5, 0.5 );
 		qglDisable( GL_SCISSOR_TEST );
 	}
 }
@@ -821,15 +822,15 @@ void R_SetGL2D(void)
 	R_CullFace(false);
 	R_Blend(false);
 	R_AlphaTest(true);
-	qglColor4f (1,1,1,1);
+	R_SetColor(1,1,1,1);
 }
 
 static void GL_DrawColoredStereoLinePair( float r, float g, float b, float y )
 {
-	qglColor3f( r, g, b );
+	R_SetColor( r, g, b, 1.0f );
 	qglVertex2f( 0, y );
 	qglVertex2f( vid.width, y );
-	qglColor3f( 0, 0, 0 );
+	R_SetColor( 0, 0, 0, 1.0f );
 	qglVertex2f( 0, y + 1 );
 	qglVertex2f( vid.width, y + 1 );
 }
@@ -1044,9 +1045,9 @@ void R_DrawBeam( centity_t *e )
 		VectorAdd( start_points[i], direction, end_points[i] );
 	}
 
-	qglDisable( GL_TEXTURE_2D );
+	R_Texturing(false);
 	R_Blend(true);
-	R_WriteToDepthBuffer(GL_FALSE);
+	R_WriteToDepthBuffer( GL_FALSE );
 
 //	r = ( d_8to24table[e->skinnum & 0xFF] ) & 0xFF;
 //	g = ( d_8to24table[e->skinnum & 0xFF] >> 8 ) & 0xFF;
@@ -1057,7 +1058,7 @@ void R_DrawBeam( centity_t *e )
 	g *= 1/255.0F;
 	b *= 1/255.0F;
 
-	qglColor4f( r, g, b, e->alpha );
+	R_SetColor( r, g, b, e->alpha );
 
 	qglBegin( GL_TRIANGLE_STRIP );
 	for ( i = 0; i < NUM_BEAM_SEGS; i++ )
@@ -1069,8 +1070,8 @@ void R_DrawBeam( centity_t *e )
 	}
 	qglEnd();
 
-	qglEnable( GL_TEXTURE_2D );
+	R_Texturing(true);
 	R_Blend(false);
-	R_WriteToDepthBuffer(GL_TRUE);
+	R_WriteToDepthBuffer( GL_TRUE );
 }
 

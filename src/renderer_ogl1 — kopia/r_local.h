@@ -71,6 +71,9 @@ typedef struct
 
 extern	viddef_t	vid;
 
+#define TMU_DEFAULT 0
+#define TMU_LIGHTMAP 1
+
 
 /*
 
@@ -244,7 +247,6 @@ extern	int		c_visible_textures;
 
 extern	float	r_world_matrix[16];
 
-void GL_Bind (int texnum);
 void GL_MBind( GLenum target, int texnum );
 void GL_TexEnv( GLenum value );
 void GL_EnableMultitexture( qboolean enable );
@@ -388,8 +390,11 @@ extern inline void R_BlendFunc(GLenum newstateA, GLenum newstateB);
 extern inline void R_SetColor(float r, float g, float b, float a);
 extern inline void R_SetClearColor(float r, float g, float b, float a);
 
-extern void R_InitialOGLState();
+extern void R_BindTextureToCurrentTMU(int texnum);
+extern void R_SelectTextureMappingUnit(int tmu);
+extern void R_MultiBindTexture(int tmu, int texnum);
 
+extern void R_InitialOGLState();
 /*
 ====================================================================
 

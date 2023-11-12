@@ -56,16 +56,12 @@ void R_DrawSprite(centity_t* ent)
 		right = vright;
 	}
 
-	qglColor4f(1, 1, 1, currententity->alpha);
+	R_SetColor(1, 1, 1, currententity->alpha);
 
-	GL_Bind(currentmodel->skins[ent->frame]->texnum);
+	R_BindTextureToCurrentTMU(currentmodel->skins[ent->frame]->texnum);
 	GL_TexEnv(GL_MODULATE);
 
-//	if (ent->alpha == 1.0)
-//		qglEnable(GL_ALPHA_TEST);
-//	else
-//		qglDisable(GL_ALPHA_TEST);
-	R_AlphaTest(ent->alpha == 1.0);
+	R_AlphaTest((ent->alpha == 1.0)); // realy only when alpha==1?
 
 	qglBegin(GL_QUADS);
 

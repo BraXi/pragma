@@ -157,14 +157,14 @@ int ScrInternal_LeaveFunction()
 
 	if (active_qcvm->stackDepth <= 0)
 	{
-		Scr_RunError("script stack underflow\n");
+		Scr_RunError("script stack underflow in %s\n", vmDefs[active_qcvm->progsType].filename);
 	}
 
 	// restore locals from the stack
 	c = active_qcvm->xfunction->locals;
 	active_qcvm->localstack_used -= c;
 	if (active_qcvm->localstack_used < 0)
-		Scr_RunError("locals stack underflow\n");
+		Scr_RunError("locals stack underflow in %s\n", vmDefs[active_qcvm->progsType].filename);
 
 	for (i = 0; i < c; i++)
 		((int*)active_qcvm->globals)[active_qcvm->xfunction->parm_start + i] = active_qcvm->localstack[active_qcvm->localstack_used + i];
@@ -206,7 +206,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 				Scr_PrintEntityFields(VM_TO_ENT(g->self));
 		}
 
-		Scr_RunError("%s: incorrect function index %i\n", __FUNCTION__, fnum);
+		Scr_RunError("%s: incorrect function index %i in %s, from %s\n", __FUNCTION__, fnum, vmDefs[vm->progsType].filename, callFromFuncName);
 		return;
 	}
 
@@ -230,7 +230,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		c = (eval_t*)&vm->globals[st->c];
 
 		if (!--vm->runawayCounter)
-			Scr_RunError("runaway loop error in script function %s", ScrInternal_String(f->s_name));
+			Scr_RunError("runaway loop error in function %s (%s)", ScrInternal_String(f->s_name), vmDefs[vm->progsType].filename);
 
 		vm->xfunction->profile++;
 		vm->xstatement = s;
@@ -298,7 +298,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_LOADP_FTOI:
 		case OP_LOADA_I:
 		case OP_LOADP_I:
-			Scr_RunError("Unsupported FTEQC opcode: %s", qcvm_op_names[st->op]);
+			Scr_RunError("Unsupported FTEQC opcode %s in %s", qcvm_op_names[st->op], vmDefs[vm->progsType].filename);
 			break;
 
 		case OP_MUL_I:
@@ -308,7 +308,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_DIV_I:
 			if (b->_int == 0)
 			{
-				Scr_RunError("division by zero");
+				Scr_RunError("division by zero in %s", vmDefs[vm->progsType].filename);
 //				c->_int = 0;
 			}
 			else
@@ -714,7 +714,7 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 		case OP_CALL8:
 			vm->argc = st->op - OP_CALL0; //sets the number of arguments a function takes
 			if (!a->function)
-				Scr_RunError("%s: NULL function\n", __FUNCTION__);
+				Scr_RunError("%s: NULL function in %s\n", __FUNCTION__, vmDefs[vm->progsType].filename);
 
 			newf = &vm->functions[a->function];
 
@@ -722,10 +722,10 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 			{	// negative statements are built in functions
 				i = -newf->first_statement;
 				if (i >= scr_numBuiltins)
-					Scr_RunError("%s: unknown builtin function (funcnum = %i)\n", __FUNCTION__, i);
+					Scr_RunError("%s: unknown builtin function (funcnum = %i) in %s\n", __FUNCTION__, i, vmDefs[vm->progsType].filename);
 
 				if(scr_builtins[i].execon != PF_ALL && vm->progsType != scr_builtins[i].execon)
-					Scr_RunError("%s: call to '%s' builtin in %s VM not allowed\n", __FUNCTION__, scr_builtins[i].name, vmDefs[vm->progsType]);
+					Scr_RunError("%s: call to '%s' builtin in %s VM not allowed\n", __FUNCTION__, scr_builtins[i].name, vmDefs[vm->progsType].name);
 
 				scr_builtins[i].func();
 				break;
@@ -767,9 +767,9 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 
 		default:
 			if(st->op > 0 && st->op < 269)
-				Scr_RunError("%s: unknown opcode %i [%s]\n", __FUNCTION__, st->op, qcvm_op_names[st->op]);
+				Scr_RunError("%s: unknown opcode %i [%s] in %s\n", __FUNCTION__, st->op, qcvm_op_names[st->op], vmDefs[vm->progsType].filename);
 			else
-				Scr_RunError("%s: unknown opcode %i\n", __FUNCTION__, st->op);
+				Scr_RunError("%s: unknown opcode %i in %s\n", __FUNCTION__, st->op, vmDefs[vm->progsType].filename);
 		}
 	}
 

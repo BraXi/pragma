@@ -15,8 +15,8 @@ void() testmodel_rotate =
 //	self.avelocity = '0 90 0';
 
 	self.animFrame ++;
-	if( self.animFrame > 153 )
-		self.animFrame = 0;
+	if( self.animFrame > 125 )
+		self.animFrame = 62;
 	self.nextthink = g_time + 0.1;
 	self.think = testmodel_rotate;	
 	
@@ -29,6 +29,7 @@ void() ClientCmd_TestModel =
 		setmodel(testmodel, "models/mutant.md3");
 		testmodel.think = testmodel_rotate;
 		testmodel.nextthink = g_time + 0.1;
+		self.animFrame = 62;
 	}
 	setorigin(testmodel, self.origin + '0 0 0' );
 	

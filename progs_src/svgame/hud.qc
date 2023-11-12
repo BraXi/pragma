@@ -29,43 +29,8 @@ float hud_pic_armor;
 */
 
 
-enum
-{
-	/* these match engine */
-	STAT_LAYOUT = 0,
-	STAT_HEALTH_VALUE,
-	STAT_ARMOR_VALUE,
-	STAT_CURRENT_AMMO,
-	STAT_FLASHES, // cleared each frame, 1 = health, 2 = armor
-	/* add custom stats below */
-	STAT_HEALTH_IMAGE,
-	STAT_ARMOR_IMAGE,	
-	STAT_UNUSED1,
-	STAT_UNUSED2,
-	STAT_UNUSED3,
-	STAT_UNUSED4,
-	STAT_UNUSED5,
-	STAT_UNUSED6,
-	STAT_UNUSED7,
-	STAT_UNUSED8,
-	STAT_UNUSED9,
-	STAT_UNUSED10,
-	STAT_UNUSED11,
-	STAT_UNUSED12,
-	STAT_UNUSED13,
-	STAT_UNUSED14,
-	STAT_UNUSED15,
-	STAT_UNUSED16,
-	STAT_UNUSED17,
-	STAT_UNUSED18,
-	STAT_UNUSED19,
-	STAT_UNUSED20,
-	STAT_UNUSED21,
-	STAT_UNUSED22,
-	STAT_UNUSED23,
-	STAT_UNUSED24,
-	STAT_UNUSED25,	
-};
+string hud_layoutstring_empty = "";
+
 
 string hud_layoutstring_mp = "";
 
@@ -134,5 +99,5 @@ void() HUD_Init =
 //	if(cvar("deathmatch"))
 //		HUD_SetLayout( world, hud_layoutstring_mp );
 //	else
-		HUD_SetLayout( world, hud_layoutstring_sp );
+		HUD_SetLayout( world, hud_layoutstring_empty );
 };

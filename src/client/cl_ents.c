@@ -487,7 +487,11 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 
 	if (flags & PS_VIEWMODEL_INDEX)
 	{
-		state->viewmodel_index = MSG_ReadByte (&net_message);
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		state->viewmodel_index = MSG_ReadShort(&net_message);
+#else
+		state->viewmodel_index = MSG_ReadByte(&net_message);
+#endif
 	}
 
 	if (flags & PS_VIEWMODEL_FRAME)

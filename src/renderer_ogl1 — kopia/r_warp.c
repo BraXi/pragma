@@ -568,7 +568,7 @@ void R_DrawSkyBox (void)
 #if 0
 	R_Blend(true);
 GL_TexEnv( GL_MODULATE );
-qglColor4f (1,1,1,0.5);
+R_SetColor(1,1,1,0.5);
 R_DepthTest(false);
 #endif
 	if (skyrotate)
@@ -598,7 +598,7 @@ R_DepthTest(false);
 		if (skymins[0][i] >= skymaxs[0][i] || skymins[1][i] >= skymaxs[1][i])
 			continue;
 
-		GL_Bind (sky_images[skytexorder[i]]->texnum);
+		R_BindTextureToCurrentTMU(sky_images[skytexorder[i]]->texnum);
 
 		qglBegin (GL_QUADS);
 		MakeSkyVec (skymins[0][i], skymins[1][i], i);
@@ -612,7 +612,7 @@ R_DepthTest(false);
 #if 0
 	R_Blend(false);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glColor4f (1,1,1,0.5);
+	R_SetColor(1,1,1,0.5);
 	R_DepthTest(true);
 #endif
 }

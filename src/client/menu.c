@@ -1104,9 +1104,6 @@ static void ControlsSetMenuItemValues( void )
 
 	Cvar_SetValue( "freelook", ClampCvar( 0, 1, freelook->value ) );
 	s_options_freelook_box.curvalue			= freelook->value;
-
-	Cvar_SetValue( "crosshair", ClampCvar( 0, 3, crosshair->value ) );
-	s_options_crosshair_box.curvalue		= crosshair->value;
 }
 
 static void ControlsResetDefaultsFunc( void *unused )

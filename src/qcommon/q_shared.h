@@ -484,6 +484,7 @@ typedef struct
 	cplane_t	plane;		// surface normal at impact
 	csurface_t	*surface;	// surface hit
 	int			contents;	// contents on other side of surface hit
+	int			entitynum;	// currently only used by CL_ & CG_
 	struct gentity_s	*ent;		// not set by CM_*() functions
 } trace_t;
 

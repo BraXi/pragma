@@ -184,9 +184,11 @@ void GL_Strings_f( void )
 */
 void GL_SetDefaultState( void )
 {
-	qglClearColor (1,0, 0.5 , 0.5);
+	R_InitialOGLState();
+
+	R_SetClearColor(1, 0, 0.5, 0.5);
 	R_SetCullFace(GL_FRONT);
-	qglEnable(GL_TEXTURE_2D);
+	R_Texturing(true);
 
 	R_AlphaTest(true);
 	qglAlphaFunc(GL_GREATER, 0.666);
@@ -195,7 +197,7 @@ void GL_SetDefaultState( void )
 	R_CullFace(false);
 	R_Blend(false);
 
-	qglColor4f (1,1,1,1);
+	R_SetColor(1,1,1,1);
 
 	qglPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 	qglShadeModel (GL_FLAT);

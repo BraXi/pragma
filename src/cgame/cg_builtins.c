@@ -5,6 +5,16 @@ extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 
 /*
 =================
+PFCG_AngleVectors
+=================
+*/
+void PFCG_AngleVectors(void)
+{
+	AngleVectors(Scr_GetParmVector(0), cl.script_globals->v_forward, cl.script_globals->v_right, cl.script_globals->v_up);
+}
+
+/*
+=================
 PFCG_getconfigstring
 
 returns configstring by index
@@ -29,7 +39,7 @@ PFCG_getstat
 get stat
 =================
 */
-static void PFCG_getstat()
+static void PFCG_getstat(void)
 {
 	int index = Scr_GetParmFloat(0);
 	if (index < 0 || index >= MAX_STATS)
@@ -39,6 +49,74 @@ static void PFCG_getstat()
 		return;
 	}
 	Scr_ReturnFloat(cl.frame.playerstate.stats[index]);
+}
+
+/*
+=================
+PFCG_pointcontents
+
+int contents = pointcontents(vector point)
+=================
+*/
+extern int CG_PointContents(vec3_t point);
+void PFCG_pointcontents(void)
+{
+	float* point = Scr_GetParmVector(0);
+	Scr_ReturnInt(CG_PointContents(point));
+}
+
+/*
+=================
+PFSV_trace
+
+Moves the given mins/maxs volume through the world from start to end.
+ignoreEntNum is explicitly not checked.
+
+trace(vector start, vector minS, vector maxS, vector end, float ignoreEnt, int contentmask)
+=================
+*/
+extern trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum);
+void PFCG_trace(void)
+{
+	trace_t		trace;
+	float* start, * end, * min, * max;
+	int ignoreEntNum;
+	int			contentmask;
+
+	start = Scr_GetParmVector(0);
+	min = Scr_GetParmVector(1);
+	max = Scr_GetParmVector(2);
+	end = Scr_GetParmVector(3);
+
+	ignoreEntNum = Scr_GetParmInt(4);
+	contentmask = Scr_GetParmInt(5);
+
+	trace = CG_Trace(start, min, max, end, contentmask, ignoreEntNum); 
+			//SV_Trace(start, min, max, end, ignoreEnt, contentmask);
+
+	// set globals in progs
+	cl.script_globals->trace_allsolid = trace.allsolid;
+	cl.script_globals->trace_startsolid = trace.startsolid;
+	cl.script_globals->trace_fraction = trace.fraction;
+	cl.script_globals->trace_plane_dist = trace.plane.dist;
+	VectorCopy(trace.plane.normal, cl.script_globals->trace_plane_normal);
+	VectorCopy(trace.endpos, cl.script_globals->trace_endpos);
+//	sv.script_globals->trace_ent = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
+	cl.script_globals->trace_entnum = trace.entitynum;
+	cl.script_globals->trace_contents = trace.contents;
+
+	if (trace.surface)
+	{
+		cl.script_globals->trace_surface_name = Scr_SetString(trace.surface->name);
+		cl.script_globals->trace_surface_flags = trace.surface->flags;
+		cl.script_globals->trace_surface_value = trace.surface->value;
+	}
+	else
+	{
+		cl.script_globals->trace_surface_name = Scr_SetString("");
+		cl.script_globals->trace_surface_flags = 0;
+		cl.script_globals->trace_surface_value = 0;
+	}
 }
 
 // read network packets
@@ -137,6 +215,9 @@ Register builtins which can be shared by both client and server progs
 */
 void CG_InitScriptBuiltins()
 {
+	Scr_DefineBuiltin(PFCG_pointcontents, PF_CL, "pointcontents", "int(vector v)");
+	Scr_DefineBuiltin(PFCG_trace, PF_CL, "trace", "void(vector s, vector bmins, vector bmaxs, vector e, float ie, int cm)");
+
 	Scr_DefineBuiltin(PFCG_getconfigstring, PF_CL, "getconfigstring", "string(int idx)");
 	Scr_DefineBuiltin(PFCG_getstat, PF_CL, "getstat", "float(float idx)");
 

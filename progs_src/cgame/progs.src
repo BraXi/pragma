@@ -13,9 +13,12 @@ cgame.dat
 
 ../inc/shared.qc 	// shared by client and server
 
+../inc/pmove.qc
+
 //
 // client game
 //
 cg_crosshair.qc
+cg_hud.qc
 cg_load.qc
 cg_main.qc

@@ -24,9 +24,22 @@ typedef struct cl_globalvars_s
 
 	float frametime;
 	int time; 
-	float realtime; 
+	float realtime;
+
 	int vid_width;
 	int vid_height;
+
+	float localplayernum;
+
+	vec3_t			v_forward, v_up, v_right;
+
+	float			trace_allsolid, trace_startsolid, trace_fraction, trace_plane_dist;
+	vec3_t			trace_endpos, trace_plane_normal;
+	float			trace_entnum;
+	int				trace_contents;
+	scr_string_t	trace_surface_name;
+	float			trace_surface_flags;
+	float			trace_surface_value;
 
 	scr_func_t CG_Main;
 	scr_func_t CG_Frame;

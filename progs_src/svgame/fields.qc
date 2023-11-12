@@ -6,6 +6,8 @@ Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
 */
 
+float developer, developer_script; // cvars for debugging
+
 // TODO move these
 .float noise_index;
 .float groundEntityNum;

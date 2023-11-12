@@ -66,9 +66,6 @@ typedef struct
 
 dirty_t		scr_dirty, scr_old_dirty[2];
 
-char		crosshair_pic[MAX_QPATH];
-int			crosshair_width, crosshair_height;
-
 void SCR_TimeRefresh_f (void);
 void SCR_Loading_f (void);
 
@@ -938,7 +935,6 @@ SCR_TouchPics
 Allows rendering code to cache all needed sbar graphics
 ===============
 */
-static const int num_crosshairs = 1; // number of crosshair pics
 void SCR_TouchPics (void)
 {
 	int		i, j;
@@ -946,17 +942,6 @@ void SCR_TouchPics (void)
 	for (i=0 ; i<2 ; i++)
 		for (j=0 ; j<11 ; j++)
 			re.RegisterPic (sb_nums[i][j]);
-
-	if (crosshair->value)
-	{
-		if (crosshair->value > num_crosshairs || crosshair->value < 0)
-			crosshair->value = num_crosshairs;
-
-		Com_sprintf (crosshair_pic, sizeof(crosshair_pic), "hud/crosshair_%i", (int)(crosshair->value));
-		re.DrawGetPicSize (&crosshair_width, &crosshair_height, crosshair_pic);
-		if (!crosshair_width)
-			crosshair_pic[0] = 0;
-	}
 }
 
 /*
@@ -1437,11 +1422,12 @@ void SCR_UpdateScreen (void)
 			if (cl.frame.playerstate.stats[STAT_LAYOUTS] & 2)
 				CL_DrawInventory ();
 
+			CG_DrawGUI();
+
 			SCR_DrawNet ();
 			SCR_DrawServerStats();
 			SCR_CheckDrawCenterString ();
 
-			CG_DrawGUI();
 
 			if (scr_timegraph->value)
 				SCR_DebugGraph (cls.frametime*300, 0);

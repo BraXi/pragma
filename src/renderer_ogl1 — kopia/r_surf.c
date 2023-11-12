@@ -235,9 +235,9 @@ void R_DrawTriangleOutlines (void)
 	if (!r_showtris->value)
 		return;
 
-	qglDisable (GL_TEXTURE_2D);
+	R_Texturing(false);
 	R_DepthTest(false);
-	qglColor4f (1,1,1,1);
+	R_SetColor (1,1,1,1);
 
 	for (i=0 ; i<MAX_LIGHTMAPS ; i++)
 	{
@@ -262,7 +262,7 @@ void R_DrawTriangleOutlines (void)
 	}
 
 	R_DepthTest(true);
-	qglEnable (GL_TEXTURE_2D);
+	R_Texturing(true);
 }
 
 /*
@@ -326,7 +326,7 @@ void R_BlendLightmaps (void)
 		return;
 
 	// don't bother writing Z
-	R_WriteToDepthBuffer(GL_FALSE);
+	R_WriteToDepthBuffer( GL_FALSE );
 
 	/*
 	** set the appropriate blending mode unless we're only looking at the
@@ -377,7 +377,7 @@ void R_BlendLightmaps (void)
 		{
 			if (currentmodel == r_worldmodel)
 				c_visible_lightmaps++;
-			GL_Bind( gl_state.lightmap_textures + i);
+			R_BindTextureToCurrentTMU( gl_state.lightmap_textures + i);
 
 			for ( surf = gl_lms.lightmap_surfaces[i]; surf != 0; surf = surf->lightmapchain )
 			{
@@ -394,7 +394,7 @@ void R_BlendLightmaps (void)
 	{
 		LM_InitBlock();
 
-		GL_Bind( gl_state.lightmap_textures+0 );
+		R_BindTextureToCurrentTMU( gl_state.lightmap_textures+0 );
 
 		if (currentmodel == r_worldmodel)
 			c_visible_lightmaps++;
@@ -488,11 +488,11 @@ void R_RenderBrushPoly (msurface_t *fa)
 
 	if (fa->flags & SURF_DRAWTURB)
 	{	
-		GL_Bind( image->texnum );
+		R_BindTextureToCurrentTMU( image->texnum );
 
 		// warp texture, no lightmaps
 		GL_TexEnv( GL_MODULATE );
-		qglColor4f( gl_state.inverse_intensity, 
+		R_SetColor( gl_state.inverse_intensity,
 			        gl_state.inverse_intensity,
 					gl_state.inverse_intensity,
 					1.0F );
@@ -503,7 +503,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	}
 	else
 	{
-		GL_Bind( image->texnum );
+		R_BindTextureToCurrentTMU( image->texnum );
 
 		GL_TexEnv( GL_REPLACE );
 	}
@@ -552,7 +552,7 @@ dynamic:
 			R_BuildLightMap( fa, (void *)temp, smax*4 );
 			R_SetCacheState( fa );
 
-			GL_Bind( gl_state.lightmap_textures + fa->lightmaptexturenum );
+			R_BindTextureToCurrentTMU( gl_state.lightmap_textures + fa->lightmaptexturenum );
 
 			qglTexSubImage2D( GL_TEXTURE_2D, 0,
 							  fa->light_s, fa->light_t, 
@@ -605,14 +605,14 @@ void R_DrawAlphaSurfaces (void)
 
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
-		GL_Bind(s->texinfo->image->texnum);
+		R_BindTextureToCurrentTMU(s->texinfo->image->texnum);
 		c_brush_polys++;
 		if (s->texinfo->flags & SURF_TRANS33)
-			qglColor4f (intens,intens,intens,0.33);
+			R_SetColor(intens,intens,intens,0.33);
 		else if (s->texinfo->flags & SURF_TRANS66)
-			qglColor4f (intens,intens,intens,0.66);
+			R_SetColor(intens,intens,intens,0.66);
 		else
-			qglColor4f (intens,intens,intens,1);
+			R_SetColor(intens,intens,intens,1);
 		if (s->flags & SURF_DRAWTURB)
 			EmitWaterPolys (s);
 		else
@@ -620,7 +620,7 @@ void R_DrawAlphaSurfaces (void)
 	}
 
 	GL_TexEnv( GL_REPLACE );
-	qglColor4f (1,1,1,1);
+	R_SetColor(1,1,1,1);
 	R_Blend(false);
 
 	r_alpha_surfaces = NULL;
@@ -721,7 +721,7 @@ dynamic:
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 			R_SetCacheState( surf );
 
-			GL_MBind( GL_TEXTURE1_ARB, gl_state.lightmap_textures + surf->lightmaptexturenum );
+			R_MultiBindTexture( TMU_LIGHTMAP, gl_state.lightmap_textures + surf->lightmaptexturenum );
 
 			lmtex = surf->lightmaptexturenum;
 
@@ -739,7 +739,7 @@ dynamic:
 
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 
-			GL_MBind( GL_TEXTURE1_ARB, gl_state.lightmap_textures + 0 );
+			R_MultiBindTexture(TMU_LIGHTMAP, gl_state.lightmap_textures + 0 );
 
 			lmtex = 0;
 
@@ -753,8 +753,8 @@ dynamic:
 
 		c_brush_polys++;
 
-		GL_MBind( GL_TEXTURE0_ARB, image->texnum );
-		GL_MBind( GL_TEXTURE1_ARB, gl_state.lightmap_textures + lmtex );
+		R_MultiBindTexture(TMU_DEFAULT, image->texnum );
+		R_MultiBindTexture(TMU_LIGHTMAP, gl_state.lightmap_textures + lmtex );
 
 //==========
 //PGM
@@ -801,8 +801,8 @@ dynamic:
 	{
 		c_brush_polys++;
 
-		GL_MBind( GL_TEXTURE0_ARB, image->texnum );
-		GL_MBind( GL_TEXTURE1_ARB, gl_state.lightmap_textures + lmtex );
+		R_MultiBindTexture(TMU_DEFAULT, image->texnum );
+		R_MultiBindTexture(TMU_LIGHTMAP, gl_state.lightmap_textures + lmtex );
 
 //==========
 //PGM
@@ -879,7 +879,7 @@ void R_DrawInlineBModel (void)
 	if ( currententity->renderfx & RF_TRANSLUCENT )
 	{
 		R_Blend(true);
-		qglColor4f (1,1,1,0.25);
+		R_SetColor(1,1,1,0.25);
 		GL_TexEnv( GL_MODULATE );
 	}
 
@@ -922,7 +922,7 @@ void R_DrawInlineBModel (void)
 	else
 	{
 		R_Blend(false);
-		qglColor4f (1,1,1,1);
+		R_SetColor(1,1,1,1);
 		GL_TexEnv( GL_REPLACE );
 	}
 }
@@ -963,7 +963,7 @@ void R_DrawBrushModel (centity_t *e)
 	if (R_CullBox (mins, maxs))
 		return;
 
-	qglColor3f (1,1,1);
+	R_SetColor(1,1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
 	VectorSubtract (r_newrefdef.vieworg, e->origin, modelorg);
@@ -987,9 +987,9 @@ void R_DrawBrushModel (centity_t *e)
 	e->angles[2] = -e->angles[2];	// stupid quake bug
 
 	GL_EnableMultitexture( !r_fullbright->value );
-	GL_SelectTexture( GL_TEXTURE0_ARB );
+	R_SelectTextureMappingUnit( TMU_DEFAULT );
 	GL_TexEnv( GL_REPLACE );
-	GL_SelectTexture( GL_TEXTURE1_ARB );
+	R_SelectTextureMappingUnit( TMU_LIGHTMAP );
 	GL_TexEnv( GL_MODULATE );
 
 	R_DrawInlineBModel ();
@@ -1193,7 +1193,7 @@ void R_DrawWorld (void)
 
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
 
-	qglColor3f (1,1,1);
+	R_SetColor(1,1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 	R_ClearSkyBox ();
 
@@ -1201,9 +1201,9 @@ void R_DrawWorld (void)
 	{
 		GL_EnableMultitexture( !r_fullbright->value );
 
-		GL_SelectTexture( GL_TEXTURE0_ARB );
+		R_SelectTextureMappingUnit( TMU_DEFAULT );
 		GL_TexEnv( GL_REPLACE );
-		GL_SelectTexture( GL_TEXTURE1_ARB );
+		R_SelectTextureMappingUnit( TMU_LIGHTMAP );
 
 		if ( r_lightmap->value )
 			GL_TexEnv( GL_REPLACE );
@@ -1348,7 +1348,7 @@ static void LM_UploadBlock( qboolean dynamic )
 		texture = gl_lms.current_lightmap_texture;
 	}
 
-	GL_Bind( gl_state.lightmap_textures + texture );
+	R_BindTextureToCurrentTMU( gl_state.lightmap_textures + texture );
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -1551,7 +1551,7 @@ void GL_BeginBuildingLightmaps (model_t *m)
 	r_framecount = 1;		// no dlightcache
 
 	GL_EnableMultitexture( true );
-	GL_SelectTexture( GL_TEXTURE1_ARB );
+	R_SelectTextureMappingUnit( TMU_LIGHTMAP );
 
 	/*
 	** setup the base lightstyles so the lightmaps won't have to be regenerated
@@ -1615,7 +1615,7 @@ void GL_BeginBuildingLightmaps (model_t *m)
 	/*
 	** initialize the dynamic lightmap texture
 	*/
-	GL_Bind( gl_state.lightmap_textures + 0 );
+	R_BindTextureToCurrentTMU( gl_state.lightmap_textures + 0 );
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	qglTexImage2D( GL_TEXTURE_2D, 

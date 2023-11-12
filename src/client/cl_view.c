@@ -30,7 +30,6 @@ struct model_s	*gun_model;
 
 //=============
 
-cvar_t		*crosshair;
 cvar_t		*cl_testparticles;
 cvar_t		*cl_testentities;
 cvar_t		*cl_testlights;
@@ -413,31 +412,6 @@ void V_Gun_Model_f (void)
 
 //============================================================================
 
-
-/*
-=================
-SCR_DrawCrosshair
-=================
-*/
-void SCR_DrawCrosshair (void)
-{
-	if (!crosshair->value)
-		return;
-
-	// todo: dont draw crosshair in menus m_menudepth
-
-	if (crosshair->modified)
-	{
-		crosshair->modified = false;
-		SCR_TouchPics ();
-	}
-
-	if (!crosshair_pic[0])
-		return;
-
-	re.DrawPic (scr_vrect.x + ((scr_vrect.width - crosshair_width)>>1), scr_vrect.y + ((scr_vrect.height - crosshair_height)>>1), crosshair_pic);
-}
-
 /*
 ==================
 V_RenderView
@@ -549,7 +523,7 @@ void V_RenderView( float stereo_separation )
 	SCR_AddDirtyPoint (scr_vrect.x+scr_vrect.width-1,
 		scr_vrect.y+scr_vrect.height-1);
 
-	SCR_DrawCrosshair ();
+//	SCR_DrawCrosshair ();
 }
 
 
@@ -577,8 +551,6 @@ void V_Init (void)
 	Cmd_AddCommand ("gun_model", V_Gun_Model_f);
 
 	Cmd_AddCommand ("viewpos", V_Viewpos_f);
-
-	crosshair = Cvar_Get ("crosshair", "0", CVAR_ARCHIVE);
 
 	cl_testblend = Cvar_Get ("cl_testblend", "0", 0);
 	cl_testparticles = Cvar_Get ("cl_testparticles", "0", 0);
