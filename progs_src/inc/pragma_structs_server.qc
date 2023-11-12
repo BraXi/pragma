@@ -92,8 +92,8 @@ void end_sys_globals; // end of struct
 	.float			movetype;	// MOVETYPE_NONE etc
 	.float			gravity;	// [0-1.0]
 	.int			clipmask;	
-	.float			groundEntityNum; // -1 = in air
-	.float			groundEntity_linkcount;
+	.float			groundentity_num; // -1 = in air, 0 world, etc..
+	.float			groundentity_linkcount;
 	.vector			size;		// DON'T CHANGE! set by linkentity()
 	.entity			owner;		
 	.entity			chain;		// DON'T CHANGE!

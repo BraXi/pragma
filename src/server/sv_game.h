@@ -112,10 +112,8 @@ struct gentity_s
 
 	float		freetime;			// time when entity was freed
 
-	
-	int			groundentity_num;
-//	gentity_t	*groundentity;
-	int			groundentity_linkcount;
+	int			dummy[2]; // proper alignment
+
 	gentity_t	*teamchain;
 	gentity_t	*teammaster;
 

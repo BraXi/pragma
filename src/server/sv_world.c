@@ -101,7 +101,7 @@ void M_CheckGround(gentity_t* ent)
 
 	if (ent->v.velocity[2] > 100)
 	{
-		ent->groundentity_num = ENTITYNUM_NULL;
+		ent->v.groundentity_num = ENTITYNUM_NULL;
 		return;
 	}
 
@@ -115,7 +115,7 @@ void M_CheckGround(gentity_t* ent)
 	// check steepness
 	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
 	{
-		ent->groundentity_num = ENTITYNUM_NULL;
+		ent->v.groundentity_num = ENTITYNUM_NULL;
 		return;
 	}
 
@@ -126,8 +126,8 @@ void M_CheckGround(gentity_t* ent)
 	if (!trace.startsolid && !trace.allsolid)
 	{
 		VectorCopy(trace.endpos, ent->s.origin);
-		ent->groundentity_num = trace.entitynum;
-		ent->groundentity_linkcount = trace.ent->linkcount;
+		ent->v.groundentity_num = trace.entitynum;
+		ent->v.groundentity_linkcount = trace.ent->linkcount;
 		ent->v.velocity[2] = 0;
 	}
 }
@@ -167,15 +167,15 @@ void SV_RunWorldFrame(void)
 
 		VectorCopy(ent->v.origin, ent->v.old_origin);
 
-		gentity_t* groundentity = (ent->groundentity_num == ENTITYNUM_NULL) ? NULL : ENT_FOR_NUM(ent->groundentity_num);
+		gentity_t* groundentity = (ent->v.groundentity_num == ENTITYNUM_NULL) ? NULL : ENT_FOR_NUM((int)ent->v.groundentity_num);
 //		groundentity = ent->groundentity;
 
 		// if the ground entity moved, make sure we are still on it
 		if(groundentity != NULL) 
 		{
-			if ((groundentity->linkcount != ent->groundentity_linkcount))
+			if ((groundentity->linkcount != (int)ent->v.groundentity_linkcount))
 			{
-				ent->groundentity_num = ENTITYNUM_NULL;
+				ent->v.groundentity_num = ENTITYNUM_NULL;
 				//if (!((int)ent->v.flags & (FL_SWIM | FL_FLY)))// && (ent->v.svflags & SVF_MONSTER))
 				//{
 				//	M_CheckGround(ent);

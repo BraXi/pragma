@@ -98,8 +98,8 @@ typedef struct sv_entvars_s
 	float			movetype;	// MOVETYPE_NONE etc
 	float			gravity;	// [0-1.0]
 	int			clipmask;	
-	float			groundEntityNum; // -1 = in air
-	float			groundEntity_linkcount;
+	float			groundentity_num; // -1 = in air, 0 world, etc..
+	float			groundentity_linkcount;
 	vec3_t			size;		// DON'T CHANGE! set by linkentity()
 	scr_entity_t	owner;		
 	scr_entity_t	chain;		// DON'T CHANGE!

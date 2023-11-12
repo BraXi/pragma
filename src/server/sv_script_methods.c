@@ -1334,15 +1334,11 @@ void PFSV_pmove(void)
 
 	gentity_t* ground = pm.groundentity;
 
-	ent->groundentity_num = (pm.groundentity == NULL ? -1 : ground->s.number);
+	ent->v.groundentity_num = (pm.groundentity == NULL ? -1 : ground->s.number);
 
 	if (ground)
-		ent->groundentity_linkcount = ground->linkcount;
+		ent->v.groundentity_linkcount = ground->linkcount;
 
-	ent->v.groundEntityNum = (ground == NULL ? -1 : ground->s.number);
-	
-	if (ground)
-		ent->v.groundEntity_linkcount = ground->linkcount;
 
 	VectorCopy(pm.viewangles, ent->v.v_angle);
 	VectorCopy(pm.viewangles, client->ps.viewangles);
