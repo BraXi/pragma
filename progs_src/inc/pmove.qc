@@ -1438,5 +1438,8 @@ void(pmove_t pmove) Pmove =
 
 #ifdef SVGAME
 
+void(entity ent) SV_PMove =
+{
+};
 
 #endif

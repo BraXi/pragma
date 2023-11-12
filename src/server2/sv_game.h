@@ -96,7 +96,6 @@ struct gclient_s
 	pmove_state_t	old_pmove;
 };
 
-#define ENTITYNUM_NULL -1
 struct gentity_s
 {
 	entity_state_t		s;
@@ -112,9 +111,7 @@ struct gentity_s
 
 	float		freetime;			// time when entity was freed
 
-	
-	int			groundentity_num;
-//	gentity_t	*groundentity;
+	gentity_t	*groundentity;
 	int			groundentity_linkcount;
 	gentity_t	*teamchain;
 	gentity_t	*teammaster;

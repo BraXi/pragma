@@ -145,7 +145,7 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 CL_PMTrace
 ================
 */
-trace_t		CL_PMTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
+trace_t CL_PMTrace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
 {
 	trace_t	t;
 
@@ -160,7 +160,7 @@ trace_t		CL_PMTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
 	return t;
 }
 
-int		CL_PMpointcontents (vec3_t point)
+int CL_PMpointcontents(vec3_t point)
 {
 	int			i;
 	entity_state_t	*ent;
@@ -168,14 +168,14 @@ int		CL_PMpointcontents (vec3_t point)
 	cmodel_t		*cmodel;
 	int			contents;
 
-	contents = CM_PointContents (point, 0);
+	contents = CM_PointContents(point, 0);
 
 	for (i=0 ; i<cl.frame.num_entities ; i++)
 	{
 		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
 		ent = &cl_parse_entities[num];
 
-		if (ent->solid != 31) // special value for bmodel
+		if (ent->solid != PACKED_BSP) // special value for bmodel
 			continue;
 
 		cmodel = cl.model_clip[(int)ent->modelindex];

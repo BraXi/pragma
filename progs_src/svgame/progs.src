@@ -14,6 +14,7 @@ svgame.dat
 ../inc/shared.qc 	// shared by client and server
 
 ../inc/pmove.qc 	// shared by client and server
+
 //
 // server game
 //

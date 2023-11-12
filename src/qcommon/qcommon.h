@@ -100,7 +100,7 @@ static inline void MSG_UnpackSolid32(int packedsolid, vec3_t mins, vec3_t maxs)
 #else
 static inline void MSG_UnpackSolid16(int packedsolid, vec3_t bmins, vec3_t bmaxs)
 {
-	int		i, x, zd, zu;
+	int		x, zd, zu;
 	// encoded bbox
 	x = 8 * ((int)packedsolid & 31);
 	zd = 8 * (((int)packedsolid >> 5) & 31);

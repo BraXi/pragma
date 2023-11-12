@@ -65,7 +65,10 @@ typedef struct sv_entvars_s
 	vec3_t		angles;
 	vec3_t		old_origin;		// for lerping
 
-	int			modelindex[4];	// models
+	int			modelindex;	// models
+	int			modelindex2;	// models
+	int			modelindex3;	// models
+	int			modelindex4;	// models
 
 	int			animFrame;		// current animation frame
 	int			skinnum;		// for MD3 this should be index to .skin file
@@ -129,12 +132,14 @@ typedef struct sv_entvars_s
 	vec3_t			v_angle;	
 	float			viewheight;
 
-	// pmove vars
-	float		pm_type;		// pmtype_t
-	vec3_t		pm_origin;		// short
-	float		pm_velocity;	// short
-	float		pm_flags;		// byte
-	float		pm_time;		// byte each unit = 8 ms
-	float		pm_gravity;		// short
-	vec3_t		delta_angles;	// short add to command angles to get view direction, changed by spawns, rotating objects, and teleporters
+	float		pm_type; //pmtype_t
+	vec3_t		pm_origin;
+	vec3_t		pm_velocity;
+	vec3_t		pm_mins;
+	vec3_t		pm_maxs;
+	float		pm_flags;			// ducked, jump_held, etc
+	float		pm_time;			// each unit = 8 ms
+	float		pm_gravity;
+	vec3_t		pm_delta_angles;	// add to command angles to get view direction
+									// changed by spawns, rotating objects, and teleporters
 } sv_entvars_t;

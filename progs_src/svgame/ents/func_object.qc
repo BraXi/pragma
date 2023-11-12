@@ -18,9 +18,9 @@ void(float planeDist, vector planeNormal, float surfaceFlags) func_object_touch 
 	if (planeNormal == vec3_origin)
 		return;
 	
-	if (planeNormal_z == 1.0)
+	if (planeNormal_z < 1.0)
 		return;
-	
+
 	if (other.takedamage == DAMAGE_NO)
 		return;
 	

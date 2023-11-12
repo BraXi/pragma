@@ -202,7 +202,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 
 	//sv.models[1] is world
 	sv.models[1].type = MOD_BRUSH;
-	sv.num_models = 1;
+	sv.num_models = 2;
 	if (serverstate != ss_game)
 	{
 		sv.models[1].bmodel = CM_LoadMap ("", false, &checksum);	// no real map
@@ -248,12 +248,6 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 		sv.num_models++;
 	}
 
-	for (i = 1; i < CM_NumInlineModels(); i++)
-	{
-		Com_sprintf(sv.configstrings[CS_MODELS + 1 + i], sizeof(sv.configstrings[CS_MODELS + 1 + i]), "*%i", i);
-		sv.models[i + 1].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS + 1 + i]);
-		sv.models[i + 1].type = MOD_BRUSH;
-	}
 	//
 	// spawn the rest of the entities on the map
 	//	

@@ -99,7 +99,7 @@ void SV_CheckGround(gentity_t* ent)
 
 	if (ent->v.velocity[2] > 100)
 	{
-		ent->groundentity_num = ENTITYNUM_NULL;
+		ent->groundentity = NULL;
 		return;
 	}
 
@@ -113,14 +113,14 @@ void SV_CheckGround(gentity_t* ent)
 	// check steepness
 	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
 	{
-		ent->groundentity_num = ENTITYNUM_NULL;
+		ent->groundentity = NULL;
 		return;
 	}
 
 	if (!trace.startsolid && !trace.allsolid)
 	{
 		VectorCopy(trace.endpos, ent->v.origin);
-		ent->groundentity_num = trace.entitynum;
+		ent->groundentity = trace.ent;
 		ent->groundentity_linkcount = trace.ent->linkcount;
 		ent->v.velocity[2] = 0;
 	}
@@ -237,7 +237,7 @@ int SV_FlyMove(gentity_t* ent, float time, int mask)
 
 	time_left = time;
 
-	ent->groundentity_num = ENTITYNUM_NULL;
+	ent->groundentity = NULL;
 	for (bumpcount = 0; bumpcount < numbumps; bumpcount++)
 	{
 		for (i = 0; i < 3; i++)
@@ -268,7 +268,7 @@ int SV_FlyMove(gentity_t* ent, float time, int mask)
 			blocked |= 1;		// floor
 			if (hit->v.solid == SOLID_BSP)
 			{
-				ent->groundentity_num = NUM_FOR_ENT(hit);
+				ent->groundentity = hit;
 				ent->groundentity_linkcount = hit->linkcount;
 			}
 		}
@@ -488,7 +488,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			continue;		// not linked in anywhere
 
 		// if the entity is standing on the pusher, it will definitely be moved
-		if (check->groundentity_num != NUM_FOR_ENT(pusher))
+		if (check->groundentity != pusher)
 		{
 			// see if the ent needs to be tested
 			if (check->v.absmin[0] >= maxs[0]
@@ -504,7 +504,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 				continue;
 		}
 
-		if ((pusher && pusher->v.movetype == MOVETYPE_PUSH) || (check->groundentity_num == NUM_FOR_ENT(pusher)))
+		if ((pusher && pusher->v.movetype == MOVETYPE_PUSH) || (check->groundentity == pusher))
 		{
 			// move this entity
 			pushed_p->ent = check;
@@ -535,8 +535,8 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			VectorAdd(check->v.origin, move2, check->v.origin);
 
 			// may have pushed them off an edge
-			if (check->groundentity_num != NUM_FOR_ENT(pusher))
-				check->groundentity_num = ENTITYNUM_NULL;
+			if (check->groundentity != pusher)
+				check->groundentity = NULL;
 
 			block = SV_TestEntityPosition(check);
 			if (!block)
@@ -714,20 +714,15 @@ void SV_Physics_Toss(gentity_t* ent)
 		return;
 
 	if (ent->v.velocity[2] > 0)
-		ent->groundentity_num = ENTITYNUM_NULL;
-
-	gentity_t* groundent = NULL;
-
-	if (ent->groundentity_num != ENTITYNUM_NULL)
-		groundent = ENT_FOR_NUM(ent->groundentity_num);
+		ent->groundentity = NULL;
 
 	// check for the groundentity going away
-	if (groundent)
-		if (!groundent->inuse)
-			ent->groundentity_num = ENTITYNUM_NULL;
+	if (ent->groundentity)
+		if (!ent->groundentity->inuse)
+			ent->groundentity = NULL;
 
 	// if onground, return without moving
-	if (groundent)
+	if (ent->groundentity)
 		return;
 
 	VectorCopy(ent->v.origin, old_origin);
@@ -761,7 +756,7 @@ void SV_Physics_Toss(gentity_t* ent)
 		{
 			if (ent->v.velocity[2] < 60 || ent->v.movetype != MOVETYPE_BOUNCE)
 			{
-				ent->groundentity_num = trace.entitynum;
+				ent->groundentity = trace.ent;
 				ent->groundentity_linkcount = trace.ent->linkcount;
 				VectorCopy(vec3_origin, ent->v.velocity);
 				VectorCopy(vec3_origin, ent->v.avelocity);
@@ -840,14 +835,14 @@ void SV_Physics_Step(gentity_t* ent)
 	float* vel;
 	float		speed, newspeed, control;
 	float		friction;
-	gentity_t* groundentity = NULL;
+	gentity_t* groundentity;
 	int			mask;
 
 	// airborn monsters should always check for ground
-	if (ent->groundentity_num == ENTITYNUM_NULL)
+	if (!ent->groundentity)
 		SV_CheckGround(ent);
 
-	groundentity = (ent->groundentity_num == ENTITYNUM_NULL) ? NULL : ENT_FOR_NUM(ent->groundentity_num);
+	groundentity = ent->groundentity;
 
 	SV_CheckVelocity(ent);
 
@@ -934,7 +929,7 @@ void SV_Physics_Step(gentity_t* ent)
 		if (!ent->inuse)
 			return;
 
-		if (ent->groundentity_num != ENTITYNUM_NULL && !wasonground && hitsound)
+		if (ent->groundentity && !wasonground && hitsound)
 			SV_StartSound(NULL, ent, 0, SV_SoundIndex("world/land.wav"), 1, 1, 0);
 	}
 

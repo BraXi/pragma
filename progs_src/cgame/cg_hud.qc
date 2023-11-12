@@ -61,7 +61,7 @@ void() HUD_DeadScreen =
 	drawstring(xy_align, 2, '1 1 1', 1, "You are dead");		
 		
 	xy_align = '400 330 2';
-	drawstring(xy_align, 0.8, '1 1 1', 1, "type respawn in console");
+	drawstring(xy_align, 0.8, '1 1 1', 1, "press SPACE to respawn");
 };
 
 

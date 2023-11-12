@@ -123,6 +123,7 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 void(entity who, vector start, vector end, float weaponnum) FireBullet;
 void(entity ent, vector fireAngles, vector offset, float wpn) W_Fire;
 
+void() SpawnPlayer;
 void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime) ClientThink =
 {
 	
@@ -135,6 +136,14 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 	make clientinfo transmit bbox size so pmove can become more flexible
 	
 	*/
+	
+	if(self.health <= 0 && self.deadflag == DEAD_DEAD && inMove_z > 0)
+	{
+		SpawnPlayer();
+		sprint(self, PRINT_HIGH, "respawned\n");
+		return;
+	}
+	
 	// pmove
 	if( self.health > 0 )
 	{

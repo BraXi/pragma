@@ -40,6 +40,7 @@ typedef struct cl_globalvars_s
 	scr_string_t	trace_surface_name;
 	float			trace_surface_flags;
 	float			trace_surface_value;
+	scr_entity_t	trace_ent;
 
 	scr_func_t CG_Main;
 	scr_func_t CG_Frame;

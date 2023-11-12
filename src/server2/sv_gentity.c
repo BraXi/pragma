@@ -33,8 +33,6 @@ void SV_InitEntity(gentity_t* ent)
 	ent->v.classname = Scr_SetString("no_class");
 	ent->v.gravity = 1.0;
 	ent->v.groundEntityNum = -1;
-
-	ent->groundentity_num = -1;
 }
 
 /*

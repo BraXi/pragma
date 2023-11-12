@@ -73,7 +73,7 @@ void SV_EndWorldFrame(void)
 		ent->s.modelindex = ent->v.modelindex;
 		ent->s.modelindex2 = ent->v.modelindex2;
 		ent->s.modelindex3 = ent->v.modelindex3;
-		ent->s.modelindex4 = ent->v.modelindex3;
+		ent->s.modelindex4 = ent->v.modelindex4;
 
 		ent->s.frame = (int)ent->v.animFrame;
 		ent->s.skinnum = (int)ent->v.skinnum;
@@ -101,7 +101,7 @@ void M_CheckGround(gentity_t* ent)
 
 	if (ent->v.velocity[2] > 100)
 	{
-		ent->groundentity_num = ENTITYNUM_NULL;
+		ent->groundentity = NULL;
 		return;
 	}
 
@@ -115,7 +115,7 @@ void M_CheckGround(gentity_t* ent)
 	// check steepness
 	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
 	{
-		ent->groundentity_num = ENTITYNUM_NULL;
+		ent->groundentity = NULL;
 		return;
 	}
 
@@ -126,7 +126,7 @@ void M_CheckGround(gentity_t* ent)
 	if (!trace.startsolid && !trace.allsolid)
 	{
 		VectorCopy(trace.endpos, ent->s.origin);
-		ent->groundentity_num = trace.entitynum;
+		ent->groundentity = trace.ent;
 		ent->groundentity_linkcount = trace.ent->linkcount;
 		ent->v.velocity[2] = 0;
 	}
@@ -167,20 +167,14 @@ void SV_RunWorldFrame(void)
 
 		VectorCopy(ent->v.origin, ent->v.old_origin);
 
-		gentity_t* groundentity = (ent->groundentity_num == ENTITYNUM_NULL) ? NULL : ENT_FOR_NUM(ent->groundentity_num);
-//		groundentity = ent->groundentity;
-
 		// if the ground entity moved, make sure we are still on it
-		if(groundentity != NULL) 
+		if ((ent->groundentity) && (ent->groundentity->linkcount != ent->groundentity_linkcount))
 		{
-			if ((groundentity->linkcount != ent->groundentity_linkcount))
-			{
-				ent->groundentity_num = ENTITYNUM_NULL;
-				//if (!((int)ent->v.flags & (FL_SWIM | FL_FLY)))// && (ent->v.svflags & SVF_MONSTER))
-				//{
-				//	M_CheckGround(ent);
-				//}
-			}
+			ent->groundentity = NULL;
+			//if (!((int)ent->v.flags & (FL_SWIM | FL_FLY)))// && (ent->v.svflags & SVF_MONSTER))
+			//{
+			//	M_CheckGround(ent);
+			//}
 		}
 
 		if (i > 0 && i <= svs.max_clients)
@@ -356,7 +350,6 @@ static int SV_PackSolid32(gentity_t* ent)
 #else
 static int SV_PackSolid16(gentity_t* ent)
 {
-	int i, j, k;
 	int packedsolid;
 	// assume that x/y are equal and symetric
 	i = ent->v.maxs[0] / 8;
@@ -385,7 +378,7 @@ static int SV_PackSolid16(gentity_t* ent)
 	{
 		vec3_t mins, maxs;
 
-		MSG_UnpackSolid16(packedsolid, mins, maxs);
+		MSG_UnpackSolid16(solid32, mins, maxs);
 
 		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
 			Com_Printf("%s: bad mins/maxs on entity %d\n", __FUNCTION__, NUM_FOR_EDICT(ent));
@@ -448,6 +441,17 @@ void SV_LinkEdict (gentity_t *ent)
 		ent->s.solid = 0;
 		break;
 	}
+
+	// encode the size into the centity_state for client prediction
+	if (ent->v.solid == SOLID_BBOX && !((int)ent->v.svflags & SVF_DEADMONSTER))
+	{	
+	}
+	else if (ent->v.solid == SOLID_BSP)
+	{
+		ent->s.solid = 31;		// a solid_bbox will never create this value
+	}
+	else
+		ent->s.solid = 0;
 
 	// set the abs box
 	if (ent->v.solid == SOLID_BSP && (ent->v.angles[0] || ent->v.angles[1] || ent->v.angles[2]) )
@@ -715,15 +719,15 @@ Offset is filled in to contain the adjustment that must be added to the
 testing object's origin to get a point to use with the returned hull.
 ================
 */
-int SV_HullForEntity(gentity_t* ent)
+int SV_HullForEntity (gentity_t *ent)
 {
-	cmodel_t* model;
+	cmodel_t	*model;
 
 	// decide which clipping hull to use, based on the size
 	if (ent->v.solid == SOLID_BSP)
-	{
+	{	
 		// explicit hulls in the BSP model
-		model = sv.models[ent->s.modelindex].bmodel;
+		model = &sv.models[ ent->s.modelindex ];
 
 		if (!model)
 		{
@@ -885,11 +889,6 @@ trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t 
 
 	// clip to other solid entities
 	SV_ClipMoveToEntities ( &clip );
-
-	if (clip.trace.ent == NULL)
-		clip.trace.entitynum = ENTITYNUM_NULL;
-	else
-		clip.trace.entitynum = NUM_FOR_ENT(clip.trace.ent);
 
 	return clip.trace;
 }

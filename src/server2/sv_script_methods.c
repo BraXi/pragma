@@ -288,6 +288,7 @@ void PFSV_setmodel(void)
 		Scr_RunError("setmodel(): empty model name for entity %i\n", NUM_FOR_EDICT(ent));
 		return;
 	}
+//	name = "*3";
 	i = SV_ModelIndex(name);
 	ent->v.model = Scr_SetString(name);
 	ent->v.modelindex = i;
@@ -1330,19 +1331,13 @@ void PFSV_pmove(void)
 	ent->v.pm_type = client->ps.pmove.pm_type;
 	ent->v.pm_flags = client->ps.pmove.pm_flags;
 
+	ent->groundentity = pm.groundentity;
+	if (pm.groundentity)
+		ent->groundentity_linkcount = pm.groundentity->linkcount;
 
-
-	gentity_t* ground = pm.groundentity;
-
-	ent->groundentity_num = (pm.groundentity == NULL ? -1 : ground->s.number);
-
-	if (ground)
-		ent->groundentity_linkcount = ground->linkcount;
-
-	ent->v.groundEntityNum = (ground == NULL ? -1 : ground->s.number);
-	
-	if (ground)
-		ent->v.groundEntity_linkcount = ground->linkcount;
+	ent->v.groundEntityNum = (pm.groundentity == NULL ? -1 : pm.groundentity->s.number); 
+	if (pm.groundentity)
+		ent->v.groundEntity_linkcount = pm.groundentity->linkcount;
 
 	VectorCopy(pm.viewangles, ent->v.v_angle);
 	VectorCopy(pm.viewangles, client->ps.viewangles);

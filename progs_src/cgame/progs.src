@@ -13,7 +13,7 @@ cgame.dat
 
 ../inc/shared.qc 	// shared by client and server
 
-../inc/pmove.qc
+//../inc/pmove.qc
 
 //
 // client game

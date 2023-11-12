@@ -35,7 +35,8 @@ Copyright (C) 1997-2001 Id Software, Inc.
 						// trace_entnum will be -1, thats because QC's null entity is world
 	int			trace_contents;
 	string		trace_surface_name;
-	float		trace_surface_flags, trace_surface_value;
+	float		trace_surface_flags;
+	float 		trace_surface_value;
 
 	void()		main;
 	void()		StartFrame;
@@ -126,13 +127,13 @@ void end_sys_globals; // end of struct
 	.float			viewheight;
 
 	// pmove vars
-	.int		pm_type; //pmtype_t
+	.float		pm_type; //pmtype_t
 	.vector		pm_origin;
 	.vector		pm_velocity;
 	.vector		pm_mins;
 	.vector		pm_maxs;
-	.int		pm_flags;			// ducked, jump_held, etc
-	.int		pm_time;			// each unit = 8 ms
+	.float		pm_flags;			// ducked, jump_held, etc
+	.float		pm_time;			// each unit = 8 ms
 	.float		pm_gravity;
 	.vector		pm_delta_angles;	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
