@@ -44,7 +44,7 @@ void() HUD_DrawCurrentWeaponStats =
 	 
 	// current weapon
 	xy_align = '795 570 1';
-	drawstring(xy_align, 1.2, '1 1 1', 1, "30/90");
+	drawstring(xy_align, 1.2, '1 1 1', 1, "30/90"); //stat
 		
 	xy_align = '795 560 1';
 	drawstring(xy_align, 0.8, '1 1 1', 1, "AK-47");
@@ -78,12 +78,8 @@ void() CG_DrawHUD =
 		return;
 	}
 	
-
 	HUD_DrawHealth();
 	HUD_DrawCurrentWeaponStats();
-	
-	// crosshair
-	CG_DrawCrosshair();		
-	
+			
 	HUD_BossBar();
 };

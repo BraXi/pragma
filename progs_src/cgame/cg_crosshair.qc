@@ -13,21 +13,21 @@ vector crosshair_size;
 
 void() CG_InitCrosshair =
 {
-	gfx_crosshair = "hud/crosshair_1"; //registerimage("hud/crosshair_1");
+	gfx_crosshair = "hud/crosshair_1";
 	crosshair_size = '28 36 0';
 };
 
 
 void() CG_DrawCrosshair =
 {
-	if (cg_nocrosshair)
+	if(cg_nocrosshair)
 		return;
 
 	if(getstat(STAT_HEALTH_VALUE) <= 0)
 		return;	//dont draw when dead or spectating
 
 // snipet to scale crosshair
-	crosshair_size = '28 36 0';
+//	crosshair_size = '28 36 0';
 //	crosshair_size  = crosshair_size * cvar("cs");
 //	float alpha = 2.0 - cvar("cs");
 	

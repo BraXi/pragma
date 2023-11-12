@@ -20,23 +20,6 @@ void() CG_Frame =
 
 void() CG_DrawGUI =
 {
-	vector xy_align;
-	
 	CG_DrawHUD();
-	
-	//
-	// bossbar
-	//
-	float width;
-	
-	width = 296 * cvar("hp");
-	
-	if(!width)
-		return;
-	drawfill(250, 100, 300, 18, '0 0 0', 0.7);	
-	drawfill(252, 103, width, 12, '1 0 0', 0.5);	
-	
-
-	xy_align = '400 104 2';
-	drawstring(xy_align, 1.0, '1 1 0', 1, "hulktant");
+	CG_DrawCrosshair();
 };
