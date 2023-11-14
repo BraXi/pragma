@@ -932,7 +932,6 @@ typedef struct entity_state_s
 	vec3_t		old_origin;		// for lerping
 
 	int			modelindex;		// main model
-
 	int			modelindex2, modelindex3, modelindex4;	// attachments
 
 	int			frame;			// current animation frame

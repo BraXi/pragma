@@ -13,6 +13,16 @@ float developer, developer_script; // cvars for debugging
 .float groundEntityNum;
 .float		mass;
 
+
+//
+// ONLY FOR CLIENTS!
+//
+.float oldbuttons;
+.float buttons;
+.float latched_buttons;
+
+.float clipammo;
+
 //
 // 'worldspawn' entity
 //

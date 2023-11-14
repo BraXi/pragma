@@ -518,10 +518,12 @@ void V_RenderView( float stereo_separation )
 	if ( log_stats->value && ( log_stats_file != 0 ) )
 		fprintf( log_stats_file, "%i,%i,%i,",r_numentities, r_numdlights, r_numparticles);
 
+	re.SetColor(1, 1, 1, 1);
 
 	SCR_AddDirtyPoint (scr_vrect.x, scr_vrect.y);
 	SCR_AddDirtyPoint (scr_vrect.x+scr_vrect.width-1,
 		scr_vrect.y+scr_vrect.height-1);
+
 
 //	SCR_DrawCrosshair ();
 }

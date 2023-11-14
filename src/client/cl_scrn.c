@@ -543,6 +543,8 @@ SCR_DrawConsole
 void SCR_DrawConsole (void)
 {
 	Con_CheckResize ();
+
+	re.SetColor(1, 1, 1, 1);
 	
 	if (cls.state == ca_disconnected || cls.state == ca_connecting)
 	{	// forced full screen console
@@ -552,8 +554,19 @@ void SCR_DrawConsole (void)
 
 	if (cls.state != ca_active || !cl.refresh_prepped)
 	{	// connected, but can't render
-		Con_DrawConsole (0.5);
-		re.DrawFill (0, viddef.height/2, viddef.width, viddef.height/2, 0);
+//		Con_DrawConsole(0.5);
+		//re.DrawFill (0, viddef.height/2, viddef.width, viddef.height/2, 0);
+		re.SetColor(0.1, 0.1, 0.1, 1);
+		re.DrawFill(0, 0, viddef.width, viddef.height, 0);
+
+		// weeeewwwy temporarry
+		rgba_t c = { 1,1,1,1 };
+		re.DrawString("Entering Game", 400, 240, 3, 2, c);
+		re.DrawString(cls.servername, 400, 290, 2.5, 2, c);
+		if (cl.configstrings[CS_MODELS + 1])
+			re.DrawString(cl.configstrings[CS_MODELS + 1], 400, 360, 2, 2, c);
+
+
 		return;
 	}
 
@@ -1335,6 +1348,7 @@ void SCR_UpdateScreen (void)
 	float separation[2] = { 0, 0 };
 	float color[4];
 
+
 	// if the screen is disabled (loading plaque is up, or vid mode changing)
 	// do nothing at all
 	if (cls.disable_screen)
@@ -1349,6 +1363,8 @@ void SCR_UpdateScreen (void)
 
 	if (!scr_initialized || !con.initialized)
 		return;				// not initialized yet
+
+	re.SetColor(1, 1, 1, 1);
 
 	/*
 	** range check cl_camera_separation so we don't inadvertently fry someone's
@@ -1424,10 +1440,13 @@ void SCR_UpdateScreen (void)
 
 			CG_DrawGUI();
 
+			re.SetColor(1, 1, 1, 1);
+
 			SCR_DrawNet ();
 			SCR_DrawServerStats();
 			SCR_CheckDrawCenterString ();
 
+			re.SetColor(1, 1, 1, 1);
 
 			if (scr_timegraph->value)
 				SCR_DebugGraph (cls.frametime*300, 0);

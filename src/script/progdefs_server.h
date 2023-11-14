@@ -65,13 +65,13 @@ typedef struct sv_entvars_s
 	vec3_t		angles;
 	vec3_t		old_origin;		// for lerping
 
-	int			modelindex;	// models
-	int			modelindex2;	// models
-	int			modelindex3;	// models
-	int			modelindex4;	// models
+	float		modelindex;	// models
+	float		modelindex2;	// models
+	float		modelindex3;	// models
+	float		modelindex4;	// models
 
-	int			animFrame;		// current animation frame
-	int			skinnum;		// for MD3 this should be index to .skin file
+	float		animFrame;		// current animation frame
+	float		skinnum;		// for MD3 this should be index to .skin file
 	int			effects;		// PGM - we're filling it, so it needs to be unsigned
 
 	int			renderFlags;	// RF_ flags
@@ -82,10 +82,10 @@ typedef struct sv_entvars_s
 	// used when renderFlags & RF_LIGHT*
 	vec3_t		lightColor;		// if RF_LIGHT_NEGATIVE, it will substract this ammount of color
 	float		lightRadius;	// in quake units
-	int			lightStyle;		// index to lightstyle (see server/ents/lights.q2c:InitLightStyles)
+	float		lightStyle;		// index to lightstyle (see server/ents/lights.q2c:InitLightStyles)
 
-	int			loopsound;		// index to sound from precache_sound() that will constantly loop
-	int			loopsound_att;	// sound attenuation, one of ATT_
+	float		loopsound;		// index to sound from precache_sound() that will constantly loop
+	float		loopsound_att;	// sound attenuation, one of ATT_
 
 	int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 	// ----------------------------------------------------

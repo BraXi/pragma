@@ -82,8 +82,6 @@ void Draw_Char (int x, int y, int num)
 	int				row, col;
 	float			frow, fcol, size;
 
-	R_Blend(false);
-	qglColor4f(1, 0, 0, 1);
 	num &= 255;
 	
 	if ( (num&127) == 32 )
@@ -253,23 +251,15 @@ Draw_Fill
 Fills a box of pixels with a single color
 =============
 */
-void Draw_Fill (int x, int y, int w, int h, vec3_t color)
+void Draw_Fill (int x, int y, int w, int h)
 {
-	if (1)
-		return;
 	qglDisable (GL_TEXTURE_2D);
-
-	qglColor3f (color[0], color[1], color[2]);
-
 	qglBegin (GL_QUADS);
-
-	qglVertex2f (x,y);
-	qglVertex2f (x+w, y);
-	qglVertex2f (x+w, y+h);
-	qglVertex2f (x, y+h);
-
+		qglVertex2f (x,y);
+		qglVertex2f (x+w, y);
+		qglVertex2f (x+w, y+h);
+		qglVertex2f (x, y+h);
 	qglEnd ();
-	qglColor3f (1,1,1);
 	qglEnable (GL_TEXTURE_2D);
 }
 

@@ -59,13 +59,13 @@ void end_sys_globals; // end of struct
 	.vector		angles;			// current angles
 	.vector		old_origin;		// for lerping
 
-	.int		modelindex;		// main model
-	.int		modelindex2;	// attached model
-	.int		modelindex3;	// attached model
-	.int		modelindex4;	// attached model
+	.float		modelindex;		// main model
+	.float		modelindex2;	// attached model
+	.float		modelindex3;	// attached model
+	.float		modelindex4;	// attached model
 
-	.int		animFrame;		// current animation frame
-	.int		skinnum;		// for MD3 this should be index to .skin file, otherwise ignored
+	.float		animFrame;		// current animation frame
+	.float		skinnum;		// for MD3 this should be index to .skin file, otherwise ignored
 	.int		effects;
 
 	.int		renderFlags;	// RF_ flags
@@ -76,10 +76,10 @@ void end_sys_globals; // end of struct
 	// used when renderFlags & RF_LIGHT*
 	.vector		lightColor;		// if RF_LIGHT_NEGATIVE, it will substract this ammount of color
 	.float		lightRadius;	// in quake units
-	.int		lightStyle;		// index to lightstyle (see server/ents/lights.q2c:InitLightStyles)
+	.float		lightStyle;		// index to lightstyle (see server/ents/lights.q2c:InitLightStyles)
 
-	.int		loopsound;		// index to sound from precache_sound() that will constantly loop
-	.int		loopsound_att;	// sound attenuation, one of ATT_
+	.float		loopsound;		// index to sound from precache_sound() that will constantly loop
+	.float		loopsound_att;	// sound attenuation, one of ATT_
 
 	.int		event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 	// ----------------------------------------------------
@@ -227,19 +227,6 @@ float cvar_coop;
 float cvar_deathmatch;
 float cvar_dmflags;
 float cvar_skill;
-
-enum // DAMAGE METHODS
-{
-	DMG_UNKNOWN,
-	DMG_SLIME,
-	DMG_LAVA,
-	DMG_FALLING,
-	DMG_CRUSH,
-	DMG_DROWNING,
-	DMG_EXPLOSIVE,
-	DMG_BULLET,
-	DMG_ENERGY
-};
 
 // DAMAGE FLAGS
 float DAMAGE_NO_PROTECTION = 2; 	// nothing can stop the damage

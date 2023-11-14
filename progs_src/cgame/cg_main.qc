@@ -9,6 +9,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 void() CG_Main =
 {
+	BG_InitWeapons();
 	CG_InitCrosshair();
 
 };

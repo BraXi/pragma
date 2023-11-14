@@ -16,7 +16,8 @@ void() plr_showanim =
 	self.angles = player.angles;	
 	self.angles = self.angles - '0 180 0';
 	self.angles_x = 0;
-	self.modelindex2 = precache_model("models/md3_test.md3");
+//	self.loopsound = precache_sound("effects/teleport.wav");
+//	self.modelindex2 = precache_model("models/md3_test.md3");
 	self.nextthink = g_time + 0.1;
 };
 
@@ -50,6 +51,7 @@ void() main =
 		//setmodel(e, "models/md3_test.md3");
 		setmodel(e, "models/female.md3");
 		e.origin = '0 0 24';
+		e.loopsound = precache_sound("effects/teleport.wav");
 //		e.avelocity = '0 90 0';
 		linkentity(e);
 		e.think = plr_showanim;

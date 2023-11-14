@@ -6,6 +6,10 @@ extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 /*
 =================
 PFCG_AngleVectors
+
+calculate fwd/right/up vectors for given angles and set globals v_forward, v_right and v_up
+
+anglevectors(self.v_angle);
 =================
 */
 void PFCG_AngleVectors(void)
@@ -18,7 +22,7 @@ void PFCG_AngleVectors(void)
 PFCG_getconfigstring
 
 returns configstring by index
-str = getconfigstring(index);
+string bspname = getconfigstring(CS_MODELS+1);
 =================
 */
 static void PFCG_getconfigstring(void)
@@ -36,7 +40,7 @@ static void PFCG_getconfigstring(void)
 =================
 PFCG_getstat
 
-get stat
+return client's stat value for given index
 =================
 */
 static void PFCG_getstat(void)
@@ -55,6 +59,7 @@ static void PFCG_getstat(void)
 =================
 PFCG_pointcontents
 
+returns CONTENTS_ mask for given point
 int contents = pointcontents(vector point)
 =================
 */
@@ -70,7 +75,7 @@ void PFCG_pointcontents(void)
 PFSV_trace
 
 Moves the given mins/maxs volume through the world from start to end.
-ignoreEntNum is explicitly not checked.
+ignoreEntNum is explicitly not checked. contentmask is the collision contents mask
 
 trace(vector start, vector minS, vector maxS, vector end, float ignoreEnt, int contentmask)
 =================
@@ -140,6 +145,12 @@ drawstring( vector xy_align, float fontSize, vector color, float alpha, string t
 */
 static void PFCG_drawstring(void)
 {
+	if (!CG_CanDrawCall())
+	{
+		Scr_RunError("call to 'drawstring' outside of rendering phase\n");
+		return;
+	}
+
 	float color[4];
 
 	float* xy_align = Scr_GetParmVector(0);
@@ -164,6 +175,12 @@ static void PFCG_drawimage(void)
 {
 	float rect[4], color[4];
 
+	if (!CG_CanDrawCall())
+	{
+		Scr_RunError("call to 'drawimage' outside of rendering phase\n");
+		return;
+	}
+
 	rect[0] = Scr_GetParmFloat(0);
 	rect[1] = Scr_GetParmFloat(1);
 	rect[2] = Scr_GetParmFloat(2);
@@ -186,6 +203,12 @@ drawfill( float x, float y, float w, float h, vector color, float alpha );
 static void PFCG_drawfill(void)
 {
 	float rect[4], color[4];
+
+	if (!CG_CanDrawCall())
+	{
+		Scr_RunError("call to 'drawfill' outside of rendering phase\n");
+		return;
+	}
 
 	rect[0] = Scr_GetParmFloat(0);
 	rect[1] = Scr_GetParmFloat(1);

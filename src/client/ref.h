@@ -190,7 +190,7 @@ typedef struct
 	void	(*DrawChar) (int x, int y, int c);
 	void	(*Draw_Char2)(float x, float y, float w, float h, int num, rgba_t color);
 	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
-	void	(*DrawFill) (int x, int y, int w, int h, vec3_t c);
+	void	(*DrawFill) (int x, int y, int w, int h);
 	void	(*DrawFadeScreen) (float *rgba);
 
 
@@ -200,6 +200,8 @@ typedef struct
 	void	(*DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
 	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);
 	void	(*NewDrawFill) (rect_t rect, rgba_t color);
+
+	void	(*SetColor)(float r, float g, float b, float a);
 
 
 	/*

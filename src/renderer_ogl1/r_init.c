@@ -428,12 +428,18 @@ struct image_s* R_RegisterPic(char* name);
 void	Draw_Pic(int x, int y, char* name);
 void	Draw_Char(int x, int y, int c);
 void	Draw_TileClear(int x, int y, int w, int h, char* name);
-void	Draw_Fill(int x, int y, int w, int h, vec3_t c);
+void	Draw_Fill(int x, int y, int w, int h);
 void	Draw_FadeScreen(float* rgba);
 
 void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
 void R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
 void R_DrawFill(rect_t rect, rgba_t color);
+
+void RR_SetColor(float r, float g, float b, float a)
+{
+	qglColor4f(r,g,b,a);
+}
+
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -466,6 +472,7 @@ refexport_t GetRefAPI(refimport_t rimp)
 	re.DrawFill = Draw_Fill;
 	re.DrawFadeScreen = Draw_FadeScreen;
 	re.DrawStretchRaw = Draw_StretchRaw;
+	re.SetColor = RR_SetColor;
 
 	// braxi -- newer replacements
 	re.DrawString = R_DrawString;

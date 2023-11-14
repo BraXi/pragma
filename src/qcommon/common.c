@@ -731,7 +731,13 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 
 	// looping sound
 	if (bits & U_LOOPSOUND)
-		MSG_WriteByte (msg, to->loopingSound);
+	{
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		MSG_WriteShort(msg, to->loopingSound);
+#else
+		MSG_WriteByte(msg, to->loopingSound);
+#endif
+	}
 
 	// event
 	if (bits & U_EVENT)

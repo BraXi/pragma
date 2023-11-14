@@ -303,7 +303,7 @@ void	Draw_Pic (int x, int y, char *name);
 void	Draw_StretchPic (int x, int y, int w, int h, char *name);
 void	Draw_Char (int x, int y, int c);
 void	Draw_TileClear (int x, int y, int w, int h, char *name);
-void	Draw_Fill (int x, int y, int w, int h, vec3_t c);
+void	Draw_Fill (int x, int y, int w, int h);
 void	Draw_FadeScreen(float* rgba);
 void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
 
@@ -385,7 +385,7 @@ extern inline void R_SetCullFace(GLenum newstate);
 extern inline void R_WriteToDepthBuffer(GLboolean newstate);
 extern inline void R_BlendFunc(GLenum newstateA, GLenum newstateB);
 
-extern inline void R_SetColor(float r, float g, float b, float a);
+// inline void R_SetColor(float r, float g, float b, float a);
 extern inline void R_SetClearColor(float r, float g, float b, float a);
 
 extern void R_InitialOGLState();

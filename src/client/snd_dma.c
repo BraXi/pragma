@@ -860,8 +860,7 @@ void S_AddLoopSounds (void)
 		ent = &cl_parse_entities[num];
 
 		// find the total contribution of all sounds of this type
-		S_SpatializeOrigin (ent->origin, 255.0, SOUND_LOOPATTENUATE,
-			&left_total, &right_total);
+		S_SpatializeOrigin (ent->origin, 255.0, SOUND_LOOPATTENUATE, &left_total, &right_total);
 		for (j=i+1 ; j<cl.frame.num_entities ; j++)
 		{
 			if (sounds[j] != sounds[i])
@@ -871,8 +870,7 @@ void S_AddLoopSounds (void)
 			num = (cl.frame.parse_entities + j)&(MAX_PARSE_ENTITIES-1);
 			ent = &cl_parse_entities[num];
 
-			S_SpatializeOrigin (ent->origin, 255.0, SOUND_LOOPATTENUATE, 
-				&left, &right);
+			S_SpatializeOrigin (ent->origin, 255.0, SOUND_LOOPATTENUATE, &left, &right);
 			left_total += left;
 			right_total += right;
 		}
@@ -889,6 +887,7 @@ void S_AddLoopSounds (void)
 			left_total = 255;
 		if (right_total > 255)
 			right_total = 255;
+
 		ch->leftvol = left_total;
 		ch->rightvol = right_total;
 		ch->autosound = true;	// remove next frame

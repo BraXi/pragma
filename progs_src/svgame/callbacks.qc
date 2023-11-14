@@ -35,17 +35,6 @@ void() ClientBeginServerFrame =
 {
 	if(isplayer(self) == 0)
 		return;
-	
-	//self.animf ++; //= self.animf +1;
-	//if( self.animf > 3 )
-	//	self.animf = 0;
-	
-	//if( self.wpn_lastShotTime >= g_time )
-	{
-		if( self.animf < self.goalframe )
-			self.animf++;
-	}
-
 
 	if( self.health <= 0 )
 	{
@@ -133,8 +122,7 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 	/* 
 	note to self: 
 	client is not aware of its bbox size, thus pmove predictions fail
-	make clientinfo transmit bbox size so pmove can become more flexible
-	
+	make clientinfo transmit bbox size so pmove can become more flexible	
 	*/
 	
 	if(self.health <= 0 && self.deadflag == DEAD_DEAD && inMove_z > 0)
@@ -164,6 +152,11 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 	self.viewheight = 22;
 	pmove(self, inMove, true);
 			
+	// update button states
+	self.oldbuttons = self.buttons;
+	self.buttons = inButtons;
+	self.latched_buttons |= self.buttons & ~self.oldbuttons;
+			
 	if( self.health > 0 && (inButtons & BUTTON_ATTACK) && g_time >= self.wpn_lastShotTime+0.2 )
 	{
 		self.wpn_fireframe = g_frameNum;
@@ -171,7 +164,7 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 		self.animf = 0;
 		self.goalframe = 2;
 	
-		if(self.model == "models/monsters/mutant/tris.md2")
+		if(self.model == "models/mutant.md3")
 		{
 			playsound(vec3_origin, self, CHAN_BODY, "mutant/Mutsght1.wav", 1, ATTN_NORM, 0);
 			self.velocity_z += 400;
@@ -181,6 +174,9 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 		vector o;
 		o_z = self.viewheight;
 		W_Fire(self, self.v_angle, o, 1);
+		
+		self.clipammo -= 1;
+		setstat(self, STAT_WEAPON_CLIPAMMO, self.clipammo);
 	}
 };
 

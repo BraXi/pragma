@@ -1,5 +1,7 @@
 svgame.dat
 
+#define SVGAME 1
+
 // qc extensions
 #include "fteqc_ext.qc"
 
@@ -13,7 +15,8 @@ svgame.dat
 
 ../inc/shared.qc 	// shared by client and server
 
-../inc/pmove.qc 	// shared by client and server
+../bg/bg_pmove.qc
+../bg/bg_weapons.qc
 
 //
 // server game

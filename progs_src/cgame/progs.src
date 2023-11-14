@@ -11,9 +11,10 @@ cgame.dat
 ../inc/pragma_funcs_clgame.qc
 ../inc/pragma_defs.qc
 
-../inc/shared.qc 	// shared by client and server
-
-//../inc/pmove.qc
+// shared by client and server
+../inc/shared.qc 	
+../bg/bg_pmove.qc
+../bg/bg_weapons.qc
 
 //
 // client game

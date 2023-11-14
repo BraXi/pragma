@@ -177,7 +177,13 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 
 	// looping sound
 	if (bits & U_LOOPSOUND)
-		to->loopingSound = MSG_ReadByte (&net_message);
+	{
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		to->loopingSound = MSG_ReadShort(&net_message);
+#else
+		to->loopingSound = MSG_ReadByte(&net_message);
+#endif
+	}
 
 	// event
 	if (bits & U_EVENT)

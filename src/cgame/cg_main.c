@@ -1,6 +1,6 @@
 #include "../client/client.h"
 
-
+static qboolean cg_allow_drawcalls;
 
 /*
 ===============
@@ -11,7 +11,8 @@ Called when engine is closing or it is changing to a different game directory.
 */
 void CL_ShutdownClientGame()
 {
-//	Scr_FreeScriptVM(VM_CLGAME);
+	cg_allow_drawcalls = false;
+	Scr_FreeScriptVM(VM_CLGAME);
 }
 
 /*
@@ -71,15 +72,29 @@ void CG_Frame(float frametime, int time, float realtime)
 
 void CG_DrawGUI()
 {
-	if (CG_IsActive() == false)
+	if (CG_IsActive() == false || cls.state != ca_active)
 		return;
 
-	if (cls.state != ca_active)
-		return;
-
+	cg_allow_drawcalls = true;
 	Scr_Execute(cl.script_globals->CG_DrawGUI, __FUNCTION__);
+	cg_allow_drawcalls = false;
 }
 
+/*
+====================
+CG_CanDrawCall
+====================
+*/
+qboolean CG_CanDrawCall()
+{
+	if(!cl.refresh_prepped)
+		return false; // ref not ready
+//	if (cls.state != ca_active)
+//		return false; // not actively in game
+	if (!cg_allow_drawcalls)
+		return false; // no drawing outside of draw phase
+	return true;
+}
 
 /*
 ====================

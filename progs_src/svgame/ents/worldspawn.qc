@@ -1,6 +1,5 @@
 
 void() HUD_Init;
-void() W_InitWeapons;
 
 /*QUAKED worldspawn (0 0 0) ?
 
@@ -62,7 +61,7 @@ float() SP_worldspawn =
 	precache_sound("misc/h2ohit1.wav");
 
 	// initialize g_weapons array
-	W_InitWeapons();
+	BG_InitWeapons();
 	
 	// initialize hud
 	HUD_Init();

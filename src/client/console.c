@@ -595,7 +595,6 @@ void Con_DrawConsole (float frac)
 // draw the text
 	con.vislines = lines;
 	
-
 	rows = (lines-22)>>3;		// rows of text to draw
 
 	y = lines - 30;

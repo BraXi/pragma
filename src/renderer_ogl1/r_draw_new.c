@@ -79,6 +79,8 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	else if (alignx == XALIGN_RIGHT)
 		ofs_x -= ((strlen(string) * CHAR_SIZEX));
 
+	qglColor4fv(color);
+
 	// draw string
 	while (*string)
 	{

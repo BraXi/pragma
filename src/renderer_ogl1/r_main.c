@@ -821,7 +821,8 @@ void R_SetGL2D(void)
 	R_CullFace(false);
 	R_Blend(false);
 	R_AlphaTest(true);
-	qglColor4f (1,1,1,1);
+
+	GL_TexEnv(GL_MODULATE);
 }
 
 static void GL_DrawColoredStereoLinePair( float r, float g, float b, float y )
@@ -907,6 +908,7 @@ R_RenderFrame
 */
 void R_RenderFrame (refdef_t *fd)
 {
+	GL_TexEnv(GL_REPLACE);
 	R_RenderView( fd );
 	R_SetLightLevel ();
 	R_SetGL2D ();

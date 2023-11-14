@@ -357,7 +357,7 @@ enum clc_ops_e
 // fourth byte
 #define	U_OLDORIGIN			(1<<24)		// id: FIXME: get rid of this, braxi: WHY?
 #define	U_SKIN_16			(1<<25)
-#define	U_LOOPSOUND			(1<<26)		// byte, index to sounds
+#define	U_LOOPSOUND			(1<<26)		// byte/short, index to sounds
 #define	U_PACKEDSOLID		(1<<27)
 #define	U_RENDERSCALE		(1<<28)
 #define	U_RENDERALPHA		(1<<29)

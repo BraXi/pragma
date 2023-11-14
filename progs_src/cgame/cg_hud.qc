@@ -8,7 +8,14 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 //drawfill(float x, float y, float w, float h, vector color, float alpha)
 //drawstring(vector xy_align, float fontsize, vector color, float alpha, string text, ...)
+// todo add VA() builtin to save on loc :v
 
+/*
+	XALIGN_LEFT = 0,
+	XALIGN_RIGHT = 1,
+	XALIGN_CENTER = 2
+*/
+	
 void() HUD_BossBar =
 {
 	vector xy_align;
@@ -37,17 +44,34 @@ void() HUD_DrawHealth =
 void() HUD_DrawCurrentWeaponStats =
 {
 	vector xy_align;	
-	float weapon = getstat(STAT_CURRENT_WEAPON);
+	float weapon;
+
+	weapon = getstat(STAT_CURRENT_WEAPON);
+	if(weapon <= 0)
+		return;
+
+	// name
+	xy_align = '795 560 1';	
+	drawstring(xy_align, 0.8, '1 1 1', 1, GetWeaponNameForNum(weapon));
+
+	// ammo
+	float clip = getstat(STAT_WEAPON_CLIPAMMO);
+	float reserve = getstat(STAT_WEAPON_RESERVEAMMO);
+
+	// ammo in magazine
+	xy_align = '765 570 1';	
+	if(clip > (GetWeaponMaxClipAmmo(weapon)/3))
+		drawstring(xy_align, 1.2, '1 1 1', 1, ftos(clip)); 
+	else //draw red to indicate low ammo
+		drawstring(xy_align, 1.2, '1 0 0', 1, ftos(clip));
+
+	xy_align = '775 570 0';
+	drawstring(xy_align, 1.2, '1 1 1', 1, ftos(reserve)); 
+	//reserve ammo
+//	xy_align = '770 570 0';	
+//	drawstring(xy_align, 1.2, '1 1 1', 1, );
 	
-//	if(!weapon)
-//		return;
-	 
-	// current weapon
-	xy_align = '795 570 1';
-	drawstring(xy_align, 1.2, '1 1 1', 1, "30/90"); //stat
-		
-	xy_align = '795 560 1';
-	drawstring(xy_align, 0.8, '1 1 1', 1, "AK-47");
+
 };
 
 
@@ -58,7 +82,7 @@ void() HUD_DeadScreen =
 	drawfill(200, 285, 400, 28, '0 0 0', 0.5);	
 		
 	xy_align = '400 290 2';
-	drawstring(xy_align, 2, '1 1 1', 1, "You are dead");		
+	drawstring(xy_align, 2, '1 0.2 0.2', 1, "You are dead");		
 		
 	xy_align = '400 330 2';
 	drawstring(xy_align, 0.8, '1 1 1', 1, "press SPACE to respawn");

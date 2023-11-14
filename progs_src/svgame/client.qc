@@ -298,6 +298,8 @@ void(entity attacker, float damage, float method) player_die =
 	
 	self.pm_type = PM_DEAD;
 	
+	self.svflags |= SVF_DEADMONSTER;
+	
 	// play death sound
 	if( random() > 0.5 )
 		playsound(vec3_origin, self, CHAN_BODY, animTree[self.playerAnimTree].snd_death1, 1, ATTN_NORM, 0);
@@ -318,9 +320,14 @@ void() SpawnPlayer =
 	self.angles = sp.angles;
 	setorigin( self, sp.origin );
 
+	self.groundentity_num = -1;
 	self.deadflag = DEAD_NO;
 	self.takedamage = DAMAGE_AIM;
 	self.health = self.max_health = 100;	
+	
+	self.effects = 0;
+	self.skinnum = 0;
+	
 	self.pain = player_pain;
 	self.die = player_die;
 
@@ -330,15 +337,33 @@ void() SpawnPlayer =
 	self.mass = 200;
 	self.solid = SOLID_BBOX;
 	self.clipmask = MASK_PLAYERSOLID;
+	self.svflags &= ~SVF_DEADMONSTER;
 
 	self.waterlevel = 0;
 	self.watertype = 0;
 
 	setviewoffset(self, '0 0 24');
 	setsize(self, '-16 -16 -24', '16 16 32');
+	linkentity(self);
 	
 	self.pm_type = PM_NORMAL;
+	self.pm_flags &= ~PMF_NO_PREDICTION;	
+//	self.pm_origin[0] = self.origin[0];
+//	self.pm_origin[1] = self.origin[1];
+//	self.pm_origin[2] = self.origin[2];
 	
+//	self.angles_x = 0;
+//	self.angles_y = sp.angles_y;
+//	self.angles_z = 0;
+//	self.viewangles = self.angles;
+//	self.v_angle = self.angles;
+
+	self.clipammo = 30;
+	
+	setstat(self, STAT_CURRENT_WEAPON, 0);
+	setstat(self, STAT_WEAPON_CLIPAMMO, self.clipammo);
+	setstat(self, STAT_WEAPON_RESERVEAMMO, 90);
+
 	
 	float human = true;
 	if(getentnum(self) == 1 || human)
