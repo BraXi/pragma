@@ -1392,8 +1392,8 @@ void(vector cmdMove, int cmdMsec) SV_PMove =
 	pm_passent = self; 
 	
 	// set bounding box
-	pm.mins = self.mins;
-	pm.maxs = self.maxs;
+	pm.state.mins = self.mins;
+	pm.state.maxs = self.maxs;
 	
 	// set viewheight
 	pm.viewheight = self.viewheight;

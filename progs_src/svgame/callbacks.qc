@@ -136,7 +136,7 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 	if( self.health > 0 )
 	{
 		if(self.movetype == MOVETYPE_NOCLIP)
-			self.pm_type = PM_SPECTATOR;
+			self.pm_type = PM_NOCLIP;
 		else if(self.health <= -50)
 			self.pm_type = PM_GIB;
 		else
