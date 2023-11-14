@@ -11,6 +11,8 @@ string string_null = "";
 vector vec_null = '0 0 0';
 vector vec3_origin = vec_null; //temporary, ugly
 
+#define ENTITYNUM_NONE -1
+
 // angle indexes
 #define	PITCH		0		// up / down
 #define	YAW			1		// left / right
@@ -19,6 +21,17 @@ vector vec3_origin = vec_null; //temporary, ugly
 // ------------------------------------------------------
 // BG - defines shared by cgame and svgame
 // ------------------------------------------------------
+
+// .waterlevel levels
+enum
+{
+	WL_NOTINWATER = 0, 	// not in water
+	WL_TOUCHING, 		// touching water
+	
+/* players only below */	
+	WL_HALFWAY,			// half in water
+	WL_UNDERWATER		// head under water
+};
 
 //
 // stats are used to display HUD
