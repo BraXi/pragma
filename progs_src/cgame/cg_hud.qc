@@ -35,7 +35,7 @@ void() HUD_BossBar =
 void() HUD_DrawHealth =
 {
 	vector xy_align;	
-	float health = getstat(STAT_HEALTH_VALUE);
+	float health = getstat(STAT_HEALTH);
 	
 	xy_align = '5 570 0';
 	drawstring(xy_align, 1.2, '1 1 1', 1, ftos(health), " HP");
@@ -46,7 +46,7 @@ void() HUD_DrawCurrentWeaponStats =
 	vector xy_align;	
 	float weapon;
 
-	weapon = getstat(STAT_CURRENT_WEAPON);
+	weapon = getstat(STAT_WEAPON);
 	if(weapon <= 0)
 		return;
 
@@ -55,8 +55,8 @@ void() HUD_DrawCurrentWeaponStats =
 	drawstring(xy_align, 0.8, '1 1 1', 1, GetWeaponNameForNum(weapon));
 
 	// ammo
-	float clip = getstat(STAT_WEAPON_CLIPAMMO);
-	float reserve = getstat(STAT_WEAPON_RESERVEAMMO);
+	float clip = getstat(STAT_AMMO);
+	float reserve = getstat(STAT_AMMO_RESERVE);
 
 	// ammo in magazine
 	xy_align = '765 570 1';	
@@ -96,7 +96,7 @@ void() CG_DrawHUD =
 {
 	// there should be a spectator hud too
 	
-	if( getstat(STAT_HEALTH_VALUE) <= 0 )
+	if( getstat(STAT_HEALTH) <= 0 )
 	{
 		HUD_DeadScreen();
 		return;

@@ -360,9 +360,9 @@ void() SpawnPlayer =
 
 	self.clipammo = 30;
 	
-	setstat(self, STAT_CURRENT_WEAPON, WEAPON_AR);
-	setstat(self, STAT_WEAPON_CLIPAMMO, self.clipammo);
-	setstat(self, STAT_WEAPON_RESERVEAMMO, 90);
+	setstat(self, STAT_WEAPON, WEAPON_AR);
+	setstat(self, STAT_AMMO, self.clipammo);
+	setstat(self, STAT_AMMO_RESERVE, 90);
 
 	
 	float human = true;

@@ -176,7 +176,7 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 		W_Fire(self, self.v_angle, o, 1);
 		
 		self.clipammo -= 1;
-		setstat(self, STAT_WEAPON_CLIPAMMO, self.clipammo);
+		setstat(self, STAT_AMMO, self.clipammo);
 	}
 };
 

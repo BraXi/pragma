@@ -1275,7 +1275,7 @@ SCR_DrawLayout
 
 void SCR_DrawLayout (void)
 {
-	if (!cl.frame.playerstate.stats[STAT_LAYOUTS])
+	if (!cl.frame.playerstate.stats[STAT_LAYOUT])
 		return;
 	SCR_ExecuteLayoutString (cl.layout);
 }
@@ -1433,9 +1433,9 @@ void SCR_UpdateScreen (void)
 			V_RenderView ( separation[i] );
 
 			SCR_DrawStats ();
-			if (cl.frame.playerstate.stats[STAT_LAYOUTS] & 1)
+			if (cl.frame.playerstate.stats[STAT_LAYOUT] & 1)
 				SCR_DrawLayout ();
-			if (cl.frame.playerstate.stats[STAT_LAYOUTS] & 2)
+			if (cl.frame.playerstate.stats[STAT_LAYOUT] & 2)
 				CL_DrawInventory ();
 
 			CG_DrawGUI();

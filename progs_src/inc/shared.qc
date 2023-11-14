@@ -11,6 +11,10 @@ string string_null = "";
 vector vec_null = '0 0 0';
 vector vec3_origin = vec_null; //temporary, ugly
 
+// angle indexes
+#define	PITCH		0		// up / down
+#define	YAW			1		// left / right
+#define	ROLL		2		// fall over
 
 // ------------------------------------------------------
 // BG - defines shared by cgame and svgame
@@ -19,42 +23,20 @@ vector vec3_origin = vec_null; //temporary, ugly
 //
 // stats are used to display HUD
 //
+// player_state->stats[] indexes
 enum
 {
-/* these MUST match in C code */
-	STAT_LAYOUT = 0,
-	STAT_HEALTH_VALUE,
-	STAT_ARMOR_VALUE,
-	STAT_CURRENT_AMMO,
-	STAT_FLASHES, // cleared each frame, 1 = health, 2 = armor
+/* these MUST match in C code */	
+	STAT_HEALTH,
+	STAT_AMMO,				// only used in layoutstring
+	STAT_SCORE,
+	STAT_ARMOR,				// only used in layoutstring
+	STAT_LAYOUT,			// 0 don't draw layout programs at all, 1 draw layout, 2 draw inventory and layout
+	STAT_FLASHES,			// cleared each frame, 1 = health, 2 = armor, used only in layoutstring programs
+	STAT_SELECTED_ITEM,		// TODO: remove! used in inventory
 /* add custom stats below */
-	STAT_HEALTH_IMAGE,
-	STAT_ARMOR_IMAGE,	
-	STAT_CURRENT_WEAPON,
-	STAT_WEAPON_CLIPAMMO,
-	STAT_WEAPON_RESERVEAMMO,
-	STAT_UNUSED4,
-	STAT_UNUSED5,
-	STAT_UNUSED6,
-	STAT_UNUSED7,
-	STAT_UNUSED8,
-	STAT_UNUSED9,
-	STAT_UNUSED10,
-	STAT_UNUSED11,
-	STAT_UNUSED12,
-	STAT_UNUSED13,
-	STAT_UNUSED14,
-	STAT_UNUSED15,
-	STAT_UNUSED16,
-	STAT_UNUSED17,
-	STAT_UNUSED18,
-	STAT_UNUSED19,
-	STAT_UNUSED20,
-	STAT_UNUSED21,
-	STAT_UNUSED22,
-	STAT_UNUSED23,
-	STAT_UNUSED24,
-	STAT_UNUSED25,	
+	STAT_WEAPON,
+	STAT_AMMO_RESERVE,
 };
 
 

@@ -23,7 +23,7 @@ void() CG_DrawCrosshair =
 	if(cg_nocrosshair)
 		return;
 
-	if(getstat(STAT_HEALTH_VALUE) <= 0)
+	if(getstat(STAT_HEALTH) <= 0)
 		return;	//dont draw when dead or spectating
 
 // snipet to scale crosshair

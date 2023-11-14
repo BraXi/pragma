@@ -7,8 +7,8 @@ Copyright (C) 1997-2001 Id Software, Inc.
 */
 // hud.q2c
 
-float hud_pic_health;
-float hud_pic_armor;
+//float hud_pic_health;
+//float hud_pic_armor;
 
 /*	
 	"xl <val>" - X pos [0+x] from left to right
@@ -30,8 +30,6 @@ float hud_pic_armor;
 
 
 string hud_layoutstring_empty = "";
-
-
 string hud_layoutstring_mp = "";
 
 string hud_layoutstring_sp =
@@ -48,23 +46,24 @@ string hud_layoutstring_sp =
 
 void() HUD_SetStats =
 {
-	setstat(self, STAT_HEALTH_VALUE, self.health);
-	setstat(self, STAT_ARMOR_VALUE, self.armor);
+	setstat(self, STAT_HEALTH, self.health);
+	setstat(self, STAT_ARMOR, self.armor);
 };
 
 
 
 void() HUD_SetInitialStats =
 {
-	setstat(self, STAT_HEALTH_IMAGE, hud_pic_health);
-	setstat(self, STAT_ARMOR_IMAGE, hud_pic_armor);
+// UNUSED	
+//	setstat(self, STAT_HEALTH_IMAGE, hud_pic_health);
+//	setstat(self, STAT_ARMOR_IMAGE, hud_pic_armor);
 };
 
 /*
 ==============
 HUD_SetLayout
 
-Set layout for everyone or for single player
+Set hud layout string for everyone or for a single player
 ==============
 */
 void(entity who, string hudprogram) HUD_SetLayout =
@@ -76,7 +75,10 @@ void(entity who, string hudprogram) HUD_SetLayout =
 		MSG_Unicast(who, true); // send reliable message
 	}
 	else
-		configstring(CS_STATUSBAR, hudprogram);		
+	{
+		// send to everyone
+		configstring(CS_STATUSBAR, hudprogram);	
+	}		
 };
 
 
@@ -90,14 +92,14 @@ Precache hud images and set default HUD program
 void() HUD_Init =
 {
 	// precache default images 
-	hud_pic_health = precache_image("i_health");
-	hud_pic_armor = precache_image("i_powershield");
+//	hud_pic_health = precache_image("i_health");
+//	hud_pic_armor = precache_image("i_powershield");
 
 //	hud_layoutstring_mp = hud_layoutstring_sp;
 	
 	// set default HUD based on gametype
-//	if(cvar("deathmatch"))
-//		HUD_SetLayout( world, hud_layoutstring_mp );
-//	else
+	if(cvar("deathmatch"))
+		HUD_SetLayout( world, hud_layoutstring_mp );
+	else
 		HUD_SetLayout( world, hud_layoutstring_empty );
 };

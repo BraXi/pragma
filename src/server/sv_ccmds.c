@@ -813,7 +813,7 @@ void SV_Status_f (void)
 
 		Com_Printf ("%3i ", i);
 
-		Com_Printf ("%5i ", cl->edict->client->ps.stats[STAT_FRAGS]);
+		Com_Printf ("%5i ", cl->edict->client->ps.stats[STAT_SCORE]);
 
 		if (cl->state == cs_connected)
 			Com_Printf ("CNCT ");

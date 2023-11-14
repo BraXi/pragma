@@ -28,14 +28,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define VectorNegate(a,b)		(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])
 #define VectorSet(v, x, y, z)	(v[0]=(x), v[1]=(y), v[2]=(z))
 
-// angle indexes
-#define	PITCH				0		// up / down
-#define	YAW					1		// left / right
-#define	ROLL				2		// fall over
-
 #define NULL 0
 
 entity null_ent;
+
 void(vector veca, float scale, vector vecb, __out vector vecc) VectorMA =
 {
 	vecc[0] = veca[0] + scale*vecb[0];
