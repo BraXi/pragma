@@ -1,13 +1,16 @@
 #pragma once
 
 // version string
-#define PRAGMA_VERSION "0.19"
+#define PRAGMA_VERSION "0.20"
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
 // net protocol will use floats for coordinates instead of shorts, this applies to pmove too
 // this also fixes some of pmove issues like dragging players motion towards 0,0,0 and higher jumps
-// all entities can move beyond +/- 4096qu boundary
+// all entities can move beyond +/- 4096qu boundary, 
 #define PROTOCOL_FLOAT_COORDS 1
+
+// player view angles will use floats instead shorts
+#define PROTOCOL_FLOAT_PLAYERANGLES 0
 
 // protocol can use shorts when modelindex or soundindex exceed byte
 #define PROTOCOL_EXTENDED_ASSETS 1

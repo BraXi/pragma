@@ -709,7 +709,7 @@ void SV_Savegame_f (void)
 		return;
 	}
 
-	if (sv_maxclients->value == 1 && svs.clients[0].edict->client->ps.stats[STAT_HEALTH] <= 0)
+	if (sv_maxclients->value == 1 && svs.clients[0].edict->v.health <= 0)	//	if (sv_maxclients->value == 1 && svs.clients[0].edict->client->ps.stats[STAT_HEALTH] <= 0)
 	{
 		Com_Printf ("\nCan't savegame while dead!\n");
 		return;
@@ -784,6 +784,7 @@ void SV_Status_f (void)
 	char		*s;
 	int			ping;
 	int			numplayers = 0;
+
 	if (!svs.clients)
 	{
 		Com_Printf ("No server running.\n");
@@ -796,18 +797,22 @@ void SV_Status_f (void)
 			continue;
 		numplayers++;
 	}
+
 	Com_Printf("\n--- server status ---\n\n");
+
 	Com_Printf("map       : %s\n", sv.name);
-	Com_Printf("entities  : %i/%i\n", sv.num_edicts, sv.max_edicts);
 	Com_Printf("clients   : %i/%i\n\n", numplayers, svs.max_clients);
+	Com_Printf("entities  : %i/%i\n", sv.num_edicts, sv.max_edicts);
 
 	Com_Printf ("num score ping name            lastmsg address               qport \n");
 	Com_Printf ("--- ----- ---- --------------- ------- --------------------- ------\n");
-	for (i=0,cl=svs.clients ; i<sv_maxclients->value; i++,cl++)
+	for (i = 0, cl = svs.clients; i < sv_maxclients->value; i++, cl++)
 	{
 		if (!cl->state)
 			continue;
+
 		Com_Printf ("%3i ", i);
+
 		Com_Printf ("%5i ", cl->edict->client->ps.stats[STAT_FRAGS]);
 
 		if (cl->state == cs_connected)

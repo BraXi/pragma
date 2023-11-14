@@ -1271,7 +1271,7 @@ SCR_DrawLayout
 
 ================
 */
-#define	STAT_LAYOUTS		13
+//#define	STAT_LAYOUTS		13
 
 void SCR_DrawLayout (void)
 {

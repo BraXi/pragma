@@ -266,7 +266,14 @@ void SV_Begin_f (void)
 		// the client has cleared the client side viewangles upon connecting to the server, which is different than the
 		// state when the game is saved, so we need to compensate with deltaangles
 		for (i = 0; i < 3; i++)
+		{
+#if PROTOCOL_FLOAT_PLAYERANGLES == 1
+			ent->client->ps.pmove.delta_angles[i] = ent->client->ps.viewangles[i];
+#else
 			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->client->ps.viewangles[i]);
+#endif
+		}
+			
 	}
 	else
 	{

@@ -416,12 +416,21 @@ void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
 
     MSG_WriteByte (buf, bits);
 
+#if PROTOCOL_FLOAT_PLAYERANGLES == 1
 	if (bits & CM_ANGLE1)
-		MSG_WriteShort (buf, cmd->angles[0]);
+		MSG_WriteFloat (buf, cmd->angles[0]);
 	if (bits & CM_ANGLE2)
-		MSG_WriteShort (buf, cmd->angles[1]);
+		MSG_WriteFloat(buf, cmd->angles[1]);
 	if (bits & CM_ANGLE3)
-		MSG_WriteShort (buf, cmd->angles[2]);
+		MSG_WriteFloat(buf, cmd->angles[2]);
+#else
+	if (bits & CM_ANGLE1)
+		MSG_WriteShort(buf, cmd->angles[0]);
+	if (bits & CM_ANGLE2)
+		MSG_WriteShort(buf, cmd->angles[1]);
+	if (bits & CM_ANGLE3)
+		MSG_WriteShort(buf, cmd->angles[2]);
+#endif
 	
 	if (bits & CM_FORWARD)
 		MSG_WriteShort (buf, cmd->forwardmove);
@@ -932,13 +941,22 @@ void MSG_ReadDeltaUsercmd (sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move
 	bits = MSG_ReadByte (msg_read);
 		
 // read current angles
+#if PROTOCOL_FLOAT_PLAYERANGLES == 1
+	if (bits & CM_ANGLE1)
+		move->angles[0] = MSG_ReadFloat(msg_read);
+	if (bits & CM_ANGLE2)
+		move->angles[1] = MSG_ReadFloat(msg_read);
+	if (bits & CM_ANGLE3)
+		move->angles[2] = MSG_ReadFloat(msg_read);
+#else
 	if (bits & CM_ANGLE1)
 		move->angles[0] = MSG_ReadShort (msg_read);
 	if (bits & CM_ANGLE2)
 		move->angles[1] = MSG_ReadShort (msg_read);
 	if (bits & CM_ANGLE3)
 		move->angles[2] = MSG_ReadShort (msg_read);
-		
+#endif
+
 // read movement
 	if (bits & CM_FORWARD)
 		move->forwardmove = MSG_ReadShort (msg_read);

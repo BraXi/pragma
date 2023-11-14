@@ -455,7 +455,13 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 	if (flags & PS_M_DELTA_ANGLES)
 	{
 		for (i = 0; i < 3; i++)
+		{
+#if PROTOCOL_FLOAT_PLAYERANGLES == 1
+			state->pmove.delta_angles[i] = MSG_ReadFloat(&net_message);
+#else
 			state->pmove.delta_angles[i] = MSG_ReadShort(&net_message);
+#endif
+		}
 	}
 
 	if (flags & PS_M_BBOX_SIZE) // mins and maxs
@@ -502,7 +508,7 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 
 	if (flags & PS_VIEWMODEL_FRAME)
 	{
-		state->viewmodel_frame = MSG_ReadByte (&net_message);
+		state->viewmodel_frame = MSG_ReadByte (&net_message); // braxi -- do I need more than 256 frames for viewmodel?
 
 		for (i = 0; i < 3; i++)
 			state->viewmodel_offset[i] = MSG_ReadChar (&net_message)*0.25;

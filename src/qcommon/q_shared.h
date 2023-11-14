@@ -539,8 +539,15 @@ typedef struct
 	byte		pm_flags;		// ducked, jump_held, etc
 	byte		pm_time;		// each unit = 8 ms
 	short		gravity;
-	short		delta_angles[3];	// add to command angles to get view direction
-									// changed by spawns, rotating objects, and teleporters
+
+	// add to command angles to get view direction
+	// changed by spawns, rotating objects, and teleporters
+
+#if PROTOCOL_FLOAT_PLAYERANGLES == 1
+	vec3_t		delta_angles;
+#else
+	short		delta_angles[3];
+#endif
 } pmove_state_t;
 
 #define PACKED_BSP 31
@@ -558,7 +565,11 @@ typedef struct usercmd_s
 {
 	byte	msec;
 	byte	buttons;
+#if PROTOCOL_FLOAT_PLAYERANGLES == 1
+	float	angles[3];
+#else
 	short	angles[3];
+#endif
 	short	forwardmove, sidemove, upmove;
 	byte	impulse;		// remove?
 	byte	lightlevel;		// light level the player is standing on
@@ -786,26 +797,19 @@ typedef enum
 
 
 // player_state->stats[] indexes
-#define STAT_HEALTH_ICON		0
-#define	STAT_HEALTH				1
-#define	STAT_AMMO_ICON			2
-#define	STAT_AMMO				3
-#define	STAT_ARMOR_ICON			4
-#define	STAT_ARMOR				5
-#define	STAT_SELECTED_ICON		6
-#define	STAT_PICKUP_ICON		7
-#define	STAT_PICKUP_STRING		8
-#define	STAT_TIMER_ICON			9
-#define	STAT_TIMER				10
-#define	STAT_HELPICON			11
-#define	STAT_SELECTED_ITEM		12
-#define	STAT_LAYOUTS			13
-#define	STAT_FRAGS				14
-#define	STAT_FLASHES			15		// cleared each frame, 1 = health, 2 = armor
-#define STAT_CHASE				16
-#define STAT_SPECTATOR			17
+enum
+{
+	STAT_HEALTH,
+	STAT_AMMO,				// only used in layoutstring
+	STAT_FRAGS,
+	STAT_ARMOR,				// only used in layoutstring
+	STAT_LAYOUTS,			// 0 don't draw layout programs at all, 1 draw layout, 2 draw inventory and layout
+	STAT_FLASHES,			// cleared each frame, 1 = health, 2 = armor, used only in layoutstring programs
+	STAT_SELECTED_ITEM,		// TODO: remove! used in inventory
 
-#define	MAX_STATS				32
+	MAX_STATS = 32
+};
+
 
 
 // dmflags->value flags
@@ -836,36 +840,7 @@ typedef enum
 #define DF_NO_SPHERES		0x00100000
 //ROGUE
 
-/*
-ROGUE - VERSIONS
-1234	08/13/1998		Activision
-1235	08/14/1998		Id Software
-1236	08/15/1998		Steve Tietze
-1237	08/15/1998		Phil Dobranski
-1238	08/15/1998		John Sheley
-1239	08/17/1998		Barrett Alexander
-1230	08/17/1998		Brandon Fish
-1245	08/17/1998		Don MacAskill
-1246	08/17/1998		David "Zoid" Kirsch
-1247	08/17/1998		Manu Smith
-1248	08/17/1998		Geoff Scully
-1249	08/17/1998		Andy Van Fossen
-1240	08/20/1998		Activision Build 2
-1256	08/20/1998		Ranger Clan
-1257	08/20/1998		Ensemble Studios
-1258	08/21/1998		Robert Duffy
-1259	08/21/1998		Stephen Seachord
-1250	08/21/1998		Stephen Heaslip
-1267	08/21/1998		Samir Sandesara
-1268	08/21/1998		Oliver Wyman
-1269	08/21/1998		Steven Marchegiano
-1260	08/21/1998		Build #2 for Nihilistic
-1278	08/21/1998		Build #2 for Ensemble
 
-9999	08/20/1998		Internal Use
-*/
-
-// ROGUE
 /*
 ==========================================================
 
@@ -883,12 +858,12 @@ ROGUE - VERSIONS
 // the server to all connected clients.
 // Each config string can be at most MAX_QPATH characters.
 //
-#define	CS_NAME				0
+#define	CS_NAME				0		// level name is set in worldspawn's 'message' key
 #define	CS_CDTRACK			1
 #define	CS_SKY				2
 #define	CS_SKYAXIS			3		// %f %f %f format
 #define	CS_SKYROTATE		4
-#define	CS_HUD		5		// display program string
+#define	CS_HUD				5		// display program string
 
 #define CS_AIRACCEL			29		// air acceleration control
 #define	CS_MAXCLIENTS		30
@@ -955,7 +930,7 @@ typedef struct entity_state_s
 
 
 // player_state_t is the information needed in addition to pmove_state_t
-// to rendered a view.  There will only be 10 player_state_t sent each second,
+// to rendered a view.  There will only be [SV_FPS] player_state_t sent each second,
 // but the number of pmove_state_t changes will be reletive to client
 // frame rates
 typedef struct
