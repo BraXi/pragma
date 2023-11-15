@@ -178,6 +178,7 @@ Does not modify any world state?
 ==================
 */
 
+void() PM_InitialSnapPosition;
 void() PM_StepSlideMove_ =
 {
 	float		bumpcount, numbumps;
@@ -191,10 +192,9 @@ void() PM_StepSlideMove_ =
 	float		time_left;
 	
 	numbumps = 4;
-	
-	primal_velocity = pml_velocity;
 	numplanes = 0;
 	
+	primal_velocity = pml_velocity;
 	time_left = pml_frametime;
 
 	for (bumpcount = 0; bumpcount < numbumps; bumpcount++)
@@ -207,6 +207,7 @@ void() PM_StepSlideMove_ =
 
 		if (trace_allsolid)
 		{	
+//			print("PM_StepSlideMove_ trace_allsolid\n");
 			// entity is trapped in another solid
 			pml_velocity_z = 0;	// don't build up falling damage
 			return;
@@ -233,8 +234,9 @@ void() PM_StepSlideMove_ =
 
 		// slide along this plane
 		if(numplanes >= MAX_CLIP_PLANES)
-		{	
-			// this shouldn't really happen
+		{
+			// this shouldn't really happen			
+			dprint("numplanes >= MAX_CLIP_PLANES\n");
 			pml_velocity = vec3_origin;
 			break;
 		}
@@ -253,12 +255,14 @@ void() PM_StepSlideMove_ =
 				if(j != i)
 				{
 					if(dotproduct(pml_velocity, planes[j]) < 0)
+					{
+//						print("PM_StepSlideMove_ dotproduct(",vtos(pml_velocity),",",vtos(planes[j]),") < 0\n");
 						break;	// not ok
+					}
 				}
-				
-				if (j == numplanes)
-					break;
 			}
+			if (j == numplanes)
+				break;	
 		}
 		
 		if (i != numplanes)
@@ -269,11 +273,13 @@ void() PM_StepSlideMove_ =
 		{	
 			// go along the crease
 			if (numplanes != 2)
-			{
-				dprint("clip velocity, numplanes ==", ftos(numplanes), "\n");
+			{		
+				dprint("clip velocity, numplanes == ", ftos(numplanes), "\n");
 				pml_velocity = vec3_origin;
 				break;
 			}
+			
+		
 			dir = crossproduct(planes[0], planes[1]);
 			d = dotproduct(dir, pml_velocity);			
 			pml_velocity_x = dir_x * d;
@@ -287,6 +293,7 @@ void() PM_StepSlideMove_ =
 		//
 		if (dotproduct(pml_velocity, primal_velocity) <= 0)
 		{
+//			dprint("dotproduct(pml_velocity, primal_velocity) <= 0\n");
 			pml_velocity = vec3_origin;
 			break;
 		}
@@ -946,17 +953,15 @@ void(float doclip) PM_FlyMove =
 {
 	float	speed, drop, friction, control, newspeed;
 	float	currentspeed, addspeed, accelspeed;
-	int			i;
-	vector		wishvel;
-	float		fmove, smove;
-	vector		wishdir;
-	float		wishspeed;
-	vector		end;
+	vector	wishvel;
+	float	fmove, smove;
+	vector	wishdir;
+	float	wishspeed;
+	vector	end;
 
-	pmove_viewheight = 22; // FIXME, why was it hardcoded here?!
+	pmove_viewheight = 22; // FIXME, why is it hardcoded here?!
 
 	// friction
-
 	speed = vectorlength(pml_velocity);
 	if (speed < 1)
 	{
@@ -998,16 +1003,12 @@ void(float doclip) PM_FlyMove =
 	wishvel_y = pml_forward_y*fmove + pml_right_y*smove;
 	wishvel_z = pml_forward_z*fmove + pml_right_z*smove;
 	
-	print("wishvel:" ,vtos(wishvel), "\n");
-
 	wishvel_z += pmove_cmd_upmove;
 
 	wishdir = wishvel;
 	wishspeed = VectorNormalize(wishdir);	// ugly
 	wishdir = VectorNormalize2(wishdir); //ugly
 	
-	print("wishspeed:",ftos(wishspeed), "\n");
-
 	//
 	// clamp to server defined max speed
 	//
@@ -1219,7 +1220,7 @@ void() PM_InitialSnapPosition =
 		}
 	}
 
-	dprint( "Bad InitialSnapPosition\n");
+	dprint("Bad InitialSnapPosition\n");
 };
 
 
@@ -1491,18 +1492,15 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	pm_state_pm_time = self.pm_time;
 	pm_state_gravity = (cvar("sv_gravity") * self.gravity);
 
-#ifdef SVGAME
 	cvarset("pmdebug_0", "movecmd: ", ftos(cmdMove_x)," FWD, ", ftos(cmdMove_y), " SIDE, ", ftos(cmdMove_z)," UP");
 	cvarset("pmdebug_1", "[in] origin  : ", vtos(pm_state_origin));
 	cvarset("pmdebug_2", "[in] velocity: ", vtos(pm_state_velocity));
-#endif
 	
 	//
 	// perform a player move
 	//
 	PlayerMove();
 	
-#ifdef SVGAME
 	// play a jump sfx if needed	
 	if(self.groundentity_num != ENTITYNUM_NONE && pmove_groundentity_num == ENTITYNUM_NONE && (pmove_cmd_upmove >= 10) && (pmove_waterlevel == WL_NOTINWATER))
 	{	
@@ -1510,13 +1508,11 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 		//	playsound(vec3_origin, self, CHAN_VOICE, animTree[self.playerAnimTree].snd_jump, 1, ATTN_NORM, 0);
 		playsound(vec3_origin, self, CHAN_VOICE, "player/female/jump1.wav", 1, ATTN_NORM, 0);
 	}
-#endif	
 	
 	//
 	// save results of pmove
 	//
 	
-#ifdef SVGAME
 	cvarset("pmdebug_3", "[out] origin  : ", vtos(pm_state_origin));
 	cvarset("pmdebug_4", "[out] velocity: ", vtos(pm_state_velocity));	
 	if(self.groundentity_num > 0)
@@ -1528,7 +1524,6 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	{
 		cvarset("pmdebug_5", "GRND ", ftos(pmove_groundentity_num), " (", pml_groundsurface_name, "), pm_type ", ftos(pm_state_pm_type));
 	}
-#endif	
 	
 	// no setorigin() as we linkentity at the end
 	self.origin = pm_state_origin;		
@@ -1563,7 +1558,7 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 
 	self.mins = pm_state_mins;
 	self.maxs = pm_state_maxs;
-	//setsize(self, pm_state_mins, pm_state_maxs); // set new bbox
+	setsize(self, pm_state_mins, pm_state_maxs); // set new bbox
 	linkentity(self);
 };
 
