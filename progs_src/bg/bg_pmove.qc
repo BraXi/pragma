@@ -199,9 +199,9 @@ void() PM_StepSlideMove_ =
 
 	for (bumpcount = 0; bumpcount < numbumps; bumpcount++)
 	{
-		end_x = pml_origin_x + time_left * pml_velocity_x;
-		end_y = pml_origin_y + time_left * pml_velocity_y;
-		end_z = pml_origin_z + time_left * pml_velocity_z;
+		end_x = pml_origin_x + (time_left * pml_velocity_x);
+		end_y = pml_origin_y + (time_left * pml_velocity_y);
+		end_z = pml_origin_z + (time_left * pml_velocity_z);
 
 		pm_trace(pml_origin, pm_state_mins, pm_state_maxs, end);
 
@@ -276,7 +276,9 @@ void() PM_StepSlideMove_ =
 			}
 			dir = crossproduct(planes[0], planes[1]);
 			d = dotproduct(dir, pml_velocity);			
-			pml_velocity = dir * d;
+			pml_velocity_x = dir_x * d;
+			pml_velocity_y = dir_y * d;
+			pml_velocity_z = dir_z * d;
 		}
 		
 		//
@@ -385,6 +387,7 @@ void() PM_Friction =
 	{
 		vel_x = 0;
 		vel_y = 0;
+		pml_velocity = vel;
 		return;
 	}
 
@@ -397,7 +400,7 @@ void() PM_Friction =
 	{
 		friction = pm_friction;
 		control = speed < pm_stopspeed ? pm_stopspeed : speed;
-		drop += control*friction*pml_frametime;
+		drop += control * friction * pml_frametime;
 	}
 
 // apply water friction
@@ -415,6 +418,8 @@ void() PM_Friction =
 	vel_x = vel_x * newspeed;
 	vel_y = vel_y * newspeed;
 	vel_z = vel_z * newspeed;
+	
+	pml_velocity = vel;
 };
 
 
@@ -435,7 +440,7 @@ void(vector wishdir, float wishspeed, float accel) PM_Accelerate =
 	if (addspeed <= 0)
 		return;
 	
-	accelspeed = accel*pml_frametime*wishspeed;
+	accelspeed = accel * pml_frametime * wishspeed;
 	if (accelspeed > addspeed)
 		accelspeed = addspeed;
 	
@@ -590,8 +595,8 @@ void() PM_WaterMove =
 	PM_AddCurrents(wishvel);
 
 	wishdir = wishvel;
+	wishspeed = VectorNormalize(wishdir); //ugly
 	wishdir = VectorNormalize2(wishdir); //ugly
-	wishspeed = VectorNormalize(wishdir);
 
 	if (wishspeed > pm_maxspeed)
 	{
@@ -639,8 +644,8 @@ void() PM_AirMove =
 	PM_AddCurrents (wishvel);
 
 	wishdir = wishvel;
-	wishdir = VectorNormalize2(wishdir); //ugly
-	wishspeed = VectorNormalize(wishdir);
+	wishspeed = VectorNormalize(wishdir); // <- this returns length	
+	wishdir = VectorNormalize2(wishdir); // <- this normalizes vector	
 
 //
 // clamp to server defined max speed
@@ -655,6 +660,7 @@ void() PM_AirMove =
 	
 	if ( pml_onLadder )
 	{
+		// when on ladder
 		PM_Accelerate (wishdir, wishspeed, pm_accelerate);
 		if (!wishvel_z)
 		{
@@ -675,7 +681,8 @@ void() PM_AirMove =
 	}
 	else if ( pmove_groundentity_num != ENTITYNUM_NONE )
 	{	
-		// walking on ground
+		// when on ground
+		
 		pml_velocity_z = 0; //!!! this is before the accel
 		PM_Accelerate (wishdir, wishspeed, pm_accelerate);
 
@@ -693,7 +700,8 @@ void() PM_AirMove =
 		PM_StepSlideMove ();
 	}
 	else
-	{	// not on ground, so little effect on velocity
+	{	
+		// not on ground, so little effect on velocity
 		if (pm_airaccelerate)
 			PM_AirAccelerate(wishdir, wishspeed, pm_accelerate);
 		else
@@ -945,7 +953,7 @@ void(float doclip) PM_FlyMove =
 	float		wishspeed;
 	vector		end;
 
-//	pmove_viewheight = 22; // FIXME, why was it hardcoded here?!
+	pmove_viewheight = 22; // FIXME, why was it hardcoded here?!
 
 	// friction
 
@@ -960,8 +968,10 @@ void(float doclip) PM_FlyMove =
 
 		friction = pm_friction * 1.5;	// extra friction
 		
-		
-		control = speed < pm_stopspeed ? pm_stopspeed : speed;
+		if(speed < pm_stopspeed) //control = speed < pm_stopspeed ? pm_stopspeed : speed;
+			control = pm_stopspeed;
+		else
+			control = speed;
 		
 		drop += control * friction * pml_frametime;
 
@@ -971,7 +981,7 @@ void(float doclip) PM_FlyMove =
 			newspeed = 0;
 		newspeed /= speed;
 
-		pml_velocity = (pml_velocity * newspeed);
+		pml_velocity = pml_velocity * newspeed;
 	}
 
 	// accelerate
@@ -987,12 +997,16 @@ void(float doclip) PM_FlyMove =
 	wishvel_x = pml_forward_x*fmove + pml_right_x*smove;
 	wishvel_y = pml_forward_y*fmove + pml_right_y*smove;
 	wishvel_z = pml_forward_z*fmove + pml_right_z*smove;
+	
+	print("wishvel:" ,vtos(wishvel), "\n");
 
 	wishvel_z += pmove_cmd_upmove;
 
 	wishdir = wishvel;
+	wishspeed = VectorNormalize(wishdir);	// ugly
 	wishdir = VectorNormalize2(wishdir); //ugly
-	wishspeed = VectorNormalize(wishdir);
+	
+	print("wishspeed:",ftos(wishspeed), "\n");
 
 	//
 	// clamp to server defined max speed
@@ -1002,7 +1016,6 @@ void(float doclip) PM_FlyMove =
 		wishvel = (wishvel * (pm_maxspeed/wishspeed));
 		wishspeed = pm_maxspeed;
 	}
-
 
 	currentspeed = dotproduct(pml_velocity, wishdir);
 	addspeed = wishspeed - currentspeed;
@@ -1302,6 +1315,8 @@ void() PlayerMove =
 	pml_frametime = pmove_cmd_msec * scale;
 
 	PM_ClampAngles ();
+	
+//	pm_state_pm_type = PM_NOCLIP; //test
 
 	if (pm_state_pm_type == PM_NOCLIP)
 	{
@@ -1445,14 +1460,14 @@ void() ClearPlayerMove =
 // not complete
 void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 {
-	//
+	entity ground;
+	
 	// wipe all pmove data
 	//
 	ClearPlayerMove();
 	
 	// we don't want to collide with ourselves
 	pm_passent = self; 
-
 	
 	//
 	// copy data to pmove
@@ -1476,25 +1491,44 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	pm_state_pm_time = self.pm_time;
 	pm_state_gravity = (cvar("sv_gravity") * self.gravity);
 
-
+#ifdef SVGAME
 	cvarset("pmdebug_0", "movecmd: ", ftos(cmdMove_x)," FWD, ", ftos(cmdMove_y), " SIDE, ", ftos(cmdMove_z)," UP");
 	cvarset("pmdebug_1", "[in] origin  : ", vtos(pm_state_origin));
 	cvarset("pmdebug_2", "[in] velocity: ", vtos(pm_state_velocity));
+#endif
 	
 	//
 	// perform a player move
 	//
 	PlayerMove();
 	
+#ifdef SVGAME
+	// play a jump sfx if needed	
+	if(self.groundentity_num != ENTITYNUM_NONE && pmove_groundentity_num == ENTITYNUM_NONE && (pmove_cmd_upmove >= 10) && (pmove_waterlevel == WL_NOTINWATER))
+	{	
+		//if(self.playerAnimTree)
+		//	playsound(vec3_origin, self, CHAN_VOICE, animTree[self.playerAnimTree].snd_jump, 1, ATTN_NORM, 0);
+		playsound(vec3_origin, self, CHAN_VOICE, "player/female/jump1.wav", 1, ATTN_NORM, 0);
+	}
+#endif	
+	
 	//
 	// save results of pmove
 	//
-
-	cvarset("pmdebug_3", "[out] origin  : ", vtos(pm_state_origin));
-	cvarset("pmdebug_4", "[out] velocity: ", vtos(pm_state_velocity));		
-	cvarset("pmdebug_5", "GRND ", ftos(pmove_groundentity_num), " (", pml_groundsurface_name, ") ", ", pm_type ", ftos(pm_state_pm_type));	
 	
-//	pm_state_origin = '100 -100 200';
+#ifdef SVGAME
+	cvarset("pmdebug_3", "[out] origin  : ", vtos(pm_state_origin));
+	cvarset("pmdebug_4", "[out] velocity: ", vtos(pm_state_velocity));	
+	if(self.groundentity_num > 0)
+	{
+		ground = getent(self.groundentity_num);	
+		cvarset("pmdebug_5", "GRND ", ftos(pmove_groundentity_num), " (", ground.classname, "), pm_type ", ftos(pm_state_pm_type));
+	}
+	else
+	{
+		cvarset("pmdebug_5", "GRND ", ftos(pmove_groundentity_num), " (", pml_groundsurface_name, "), pm_type ", ftos(pm_state_pm_type));
+	}
+#endif	
 	
 	// no setorigin() as we linkentity at the end
 	self.origin = pm_state_origin;		

@@ -117,9 +117,9 @@ void() initHumanAnimTree =
 	animTree[ANIMTREE_HUMAN].snd_pain2 = "player/female/pain75_2.wav";
 	animTree[ANIMTREE_HUMAN].snd_pain3 = "player/female/pain50_2.wav";
 	
-	animTree[ANIMTREE_HUMAN].snd_death1 = "player/female/jump1.wav";
-	animTree[ANIMTREE_HUMAN].snd_death2 = "player/female/jump1.wav";
-	animTree[ANIMTREE_HUMAN].snd_death3 = "player/female/jump1.wav";
+	animTree[ANIMTREE_HUMAN].snd_death1 = "player/female/death1.wav";
+	animTree[ANIMTREE_HUMAN].snd_death2 = "player/female/death2.wav";
+	animTree[ANIMTREE_HUMAN].snd_death3 = "player/female/death3.wav";
 	
 	precacheAnimTree(ANIMTREE_HUMAN);
 };
