@@ -1,120 +1,138 @@
 /*
+P R A G M A
+Copyright (C) 2023 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
+*/
+/*
+bg_pmove.qc 
+-----------
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+Handles all player movement physics and all releated logic like jumping and stances.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+PlayerMove is called by both client and server game progs respectively. 
+This file must be compiled into cgame and svgame progs respectively or 
+client prediction will generate errors causing desynchronization and jitter.
 
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
+Compile it for progs accordingly with CLGAME or SVGAME define
 */
 
+// enable pmove debug gui
+//#define PMOVEDEBUGMENU 1	
+
+//
+// macros to convert angles back and forth 
+// from shorts (network) to floats (game)
+//
+#define	ANGLE2SHORT(x)	((int)((x)*65536/360) & 65535)
+#define	SHORT2ANGLE(x)	((x)*(360.0/65536))
+
+// ---------------------------------------------------
+//
+// player movement types
+//
 typedef enum 
 {
-	PM_NORMAL,
-	PM_NOCLIP,
-	PM_DEAD,
-	PM_GIB,
-	PM_FREEZE
+	PM_NORMAL,		// can normaly move
+	PM_NOCLIP,		// fly move, no clipping to world
+	PM_DEAD,		// doesn't move
+	PM_GIB,			// doesn't move, diferent bbox size
+	PM_FREEZE		// cannot move and may hover above ground
 } pmtype_t;
-
-float PMF_DUCKED			= 1;	// crouching
+// ---------------------------------------------------
+//
+// player movement flags
+//
+float PMF_CROUCHING			= 1;	// crouching
 float PMF_JUMP_HELD			= 2;	// holding jump
 float PMF_ON_GROUND			= 4;	// touching ground
 float PMF_TIME_WATERJUMP	= 8;	// pm_time is waterjump
 float PMF_TIME_LAND			= 16;	// pm_time is time before rejump
 float PMF_TIME_TELEPORT		= 32;	// pm_time is non-moving time
-float PMF_NO_PREDICTION		= 64;	// temporarily disables prediction (used for grappling hook)
-
+float PMF_NO_PREDICTION		= 64;	// temporarily disables prediction -- !!! THIS MUST MATCH C CODE !!!
+float PMF_FREE				= 128;	// the only free for use pmflag, can't have more without changing pm_flags to short in C network code
+// ---------------------------------------------------
+//
 // movement parameters
+//
 float	pm_stopspeed = 100;
-float	pm_maxspeed = 300;
-float	pm_duckspeed = 100;
-float	pm_accelerate = 10;
-float	pm_airaccelerate = 0;
-float	pm_wateraccelerate = 10;
-float	pm_friction = 6;
-float	pm_waterfriction = 1;
-float	pm_waterspeed = 400;
-
-// macros to convert angles back and forth to pmove
-#define	ANGLE2SHORT(x)	((int)((x)*65536/360) & 65535)
-//#define	SHORT2ANGLE(x)	((x)*(360.0/65536))
-
-
-float(float x) SHORT2ANGLE =
-{
-	return (x)*(360.0/65536);
-};
-
-#define	STEPSIZE		18
-#define	MAXTOUCH		32
-#define	STOP_EPSILON	0.1
+float	pm_maxspeed = 300;			// normal speed
+float	pm_crouchspeed = 100;		// crouch speed
+float	pm_accelerate = 10;			// normal acceleration
+float	pm_airaccelerate = 0;		// acceleration in air
+float	pm_wateraccelerate = 10;	// acceleration in water
+float	pm_friction = 6;			// normal friction
+float	pm_waterfriction = 1;		// friction in water
+float	pm_waterspeed = 400;		// speed in water
+float	pm_stepsize = 18;			// can step on this high stairs
+float	pm_maxtouch = 32;			// can be touching up to this many entities
+// ---------------------------------------------------	
+#define	STOP_EPSILON	0.1		// make floating point happy
 #define	MIN_STEP_NORMAL	0.7		// can't step up onto very steep slopes
 #define	MAX_CLIP_PLANES	5
-
-// pmove_state_t
-pmtype_t	pm_state_pm_type;
-vector		pm_state_origin;
-vector		pm_state_velocity;
-float		pm_state_gravity;
-vector		pm_state_mins, pm_state_maxs;
-float		pm_state_pm_flags;
-float		pm_state_pm_time;
-vector		pm_state_delta_angles;
-
+// ---------------------------------------------------
+// this is communicated to clients for prediction
+// used for in/out communication (matches pmove_state_t)
+pmtype_t	pm_state_pm_type;		// byte
+vector		pm_state_origin;		// floats
+vector		pm_state_velocity;		// floats
+float		pm_state_gravity;		// short
+vector		pm_state_mins			// char [-127,127 range]
+vector		pm_state_maxs;			// char [-127,127 range]
+float		pm_state_pm_flags;		// byte [0-255]
+float		pm_state_pm_time;		// byte [0-255]
+vector		pm_state_delta_angles;	// shorts, use ANGLE2SHORT/SHORT2ANGLE
+// ---------------------------------------------------
 // pmove_t
-int			pmove_cmd_msec;
-vector		pmove_cmd_angles;			// these are all actualy SHORT! use SHORT2ANGLE / ANGLE2SHORT
-float		pmove_cmd_forwardmove;
-float		pmove_cmd_sidemove;
-float		pmove_cmd_upmove;
+int			pmove_cmd_msec;				// short, use ANGLE2SHORT/SHORT2ANGLE
+vector		pmove_cmd_angles;			// shorts, use SHORT2ANGLE / ANGLE2SHORT
+float		pmove_cmd_forwardmove;		// multiplied by `cl_forwardspeed` cvar
+float		pmove_cmd_sidemove;			// multiplied by `cl_sidespeed` cvar
+float		pmove_cmd_upmove;			// multiplied by `cl_upspeed` cvar
 float		pmove_snapinitial;			// if state has been changed outside pmove
-int			pmove_numtouch;
-entity		pmove_touchents[MAXTOUCH];
-vector		pmove_viewangles;			// clamped
-float		pmove_viewheight;
-float		pmove_groundentity_num;		// -1 = in air
+int			pmove_numtouch;				// number of entities in touch (unused clientside)
+entity		pmove_touchents[pm_maxtouch];	// array of server entities (unused clientside)
+vector		pmove_viewangles;			// clamped in CL_ClampAngles and PM_ClampAngles
+float		pmove_viewheight;			// added to viewoffset_z
+float		pmove_groundentity_num;		// index to sventity we're standing on, -1 = in air, 0 = worldspawn, etc..
 int			pmove_watertype;			// CONTENTS_WATER, CONTENTS_LAVA or CONTENTS_SLIME
 float		pmove_waterlevel;			// WL_ enum
-
+// ---------------------------------------------------
 //pml_t
-vector		pml_origin;			// full float precision
-vector		pml_velocity;		// full float precision
-vector		pml_forward;
-vector		pml_right;
-vector		pml_up;
-float		pml_frametime;
-//csurface_t	*groundsurface;
-string		pml_groundsurface_name;
-float		pml_groundsurface_flags;
-float		pml_groundsurface_value;
-int			pml_groundcontents;
-vector		pml_previous_origin;	
-float		pml_onLadder;
-
+// locals known only to pmove
+vector		pml_origin;					// full float precision
+vector		pml_velocity;				// full float precision
+vector		pml_forward;				// anglevectors fwd
+vector		pml_right;					// anglevectors right
+vector		pml_up;						// anglevectors up
+float		pml_frametime;				// scale movement by this time
+string		pml_groundsurface_name;		// name of texture we're on (ex. dev/floor_grey_01)
+float		pml_groundsurface_flags;	// surface flags - SURF_SLICK, SURF_WARP etc
+float		pml_groundsurface_value;	// texture's 'value' (conveyor belt speed etc)
+int			pml_groundcontents;			// CONTENTS were standing on
+vector		pml_previous_origin;		// used as a backup if we somehow get stuck in solid
+float		pml_onLadder;				// set to true when we're touching ladder texture
+// ---------------------------------------------------
 
 vector(vector veca, float scale, vector vecb) VectorMA;
 float(vector v) VectorNormalize;
 vector(vector v) VectorNormalize2;
 
-
 #ifdef SVGAME
 entity pm_passent;
 #endif
 
-void(vector start, vector mins, vector maxs, vector end) pm_trace =
+/*
+==================
+PM_Trace
+
+uses trace function that matches cgame and svgame builtins
+==================
+*/
+void(vector start, vector mins, vector maxs, vector end) PM_Trace =
 {
-#ifdef CGAME
+#ifdef CLGAME
 	trace(start, mins, maxs, end, localplayernum+1, MASK_PLAYERSOLID);
 #endif
 
@@ -126,6 +144,7 @@ void(vector start, vector mins, vector maxs, vector end) pm_trace =
 #endif
 };
 
+
 /*
 ==================
 PM_ClipVelocity
@@ -134,8 +153,6 @@ Slide off of the impacting object
 returns the blocked flags (1 = floor, 2 = step / wall)
 ==================
 */
-
-
 vector(vector in, vector normal, float overbounce) PM_ClipVelocity =
 {
 	float	backoff;
@@ -170,15 +187,10 @@ vector(vector in, vector normal, float overbounce) PM_ClipVelocity =
 ==================
 PM_StepSlideMove
 
-Each intersection will try to step over the obstruction instead of
-sliding along it.
-
-Returns a new origin, velocity, and contact entity
-Does not modify any world state?
+Each intersection will try to step over the obstruction instead of sliding along it.
+Returns a new origin, velocity, and contact entity Does not modify any world state?
 ==================
 */
-
-void() PM_InitialSnapPosition;
 void() PM_StepSlideMove_ =
 {
 	float		bumpcount, numbumps;
@@ -203,7 +215,7 @@ void() PM_StepSlideMove_ =
 		end_y = pml_origin_y + (time_left * pml_velocity_y);
 		end_z = pml_origin_z + (time_left * pml_velocity_z);
 
-		pm_trace(pml_origin, pm_state_mins, pm_state_maxs, end);
+		PM_Trace(pml_origin, pm_state_mins, pm_state_maxs, end);
 
 		if (trace_allsolid)
 		{	
@@ -224,7 +236,7 @@ void() PM_StepSlideMove_ =
 			 break;		// moved the entire distance
 
 		// save entity for contact
-		if(pmove_numtouch < MAXTOUCH && trace_ent)
+		if(pmove_numtouch < pm_maxtouch && trace_ent)
 		{
 			pmove_touchents[pmove_numtouch] = trace_ent;
 			pmove_numtouch++;
@@ -330,9 +342,9 @@ void() PM_StepSlideMove =
 	down_v = pml_velocity;
 
 	up = start_o;
-	up_z += STEPSIZE;
+	up_z += pm_stepsize;
 
-	pm_trace(up, pm_state_mins, pm_state_maxs, up);
+	PM_Trace(up, pm_state_mins, pm_state_maxs, up);
 	if (trace_allsolid)
 		return;		// can't step up
 
@@ -344,9 +356,9 @@ void() PM_StepSlideMove =
 
 	// push down the final amount
 	down = pml_origin;
-	down_z -= STEPSIZE;
+	down_z -= pm_stepsize;
 	
-	pm_trace(pml_origin, pm_state_mins, pm_state_maxs, down);
+	PM_Trace(pml_origin, pm_state_mins, pm_state_maxs, down);
 	if (!trace_allsolid)
 	{
 		pml_origin = trace_endpos;
@@ -410,11 +422,11 @@ void() PM_Friction =
 		drop += control * friction * pml_frametime;
 	}
 
-// apply water friction
+	// apply water friction
 	if (pmove_waterlevel && !pml_onLadder)
 		drop += speed * pm_waterfriction * pmove_waterlevel * pml_frametime;
 
-// scale the velocity
+	// scale the velocity
 	newspeed = speed - drop;
 	if (newspeed < 0)
 	{
@@ -422,10 +434,7 @@ void() PM_Friction =
 	}
 	newspeed /= speed;
 
-	vel_x = vel_x * newspeed;
-	vel_y = vel_y * newspeed;
-	vel_z = vel_z * newspeed;
-	
+	vel = vel * newspeed;	
 	pml_velocity = vel;
 };
 
@@ -456,6 +465,14 @@ void(vector wishdir, float wishspeed, float accel) PM_Accelerate =
 	pml_velocity_z += accelspeed * wishdir_z;
 };
 
+
+/*
+==============
+PM_AirAccelerate
+
+Handles user intended acceleration IN AIR
+==============
+*/
 void(vector wishdir, float wishspeed, float accel) PM_AirAccelerate =
 {
 	float		addspeed, accelspeed, currentspeed, wishspd;
@@ -483,6 +500,8 @@ void(vector wishdir, float wishspeed, float accel) PM_AirAccelerate =
 /*
 =============
 PM_AddCurrents
+
+Ladder controls, water currents and conveyor belts
 =============
 */
 void(__inout vector	wishvel) PM_AddCurrents =
@@ -493,7 +512,6 @@ void(__inout vector	wishvel) PM_AddCurrents =
 	//
 	// account for ladders
 	//
-
 	if (pml_onLadder && fabs(pml_velocity_z) <= 200)
 	{
 		if ((pmove_viewangles_x <= -15) && (pmove_cmd_forwardmove > 0))
@@ -523,7 +541,6 @@ void(__inout vector	wishvel) PM_AddCurrents =
 	//
 	// add water currents
 	//
-
 	if (pmove_watertype & MASK_CURRENT)
 	{
 		v = vec3_origin;
@@ -551,7 +568,6 @@ void(__inout vector	wishvel) PM_AddCurrents =
 	//
 	// add conveyor belt velocities
 	//
-
 	if (pmove_groundentity_num != ENTITYNUM_NONE)
 	{
 		v = vec3_origin;
@@ -578,6 +594,7 @@ void(__inout vector	wishvel) PM_AddCurrents =
 ===================
 PM_WaterMove
 
+Handles movement when in water
 ===================
 */
 void() PM_WaterMove =
@@ -586,16 +603,18 @@ void() PM_WaterMove =
 	float	wishspeed;
 	vector	wishdir;
 
-//
-// user intentions
-//
+	//
+	// user intentions
+	//
 	wishvel_x = (pml_forward_x * pmove_cmd_forwardmove) + (pml_right_x * pmove_cmd_sidemove);
 	wishvel_y = (pml_forward_y * pmove_cmd_forwardmove) + (pml_right_y * pmove_cmd_sidemove);	
 	wishvel_z = (pml_forward_z * pmove_cmd_forwardmove) + (pml_right_z * pmove_cmd_sidemove);
 	
 
+	// if user doesn't press move keys then drift towards bottom
+	// add upmove to Z wishvel
 	if(!pmove_cmd_forwardmove && !pmove_cmd_sidemove && !pmove_cmd_upmove)
-		wishvel_z -= 60;		// drift towards bottom
+		wishvel_z -= 60;	
 	else
 		wishvel_z += pmove_cmd_upmove;
 
@@ -611,10 +630,10 @@ void() PM_WaterMove =
 		wishspeed = pm_maxspeed;
 	}
 	
+	// scale down wishspeed in water
 	wishspeed *= 0.5;
 
 	PM_Accelerate(wishdir, wishspeed, pm_wateraccelerate);
-
 	PM_StepSlideMove();
 };
 
@@ -623,6 +642,7 @@ void() PM_WaterMove =
 ===================
 PM_AirMove
 
+Handles all the movement when flying
 ===================
 */
 void() PM_AirMove =
@@ -657,7 +677,7 @@ void() PM_AirMove =
 //
 // clamp to server defined max speed
 //
-	maxspeed = (pm_state_pm_flags & PMF_DUCKED) ? pm_duckspeed : pm_maxspeed;
+	maxspeed = (pm_state_pm_flags & PMF_CROUCHING) ? pm_crouchspeed : pm_maxspeed;
 
 	if (wishspeed > maxspeed)
 	{
@@ -747,7 +767,7 @@ void() PM_CatagorizePosition =
 	}
 	else
 	{
-		pm_trace(pml_origin, pm_state_mins, pm_state_maxs, point);
+		PM_Trace(pml_origin, pm_state_mins, pm_state_maxs, point);
 
 		pml_groundsurface_name = trace_surface_name;
 		pml_groundsurface_flags = trace_surface_flags;
@@ -793,7 +813,7 @@ void() PM_CatagorizePosition =
 			pml_velocity_z = 0;
 #endif
 
-		if (pmove_numtouch < MAXTOUCH && trace_ent)
+		if (pmove_numtouch < pm_maxtouch && trace_ent)
 		{
 			pmove_touchents[pmove_numtouch] = trace_ent;
 			pmove_numtouch++;
@@ -892,6 +912,8 @@ void() PM_CheckJump =
 /*
 =============
 PM_CheckSpecialMovement
+
+check if we're touching ladder and handles jumping out of liquids
 =============
 */
 void() PM_CheckSpecialMovement =
@@ -915,7 +937,7 @@ void() PM_CheckSpecialMovement =
 	
 	spot = VectorMA (pml_origin, 1, flatforward);
 	
-	pm_trace (pml_origin, pm_state_mins, pm_state_maxs, spot);
+	PM_Trace (pml_origin, pm_state_mins, pm_state_maxs, spot);
 	
 	if ((trace_fraction < 1) && (trace_contents & CONTENTS_LADDER))
 		pml_onLadder = true; //we're on ladder
@@ -996,9 +1018,6 @@ void(float doclip) PM_FlyMove =
 	pml_forward = VectorNormalize2 (pml_forward); //ugly
 	pml_right = VectorNormalize2 (pml_right);
 	
-//	VectorNormalize (pml_forward);
-//	VectorNormalize (pml_right);
-
 	wishvel_x = pml_forward_x*fmove + pml_right_x*smove;
 	wishvel_y = pml_forward_y*fmove + pml_right_y*smove;
 	wishvel_z = pml_forward_z*fmove + pml_right_z*smove;
@@ -1038,7 +1057,7 @@ void(float doclip) PM_FlyMove =
 		end_y = pml_origin_y + pml_frametime * pml_velocity_y;
 		end_z = pml_origin_z + pml_frametime * pml_velocity_z;
 
-		pm_trace(pml_origin, pm_state_mins, pm_state_maxs, end);
+		PM_Trace(pml_origin, pm_state_mins, pm_state_maxs, end);
 
 		pml_origin = trace_endpos;
 	} 
@@ -1052,17 +1071,22 @@ void(float doclip) PM_FlyMove =
 
 /*
 ==============
-PM_CheckDuck
+PM_SetSizeAndViewHeight
 
-Sets mins, maxs, and pmove_viewheight
+Sets players bbox mins, maxs, and viewheight
+
+pmtype,    mins,          maxs,        viewheight
+standing   [-16 -16 -24]  [16 16 32]   22
+crouching  [-16 -16 -24]  [16 16  4]   -2
+gibbed     [-16 -16 0.0]  [16 16 16]    8
 ==============
 */
-void() PM_CheckDuck =
+void() PM_SetSizeAndViewHeight =
 {
 #if 0
 	if (pm_state_pm_type == PM_NORMAL_NO_CROUCH)
 	{
-		pm_state_pm_flags &= ~PMF_DUCKED;
+		pm_state_pm_flags &= ~PMF_CROUCHING;
 		return;
 	}
 #endif 
@@ -1085,28 +1109,28 @@ void() PM_CheckDuck =
 
 	if (pm_state_pm_type == PM_DEAD)
 	{
-		pm_state_pm_flags |= PMF_DUCKED;
+		pm_state_pm_flags |= PMF_CROUCHING;
 	}
-	else if (pmove_cmd_upmove < 0 && (pm_state_pm_flags & PMF_ON_GROUND) )
+	else if (pmove_cmd_upmove < 0 && (pm_state_pm_flags & PMF_ON_GROUND))
 	{	
-		// duck
-		pm_state_pm_flags |= PMF_DUCKED;
+		// crouch
+		pm_state_pm_flags |= PMF_CROUCHING;
 	}
 	else
 	{	
 		// stand up if possible
-		if (pm_state_pm_flags & PMF_DUCKED)
+		if (pm_state_pm_flags & PMF_CROUCHING)
 		{
 			// try to stand up
 			pm_state_maxs_z = 32;
-			pm_trace (pml_origin, pm_state_mins, pm_state_maxs, pml_origin);
+			PM_Trace (pml_origin, pm_state_mins, pm_state_maxs, pml_origin);
 			
 			if (!trace_allsolid)
-				pm_state_pm_flags &= ~PMF_DUCKED;
+				pm_state_pm_flags &= ~PMF_CROUCHING;
 		}
 	}
 
-	if (pm_state_pm_flags & PMF_DUCKED)
+	if (pm_state_pm_flags & PMF_CROUCHING)
 	{
 		pm_state_maxs_z = 4;
 		pmove_viewheight = -2;
@@ -1153,7 +1177,7 @@ float() PM_GoodPosition =
 	if (pm_state_pm_type == PM_NOCLIP)
 		return true;
 
-	pm_trace (pm_state_origin, pm_state_mins, pm_state_maxs, pm_state_origin);
+	PM_Trace (pm_state_origin, pm_state_mins, pm_state_maxs, pm_state_origin);
 	
 	return !trace_allsolid;
 }
@@ -1286,14 +1310,12 @@ void() PlayerMove =
 	pmove_waterlevel = WL_NOTINWATER;
 
 	// clear all pmove local vars
-//	memset (&pml, 0, sizeof(pml));
-	pml_origin = vec3_origin;			// full float precision
+	pml_origin = vec3_origin;		// full float precision
 	pml_velocity = vec3_origin;		// full float precision
 	pml_forward = vec3_origin;
 	pml_right = vec3_origin;
 	pml_up = vec3_origin;
 	pml_frametime = 0;
-	//csurface_t	*groundsurface;
 	pml_groundsurface_name = "";
 	pml_groundsurface_flags = 0;
 	pml_groundsurface_value = 0;
@@ -1337,19 +1359,19 @@ void() PlayerMove =
 		return;		// no movement at all
 
 
-	// setmins, maxs, and viewheight
-	PM_CheckDuck ();
+	// set crouching, mins, maxs, and viewheight
+	PM_SetSizeAndViewHeight();
 
 	if (pmove_snapinitial)
-		PM_InitialSnapPosition ();
+		PM_InitialSnapPosition();
 
 	// set groundentity, watertype, and waterlevel
-	PM_CatagorizePosition ();
+	PM_CatagorizePosition();
 
 	if (pm_state_pm_type == PM_DEAD)
-		PM_DeadMove ();
+		PM_DeadMove();
 
-	PM_CheckSpecialMovement ();
+	PM_CheckSpecialMovement();
 
 	// drop timing counter
 	if (pm_state_pm_time)
@@ -1446,7 +1468,7 @@ void() ClearPlayerMove =
 	// results
 	pmove_numtouch = 0;
 	
-	for(float i = 0; i < MAXTOUCH; i++)
+	for(float i = 0; i < pm_maxtouch; i++)
 		pmove_touchents[i] = none;
 
 	pmove_viewangles = vec3_origin;
@@ -1458,7 +1480,6 @@ void() ClearPlayerMove =
 };
 
 #ifdef SVGAME
-// not complete
 void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 {
 	entity ground;
@@ -1476,14 +1497,12 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	pmove_viewheight = self.viewheight;
 	
 	//cmdMove = [forwardmove, sidemove, upmove]
-//	pmove_viewangles = cmdAngles;
 	pmove_cmd_forwardmove = cmdMove_x;
 	pmove_cmd_sidemove = cmdMove_y;
 	pmove_cmd_upmove = cmdMove_z;
 	pmove_cmd_msec = cmdMsec;
 	pmove_cmd_angles = cmdAngles;	
 	pm_state_pm_type = self.pm_type;
-//	pm_state_pm_type = PM_NORMAL; 		// !! test !!	
 	pm_state_origin = self.origin;
 	pm_state_velocity = self.velocity;
 	pm_state_mins = self.mins;
@@ -1492,10 +1511,12 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	pm_state_pm_time = self.pm_time;
 	pm_state_gravity = (cvar("sv_gravity") * self.gravity);
 
+#ifdef PMOVEDEBUGMENU
 	cvarset("pmdebug_0", "movecmd: ", ftos(cmdMove_x)," FWD, ", ftos(cmdMove_y), " SIDE, ", ftos(cmdMove_z)," UP");
 	cvarset("pmdebug_1", "[in] origin  : ", vtos(pm_state_origin));
 	cvarset("pmdebug_2", "[in] velocity: ", vtos(pm_state_velocity));
-	
+#endif
+
 	//
 	// perform a player move
 	//
@@ -1508,11 +1529,9 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 		//	playsound(vec3_origin, self, CHAN_VOICE, animTree[self.playerAnimTree].snd_jump, 1, ATTN_NORM, 0);
 		playsound(vec3_origin, self, CHAN_VOICE, "player/female/jump1.wav", 1, ATTN_NORM, 0);
 	}
-	
-	//
-	// save results of pmove
-	//
-	
+
+
+#ifdef PMOVEDEBUGMENU	
 	cvarset("pmdebug_3", "[out] origin  : ", vtos(pm_state_origin));
 	cvarset("pmdebug_4", "[out] velocity: ", vtos(pm_state_velocity));	
 	if(self.groundentity_num > 0)
@@ -1521,10 +1540,12 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 		cvarset("pmdebug_5", "GRND ", ftos(pmove_groundentity_num), " (", ground.classname, "), pm_type ", ftos(pm_state_pm_type));
 	}
 	else
-	{
 		cvarset("pmdebug_5", "GRND ", ftos(pmove_groundentity_num), " (", pml_groundsurface_name, "), pm_type ", ftos(pm_state_pm_type));
-	}
+#endif
 	
+	//
+	// save results of pmove
+	//	
 	// no setorigin() as we linkentity at the end
 	self.origin = pm_state_origin;		
 	self.velocity = pm_state_velocity;
@@ -1541,10 +1562,9 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 
 	// set ground entity
 	self.groundentity_num = pmove_groundentity_num;
-
 	if (self.groundentity_num != ENTITYNUM_NONE)
 	{
-		entity ground = getent(self.groundentity_num);
+		ground = getent(self.groundentity_num);
 		self.groundentity_linkcount = ground.groundentity_linkcount;
 	}
 
@@ -1552,8 +1572,7 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	viewofs_z = self.viewheight;
 	setviewoffset(self, viewofs);
 
-	self.v_angle = pmove_viewangles; //v_angle is read only	
-//	VectorCopy(pmove_viewangles, client->ps.viewangles);
+	self.v_angle = pmove_viewangles;
 	setviewangles(self, pmove_viewangles);
 
 	self.mins = pm_state_mins;
@@ -1561,7 +1580,6 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	setsize(self, pm_state_mins, pm_state_maxs); // set new bbox
 	linkentity(self);
 };
-
 #endif
 
 
