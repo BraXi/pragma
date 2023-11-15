@@ -51,7 +51,7 @@ void() main =
 		//setmodel(e, "models/md3_test.md3");
 		setmodel(e, "models/female.md3");
 		e.origin = '0 0 24';
-		e.loopsound = precache_sound("effects/teleport.wav");
+//		e.loopsound = precache_sound("effects/teleport.wav");
 //		e.avelocity = '0 90 0';
 		linkentity(e);
 		e.think = plr_showanim;

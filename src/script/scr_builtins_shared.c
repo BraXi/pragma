@@ -283,7 +283,7 @@ void PF_cvarset(void)
 		return;
 	}
 
-	value = Scr_GetParmString(1);
+	value = Scr_VarString(1); // Scr_GetParmString(1);
 	if( value )
 		Cvar_Set(str, value);
 }
@@ -468,7 +468,7 @@ void Scr_InitSharedBuiltins()
 	// cvars
 	Scr_DefineBuiltin(PF_cvar, PF_ALL, "cvar", "float(string str)");
 	Scr_DefineBuiltin(PF_cvarstring, PF_ALL, "cvarstring", "string(string str)");
-	Scr_DefineBuiltin(PF_cvarset, PF_ALL, "cvarset", "void(string str, string val)");
+	Scr_DefineBuiltin(PF_cvarset, PF_ALL, "cvarset", "void(string str, string val, ...)");
 	Scr_DefineBuiltin(PF_cvarforceset, PF_ALL, "cvarforceset", "void(string str, string val)");
 
 	// strings

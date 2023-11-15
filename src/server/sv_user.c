@@ -271,6 +271,7 @@ void SV_Begin_f (void)
 			ent->client->ps.pmove.delta_angles[i] = ent->client->ps.viewangles[i];
 #else
 			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->client->ps.viewangles[i]);
+			ent->v.pm_delta_angles[i] = ANGLE2SHORT(ent->client->ps.viewangles[i]);
 #endif
 		}
 			

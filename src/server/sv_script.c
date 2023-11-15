@@ -254,24 +254,41 @@ void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 	move[1] = ucmd->sidemove;
 	move[2] = ucmd->upmove;
 
+	vec3_t a;
+	a[0] = ucmd->angles[0];
+	a[1] = ucmd->angles[1];
+	a[2] = ucmd->angles[2];
+
 	last_ucmd = ucmd; // for pmove
 
 	sv.script_globals->g_frameNum = sv.framenum;
 	sv.script_globals->self = GENT_TO_PROG(ent);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 
-	Scr_AddFloat(0, ucmd->buttons);
-	Scr_AddFloat(1, ucmd->impulse);
+	Scr_AddFloat(0, (int)ucmd->buttons);
+	Scr_AddFloat(1, (int)ucmd->impulse);
 	Scr_AddVector(2, move);
-	Scr_AddVector(3, ucmd->angles);
-	Scr_AddFloat(4, ucmd->lightlevel);
-	Scr_AddFloat(5, ucmd->msec);
+	Scr_AddVector(3, a);
+	Scr_AddFloat(4, (int)ucmd->lightlevel);
+	Scr_AddFloat(5, (int)ucmd->msec);
 
 	// move [forwardmove, sidemove, upmove]
 	// void ClientThink(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime)
 	Scr_Execute(sv.script_globals->ClientThink, __FUNCTION__);
 
 //	ClientMove(ent, ucmd);
+
+	pmove_state_t* pm;
+	pm = &ent->client->ps.pmove;
+
+	pm->pm_type = (int)ent->v.pm_time;
+	pm->pm_flags = (int)ent->v.pm_flags;
+	pm->pm_time = ent->v.pm_time;
+	pm->gravity = ent->v.pm_gravity;
+
+	//ent->client->ps.pmove = pm;
+	ent->client->old_pmove = ent->client->ps.pmove;
+
 
 	if (ent->v.movetype != MOVETYPE_NOCLIP)
 		SV_TouchEntities(ent, AREA_TRIGGERS);
@@ -385,6 +402,8 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 {
 	int i;
 	static vec3_t forward, right, up;
+	pmove_state_t* pm;
+
 	//
 	// If the origin or velocity have changed since ClientThink(),
 	// update the pmove values.  This will happen when the client
@@ -394,19 +413,34 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	// behind the body position when pushed -- "sinking into plats"
 	//
 
+	pm = &ent->client->ps.pmove;
+
+	pm->pm_type = (int)ent->v.pm_time;
+	pm->pm_flags = (int)ent->v.pm_flags;
+	pm->pm_time = ent->v.pm_time;
+	pm->gravity = ent->v.pm_gravity;
+
+	for (i = 0; i < 3; i++)
+	{
+		pm->mins[i] = ent->v.mins[i];
+		pm->maxs[i] = ent->v.maxs[i];
+		pm->delta_angles[i] = ent->v.pm_delta_angles[i];
+	}
+
 #if PROTOCOL_FLOAT_COORDS == 1
 	for (i = 0; i < 3; i++)
 	{
-		ent->client->ps.pmove.origin[i] = ent->v.origin[i];
-		ent->client->ps.pmove.velocity[i] = ent->v.velocity[i];
+		pm->origin[i] = ent->v.origin[i];
+		pm->velocity[i] = ent->v.velocity[i];
 	}
 #else
 	for (i = 0; i < 3; i++)
 	{
-		ent->client->ps.pmove.origin[i] = ent->v.origin[i] * 8.0;
-		ent->client->ps.pmove.velocity[i] = ent->v.velocity[i] * 8.0;
+		pm->origin[i] = ent->v.origin[i] * 8.0;
+		pm->velocity[i] = ent->v.velocity[i] * 8.0;
 	}
 #endif
+
 	AngleVectors(ent->v.v_angle, forward, right, up);
 
 //	cl->ps.viewoffset[2] = 128;

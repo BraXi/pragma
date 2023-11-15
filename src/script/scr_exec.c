@@ -86,6 +86,7 @@ void Scr_RunError(char* error, ...)
 	Com_Error(ERR_DROP, "%s", string);
 }
 
+#define QCVMDEBUGLEVEL 0
 /*
 ============
 Scr_NumArgs
@@ -116,18 +117,22 @@ int ScrInternal_EnterFunction(dfunction_t* f)
 
 	active_qcvm->stackDepth++;
 	if (active_qcvm->stackDepth >= SCR_MAX_STACK_DEPTH)
-		Scr_RunError("qcvm: stack overflow\n");
+		Scr_RunError("%s qcvm: stack overflow\n", vmDefs[active_qcvm->progsType].name);
+
 
 	// save off any locals that the new function steps on
 	c = f->locals;
 	if (active_qcvm->localstack_used + c > SCR_LOCALSTACK_SIZE)
-		Scr_RunError("qcvm: locals stack overflow\n");
+		Scr_RunError("%s qcvm: locals stack overflow\n", vmDefs[active_qcvm->progsType].name);
+
+#if QCVMDEBUGLEVEL > 1
+	printf("[%s:#%i] enter %s:%s (%i parms)\n", vmDefs[active_qcvm->progsType].name, active_qcvm->stackDepth, COM_SkipPath(Scr_GetString(f->s_file)), Scr_GetString(f->s_name),f->numparms);
+#endif
 
 	for (i = 0; i < c; i++)
 		active_qcvm->localstack[active_qcvm->localstack_used + i] = ((int*)active_qcvm->globals)[f->parm_start + i];
 	active_qcvm->localstack_used += c;
 
-//	printf("EnterFunction: %s:%s\n", Scr_GetString(f->s_file), Scr_GetString(f->s_name));
 
 	// copy parameters
 	o = f->parm_start;
@@ -171,6 +176,9 @@ int ScrInternal_LeaveFunction()
 
 	// up stack
 	active_qcvm->stackDepth--;
+#if QCVMDEBUGLEVEL > 1
+	printf("[%s:#%i] leave %s:%s()\n", vmDefs[active_qcvm->progsType].name, active_qcvm->stackDepth, COM_SkipPath(Scr_GetString(active_qcvm->xfunction->s_file)), Scr_GetString(active_qcvm->xfunction->s_name));
+#endif
 	active_qcvm->xfunction = active_qcvm->stack[active_qcvm->stackDepth].f;
 	return active_qcvm->stack[active_qcvm->stackDepth].s;
 }

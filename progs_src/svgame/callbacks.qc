@@ -150,7 +150,10 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 	setviewoffset(self, '0 0 24');	
 	setsize(self, '-16 -16 -24', '16 16 32');
 	self.viewheight = 22;
-	pmove(self, inMove, true);
+	
+	
+	SV_PMove(inMove, inAngles, inMsecTime);
+	//pmove(self, inMove, true);
 			
 	// update button states
 	self.oldbuttons = self.buttons;

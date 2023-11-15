@@ -465,7 +465,9 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 	VectorCopy(pusher->v.origin, pushed_p->origin);
 	VectorCopy(pusher->v.angles, pushed_p->angles);
 	if (pusher->client)
+	{
 		pushed_p->deltayaw = pusher->client->ps.pmove.delta_angles[YAW];
+	}
 	pushed_p++;
 
 	// move the pusher to it's final position
@@ -522,6 +524,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 				check->client->ps.pmove.delta_angles[YAW] += amove[YAW];
 #else	
 				check->client->ps.pmove.delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
+				check->v.pm_delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
 #endif
 			}
 			else
@@ -573,6 +576,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			if (p->ent->client)
 			{
 				p->ent->client->ps.pmove.delta_angles[YAW] = p->deltayaw;
+				p->ent->v.pm_delta_angles[YAW] = p->deltayaw;
 			}
 			SV_LinkEdict(p->ent);
 		}

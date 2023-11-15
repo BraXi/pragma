@@ -125,7 +125,8 @@ void end_sys_globals; // end of struct
 	// client fields
 	.vector			v_angle;	
 	.float			viewheight;
-
+	
+	
 	// pmove vars
 	.float		pm_type; //pmtype_t
 	.vector		pm_origin;

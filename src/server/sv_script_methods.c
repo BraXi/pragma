@@ -1225,6 +1225,25 @@ void PFSV_setstat(void)
 	cl->ps.stats[idx] = Scr_GetParmFloat(2);
 }
 
+
+
+
+void PFSV_setviewangles(void)
+{
+	gentity_t* ent;
+	gclient_t* client;
+
+	ent = Scr_GetParmEdict(0);
+	if (!ent->client || ent->client->pers.connected == false)
+	{
+		Scr_RunError("setviewangles(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
+		return;
+	}
+	client = ent->client;
+
+	VectorCopy(Scr_GetParmVector(1), client->ps.viewangles);
+	VectorCopy(client->ps.viewangles, ent->v.v_angle);
+}
 /*
 ===============
 PFSV_pmove
@@ -1249,7 +1268,7 @@ void PFSV_pmove(void)
 	gentity_t* ent;
 	gclient_t* client;
 	float* inmove;
-	float	allowCrouch;
+	float	copytopmove;
 	pmove_t	pm;
 	int i;
 
@@ -1262,7 +1281,13 @@ void PFSV_pmove(void)
 	client = ent->client;
 
 	inmove = Scr_GetParmVector(1);
-	allowCrouch = Scr_GetParmFloat(2);
+	copytopmove = Scr_GetParmFloat(2);
+
+
+	if (copytopmove)
+	{
+		return;
+	}
 
 	// set up for pmove
 	pm_passent = ent;
@@ -1433,4 +1458,6 @@ void SV_InitScriptBuiltins()
 
 	Scr_DefineBuiltin(PFSV_setstat, PF_SV, "setstat", "float(entity e, float sg, float sc)");
 	Scr_DefineBuiltin(PFSV_pmove, PF_SV, "pmove", "float(entity e, vector mv, float cr)");
+
+	Scr_DefineBuiltin(PFSV_setviewangles, PF_SV, "setviewangles", "vector(entity e, vector a)");
 }

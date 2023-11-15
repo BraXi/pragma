@@ -20,6 +20,7 @@ cgame.dat
 // client game
 //
 cg_crosshair.qc
+cg_debug.qc
 cg_hud.qc
 cg_load.qc
 cg_main.qc

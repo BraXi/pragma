@@ -1443,7 +1443,7 @@ void SCR_UpdateScreen (void)
 			re.SetColor(1, 1, 1, 1);
 
 			SCR_DrawNet ();
-			SCR_DrawServerStats();
+//			SCR_DrawServerStats();
 			SCR_CheckDrawCenterString ();
 
 			re.SetColor(1, 1, 1, 1);

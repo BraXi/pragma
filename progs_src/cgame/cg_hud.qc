@@ -106,4 +106,6 @@ void() CG_DrawHUD =
 	HUD_DrawCurrentWeaponStats();
 			
 	HUD_BossBar();
+	
+	CG_DebugGUI();
 };
