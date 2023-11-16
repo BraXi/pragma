@@ -1523,7 +1523,7 @@ Client's entry point to pmove
 ================
 */
 #ifdef CLGAME
-void(vector cmdMove, vector cmdAngles, __int cmdMsec) CG_PlayerMove
+void(vector cmdMove, vector cmdAngles, float cmdMsec) CG_PlayerMove
 {
 	//
 	// wipe all pmove data

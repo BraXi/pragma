@@ -253,8 +253,6 @@ void CL_PredictMovement (void)
 	// copy current state to pmove
 	//
 	memset (&pm, 0, sizeof(pm));
-
-	pm_airaccelerate = atof(cl.configstrings[CS_AIRACCEL]);
 	pm.s = cl.frame.playerstate.pmove;
 
 #ifdef PMOVE_PROGS
@@ -277,6 +275,9 @@ void CL_PredictMovement (void)
 		vars->pm_state_mins[i] = pm.s.mins[i];
 		vars->pm_state_maxs[i] = pm.s.maxs[i];
 	}
+
+	// make sure qc knows our number for trace function
+	vars->localplayernum = cl.playernum;
 #else
 	pm.trace = CL_PMTrace;
 	pm.pointcontents = CL_PMpointcontents;
@@ -293,19 +294,18 @@ void CL_PredictMovement (void)
 		cmd = &cl.cmds[frame];
 
 #ifdef PMOVE_PROGS
-		inmove[0] = cmd->forwardmove;
-		inmove[1] = cmd->sidemove;
-		inmove[2] = cmd->upmove;
+		inmove[0] = (float)cmd->forwardmove;
+		inmove[1] = (float)cmd->sidemove;
+		inmove[2] = (float)cmd->upmove;
 		for (i = 0; i < 3; i++)
-			inangles[i] = cmd->angles[i];
+			inangles[i] = (float)cmd->angles[i];
 
 		//
 		// call cgame's pmove
-		//
-		vars->localplayernum = cl.playernum;
+		//	
 		Scr_AddVector(0, inmove);
 		Scr_AddVector(1, inangles);
-		Scr_AddFloat(2, (int)cmd->msec);
+		Scr_AddFloat(2, (float)cmd->msec);
 		Scr_Execute(cl.script_globals->CG_PlayerMove, __FUNCTION__);
 
 		//
