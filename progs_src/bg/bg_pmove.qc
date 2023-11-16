@@ -145,11 +145,11 @@ void(vector start, vector mins, vector maxs, vector end) PM_Trace =
 	trace(start, mins, maxs, end, localplayernum+1, MASK_PLAYERSOLID);
 
 #if 1
-	//ugly gross hack to determine if we're on ground, doesnt work on entities
-	if(strlen(trace_surface_name) > 1)
-		trace_entnum = 0;
+	// ugly gross hack to determine if we're on ground
+	if(trace_fraction == 1)
+		trace_entnum = ENTITYNUM_NONE;
 	else
-		trace_entnum = ENTITYNUM_NONE;		
+		trace_entnum = 0;		
 #endif
 	
 #endif
