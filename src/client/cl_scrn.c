@@ -147,9 +147,7 @@ void SCR_DrawDebugGraph (void)
 {
 	int		a, x, y, w, i, h;
 	float	v;
-	vec3_t	color;
 
-	static vec3_t c = { 0.482353, 0.482353,0.482353 };
 	//
 	// draw the graph
 	//
@@ -157,20 +155,26 @@ void SCR_DrawDebugGraph (void)
 
 	x = scr_vrect.x;
 	y = scr_vrect.y+scr_vrect.height;
-	re.DrawFill (x, y-scr_graphheight->value, w, scr_graphheight->value, c);
+
+	re.SetColor(0.482353, 0.482353, 0.482353, 1);
+	re.DrawFill (x, y-scr_graphheight->value, w, scr_graphheight->value);
 
 	for (a=0 ; a<w ; a++)
 	{
 		i = (current-1-a+1024) & 1023;
 		v = values[i].value;
-		VectorCopy(values[i].color, color);
+
 		v = v*scr_graphscale->value + scr_graphshift->value;
 		
 		if (v < 0)
 			v += scr_graphheight->value * (1+(int)(-v/scr_graphheight->value));
 		h = (int)v % (int)scr_graphheight->value;
-		re.DrawFill (x+w-1-a, y - h, 1,	h, color);
+
+		re.SetColor(values[i].color[0], values[i].color[1], values[i].color[2], 1);
+		re.DrawFill (x+w-1-a, y - h, 1,	h);
 	}
+	re.SetColor(1, 1, 1, 1);
+
 }
 
 /*
@@ -557,7 +561,7 @@ void SCR_DrawConsole (void)
 //		Con_DrawConsole(0.5);
 		//re.DrawFill (0, viddef.height/2, viddef.width, viddef.height/2, 0);
 		re.SetColor(0.1, 0.1, 0.1, 1);
-		re.DrawFill(0, 0, viddef.width, viddef.height, 0);
+		re.DrawFill(0, 0, viddef.width, viddef.height);
 
 		// weeeewwwy temporarry
 		rgba_t c = { 1,1,1,1 };
@@ -1303,7 +1307,7 @@ static void SetStringHighBit2(char* s)
 	while (*s)
 		*s++ |= 128;
 }
-
+extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 void DrawDownloadNotify()
 {
 	// fixme -- redo all of this in new UI

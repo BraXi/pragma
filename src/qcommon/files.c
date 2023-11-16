@@ -184,7 +184,7 @@ a seperate file.
 */
 int file_from_pak = 0;
 #ifndef NO_ADDONS
-int FS_FOpenFile (const char *filename, FILE **file)
+int FS_FOpenFile (char *filename, FILE **file)
 {
 	searchpath_t	*search;
 	char			netpath[MAX_OSPATH];
@@ -370,7 +370,7 @@ Filename are reletive to the quake search path
 a null buffer will just return the file length without loading
 ============
 */
-int FS_LoadFile (const char *path, void **buffer)
+int FS_LoadFile (char *path, void **buffer)
 {
 	FILE	*h;
 	byte	*buf;

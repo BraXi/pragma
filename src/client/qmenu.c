@@ -422,12 +422,12 @@ void Menu_DrawStatusBar( const char *string )
 		int maxcol = VID_WIDTH / 8;
 		int col = maxcol / 2 - l / 2;
 
-		Draw_Fill( 0, VID_HEIGHT-8, VID_WIDTH, 8, 4 );
+		Draw_Fill( 0, VID_HEIGHT-8, VID_WIDTH, 8 );
 		Menu_DrawString( col*8, VID_HEIGHT - 8, string );
 	}
 	else
 	{
-		Draw_Fill( 0, VID_HEIGHT-8, VID_WIDTH, 8, 0 );
+		Draw_Fill( 0, VID_HEIGHT-8, VID_WIDTH, 8 );
 	}
 }
 
@@ -573,7 +573,7 @@ void MenuList_Draw( menulist_s *l )
 
 	n = l->itemnames;
 
-  	Draw_Fill( l->generic.x - 112 + l->generic.parent->x, l->generic.parent->y + l->generic.y + l->curvalue*10 + 10, 128, 10, 16 );
+  	Draw_Fill( l->generic.x - 112 + l->generic.parent->x, l->generic.parent->y + l->generic.y + l->curvalue*10 + 10, 128, 10 );
 	while ( *n )
 	{
 		Menu_DrawStringR2LDark( l->generic.x + l->generic.parent->x + LCOLUMN_OFFSET, l->generic.y + l->generic.parent->y + y + 10, *n );

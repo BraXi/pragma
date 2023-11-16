@@ -19,7 +19,7 @@ Compile it for progs accordingly with CLGAME or SVGAME define
 */
 
 // enable pmove debug gui
-//#define PMOVEDEBUGMENU 1	
+#define PMOVEDEBUGMENU 1	
 
 //
 // macros to convert angles back and forth 
@@ -34,10 +34,10 @@ Compile it for progs accordingly with CLGAME or SVGAME define
 //
 typedef enum 
 {
-	PM_NORMAL,		// can normaly move
+	PM_NORMAL,		// can accelerate and turn
 	PM_NOCLIP,		// fly move, no clipping to world
-	PM_DEAD,		// doesn't move
-	PM_GIB,			// doesn't move, diferent bbox size
+	PM_DEAD,		// no acceleration or turning
+	PM_GIB,			// no acceleration or turning, diferent bbox size
 	PM_FREEZE		// cannot move and may hover above ground
 } pmtype_t;
 // ---------------------------------------------------
@@ -74,15 +74,17 @@ float	pm_maxtouch = 32;			// can be touching up to this many entities
 // ---------------------------------------------------
 // this is communicated to clients for prediction
 // used for in/out communication (matches pmove_state_t)
+#ifdef SVGAME /* client game has this in globals - TODO maybe server should have it in globals too? */
 pmtype_t	pm_state_pm_type;		// byte
 vector		pm_state_origin;		// floats
 vector		pm_state_velocity;		// floats
 float		pm_state_gravity;		// short
-vector		pm_state_mins			// char [-127,127 range]
+vector		pm_state_mins;			// char [-127,127 range]
 vector		pm_state_maxs;			// char [-127,127 range]
 float		pm_state_pm_flags;		// byte [0-255]
 float		pm_state_pm_time;		// byte [0-255]
 vector		pm_state_delta_angles;	// shorts, use ANGLE2SHORT/SHORT2ANGLE
+#endif
 // ---------------------------------------------------
 // pmove_t
 int			pmove_cmd_msec;				// short, use ANGLE2SHORT/SHORT2ANGLE
@@ -132,15 +134,24 @@ uses trace function that matches cgame and svgame builtins
 */
 void(vector start, vector mins, vector maxs, vector end) PM_Trace =
 {
-#ifdef CLGAME
-	trace(start, mins, maxs, end, localplayernum+1, MASK_PLAYERSOLID);
-#endif
-
-#ifdef SVGAME
+#ifdef SVGAME	
 	if (pm_passent.health > 0)
 		trace(start, mins, maxs, end, pm_passent, MASK_PLAYERSOLID);
 	else
 		trace(start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
+	
+#else
+	
+	trace(start, mins, maxs, end, localplayernum+1, MASK_PLAYERSOLID);
+
+#if 1
+	//ugly gross hack to determine if we're on ground, doesnt work on entities
+	if(strlen(trace_surface_name) > 1)
+		trace_entnum = 0;
+	else
+		trace_entnum = ENTITYNUM_NONE;		
+#endif
+	
 #endif
 };
 
@@ -235,13 +246,14 @@ void() PM_StepSlideMove_ =
 		if(trace_fraction == 1)
 			 break;		// moved the entire distance
 
+#ifdef SVGAME // server only?
 		// save entity for contact
 		if(pmove_numtouch < pm_maxtouch && trace_ent)
 		{
 			pmove_touchents[pmove_numtouch] = trace_ent;
 			pmove_numtouch++;
 		}
-		
+#endif		
 		time_left -= time_left * trace_fraction;
 
 		// slide along this plane
@@ -305,7 +317,7 @@ void() PM_StepSlideMove_ =
 		//
 		if (dotproduct(pml_velocity, primal_velocity) <= 0)
 		{
-//			dprint("dotproduct(pml_velocity, primal_velocity) <= 0\n");
+			dprint("dotproduct(pml_velocity, primal_velocity) <= 0\n");
 			pml_velocity = vec3_origin;
 			break;
 		}
@@ -758,7 +770,7 @@ void() PM_CatagorizePosition =
 	// see if standing on something solid	
 	point_x = pml_origin_x;
 	point_y = pml_origin_y;
-	point_z = pml_origin_z - 1; // braxi -- was -0.25
+	point_z = pml_origin_z - 0.25; // braxi -- was -0.25
 	
 	if (pml_velocity_z > 180) //!!ZOID changed from 100 to 180 (ramp accel)
 	{
@@ -808,16 +820,18 @@ void() PM_CatagorizePosition =
 			}
 		}
 		
-#if 0 //zeroed in id too
+#if 0 
 		if (trace_fraction < 1.0 && trace_entnum != ENTITYNUM_NONE && pml_velocity_z < 0)
 			pml_velocity_z = 0;
 #endif
 
+#ifdef SVGAME // server only?
 		if (pmove_numtouch < pm_maxtouch && trace_ent)
 		{
 			pmove_touchents[pmove_numtouch] = trace_ent;
 			pmove_numtouch++;
 		}
+#endif
 	}
 
 //
@@ -1294,12 +1308,85 @@ void() PM_ClampAngles =
 
 /*
 ================
-Pmove
+ClearPlayerMoveLocals
+
+Clears all pmove local vars before performing simulation
+================
+*/
+void() ClearPlayerMoveLocals =
+{
+	pml_origin = vec3_origin;
+	pml_velocity = vec3_origin;
+	pml_forward = vec3_origin;
+	pml_right = vec3_origin;
+	pml_up = vec3_origin;
+	pml_frametime = 0;
+	pml_groundsurface_name = "";
+	pml_groundsurface_flags = 0;
+	pml_groundsurface_value = 0;
+	pml_groundcontents = 0;
+	pml_previous_origin = vec3_origin;	
+	pml_onLadder = false;
+};
+
+
+/*
+================
+ClearPlayerMove
+
+Clears all pmove vars before performing simulation
+================
+*/
+void() ClearPlayerMove =
+{
+	entity none; // don't set, this must be null entity
+
+
+	// commands
+	pmove_cmd_msec = 0;
+	pmove_cmd_angles = vec3_origin;
+	pmove_cmd_forwardmove = 0;
+	pmove_cmd_sidemove = 0;
+	pmove_cmd_upmove = 0;
+#if 0		
+	pmove_snapinitial = false;
+
+	// state
+	pm_state_pm_type = PM_NORMAL;	
+	pm_state_origin = vec3_origin;
+	pm_state_velocity = vec3_origin;
+	pm_state_gravity = 0;	
+	pm_state_mins = vec3_origin;
+	pm_state_maxs = vec3_origin;
+	pm_state_pm_flags = 0;
+	pm_state_pm_time = 0;
+	pm_state_delta_angles = vec3_origin;
+#endif
+		
+	// results
+#ifdef SVGAME	
+	pmove_numtouch = 0;
+	
+	for(float i = 0; i < pm_maxtouch; i++)
+		pmove_touchents[i] = none;
+#endif
+
+	pmove_viewangles = vec3_origin;
+	pmove_viewheight = 0;
+
+	pmove_groundentity_num = ENTITYNUM_NONE;
+	pmove_watertype = 0;
+	pmove_waterlevel = WL_NOTINWATER;
+};
+
+/*
+================
+BG_PlayerMove
 
 Can be called by either the server or the client
 ================
 */
-void() PlayerMove =
+void() BG_PlayerMove =
 {
 	// clear results
 	pmove_numtouch = 0;
@@ -1310,18 +1397,7 @@ void() PlayerMove =
 	pmove_waterlevel = WL_NOTINWATER;
 
 	// clear all pmove local vars
-	pml_origin = vec3_origin;		// full float precision
-	pml_velocity = vec3_origin;		// full float precision
-	pml_forward = vec3_origin;
-	pml_right = vec3_origin;
-	pml_up = vec3_origin;
-	pml_frametime = 0;
-	pml_groundsurface_name = "";
-	pml_groundsurface_flags = 0;
-	pml_groundsurface_value = 0;
-	pml_groundcontents = 0;
-	pml_previous_origin = vec3_origin;	
-	pml_onLadder = 0;
+	ClearPlayerMoveLocals();
 
 	// copy to locals
 	pml_origin = pm_state_origin;
@@ -1330,12 +1406,7 @@ void() PlayerMove =
 	// save old org in case we get stuck
 	pml_previous_origin = pm_state_origin;
 
-
-	float scale = cvar("pmtscale"); //test
-	if(!scale)
-		scale = 0.001; // as in vanilla
-	
-	pml_frametime = pmove_cmd_msec * scale;
+	pml_frametime = pmove_cmd_msec * 0.001;
 
 	PM_ClampAngles ();
 	
@@ -1409,7 +1480,6 @@ void() PlayerMove =
 	else
 	{
 		PM_CheckJump ();
-
 		PM_Friction ();
 
 		if (pmove_waterlevel >= WL_HALFWAY)
@@ -1441,49 +1511,78 @@ void() PlayerMove =
 	PM_SnapPosition ();
 };
 
-void() ClearPlayerMove =
+
+/*
+================
+CG_PlayerMove
+
+cmdMove = [forwardmove, sidemove, upmove]
+cmdAngles = [pitch, yaw, roll]
+
+Client's entry point to pmove
+================
+*/
+#ifdef CLGAME
+void(vector cmdMove, vector cmdAngles, __int cmdMsec) CG_PlayerMove
 {
-	entity none; // don't set
+	//
+	// wipe all pmove data
+	//
+	ClearPlayerMove();
 	
-	// commands
-	pmove_cmd_msec = 0;
-	pmove_cmd_angles = vec3_origin;
-	pmove_cmd_forwardmove = 0;
-	pmove_cmd_sidemove = 0;
-	pmove_cmd_upmove = 0;
-	
-	pmove_snapinitial = false;
+	//
+	// copy data to pmove
+	//	
+	pmove_viewheight = cam_viewoffset_z;
+	pmove_cmd_forwardmove = cmdMove_x;
+	pmove_cmd_sidemove = cmdMove_y;
+	pmove_cmd_upmove = cmdMove_z;
+	pmove_cmd_msec = cmdMsec;
+	pmove_cmd_angles = cmdAngles;
 
-	// state
-	pm_state_pm_type = PM_NORMAL;	
-	pm_state_origin = vec3_origin;
-	pm_state_velocity = vec3_origin;
-	pm_state_gravity = 0;	
-	pm_state_mins = vec3_origin;
-	pm_state_maxs = vec3_origin;
-	pm_state_pm_flags = 0;
-	pm_state_pm_time = 0;
-	pm_state_delta_angles = vec3_origin;
+#if PMOVEDEBUGMENU == 1
+	cvarset("pmdebug_0", "movecmd: ", ftos(cmdMove_x)," FWD, ", ftos(cmdMove_y), " SIDE, ", ftos(cmdMove_z)," UP");
+	cvarset("pmdebug_1", "[in] origin  : ", vtos(pm_state_origin));
+	cvarset("pmdebug_2", "[in] velocity: ", vtos(pm_state_velocity));
+#endif
 		
-	// results
-	pmove_numtouch = 0;
+	//
+	// perform a player move simulation
+	//
+	BG_PlayerMove();	
 	
-	for(float i = 0; i < pm_maxtouch; i++)
-		pmove_touchents[i] = none;
 
-	pmove_viewangles = vec3_origin;
-	pmove_viewheight = 0;
+#if PMOVEDEBUGMENU == 1
+	cvarset("pmdebug_3", "[out] origin  : ", vtos(pm_state_origin));
+	cvarset("pmdebug_4", "[out] velocity: ", vtos(pm_state_velocity));	
+	cvarset("pmdebug_5", "GRND ", ftos(pmove_groundentity_num), " (", pml_groundsurface_name, "), pm_type ", ftos(pm_state_pm_type));
+#endif	
+	
+	vector viewofs;
+	viewofs_z = pmove_viewheight;
 
-	pmove_groundentity_num = ENTITYNUM_NONE;
-	pmove_watertype = 0;
-	pmove_waterlevel = WL_NOTINWATER;
-};
+	cam_viewoffset = viewofs;
+	cam_viewangles = pmove_viewangles;	
+}
+#endif
 
+
+/*
+================
+BG_PlayerMove
+
+cmdMove = [forwardmove, sidemove, upmove]
+cmdAngles = [pitch, yaw, roll]
+
+Can be called by either the server or the client
+================
+*/
 #ifdef SVGAME
-void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
+void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PlayerMove =
 {
 	entity ground;
 	
+	//
 	// wipe all pmove data
 	//
 	ClearPlayerMove();
@@ -1501,7 +1600,8 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	pmove_cmd_sidemove = cmdMove_y;
 	pmove_cmd_upmove = cmdMove_z;
 	pmove_cmd_msec = cmdMsec;
-	pmove_cmd_angles = cmdAngles;	
+	pmove_cmd_angles = cmdAngles;
+	
 	pm_state_pm_type = self.pm_type;
 	pm_state_origin = self.origin;
 	pm_state_velocity = self.velocity;
@@ -1511,27 +1611,28 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	pm_state_pm_time = self.pm_time;
 	pm_state_gravity = (cvar("sv_gravity") * self.gravity);
 
-#ifdef PMOVEDEBUGMENU
+#if PMOVEDEBUGMENU == 2
 	cvarset("pmdebug_0", "movecmd: ", ftos(cmdMove_x)," FWD, ", ftos(cmdMove_y), " SIDE, ", ftos(cmdMove_z)," UP");
 	cvarset("pmdebug_1", "[in] origin  : ", vtos(pm_state_origin));
 	cvarset("pmdebug_2", "[in] velocity: ", vtos(pm_state_velocity));
 #endif
 
 	//
-	// perform a player move
+	// perform a player move simulation
 	//
-	PlayerMove();
+	BG_PlayerMove();
 	
 	// play a jump sfx if needed	
 	if(self.groundentity_num != ENTITYNUM_NONE && pmove_groundentity_num == ENTITYNUM_NONE && (pmove_cmd_upmove >= 10) && (pmove_waterlevel == WL_NOTINWATER))
 	{	
+		//braxi -- compiled in too early to see these
 		//if(self.playerAnimTree)
 		//	playsound(vec3_origin, self, CHAN_VOICE, animTree[self.playerAnimTree].snd_jump, 1, ATTN_NORM, 0);
 		playsound(vec3_origin, self, CHAN_VOICE, "player/female/jump1.wav", 1, ATTN_NORM, 0);
 	}
 
 
-#ifdef PMOVEDEBUGMENU	
+#if PMOVEDEBUGMENU == 2	
 	cvarset("pmdebug_3", "[out] origin  : ", vtos(pm_state_origin));
 	cvarset("pmdebug_4", "[out] velocity: ", vtos(pm_state_velocity));	
 	if(self.groundentity_num > 0)
@@ -1553,7 +1654,7 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PMove =
 	self.pm_type = pm_state_pm_type;
 	self.pm_flags = pm_state_pm_flags;
 	self.pm_time = pm_state_pm_time;
-//	self.gravity = pm_state_gravity;	
+	self.pm_gravity = pm_state_gravity;	
 	
 	self.viewheight = pmove_viewheight;
 	

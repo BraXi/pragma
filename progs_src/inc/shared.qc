@@ -11,7 +11,7 @@ string string_null = "";
 vector vec_null = '0 0 0';
 vector vec3_origin = vec_null; //temporary, ugly
 
-#define ENTITYNUM_NONE -1
+#define ENTITYNUM_NONE -1	// returned by trace function to mark nothing was hit
 
 // angle indexes
 #define	PITCH		0		// up / down
@@ -21,6 +21,31 @@ vector vec3_origin = vec_null; //temporary, ugly
 // ------------------------------------------------------
 // BG - defines shared by cgame and svgame
 // ------------------------------------------------------
+
+//
+// button bits
+//
+#define	BUTTON_ATTACK	1
+#define	BUTTON_USE		2
+#define	BUTTON_RELOAD	4
+#define	BUTTON_MELEE	8
+#define	BUTTON_ANY		128		// any key whatsoever
+
+
+//
+// surface flags
+//
+#define	SURF_LIGHT		0x1		// value will hold the light strength
+#define	SURF_SLICK		0x2		// effects game physics
+#define	SURF_SKY		0x4		// don't draw, but add to skybox
+#define	SURF_WARP		0x8		// turbulent water warp
+#define	SURF_TRANS33	0x10
+#define	SURF_TRANS66	0x20
+#define	SURF_FLOWING	0x40	// scroll towards angle
+#define	SURF_NODRAW		0x80	// don't bother referencing the texture
+#define	SURF_HINT		0x100	// make a primary bsp splitter
+#define	SURF_SKIP		0x200	// completely ignore, allowing non-closed brushes
+
 
 // .waterlevel levels
 enum

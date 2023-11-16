@@ -444,15 +444,6 @@ typedef struct cplane_s
 	byte	pad[2];
 } cplane_t;
 
-// structure offset for asm code
-#define CPLANE_NORMAL_X			0
-#define CPLANE_NORMAL_Y			4
-#define CPLANE_NORMAL_Z			8
-#define CPLANE_DIST				12
-#define CPLANE_TYPE				16
-#define CPLANE_SIGNBITS			17
-#define CPLANE_PAD0				18
-#define CPLANE_PAD1				19
 
 typedef struct cmodel_s
 {
@@ -484,8 +475,9 @@ typedef struct
 	cplane_t	plane;		// surface normal at impact
 	csurface_t	*surface;	// surface hit
 	int			contents;	// contents on other side of surface hit
-	int			entitynum;	// currently only used by CL_ & CG_
+	int			entitynum;	// -1 = nothing hit
 	struct gentity_s	*ent;		// not set by CM_*() functions
+	struct entity_state_s *clent;		//set by CM_*() functions
 } trace_t;
 
 
@@ -557,6 +549,8 @@ typedef struct
 //
 #define	BUTTON_ATTACK		1
 #define	BUTTON_USE			2
+#define	BUTTON_RELOAD		4
+#define	BUTTON_MELEE		8
 #define	BUTTON_ANY			128			// any key whatsoever
 
 

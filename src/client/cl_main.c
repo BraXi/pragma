@@ -1066,7 +1066,43 @@ void CL_Snd_Restart_f (void)
 	CL_RegisterSounds ();
 }
 
+#ifdef _DEBUG
+void printvec(char* str, vec3_t v)
+{
+	Com_Printf("%s: %i %i %i\n", str, (int)v[0], (int)v[1], (int)v[2]);
+}
 
+void CL_PrintEnts_f(void)
+{
+	entity_state_t* ent;
+	int			num;
+	int i;
+	
+	for (i = 0; i < cl.frame.num_entities; i++)
+	{
+		num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
+		ent = &cl_parse_entities[num];
+
+		Com_Printf("\n--- ENTITY %i (%i) ---\n", i, num);
+
+		Com_Printf("number: %i\n", ent->number);
+
+		printvec("origin", ent->origin);
+		printvec("old_origin", ent->old_origin);
+		printvec("angles", ent->angles);
+
+		if (ent->modelindex)
+		{
+			if(cl.configstrings[CS_MODELS + ent->modelindex][0] == '*')
+				Com_Printf("brushmodel: %s (modelindex %i)\n", cl.configstrings[CS_MODELS + ent->modelindex], ent->modelindex);
+			else
+				Com_Printf("model: %s (frame %i, skinnum %i, modelindex %i)\n", cl.configstrings[CS_MODELS + ent->modelindex], ent->frame, ent->skinnum, ent->modelindex);
+		}
+	}
+
+	Com_Printf("\nnum frame entities: %i\n", cl.frame.num_entities);
+}
+#endif
 /*
 =================
 CL_InitLocal
@@ -1160,6 +1196,11 @@ void CL_InitLocal (void)
 	//
 	// register our commands
 	//
+
+#ifdef _DEBUG
+	Cmd_AddCommand("clents", CL_PrintEnts_f);
+#endif
+
 	Cmd_AddCommand ("cmd", CL_ForwardToServer_f);
 	Cmd_AddCommand ("pause", CL_Pause_f);
 	Cmd_AddCommand ("pingservers", CL_PingServers_f);
@@ -1192,10 +1233,12 @@ void CL_InitLocal (void)
 	// the only thing this does is allow command completion
 	// to work -- all unknown commands are automatically
 	// forwarded to the server
-	Cmd_AddCommand ("wave", NULL);
-	Cmd_AddCommand ("inven", NULL);
+//	Cmd_AddCommand ("wave", NULL);
+//	Cmd_AddCommand ("inven", NULL);
 	Cmd_AddCommand ("kill", NULL);
 	Cmd_AddCommand ("use", NULL);
+	Cmd_AddCommand ("reload", NULL);
+	Cmd_AddCommand ("melee", NULL);
 	Cmd_AddCommand ("drop", NULL);
 	Cmd_AddCommand ("say", NULL);
 	Cmd_AddCommand ("say_team", NULL);

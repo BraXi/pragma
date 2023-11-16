@@ -304,7 +304,7 @@ Scr_LoadProgs
 Loads progs .dat file, sets edict size
 ===============
 */
-void Scr_LoadProgs(qcvm_t *vm, const char* filename)
+void Scr_LoadProgs(qcvm_t *vm, char* filename)
 {
 	int		len, i;
 	byte	*raw;

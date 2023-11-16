@@ -52,7 +52,7 @@ void CL_CheckPredictionError (void)
 	else
 	{
 		if (cl_showmiss->value && (delta[0] || delta[1] || delta[2]) )
-			Com_Printf ("prediction miss on %i: %i\n", cl.frame.serverframe, delta[0] + delta[1] + delta[2]);
+			Com_Printf ("prediction miss on serverframe %i: %i\n", cl.frame.serverframe, delta[0] + delta[1] + delta[2]);
 
 		VectorCopy (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
 
@@ -152,11 +152,15 @@ trace_t CL_PMTrace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
 	// check against world
 	t = CM_BoxTrace (start, end, mins, maxs, 0, MASK_PLAYERSOLID);
 	if (t.fraction < 1.0)
-		t.ent = (struct gentity_s *)1;
+	{
+		t.clent = cl.entities;
+		t.entitynum = 0;
+	}
 
 	// check all other solid models
 	CL_ClipMoveToEntities (start, mins, maxs, end, &t);
 
+	t.entitynum = 0;
 	return t;
 }
 
@@ -196,6 +200,9 @@ CL_PredictMovement
 Sets cl.predicted_origin and cl.predicted_angles
 =================
 */
+
+#define PMOVE_PROGS 1
+
 void CL_PredictMovement (void)
 {
 	int			ack, current;
@@ -206,6 +213,10 @@ void CL_PredictMovement (void)
 	int			i;
 	int			step;
 	int			oldz;
+
+#ifdef PMOVE_PROGS
+	vec3_t inmove, inangles;
+#endif
 
 	if (cls.state != ca_active)
 		return;
@@ -237,14 +248,39 @@ void CL_PredictMovement (void)
 		return;	
 	}
 
+
+	//
 	// copy current state to pmove
+	//
 	memset (&pm, 0, sizeof(pm));
-	pm.trace = CL_PMTrace;
-	pm.pointcontents = CL_PMpointcontents;
 
 	pm_airaccelerate = atof(cl.configstrings[CS_AIRACCEL]);
-
 	pm.s = cl.frame.playerstate.pmove;
+
+#ifdef PMOVE_PROGS
+	cl_globalvars_t* vars = cl.script_globals;
+
+	//
+	// copy pmove state TO cgame
+	//
+	vars->pm_state_pm_type = (int)pm.s.pm_type;
+	vars->pm_state_gravity = (int)pm.s.gravity;
+	vars->pm_state_pm_flags = (int)pm.s.pm_flags;
+	vars->pm_state_pm_time = (int)pm.s.pm_time;
+
+	for (i = 0; i < 3; i++)
+	{
+		vars->pm_state_origin[i] = pm.s.origin[i];
+		vars->pm_state_velocity[i] = pm.s.velocity[i];
+		vars->pm_state_delta_angles[i] = (float)pm.s.delta_angles[i];
+
+		vars->pm_state_mins[i] = pm.s.mins[i];
+		vars->pm_state_maxs[i] = pm.s.maxs[i];
+	}
+#else
+	pm.trace = CL_PMTrace;
+	pm.pointcontents = CL_PMpointcontents;
+#endif
 
 //	SCR_DebugGraph (current - ack - 1, 0);
 
@@ -256,9 +292,49 @@ void CL_PredictMovement (void)
 		frame = ack & (CMD_BACKUP-1);
 		cmd = &cl.cmds[frame];
 
+#ifdef PMOVE_PROGS
+		inmove[0] = cmd->forwardmove;
+		inmove[1] = cmd->sidemove;
+		inmove[2] = cmd->upmove;
+		for (i = 0; i < 3; i++)
+			inangles[i] = cmd->angles[i];
+
+		//
+		// call cgame's pmove
+		//
+		vars->localplayernum = cl.playernum;
+		Scr_AddVector(0, inmove);
+		Scr_AddVector(1, inangles);
+		Scr_AddFloat(2, (int)cmd->msec);
+		Scr_Execute(cl.script_globals->CG_PlayerMove, __FUNCTION__);
+
+		//
+		// read pmove state FROM cgame
+		//
+		pm.s.pm_type = vars->pm_state_pm_type;
+		pm.s.gravity = vars->pm_state_gravity;
+		pm.s.pm_flags = vars->pm_state_pm_flags;
+		pm.s.pm_time = vars->pm_state_pm_time;
+		pm.viewheight = cl.script_globals->cam_viewoffset[2];
+
+		for (i = 0; i < 3; i++)
+		{
+			pm.s.origin[i] = vars->pm_state_origin[i];
+			pm.s.velocity[i] = vars->pm_state_velocity[i];
+			pm.s.delta_angles[i] = vars->pm_state_delta_angles[i];
+
+			pm.s.mins[i] = vars->pm_state_mins[i];
+			pm.s.maxs[i] = vars->pm_state_maxs[i];
+
+			pm.mins[i] = vars->pm_state_mins[i];
+			pm.maxs[i] = vars->pm_state_maxs[i];
+
+			pm.viewangles[i] = cl.script_globals->cam_viewangles[i];
+		}
+#else
 		pm.cmd = *cmd;
 		Pmove (&pm);
-
+#endif
 		// save for debug checking
 		VectorCopy (pm.s.origin, cl.predicted_origins[frame]);
 	}
@@ -277,18 +353,14 @@ void CL_PredictMovement (void)
 		cl.predicted_step_time = cls.realtime - cls.frametime * 500;
 	}
 
-
 	// copy results out for rendering
 #if PROTOCOL_FLOAT_COORDS == 1
-	cl.predicted_origin[0] = pm.s.origin[0];
-	cl.predicted_origin[1] = pm.s.origin[1];
-	cl.predicted_origin[2] = pm.s.origin[2];
+	VectorCopy(pm.s.origin, cl.predicted_origin);
 #else
 	cl.predicted_origin[0] = pm.s.origin[0] * 0.125;
 	cl.predicted_origin[1] = pm.s.origin[1] * 0.125;
 	cl.predicted_origin[2] = pm.s.origin[2] * 0.125;
 #endif
-
-
+	//set view angles
 	VectorCopy (pm.viewangles, cl.predicted_angles);
 }

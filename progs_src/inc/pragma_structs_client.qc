@@ -31,9 +31,23 @@ float		trace_surface_flags;
 float		trace_surface_value;
 entity		trace_ent;
 
+float		pm_state_pm_type;		// byte
+vector		pm_state_origin;		// floats
+vector		pm_state_velocity;		// floats
+float		pm_state_gravity;		// short
+vector		pm_state_mins;			// char [-127,127 range]
+vector		pm_state_maxs;			// char [-127,127 range]
+float		pm_state_pm_flags;		// byte [0-255]
+float		pm_state_pm_time;		// byte [0-255]
+vector		pm_state_delta_angles;	// shorts, use ANGLE2SHORT/SHORT2ANGLE
+
+vector		cam_viewangles;
+vector		cam_viewoffset;
+	
 void()		CG_Main;
-void()		CG_Frame;	
+void()		CG_Frame;
 void()		CG_DrawGUI;
+void(vector cmdMove, vector cmdAngles, __int cmdMsec)	CG_PlayerMove;
 	
 void end_sys_globals;
 

@@ -208,15 +208,6 @@ float MULTICAST_ALL_R	= 3;
 float MULTICAST_PHS_R	= 4;
 float MULTICAST_PVS_R	= 5;
 
-// pmove flags
-float PMF_DUCKED			= 1;
-float PMF_JUMP_HELD			= 2;
-float PMF_ON_GROUND			= 4;
-float PMF_TIME_WATERJUMP	= 8; 	// pm_time is waterjump
-float PMF_TIME_LAND			= 16;	// pm_time is time before rejump
-float PMF_TIME_TELEPORT		= 32;	// pm_time is non-moving time
-float PMF_NO_PREDICTION		= 64;	// temporarily disables prediction (used for grappling hook)
-
 // ========================================================
 // end of engine defs 
 // ========================================================

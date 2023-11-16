@@ -21,7 +21,13 @@ float developer, developer_script; // cvars for debugging
 .float buttons;
 .float latched_buttons;
 
+.vector playerAnim; 		// current player anim
+.float playerAnimTree;
+.float playerAnimFrame; 	// current animation frame
+.float animPriority;
+
 .float clipammo;
+
 
 //
 // 'worldspawn' entity

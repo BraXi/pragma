@@ -764,10 +764,13 @@ void SV_ClipMoveToEntities ( moveclip_t *clip )
 		touch = touchlist[i];
 		if (touch->v.solid == SOLID_NOT)
 			continue;
+
 		if (touch == clip->passedict)
 			continue;
+
 		if (clip->trace.allsolid)
 			return;
+
 		if (clip->passedict)
 		{
 		 	if (PROG_TO_GENT(touch->v.owner) == clip->passedict)

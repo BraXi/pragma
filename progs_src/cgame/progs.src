@@ -1,5 +1,7 @@
 cgame.dat
 
+#define CLGAME 1
+
 // qc extensions
 #include "fteqc_ext.qc"
 

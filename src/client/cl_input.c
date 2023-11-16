@@ -57,7 +57,8 @@ Key_Event (int key, qboolean down, unsigned time);
 kbutton_t	in_klook;
 kbutton_t	in_left, in_right, in_forward, in_back;
 kbutton_t	in_lookup, in_lookdown, in_moveleft, in_moveright;
-kbutton_t	in_strafe, in_speed, in_use, in_attack;
+kbutton_t	in_strafe, in_speed;
+kbutton_t	in_use, in_attack, in_reload, in_melee;
 kbutton_t	in_up, in_down;
 
 int			in_impulse;
@@ -172,6 +173,12 @@ void IN_AttackUp(void) {KeyUp(&in_attack);}
 
 void IN_UseDown (void) {KeyDown(&in_use);}
 void IN_UseUp (void) {KeyUp(&in_use);}
+
+void IN_ReloadDown(void) { KeyDown(&in_reload); }
+void IN_ReloadUp(void) { KeyUp(&in_reload); }
+
+void IN_MeleeDown(void) { KeyDown(&in_melee); }
+void IN_MeleeUp(void) { KeyUp(&in_melee); }
 
 void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
 
@@ -347,6 +354,14 @@ void CL_FinishMove (usercmd_t *cmd)
 		cmd->buttons |= BUTTON_USE;
 	in_use.state &= ~2;
 
+	if (in_reload.state & 3)
+		cmd->buttons |= BUTTON_RELOAD;
+	in_reload.state &= ~2;
+
+	if (in_melee.state & 3)
+		cmd->buttons |= BUTTON_MELEE;
+	in_melee.state &= ~2;
+
 	if (anykeydown && cls.key_dest == key_game)
 		cmd->buttons |= BUTTON_ANY;
 
@@ -365,8 +380,7 @@ void CL_FinishMove (usercmd_t *cmd)
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
 #endif
 	}
-		
-
+	
 	cmd->impulse = in_impulse;
 	in_impulse = 0;
 
@@ -398,8 +412,6 @@ usercmd_t CL_CreateCmd (void)
 	CL_FinishMove (&cmd);
 
 	old_sys_frame_time = sys_frame_time;
-
-//cmd.impulse = cls.framecount;
 
 	return cmd;
 }
@@ -451,6 +463,10 @@ void CL_InitInput (void)
 	Cmd_AddCommand ("-attack", IN_AttackUp);
 	Cmd_AddCommand ("+use", IN_UseDown);
 	Cmd_AddCommand ("-use", IN_UseUp);
+	Cmd_AddCommand ("+reload", IN_ReloadDown);
+	Cmd_AddCommand ("-reload", IN_ReloadUp);
+	Cmd_AddCommand ("+melee", IN_MeleeDown);
+	Cmd_AddCommand ("-melee", IN_MeleeUp);
 	Cmd_AddCommand ("impulse", IN_Impulse);
 	Cmd_AddCommand ("+klook", IN_KLookDown);
 	Cmd_AddCommand ("-klook", IN_KLookUp);

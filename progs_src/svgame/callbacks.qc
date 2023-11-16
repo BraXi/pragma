@@ -89,8 +89,6 @@ void() ClientEndServerFrame =
 		self.angles_y = self.v_angle_y; //+90;
 		self.angles_z = 0;
 	}
-	
-//	self.angles[ROLL] = SV_CalcRoll(ent->v.angles, ent->v.velocity) * 4;	
 };
 
 /*
@@ -104,27 +102,19 @@ inAngles - client view side angles
 inMove = [forwardmove, sidemove, upmove]
 ============
 */
-#define	BUTTON_ATTACK	1
-#define	BUTTON_USE	2
-#define	BUTTON_ANY	128
 
 void(entity attacker, entity inflictor, entity targ, float damage, float dmgflags, float method) DoDamage;
-void(entity who, vector start, vector end, float weaponnum) FireBullet;
 void(entity ent, vector fireAngles, vector offset, float wpn) W_Fire;
 
 void() SpawnPlayer;
 void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime) ClientThink =
 {
-	
 	if(isplayer(self) == 0)
 		return;	
 	
-	/* 
-	note to self: 
-	client is not aware of its bbox size, thus pmove predictions fail
-	make clientinfo transmit bbox size so pmove can become more flexible	
-	*/
-	
+	//
+	// let dead players respawn (fixme testing)
+	//	
 	if(self.health <= 0 && self.deadflag == DEAD_DEAD && inMove_z > 0)
 	{
 		SpawnPlayer();
@@ -132,7 +122,18 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 		return;
 	}
 	
-	// pmove
+	
+	//
+	// update button states, see button bits in shared.qc
+	//
+	self.oldbuttons = self.buttons;
+	self.buttons = inButtons;
+	self.latched_buttons |= self.buttons & ~self.oldbuttons;	
+	
+	
+	//
+	// perform player move simulation (bg_pmove.qc)
+	//
 	if( self.health > 0 )
 	{
 		if(self.movetype == MOVETYPE_NOCLIP)
@@ -143,23 +144,15 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 			self.pm_type = PM_NORMAL;
 	}
 	
-	//self.pm_type = PM_FREEZE;
 	if(self.pm_type == PM_FREEZE)
 		inAngles = self.v_angle;
 	
-	setviewoffset(self, '0 0 24');	
-	setsize(self, '-16 -16 -24', '16 16 32');
-	self.viewheight = 22;
+	SV_PlayerMove(inMove, inAngles, inMsecTime);
 	
-	
-	SV_PMove(inMove, inAngles, inMsecTime);
-	//pmove(self, inMove, true);
-			
-	// update button states
-	self.oldbuttons = self.buttons;
-	self.buttons = inButtons;
-	self.latched_buttons |= self.buttons & ~self.oldbuttons;
-			
+
+	//
+	// weapon think (fixme test)
+	//
 	if( self.health > 0 && (inButtons & BUTTON_ATTACK) && g_time >= self.wpn_lastShotTime+0.2 )
 	{
 		self.wpn_fireframe = g_frameNum;
@@ -195,6 +188,7 @@ This will happen every level load and thus also when server changes map.
 void() SpawnPlayer;
 void() RestoreClientPers;
 void() HUD_SetInitialStats;
+
 void() ClientBegin =
 {
 	self.classname = "player";
@@ -203,7 +197,7 @@ void() ClientBegin =
 	RestoreClientPers();
 	SpawnPlayer();
 	HUD_SetInitialStats();	
-	FX_Muzzleflash(self, FX_MUZZLEFLASH_LOGIN);	
+//	FX_Muzzleflash(self, FX_MUZZLEFLASH_LOGIN);	//this is lame
 	ClientEndServerFrame();	
 };
 

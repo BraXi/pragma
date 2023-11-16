@@ -186,7 +186,7 @@ typedef struct qcvm_s
 typedef struct
 {
 	int vmtype;
-	const char* filename;
+	char* filename;
 	int defs_crc_checksum;
 	const char* name;
 } qcvmdef_t;

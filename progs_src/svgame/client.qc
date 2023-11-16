@@ -6,6 +6,11 @@ Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
 */
 
+static vector	forward, right, up;
+static float	xyspeed;
+static float	bobmove;
+static int		bobcycle;		// odd cycles are right foot going forward
+static float	bobfracsin;		// sin(bobfrac*M_PI)
 
 enum
 {
@@ -19,7 +24,6 @@ enum
 float ANIMTREE_NONE = 0;
 float ANIMTREE_HUMAN = 1;
 float ANIMTREE_MUTANT = 2;
-
 
 struct playerAnims
 {
@@ -60,12 +64,6 @@ struct playerAnims
 
 playerAnims animTree[3];
 
-
-
-.vector playerAnim; 		// current player anim
-.float playerAnimTree;
-.float playerAnimFrame; 	// current animation frame
-.float animPriority;
 
 void(string n) safe_precache_sound =
 {
@@ -163,6 +161,31 @@ void() initAnimTrees =
 
 
 /*
+===============
+CalcRoll
+===============
+*/
+float(vector angles, vector velocity) CalcRoll =
+{
+	float sign, side, value;
+	float rollangle, rollspeed;
+	
+	side = dotproduct(velocity, right);
+	sign = side < 0 ? -1 : 1;
+	side = fabs(side);
+	
+	rollangle = cvar("sv_rollangle");
+	rollspeed = cvar("sv_rollspeed");
+	
+	if (side < rollspeed)
+		side = side * rollangle / rollspeed;
+	else
+		side = rollangle;
+	
+	return side*sign;
+}
+
+/*
 =======================================
 Player_PlayBodyAnim
 =======================================
@@ -213,6 +236,44 @@ void(vector newanim, float priority, float reset) Player_SetAnimation =
 	self.animFrame = self.playerAnimFrame = self.playerAnim_x;
 };
 
+
+/*
+=======================================
+Player_SetViewBlend
+=======================================
+*/
+void() Player_SetViewBlend =
+{
+	local int contents;	
+	local vector vieworg;
+	
+	vieworg = self.origin + getviewoffset(self);	
+	contents = pointcontents(vieworg); 
+
+#if 0 /*this is for waterwarp effect, not used in opengl renderer currently*/
+	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
+		self.rdflags |= RDF_UNDERWATER;
+	else
+		self.rdflags &= ~RDF_UNDERWATER;
+#endif
+	
+	
+	// set blending based on contents of where our view is
+	if (contents & (/*CONTENTS_SOLID|*/CONTENTS_LAVA))
+		setviewblend(self, '1.0 0.3 0.0', 0.6);
+	else if (contents & CONTENTS_SLIME)
+		setviewblend(self, '0.0 0.1 0.05', 0.6);
+	else if (contents & CONTENTS_WATER)
+		setviewblend(self, '0.5 0.3 0.2', 0.4);
+	else
+		setviewblend(self, vec_null, 0);
+	
+	// monsters have a little tinted vision
+	if(self.model == "models/mutant.md3")
+		setviewblend(self, '0.7 0.2 0.0', 0.35);	
+};
+
+
 /*
 =======================================
 Player_ViewEffects
@@ -220,9 +281,6 @@ Player_ViewEffects
 */
 void() Player_ViewEffects =
 {
-	local float	contents;
-	local vector	vieworg;
-	
 	if( self.deadflag == DEAD_NO )
 	{
 		#if 1
@@ -253,34 +311,24 @@ void() Player_ViewEffects =
 
 	Player_PlayBodyAnimation();
 	
-	vieworg = self.origin + getviewoffset(self);
-	contents = pointcontents(vieworg); // add for contents	
-
-// not used in gl renderer :v
-//	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
-//		self.rdflags |= RDF_UNDERWATER;
-//	else
-//		self.rdflags &= ~RDF_UNDERWATER;
-	
-	if (contents & (/*CONTENTS_SOLID|*/CONTENTS_LAVA))
-		setviewblend(self, '1.0 0.3 0.0', 0.6);
-	else if (contents & CONTENTS_SLIME)
-		setviewblend(self, '0.0 0.1 0.05', 0.6);
-	else if (contents & CONTENTS_WATER)
-		setviewblend(self, '0.5 0.3 0.2', 0.4);
-	else
-		setviewblend(self, vec_null, 0);
-	
-	if(self.model == "models/mutant.md3")
-		setviewblend(self, '0.8 0.2 0.0', 0.35);	
+	Player_SetViewBlend();
 };
 
 
+/*
+=======================================
+player_pain
+
+When damage is done to player
+=======================================
+*/
 void(entity attacker, float damage, float method) player_pain =
 {	
+#if 0
 	if( self.playerAnimTree == ANIMTREE_MUTANT && self.health <= self.max_health/2 )
 		self.skinnum = 1;
-	
+#endif	
+
 	// play pain sound
 	if( random() > 0.5 )
 		playsound(vec3_origin, self, CHAN_BODY, animTree[self.playerAnimTree].snd_pain1, 1, ATTN_NORM, 0);
@@ -290,6 +338,14 @@ void(entity attacker, float damage, float method) player_pain =
 	Player_SetAnimation(animTree[self.playerAnimTree].pain2, AP_MEDIUM, false);
 };
 
+
+/*
+=======================================
+player_die
+
+when player dies
+=======================================
+*/
 void(entity attacker, float damage, float method) player_die =
 {	
 	self.deadflag = DEAD_DEAD;
@@ -310,6 +366,14 @@ void(entity attacker, float damage, float method) player_die =
 };
 
 
+
+/*
+=======================================
+SpawnPlayer
+
+logic for putting player in game as a living creature!
+=======================================
+*/
 entity(string spawnpointname) SelectSpawnPoint;
 void() SpawnPlayer =
 {
@@ -325,6 +389,10 @@ void() SpawnPlayer =
 	self.takedamage = DAMAGE_AIM;
 	self.health = self.max_health = 100;	
 	
+	
+	// todo: this is meeh, a builtin reseting entity fields to zero could be handy
+	// builtin must be aware of persistant vars and not zero them
+	
 	self.effects = 0;
 	self.skinnum = 0;
 	
@@ -339,7 +407,7 @@ void() SpawnPlayer =
 	self.clipmask = MASK_PLAYERSOLID;
 	self.svflags &= ~SVF_DEADMONSTER;
 
-	self.waterlevel = 0;
+	self.waterlevel = WL_NOTINWATER;
 	self.watertype = 0;
 
 	setviewoffset(self, '0 0 24');
@@ -347,7 +415,8 @@ void() SpawnPlayer =
 	linkentity(self);
 	
 	self.pm_type = PM_NORMAL;
-	self.pm_flags &= ~PMF_NO_PREDICTION;	
+	self.pm_flags &= ~PMF_NO_PREDICTION; // remove no prediction flag
+	self.pm_origin = self.origin;
 //	self.pm_origin[0] = self.origin[0];
 //	self.pm_origin[1] = self.origin[1];
 //	self.pm_origin[2] = self.origin[2];
@@ -377,31 +446,13 @@ void() SpawnPlayer =
 		self.playerAnimTree = ANIMTREE_MUTANT;
 	}
 
-#if defined(POLO_FUNC_VEHICLE)	
-	modelindex_player = precache_model(modelname);
-	modelindex_eyes = modelindex_player;
-#endif	
 	precache_model(modelname);
 	setmodel(self, modelname);
 	
 	self.animPriority = 0;
 	Player_SetAnimation(animTree[self.playerAnimTree].idle, AP_MEDIUM, false);	
+	
+	// call end frame to settle everything for us
 	ClientEndServerFrame();	
 };
 
-
-
-
-
-/*
-anims:
-
-stand
-	- idle
-	- attack (one handed)
-	- attack (two handed)
-	- walk front
-	- walk back
-
-
-*/

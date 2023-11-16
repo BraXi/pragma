@@ -402,8 +402,6 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 {
 	int i;
 	static vec3_t forward, right, up;
-	pmove_state_t* pm;
-
 	//
 	// If the origin or velocity have changed since ClientThink(),
 	// update the pmove values.  This will happen when the client
@@ -412,26 +410,30 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	// If it wasn't updated here, the view position would lag a frame
 	// behind the body position when pushed -- "sinking into plats"
 	//
+	ent->client->ps.viewoffset[0] = ent->client->ps.viewoffset[1] = 0;
+	ent->client->ps.viewoffset[2] = ent->v.viewheight;
 
-	pm = &ent->client->ps.pmove;
-
-	pm->pm_type = (int)ent->v.pm_time;
-	pm->pm_flags = (int)ent->v.pm_flags;
-	pm->pm_time = ent->v.pm_time;
-	pm->gravity = ent->v.pm_gravity;
+	ent->client->ps.pmove.pm_type = ent->v.pm_type;
+	ent->client->ps.pmove.pm_flags = ent->v.pm_flags;
+	ent->client->ps.pmove.pm_time = ent->v.pm_time;
+	ent->client->ps.pmove.gravity = ent->v.pm_gravity;
 
 	for (i = 0; i < 3; i++)
 	{
-		pm->mins[i] = ent->v.mins[i];
-		pm->maxs[i] = ent->v.maxs[i];
-		pm->delta_angles[i] = ent->v.pm_delta_angles[i];
+		ent->client->ps.pmove.mins[i] = ent->v.pm_mins[i];
+		ent->client->ps.pmove.maxs[i] = ent->v.pm_maxs[i];
+		ent->client->ps.pmove.delta_angles[i] = ent->v.pm_delta_angles[i];
 	}
+
+	// save results of pmove
+//	ent->client->ps.pmove = pm;
+	ent->client->old_pmove = ent->client->ps.pmove;
 
 #if PROTOCOL_FLOAT_COORDS == 1
 	for (i = 0; i < 3; i++)
 	{
-		pm->origin[i] = ent->v.origin[i];
-		pm->velocity[i] = ent->v.velocity[i];
+		ent->client->ps.pmove.origin[i] = ent->v.origin[i];
+		ent->client->ps.pmove.velocity[i] = ent->v.velocity[i];
 	}
 #else
 	for (i = 0; i < 3; i++)

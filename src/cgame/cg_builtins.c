@@ -93,11 +93,10 @@ void PFCG_trace(void)
 	max = Scr_GetParmVector(2);
 	end = Scr_GetParmVector(3);
 
-	ignoreEntNum = Scr_GetParmInt(4);
+	ignoreEntNum = Scr_GetParmFloat(4); //cl.playernum + 1;
 	contentmask = Scr_GetParmInt(5);
 
 	trace = CG_Trace(start, min, max, end, contentmask, ignoreEntNum); 
-			//SV_Trace(start, min, max, end, ignoreEnt, contentmask);
 
 	// set globals in progs
 	cl.script_globals->trace_allsolid = trace.allsolid;
@@ -106,7 +105,7 @@ void PFCG_trace(void)
 	cl.script_globals->trace_plane_dist = trace.plane.dist;
 	VectorCopy(trace.plane.normal, cl.script_globals->trace_plane_normal);
 	VectorCopy(trace.endpos, cl.script_globals->trace_endpos);
-//	sv.script_globals->trace_ent = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
+//	cl.script_globals->trace_ent = cl.entities;
 	cl.script_globals->trace_entnum = trace.entitynum;
 	cl.script_globals->trace_contents = trace.contents;
 
