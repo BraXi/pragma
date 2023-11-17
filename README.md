@@ -19,9 +19,9 @@ Project has a simple rule - *no bloat*, all the changes and additions should not
 |----------------|--------|--------------|
 | Server game | SVQuakeC progs | Native library |
 | Client game | CLQuakeC progs | Hardcoded in engine |
-| GUI (menus, hud)| MenuQuakeC progs | Hardcoded in engine |
-| Pmove | Full editable by mods (QC)*** | Hardcoded in engine |
-| Renderers | OpenGL 2.1 with shaders* | OpenGL 1.1, Software |
+| GUI (menus, hud)| In QC scripts*** | Hardcoded in engine |
+| Pmove | In QC scripts | Hardcoded in engine |
+| Renderers | OpenGL 2.1 with shaders*** | OpenGL 1.1, Software |
 | Color palette | RGBA | colormap.pcx dependant (256 colors)|
 | Image formats | TGA | TGA (sky only), PCX, WAL |
 | Model formats | MD3, SP2 | MD2, SP2 |
@@ -85,25 +85,11 @@ You'll need Visual Studio 2019 or Visual Studio 2022 to compile the engine (engi
 
 5. Run pragma with `run_pragma.bat` :)
 
-# Screenshots and videos of pragma in action
 
-players with diferent models and anims
+# pragma in action
 
-[![pragma_players](https://img.youtube.com/vi/rLWEsG0bD44/0.jpg)](https://www.youtube.com/watch?v=rLWEsG0bD44)
+[![pragma_wpnlogic](https://img.youtube.com/vi/aveXkVqTDmQ/0.jpg)](https://www.youtube.com/watch?v=aveXkVqTDmQ)
 
-some random physics test
-
-[![pragma_players](https://img.youtube.com/vi/mbXaEDZLZgE/0.jpg)](https://www.youtube.com/watch?v=mbXaEDZLZgE)
-
-new UI system in action (not on git yet)
-
-![shot031](https://github.com/BraXi/pragma/assets/6434152/09d30811-2681-418c-8036-bb8622c35fb9)
-
-
-goofing around, QC profiler displayed on the right
-
-
-![shot009](https://github.com/BraXi/pragma/assets/6434152/f586402a-8bd5-405e-a9ff-9c8cd30deb5c)
 
 
 
