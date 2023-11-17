@@ -185,7 +185,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 		{
 			ri.Sys_Error(ERR_DROP, "Mod_LoadMD3: %s has more than %i verts on a surface (%i)", mod->name, MD3_MAX_VERTS, surf->numVerts);
 		}
-		if (surf->numTriangles * 3 > MD3_MAX_TRIANGLES)
+		if (surf->numTriangles > MD3_MAX_TRIANGLES)
 		{
 			ri.Sys_Error(ERR_DROP, "Mod_LoadMD3: %s has more than %i triangles on a surface (%i)", mod->name, MD3_MAX_TRIANGLES, surf->numTriangles);
 		}

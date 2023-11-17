@@ -42,14 +42,6 @@ void() ClientBeginServerFrame =
 		return;
 		
 	}
-	if(self.model == "models/mutant.md3")
-	{
-	}
-	else
-	{
-		setviewmodel(self, "models/v_ak47.md3");
-		setviewmodelparms(self, self.animf, vec_null, vec_null);
-	}
 };
 
 /*
@@ -69,10 +61,7 @@ void() ClientEndServerFrame =
 {
 	if(isplayer(self) == 0)
 		return;	
-	
-	// pmove has been already performed and applied
-	
-	//RadiusDamage(self, self, 100, self, 96, 0);
+
 	Player_ViewEffects();
 	HUD_SetStats();
 	
@@ -107,10 +96,12 @@ void(entity attacker, entity inflictor, entity targ, float damage, float dmgflag
 void(entity ent, vector fireAngles, vector offset, float wpn) W_Fire;
 
 void() SpawnPlayer;
+void() WeaponLogic;
 void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime) ClientThink =
 {
 	if(isplayer(self) == 0)
 		return;	
+	
 	
 	//
 	// let dead players respawn (fixme testing)
@@ -151,8 +142,12 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 	
 
 	//
-	// weapon think (fixme test)
+	// weapon think
 	//
+	
+	WeaponLogic();
+
+#if 0	
 	if( self.health > 0 && (inButtons & BUTTON_ATTACK) && g_time >= self.wpn_lastShotTime+0.2 )
 	{
 		self.wpn_fireframe = g_frameNum;
@@ -166,14 +161,8 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inL
 			self.velocity_z += 400;
 			return;
 		}
-		
-		vector o;
-		o_z = self.viewheight;
-		W_Fire(self, self.v_angle, o, 1);
-		
-		self.clipammo -= 1;
-		setstat(self, STAT_AMMO, self.clipammo);
 	}
+#endif
 };
 
 

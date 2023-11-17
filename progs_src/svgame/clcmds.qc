@@ -42,6 +42,14 @@ void() ClientCmd_TestModel =
 	testmodel.origin_z = testmodel.origin_z + (24 * (testmodel.renderScale-1));
 };
 
+void(entity ent, int newweapon) SetWeapon;
+void() ClientCmd_SetWeapon =
+{
+	float newweapon = stof(argv(1));
+	SetWeapon(self, newweapon);
+
+};
+
 float() ParseClientCommand =
 {
 	local string cmd;
@@ -64,7 +72,11 @@ float() ParseClientCommand =
 	{
 		ClientCmd_TestModel();
 	}
-		
+	else if( cmd == "weapon" ) /* cheat */
+	{
+		ClientCmd_SetWeapon();
+	}
+	
 	if( cmd == "god" ) /* cheat */
 	{
 		ClientCmd_Cheat(0);

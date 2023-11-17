@@ -1157,10 +1157,10 @@ struct model_s *R_RegisterModel (char *name)
 		}
 		else if (mod->type == MOD_MD3)
 		{
-			md3Header = (md3Header_t*)mod->extradata;
+			md3Header = mod->md3[LOD_HIGH];
 			mod->numframes = md3Header->numFrames;
-			surf = (md3Surface_t*)((byte*)mod->md3[LOD_HIGH] + mod->md3[LOD_HIGH]->ofsSurfaces);
-			for (i = 0; i < mod->md3[LOD_HIGH]->numSurfaces; i++)
+			surf = (md3Surface_t*)((byte*)md3Header + md3Header->ofsSurfaces);
+			for (i = 0; i < md3Header->numSurfaces; i++)
 			{
 				shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 				for (j = 0; j < surf->numShaders; j++, shader++)
@@ -1168,6 +1168,7 @@ struct model_s *R_RegisterModel (char *name)
 					mod->skins[i] = GL_FindImage(shader->name, it_model);
 					shader->shaderIndex = mod->skins[i]->texnum;
 				}
+				surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 			}
 		}
 		else if (mod->type == MOD_BRUSH)

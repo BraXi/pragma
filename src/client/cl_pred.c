@@ -256,28 +256,32 @@ void CL_PredictMovement (void)
 	pm.s = cl.frame.playerstate.pmove;
 
 #ifdef PMOVE_PROGS
-	cl_globalvars_t* vars = cl.script_globals;
-
-	//
-	// copy pmove state TO cgame
-	//
-	vars->pm_state_pm_type = (int)pm.s.pm_type;
-	vars->pm_state_gravity = (int)pm.s.gravity;
-	vars->pm_state_pm_flags = (int)pm.s.pm_flags;
-	vars->pm_state_pm_time = (int)pm.s.pm_time;
-
-	for (i = 0; i < 3; i++)
+	cl_globalvars_t* vars;
+	if (cl.qcvm_active && cl.entities)
 	{
-		vars->pm_state_origin[i] = pm.s.origin[i];
-		vars->pm_state_velocity[i] = pm.s.velocity[i];
-		vars->pm_state_delta_angles[i] = (float)pm.s.delta_angles[i];
+		vars = cl.script_globals;
 
-		vars->pm_state_mins[i] = pm.s.mins[i];
-		vars->pm_state_maxs[i] = pm.s.maxs[i];
+		//
+		// copy pmove state TO cgame
+		//
+		vars->pm_state_pm_type = (int)pm.s.pm_type;
+		vars->pm_state_gravity = (int)pm.s.gravity;
+		vars->pm_state_pm_flags = (int)pm.s.pm_flags;
+		vars->pm_state_pm_time = (int)pm.s.pm_time;
+
+		for (i = 0; i < 3; i++)
+		{
+			vars->pm_state_origin[i] = pm.s.origin[i];
+			vars->pm_state_velocity[i] = pm.s.velocity[i];
+			vars->pm_state_delta_angles[i] = (float)pm.s.delta_angles[i];
+
+			vars->pm_state_mins[i] = pm.s.mins[i];
+			vars->pm_state_maxs[i] = pm.s.maxs[i];
+		}
+
+		// make sure qc knows our number for trace function
+		vars->localplayernum = cl.playernum;
 	}
-
-	// make sure qc knows our number for trace function
-	vars->localplayernum = cl.playernum;
 #else
 	pm.trace = CL_PMTrace;
 	pm.pointcontents = CL_PMpointcontents;
@@ -300,36 +304,40 @@ void CL_PredictMovement (void)
 		for (i = 0; i < 3; i++)
 			inangles[i] = (float)cmd->angles[i];
 
-		//
-		// call cgame's pmove
-		//	
-		Scr_AddVector(0, inmove);
-		Scr_AddVector(1, inangles);
-		Scr_AddFloat(2, (float)cmd->msec);
-		Scr_Execute(cl.script_globals->CG_PlayerMove, __FUNCTION__);
 
-		//
-		// read pmove state FROM cgame
-		//
-		pm.s.pm_type = vars->pm_state_pm_type;
-		pm.s.gravity = vars->pm_state_gravity;
-		pm.s.pm_flags = vars->pm_state_pm_flags;
-		pm.s.pm_time = vars->pm_state_pm_time;
-		pm.viewheight = cl.script_globals->cam_viewoffset[2];
-
-		for (i = 0; i < 3; i++)
+		if(cl.qcvm_active && cl.entities)
 		{
-			pm.s.origin[i] = vars->pm_state_origin[i];
-			pm.s.velocity[i] = vars->pm_state_velocity[i];
-			pm.s.delta_angles[i] = vars->pm_state_delta_angles[i];
+			//
+			// call cgame's pmove
+			//	
+			Scr_AddVector(0, inmove);
+			Scr_AddVector(1, inangles);
+			Scr_AddFloat(2, (float)cmd->msec);
+			Scr_Execute(cl.script_globals->CG_PlayerMove, __FUNCTION__);
 
-			pm.s.mins[i] = vars->pm_state_mins[i];
-			pm.s.maxs[i] = vars->pm_state_maxs[i];
+			//
+			// read pmove state FROM cgame
+			//
+			pm.s.pm_type = vars->pm_state_pm_type;
+			pm.s.gravity = vars->pm_state_gravity;
+			pm.s.pm_flags = vars->pm_state_pm_flags;
+			pm.s.pm_time = vars->pm_state_pm_time;
+			pm.viewheight = cl.script_globals->cam_viewoffset[2];
 
-			pm.mins[i] = vars->pm_state_mins[i];
-			pm.maxs[i] = vars->pm_state_maxs[i];
+			for (i = 0; i < 3; i++)
+			{
+				pm.s.origin[i] = vars->pm_state_origin[i];
+				pm.s.velocity[i] = vars->pm_state_velocity[i];
+				pm.s.delta_angles[i] = vars->pm_state_delta_angles[i];
 
-			pm.viewangles[i] = cl.script_globals->cam_viewangles[i];
+				pm.s.mins[i] = vars->pm_state_mins[i];
+				pm.s.maxs[i] = vars->pm_state_maxs[i];
+
+				pm.mins[i] = vars->pm_state_mins[i];
+				pm.maxs[i] = vars->pm_state_maxs[i];
+
+				pm.viewangles[i] = cl.script_globals->cam_viewangles[i];
+			}
 		}
 #else
 		pm.cmd = *cmd;

@@ -1244,6 +1244,25 @@ void PFSV_setviewangles(void)
 	VectorCopy(Scr_GetParmVector(1), client->ps.viewangles);
 	VectorCopy(client->ps.viewangles, ent->v.v_angle);
 }
+
+
+void PFSV_kickangles(void)
+{
+	gentity_t* ent;
+	gclient_t* client;
+
+	ent = Scr_GetParmEdict(0);
+	if (!ent->client || ent->client->pers.connected == false)
+	{
+		Scr_RunError("kickangles(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
+		return;
+	}
+	client = ent->client;
+
+	VectorCopy(Scr_GetParmVector(1), client->ps.kick_angles);
+}
+
+
 /*
 ===============
 PFSV_pmove
@@ -1460,4 +1479,5 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_pmove, PF_SV, "pmove", "float(entity e, vector mv, float cr)");
 
 	Scr_DefineBuiltin(PFSV_setviewangles, PF_SV, "setviewangles", "vector(entity e, vector a)");
+	Scr_DefineBuiltin(PFSV_kickangles, PF_SV, "kickangles", "vector(entity e, vector a)");
 }

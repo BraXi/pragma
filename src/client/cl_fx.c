@@ -294,6 +294,15 @@ void CL_ParseMuzzleFlash(void)
 	switch(effectNum)
 	{
 	case FX_MUZZLEFLASH_PISTOL:
+		VectorSet(dlight->color, 1, 1, 0.7);
+		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/deagle/shot.wav"), volume, ATTN_NORM, 0);
+
+		// negative light test
+		//		VectorSet(dlight->color, -1, -1, -1);
+		//		dlight->radius = 1024;
+		//		dlight->die = cl.time + 2000; // + 0.1;
+		break;
+
 	case FX_MUZZLEFLASH_RIFLE:
 	case FX_MUZZLEFLASH_SHOTGUN:
 		VectorSet(dlight->color, 1, 1, 0.7);

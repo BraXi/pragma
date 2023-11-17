@@ -20,6 +20,7 @@ void() CG_InitCrosshair =
 
 void() CG_DrawCrosshair =
 {
+	float alpha;
 	if(cg_nocrosshair)
 		return;
 
@@ -30,7 +31,12 @@ void() CG_DrawCrosshair =
 //	crosshair_size = '28 36 0';
 //	crosshair_size  = crosshair_size * cvar("cs");
 //	float alpha = 2.0 - cvar("cs");
+
+	if(getstat(STAT_AMMO) <= 0)	
+		alpha = 0.1;
+	else
+		alpha = 0.6;
 	
-	drawimage(400-(crosshair_size_x/2), 300-(crosshair_size_y/2), crosshair_size_x, crosshair_size_y, '1 1 1', 1.0, gfx_crosshair);
+	drawimage(400-(crosshair_size_x/2), 300-(crosshair_size_y/2), crosshair_size_x, crosshair_size_y, '1 1 1', alpha, gfx_crosshair);
 };
 

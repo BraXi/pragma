@@ -19,7 +19,7 @@ Compile it for progs accordingly with CLGAME or SVGAME define
 */
 
 // enable pmove debug gui
-#define PMOVEDEBUGMENU 1	
+#define PMOVEDEBUGMENU 0 // 1 = client, 2 = server	
 
 //
 // macros to convert angles back and forth 
@@ -260,7 +260,7 @@ void() PM_StepSlideMove_ =
 		if(numplanes >= MAX_CLIP_PLANES)
 		{
 			// this shouldn't really happen			
-			dprint("numplanes >= MAX_CLIP_PLANES\n");
+//			dprint("numplanes >= MAX_CLIP_PLANES\n");
 			pml_velocity = vec3_origin;
 			break;
 		}
@@ -298,7 +298,7 @@ void() PM_StepSlideMove_ =
 			// go along the crease
 			if (numplanes != 2)
 			{		
-				dprint("clip velocity, numplanes == ", ftos(numplanes), "\n");
+//				dprint("clip velocity, numplanes == ", ftos(numplanes), "\n");
 				pml_velocity = vec3_origin;
 				break;
 			}
@@ -317,7 +317,7 @@ void() PM_StepSlideMove_ =
 		//
 		if (dotproduct(pml_velocity, primal_velocity) <= 0)
 		{
-			dprint("dotproduct(pml_velocity, primal_velocity) <= 0\n");
+//			dprint("dotproduct(pml_velocity, primal_velocity) <= 0\n");
 			pml_velocity = vec3_origin;
 			break;
 		}
@@ -1258,7 +1258,7 @@ void() PM_InitialSnapPosition =
 		}
 	}
 
-	dprint("Bad InitialSnapPosition\n");
+//	dprint("Bad InitialSnapPosition\n");
 };
 
 

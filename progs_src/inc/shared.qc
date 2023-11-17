@@ -97,6 +97,7 @@ enum
 {
 	WEAPON_NONE = 0,
 	WEAPON_AR,
+	WEAPON_PISTOL,
 	NUM_WEAPONS
 };
 
@@ -114,12 +115,20 @@ typedef struct
 	float	clipAmmo;
 	float	maxAmmo;	
 	
-	float	viewModel; //modelindex
-	float	worldModel; //modelindex
-	float	muzzleflash; //effect+fire sound
+	float	fireTime;
+	float	reloadTime;
+
+	float	vkick;
 	
+	string	viewModel;
+	string	worldModel;
+	
+	float	muzzleflash; //effect+fire sound
+	string	sfx_reload;
+	
+	// [firstframe, lastframe, speed]
 	vector	anim_idle;
-	vector	anim_attack;
+	vector	anim_fire;
 	vector	anim_drop;
 	vector	anim_raise;
 	vector	anim_reload;

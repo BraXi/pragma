@@ -27,6 +27,12 @@ float developer, developer_script; // cvars for debugging
 .float animPriority;
 
 .float clipammo;
+.float reserveammo;
+.float weapon_animrate;
+
+.float nextFireTime;
+.float weaponState;
+.float weaponThinkFrame;
 
 
 //

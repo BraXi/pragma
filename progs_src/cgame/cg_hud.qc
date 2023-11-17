@@ -50,28 +50,39 @@ void() HUD_DrawCurrentWeaponStats =
 	if(weapon <= 0)
 		return;
 
-	// name
-	xy_align = '795 560 1';	
-	drawstring(xy_align, 0.8, '1 1 1', 1, GetWeaponNameForNum(weapon));
-
 	// ammo
 	float clip = getstat(STAT_AMMO);
 	float reserve = getstat(STAT_AMMO_RESERVE);
+		
+	// out of ammo warning
+	if( !clip && !reserve )
+	{
+		xy_align = '400 450 2';	
+		drawstring(xy_align, 1.1, '1 0 0', 1, "[OUT OF AMMO]");
+	}
+//	else if( !clip && reserve )
+//	{
+//		xy_align = '400 450 2';	
+//		drawstring(xy_align, 1, '1 0 0', 0.7, "[ RELOAD ]");
+//	}
+	
 
+	// weapon name
+	xy_align = '795 560 1';	
+	drawstring(xy_align, 0.8, '1 1 1', 1, GetWeaponNameForNum(weapon));
+	
 	// ammo in magazine
-	xy_align = '765 570 1';	
+	xy_align = '755 570 1';	
 	if(clip > (GetWeaponMaxClipAmmo(weapon)/3))
 		drawstring(xy_align, 1.2, '1 1 1', 1, ftos(clip)); 
 	else //draw red to indicate low ammo
 		drawstring(xy_align, 1.2, '1 0 0', 1, ftos(clip));
 
-	xy_align = '775 570 0';
-	drawstring(xy_align, 1.2, '1 1 1', 1, ftos(reserve)); 
-	//reserve ammo
-//	xy_align = '770 570 0';	
-//	drawstring(xy_align, 1.2, '1 1 1', 1, );
-	
-
+	if(IsWeaponClipOnly(weapon) == 0)
+	{
+		xy_align = '795 570 1';
+		drawstring(xy_align, 1.2, '1 1 1', 1, ftos(reserve)); 
+	}
 };
 
 

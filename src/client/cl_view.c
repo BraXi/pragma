@@ -403,7 +403,7 @@ void V_Gun_Model_f (void)
 		gun_model = NULL;
 		return;
 	}
-	Com_sprintf (name, sizeof(name), "models/%s/tris.md2", Cmd_Argv(1));
+	Com_sprintf (name, sizeof(name), "models/%s.md3", Cmd_Argv(1));
 	gun_model = re.RegisterModel (name);
 
 	if(gun_model)

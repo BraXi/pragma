@@ -426,13 +426,6 @@ void() SpawnPlayer =
 //	self.angles_z = 0;
 //	self.viewangles = self.angles;
 //	self.v_angle = self.angles;
-
-	self.clipammo = 30;
-	
-	setstat(self, STAT_WEAPON, WEAPON_AR);
-	setstat(self, STAT_AMMO, self.clipammo);
-	setstat(self, STAT_AMMO_RESERVE, 90);
-
 	
 	float human = true;
 	if(getentnum(self) == 1 || human)
