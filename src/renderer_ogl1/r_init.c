@@ -23,9 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 refimport_t	ri;
 
 
-cvar_t* r_md3shading; 
-cvar_t* r_md3scale;
-
 cvar_t* r_norefresh;
 cvar_t* r_drawentities;
 cvar_t* r_drawworld;
@@ -96,10 +93,7 @@ register all cvars and commands
 */
 void R_RegisterCvarsAndCommands(void)
 {
-	r_md3shading = ri.Cvar_Get("r_md3shading", "0", CVAR_CHEAT);
-	r_md3scale = ri.Cvar_Get("r_md3scale", "1", CVAR_CHEAT);
-
-	r_lefthand = ri.Cvar_Get("hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
+	r_lefthand = ri.Cvar_Get("hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0);
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
 	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);
@@ -363,6 +357,7 @@ int R_Init(void* hinstance, void* hWnd)
 #endif
 
 	GL_SetDefaultState();
+	R_InitialOGLState(); //wip
 
 	/*
 	** draw our stereo patterns

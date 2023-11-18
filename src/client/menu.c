@@ -3580,7 +3580,7 @@ qboolean PlayerConfig_MenuInit( void )
 	int currentdirectoryindex = 0;
 	int currentskinindex = 0;
 
-	cvar_t *hand = Cvar_Get( "hand", "0", CVAR_USERINFO | CVAR_ARCHIVE );
+	cvar_t *hand = Cvar_Get( "hand", "1", CVAR_USERINFO | CVAR_ARCHIVE );
 
 	static const char *handedness[] = { "right", "left", "center", 0 };
 

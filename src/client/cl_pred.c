@@ -304,7 +304,7 @@ void CL_PredictMovement (void)
 		for (i = 0; i < 3; i++)
 			inangles[i] = (float)cmd->angles[i];
 
-
+		// may crash here or cause qcvm panic
 		if(cl.qcvm_active && cl.entities)
 		{
 			//

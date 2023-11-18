@@ -53,8 +53,6 @@ any other entities in the world.
 ==============
 */
 void() Player_ViewEffects;
-
-void(entity inflictor, entity attacker, float damage, entity ignore, float radius, int mod) RadiusDamage;
 void() HUD_SetStats;
 
 void() ClientEndServerFrame =

@@ -272,7 +272,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	switch (LittleLong(*(unsigned *)buf))
 	{
 	case MD3_IDENT: /* Quake3 .md3 model */
-		loadmodel->extradata = Hunk_Begin(0x400000); // is 2MB enuff?
+		loadmodel->extradata = Hunk_Begin(0x400000); // is 4MB enuff?
 		Mod_LoadMD3(mod, buf, LOD_HIGH);
 		break;
 		
@@ -1152,7 +1152,7 @@ struct model_s *R_RegisterModel (char *name)
 		{
 			sp2Header = (sp2Header_t *)mod->extradata;
 			mod->numframes = sp2Header->numframes;
-			for (i=0 ; i< sp2Header->numframes ; i++)
+			for(i = 0; i< sp2Header->numframes; i++)
 				mod->skins[i] = GL_FindImage (sp2Header->frames[i].name, it_sprite);
 		}
 		else if (mod->type == MOD_MD3)
@@ -1165,7 +1165,7 @@ struct model_s *R_RegisterModel (char *name)
 				shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 				for (j = 0; j < surf->numShaders; j++, shader++)
 				{
-					mod->skins[i] = GL_FindImage(shader->name, it_model);
+					mod->skins[i+j] = GL_FindImage(shader->name, it_model);
 					shader->shaderIndex = mod->skins[i]->texnum;
 				}
 				surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
@@ -1173,7 +1173,7 @@ struct model_s *R_RegisterModel (char *name)
 		}
 		else if (mod->type == MOD_BRUSH)
 		{
-			for (i=0 ; i<mod->numtexinfo ; i++)
+			for (i=0 ; i<mod->numtexinfo; i++)
 				mod->texinfo[i].image->registration_sequence = registration_sequence;
 		}
 	}
@@ -1214,20 +1214,22 @@ void R_EndRegistration (void)
 Mod_Free
 ================
 */
-void Mod_Free (model_t *mod)
+void Mod_Free(model_t* mod)
 {
+	if (mod->extradata)
+		Hunk_Free(mod->extradata);
 
 #if 0
 	if (mod->type == MOD_MD3)
 	{
-		for( int i = 0; i < NUM_LODS; i++)
-			if (mod->md3[i])
-				Hunk_Free(mod->md3[i]);
+		for (int i = 0; i < NUM_LODS; i++)
+			if (mod->md3[i] != NULL)
+			{
+				printf("how is this not null\n");
+				mod->md3[i] = NULL;
+			}
 	}
 #endif
-	if(mod->extradata)
-		Hunk_Free(mod->extradata);
-
 	memset (mod, 0, sizeof(*mod));
 }
 

@@ -46,8 +46,15 @@ string hud_layoutstring_sp =
 
 void() HUD_SetStats =
 {
+	// update hud
+	
 	setstat(self, STAT_HEALTH, self.health);
-	setstat(self, STAT_ARMOR, self.armor);
+//	setstat(self, STAT_ARMOR, self.armor);
+	
+	// weapon
+	setstat(self, STAT_WEAPON, self.weapon);
+	setstat(self, STAT_AMMO, self.clipammo);
+	setstat(self, STAT_AMMO_RESERVE, self.reserveammo);	
 };
 
 

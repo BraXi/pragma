@@ -90,6 +90,7 @@ Mod_LoadMD3
 Loads Q3 .md3 model
 =================
 */
+extern int modfilelen;
 #define	LL(x) x=LittleLong(x)
 void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 {
@@ -111,11 +112,17 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 	version = LittleLong(pinmodel->version);
 	if (version != MD3_VERSION)
 	{
-		ri.Con_Printf(PRINT_ALL, "MOD_LoadMD3: %s has wrong version (%i should be %i)\n", mod->name, version, MD3_VERSION);
+		ri.Sys_Error(ERR_DROP, "MOD_LoadMD3: '%s' has wrong version (%i should be %i)\n", mod->name, version, MD3_VERSION);
 		return;
 	}
 
 	size = LittleLong(pinmodel->ofsEnd);
+	if(modfilelen != size)
+	{
+		ri.Sys_Error(ERR_DROP, "MOD_LoadMD3: '%s' has weird size (probably broken)\n", mod->name);
+		return;
+	}
+
 	mod->extradatasize = size;
 	mod->md3[lod] = Hunk_Alloc(size);
 
@@ -133,7 +140,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 
 	if (mod->md3[lod]->numFrames < 1)
 	{
-		ri.Con_Printf(PRINT_ALL, "Mod_LoadMD3: %s has no frames\n", mod->name);
+		ri.Sys_Error(ERR_DROP, "Mod_LoadMD3: %s has no frames\n", mod->name);
 		return;
 	}
 
@@ -247,7 +254,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 
 	}
 
-	MD3_DecodeNormals(mod, mod->md3[lod]);
+//	MD3_DecodeNormals(mod, mod->md3[lod]);
 
 	VectorSet(mod->mins, -32, -32, -32);
 	VectorSet(mod->maxs, 32, 32, 32);
@@ -383,6 +390,9 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 	int lat, lng;
 	vec3_t p1, p2;
 
+//	if (lerp >= 1)
+//		ri.Con_Printf(PRINT_LOW, "lerp >= 1\n");
+
 	if (lerp == 0.0f)
 	{
 		VectorCopy(vert->xyz, outVert);
@@ -398,13 +408,12 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 		outVert[2] = (p1[2] + lerp * (p2[2] - p1[2]));
 	}
 
-	// scale verticles
+	// scale verticles to qu
 	outVert[0] = outVert[0] / 64.0f;
 	outVert[1] = outVert[1] / 64.0f;
 	outVert[2] = outVert[2] / 64.0f;
 
-	//	VectorScale(outVert, MD3_XYZ_SCALE, outVert);
-
+	// retrieve normal
 	lat = (vert->normal >> 8) & 0xff;
 	lng = (vert->normal & 0xff);
 	lat *= (FUNCTABLE_SIZE / 256);
@@ -447,13 +456,15 @@ void R_DrawMD3Model(centity_t* ent, lod_t lod, float lerp)
 		return;
 	}
 
+
+
 	// for each surface
 	surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
 	for (i = 0; i < model->numSurfaces; i++)
-	{
-		//bind texture
+	{	
 		if (surface->numShaders > 0) 
 		{
+			//bind texture
 			md3Shader = (md3Shader_t*)((byte*)surface + surface->ofsShaders);
 			GL_Bind(md3Shader->shaderIndex);
 		}
@@ -464,6 +475,7 @@ void R_DrawMD3Model(centity_t* ent, lod_t lod, float lerp)
 
 		oldVert = (short*)((byte*)surface + surface->ofsXyzNormals) + (ent->oldframe * surface->numVerts * 4); // current keyframe verts
 		vert = (short*)((byte*)surface + surface->ofsXyzNormals) + (ent->frame * surface->numVerts * 4); // next keyframe verts
+
 
 		// for each triangle in surface
 		for (j = 0; j < surface->numTriangles; j++, triangle++)
@@ -481,6 +493,7 @@ void R_DrawMD3Model(centity_t* ent, lod_t lod, float lerp)
 				if (r_fullbright->value ||currententity->renderfx & RF_FULLBRIGHT)
 					l = 1.0f; 
 
+				qglColor4f(1,1,1, ent->alpha);
 				qglColor4f(l * model_shadelight[0], l * model_shadelight[1], l * model_shadelight[2], ent->alpha);
 				
 				qglTexCoord2f(texcoord[index].st[0], texcoord[index].st[1]);

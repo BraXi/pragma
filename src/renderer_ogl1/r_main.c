@@ -242,11 +242,7 @@ static void R_DrawNullModel (void)
 	qglEnable (GL_TEXTURE_2D);
 }
 
-/*
-=============
-R_DrawEntitiesOnList
-=============
-*/
+
 void R_DrawEntityModel(centity_t* ent);
 static inline void R_DrawCurrentEntity()
 {
@@ -268,26 +264,17 @@ static inline void R_DrawCurrentEntity()
 			}
 			else
 			{
-#if 1
 				R_DrawEntityModel(currententity);
-#else
-				switch (currentmodel->type)
-				{
-				case MOD_MD3:
-					R_DrawMD3Model(currententity);
-					break;
-				case MOD_SPRITE:
-					R_DrawSpriteModel(currententity);
-					break;
-				default:
-					ri.Sys_Error(ERR_DROP, "Bad modeltype");
-					break;
-				}
-#endif
 			}
 		}
 	}
 }
+
+/*
+=============
+R_DrawEntitiesOnList
+=============
+*/
 void R_DrawEntitiesOnList (void)
 {
 	int		i;
@@ -295,16 +282,21 @@ void R_DrawEntitiesOnList (void)
 	if (!r_drawentities->value)
 		return;
 
+	
+//	ri.Con_Printf(PRINT_LOW, "BEGIN R_DrawEntitiesOnList\n");
 	// draw non-transparent first
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
+//		ri.Con_Printf(PRINT_LOW, "currententity = %i - currentmodel: %s\n", i, currentmodel->name);
 		currententity = &r_newrefdef.entities[i];
 		currentmodel = currententity->model;
 		if ((currententity->renderfx & RF_TRANSLUCENT))
 			continue;	// transparent
 		R_DrawCurrentEntity();
 	}
+//	ri.Con_Printf(PRINT_LOW, "END R_DrawEntitiesOnList\n");
 
+#if 0
 	// draw transparent entities
 	// todo: sort them
 	R_WriteToDepthBuffer(GL_FALSE);	// no z writes
@@ -316,6 +308,7 @@ void R_DrawEntitiesOnList (void)
 			continue;	// solid
 		R_DrawCurrentEntity();
 	}
+#endif
 	R_WriteToDepthBuffer(GL_TRUE);		// reenable z writing
 }
 

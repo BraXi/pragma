@@ -334,9 +334,4 @@ void() WeaponLogic =
 	{
 		self.weaponframe = self.weaponframeend;
 	}	
-	
-	// update hud
-	setstat(self, STAT_WEAPON, self.weapon);
-	setstat(self, STAT_AMMO, self.clipammo);
-	setstat(self, STAT_AMMO_RESERVE, self.reserveammo);
 };
