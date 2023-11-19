@@ -95,7 +95,7 @@ void(entity ent, vector fireAngles, vector offset, float wpn) W_Fire;
 
 void() SpawnPlayer;
 void() WeaponLogic;
-void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime) ClientThink =
+void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inMsecTime) ClientThink =
 {
 	if(isplayer(self) == 0)
 		return;	
