@@ -463,7 +463,6 @@ extern	refexport_t	re;		// interface to refresh .dll
 
 void CL_Init (void);
 
-void CL_FixUpGender(void);
 void CL_Disconnect (void);
 void CL_Disconnect_f (void);
 void CL_PingServers_f (void);

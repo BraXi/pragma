@@ -80,8 +80,6 @@ cvar_t	*rate;
 cvar_t	*fov;
 cvar_t	*msg;
 cvar_t	*hand;
-cvar_t	*gender;
-cvar_t	*gender_auto;
 
 client_static_t	cls;
 client_state_t	cl;
@@ -965,37 +963,6 @@ void CL_ReadPackets (void)
 
 /*
 ==============
-CL_FixUpGender_f
-==============
-*/
-void CL_FixUpGender(void)
-{
-	char *p;
-	char sk[80];
-
-	if (gender_auto->value) {
-
-		if (gender->modified) {
-			// was set directly, don't override the user
-			gender->modified = false;
-			return;
-		}
-
-		strncpy(sk, skin->string, sizeof(sk) - 1);
-		if ((p = strchr(sk, '/')) != NULL)
-			*p = 0;
-		if (Q_stricmp(sk, "male") == 0 || Q_stricmp(sk, "cyborg") == 0)
-			Cvar_Set ("gender", "male");
-		else if (Q_stricmp(sk, "female") == 0 || Q_stricmp(sk, "crackhor") == 0)
-			Cvar_Set ("gender", "female");
-		else
-			Cvar_Set ("gender", "none");
-		gender->modified = false;
-	}
-}
-
-/*
-==============
 CL_Userinfo_f
 ==============
 */
@@ -1138,9 +1105,6 @@ void CL_InitLocal (void)
 	msg = Cvar_Get ("msg", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	hand = Cvar_Get ("hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	fov = Cvar_Get ("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
-	gender = Cvar_Get ("gender", "male", CVAR_USERINFO | CVAR_ARCHIVE);
-	gender_auto = Cvar_Get ("gender_auto", "1", CVAR_ARCHIVE);
-	gender->modified = false; // clear this so we know when user sets it manually
 
 	//
 	// register our commands
