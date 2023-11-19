@@ -83,8 +83,6 @@ cvar_t	*hand;
 cvar_t	*gender;
 cvar_t	*gender_auto;
 
-cvar_t	*cl_vwep;
-
 client_static_t	cls;
 client_state_t	cl;
 
@@ -1143,9 +1141,6 @@ void CL_InitLocal (void)
 	gender = Cvar_Get ("gender", "male", CVAR_USERINFO | CVAR_ARCHIVE);
 	gender_auto = Cvar_Get ("gender_auto", "1", CVAR_ARCHIVE);
 	gender->modified = false; // clear this so we know when user sets it manually
-
-	cl_vwep = Cvar_Get ("cl_vwep", "1", CVAR_ARCHIVE);
-
 
 	//
 	// register our commands

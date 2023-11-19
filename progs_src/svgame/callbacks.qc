@@ -123,26 +123,22 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inM
 	//
 	// perform player move simulation (bg_pmove.qc)
 	//
-	if( self.health > 0 )
+	if(self.health > 0) // spectators will not want this changed
 	{
 		if(self.movetype == MOVETYPE_NOCLIP)
 			self.pm_type = PM_NOCLIP;
-		else if(self.health <= -50)
-			self.pm_type = PM_GIB;
 		else
 			self.pm_type = PM_NORMAL;
 	}
 	
-	if(self.pm_type == PM_FREEZE)
-		inAngles = self.v_angle;
-	
 	SV_PlayerMove(inMove, inAngles, inMsecTime);
-	
 
+	if(self.health > 0)
+		touchentities(self, 0); // touch triggers
+		
 	//
 	// weapon think
 	//
-	
 	WeaponLogic();
 
 #if 0	
