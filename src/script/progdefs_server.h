@@ -128,6 +128,12 @@ typedef struct sv_entvars_s
 	float			health;
 	float			team;
 
+	// ai
+	float			yaw_speed;
+	float			ideal_yaw;
+	float			aiflags;
+	scr_entity_t	goal_entity;
+
 	// client fields
 	vec3_t			v_angle;	
 	float			viewheight;

@@ -67,7 +67,7 @@ extern int CG_PointContents(vec3_t point);
 void PFCG_pointcontents(void)
 {
 	float* point = Scr_GetParmVector(0);
-	Scr_ReturnInt(CG_PointContents(point));
+	Scr_ReturnFloat(CG_PointContents(point));
 }
 
 /*
@@ -237,7 +237,7 @@ Register builtins which can be shared by both client and server progs
 */
 void CG_InitScriptBuiltins()
 {
-	Scr_DefineBuiltin(PFCG_pointcontents, PF_CL, "pointcontents", "int(vector v)");
+	Scr_DefineBuiltin(PFCG_pointcontents, PF_CL, "pointcontents", "float(vector v)");
 	Scr_DefineBuiltin(PFCG_trace, PF_CL, "trace", "void(vector s, vector bmins, vector bmaxs, vector e, float ie, int cm)");
 
 	Scr_DefineBuiltin(PFCG_getconfigstring, PF_CL, "getconfigstring", "string(int idx)");

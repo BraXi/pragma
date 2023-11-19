@@ -680,13 +680,374 @@ INTERPOLATE BETWEEN FRAMES TO GET RENDERING PARMS
 ==========================================================================
 */
 
+static unsigned int c_effects, c_renderfx;
+
+/*
+===============
+CL_EntityAnimation
+===============
+*/
+static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+{
+	int		autoanim;
+	unsigned int effects = state->effects;
+
+	// models can auto animate their frames
+	autoanim = 2 * cl.time / 1000;
+
+	//
+	// set animation frame
+	//
+	if (effects & EF_ANIM01)				/* automatically cycle between frames 0 and 1 at 2 hz */
+		refent->frame = autoanim & 1;
+	else if (effects & EF_ANIM23)			/* automatically cycle between frames 2 and 3 at 2 hz */
+		refent->frame = 2 + (autoanim & 1);
+	else if (effects & EF_ANIM_ALL)			/* automatically cycle through all frames at 2hz */
+		refent->frame = autoanim;
+	else if (effects & EF_ANIM_ALLFAST)		/* automatically cycle through all frames at 10hz */
+		refent->frame = cl.time / SV_FRAMETIME_MSEC;
+	else
+		refent->frame = state->frame;		/* .. or just let gamecode drive animation */
+
+	refent->oldframe = clent->prev.frame;
+	refent->backlerp = 1.0 - cl.lerpfrac;
+}
+
+/*
+===============
+CL_EntityPositionAndRotation
+===============
+*/
+static inline void CL_EntityPositionAndRotation(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+{
+	int i;
+	float	current_angles, previous_angles;
+
+	//
+	// ORIGIN
+	// 
+
+	// interpolate origin
+	for (i = 0; i < 3; i++)
+	{
+		refent->origin[i] = refent->oldorigin[i] = clent->prev.origin[i] + cl.lerpfrac * (clent->current.origin[i] - clent->prev.origin[i]);
+	}
+
+	//
+	// ROTATION
+	//
+	if (state->effects & EF_ROTATEYAW)
+	{	// some bonus items auto-rotate
+		refent->angles[0] = 0;
+		refent->angles[1] = anglemod(cl.time / 10.0);
+		refent->angles[2] = 0;
+	}
+	else
+	{
+		// interpolate angles
+		for (i = 0; i < 3; i++)
+		{
+			current_angles = clent->current.angles[i];
+			previous_angles = clent->prev.angles[i];
+			refent->angles[i] = LerpAngle(previous_angles, current_angles, cl.lerpfrac);
+		}
+	}
+}
+
+/*
+===============
+CL_EntityAddAttachedModels
+
+Add attached models, but don't use custom skins on them
+===============
+*/
+static inline void CL_EntityAddAttachedModels(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+{
+	refent->skin = NULL;
+	refent->skinnum = 0;
+	refent->renderfx = 0;
+
+	if (state->modelindex2)
+	{
+		refent->model = cl.model_draw[state->modelindex2];
+		V_AddEntity(refent);
+
+//		rent.renderfx = 0;
+//		rent.alpha = 1;
+	}
+
+	if (state->modelindex3)
+	{
+		refent->model = cl.model_draw[state->modelindex3];
+		V_AddEntity(refent);
+	}
+
+	if (state->modelindex4)
+	{
+		refent->model = cl.model_draw[state->modelindex4];
+		V_AddEntity(refent);
+	}
+}
+
+/*
+===============
+CL_EntityAddParticleTrails
+
+Add particle trails to entity, they may have dlight attached to them
+===============
+*/
+static inline void CL_EntityAddParticleTrails(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+{
+	unsigned int effects = state->effects;
+	float intensity;
+
+	/* rocket trail */
+	if (effects & EF_ROCKET) 
+	{
+		CL_RocketTrail(clent->lerp_origin, refent->origin, clent);
+		V_AddLight(refent->origin, 200, 1, 1, 0);
+	}
+	/* blaster trail */
+	else if (effects & EF_BLASTER)
+	{
+		if (effects & EF_TRACKER_DLIGHT) /* (EF_BLASTER | EF_TRACKER) special case */
+		{
+			CL_BlasterTrail2(clent->lerp_origin, refent->origin);
+			V_AddLight(refent->origin, 200, 0, 1, 0);
+		}
+		else
+		{
+			CL_BlasterTrail(clent->lerp_origin, refent->origin);
+			V_AddLight(refent->origin, 200, 1, 1, 0);
+		}
+	}
+	/* hyper blaster trail */
+	else if (effects & EF_HYPERBLASTER)
+	{
+		if (effects & EF_TRACKER_DLIGHT) /* (EF_HYPERBLASTER | EF_TRACKER) special case */
+			V_AddLight(refent->origin, 200, 0, 1, 0);
+		else
+			V_AddLight(refent->origin, 200, 1, 1, 0);
+	}
+	/* diminishing blood trail */
+	else if (effects & EF_GIB)
+	{
+		CL_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
+	}
+	/* diminishing 'smoke' trail */
+	else if (effects & EF_GRENADE)
+	{
+		CL_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
+	}
+	else if (effects & EF_FLAG1)
+	{
+		vec3_t c = { 1.000000, 0.000000, 0.000000 };
+		CL_FlagTrail(clent->lerp_origin, refent->origin, c);
+		V_AddLight(refent->origin, 225, 1, 0.1, 0.1);
+	}
+	else if (effects & EF_FLAG2)
+	{
+		vec3_t c = { 0.184314, 0.403922, 0.498039 };
+		CL_FlagTrail(clent->lerp_origin, refent->origin, c);
+		V_AddLight(refent->origin, 225, 0.1, 0.1, 1);
+	}
+	else if (effects & EF_TAGTRAIL)
+	{
+		vec3_t c = { 1.000000, 1.000000, 0.152941 };
+		CL_TagTrail(clent->lerp_origin, refent->origin, c);
+		V_AddLight(refent->origin, 225, 1.0, 1.0, 0.0);
+	}
+	else if (effects & EF_TRACKERTRAIL)
+	{
+		if (effects & EF_TRACKER_DLIGHT) /* (EF_TRACKERTRAIL | EF_TRACKER) special case */
+		{
+			intensity = 50 + (500 * (sin(cl.time / 500.0) + 1.0));
+			
+			// FIXME - check out this effect in rendition
+			if (vidref_val == VIDREF_GL)
+				V_AddLight(refent->origin, intensity, -1.0, -1.0, -1.0);
+			else
+				V_AddLight(refent->origin, -1.0 * intensity, 1.0, 1.0, 1.0);
+		}
+		else
+		{
+			CL_Tracker_Shell(clent->lerp_origin);
+			V_AddLight(refent->origin, 155, -1.0, -1.0, -1.0);
+		}
+	}
+	else if (effects & EF_TRACKER_DLIGHT)
+	{
+		vec3_t c = { 0,0,0 };
+		CL_TrackerTrail(clent->lerp_origin, refent->origin, c);
+		// FIXME - check out this effect in rendition
+		if (vidref_val == VIDREF_GL)
+			V_AddLight(refent->origin, 200, -1, -1, -1);
+		else
+			V_AddLight(refent->origin, -200, 1, 1, 1);
+	}
+	else if (effects & EF_GREENGIB)
+	{
+		CL_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
+	}
+	else if (effects & EF_IONRIPPER)
+	{
+		CL_IonripperTrail(clent->lerp_origin, refent->origin);
+		V_AddLight(refent->origin, 100, 1, 0.5, 0.5);
+	}
+	else if (effects & EF_BLUEHYPERBLASTER)
+	{
+		V_AddLight(refent->origin, 200, 0, 0, 1);
+	}
+	else if (effects & EF_PLASMA)
+	{
+		if (effects & EF_ANIM_ALLFAST) /* (EF_PLASMA | EF_ANIM_ALLFAST) special case */
+		{
+			CL_BlasterTrail(clent->lerp_origin, refent->origin);
+		}
+		V_AddLight(refent->origin, 130, 1, 0.5, 0.5);
+	}
+}
+
+
+/*
+===============
+CL_EntityAddMiscEffects
+
+Mostly effects that were previously in trails code but shouldn't be
+===============
+*/
+static inline void CL_EntityAddMiscEffects(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+{
+	if (state->effects & EF_FLIES)
+	{
+		CL_FlyEffect(clent, refent->origin);
+	}
+	else if (state->effects & EF_TRAP)
+	{
+		refent->origin[2] += 32;
+		CL_TrapParticles(refent);
+		V_AddLight(refent->origin, ((rand() % 100) + 100), 1, 0.8, 0.1);
+	}
+}
 
 /*
 ===============
 CL_AddPacketEntities
 
+FIXME - add beams back
+FIXME - if server sets this entity a dlight, then skip adding dlights from effects
+
 ===============
 */
+void CL_AddPacketEntities(frame_t* frame)
+{
+	ccentity_t		*clent;		// currently parsed client entity
+	entity_state_t	*state;		// current client entity's state
+	centity_t		rent;		// this is refdef entity passed to renderer
+	int				entnum;
+//	clientinfo_t	* ci;
+	unsigned int	effects, renderfx;
+
+	memset(&rent, 0, sizeof(rent)); // move to loop so nothing will ever leak to next clent?
+
+	//
+	// parse all client entities
+	//
+	for (entnum = 0; entnum < frame->num_entities; entnum++)
+	{
+		state = &cl_parse_entities[(frame->parse_entities + entnum) & (MAX_PARSE_ENTITIES - 1)];
+		clent = &cl_entities[(int)state->number];
+
+		effects = state->effects;
+		renderfx = state->renderFlags;
+
+		//
+		// create a new render entity
+		//
+		CL_EntityAnimation(clent, state, &rent);
+		CL_EntityPositionAndRotation(clent, state, &rent);
+
+		// special case for local player entity, otherwise camera would be inside of a player model
+		if (state->number == cl.playernum + 1)
+		{
+#if 0
+			// draw own model, better to draw it not here, but at the end of frame so it sticks to view
+			rent.angles[0] = rent.angles[2] = 0;
+			vec3_t forward;
+			AngleVectors(rent.angles, forward, NULL, NULL);
+			VectorMA(rent.origin, -10, forward, rent.origin);
+#else
+			rent.renderfx |= RF_VIEWERMODEL;	// only draw from mirrors
+			continue;
+#endif
+		}
+
+
+		rent.skinnum = state->skinnum;
+		rent.skin = NULL;
+		rent.model = cl.model_draw[state->modelindex];
+//		rent.renderfx = state->renderFlags; // set later on
+
+
+#if 0
+		//
+		// add dynamic light
+		// TODO: figure out lightstyle
+		//
+		if (state->effects & RF_LIGHT)
+		{
+			V_AddLight(rent.origin, state->lightIntensity, state->lightColor[0], state->lightColor[1], state->lightColor[2]);
+		}
+		else if (state->effects & RF_NEGATIVE_LIGHT)
+		{
+			V_AddLight(rent.origin, state->lightIntensity, -state->lightColor[0], -state->lightColor[1], -state->lightColor[2]);
+		}
+#endif
+		//
+		// if entity has no model just skip at this point
+		//
+		if (!state->modelindex)
+			continue;
+
+		//
+		// add entity model
+		//
+		rent.renderfx = state->renderFlags; // clent->current.
+		rent.alpha = state->renderAlpha;
+		VectorCopy(state->renderColor, rent.renderColor);
+		rent.scale = state->renderScale;
+
+		// FIXME: this is a big temporary hack for (borrowed from) Q2R models :v
+		if (rent.renderfx & RF_YAWHACK)
+			rent.angles[1] -= 90; 
+
+		// add entity to refresh list
+		V_AddEntity(&rent);
+
+		//
+		// add attached models if any
+		//
+		CL_EntityAddAttachedModels(clent, state, &rent);
+
+		//
+		// add trails
+		//
+		CL_EntityAddParticleTrails(clent, state, &rent);
+
+		//
+		// add misc effects
+		//
+		CL_EntityAddMiscEffects(clent, state, &rent);
+
+		//
+		// save origin to for lerping between frames
+		//
+		VectorCopy(rent.origin, clent->lerp_origin);
+	}
+}
+
+
+#if 0 // old messy shit, keept to readd beams later
 void CL_AddPacketEntities (frame_t *frame)
 {
 	centity_t			ent;
@@ -716,7 +1077,8 @@ void CL_AddPacketEntities (frame_t *frame)
 		effects = s1->effects;
 		renderfx = s1->renderFlags;
 
-			// set frame
+
+		// set frame
 		if (effects & EF_ANIM01)
 			ent.frame = autoanim & 1;
 		else if (effects & EF_ANIM23)
@@ -729,37 +1091,6 @@ void CL_AddPacketEntities (frame_t *frame)
 			ent.frame = s1->frame;
 
 
-		// quad and pent can do different things on client
-		if (effects & EF_PENT)
-		{
-			effects &= ~EF_PENT;
-			effects |= EF_COLOR_SHELL;
-			renderfx |= RF_SHELL_RED;
-		}
-
-		if (effects & EF_QUAD)
-		{
-			effects &= ~EF_QUAD;
-			effects |= EF_COLOR_SHELL;
-			renderfx |= RF_SHELL_BLUE;
-		}
-//======
-// PMM
-		if (effects & EF_DOUBLE)
-		{
-			effects &= ~EF_DOUBLE;
-			effects |= EF_COLOR_SHELL;
-			renderfx |= RF_SHELL_DOUBLE;
-		}
-
-		if (effects & EF_HALF_DAMAGE)
-		{
-			effects &= ~EF_HALF_DAMAGE;
-			effects |= EF_COLOR_SHELL;
-			renderfx |= RF_SHELL_HALF_DAM;
-		}
-// pmm
-//======
 		ent.oldframe = cent->prev.frame;
 		ent.backlerp = 1.0 - cl.lerpfrac;
 
@@ -775,8 +1106,7 @@ void CL_AddPacketEntities (frame_t *frame)
 		{	// interpolate origin
 			for (i=0 ; i<3 ; i++)
 			{
-				ent.origin[i] = ent.oldorigin[i] = cent->prev.origin[i] + cl.lerpfrac * 
-					(cent->current.origin[i] - cent->prev.origin[i]);
+				ent.origin[i] = ent.oldorigin[i] = cent->prev.origin[i] + cl.lerpfrac * (cent->current.origin[i] - cent->prev.origin[i]);
 			}
 		}
 
@@ -848,6 +1178,7 @@ void CL_AddPacketEntities (frame_t *frame)
 		else
 			ent.renderfx = renderfx;
 
+
 		// calculate angles
 		if (effects & EF_ROTATE)
 		{	// some bonus items auto-rotate
@@ -899,6 +1230,7 @@ void CL_AddPacketEntities (frame_t *frame)
 			continue;
 		}
 
+
 		// if set to invisible, skip
 		if (!s1->modelindex)
 			continue;
@@ -931,6 +1263,12 @@ void CL_AddPacketEntities (frame_t *frame)
 		VectorCopy(cent->current.renderColor, ent.renderColor);
 		ent.scale = cent->current.renderScale;
 		
+
+		if (ent.renderfx & RF_LIGHT) //hack
+		{
+			ent.angles[1] -= 90;
+			//V_AddLight(ent.origin, 200, cent->current.renderColor[0], cent->current.renderColor[1], cent->current.renderColor[2]);
+		}
 
 		// add to refresh list
 		V_AddEntity (&ent);
@@ -1153,7 +1491,7 @@ void CL_AddPacketEntities (frame_t *frame)
 		VectorCopy (ent.origin, cent->lerp_origin);
 	}
 }
-
+#endif
 
 
 /*

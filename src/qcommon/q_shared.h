@@ -601,77 +601,51 @@ typedef struct
 
 // entity_state_t->effects
 // Effects are things handled on the client side (lights, particles, frame animations)
-// that happen constantly on the given entity.
-// An entity that has effects will be sent to the client
-// even if it has a zero index model.
-#define	EF_ROTATE			0x00000001		// rotate (bonus items)
-#define	EF_GIB				0x00000002		// leave a trail
-#define	EF_BLASTER			0x00000008		// redlight + trail
-#define	EF_ROCKET			0x00000010		// redlight + trail
-#define	EF_GRENADE			0x00000020
-#define	EF_HYPERBLASTER		0x00000040
-#define	EF_BFG				0x00000080
-#define EF_COLOR_SHELL		0x00000100
-#define EF_POWERSCREEN		0x00000200
-#define	EF_ANIM01			0x00000400		// automatically cycle between frames 0 and 1 at 2 hz
-#define	EF_ANIM23			0x00000800		// automatically cycle between frames 2 and 3 at 2 hz
-#define EF_ANIM_ALL			0x00001000		// automatically cycle through all frames at 2hz
-#define EF_ANIM_ALLFAST		0x00002000		// automatically cycle through all frames at 10hz
-#define	EF_FLIES			0x00004000
-#define	EF_QUAD				0x00008000
-#define	EF_PENT				0x00010000
-#define	EF_TELEPORTER		0x00020000		// particle fountain
-#define EF_FLAG1			0x00040000
-#define EF_FLAG2			0x00080000
-// RAFAEL
-#define EF_IONRIPPER		0x00100000
-#define EF_GREENGIB			0x00200000
-#define	EF_BLUEHYPERBLASTER 0x00400000
-#define EF_SPINNINGLIGHTS	0x00800000
-#define EF_PLASMA			0x01000000
-#define EF_TRAP				0x02000000
-
-//ROGUE
-#define EF_TRACKER			0x04000000
-#define	EF_DOUBLE			0x08000000
-#define	EF_SPHERETRANS		0x10000000
-#define EF_TAGTRAIL			0x20000000
-#define EF_HALF_DAMAGE		0x40000000
-#define EF_TRACKERTRAIL		0x80000000
-//ROGUE
-
-// not implemented
-#define RF_NODEPTHTEST	64	// entity is not depthtested(can not be occluded by other geometry)
+// that happen constantly on the given entity. An entity that has 
+// effects will be sent to the client even if it has a zero index model.
+#define	EF_ROTATEYAW		1		// rotate
+#define	EF_GIB				2		// leave a trail
+#define	EF_BLASTER			4		// redlight + trail
+#define	EF_ROCKET			8		// redlight + trail
+#define	EF_GRENADE			16
+#define	EF_HYPERBLASTER		32
+#define	EF_ANIM01			64		// automatically cycle between frames 0 and 1 at 2 hz
+#define	EF_ANIM23			128		// automatically cycle between frames 2 and 3 at 2 hz
+#define EF_ANIM_ALL			256		// automatically cycle through all frames at 2hz
+#define EF_ANIM_ALLFAST		512		// automatically cycle through all frames at 10hz
+#define	EF_FLIES			1024
+#define	EF_TELEPORTER		2048	// particle fountain
+#define EF_FLAG1			4096
+#define EF_FLAG2			8192
+#define EF_IONRIPPER		16384
+#define EF_GREENGIB			32768
+#define	EF_BLUEHYPERBLASTER 65536
+#define EF_PLASMA			131072
+#define EF_TRAP				262144
+#define EF_TRACKER_DLIGHT	524288
+#define	EF_DOUBLE			1048576
+#define EF_TAGTRAIL			2097152
+#define EF_TRACKERTRAIL		4194304
 
 // entity_state_t->renderfx flags
 #define	RF_MINLIGHT			1		// allways have some light, never go full dark
 #define	RF_VIEWERMODEL		2		// don't draw through eyes, only mirrors
 #define	RF_VIEW_MODEL		4		// only draw through eyes
 #define	RF_FULLBRIGHT		8		// allways draw full intensity
-#define	RF_DEPTHHACK		16		// for view weapon Z crunching
+#define	RF_DEPTHHACK		16		// entity can not be occluded by other geometry
 #define	RF_TRANSLUCENT		32		// entity uses .renderAlpha
-#define	RF_FRAMELERP		64
+#define	RF_LIGHT			64		// entity has gamecode controlled dynamic light attached
 #define RF_BEAM				128
 #define	RF_COLOR			256		// entity uses .renderColor, was RF_CUSTOMSKIN
 #define	RF_GLOW				512		// pulse lighting for bonus items
-#define RF_SHELL_RED		1024
-#define	RF_SHELL_GREEN		2048
-#define RF_SHELL_BLUE		4096
-#define RF_SCALE			8192	// entity uses .renderScale for rendering
-#define RF_NOANIMLERP		16384	// animation is not lerped (software q1 style)
-#define RF_UNUSED1			32768	
-
-
-//R
-#define RF_IR_VISIBLE		0x00008000		// 32768
-#define	RF_SHELL_DOUBLE		0x00010000		// 65536
-#define	RF_SHELL_HALF_DAM	0x00020000
+#define RF_SCALE			1024	// entity model is scaled by .renderScale
+#define	RF_NOANIMLERP		2048	// animation is not lerped (software q1 style)
+#define RF_NEGATIVE_LIGHT	4096	// light that substracts from world!
+#define RF_YAWHACK			8192	// entity uses .renderScale for rendering
 
 // player_state_t->refdef flags
 #define	RDF_UNDERWATER		1		// warp the screen as apropriate
 #define RDF_NOWORLDMODEL	2		// used for player configuration screen
-#define	RDF_IRGOGGLES		4
-#define RDF_UVGOGGLES		8
 
 
 //
@@ -911,6 +885,10 @@ typedef struct entity_state_s
 	float		renderScale;	// used when renderFlags & RF_SCALE 
 	vec3_t		renderColor;	// used when renderFlags & RF_COLOR
 	float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
+
+//	vec3_t		lightColor;		// if RF_LIGHT_NEGATIVE, it will substract this ammount of color
+//	float		lightIntensity;	// in quake units
+//	float		lightStyle;		// index to lightstyles
 
 	int			loopingSound;	// for looping sounds, to guarantee shutoff
 

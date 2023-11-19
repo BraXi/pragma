@@ -9,7 +9,7 @@ See the attached GNU General Public License v2 for more details.
 */
 // scr_main.c
 
-#define PROGS_CHECK_CRC 0
+#define PROGS_CHECK_CRC 1
 
 #include "../qcommon/qcommon.h"
 #include "script_internals.h"
@@ -25,8 +25,8 @@ int scr_numBuiltins = 0;
 const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 {
 	{VM_NONE, NULL, 0, "shared"},
-	{VM_SVGAME, "progs/svgame.dat", 32763, "svgame"},
-	{VM_CLGAME, "progs/cgame.dat", 0, "clgame"},
+	{VM_SVGAME, "progs/svgame.dat", 37418, "svgame"},
+	{VM_CLGAME, "progs/cgame.dat", 9909, "clgame"},
 	{VM_GUI, "progs/guis.dat", 0, "gui"}
 };
 

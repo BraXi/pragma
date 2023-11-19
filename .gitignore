@@ -371,3 +371,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /build/main
+/tools/ericw-tools/doc
+/stuff/netradiant-gamepack

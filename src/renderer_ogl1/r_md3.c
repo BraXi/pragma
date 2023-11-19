@@ -390,23 +390,13 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 	int lat, lng;
 	vec3_t p1, p2;
 
-//	if (lerp >= 1)
-//		ri.Con_Printf(PRINT_LOW, "lerp >= 1\n");
+	// linear interpolation between the current and next vertex positions
+	VectorCopy(oldVert->xyz, p1);
+	VectorCopy(vert->xyz, p2);
 
-	if (lerp == 0.0f)
-	{
-		VectorCopy(vert->xyz, outVert);
-	}
-	else
-	{
-		// linear interpolation between the current and next vertex positions
-		VectorCopy(oldVert->xyz, p1);
-		VectorCopy(vert->xyz, p2);
-
-		outVert[0] = (p1[0] + lerp * (p2[0] - p1[0]));
-		outVert[1] = (p1[1] + lerp * (p2[1] - p1[1]));
-		outVert[2] = (p1[2] + lerp * (p2[2] - p1[2]));
-	}
+	outVert[0] = (p1[0] + lerp * (p2[0] - p1[0]));
+	outVert[1] = (p1[1] + lerp * (p2[1] - p1[1]));
+	outVert[2] = (p1[2] + lerp * (p2[2] - p1[2]));
 
 	// scale verticles to qu
 	outVert[0] = outVert[0] / 64.0f;

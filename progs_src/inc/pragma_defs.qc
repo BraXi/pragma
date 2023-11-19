@@ -12,114 +12,108 @@ float PRINT_MEDIUM	= 1;	// death messages
 float PRINT_HIGH	= 2;	// critical messages
 float PRINT_CHAT	= 3;	// chat message
 
-#define	CONTENTS_SOLID			1i		// an eye is never valid in a solid
-#define	CONTENTS_WINDOW			2i		// translucent, but not watery
-#define	CONTENTS_AUX			4i
-#define	CONTENTS_LAVA			8i
-#define	CONTENTS_SLIME			16i
-#define	CONTENTS_WATER			32i
-#define	CONTENTS_MIST			64i
-#define	LAST_VISIBLE_CONTENTS		64i
+int CONTENTS_SOLID			= 1i;		// an eye is never valid in a solid
+int CONTENTS_WINDOW			= 2i;		// translucent, but not watery
+int CONTENTS_AUX			= 4i;
+int CONTENTS_LAVA			= 8i;
+int CONTENTS_SLIME			= 16i;
+int CONTENTS_WATER			= 32i;
+int CONTENTS_MIST			= 64i;
+int LAST_VISIBLE_CONTENTS	= CONTENTS_MIST;
+
 // remaining contents are non-visible, and don't eat brushes
-#define	CONTENTS_AREAPORTAL		0x8000i
-#define	CONTENTS_PLAYERCLIP		0x10000i
-#define	CONTENTS_MONSTERCLIP		0x20000i
+int CONTENTS_AREAPORTAL		= 0x8000i;
+int CONTENTS_PLAYERCLIP		= 0x10000i;
+int CONTENTS_MONSTERCLIP	= 0x20000i;
+
 // currents can be added to any other contents, and may be mixed
-#define	CONTENTS_CURRENT_0		0x40000i
-#define	CONTENTS_CURRENT_90		0x80000i
-#define	CONTENTS_CURRENT_180		0x100000i
-#define	CONTENTS_CURRENT_270		0x200000i
-#define	CONTENTS_CURRENT_UP		0x400000i
-#define	CONTENTS_CURRENT_DOWN		0x800000i
-#define	CONTENTS_ORIGIN			0x1000000i	// removed before bsping an entity
-#define	CONTENTS_MONSTER		0x2000000i	// should never be on a brush, only in game
-#define	CONTENTS_DEADMONSTER		0x4000000i
-#define	CONTENTS_DETAIL			0x8000000i	// brushes to be added after vis leafs
-#define	CONTENTS_TRANSLUCENT		0x10000000i	// auto set if any surface has trans
-#define	CONTENTS_LADDER			0x20000000i
+int CONTENTS_CURRENT_0		= 0x40000i;
+int CONTENTS_CURRENT_90		= 0x80000i;
+int CONTENTS_CURRENT_180	= 0x100000i;
+int CONTENTS_CURRENT_270	= 0x200000i;
+int CONTENTS_CURRENT_UP		= 0x400000i;
+int CONTENTS_CURRENT_DOWN	= 0x800000i;
+int CONTENTS_ORIGIN			= 0x1000000i;	// removed before bsping an entity
+int CONTENTS_MONSTER		= 0x2000000i;	// should never be on a brush, only in game
+int CONTENTS_DEADMONSTER	= 0x4000000i;
+int CONTENTS_DETAIL			= 0x8000000i;	// brushes to be added after vis leafs
+int CONTENTS_TRANSLUCENT	= 0x10000000i;	// auto set if any surface has trans
+int CONTENTS_LADDER			= 0x20000000i;
 
 // content masks
 int MASK_ALL			= -1;
 int MASK_SOLID			= (CONTENTS_SOLID|CONTENTS_WINDOW);
-int MASK_PLAYERSOLID		= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
+int MASK_PLAYERSOLID	= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
 int MASK_DEADSOLID		= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW);
-int MASK_MONSTERSOLID		= (CONTENTS_SOLID|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
+int MASK_MONSTERSOLID	= (CONTENTS_SOLID|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
 int MASK_WATER			= (CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME);
 int MASK_OPAQUE			= (CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA);
 int MASK_SHOT			= (CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER);
 int MASK_CURRENT		= (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN);
 
 //surface flags
-float SURF_LIGHT		= 0x1;		// value will hold the light strength
-float SURF_SLICK		= 0x2;		// effects game physics (pmove.qc)
-float SURF_SKY			= 0x4;		// don't draw, but add to skybox
-float SURF_WARP			= 0x8;		// turbulent water warp
-float SURF_TRANS33		= 0x10;		// 33% translucent
-float SURF_TRANS66		= 0x20;		// 66% translucent
-float SURF_FLOWING		= 0x40;		// scroll towards angle
-float SURF_NODRAW		= 0x80;		// don't bother referencing the texture
+float SURF_LIGHT		= 1;		// value will hold the light strength
+float SURF_SLICK		= 2;		// effects game physics (pmove.qc)
+float SURF_SKY			= 4;		// don't draw, but add to skybox
+float SURF_WARP			= 8;		// turbulent water warp
+float SURF_TRANS33		= 16;		// 33% translucent
+float SURF_TRANS66		= 32;		// 66% translucent
+float SURF_FLOWING		= 64;		// scroll towards angle
+float SURF_NODRAW		= 128;		// don't bother referencing the texture
 
 // .svflags
-float SVF_NOCLIENT			= 0x00000001;	// don't send entity to clients, even if it has effects
-float SVF_DEADMONSTER		= 0x00000002;	// treat as CONTENTS_DEADMONSTER for collision
-float SVF_MONSTER			= 0x00000004;	// treat as CONTENTS_MONSTER for collision
+float SVF_NOCLIENT			= 1;	// don't send entity to clients, even if it has effects
+float SVF_DEADMONSTER		= 2;	// treat as CONTENTS_DEADMONSTER for collision
+float SVF_MONSTER			= 4;	// treat as CONTENTS_MONSTER for collision
+
 
 // entity_state_t->effects
 // Effects are things handled on the client side (lights, particles, frame animations)
-// that happen constantly on the given entity.
-// An entity that has effects will be sent to the client even if it has a zero index model.
-float EF_ROTATE			= 0x00000001;		// rotate (bonus items)
-float EF_GIB			= 0x00000002;		// leave a trail
-float EF_BLASTER		= 0x00000008;		// redlight + trail
-float EF_ROCKET			= 0x00000010;		// redlight + trail
-float EF_GRENADE		= 0x00000020;
-float EF_HYPERBLASTER	= 0x00000040;
-float EF_BFG			= 0x00000080;
-float EF_COLOR_SHELL	= 0x00000100;
-float EF_POWERSCREEN	= 0x00000200;
-float EF_ANIM01			= 0x00000400;	// automatically cycle between frames 0 and 1 at 2 hz
-float EF_ANIM23			= 0x00000800;	// automatically cycle between frames 2 and 3 at 2 hz
-float EF_ANIM_ALL		= 0x00001000;	// automatically cycle through all frames at 2hz
-float EF_ANIM_ALLFAST	= 0x00002000;	// automatically cycle through all frames at 10hz
-float EF_FLIES			= 0x00004000;
-float EF_QUAD			= 0x00008000;
-float EF_PENT			= 0x00010000;
-float EF_TELEPORTER		= 0x00020000;	// particle fountain
-float EF_FLAG1			= 0x00040000;
-float EF_FLAG2			= 0x00080000;
-float EF_IONRIPPER		= 0x00100000; // begin RAFAEL
-float EF_GREENGIB		= 0x00200000;
-float EF_BLUEHYPERBLASTER = 0x00400000;
-float EF_SPINNINGLIGHTS	= 0x00800000;
-float EF_PLASMA			= 0x01000000;
-float EF_TRAP			= 0x02000000; // end RAFAEL
-float EF_TRACKER		= 0x04000000; //begin ROGUE
-float EF_DOUBLE			= 0x08000000;
-float EF_SPHERETRANS	= 0x10000000;
-float EF_TAGTRAIL		= 0x20000000;
-float EF_HALF_DAMAGE	= 0x40000000;
-float EF_TRACKERTRAIL	= 0x80000000; //end ROGUE
-//ROGUE
+// that happen constantly on the given entity. An entity that has 
+// effects will be sent to the client even if it has a zero index model.
+#define	EF_ROTATEYAW		1		// rotate
+#define	EF_GIB				2		// leave a trail
+#define	EF_BLASTER			4		// redlight + trail
+#define	EF_ROCKET			8		// redlight + trail
+#define	EF_GRENADE			16
+#define	EF_HYPERBLASTER		32
+#define	EF_ANIM01			64		// automatically cycle between frames 0 and 1 at 2 hz
+#define	EF_ANIM23			128		// automatically cycle between frames 2 and 3 at 2 hz
+#define EF_ANIM_ALL			256		// automatically cycle through all frames at 2hz
+#define EF_ANIM_ALLFAST		512		// automatically cycle through all frames at 10hz
+#define	EF_FLIES			1024
+#define	EF_TELEPORTER		2048	// particle fountain
+#define EF_FLAG1			4096
+#define EF_FLAG2			8192
+#define EF_IONRIPPER		16384
+#define EF_GREENGIB			32768
+#define	EF_BLUEHYPERBLASTER 65536
+#define EF_PLASMA			131072
+#define EF_TRAP				262144
+#define EF_TRACKER_DLIGHT	524288
+#define	EF_DOUBLE			1048576
+#define EF_TAGTRAIL			2097152
+#define EF_TRACKERTRAIL		4194304
 
 // entity_state_t->renderfx flags
 #define	RF_MINLIGHT			1		// allways have some light, never go full dark
 #define	RF_VIEWERMODEL		2		// don't draw through eyes, only mirrors
 #define	RF_VIEW_MODEL		4		// only draw through eyes
 #define	RF_FULLBRIGHT		8		// allways draw full intensity
-#define	RF_DEPTHHACK		16		// for view weapon Z crunching
+#define	RF_DEPTHHACK		16		// entity can not be occluded by other geometry
 #define	RF_TRANSLUCENT		32		// entity uses .renderAlpha
-#define	RF_FRAMELERP		64
+#define	RF_LIGHT			64		// entity has gamecode controlled dynamic light attached
 #define RF_BEAM				128
 #define	RF_COLOR			256		// entity uses .renderColor, was RF_CUSTOMSKIN
 #define	RF_GLOW				512		// pulse lighting for bonus items
-#define RF_SHELL_RED		1024
-#define	RF_SHELL_GREEN		2048
-#define RF_SHELL_BLUE		4096
-#define RF_SCALE			8192	// entity uses .renderScale for rendering
-#define RF_NOANIMLERP		16384	// animation is not lerped (software q1 style)
-#define RF_UNUSED1			32768	
+#define RF_SCALE			1024	// entity model is scaled by .renderScale
+#define	RF_NOANIMLERP		2048	// animation is not lerped (software q1 style)
+#define RF_NEGATIVE_LIGHT	4096	// light that substracts from world!
+#define RF_YAWHACK			8192	// entity uses .renderScale for rendering
 
-
+//
+// svc_muzzleflash effects
+//
 enum
 {
 	FX_MUZZLEFLASH_PISTOL,
@@ -135,10 +129,12 @@ enum
 	FX_MUZZLEFLASH_SILENCED = 128		// bit flag ORed with one of the above numbers
 };
 
-// temp entity events
-// typedef enum temp_event_t
+
+//
+// TEMPORARY ENTITY EVENTS
 // Temp entity events are for things that happen at a location seperate from any existing entity.
 // Temporary entity messages are explicitly constructed and broadcast.
+//
 float TE_GUNSHOT				= 0; 	// [in]: vector pos, vector dir
 float TE_BLOOD					= 1;	// [in]: vector pos, vector dir
 float TE_BLASTER				= 2;
@@ -196,6 +192,10 @@ float TE_EXPLOSION1_BIG			= 53;
 float TE_EXPLOSION1_NP			= 54;
 float TE_FLECHETTE				= 55; /* end ROGUE */
 
+
+//
+// used for particle colors
+//
 float SPLASH_UNKNOWN		= 0;
 float SPLASH_SPARKS			= 1;
 float SPLASH_BLUE_WATER		= 2;
@@ -204,9 +204,13 @@ float SPLASH_SLIME			= 4;
 float SPLASH_LAVA			= 5;
 float SPLASH_BLOOD			= 6;
 
-// sound channels
+
+//
+// SOUND CHANNELS
+//
 // channel 0 never willingly overrides
 // other channels (1-7) allways override a playing sound on that channel
+//
 float CHAN_AUTO 			= 0;
 float CHAN_WEAPON			= 1;
 float CHAN_VOICE 			= 2;
@@ -216,42 +220,24 @@ float CHAN_EXTRA1			= 5;
 float CHAN_EXTRA2			= 6;
 float CHAN_EXTRA3			= 7;
 
-// modifier flags
+//
+// SOUND CHANNEL MODIFIER FLAGS
+//
 float CHAN_NO_PHS_ADD		= 8;	// send to all clients, not just ones in PHS (ATTN 0 will also do this)
 float CHAN_RELIABLE			= 16;	// send by reliable message, not datagram
 
-// sound attenuation values
+//
+// SOUND ATTENUATION VALUES
+//
 float ATTN_NONE				= 0;	// full volume the entire level
 float ATTN_NORM				= 1;
 float ATTN_IDLE				= 2;
 float ATTN_STATIC			= 3;	// diminish very rapidly with distance
 
-// player_state->stats[] indexes - 32 max
-float STAT_HEALTH_ICON		= 0;
-float STAT_HEALTH			= 1;
-float STAT_AMMO_ICON		= 2;
-float STAT_AMMO				= 3;
-float STAT_ARMOR_ICON		= 4;
-float STAT_ARMOR			= 5;
-float STAT_SELECTED_ICON	= 6;
-float STAT_PICKUP_ICON		= 7;
-float STAT_PICKUP_STRING	= 8;
-float STAT_TIMER_ICON		= 9;
-float STAT_TIMER			= 10;
-float STAT_HELPICON			= 11;
-float STAT_SELECTED_ITEM	= 12;
-float STAT_LAYOUTS			= 13;
-float STAT_FRAGS			= 14;
-float STAT_FLASHES			= 15;	// cleared each frame, 1 = health, 2 = armor
-float STAT_CHASE			= 16;
-float STAT_SPECTATOR		= 17;
-
-float MAX_STATS				= 32;
-
-// entity_state_t->event values
-// ertity events are for effects that take place reletive to an existing entities origin.
-// Very network efficient. All muzzle flashes really should be converted to events...
-// typedef enum entity_event_t
+//
+// ENTITY EVENTS
+// are for effects that take place reletive to an existing entities origin. Very network efficient.
+//
 float EV_NONE				= 0;
 float EV_ITEM_RESPAWN		= 1;
 float EV_FOOTSTEP			= 2;
@@ -261,51 +247,14 @@ float EV_FALLFAR			= 5;
 float EV_PLAYER_TELEPORT	= 6;
 float EV_OTHER_TELEPORT		= 7;
 
-//
-// per-level limits
-// q_shared.h
-//
-float MAX_CLIENTS			= 256;		// absolute limit
-float MAX_EDICTS			= 1024;		// must change protocol to increase more
-float MAX_LIGHTSTYLES		= 256;
-float MAX_MODELS			= 256;		// these are sent over the net as bytes
-float MAX_SOUNDS			= 256;		// so they cannot be blindly increased
-float MAX_IMAGES			= 256;
-float MAX_ITEMS				= 256;
-float MAX_GENERAL			= (MAX_CLIENTS*2);	// general config strings
-
-//
-// config strings are a general means of communication from
-// the server to all connected clients.
-// Each config string can be at most MAX_QPATH characters.
-// q_shared.h
-float CS_NAME				= 0;	// level name
-float CS_CDTRACK			= 1;	// level music
-float CS_SKY				= 2;	// skybox
-float CS_SKYAXIS			= 3;	// %f %f %f format
-float CS_SKYROTATE			= 4;	// dm, coop or singleplayer
-float CS_STATUSBAR			= 5;	// display program string
-float CS_AIRACCEL			= 29;	// air acceleration control
-float CS_MAXCLIENTS			= 30;	// maxclients->value
-float CS_MAPCHECKSUM		= 31;	// for catching cheater maps
-float CS_MODELS				= 32;
-float CS_SOUNDS				= (CS_MODELS+MAX_MODELS);
-float CS_IMAGES				= (CS_SOUNDS+MAX_SOUNDS);
-float CS_LIGHTS				= (CS_IMAGES+MAX_IMAGES);
-float CS_ITEMS				= (CS_LIGHTS+MAX_LIGHTSTYLES);
-float CS_PLAYERSKINS		= (CS_ITEMS+MAX_ITEMS);
-float CS_GENERAL			= (CS_PLAYERSKINS+MAX_CLIENTS);
-float MAX_CONFIGSTRINGS		= (CS_GENERAL+MAX_GENERAL);
 
 
-// --------------------------------------
-// server defines:
-// --------------------------------------
-
-// --------------------------------------
-// client defines:
-// --------------------------------------
-
-// ====================================================
-// end q_shared.h !!!
-// ====================================================
+#define	CS_NAME				0		// level name is set in worldspawn's 'message' key
+#define	CS_CDTRACK			1		// unused
+#define	CS_SKY				2		// name of skybox texture
+#define	CS_SKYAXIS			3		// %f %f %f format
+#define	CS_SKYROTATE		4		// does the sky rotate?
+#define	CS_STATUSBAR		5		// display program string [configstrings 5 to 28]
+#define CS_AIRACCEL			29		// air acceleration control
+#define	CS_MAXCLIENTS		30
+#define	CS_MAPCHECKSUM		31		// for catching cheater maps

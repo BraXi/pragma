@@ -92,12 +92,13 @@
     <ClCompile Include="script\scr_main.c" />
     <ClCompile Include="script\scr_builtins_shared.c" />
     <ClCompile Include="script\scr_utils.c" />
+    <ClCompile Include="server\sv_ai.c" />
     <ClCompile Include="server\sv_load.c" />
     <ClCompile Include="server\sv_gentity.c" />
     <ClCompile Include="server\sv_physics.c" />
     <ClCompile Include="server\sv_script.c" />
     <ClCompile Include="server\sv_ccmds.c" />
-    <ClCompile Include="server\sv_script_methods.c" />
+    <ClCompile Include="server\sv_builtins.c" />
     <ClCompile Include="server\sv_write.c" />
     <ClCompile Include="server\sv_init.c" />
     <ClCompile Include="server\sv_main.c" />

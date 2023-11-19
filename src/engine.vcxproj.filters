@@ -142,7 +142,7 @@
     <ClCompile Include="script\scr_builtins_shared.c">
       <Filter>script</Filter>
     </ClCompile>
-    <ClCompile Include="server\sv_script_methods.c">
+    <ClCompile Include="server\sv_builtins.c">
       <Filter>server</Filter>
     </ClCompile>
     <ClCompile Include="platform\snd_win.c">
@@ -180,6 +180,9 @@
     </ClCompile>
     <ClCompile Include="cgame\cg_builtins.c">
       <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_ai.c">
+      <Filter>server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

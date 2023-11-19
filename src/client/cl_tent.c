@@ -236,6 +236,7 @@ void CL_SmokeAndFlash(vec3_t origin)
 	VectorCopy (origin, ex->ent.origin);
 	ex->type = ex_flash;
 	ex->ent.renderfx = (RF_TRANSLUCENT|RF_FULLBRIGHT);
+	ex->ent.alpha = 0.7f;
 	ex->frames = 2;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 	ex->ent.model = cl_mod_impact_small;
@@ -259,6 +260,7 @@ void CL_GunMuzzleFlash(vec3_t origin)
 	VectorCopy(origin, ex->ent.origin);
 	ex->type = ex_flash;
 	ex->ent.renderfx = (RF_TRANSLUCENT | RF_FULLBRIGHT);
+	ex->ent.alpha = 0.7f;
 	ex->frames = 2;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 	ex->ent.model = cl_mod_impact_small;
