@@ -37,8 +37,8 @@ typedef struct
 } loopback_t;
 
 
-cvar_t		*net_shownet;
-static cvar_t	*noudp;
+//cvar_t		*net_shownet; //braxi -- not used anywhere
+static cvar_t	*net_noudp;
 
 loopback_t	loopbacks[2];
 int			ip_sockets[2];
@@ -298,7 +298,7 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *net_from, sizebuf_t *net_messag
 			if (err == WSAEWOULDBLOCK)
 				return false;
 			if (dedicated->value)	// let dedicated servers continue after errors
-				Com_Printf ("NET_GetPacket: %s", NET_ErrorString());
+				Com_Printf ("NET_GetPacket: %s", NET_ErrorString()); //braxi -- should be same behaviour for localplayer servers
 			else
 				Com_Error (ERR_DROP, "NET_GetPacket: %s", NET_ErrorString());
 			return false;
@@ -332,6 +332,8 @@ void NET_SendPacket (netsrc_t sock, int length, void *data, netadr_t to)
 		return;
 	}
 
+	net_socket = 123; // silence compiler warning..
+
 	if (to.type == NA_BROADCAST)
 	{
 		net_socket = ip_sockets[sock];
@@ -345,7 +347,9 @@ void NET_SendPacket (netsrc_t sock, int length, void *data, netadr_t to)
 			return;
 	}
 	else
-		Com_Error (ERR_FATAL, "NET_SendPacket: bad address type");
+	{
+		Com_Error(ERR_FATAL, "NET_SendPacket: bad address type");
+	}
 
 	NetadrToSockadr (&to, &addr);
 
@@ -501,7 +505,7 @@ NET_Config
 A single player game will only use the loopback code
 ====================
 */
-void	NET_Config (qboolean multiplayer)
+void NET_Config (qboolean multiplayer)
 {
 	int		i;
 	static	qboolean	old_config;
@@ -524,7 +528,7 @@ void	NET_Config (qboolean multiplayer)
 	}
 	else
 	{	// open sockets
-		if (! noudp->value)
+		if (! net_noudp->value)
 			NET_OpenIP ();
 	}
 }
@@ -569,16 +573,16 @@ void NET_Init (void)
 
 	wVersionRequested = MAKEWORD(1, 1); 
 
-	r = WSAStartup (MAKEWORD(1, 1), &winsockdata);
+	r = WSAStartup (wVersionRequested, &winsockdata);
 
 	if (r)
-		Com_Error (ERR_FATAL,"Winsock initialization failed.");
+		Com_Error(ERR_FATAL, "Winsock initialization failed.");
 
 	Com_Printf("Winsock Initialized\n");
 
-	noudp = Cvar_Get ("noudp", "0", CVAR_NOSET);
+	net_noudp = Cvar_Get ("net_noudp", "0", CVAR_NOSET);
 
-	net_shownet = Cvar_Get ("net_shownet", "0", 0);
+//	net_shownet = Cvar_Get ("net_shownet", "0", 0); //braxi -- not used anywhere
 }
 
 
@@ -587,7 +591,7 @@ void NET_Init (void)
 NET_Shutdown
 ====================
 */
-void	NET_Shutdown (void)
+void NET_Shutdown (void)
 {
 	NET_Config (false);	// close sockets
 

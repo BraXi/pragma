@@ -76,21 +76,6 @@ typedef struct
 	int			fly_stoptime;
 } ccentity_t;
 
-#define MAX_CLIENTWEAPONMODELS		20		// PGM -- upped from 16 to fit the chainfist vwep
-
-typedef struct
-{
-	char	name[MAX_QPATH];
-	char	cinfo[MAX_QPATH];
-	struct image_s	*skin;
-	struct image_s	*icon;
-	char	iconname[MAX_QPATH];
-	struct model_s	*model;
-	struct model_s	*weaponmodel[MAX_CLIENTWEAPONMODELS];
-} clientinfo_t;
-
-extern char cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
-extern int num_cl_weaponmodels;
 
 #define	CMD_BACKUP		64	// allow a lot of command backups for very fast systems
 
@@ -134,9 +119,9 @@ typedef struct
 	// and teleport direction changes
 	vec3_t		viewangles;
 
-	int			time;			// this is the time value that the client
-								// is rendering at.  always <= cls.realtime
-	float		lerpfrac;		// between oldframe and frame
+	int			time;			// this is the time value that the clientis rendering at.  
+								// always <= cls.realtime between oldframe and frame
+	float		lerpfrac;
 
 	refdef_t	refdef;
 
@@ -168,16 +153,15 @@ typedef struct
 	//
 	// locally derived information from server state
 	//
-	struct model_s	*model_draw[MAX_MODELS];
-	struct cmodel_s	*model_clip[MAX_MODELS];
+	struct model_s		*model_draw[MAX_MODELS];
+	struct cmodel_s		*model_clip[MAX_MODELS];
 
-	struct sfx_s	*sound_precache[MAX_SOUNDS];
-	struct image_s	*image_precache[MAX_IMAGES];
+	struct sfx_s		*sound_precache[MAX_SOUNDS];
+	struct image_s		*image_precache[MAX_IMAGES];
 
-	clientinfo_t	clientinfo[MAX_CLIENTS];
-	clientinfo_t	baseclientinfo;
-
-	// --- client QC ---
+	//
+	// qcvm
+	//
 	qboolean			qcvm_active;
 	cl_globalvars_t		*script_globals;	// qcvm globals
 	centity_t			*entities;			// allocated by qcvm
@@ -207,13 +191,21 @@ typedef enum
 	ca_active			// game views should be displayed
 } connstate_t;
 
-typedef enum {
+#if 0
+// download type
+typedef enum 
+{
 	dl_none,
-	dl_model,
 	dl_sound,
-	dl_skin,
-	dl_single
-} dltype_t;		// download type
+	dl_pic,
+	dl_map,
+	dl_maptexture,
+	dl_model,
+	dl_modeltexture,
+	dl_skytexture,
+	dl_md5anim
+} dltype_t;		
+#endif
 
 typedef enum {key_game, key_console, key_message, key_menu} keydest_t;
 
@@ -254,7 +246,7 @@ typedef struct
 	char		downloadtempname[MAX_OSPATH];
 	char		downloadname[MAX_OSPATH];
 	int			downloadnumber;
-	dltype_t	downloadtype;
+//	dltype_t	downloadtype;		// braxi -- unused but I may find it useful later
 	int			downloadpercent;
 
 // demo recording info must be here, so it isn't cleared on level change
@@ -273,15 +265,13 @@ extern client_static_t	cls;
 extern	cvar_t	*cl_stereo_separation;
 extern	cvar_t	*cl_stereo;
 
-extern	cvar_t	*cl_gun;
+extern	cvar_t	*cl_drawviewmodel;
 extern	cvar_t	*cl_add_blend;
 extern	cvar_t	*cl_add_lights;
 extern	cvar_t	*cl_add_particles;
 extern	cvar_t	*cl_add_entities;
 extern	cvar_t	*cl_predict;
 extern	cvar_t	*cl_footsteps;
-extern	cvar_t	*cl_noskins;
-extern	cvar_t	*cl_autoskins;
 
 extern	cvar_t	*cl_upspeed;
 extern	cvar_t	*cl_forwardspeed;
@@ -308,8 +298,6 @@ extern	cvar_t	*m_forward;
 extern	cvar_t	*m_side;
 
 extern	cvar_t	*freelook;
-
-extern	cvar_t	*cl_lightlevel;	// FIXME HACK
 
 extern	cvar_t	*cl_paused;
 extern	cvar_t	*cl_timedemo;
@@ -521,9 +509,7 @@ void CL_Record_f (void);
 extern	char *svc_strings[256];
 
 void CL_ParseServerMessage (void);
-void CL_LoadClientinfo (clientinfo_t *ci, char *s);
 void SHOWNET(char *s);
-void CL_ParseClientinfo (int player);
 void CL_Download_f (void);
 
 //

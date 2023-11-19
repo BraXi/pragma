@@ -148,9 +148,6 @@
     <ClCompile Include="platform\snd_win.c">
       <Filter>platform</Filter>
     </ClCompile>
-    <ClCompile Include="client\ui_new.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="client\cl_download.c">
       <Filter>client</Filter>
     </ClCompile>
@@ -194,15 +191,6 @@
       <Filter>client</Filter>
     </ClInclude>
     <ClInclude Include="client\anorms.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\asm_i386.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\block8.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\block16.h">
       <Filter>client</Filter>
     </ClInclude>
     <ClInclude Include="client\input.h">

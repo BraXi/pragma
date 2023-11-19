@@ -161,145 +161,6 @@ void CL_ParseBaseline (void)
 
 /*
 ================
-CL_LoadClientinfo
-
-================
-*/
-void CL_LoadClientinfo (clientinfo_t *ci, char *s)
-{
-	int i;
-	char		*t;
-	char		model_name[MAX_QPATH];
-	char		skin_name[MAX_QPATH];
-	char		model_filename[MAX_QPATH];
-	char		skin_filename[MAX_QPATH];
-	char		weapon_filename[MAX_QPATH];
-
-	strncpy(ci->cinfo, s, sizeof(ci->cinfo));
-	ci->cinfo[sizeof(ci->cinfo)-1] = 0;
-
-	// isolate the player's name
-	strncpy(ci->name, s, sizeof(ci->name));
-	ci->name[sizeof(ci->name)-1] = 0;
-	t = strstr (s, "\\");
-	if (t)
-	{
-		ci->name[t-s] = 0;
-		s = t+1;
-	}
-
-	if (cl_noskins->value || *s == 0)
-	{
-		Com_sprintf (model_filename, sizeof(model_filename), "players/female/tris.md2");
-		Com_sprintf (weapon_filename, sizeof(weapon_filename), "players/female/weapon.md2");
-		Com_sprintf (skin_filename, sizeof(skin_filename), "players/female/athena.pcx");
-		Com_sprintf (ci->iconname, sizeof(ci->iconname), "/players/female/athena_i.pcx");
-		ci->model = re.RegisterModel (model_filename);
-		memset(ci->weaponmodel, 0, sizeof(ci->weaponmodel));
-		ci->weaponmodel[0] = re.RegisterModel (weapon_filename);
-		ci->skin = re.RegisterSkin (skin_filename);
-		ci->icon = re.RegisterPic (ci->iconname);
-	}
-	else
-	{
-		// isolate the model name
-		strcpy (model_name, s);
-		t = strstr(model_name, "/");
-		if (!t)
-			t = strstr(model_name, "\\");
-		if (!t)
-			t = model_name;
-		*t = 0;
-
-		// isolate the skin name
-		strcpy (skin_name, s + strlen(model_name) + 1);
-
-		// model file
-		Com_sprintf (model_filename, sizeof(model_filename), "players/%s/tris.md2", model_name);
-		ci->model = re.RegisterModel (model_filename);
-		if (!ci->model)
-		{
-			strcpy(model_name, "male");
-			Com_sprintf (model_filename, sizeof(model_filename), "players/male/tris.md2");
-			ci->model = re.RegisterModel (model_filename);
-		}
-
-		// skin file
-		Com_sprintf (skin_filename, sizeof(skin_filename), "players/%s/%s.pcx", model_name, skin_name);
-		ci->skin = re.RegisterSkin (skin_filename);
-
-		// if we don't have the skin and the model wasn't male,
-		// see if the male has it (this is for CTF's skins)
- 		if (!ci->skin && Q_stricmp(model_name, "male"))
-		{
-			// change model to male
-			strcpy(model_name, "male");
-			Com_sprintf (model_filename, sizeof(model_filename), "players/male/tris.md2");
-			ci->model = re.RegisterModel (model_filename);
-
-			// see if the skin exists for the male model
-			Com_sprintf (skin_filename, sizeof(skin_filename), "players/%s/%s.pcx", model_name, skin_name);
-			ci->skin = re.RegisterSkin (skin_filename);
-		}
-
-		// if we still don't have a skin, it means that the male model didn't have
-		// it, so default to grunt
-		if (!ci->skin) {
-			// see if the skin exists for the male model
-			Com_sprintf (skin_filename, sizeof(skin_filename), "players/%s/grunt.pcx", model_name, skin_name);
-			ci->skin = re.RegisterSkin (skin_filename);
-		}
-
-		// weapon file
-		for (i = 0; i < num_cl_weaponmodels; i++) {
-			Com_sprintf (weapon_filename, sizeof(weapon_filename), "players/%s/%s", model_name, cl_weaponmodels[i]);
-			ci->weaponmodel[i] = re.RegisterModel(weapon_filename);
-			if (!ci->weaponmodel[i] && strcmp(model_name, "cyborg") == 0) {
-				// try male
-				Com_sprintf (weapon_filename, sizeof(weapon_filename), "players/male/%s", cl_weaponmodels[i]);
-				ci->weaponmodel[i] = re.RegisterModel(weapon_filename);
-			}
-			if (!cl_vwep->value)
-				break; // only one when vwep is off
-		}
-
-		// icon file
-		Com_sprintf (ci->iconname, sizeof(ci->iconname), "/players/%s/%s_i.pcx", model_name, skin_name);
-		ci->icon = re.RegisterPic (ci->iconname);
-	}
-
-	// must have loaded all data types to be valud
-	if (!ci->skin || !ci->icon || !ci->model || !ci->weaponmodel[0])
-	{
-		ci->skin = NULL;
-		ci->icon = NULL;
-		ci->model = NULL;
-		ci->weaponmodel[0] = NULL;
-		return;
-	}
-}
-
-/*
-================
-CL_ParseClientinfo
-
-Load the skin, icon, and model for a client
-================
-*/
-void CL_ParseClientinfo (int player)
-{
-	char			*s;
-	clientinfo_t	*ci;
-
-	s = cl.configstrings[player+CS_PLAYERSKINS];
-	ci = &cl.clientinfo[player];
-
-	CL_LoadClientinfo (ci, s);
-}
-
-
-/*
-================
 CL_ParseConfigString
 ================
 */
@@ -350,11 +211,6 @@ void CL_ParseConfigString (void)
 	{
 		if (cl.refresh_prepped)
 			cl.image_precache[i-CS_IMAGES] = re.RegisterPic (cl.configstrings[i]);
-	}
-	else if (i >= CS_PLAYERSKINS && i < CS_PLAYERSKINS+MAX_CLIENTS)
-	{
-		if (cl.refresh_prepped)
-			CL_ParseClientinfo (i-CS_PLAYERSKINS);
 	}
 }
 
@@ -497,6 +353,7 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case SVC_NOP:
+			SHOWNET("SVC_NOP\n");
 //			Com_Printf ("svc_nop\n");
 			break;
 			
@@ -508,7 +365,7 @@ void CL_ParseServerMessage (void)
 			Com_Printf ("Server disconnected, reconnecting\n");
 			if (cls.download) 
 			{
-				//ZOID, close download
+				//close download
 				fclose (cls.download);
 				cls.download = NULL;
 			}

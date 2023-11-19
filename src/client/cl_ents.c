@@ -945,7 +945,6 @@ void CL_AddPacketEntities(frame_t* frame)
 	entity_state_t	*state;		// current client entity's state
 	centity_t		rent;		// this is refdef entity passed to renderer
 	int				entnum;
-//	clientinfo_t	* ci;
 	unsigned int	effects, renderfx;
 
 	memset(&rent, 0, sizeof(rent)); // move to loop so nothing will ever leak to next clent?
@@ -1505,7 +1504,7 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	int			i;
 
 	// allow the gun to be completely removed
-	if (!cl_gun->value)
+	if (!cl_drawviewmodel->value)
 		return;
 
 	// braxi -- deleted

@@ -589,10 +589,6 @@ void		NET_Sleep(int msec);
 
 //============================================================================
 
-#define	OLD_AVG		0.99		// total = oldtotal*OLD_AVG + new*(1-OLD_AVG)
-
-#define	MAX_LATENT	32
-
 typedef struct
 {
 	qboolean	fatal_error;

@@ -39,8 +39,6 @@ cvar_t	*cl_stereo;
 cvar_t	*rcon_client_password;
 cvar_t	*rcon_address;
 
-cvar_t	*cl_noskins;
-cvar_t	*cl_autoskins;
 cvar_t	*cl_footsteps;
 cvar_t	*cl_timeout;
 cvar_t	*cl_predict;
@@ -48,7 +46,7 @@ cvar_t	*cl_predict;
 cvar_t	*cl_minfps;
 #endif
 cvar_t	*cl_maxfps;
-cvar_t	*cl_gun;
+cvar_t	*cl_drawviewmodel;
 
 cvar_t	*cl_add_particles;
 cvar_t	*cl_add_lights;
@@ -70,8 +68,6 @@ cvar_t	*m_pitch;
 cvar_t	*m_yaw;
 cvar_t	*m_forward;
 cvar_t	*m_side;
-
-cvar_t	*cl_lightlevel;
 
 //
 // userinfo
@@ -387,8 +383,7 @@ void CL_Drop (void)
 =======================
 CL_SendConnectPacket
 
-We have gotten a challenge from the server, so try and
-connect.
+We have gotten a challenge from the server, so try and connect.
 ======================
 */
 void CL_SendConnectPacket (void)
@@ -650,6 +645,7 @@ packet <destination> <contents>
 Contents allows \n escape character
 ====================
 */
+#ifdef _DEBUG
 void CL_Packet_f (void)
 {
 	char	send[2048];
@@ -692,6 +688,7 @@ void CL_Packet_f (void)
 
 	NET_SendPacket (NS_CLIENT, out-send, send, adr);
 }
+#endif
 
 /*
 =================
@@ -778,15 +775,15 @@ void CL_PingServers_f (void)
 	netadr_t	adr;
 	char		name[32];
 	char		*adrstring;
-	cvar_t		*noudp;
+	cvar_t		*net_noudp;
 
 	NET_Config (true);		// allow remote
 
 	// send a broadcast packet
 	Com_Printf ("pinging broadcast...\n");
 
-	noudp = Cvar_Get ("noudp", "0", CVAR_NOSET);
-	if (!noudp->value)
+	net_noudp = Cvar_Get ("net_noudp", "0", CVAR_NOSET);
+	if (!net_noudp->value)
 	{
 		adr.type = NA_BROADCAST;
 		adr.port = BigShort(PORT_SERVER);
@@ -812,30 +809,6 @@ void CL_PingServers_f (void)
 		Netchan_OutOfBandPrint (NS_CLIENT, adr, va("info %i", PROTOCOL_VERSION));
 	}
 }
-
-
-/*
-=================
-CL_Skins_f
-
-Load or download any custom player skins and models
-=================
-*/
-void CL_Skins_f (void)
-{
-	int		i;
-
-	for (i=0 ; i<MAX_CLIENTS ; i++)
-	{
-		if (!cl.configstrings[CS_PLAYERSKINS+i][0])
-			continue;
-		Com_Printf ("client %i: %s\n", i, cl.configstrings[CS_PLAYERSKINS+i]); 
-		SCR_UpdateScreen ();
-		Sys_SendKeyEvents ();	// pump message loop
-		CL_ParseClientinfo (i);
-	}
-}
-
 
 /*
 =================
@@ -865,7 +838,7 @@ void CL_ConnectionlessPacket (void)
 	{
 		if (cls.state == ca_connected)
 		{
-			Com_Printf ("Dup connect received.  Ignored.\n");
+			Com_Printf ("Duplicate connect received. Ignored.\n");
 			return;
 		}
 		Netchan_Setup (NS_CLIENT, &cls.netchan, net_from, cls.quakePort);
@@ -887,7 +860,7 @@ void CL_ConnectionlessPacket (void)
 	{
 		if (!NET_IsLocalAddress(net_from))
 		{
-			Com_Printf ("Command packet from remote host.  Ignored.\n");
+			Com_Printf ("Command packet from remote host. Ignored.\n");
 			return;
 		}
 		Sys_AppActivate ();
@@ -932,22 +905,6 @@ void CL_ConnectionlessPacket (void)
 
 /*
 =================
-CL_DumpPackets
-
-A vain attempt to help bad TCP stacks that cause problems
-when they overflow
-=================
-*/
-void CL_DumpPackets (void)
-{
-	while (NET_GetPacket (NS_CLIENT, &net_from, &net_message))
-	{
-		Com_Printf ("dumnping a packet\n");
-	}
-}
-
-/*
-=================
 CL_ReadPackets
 =================
 */
@@ -966,7 +923,7 @@ void CL_ReadPackets (void)
 		}
 
 		if (cls.state == ca_disconnected || cls.state == ca_connecting)
-			continue;		// dump it if not connected
+			continue;	// dump it if not connected
 
 		if (net_message.cursize < 8)
 		{
@@ -979,8 +936,7 @@ void CL_ReadPackets (void)
 		//
 		if (!NET_CompareAdr (net_from, cls.netchan.remote_address))
 		{
-			Com_DPrintf (DP_NET, "%s:sequenced packet without connection\n"
-				,NET_AdrToString(net_from));
+			Com_DPrintf (DP_NET, "%s:sequenced packet without connection\n", NET_AdrToString(net_from));
 			continue;
 		}
 		if (!Netchan_Process(&cls.netchan, &net_message))
@@ -1135,11 +1091,10 @@ void CL_InitLocal (void)
 	cl_add_lights = Cvar_Get ("cl_lights", "1", 0);
 	cl_add_particles = Cvar_Get ("cl_particles", "1", 0);
 	cl_add_entities = Cvar_Get ("cl_entities", "1", 0);
-	cl_gun = Cvar_Get ("cl_gun", "1", 0);
+	cl_drawviewmodel = Cvar_Get ("cl_drawviewmodel", "1", 0);
 	cl_footsteps = Cvar_Get ("cl_footsteps", "1", 0);
-	cl_noskins = Cvar_Get ("cl_noskins", "0", 0);
-	cl_autoskins = Cvar_Get ("cl_autoskins", "0", 0);
 	cl_predict = Cvar_Get ("cl_predict", "1", 0);
+
 #ifdef _DEBUG
 	cl_minfps = Cvar_Get ("cl_minfps", "5", 0);
 #endif
@@ -1165,7 +1120,7 @@ void CL_InitLocal (void)
 
 	cl_shownet = Cvar_Get ("cl_shownet", "0", 0);
 	cl_showmiss = Cvar_Get ("cl_showmiss", "0", 0);
-	cl_showclamp = Cvar_Get ("showclamp", "0", 0);
+	cl_showclamp = Cvar_Get ("cl_showclamp", "0", 0);
 	cl_timeout = Cvar_Get ("cl_timeout", "120", 0);
 	cl_paused = Cvar_Get ("paused", "0", 0);
 	cl_timedemo = Cvar_Get ("timedemo", "0", 0);
@@ -1173,7 +1128,6 @@ void CL_InitLocal (void)
 	rcon_client_password = Cvar_Get ("rcon_password", "", 0);
 	rcon_address = Cvar_Get ("rcon_address", "", 0);
 
-	cl_lightlevel = Cvar_Get ("r_lightlevel", "0", 0);
 
 	//
 	// userinfo
@@ -1204,7 +1158,6 @@ void CL_InitLocal (void)
 	Cmd_AddCommand ("cmd", CL_ForwardToServer_f);
 	Cmd_AddCommand ("pause", CL_Pause_f);
 	Cmd_AddCommand ("pingservers", CL_PingServers_f);
-	Cmd_AddCommand ("skins", CL_Skins_f);
 
 	Cmd_AddCommand ("userinfo", CL_Userinfo_f);
 	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
@@ -1221,8 +1174,9 @@ void CL_InitLocal (void)
 
 	Cmd_AddCommand ("rcon", CL_Rcon_f);
 
-// 	Cmd_AddCommand ("packet", CL_Packet_f); // this is dangerous to leave in
-
+#ifdef _DEBUG  // this is dangerous to leave in release builds
+ 	Cmd_AddCommand ("packet", CL_Packet_f);
+#endif
 	Cmd_AddCommand ("precache", CL_Precache_f);
 
 	Cmd_AddCommand ("download", CL_Download_f);

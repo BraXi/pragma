@@ -566,7 +566,6 @@ typedef struct usercmd_s
 #endif
 	short	forwardmove, sidemove, upmove;
 	byte	impulse;		// remove?
-	byte	lightlevel;		// light level the player is standing on
 } usercmd_t;
 
 
@@ -641,7 +640,7 @@ typedef struct
 #define RF_SCALE			1024	// entity model is scaled by .renderScale
 #define	RF_NOANIMLERP		2048	// animation is not lerped (software q1 style)
 #define RF_NEGATIVE_LIGHT	4096	// light that substracts from world!
-#define RF_YAWHACK			8192	// entity uses .renderScale for rendering
+#define RF_YAWHACK			8192
 
 // player_state_t->refdef flags
 #define	RDF_UNDERWATER		1		// warp the screen as apropriate
@@ -842,8 +841,7 @@ enum
 #define	CS_IMAGES			(CS_SOUNDS+MAX_SOUNDS)
 #define	CS_LIGHTS			(CS_IMAGES+MAX_IMAGES)
 #define	CS_ITEMS			(CS_LIGHTS+MAX_LIGHTSTYLES)
-#define	CS_PLAYERSKINS		(CS_ITEMS+MAX_ITEMS)
-#define CS_GENERAL			(CS_PLAYERSKINS+MAX_CLIENTS)
+#define CS_GENERAL			(CS_ITEMS+MAX_ITEMS)
 #define	MAX_CONFIGSTRINGS	(CS_GENERAL+MAX_GENERAL)
 
 

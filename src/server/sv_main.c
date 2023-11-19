@@ -997,7 +997,7 @@ void SV_Init (void)
 
 	timeout = Cvar_Get ("timeout", "125", 0);
 	zombietime = Cvar_Get ("zombietime", "2", 0);
-	sv_showclamp = Cvar_Get ("showclamp", "0", 0);
+	sv_showclamp = Cvar_Get ("sv_showclamp", "0", 0);
 	sv_paused = Cvar_Get ("paused", "0", 0);
 	sv_timedemo = Cvar_Get ("timedemo", "0", 0);
 	sv_enforcetime = Cvar_Get ("sv_enforcetime", "0", 0);

@@ -584,60 +584,6 @@ void S_IssuePlaysound (playsound_t *ps)
 	S_FreePlaysound (ps);
 }
 
-struct sfx_s *S_RegisterSexedSound (entity_state_t *ent, char *base)
-{
-	int				n;
-	char			*p;
-	struct sfx_s	*sfx;
-	FILE			*f;
-	char			model[MAX_QPATH];
-	char			sexedFilename[MAX_QPATH];
-	char			maleFilename[MAX_QPATH];
-
-	// determine what model the client is using
-	model[0] = 0;
-	n = CS_PLAYERSKINS + ent->number - 1;
-	if (cl.configstrings[n][0])
-	{
-		p = strchr(cl.configstrings[n], '\\');
-		if (p)
-		{
-			p += 1;
-			strcpy(model, p);
-			p = strchr(model, '/');
-			if (p)
-				*p = 0;
-		}
-	}
-	// if we can't figure it out, they're male
-	if (!model[0])
-		strcpy(model, "male");
-
-	// see if we already know of the model specific sound
-	Com_sprintf (sexedFilename, sizeof(sexedFilename), "#players/%s/%s", model, base+1);
-	sfx = S_FindName (sexedFilename, false);
-
-	if (!sfx)
-	{
-		// no, so see if it exists
-		FS_FOpenFile (&sexedFilename[1], &f);
-		if (f)
-		{
-			// yes, close the file and register it
-			FS_FCloseFile (f);
-			sfx = S_RegisterSound (sexedFilename);
-		}
-		else
-		{
-			// no, revert to the male sound in the pak0.pak
-			Com_sprintf (maleFilename, sizeof(maleFilename), "player/%s/%s", "male", base+1);
-			sfx = S_AliasName (sexedFilename, maleFilename);
-		}
-	}
-
-	return sfx;
-}
-
 
 // =======================================================================
 // Start a sound effect
@@ -664,9 +610,6 @@ void S_StartSound(vec3_t origin, int entnum, int entchannel, sfx_t *sfx, float f
 
 	if (!sfx)
 		return;
-
-	if (sfx->name[0] == '*')
-		sfx = S_RegisterSexedSound(&cl_entities[entnum].current, sfx->name);
 
 	// make sure the sound is loaded
 	sc = S_LoadSound (sfx);

@@ -383,9 +383,6 @@ void CL_FinishMove (usercmd_t *cmd)
 	
 	cmd->impulse = in_impulse;
 	in_impulse = 0;
-
-// send the ambient light level at the player's current position
-	cmd->lightlevel = (byte)cl_lightlevel->value;
 }
 
 /*

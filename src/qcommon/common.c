@@ -445,7 +445,6 @@ void MSG_WriteDeltaUsercmd (sizebuf_t *buf, usercmd_t *from, usercmd_t *cmd)
 	    MSG_WriteByte (buf, cmd->impulse);
 
     MSG_WriteByte (buf, cmd->msec);
-	MSG_WriteByte (buf, cmd->lightlevel);
 }
 
 
@@ -974,9 +973,6 @@ void MSG_ReadDeltaUsercmd (sizebuf_t *msg_read, usercmd_t *from, usercmd_t *move
 
 // read time to run command
 	move->msec = MSG_ReadByte (msg_read);
-
-// read the light level
-	move->lightlevel = MSG_ReadByte (msg_read);
 }
 
 

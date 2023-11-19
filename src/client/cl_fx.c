@@ -1785,10 +1785,10 @@ void CL_EntityEvent (entity_state_t *ent)
 		S_StartSound (NULL, ent->number, CHAN_AUTO, S_RegisterSound ("player/land1.wav"), 1, ATTN_NORM, 0);
 		break;
 	case EV_FALL:
-		S_StartSound (NULL, ent->number, CHAN_AUTO, S_RegisterSound ("*fall2.wav"), 1, ATTN_NORM, 0);
+		S_StartSound (NULL, ent->number, CHAN_AUTO, S_RegisterSound ("player/fall.wav"), 1, ATTN_NORM, 0);
 		break;
 	case EV_FALLFAR:
-		S_StartSound (NULL, ent->number, CHAN_AUTO, S_RegisterSound ("*fall1.wav"), 1, ATTN_NORM, 0);
+		S_StartSound (NULL, ent->number, CHAN_AUTO, S_RegisterSound ("player/fall_far.wav"), 1, ATTN_NORM, 0);
 		break;
 	}
 }

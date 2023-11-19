@@ -233,18 +233,6 @@ This will be called once for each client frame, which will usually be a couple t
 ==============
 */
 void ClientMove(gentity_t* ent, usercmd_t* ucmd);
-
-/*
-typedef struct usercmd_s
-{
-	byte	msec;
-	byte	buttons;
-	short	angles[3];
-	short	forwardmove, sidemove, upmove;
-	byte	impulse;		// remove?
-	byte	lightlevel;		// light level the player is standing on
-} usercmd_t;*/
-
 usercmd_t* last_ucmd;
 void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 {
@@ -269,11 +257,10 @@ void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 	Scr_AddFloat(1, (int)ucmd->impulse);
 	Scr_AddVector(2, move);
 	Scr_AddVector(3, a);
-	Scr_AddFloat(4, (int)ucmd->lightlevel);
-	Scr_AddFloat(5, (int)ucmd->msec);
+	Scr_AddFloat(4, (int)ucmd->msec);
 
 	// move [forwardmove, sidemove, upmove]
-	// void ClientThink(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime)
+	// void ClientThink(float inButtons, float inImpulse, vector inMove, vector inAngles, float inMsecTime)
 	Scr_Execute(sv.script_globals->ClientThink, __FUNCTION__);
 
 //	ClientMove(ent, ucmd);

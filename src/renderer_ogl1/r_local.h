@@ -184,9 +184,6 @@ extern	cvar_t	*r_fullbright;
 extern	cvar_t	*r_novis;
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_lerpmodels;
-
-extern	cvar_t	*r_lightlevel;	// FIXME: This is a HACK to get the client's light level
-
 extern cvar_t	*r_vertex_arrays;
 
 extern cvar_t	*gl_ext_swapinterval;

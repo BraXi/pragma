@@ -401,6 +401,8 @@ qboolean SV_SendClientDatagram (client_t *client)
 
 	// send over all the relevant entity_state_t and the player_state_t
 	SV_WriteFrameToClient (client, &msg);
+		
+//	Com_Printf("datagram for %s is size = %i of %i max (%i ents visible)\n", client->name, msg.cursize, msg.maxsize, sv.num_edicts-1);
 
 	// copy the accumulated multicast datagram for this client out to the message
 	// it is necessary for this to be after the WriteEntities so that entity references will be current

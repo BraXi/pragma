@@ -92,28 +92,6 @@ get lighting information for centity
 	else
 	{
 		R_LightPoint(currententity->origin, model_shadelight);
-
-		// player lighting hack for communication back to server
-		// big hack!
-		if (ent->renderfx & RF_VIEW_MODEL)
-		{
-			// pick the greatest component, which should be the same
-			// as the mono value returned by software
-			if (model_shadelight[0] > model_shadelight[1])
-			{
-				if (model_shadelight[0] > model_shadelight[2])
-					r_lightlevel->value = 150 * model_shadelight[0];
-				else
-					r_lightlevel->value = 150 * model_shadelight[2];
-			}
-			else
-			{
-				if (model_shadelight[1] > model_shadelight[2])
-					r_lightlevel->value = 150 * model_shadelight[1];
-				else
-					r_lightlevel->value = 150 * model_shadelight[2];
-			}
-		}
 	}
 
 	if (ent->renderfx & RF_MINLIGHT)

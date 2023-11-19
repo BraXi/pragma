@@ -33,11 +33,11 @@ int precache_model_skin;
 
 byte* precache_model; // used for skin checking in alias models
 
-#define PLAYER_MULT 5
+//#define PLAYER_MULT 5
 
 // ENV_CNT is map load, ENV_CNT+1 is first env map
-#define ENV_CNT (CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT)
-#define TEXTURE_CNT (ENV_CNT+7) // BRAXI -- 7 was 13 (removed pcx)
+//#define ENV_CNT (CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT)
+//#define TEXTURE_CNT (ENV_CNT+7) // BRAXI -- 7 was 13 (removed pcx)
 
 
 static qboolean CL_DownloadFiles(float allowDownload, int assetType, int maxAssetCount, char* fileDir, char* fileExt, int nextType)
@@ -162,6 +162,7 @@ static void CL_DownloadModelsWithSkins(float allowDownload, int nextType)
 
 static void CL_DownloadSkyImages(float allowDownload, int nextType)
 {
+#if 0
 	const char* env_suf[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
 	char fn[MAX_OSPATH];
 	int n;
@@ -182,10 +183,12 @@ static void CL_DownloadSkyImages(float allowDownload, int nextType)
 		}
 		precache_check = nextType;
 	}
+#endif
 }
 
 static void CL_DownloadMapTextures(float allowDownload, char* fileDir, char* fileExt, int nextType)
 {
+#if 0
 	char fn[MAX_OSPATH];
 	if (precache_check == TEXTURE_CNT)
 	{
@@ -211,12 +214,14 @@ static void CL_DownloadMapTextures(float allowDownload, char* fileDir, char* fil
 		}
 		precache_check = TEXTURE_CNT + 999;
 	}
+#endif
 }
 
 
 
 void CL_RequestNextDownload(void)
 {
+#if 0
 	unsigned	map_checksum;		// for detecting cheater maps
 	char		*mapFileName;
 
@@ -263,7 +268,7 @@ void CL_RequestNextDownload(void)
 			return;
 		}
 	}
-
+#endif
 //	CL_DownloadSkyImages((allow_download->value && allow_download_maps->value), TEXTURE_CNT);
 //	CL_DownloadMapTextures((allow_download->value && allow_download_maps->value), "textures", "wal", TEXTURE_CNT + 999);
 
@@ -272,6 +277,7 @@ void CL_RequestNextDownload(void)
 
 	MSG_WriteByte(&cls.netchan.message, clc_stringcmd);
 	MSG_WriteString(&cls.netchan.message, va("begin %i\n", precache_spawncount));
+
 }
 
 

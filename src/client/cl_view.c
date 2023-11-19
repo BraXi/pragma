@@ -49,9 +49,6 @@ particle_t	r_particles[MAX_PARTICLES];
 
 lightstyle_t	r_lightstyles[MAX_LIGHTSTYLES];
 
-char cl_weaponmodels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
-int num_cl_weaponmodels;
-
 /*
 ====================
 V_ClearScene
@@ -182,6 +179,7 @@ If cl_testentities is set, create 32 player models
 */
 void V_TestEntities (void)
 {
+#if 0
 	int			i, j;
 	float		f, r;
 	centity_t	*ent;
@@ -203,6 +201,7 @@ void V_TestEntities (void)
 		ent->model = cl.baseclientinfo.model;
 		ent->skin = cl.baseclientinfo.skin;
 	}
+#endif
 }
 
 /*
@@ -279,8 +278,6 @@ void CL_PrepRefresh (void)
 
 	CL_RegisterTEntModels ();
 
-	num_cl_weaponmodels = 1;
-	strcpy(cl_weaponmodels[0], "weapon.md2");
 
 	for (i=1 ; i<MAX_MODELS && cl.configstrings[CS_MODELS+i][0] ; i++)
 	{
@@ -290,25 +287,14 @@ void CL_PrepRefresh (void)
 			Com_Printf ("%s\r", name); 
 		SCR_UpdateScreen ();
 		Sys_SendKeyEvents ();	// pump message loop
-		if (name[0] == '#')
-		{
-			// special player weapon model
-			if (num_cl_weaponmodels < MAX_CLIENTWEAPONMODELS)
-			{
-				strncpy(cl_weaponmodels[num_cl_weaponmodels], cl.configstrings[CS_MODELS+i]+1,
-					sizeof(cl_weaponmodels[num_cl_weaponmodels]) - 1);
-				num_cl_weaponmodels++;
-			}
-		} 
+
+		char* n = cl.configstrings[CS_MODELS + i];
+		cl.model_draw[i] = re.RegisterModel (n);
+		if (name[0] == '*')
+			cl.model_clip[i] = CM_InlineModel (n);
 		else
-		{
-			char* n = cl.configstrings[CS_MODELS + i];
-			cl.model_draw[i] = re.RegisterModel (n);
-			if (name[0] == '*')
-				cl.model_clip[i] = CM_InlineModel (n);
-			else
-				cl.model_clip[i] = NULL;
-		}
+			cl.model_clip[i] = NULL;
+
 		if (name[0] != '*')
 			Com_Printf ("                                     \r");
 	}
@@ -322,18 +308,7 @@ void CL_PrepRefresh (void)
 	}
 	
 	Com_Printf ("                                     \r");
-	for (i=0 ; i<MAX_CLIENTS ; i++)
-	{
-		if (!cl.configstrings[CS_PLAYERSKINS+i][0])
-			continue;
-		Com_Printf ("client %i\r", i); 
-		SCR_UpdateScreen ();
-		Sys_SendKeyEvents ();	// pump message loop
-		CL_ParseClientinfo (i);
-		Com_Printf ("                                     \r");
-	}
 
-	CL_LoadClientinfo (&cl.baseclientinfo, "unnamed\\male/grunt");
 
 	// set sky textures and speed
 	Com_Printf ("sky\r", i); 

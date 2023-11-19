@@ -856,43 +856,6 @@ static void GL_DrawStereoPattern( void )
 	}
 }
 
-
-/*
-====================
-R_SetLightLevel
-
-====================
-*/
-void R_SetLightLevel (void)
-{
-	vec3_t		shadelight;
-
-	if (r_newrefdef.rdflags & RDF_NOWORLDMODEL)
-		return;
-
-	// save off light value for server to look at (BIG HACK!)
-
-	R_LightPoint (r_newrefdef.vieworg, shadelight);
-
-	// pick the greatest component, which should be the same
-	// as the mono value returned by software
-	if (model_shadelight[0] > model_shadelight[1])
-	{
-		if (model_shadelight[0] > model_shadelight[2])
-			r_lightlevel->value = 150*model_shadelight[0];
-		else
-			r_lightlevel->value = 150*model_shadelight[2];
-	}
-	else
-	{
-		if (model_shadelight[1] > model_shadelight[2])
-			r_lightlevel->value = 150*model_shadelight[1];
-		else
-			r_lightlevel->value = 150*model_shadelight[2];
-	}
-
-}
-
 /*
 @@@@@@@@@@@@@@@@@@@@@
 R_RenderFrame
@@ -903,7 +866,6 @@ void R_RenderFrame (refdef_t *fd)
 {
 	GL_TexEnv(GL_REPLACE);
 	R_RenderView( fd );
-	R_SetLightLevel ();
 	R_SetGL2D ();
 }
 

@@ -974,7 +974,6 @@ void SCR_ExecuteLayoutString (char *s)
 	char	*token;
 	int		width;
 	int		index;
-	clientinfo_t	*ci;
 
 	if (cls.state != ca_active || !cl.refresh_prepped)
 		return;
@@ -1040,79 +1039,6 @@ void SCR_ExecuteLayoutString (char *s)
 				SCR_AddDirtyPoint (x+23, y+23);
 				re.DrawPic (x, y, cl.configstrings[CS_IMAGES+value]);
 			}
-			continue;
-		}
-
-		if (!strcmp(token, "client"))
-		{	// draw a deathmatch client block
-			int		score, ping, time;
-
-			token = COM_Parse (&s);
-			x = viddef.width/2 - 160 + atoi(token);
-			token = COM_Parse (&s);
-			y = viddef.height/2 - 120 + atoi(token);
-			SCR_AddDirtyPoint (x, y);
-			SCR_AddDirtyPoint (x+159, y+31);
-
-			token = COM_Parse (&s);
-			value = atoi(token);
-			if (value >= MAX_CLIENTS || value < 0)
-				Com_Error (ERR_DROP, "client >= MAX_CLIENTS");
-			ci = &cl.clientinfo[value];
-
-			token = COM_Parse (&s);
-			score = atoi(token);
-
-			token = COM_Parse (&s);
-			ping = atoi(token);
-
-			token = COM_Parse (&s);
-			time = atoi(token);
-
-			DrawAltString (x+32, y, ci->name);
-			DrawString (x+32, y+8,  "Score: ");
-			DrawAltString (x+32+7*8, y+8,  va("%i", score));
-			DrawString (x+32, y+16, va("Ping:  %i", ping));
-			DrawString (x+32, y+24, va("Time:  %i", time));
-
-			if (!ci->icon)
-				ci = &cl.baseclientinfo;
-			re.DrawPic (x, y, ci->iconname);
-			continue;
-		}
-
-		if (!strcmp(token, "ctf"))
-		{	// draw a ctf client block
-			int		score, ping;
-			char	block[80];
-
-			token = COM_Parse (&s);
-			x = viddef.width/2 - 160 + atoi(token);
-			token = COM_Parse (&s);
-			y = viddef.height/2 - 120 + atoi(token);
-			SCR_AddDirtyPoint (x, y);
-			SCR_AddDirtyPoint (x+159, y+31);
-
-			token = COM_Parse (&s);
-			value = atoi(token);
-			if (value >= MAX_CLIENTS || value < 0)
-				Com_Error (ERR_DROP, "client >= MAX_CLIENTS");
-			ci = &cl.clientinfo[value];
-
-			token = COM_Parse (&s);
-			score = atoi(token);
-
-			token = COM_Parse (&s);
-			ping = atoi(token);
-			if (ping > 999)
-				ping = 999;
-
-			sprintf(block, "%3d %3d %-12.12s", score, ping, ci->name);
-
-			if (value == cl.playernum)
-				DrawAltString (x, y, block);
-			else
-				DrawString (x, y, block);
 			continue;
 		}
 

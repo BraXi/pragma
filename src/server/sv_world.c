@@ -635,8 +635,7 @@ void SV_AreaEdicts_r (areanode_t *node)
 SV_AreaEdicts
 ================
 */
-int SV_AreaEdicts (vec3_t mins, vec3_t maxs, gentity_t **list,
-	int maxcount, int areatype)
+int SV_AreaEdicts (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, int areatype)
 {
 	area_mins = mins;
 	area_maxs = maxs;

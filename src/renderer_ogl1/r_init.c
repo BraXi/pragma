@@ -33,8 +33,6 @@ cvar_t* r_nocull;
 cvar_t* r_lerpmodels;
 cvar_t* r_lefthand;
 
-cvar_t* r_lightlevel;	// FIXME: This is a HACK to get the client's light level
-
 cvar_t* r_vertex_arrays;
 
 cvar_t* r_particle_min_size;
@@ -102,8 +100,6 @@ void R_RegisterCvarsAndCommands(void)
 	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT);
 	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", 0);
 	r_speeds = ri.Cvar_Get("r_speeds", "0", 0);
-
-	r_lightlevel = ri.Cvar_Get("r_lightlevel", "0", 0);
 
 	r_particle_min_size = ri.Cvar_Get("r_particle_min_size", "2", CVAR_ARCHIVE);
 	r_particle_max_size = ri.Cvar_Get("r_particle_max_size", "40", CVAR_ARCHIVE);
