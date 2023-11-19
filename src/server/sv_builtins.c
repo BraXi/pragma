@@ -1488,7 +1488,6 @@ possible, no move is done, false is returned
 float moved = walkmove(self, self.ideal_yaw, 15);
 =================
 */
-
 extern qboolean SV_WalkMove(gentity_t* actor, float yaw, float dist);
 void PFSV_walkmove(void)
 {
@@ -1509,6 +1508,48 @@ void PFSV_walkmove(void)
 	result = SV_WalkMove(actor, yaw, movedist) == true ? 1.0f : 0.0f;
 	Scr_ReturnFloat(result);
 }
+
+
+/*
+=================
+PFSV_touchentities
+
+float touchentities(entity ent, float areatype)
+
+Finds entities directly intersecting [ent] bounding box and calls their touch functions.
+areatype defines the type of entities we want to touch, this can either 
+be 0 for triggers and 1 for solids returns the number of touched entities
+Returns the number of touched entities. THIS DOES DIFFER FROM Q2's!
+In Q2 only players and alive SVF_MONSTER entities could touch, in pragma you have to
+check for that yourself, it was: if((isplayer(ent) || (ent.svflags & SVF_MONSTER)) && (ent.health <= 0))
+
+float numTouchedEntities = touchentities(self, 0); // touch triggers
+=================
+*/
+void PFSV_touchentities(void)
+{
+	gentity_t* ent;
+	int areatype, numtouched;
+
+	ent = Scr_GetParmEdict(0);
+
+	if (ent == sv.edicts)
+	{
+		Scr_RunError("touchentities() called for world!\n");
+		Scr_ReturnFloat(0);
+		return;
+	}
+
+	if (Scr_GetParmFloat(1) == 0)
+		areatype = AREA_TRIGGERS;
+	else //cba to write another error message
+		areatype = AREA_SOLID;
+
+	numtouched = SV_TouchEntities(ent, areatype);
+	Scr_ReturnFloat(numtouched);
+}
+
+
 
 
 /*
@@ -1604,4 +1645,6 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_checkbottom, PF_SV, "checkbottom", "float(entity e)");
 	Scr_DefineBuiltin(PFSV_movetogoal, PF_SV, "movetogoal", "float(entity e, entity g, float d)");
 	Scr_DefineBuiltin(PFSV_walkmove, PF_SV, "walkmove", "float(entity e, float y, float d)");
+
+	Scr_DefineBuiltin(PFSV_touchentities, PF_SV, "touchentities", "float(entity e, float at)");
 }

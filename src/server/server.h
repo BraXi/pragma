@@ -345,7 +345,7 @@ qboolean SV_RunThink(gentity_t* ent);
 //
 // sv_world.c
 //
-extern void SV_TouchEntities(gentity_t* ent, int areatype);
+extern int SV_TouchEntities(gentity_t* ent, int areatype);
 
 //============================================================
 

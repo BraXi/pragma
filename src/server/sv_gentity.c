@@ -150,11 +150,12 @@ SV_TouchEntities
 
 Touches all entities overlaping with ent's bbox
 areatype could either be AREA_SOLID or AREA_TRIGGERS
+Returns the number of touched ents
 ============
 */
-void SV_TouchEntities(gentity_t* ent, int areatype)
+int SV_TouchEntities(gentity_t* ent, int areatype)
 {
-	int			i, num;
+	int			i, num, touched;
 	gentity_t* touch[MAX_GENTITIES], * hit;
 
 // dead things don't activate triggers!
@@ -163,15 +164,18 @@ void SV_TouchEntities(gentity_t* ent, int areatype)
 //		return;
 
 	num = SV_AreaEdicts(ent->v.absmin, ent->v.absmax, touch, MAX_GENTITIES, areatype);
-
+	touched = 0;
 	// be careful, it is possible to have an entity in this list removed before we get to it (killtriggered)
 	for (i = 0; i < num; i++)
 	{
 		hit = touch[i];
 		if (!hit->inuse)
 			continue;
+		touched++;
 		Scr_Event_Touch(hit, ent, NULL, NULL);
 	}
+
+	return touched;
 }
 
 

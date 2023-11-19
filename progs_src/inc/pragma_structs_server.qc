@@ -44,7 +44,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 	void() 		ClientBeginServerFrame;
 	void() 		ClientEndServerFrame;
-	void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inLightLevel, float inMsecTime)		ClientThink;
+	void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inMsecTime)		ClientThink;
 	void() 		ClientBegin;
 	float()		ClientConnect;
 	void()		ClientDisconnect;
@@ -55,24 +55,24 @@ void end_sys_globals; // end of struct
 //
 	// ----------------------------------------------------
 	// these are copied to entity_state_t
-	.vector		origin;			// current origin
-	.vector		angles;			// current angles
+	.vector		origin;
+	.vector		angles;
 	.vector		old_origin;		// for lerping
 
-	.float		modelindex;		// main model
-	.float		modelindex2;	// attached model
-	.float		modelindex3;	// attached model
-	.float		modelindex4;	// attached model
+	.float		modelindex;	// models
+	.float		modelindex2;	// models
+	.float		modelindex3;	// models
+	.float		modelindex4;	// models
 
 	.float		animFrame;		// current animation frame
-	.float		skinnum;		// for MD3 this should be index to .skin file, otherwise ignored
-	.int		effects;
+	.float		skinnum;		// for MD3 this should be index to .skin file
+	.int			effects;		// PGM - we're filling it, so it needs to be unsigned
 
-	.int		renderFlags;	// RF_ flags
+	.int			renderFlags;	// RF_ flags
 	.float		renderScale;	// used when renderFlags & RF_SCALE 
 	.vector		renderColor;	// used when renderFlags & RF_COLOR
-	.float		renderAlpha;	// used when renderFlags & RF_TRANSLUCENT
-	
+	.float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
+
 	// used when renderFlags & RF_LIGHT*
 	.vector		lightColor;		// if RF_LIGHT_NEGATIVE, it will substract this ammount of color
 	.float		lightRadius;	// in quake units
@@ -81,11 +81,11 @@ void end_sys_globals; // end of struct
 	.float		loopsound;		// index to sound from precache_sound() that will constantly loop
 	.float		loopsound_att;	// sound attenuation, one of ATT_
 
-	.int		event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
+	.int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 	// ----------------------------------------------------
 
-	.string			classname;	// for spawn functions 
-	.string			model;		// setmodel() sets this
+	.string	classname;	// for spawn functions 
+	.string	model;		// setmodel() sets this
 
 	// physics
 	.float			solid;		// SOLID_NOT etc
@@ -95,8 +95,8 @@ void end_sys_globals; // end of struct
 	.float			groundentity_num; // -1 = in air, 0 world, etc..
 	.float			groundentity_linkcount;
 	.vector			size;		// DON'T CHANGE! set by linkentity()
-	.entity			owner;		
-	.entity			chain;		// DON'T CHANGE!
+	.entity	owner;		
+	.entity	chain;		// DON'T CHANGE!
 
 	.vector			mins, maxs; //setsize() sets this
 	.vector			absmin, absmax; // DON'T CHANGE!
@@ -112,8 +112,8 @@ void end_sys_globals; // end of struct
 	.float			flags;		// FL_* flags
 
 	.float			nextthink;	// time to run think function
-	.void()			think;		// void()
-	.void()			prethink;	// void()
+	.void()		think;		// void()
+	.void()		prethink;	// void()
 
 	// fixme: rename these two to liquid**?
 	.float			watertype;	// CONTENTS_WATER etc
@@ -122,12 +122,17 @@ void end_sys_globals; // end of struct
 	.float			health;
 	.float			team;
 
+	// ai
+	.float			yaw_speed;
+	.float			ideal_yaw;
+	.float			aiflags;
+	.entity			goal_entity;
+
 	// client fields
 	.vector			v_angle;	
 	.float			viewheight;
-	
-	
-	// pmove vars
+
+	// player move
 	.float		pm_type; //pmtype_t
 	.vector		pm_origin;
 	.vector		pm_velocity;
@@ -138,7 +143,7 @@ void end_sys_globals; // end of struct
 	.float		pm_gravity;
 	.vector		pm_delta_angles;	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
-									
+
 void end_sys_fields; // end of struct
 
 
