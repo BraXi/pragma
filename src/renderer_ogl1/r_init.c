@@ -91,7 +91,7 @@ register all cvars and commands
 */
 void R_RegisterCvarsAndCommands(void)
 {
-	r_lefthand = ri.Cvar_Get("hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
+	r_lefthand = ri.Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0);
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
 	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);

@@ -1362,7 +1362,7 @@ void CL_AddBeams (void)
 //				Com_Printf ("Time:  %d %d %f\n", cl.time, cls.realtime, cls.frametime);
 */
 
-extern cvar_t *hand;
+extern cvar_t *cl_hand;
 
 /*
 =================
@@ -1388,11 +1388,11 @@ void CL_AddPlayerBeams (void)
 	player_state_t	*ps, *ops;
 
 //PMM
-	if (hand)
+	if (cl_hand)
 	{
-		if (hand->value == 2)
+		if (cl_hand->value == 2)
 			hand_multiplier = 0;
-		else if (hand->value == 1)
+		else if (cl_hand->value == 1)
 			hand_multiplier = -1;
 		else
 			hand_multiplier = 1;
@@ -1432,7 +1432,7 @@ void CL_AddPlayerBeams (void)
 				VectorMA (b->start, (hand_multiplier * b->offset[0]), cl.v_right, org);
 				VectorMA (     org, b->offset[1], cl.v_forward, org);
 				VectorMA (     org, b->offset[2], cl.v_up, org);
-				if ((hand) && (hand->value == 2)) {
+				if ((cl_hand) && (cl_hand->value == 2)) {
 					VectorMA (org, -1, cl.v_up, org);
 				}
 				// FIXME - take these out when final
@@ -1468,7 +1468,7 @@ void CL_AddPlayerBeams (void)
 			VectorMA (dist, (hand_multiplier * b->offset[0]), r, dist);
 			VectorMA (dist, b->offset[1], f, dist);
 			VectorMA (dist, b->offset[2], u, dist);
-			if ((hand) && (hand->value == 2)) {
+			if ((cl_hand) && (cl_hand->value == 2)) {
 				VectorMA (org, -1, cl.v_up, org);
 			}
 		}

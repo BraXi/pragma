@@ -3580,7 +3580,7 @@ qboolean PlayerConfig_MenuInit( void )
 	int currentdirectoryindex = 0;
 	int currentskinindex = 0;
 
-	cvar_t *hand = Cvar_Get( "hand", "1", CVAR_USERINFO | CVAR_ARCHIVE );
+	cvar_t *cl_hand = Cvar_Get( "cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE );
 
 	static const char *handedness[] = { "right", "left", "center", 0 };
 
@@ -3589,7 +3589,7 @@ qboolean PlayerConfig_MenuInit( void )
 	if (s_numplayermodels == 0)
 		return false;
 
-	if ( hand->value < 0 || hand->value > 2 )
+	if ( cl_hand->value < 0 || cl_hand->value > 2 )
 		Cvar_SetValue( "hand", 0 );
 
 	strcpy( currentdirectory, skin->string );

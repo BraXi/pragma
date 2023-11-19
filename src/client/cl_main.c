@@ -79,7 +79,7 @@ cvar_t	*skin;
 cvar_t	*rate;
 cvar_t	*fov;
 cvar_t	*msg;
-cvar_t	*hand;
+cvar_t	*cl_hand;
 
 client_static_t	cls;
 client_state_t	cl;
@@ -1103,7 +1103,7 @@ void CL_InitLocal (void)
 	skin = Cvar_Get ("skin", "male/grunt", CVAR_USERINFO | CVAR_ARCHIVE);
 	rate = Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE);	// FIXME
 	msg = Cvar_Get ("msg", "1", CVAR_USERINFO | CVAR_ARCHIVE);
-	hand = Cvar_Get ("hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
+	cl_hand = Cvar_Get ("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	fov = Cvar_Get ("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
 
 	//
