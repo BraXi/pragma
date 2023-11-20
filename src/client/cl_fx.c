@@ -61,6 +61,8 @@ void CL_ClearLightStyles (void)
 /*
 ================
 CL_RunLightStyles
+
+Advance light animation
 ================
 */
 void CL_RunLightStyles (void)
@@ -74,7 +76,7 @@ void CL_RunLightStyles (void)
 		return;
 	lastofs = ofs;
 
-	for (i=0,ls=cl_lightstyle ; i<MAX_LIGHTSTYLES ; i++, ls++)
+	for (i = 0, ls = cl_lightstyle; i < MAX_LIGHTSTYLES; i++, ls++)
 	{
 		if (!ls->length)
 		{
@@ -88,8 +90,14 @@ void CL_RunLightStyles (void)
 	}
 }
 
+/*
+================
+CL_SetLightstyle
 
-void CL_SetLightstyle (int i)
+sets lightstyle from configstring
+================
+*/
+void CL_SetLightstyle(int i)
 {
 	char	*s;
 	int		j, k;
@@ -98,7 +106,7 @@ void CL_SetLightstyle (int i)
 
 	j = (int)strlen (s);
 	if (j >= MAX_QPATH)
-		Com_Error (ERR_DROP, "svc_lightstyle length (%i) is too long", j);
+		Com_Error (ERR_DROP, "lightstyle %i has too long length %i", i + (CS_LIGHTS), j );
 
 	cl_lightstyle[i].length = j;
 
@@ -143,7 +151,6 @@ void CL_ClearDlights (void)
 /*
 ===============
 CL_AllocDlight
-
 ===============
 */
 cdlight_t *CL_AllocDlight (int key)

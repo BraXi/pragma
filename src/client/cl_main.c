@@ -638,6 +638,8 @@ CL_Packet_f
 packet <destination> <contents>
 
 Contents allows \n escape character
+
+DEBUG BUILDS ONLY
 ====================
 */
 #ifdef _DEBUG

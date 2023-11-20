@@ -363,8 +363,6 @@ void CL_ParticleEffect3 (vec3_t org, vec3_t dir, vec3_t color, int count);
 
 //=================================================
 
-// ========
-// PGM
 typedef struct particle_s
 {
 	struct particle_s	*next;
@@ -381,27 +379,20 @@ typedef struct particle_s
 	float		alphavel;
 } cparticle_t;
 
-
 #define	PARTICLE_GRAVITY	40
-#define BLASTER_PARTICLE_COLOR		0xe0
-// PMM
 #define INSTANT_PARTICLE	-10000.0
-// PGM
-// ========
+
 
 void CL_ClearEffects (void);
 void CL_ClearTEnts (void);
 void CL_BlasterTrail (vec3_t start, vec3_t end);
-void CL_QuadTrail (vec3_t start, vec3_t end);
+void CL_QuadTrail (vec3_t start, vec3_t end);		// unused
 void CL_RailTrail (vec3_t start, vec3_t end);
 void CL_BubbleTrail (vec3_t start, vec3_t end);
 void CL_FlagTrail (vec3_t start, vec3_t end, vec3_t color);
 
-// RAFAEL
 void CL_IonripperTrail (vec3_t start, vec3_t end);
 
-// ========
-// PGM
 void CL_BlasterParticles2 (vec3_t org, vec3_t dir, vec3_t color);
 void CL_BlasterTrail2 (vec3_t start, vec3_t end);
 void CL_DebugTrail (vec3_t start, vec3_t end);
@@ -409,7 +400,7 @@ void CL_SmokeTrail (vec3_t start, vec3_t end, int colorStart, int colorRun, int 
 void CL_Flashlight (int ent, vec3_t pos);
 void CL_ForceWall (vec3_t start, vec3_t end, vec3_t color);
 void CL_FlameEffects (ccentity_t *ent, vec3_t origin);
-void CL_GenericParticleEffect (vec3_t org, vec3_t dir, vec3_t color, int count, int dirspread, float alphavel);
+void CL_GenericParticleEffect (vec3_t org, vec3_t dir, vec3_t color, int count, int dirspread, float alphavel); // unused
 void CL_BubbleTrail2 (vec3_t start, vec3_t end, int dist);
 void CL_Heatbeam (vec3_t start, vec3_t end);
 void CL_ParticleSteamEffect (vec3_t org, vec3_t dir, vec3_t color, int count, int magnitude);
@@ -422,11 +413,10 @@ void CL_MonsterPlasma_Shell(vec3_t origin);
 void CL_ColorExplosionParticles (vec3_t org, vec3_t color);
 //void CL_ColorExplosionParticles(vec3_t org, vec3_t color, int run);
 void CL_ParticleSmokeEffect (vec3_t org, vec3_t dir, vec3_t color, int count, int magnitude);
+
 void CL_Widowbeamout (cl_sustain_t *self);
 void CL_Nukeblast (cl_sustain_t *self);
 void CL_WidowSplash (vec3_t org);
-// PGM
-// ========
 
 int CL_ParseEntityBits (unsigned *bits);
 void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bits);
@@ -454,10 +444,8 @@ void CL_RegisterSounds (void);
 void CL_Quit_f (void);
 
 
-
-
 //
-// cl_main
+// cl_main.c
 //
 extern	refexport_t	re;		// interface to refresh .dll
 
@@ -503,7 +491,7 @@ void CL_Record_f (void);
 //
 // cl_parse.c
 //
-extern	char *svc_strings[256];
+extern char *svc_strings[256];
 
 void CL_ParseServerMessage (void);
 void SHOWNET(char *s);
@@ -512,8 +500,8 @@ void CL_Download_f (void);
 //
 // cl_view.c
 //
-extern	int			gun_frame;
-extern	struct model_s	*gun_model;
+extern int gun_frame;
+extern struct model_s *gun_model;
 
 void V_Init (void);
 void V_RenderView( float stereo_separation );
@@ -533,8 +521,7 @@ void CL_SmokeAndFlash(vec3_t origin);
 //
 // cl_pred.c
 //
-void CL_InitPrediction (void);
-void CL_PredictMove (void);
+void CL_PredictMovement(void);
 void CL_CheckPredictionError (void);
 
 //
@@ -545,10 +532,9 @@ void CL_BigTeleportParticles (vec3_t org);
 void CL_RocketTrail (vec3_t start, vec3_t end, ccentity_t *old);
 void CL_DiminishingTrail (vec3_t start, vec3_t end, ccentity_t *old, int flags);
 void CL_FlyEffect (ccentity_t *ent, vec3_t origin);
-void CL_BfgParticles (centity_t *ent);
+void CL_BfgParticles (centity_t *ent); // unused
 void CL_AddParticles (void);
 void CL_EntityEvent (entity_state_t *ent);
-// RAFAEL
 void CL_TrapParticles (centity_t *ent);
 
 //
@@ -562,16 +548,10 @@ void M_ForceMenuOff (void);
 void M_AddToServerList (netadr_t adr, char *info);
 
 //
-// cl_inv.c
+// cl_inv.c TODO: remove inventory from kernel entirely
 //
 void CL_ParseInventory (void);
-void CL_KeyInventory (int key);
 void CL_DrawInventory (void);
-
-//
-// cl_pred.c
-//
-void CL_PredictMovement (void);
 
 #if id386
 void x86_TimerStart( void );
