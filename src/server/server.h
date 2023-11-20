@@ -28,8 +28,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //=============================================================================
 
-#define TAG_SVMODELDATA 123
-#define	MAX_MASTERS	8				// max recipients for heartbeat packets
+#define TAG_SVMODELDATA		123
+#define	MAX_MASTER_SERVERS	8		// max recipients for heartbeat packets
+#define	LATENCY_COUNTS		16
+#define	RATE_MESSAGES		10
+#define	MAX_STRINGCMDS		8		// how many console commands can client issue to server in a single message
+
+// MAX_CHALLENGES is made large to prevent a denial of service attack 
+// that could cycle all of them out before legitimate users connected
+#define	MAX_CHALLENGES	1024
 
 
 typedef struct svmodel_s
@@ -43,13 +50,11 @@ typedef struct svmodel_s
 	char			tagNames[MD3_MAX_TAGS][MD3_MAX_NAME];
 	orientation_t* tagFrames;	// numTags * numFrames
 
-
 	// common
 	int				numFrames;
 	int				numTags;
 	int				numSurfaces;
 } svmodel_t;
-
 
 typedef enum 
 {
@@ -127,8 +132,6 @@ typedef struct
 	int					senttime;			// for ping calculations
 } client_frame_t;
 
-#define	LATENCY_COUNTS	16
-#define	RATE_MESSAGES	10
 
 typedef struct client_s
 {
@@ -182,11 +185,6 @@ typedef struct client_s
 
 //=============================================================================
 
-// MAX_CHALLENGES is made large to prevent a denial
-// of service attack that could cycle all of them
-// out before legitimate users connected
-#define	MAX_CHALLENGES	1024
-
 typedef struct
 {
 	netadr_t	adr;
@@ -229,7 +227,7 @@ typedef struct
 extern	netadr_t	net_from;
 extern	sizebuf_t	net_message;
 
-extern	netadr_t	master_adr[MAX_MASTERS];	// address of the master server
+extern	netadr_t	master_adr[MAX_MASTER_SERVERS];	// address of the master server
 
 extern	server_static_t	svs;				// persistant server info
 extern	server_t		sv;					// local server
@@ -242,12 +240,9 @@ extern	cvar_t		*sv_maxclients;
 extern	cvar_t		*sv_maxentities;
 extern	cvar_t		*sv_noreload;			// don't reload level state when reentering, development tool
 extern	cvar_t		*sv_enforcetime;
-
-extern	cvar_t		*sv_airaccelerate;		
+	
 extern	cvar_t		*sv_maxvelocity;
 extern	cvar_t		*sv_gravity;
-
-
 
 extern	client_t	*sv_client;
 extern	gentity_t	*sv_player;

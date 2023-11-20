@@ -21,8 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "server.h"
 
-#define	MAX_STRINGCMDS	8 // how many console commands can client issue to server in a single message
-
 gentity_t	*sv_player;
 
 void Scr_ClientBegin(gentity_t* self);

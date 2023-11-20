@@ -88,13 +88,13 @@ void SV_SetMaster_f (void)
 	// make sure the server is listed public
 	Cvar_Set ("public", "1");
 
-	for (i = 1; i < MAX_MASTERS; i++)
+	for (i = 1; i < MAX_MASTER_SERVERS; i++)
 		memset(&master_adr[i], 0, sizeof(master_adr[i]));
 
 	slot = 1;		// slot 0 will always contain the id master
 	for (i = 1; i < Cmd_Argc(); i++)
 	{
-		if (slot == MAX_MASTERS)
+		if (slot == MAX_MASTER_SERVERS)
 			break;
 
 		if (!NET_StringToAdr (Cmd_Argv(i), &master_adr[i]))

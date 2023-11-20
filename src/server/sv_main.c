@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "server.h"
 
-netadr_t	master_adr[MAX_MASTERS];	// address of group servers
+netadr_t	master_adr[MAX_MASTER_SERVERS];	// address of group servers
 
 client_t	*sv_client;			// current client
 
@@ -38,8 +38,6 @@ cvar_t	*allow_download;
 cvar_t *allow_download_models;
 cvar_t *allow_download_sounds;
 cvar_t *allow_download_maps;
-
-cvar_t	*sv_airaccelerate;
 
 cvar_t	*sv_noreload;			// don't reload level state when reentering
 
@@ -544,8 +542,7 @@ void SV_ConnectionlessPacket (void)
 	else if (!strcmp(c, "rcon"))
 		SVC_RemoteCommand ();
 	else
-		Com_Printf ("bad connectionless packet from %s:\n%s\n"
-		, NET_AdrToString (net_from), s);
+		Com_Printf ("bad connectionless packet from %s:\n%s\n", NET_AdrToString (net_from), s);
 }
 
 
@@ -749,8 +746,6 @@ void SV_PrepWorldFrame (void)
 SV_RunGameFrame
 =================
 */
-
-
 void SV_RunGameFrame (void)
 {
 	if (host_speeds->value)
@@ -800,9 +795,8 @@ void SV_Frame (int msec)
 		Scr_BindVM(VM_SVGAME);
 
     svs.realtime += msec;
-
 	
-	rand();				// keep the random time dependent
+	rand();				// keep the random time dependent, WHY SO OFTEN?
 	SV_CheckTimeouts();	// check timeouts
 	SV_ReadPackets();	// get packets from clients
 
@@ -866,7 +860,7 @@ void Master_Heartbeat (void)
 	string = SV_StatusString();
 
 	// send to group master
-	for (i=0 ; i<MAX_MASTERS ; i++)
+	for (i=0 ; i<MAX_MASTER_SERVERS ; i++)
 		if (master_adr[i].port)
 		{
 			Com_Printf ("Sending heartbeat to %s\n", NET_AdrToString (master_adr[i]));
@@ -892,7 +886,7 @@ void Master_Shutdown (void)
 		return;		// a private dedicated game
 
 	// send to group master
-	for (i=0 ; i<MAX_MASTERS ; i++)
+	for (i=0 ; i<MAX_MASTER_SERVERS ; i++)
 		if (master_adr[i].port)
 		{
 			if (i > 0)
@@ -922,6 +916,7 @@ void SV_UserinfoChanged (client_t *cl)
 	
 	// name for C code
 	strncpy (cl->name, Info_ValueForKey (cl->userinfo, "name"), sizeof(cl->name)-1);
+	
 	// mask off high bit
 	for (i=0 ; i<sizeof(cl->name) ; i++)
 		cl->name[i] &= 127;
@@ -965,14 +960,8 @@ void SV_Init (void)
 
 	rcon_password = Cvar_Get ("rcon_password", "", 0);
 
-	Cvar_Get ("skill", "1", 0);
 	Cvar_Get ("deathmatch", "0", CVAR_LATCH);
 	Cvar_Get ("coop", "0", CVAR_LATCH);
-	Cvar_Get ("dmflags", va("%i", DF_INSTANT_ITEMS), CVAR_SERVERINFO);
-
-	Cvar_Get ("fraglimit", "0", CVAR_SERVERINFO);
-	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
-
 
 //	sv_cheats = Cvar_Get ("sv_cheats", "0", CVAR_SERVERINFO|CVAR_LATCH);
 
@@ -985,7 +974,7 @@ void SV_Init (void)
 	sv_password = Cvar_Get("sv_password", "", 0);
 	sv_maxentities = Cvar_Get("sv_maxentities", "1024", CVAR_LATCH);
 
-	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "500", CVAR_LATCH);
+	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", CVAR_LATCH);
 	sv_gravity = Cvar_Get("sv_gravity", "800", CVAR_LATCH);
 
 
@@ -1008,8 +997,6 @@ void SV_Init (void)
 	allow_download_maps	  = Cvar_Get ("allow_download_maps", "1", CVAR_ARCHIVE);
 
 	sv_noreload = Cvar_Get ("sv_noreload", "0", 0);
-
-	sv_airaccelerate = Cvar_Get("sv_airaccelerate", "0", CVAR_LATCH);
 
 	public_server = Cvar_Get ("public", "0", 0);
 
