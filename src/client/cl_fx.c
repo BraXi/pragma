@@ -31,6 +31,20 @@ extern	struct model_s	*cl_mod_impact_small;
 
 /*
 ==============================================================
+MUZZLE FLASHES
+==============================================================
+*/
+
+muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES] =
+{
+	//	forward,	right,	up,		light radius,	light color,		volume,	sound
+		{66.0f,		-4.8f,	-3.5f,	200,			{1, 0.9, 0.7},		1.0f,	"weapons/deagle/shot.wav"}, 	// FX_MUZZLEFLASH_PISTOL
+		{66.0f,		-4.8f,	-3.5f,	260,			{1, 1, 0.7},		1.0f,	"weapons/ak47/shot.wav"},	// FX_MUZZLEFLASH_RIFLE
+		{66.0f,		-4.8f,	-3.5f,	200,			{1, 1, 0.7},		1.0f,	NULL}	// FX_MUZZLEFLASH_SHOTGUN
+};
+
+/*
+==============================================================
 
 LIGHT STYLE MANAGEMENT
 
@@ -250,35 +264,28 @@ void CL_ParseMuzzleFlash(void)
 	cdlight_t	*dlight;
 	int			entity_num, effectNum;
 	ccentity_t	*cent;
-	int			silenced;
 	float		volume;
 
 	entity_num = MSG_ReadShort (&net_message);
 	if (entity_num < 1 || entity_num >= MAX_GENTITIES)
 		Com_Error (ERR_DROP, "CL_ParseMuzzleFlash: bad entity");
 
-	effectNum = MSG_ReadByte (&net_message);
-	silenced = effectNum & FX_MUZZLEFLASH_SILENCED;
-	effectNum &= ~FX_MUZZLEFLASH_SILENCED;
-
 	cent = &cl_entities[entity_num];
+	effectNum = MSG_ReadByte (&net_message);
 
-	dlight = CL_AllocDlight (entity_num);
-	VectorCopy (cent->current.origin, dlight->origin);
-
-	if (silenced)
-		dlight->radius = 100 + (rand()&31);
-	else
-		dlight->radius = 200 + (rand()&31);
-
-	dlight->minlight = 32;
-	dlight->die = cl.time; // + 0.1;
+	dlight = CL_AllocDlight(entity_num);
+	VectorCopy(cent->current.origin, dlight->origin);
 
 	if (cl.playernum + 1 == entity_num) // this is our local player
 	{
+//		cl.muzzleflash_frame = rand() & 10; //what a shitty rng
+//		printf("cl.muzzleflash_frame = %i\n", cl.muzzleflash);
 		cl.muzzleflash = effectNum;
-		cl.muzzleflash_time = cl.time + 150;
+		cl.muzzleflash_frame++;
+		if (cl.muzzleflash_frame > 9)
+			cl.muzzleflash_frame = 0;
 
+		cl.muzzleflash_time = cl.time + 90;
 		AngleVectors(cl.viewangles, v_fwd, v_right, v_up);
 		VectorMA(dlight->origin, 44, v_fwd, dlight->origin);
 		VectorMA(dlight->origin, 5, v_right, dlight->origin);
@@ -291,52 +298,49 @@ void CL_ParseMuzzleFlash(void)
 		VectorMA(dlight->origin, 16, v_right, dlight->origin);
 	}
 
-	if (silenced)
-		volume = 0.2;
-	else
-		volume = 1;
+	volume = 1;
 
-	switch(effectNum)
+	if (effectNum >= 0 && effectNum < FX_WEAPON_MUZZLEFLASHES)
 	{
-	case FX_MUZZLEFLASH_PISTOL:
-		VectorSet(dlight->color, 1, 1, 0.7);
-		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/deagle/shot.wav"), volume, ATTN_NORM, 0);
+		muzzleflash_t* mz = &cl_muzzleflashes[effectNum];
 
-		// negative light test
-		//		VectorSet(dlight->color, -1, -1, -1);
-		//		dlight->radius = 1024;
-		//		dlight->die = cl.time + 2000; // + 0.1;
-		break;
+		dlight->minlight = 32;
+		dlight->die = cl.time + 140;
 
-	case FX_MUZZLEFLASH_RIFLE:
-	case FX_MUZZLEFLASH_SHOTGUN:
-		VectorSet(dlight->color, 1, 1, 0.7);
-		S_StartSound (NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/ak47/shot.wav"), volume, ATTN_NORM, 0);
-		break;
+		VectorCopy(mz->dlight_color, dlight->color);
+		dlight->radius = mz->dlight_radius + (rand() & 31);
 
-	case FX_MUZZLEFLASH_NEGATIVE_LIGHT:
-		VectorSet(dlight->color, -1, -1, -1); // negative flashes handled the same in gl/soft until CL_AddDLights
-		break;
+		if(mz->sound != NULL)
+			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound(mz->sound), mz->volume, ATTN_NORM, 0); // should precache sound
+	}
+	else
+	{
+		dlight->minlight = 32;
+		dlight->die = cl.time;
 
-	// THESE SHOULD BE MOVED SOMEWHERE ELSE, UNLESS YOU PROVE THEY'RE MUZZLE FLASHES :V
-	case FX_MUZZLEFLASH_LOGIN:
-		VectorSet(dlight->color, 0, 1, 0);
-		dlight->die = cl.time + 1.0;
-		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/login.wav"), 1, ATTN_NORM, 0);
-		CL_LogoutEffect(cent->current.origin, effectNum);
-		break;
-	case FX_MUZZLEFLASH_LOGOUT:
-		VectorSet(dlight->color, 1, 0, 0);
-		dlight->die = cl.time + 1.0;
-		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/logout.wav"), 1, ATTN_NORM, 0);
-		CL_LogoutEffect(cent->current.origin, effectNum);
-		break;
-	case FX_MUZZLEFLASH_RESPAWN:
-		VectorSet(dlight->color, 1, 1, 0);
-		dlight->die = cl.time + 1.0;
-		S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/respawn.wav"), 1, ATTN_NORM, 0);
-		CL_LogoutEffect(cent->current.origin, effectNum);
-		break;
+		switch (effectNum)
+		{
+		case FX_MUZZLEFLASH_LOGIN:
+			
+			dlight->die = cl.time + 1.0;
+			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/login.wav"), 1, ATTN_NORM, 0);
+			CL_LogoutEffect(cent->current.origin, effectNum);
+			break;
+		case FX_MUZZLEFLASH_LOGOUT:
+			VectorSet(dlight->color, 1, 0, 0);
+			dlight->die = cl.time + 1.0;
+			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/logout.wav"), 1, ATTN_NORM, 0);
+			CL_LogoutEffect(cent->current.origin, effectNum);
+			break;
+		case FX_MUZZLEFLASH_RESPAWN:
+			VectorSet(dlight->color, 1, 1, 0);
+			dlight->die = cl.time + 1.0;
+			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/respawn.wav"), 1, ATTN_NORM, 0);
+			CL_LogoutEffect(cent->current.origin, effectNum);
+			break;
+		default:
+			break;
+		}
 	}
 }
 

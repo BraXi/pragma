@@ -107,6 +107,9 @@ struct model_s	*cl_mod_heatbeam;
 struct model_s	*cl_mod_monster_heatbeam;
 struct model_s	*cl_mod_explo4_big;
 
+
+struct model_s* cl_mod_view_muzzleflash;
+struct model_s* cl_mod_world_muzzleflash;
 //ROGUE
 /*
 =================
@@ -153,6 +156,9 @@ CL_RegisterTEntModels
 */
 void CL_RegisterTEntModels (void)
 {
+	cl_mod_view_muzzleflash = re.RegisterModel("models/fx/v_muzzleflash.md3");
+	cl_mod_world_muzzleflash = re.RegisterModel("models/fx/w_muzzleflash.md3");
+
 	cl_mod_impact_small = re.RegisterModel("models/fx/impact_small.md3");
 
 	cl_mod_explode = re.RegisterModel ("models/objects/explode/tris.md2");
@@ -240,31 +246,6 @@ void CL_SmokeAndFlash(vec3_t origin)
 	ex->frames = 2;
 	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
 	ex->ent.model = cl_mod_impact_small;
-}
-
-/*
-=================
-CL_GunMuzzleFlash
-=================
-*/
-void CL_GunMuzzleFlash(vec3_t origin)
-{
-
-	explosion_t* ex;
-
-	vec3_t dir;
-	dir[1] = 1;
-	dir[2] = 1;
-
-	ex = CL_AllocExplosion();
-	VectorCopy(origin, ex->ent.origin);
-	ex->type = ex_flash;
-	ex->ent.renderfx = (RF_TRANSLUCENT | RF_FULLBRIGHT);
-	ex->ent.alpha = 0.7f;
-	ex->frames = 2;
-	ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
-	ex->ent.model = cl_mod_impact_small;
-	ex->ent.alpha = 0.3;
 }
 
 /*

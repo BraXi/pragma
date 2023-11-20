@@ -296,10 +296,11 @@ void R_DrawEntitiesOnList (void)
 	}
 //	ri.Con_Printf(PRINT_LOW, "END R_DrawEntitiesOnList\n");
 
-#if 0
+
 	// draw transparent entities
 	// todo: sort them
 	R_WriteToDepthBuffer(GL_FALSE);	// no z writes
+//	R_AlphaTest(true); // test
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
@@ -308,7 +309,7 @@ void R_DrawEntitiesOnList (void)
 			continue;	// solid
 		R_DrawCurrentEntity();
 	}
-#endif
+//	R_AlphaTest(false);
 	R_WriteToDepthBuffer(GL_TRUE);		// reenable z writing
 }
 

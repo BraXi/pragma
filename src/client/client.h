@@ -148,7 +148,8 @@ typedef struct
 	char		gamedir[MAX_QPATH];
 	int			playernum;
 
-	int			muzzleflash;		// draw muzzleflash
+	int			muzzleflash;
+	int			muzzleflash_frame;
 	int			muzzleflash_time;
 
 	char		configstrings[MAX_CONFIGSTRINGS][MAX_QPATH];
@@ -304,6 +305,17 @@ extern	cvar_t	*freelook;
 
 extern	cvar_t	*cl_paused;
 extern	cvar_t	*cl_timedemo;
+
+typedef struct muzzleflash_s
+{
+	float forward, right, up;
+
+	float dlight_radius;
+	vec3_t dlight_color;
+
+	float	volume;
+	char* sound;
+} muzzleflash_t;
 
 typedef struct
 {

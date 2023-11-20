@@ -447,7 +447,6 @@ void R_DrawMD3Model(centity_t* ent, lod_t lod, float lerp)
 	}
 
 
-
 	// for each surface
 	surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
 	for (i = 0; i < model->numSurfaces; i++)

@@ -1498,17 +1498,20 @@ void CL_AddPacketEntities (frame_t *frame)
 CL_AddViewWeapon
 ==============
 */
-extern struct model_s* cl_mod_impact_small;
 
+struct model_s* cl_mod_view_muzzleflash;
+extern muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES];
 
 void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 {
 	centity_t	viewmodel; 
 	int			i;
 
-#if 0
+
+#if 1
 	centity_t	flash;
-	vec3_t v_fwd, v_right, v_up;
+	vec3_t  v_fwd, v_right, v_up;
+	muzzleflash_t* mz;
 #endif
 
 	// allow the gun to be completely removed
@@ -1556,7 +1559,7 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	VectorCopy (viewmodel.origin, viewmodel.oldorigin);	// don't lerp at all
 	V_AddEntity (&viewmodel);
 
-#if 0
+#if 1
 	//
 	// set up muzzleflash
 	//
@@ -1570,16 +1573,18 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 
 	AngleVectors(flash.angles, v_fwd, v_right, v_up);
 
-	VectorMA(flash.origin, 66.0f, v_fwd, flash.origin);
-	VectorMA(flash.origin, -3.5f, v_up, flash.origin);
-	VectorMA(flash.origin, -4.8f, v_right, flash.origin);
+	mz = &cl_muzzleflashes[cl.muzzleflash];
+	VectorMA(flash.origin, mz->forward, v_fwd, flash.origin);
+	VectorMA(flash.origin, mz->up, v_up, flash.origin);
+	VectorMA(flash.origin, mz->right, v_right, flash.origin);
 
 	VectorCopy(flash.origin, flash.oldorigin);	// don't lerp at all
 
-	flash.frame = flash.oldframe = 0;
-	flash.renderfx = RF_FULLBRIGHT | RF_DEPTHHACK | RF_VIEW_MODEL | RF_SCALE;
-	flash.scale = 8.0;
-	flash.model = cl_mod_impact_small;
+	flash.frame = flash.oldframe = cl.muzzleflash_frame;
+	flash.renderfx = RF_FULLBRIGHT | RF_DEPTHHACK | RF_VIEW_MODEL | RF_SCALE | RF_TRANSLUCENT;
+	flash.scale = 2.0;
+	flash.alpha = 0.8;
+	flash.model = cl_mod_view_muzzleflash;
 	V_AddEntity(&flash);
 #endif
 }
