@@ -30,7 +30,7 @@ void Scr_EntityPreThink(gentity_t* self)
 
 	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(self->v.prethink, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, self->v.prethink, __FUNCTION__);
 }
 
 void Scr_Think(gentity_t* self)
@@ -46,7 +46,7 @@ void Scr_Think(gentity_t* self)
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(self->v.think, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, self->v.think, __FUNCTION__);
 }
 
 // -----------------------------------------------------------------
@@ -65,9 +65,15 @@ void Scr_Event_Blocked(gentity_t* self, gentity_t* other)
 	if (!self->v.blocked)
 		return;
 
+	scr_entity_t oldself = sv.script_globals->self;
+	scr_entity_t oldother = sv.script_globals->other;
+
 	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(other);
-	Scr_Execute(self->v.blocked, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, self->v.blocked, __FUNCTION__);
+
+	sv.script_globals->self = oldself;
+	sv.script_globals->other = oldother;
 }
 
 void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurface_t* surf)
@@ -75,11 +81,15 @@ void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurfac
 	if (!self->v.touch || self->v.solid == SOLID_NOT)
 		return;
 
+	scr_entity_t oldself = sv.script_globals->self;
+	scr_entity_t oldother = sv.script_globals->other;
+
 	sv.script_globals = Scr_GetGlobals();
 	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(other);
 
 	//float planeDist, vector planeNormal, float surfaceFlags
+	Scr_BindVM(VM_SVGAME);
 	if (plane)
 	{
 		Scr_AddFloat(0, plane->dist);
@@ -91,7 +101,10 @@ void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurfac
 		Scr_AddVector(1, vec3_origin);
 	}
 	Scr_AddFloat(2, surf != NULL ? surf->flags : 0);
-	Scr_Execute(self->v.touch, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, self->v.touch, __FUNCTION__);
+
+	sv.script_globals->self = oldself;
+	sv.script_globals->other = oldother;
 }
 
 
@@ -107,7 +120,7 @@ void SV_ScriptMain()
 	sv.script_globals->g_frameNum = sv.gameFrame;
 	sv.script_globals->g_frameTime = SV_FRAMETIME;
 
-	Scr_Execute(sv.script_globals->main, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->main, __FUNCTION__);
 }
 
 void SV_ScriptStartFrame()
@@ -119,7 +132,7 @@ void SV_ScriptStartFrame()
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->g_frameNum = sv.gameFrame;
 	sv.script_globals->g_frameTime = SV_FRAMETIME;
-	Scr_Execute(sv.script_globals->StartFrame, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->StartFrame, __FUNCTION__);
 }
 
 void SV_ScriptEndFrame()
@@ -128,7 +141,7 @@ void SV_ScriptEndFrame()
 	sv.script_globals->self = sv.script_globals->worldspawn;
 	sv.script_globals->other = sv.script_globals->worldspawn;
 	sv.script_globals->g_time = sv.gameTime;
-	Scr_Execute(sv.script_globals->EndFrame, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->EndFrame, __FUNCTION__);
 }
 
 // -----------------------------------------------------------------
@@ -145,7 +158,7 @@ void Scr_ClientBegin(gentity_t* self)
 {
 	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(sv.script_globals->ClientBegin, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->ClientBegin, __FUNCTION__);
 }
 
 
@@ -183,7 +196,7 @@ qboolean Scr_ClientConnect(gentity_t* ent, char* userinfo)
 
 	sv.script_globals->self = GENT_TO_PROG(ent);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(sv.script_globals->ClientConnect, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->ClientConnect, __FUNCTION__);
 
 	allowed = Scr_GetReturnFloat();
 
@@ -207,7 +220,7 @@ void Scr_ClientDisconnect(gentity_t* ent)
 
 	sv.script_globals->self = GENT_TO_PROG(ent);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(sv.script_globals->ClientDisconnect, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->ClientDisconnect, __FUNCTION__);
 
 	sv.script_globals->self = GENT_TO_PROG(sv.edicts);
 
@@ -230,6 +243,8 @@ void Scr_ClientDisconnect(gentity_t* ent)
 Scr_ClientThink
 
 This will be called once for each client frame, which will usually be a couple times for each server frame.
+
+runs svgame:ClientThink(float inButtons, float inImpulse, vector inMove, vector inAngles, float inMsecTime)
 ==============
 */
 void ClientMove(gentity_t* ent, usercmd_t* ucmd);
@@ -253,17 +268,17 @@ void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 	sv.script_globals->self = GENT_TO_PROG(ent);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 
+	Scr_BindVM(VM_SVGAME);
 	Scr_AddFloat(0, (int)ucmd->buttons);
 	Scr_AddFloat(1, (int)ucmd->impulse);
-	Scr_AddVector(2, move);
+	Scr_AddVector(2, move); // [forwardmove, sidemove, upmove]
 	Scr_AddVector(3, a);
 	Scr_AddFloat(4, (int)ucmd->msec);
 
-	// move [forwardmove, sidemove, upmove]
-	// void ClientThink(float inButtons, float inImpulse, vector inMove, vector inAngles, float inMsecTime)
-	Scr_Execute(sv.script_globals->ClientThink, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->ClientThink, __FUNCTION__);
 
 //	ClientMove(ent, ucmd);
+//	ent->client->ps.pmove = pm;
 
 	pmove_state_t* pm;
 	pm = &ent->client->ps.pmove;
@@ -273,122 +288,24 @@ void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 	pm->pm_time = ent->v.pm_time;
 	pm->gravity = ent->v.pm_gravity;
 
-	//ent->client->ps.pmove = pm;
 	ent->client->old_pmove = ent->client->ps.pmove;
 
-
-	if (ent->v.movetype != MOVETYPE_NOCLIP)
-		SV_TouchEntities(ent, AREA_TRIGGERS);
+//	if (ent->v.movetype != MOVETYPE_NOCLIP)
+//		SV_TouchEntities(ent, AREA_TRIGGERS); // moved to script
 }
-
-#if 0
-/*
-==============
-ClientMove
-
-This is just here untill pmove is entirely handled by script.
-==============
-*/
-gentity_t* pm_passent;
-// pmove doesn't need to know about passent and contentmask
-trace_t	PM_trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
-{
-	if (pm_passent->v.health > 0)
-		return SV_Trace(start, mins, maxs, end, pm_passent, MASK_PLAYERSOLID);
-	else
-		return SV_Trace(start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
-}
-
-void ClientMove(gentity_t* ent, usercmd_t* ucmd)
-{
-	gclient_t* client;
-	pmove_t	pm;
-	int i;
-
-	client = ent->client;
-
-	// set up for pmove
-	pm_passent = ent;
-	memset(&pm, 0, sizeof(pm));
-
-	client->ps.pmove.pm_type = ent->v.pm_type;
-	client->ps.pmove.pm_flags = ent->v.pm_flags;
-
-
-#if 1
-	if (ent->v.movetype == MOVETYPE_NOCLIP)
-		client->ps.pmove.pm_type = PM_SPECTATOR;
-	else if (ent->v.health <= -50)
-		client->ps.pmove.pm_type = PM_GIB;
-	else
-		client->ps.pmove.pm_type = PM_NORMAL;
-#endif
-
-	client->ps.pmove.gravity = sv_gravity->value;
-	pm.s = client->ps.pmove;
-	for (i = 0; i < 3; i++)
-	{
-		pm.s.origin[i] = ent->v.origin[i] * 8;
-		pm.s.velocity[i] = ent->v.velocity[i] * 8;
-	}
-	if (memcmp(&client->old_pmove, &pm.s, sizeof(pm.s)))
-	{
-		pm.snapinitial = true;
-		Com_Printf("pmove changed!\n");
-	}
-
-	pm.cmd = *ucmd;
-	pm.trace = PM_trace;
-	pm.pointcontents = SV_PointContents;
-	Pmove(&pm); // perform a pmove
-
-	// save results of pmove
-	client->ps.pmove = pm.s;
-	client->old_pmove = pm.s;
-
-	for (i = 0; i < 3; i++)
-	{
-		ent->v.origin[i] = pm.s.origin[i] * 0.125;
-		ent->v.velocity[i] = pm.s.velocity[i] * 0.125;
-	}
-
-	VectorCopy(pm.mins, ent->v.mins);
-	VectorCopy(pm.maxs, ent->v.maxs);
-
-	ent->client->ps.viewoffset[2] = pm.viewheight;
-	ent->v.viewheight = pm.viewheight;
-	ent->v.waterlevel = pm.waterlevel;
-	ent->v.watertype = pm.watertype;
-
-	ent->v.pm_type = client->ps.pmove.pm_type;
-	ent->v.pm_flags = client->ps.pmove.pm_flags;
-
-	ent->groundentity = pm.groundentity;
-	if (pm.groundentity)
-		ent->groundentity_linkcount = pm.groundentity->linkcount;
-
-	ent->v.groundEntityNum = (pm.groundentity == NULL ? -1 : pm.groundentity->s.number); //ent->groundentity = pm.groundentity;
-	if (pm.groundentity)
-		ent->v.groundEntity_linkcount = pm.groundentity->linkcount; 
-
-	VectorCopy(pm.viewangles, ent->v.v_angle);
-	VectorCopy(pm.viewangles, client->ps.viewangles);
-	SV_LinkEdict(ent);
-}
-#endif
 
 void Scr_ClientBeginServerFrame(gentity_t* self)
 {
 	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(sv.script_globals->ClientBeginServerFrame, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->ClientBeginServerFrame, __FUNCTION__);
 }
 
 
 void Scr_ClientEndServerFrame(gentity_t* ent)
 {
 	int i;
-	static vec3_t forward, right, up;
+
 	//
 	// If the origin or velocity have changed since ClientThink(),
 	// update the pmove values.  This will happen when the client
@@ -430,18 +347,9 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	}
 #endif
 
-	AngleVectors(ent->v.v_angle, forward, right, up);
-
-//	cl->ps.viewoffset[2] = 128;
-
 	sv.script_globals->self = GENT_TO_PROG(ent);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(sv.script_globals->ClientEndServerFrame, __FUNCTION__);
-
-	//test
-	//	gclient_t* cl;
-	//	cl = ent->client;
-	//	cl->ps.viewoffset[2] = Cvar_Get("playerz", "22", 0)->value;
+	Scr_Execute(VM_SVGAME, sv.script_globals->ClientEndServerFrame, __FUNCTION__);
 }
 
 /*
@@ -575,12 +483,18 @@ void ClientCommand(gentity_t* ent)
 		return;
 	}
 
+	scr_entity_t oldself = sv.script_globals->self;
+	scr_entity_t oldother = sv.script_globals->other;
+
 	sv.script_globals->self = GENT_TO_PROG(ent);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(sv.script_globals->ClientCommand, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, sv.script_globals->ClientCommand, __FUNCTION__);
 
 	if (Scr_GetReturnFloat() > 0)
 		return;
 
 	Cmd_Say_f(ent, false, false);
+
+	sv.script_globals->self = oldself;
+	sv.script_globals->other = oldother;
 }

@@ -192,7 +192,7 @@ Execute script program
 */
 
 extern char* qcvm_op_names[];
-void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
+void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 {
 	eval_t			*a, *b, *c, *ptr;
 	int				s, i, exitdepth;
@@ -201,7 +201,10 @@ void Scr_Execute(scr_func_t fnum, char* callFromFuncName)
 	qcvm_t			*vm;
 	vm_entity_t		*ent;
 
-	CheckScriptVM(__FUNCTION__);
+
+	Scr_BindVM(vmtype);
+//	CheckScriptVM(__FUNCTION__);
+
 	vm = active_qcvm;
 
 	vm->callFromFuncName = callFromFuncName;

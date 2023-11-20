@@ -240,13 +240,13 @@ void CL_RunDLights (void)
 /*
 ==============
 CL_ParseMuzzleFlash
+
+svc_muzzleflash [entnum] [muzzleflashfx]
 ==============
 */
-
-extern void CL_GunMuzzleFlash(vec3_t origin);
 void CL_ParseMuzzleFlash(void)
 {
-	vec3_t		v_fwd, v_right, v_up; // used to position light flash
+	vec3_t		v_fwd, v_right, v_up;
 	cdlight_t	*dlight;
 	int			entity_num, effectNum;
 	ccentity_t	*cent;
@@ -263,9 +263,6 @@ void CL_ParseMuzzleFlash(void)
 
 	cent = &cl_entities[entity_num];
 
-	//svc_muzzleflash [entnum] [muzzleflashfx]
-
-
 	dlight = CL_AllocDlight (entity_num);
 	VectorCopy (cent->current.origin, dlight->origin);
 
@@ -277,14 +274,15 @@ void CL_ParseMuzzleFlash(void)
 	dlight->minlight = 32;
 	dlight->die = cl.time; // + 0.1;
 
-	if (cl.playernum + 1 == entity_num) // playernum is always smaller by one, osset it to match entnum
+	if (cl.playernum + 1 == entity_num) // this is our local player
 	{
+		cl.muzzleflash = effectNum;
+		cl.muzzleflash_time = cl.time + 150;
+
 		AngleVectors(cl.viewangles, v_fwd, v_right, v_up);
 		VectorMA(dlight->origin, 44, v_fwd, dlight->origin);
 		VectorMA(dlight->origin, 5, v_right, dlight->origin);
 		VectorMA(dlight->origin, 19, v_up, dlight->origin);
-// TODO: improve
-//		CL_GunMuzzleFlash(dlight->origin); //add tent flash model
 	}
 	else
 	{
@@ -314,11 +312,6 @@ void CL_ParseMuzzleFlash(void)
 	case FX_MUZZLEFLASH_SHOTGUN:
 		VectorSet(dlight->color, 1, 1, 0.7);
 		S_StartSound (NULL, entity_num, CHAN_WEAPON, S_RegisterSound("weapons/ak47/shot.wav"), volume, ATTN_NORM, 0);
-
-// negative light test
-//		VectorSet(dlight->color, -1, -1, -1);
-//		dlight->radius = 1024;
-//		dlight->die = cl.time + 2000; // + 0.1;
 		break;
 
 	case FX_MUZZLEFLASH_NEGATIVE_LIGHT:

@@ -37,7 +37,7 @@ void CL_InitClientGame()
 	cl.qcvm_active = true;
 	cl.script_globals = Scr_GetGlobals();
 
-	Scr_Execute(cl.script_globals->CG_Main, __FUNCTION__);
+	Scr_Execute(VM_CLGAME, cl.script_globals->CG_Main, __FUNCTION__);
 }
 
 static qboolean CG_IsActive()
@@ -50,7 +50,7 @@ void CG_Main()
 	if (CG_IsActive() == false)
 		return;
 
-	Scr_Execute(cl.script_globals->CG_Main, __FUNCTION__);
+	Scr_Execute(VM_CLGAME, cl.script_globals->CG_Main, __FUNCTION__);
 }
 
 
@@ -66,7 +66,7 @@ void CG_Frame(float frametime, int time, float realtime)
 	cl.script_globals->realtime = realtime;
 	cl.script_globals->localplayernum = cl.playernum;
 
-	Scr_Execute(cl.script_globals->CG_Frame, __FUNCTION__);
+	Scr_Execute(VM_CLGAME, cl.script_globals->CG_Frame, __FUNCTION__);
 }
 
 
@@ -76,7 +76,7 @@ void CG_DrawGUI()
 		return;
 
 	cg_allow_drawcalls = true;
-	Scr_Execute(cl.script_globals->CG_DrawGUI, __FUNCTION__);
+	Scr_Execute(VM_CLGAME, cl.script_globals->CG_DrawGUI, __FUNCTION__);
 	cg_allow_drawcalls = false;
 }
 

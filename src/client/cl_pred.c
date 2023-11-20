@@ -310,10 +310,11 @@ void CL_PredictMovement (void)
 			//
 			// call cgame's pmove
 			//	
+			Scr_BindVM(VM_CLGAME);
 			Scr_AddVector(0, inmove);
 			Scr_AddVector(1, inangles);
 			Scr_AddFloat(2, (float)cmd->msec);
-			Scr_Execute(cl.script_globals->CG_PlayerMove, __FUNCTION__);
+			Scr_Execute(VM_CLGAME, cl.script_globals->CG_PlayerMove, __FUNCTION__);
 
 			//
 			// read pmove state FROM cgame

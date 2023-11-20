@@ -148,6 +148,9 @@ typedef struct
 	char		gamedir[MAX_QPATH];
 	int			playernum;
 
+	int			muzzleflash;		// draw muzzleflash
+	int			muzzleflash_time;
+
 	char		configstrings[MAX_CONFIGSTRINGS][MAX_QPATH];
 
 	//

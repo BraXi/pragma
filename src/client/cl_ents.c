@@ -1498,56 +1498,90 @@ void CL_AddPacketEntities (frame_t *frame)
 CL_AddViewWeapon
 ==============
 */
+extern struct model_s* cl_mod_impact_small;
+
+
 void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 {
-	centity_t	gun;		// view model
+	centity_t	viewmodel; 
 	int			i;
+
+#if 0
+	centity_t	flash;
+	vec3_t v_fwd, v_right, v_up;
+#endif
 
 	// allow the gun to be completely removed
 	if (!cl_drawviewmodel->value)
 		return;
 
-	// braxi -- deleted
-	// don't draw gun if in wide angle view
-//	if (ps->fov > 90)
-//		return;
-
-	memset (&gun, 0, sizeof(gun));
+	//
+	// set up viewmodel
+	//
+	memset (&viewmodel, 0, sizeof(viewmodel));
 
 	if (gun_model)
-		gun.model = gun_model;	// development tool
+		viewmodel.model = gun_model;	// development tool
 	else
-		gun.model = cl.model_draw[ps->viewmodel_index];
-	if (!gun.model)
+		viewmodel.model = cl.model_draw[ps->viewmodel_index];
+
+	if (!viewmodel.model)
 		return;
 
-	// set up gun position
-	for (i=0 ; i<3 ; i++)
+	// set up position
+	for (i = 0; i < 3; i++)
 	{
-		gun.origin[i] = cl.refdef.vieworg[i] + ops->viewmodel_offset[i]
+		viewmodel.origin[i] = cl.refdef.vieworg[i] + ops->viewmodel_offset[i]
 			+ cl.lerpfrac * (ps->viewmodel_offset[i] - ops->viewmodel_offset[i]);
-		gun.angles[i] = cl.refdef.viewangles[i] + LerpAngle (ops->viewmodel_angles[i],
+		viewmodel.angles[i] = cl.refdef.viewangles[i] + LerpAngle (ops->viewmodel_angles[i],
 			ps->viewmodel_angles[i], cl.lerpfrac);
 	}
 
 	if (gun_frame)
 	{
-		gun.frame = gun_frame;	// development tool
-		gun.oldframe = gun_frame;	// development tool
+		viewmodel.frame = gun_frame;	// development tool
+		viewmodel.oldframe = gun_frame;	// development tool
 	}
 	else
 	{
-		gun.frame = ps->viewmodel_frame;
-		if (gun.frame == 0)
-			gun.oldframe = 0;	// just changed weapons, don't lerp from old
+		viewmodel.frame = ps->viewmodel_frame;
+		if (viewmodel.frame == 0)
+			viewmodel.oldframe = 0;	// just changed weapons, don't lerp from old
 		else
-			gun.oldframe = ops->viewmodel_frame;
+			viewmodel.oldframe = ops->viewmodel_frame;
 	}
 
-	gun.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
-	gun.backlerp = 1.0 - cl.lerpfrac;
-	VectorCopy (gun.origin, gun.oldorigin);	// don't lerp at all
-	V_AddEntity (&gun);
+	viewmodel.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
+	viewmodel.backlerp = 1.0 - cl.lerpfrac;
+	VectorCopy (viewmodel.origin, viewmodel.oldorigin);	// don't lerp at all
+	V_AddEntity (&viewmodel);
+
+#if 0
+	//
+	// set up muzzleflash
+	//
+	if (cl.time > cl.muzzleflash_time)
+		return;
+
+	memset(&flash, 0, sizeof(flash));
+
+	VectorCopy(viewmodel.angles, flash.angles);
+	VectorCopy(viewmodel.origin, flash.origin);
+
+	AngleVectors(flash.angles, v_fwd, v_right, v_up);
+
+	VectorMA(flash.origin, 66.0f, v_fwd, flash.origin);
+	VectorMA(flash.origin, -3.5f, v_up, flash.origin);
+	VectorMA(flash.origin, -4.8f, v_right, flash.origin);
+
+	VectorCopy(flash.origin, flash.oldorigin);	// don't lerp at all
+
+	flash.frame = flash.oldframe = 0;
+	flash.renderfx = RF_FULLBRIGHT | RF_DEPTHHACK | RF_VIEW_MODEL | RF_SCALE;
+	flash.scale = 8.0;
+	flash.model = cl_mod_impact_small;
+	V_AddEntity(&flash);
+#endif
 }
 
 

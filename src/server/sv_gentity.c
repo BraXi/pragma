@@ -241,7 +241,7 @@ void SV_CallSpawn(gentity_t* ent)
 	// call spawn function
 	sv.script_globals->self = GENT_TO_PROG(ent);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(spawnfunc, __FUNCTION__);
+	Scr_Execute(VM_SVGAME, spawnfunc, __FUNCTION__);
 
 	// an entity may refuse to spawn (requires coop, certain skill level, etc..)
 	// if returned value from prog is false we delete entity right now (unless its world)
