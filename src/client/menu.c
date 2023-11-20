@@ -3570,9 +3570,9 @@ static int pmicmpfnc( const void *_a, const void *_b )
 
 qboolean PlayerConfig_MenuInit( void )
 {
+#if 0 // will be removed entirely
 	extern cvar_t *name;
 	extern cvar_t *team;
-	extern cvar_t *skin;
 	char currentdirectory[1024];
 	char currentskin[1024];
 	int i = 0;
@@ -3727,7 +3727,7 @@ qboolean PlayerConfig_MenuInit( void )
 	Menu_AddItem( &s_player_config_menu, &s_player_rate_title );
 	Menu_AddItem( &s_player_config_menu, &s_player_rate_box );
 	Menu_AddItem( &s_player_config_menu, &s_player_download_action );
-
+#endif
 	return true;
 }
 

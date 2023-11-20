@@ -75,7 +75,6 @@ cvar_t	*m_side;
 cvar_t	*info_password;
 cvar_t	*info_spectator;
 cvar_t	*name;
-cvar_t	*skin;
 cvar_t	*rate;
 cvar_t	*fov;
 cvar_t	*msg;
@@ -1100,7 +1099,6 @@ void CL_InitLocal (void)
 	info_password = Cvar_Get ("password", "", CVAR_USERINFO);
 	info_spectator = Cvar_Get ("spectator", "0", CVAR_USERINFO);
 	name = Cvar_Get ("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
-	skin = Cvar_Get ("skin", "male/grunt", CVAR_USERINFO | CVAR_ARCHIVE);
 	rate = Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE);	// FIXME
 	msg = Cvar_Get ("msg", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	cl_hand = Cvar_Get ("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
