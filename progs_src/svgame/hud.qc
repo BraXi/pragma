@@ -84,7 +84,7 @@ void(entity who, string hudprogram) HUD_SetLayout =
 	else
 	{
 		// send to everyone
-		configstring(CS_STATUSBAR, hudprogram);	
+		configstring(CS_HUD, hudprogram);	
 	}		
 };
 

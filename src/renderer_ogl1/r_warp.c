@@ -26,6 +26,7 @@ extern	model_t	*loadmodel;
 char	skyname[MAX_QPATH];
 float	skyrotate;
 vec3_t	skyaxis;
+vec3_t	skycolor;
 image_t	*sky_images[6];
 
 msurface_t	*warpface;
@@ -571,6 +572,10 @@ void R_DrawSkyBox (void)
 	qglColor4f (1,1,1,0.5);
 	R_DepthTest(false);
 #endif
+
+	GL_TexEnv(GL_MODULATE); // allow sky colors change
+	qglColor4f(skycolor[0], skycolor[1], skycolor[2], 1);
+
 	if (skyrotate)
 	{	// check for no sky at all
 		for (i=0 ; i<6 ; i++)
@@ -609,6 +614,9 @@ void R_DrawSkyBox (void)
 	}
 	qglPopMatrix ();
 
+	GL_TexEnv(GL_REPLACE);
+	qglColor4f(1, 1, 1, 1);
+
 #if 0
 	R_Blend(false);
 	GL_TexEnv(GL_REPLACE);
@@ -626,14 +634,16 @@ R_SetSky
 
 //#define SKY_CHOPSIZE
 static char	*suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"}; // 3dstudio environment map names
-void R_SetSky (char *name, float rotate, vec3_t axis)
+void R_SetSky (char *name, float rotate, vec3_t axis, vec3_t color)
 {
 	int		i;
 	char	pathname[MAX_QPATH];
 
 	strncpy (skyname, name, sizeof(skyname)-1);
 	skyrotate = rotate;
-	VectorCopy (axis, skyaxis);
+
+	VectorCopy(axis, skyaxis);
+	VectorCopy(color, skycolor);
 
 	for (i=0 ; i<6 ; i++)
 	{

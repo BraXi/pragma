@@ -371,24 +371,25 @@ void SCR_SizeDown_f (void)
 =================
 SCR_Sky_f
 
-Set a specific sky and rotation speed
+Set a specific sky, rotation speed and sky color
 =================
 */
 void SCR_Sky_f (void)
 {
 	float	rotate;
-	vec3_t	axis;
+	vec3_t	axis, color;
 
 	if (Cmd_Argc() < 2)
 	{
-		Com_Printf ("Usage: sky <basename> <rotate> <axis x y z>\n");
+		Com_Printf ("Usage: sky <skyname> <rotate> <axis x y z> <color r g b>\n");
 		return;
 	}
 	if (Cmd_Argc() > 2)
 		rotate = atof(Cmd_Argv(2));
 	else
 		rotate = 0;
-	if (Cmd_Argc() == 6)
+
+	if (Cmd_Argc() >= 6)
 	{
 		axis[0] = atof(Cmd_Argv(3));
 		axis[1] = atof(Cmd_Argv(4));
@@ -401,7 +402,20 @@ void SCR_Sky_f (void)
 		axis[2] = 1;
 	}
 
-	re.SetSky (Cmd_Argv(1), rotate, axis);
+	if (Cmd_Argc() >= 9)
+	{
+		color[0] = atof(Cmd_Argv(6));
+		color[1] = atof(Cmd_Argv(7));
+		color[2] = atof(Cmd_Argv(8));
+	}
+	else
+	{
+		color[0] = color[1] = color[2] = 1;
+	}
+
+	Com_Printf("Cmd_Argc=%i\n", Cmd_Argc());
+
+	re.SetSky (Cmd_Argv(1), rotate, axis, color);
 }
 
 //============================================================================

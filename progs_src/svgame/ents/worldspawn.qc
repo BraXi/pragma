@@ -42,9 +42,13 @@ float() SP_worldspawn =
 		print("WARNING: map with no worldspawn sky set, using sky 'none'\n");
 	}
 
+	if( self.skycolor == vec3_origin )
+		self.skycolor = '1 1 1';
+	
 	configstring(CS_SKY, self.sky);
 	configstring(CS_SKYROTATE, ftos(self.skyrotate) );
 	configstring(CS_SKYAXIS, vtos(self.skyaxis) );
+	configstring(CS_SKYCOLOR, vtos(self.skycolor) );
 	
 	// --- make max clients visible ---
 	float maxc;	

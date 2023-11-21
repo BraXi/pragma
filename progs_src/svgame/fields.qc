@@ -40,6 +40,7 @@ float developer, developer_script; // cvars for debugging
 //
 .string		sky;			// skybox textures to use
 .vector		skyaxis;		// vector axis for rotating sky
+.vector		skycolor;		// rgb
 .float		skyrotate;		// speed of rotation in degrees/second
 
 //

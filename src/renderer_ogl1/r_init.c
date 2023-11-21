@@ -409,7 +409,7 @@ void R_Shutdown(void)
 void R_BeginRegistration(char* map);
 struct model_s* R_RegisterModel(char* name);
 struct image_s* R_RegisterSkin(char* name);
-void R_SetSky(char* name, float rotate, vec3_t axis);
+void R_SetSky(char* name, float rotate, vec3_t axis, vec3_t color);
 void	R_EndRegistration(void);
 
 void	R_RenderFrame(refdef_t* fd);

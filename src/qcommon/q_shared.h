@@ -792,13 +792,15 @@ enum
 //
 // config strings are a general means of communication from
 // the server to all connected clients.
-// Each config string can be at most MAX_QPATH characters.
+// Each config string can be at most 64 (MAX_QPATH) characters.
 //
 #define	CS_NAME				0		// level name is set in worldspawn's 'message' key
-#define	CS_CDTRACK			1
-#define	CS_SKY				2
-#define	CS_SKYAXIS			3		// %f %f %f format
-#define	CS_SKYROTATE		4
+
+#define	CS_SKY				1		// name of sky image without _<size> postfix
+#define	CS_SKYAXIS			2		// %f %f %f RGB format
+#define	CS_SKYROTATE		3		// boolean. does the sky rotate? 
+#define	CS_SKYCOLOR			4		// %f %f %f RGB format
+
 #define	CS_HUD				5		// display program string
 
 #define CS_AIRACCEL			29		// air acceleration control

@@ -241,6 +241,27 @@ void V_TestLights (void)
 
 /*
 =================
+CL_SetSkyFromConfigstring
+=================
+*/
+void CL_SetSkyFromConfigstring(void)
+{
+	float	skyrotate;
+	vec3_t	skyaxis, skycolor;
+	int		val; // shut up compiler warning
+
+	skyrotate = atof(cl.configstrings[CS_SKYROTATE]);
+
+	val = sscanf(cl.configstrings[CS_SKYAXIS], "%f %f %f", &skyaxis[0], &skyaxis[1], &skyaxis[2]);
+	val = sscanf(cl.configstrings[CS_SKYCOLOR], "%f %f %f", &skycolor[0], &skycolor[1], &skycolor[2]);
+
+	re.SetSky(cl.configstrings[CS_SKY], skyrotate, skyaxis, skycolor);
+}
+
+
+
+/*
+=================
 CL_PrepRefresh
 
 Call before entering a new level, or after changing dlls
@@ -251,8 +272,7 @@ void CL_PrepRefresh (void)
 	char		mapname[32];
 	int			i;
 	char		name[MAX_QPATH];
-	float		rotate;
-	vec3_t		axis;
+
 
 	if (!cl.configstrings[CS_MODELS+1][0])
 		return;		// no map loaded
@@ -313,10 +333,9 @@ void CL_PrepRefresh (void)
 	// set sky textures and speed
 	Com_Printf ("sky\r", i); 
 	SCR_UpdateScreen ();
-	rotate = atof (cl.configstrings[CS_SKYROTATE]);
-	sscanf (cl.configstrings[CS_SKYAXIS], "%f %f %f", 
-		&axis[0], &axis[1], &axis[2]);
-	re.SetSky (cl.configstrings[CS_SKY], rotate, axis);
+
+	CL_SetSkyFromConfigstring();
+
 	Com_Printf ("                                     \r");
 
 	// the renderer can now free unneeded stuff
