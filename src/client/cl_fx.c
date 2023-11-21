@@ -355,25 +355,14 @@ void CL_AddDLights (void)
 {
 	int			i;
 	cdlight_t	*dl;
-
+	
 	dl = cl_dlights;
-
-
-	if(vidref_val == VIDREF_GL)
+	for (i = 0; i < MAX_DLIGHTS; i++, dl++)
 	{
-		for (i=0 ; i<MAX_DLIGHTS ; i++, dl++)
-		{
-			if (!dl->radius)
-				continue;
-			V_AddLight (dl->origin, dl->radius,
-				dl->color[0], dl->color[1], dl->color[2]);
-		}
+		if (!dl->radius)
+			continue;
+		V_AddLight (dl->origin, dl->radius,dl->color[0], dl->color[1], dl->color[2]);
 	}
-	else
-	{
-		Com_Printf("CL_AddDLights: vidref_val != VIDREF_GL\n");
-	}
-
 }
 
 

@@ -192,8 +192,6 @@ void DrawGLPoly (glpoly_t *p)
 	qglEnd ();
 }
 
-//============
-//PGM
 /*
 ================
 DrawGLFlowingPoly -- version of DrawGLPoly that handles scrolling texture
@@ -221,12 +219,12 @@ void DrawGLFlowingPoly (msurface_t *fa)
 	}
 	qglEnd ();
 }
-//PGM
-//============
 
 /*
 ** R_DrawTriangleOutlines
 */
+extern void R_BeginLinesRendering();
+extern void R_EndLinesRendering();
 void R_DrawTriangleOutlines (void)
 {
 	int			i, j;
@@ -235,11 +233,10 @@ void R_DrawTriangleOutlines (void)
 	if (!r_showtris->value)
 		return;
 
-	qglDisable (GL_TEXTURE_2D);
-	R_DepthTest(false);
-	qglColor4f (1,1,1,1);
-
-	for (i=0 ; i<MAX_LIGHTMAPS ; i++)
+	ri.Con_Printf(PRINT_LOW, "r_showtris\n");
+	R_WriteToDepthBuffer(false);
+	R_BeginLinesRendering();
+	for (i = 0; i < MAX_LIGHTMAPS; i++)
 	{
 		msurface_t *surf;
 
@@ -248,7 +245,7 @@ void R_DrawTriangleOutlines (void)
 			p = surf->polys;
 			for ( ; p ; p=p->chain)
 			{
-				for (j=2 ; j<p->numverts ; j++ )
+				for (j = 2; j < p->numverts; j++)
 				{
 					qglBegin (GL_LINE_STRIP);
 					qglVertex3fv (p->verts[0]);
@@ -260,9 +257,8 @@ void R_DrawTriangleOutlines (void)
 			}
 		}
 	}
-
-	R_DepthTest(true);
-	qglEnable (GL_TEXTURE_2D);
+	R_EndLinesRendering();
+	R_WriteToDepthBuffer(true);
 }
 
 /*
@@ -756,8 +752,6 @@ dynamic:
 		GL_MBind( GL_TEXTURE0_ARB, image->texnum );
 		GL_MBind( GL_TEXTURE1_ARB, gl_state.lightmap_textures + lmtex );
 
-//==========
-//PGM
 		if (surf->texinfo->flags & SURF_FLOWING)
 		{
 			float scroll;
@@ -794,8 +788,6 @@ dynamic:
 				qglEnd ();
 			}
 		}
-//PGM
-//==========
 	}
 	else
 	{
@@ -804,8 +796,6 @@ dynamic:
 		GL_MBind( GL_TEXTURE0_ARB, image->texnum );
 		GL_MBind( GL_TEXTURE1_ARB, gl_state.lightmap_textures + lmtex );
 
-//==========
-//PGM
 		if (surf->texinfo->flags & SURF_FLOWING)
 		{
 			float scroll;
@@ -829,8 +819,6 @@ dynamic:
 		}
 		else
 		{
-//PGM
-//==========
 			for ( p = surf->polys; p; p = p->chain )
 			{
 				v = p->verts[0];
@@ -843,11 +831,7 @@ dynamic:
 				}
 				qglEnd ();
 			}
-//==========
-//PGM
 		}
-//PGM
-//==========
 	}
 }
 
@@ -897,7 +881,8 @@ void R_DrawInlineBModel (void)
 		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
 			if (psurf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66) )
-			{	// add to the translucent chain
+			{	
+				// add to the translucent chain
 				psurf->texturechain = r_alpha_surfaces;
 				r_alpha_surfaces = psurf;
 			}
@@ -1128,42 +1113,6 @@ void R_RecursiveWorldNode (mnode_t *node)
 
 	// recurse down the back side
 	R_RecursiveWorldNode (node->children[!side]);
-/*
-	for ( ; c ; c--, surf++)
-	{
-		if (surf->visframe != r_framecount)
-			continue;
-
-		if ( (surf->flags & SURF_PLANEBACK) != sidebit )
-			continue;		// wrong side
-
-		if (surf->texinfo->flags & SURF_SKY)
-		{	// just adds to visible sky bounds
-			R_AddSkySurface (surf);
-		}
-		else if (surf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66))
-		{	// add to the translucent chain
-//			surf->texturechain = alpha_surfaces;
-//			alpha_surfaces = surf;
-		}
-		else
-		{
-			if ( qglMultiTexCoord2fARB && !( surf->flags & SURF_DRAWTURB ) )
-			{
-				GL_RenderLightmappedPoly( surf );
-			}
-			else
-			{
-				// the polygon is visible, so add it to the texture
-				// sorted chain
-				// FIXME: this is a hack for animation
-				image = R_TextureAnimation (surf->texinfo);
-				surf->texturechain = image->texturechain;
-				image->texturechain = surf;
-			}
-		}
-	}
-*/
 }
 
 
@@ -1193,7 +1142,7 @@ void R_DrawWorld (void)
 
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
 
-	qglColor3f (1,1,1);
+	qglColor4f (1,1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 	R_ClearSkyBox ();
 

@@ -567,9 +567,9 @@ void R_DrawSkyBox (void)
 
 #if 0
 	R_Blend(true);
-GL_TexEnv( GL_MODULATE );
-qglColor4f (1,1,1,0.5);
-R_DepthTest(false);
+	GL_TexEnv( GL_MODULATE );
+	qglColor4f (1,1,1,0.5);
+	R_DepthTest(false);
 #endif
 	if (skyrotate)
 	{	// check for no sky at all
@@ -611,8 +611,8 @@ R_DepthTest(false);
 
 #if 0
 	R_Blend(false);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glColor4f (1,1,1,0.5);
+	GL_TexEnv(GL_REPLACE);
+	qglColor4f (1,1,1,0.5);
 	R_DepthTest(true);
 #endif
 }

@@ -146,7 +146,7 @@ static void PFCG_drawstring(void)
 {
 	if (!CG_CanDrawCall())
 	{
-		Scr_RunError("call to 'drawstring' outside of rendering phase\n");
+//		Scr_RunError("call to 'drawstring' outside of rendering phase\n");
 		return;
 	}
 
@@ -176,7 +176,7 @@ static void PFCG_drawimage(void)
 
 	if (!CG_CanDrawCall())
 	{
-		Scr_RunError("call to 'drawimage' outside of rendering phase\n");
+//		Scr_RunError("call to 'drawimage' outside of rendering phase\n");
 		return;
 	}
 
@@ -205,7 +205,7 @@ static void PFCG_drawfill(void)
 
 	if (!CG_CanDrawCall())
 	{
-		Scr_RunError("call to 'drawfill' outside of rendering phase\n");
+//		Scr_RunError("call to 'drawfill' outside of rendering phase\n");
 		return;
 	}
 

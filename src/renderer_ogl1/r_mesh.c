@@ -275,21 +275,31 @@ void R_EmitWirePoint(vec3_t origin)
 }
 
 
-void R_DrawBBox(vec3_t mins, vec3_t maxs)
+void R_BeginLinesRendering()
 {
 	R_DepthTest(false);
 	qglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	qglDisable(GL_TEXTURE_2D);
 	R_CullFace(false);
-	qglColor3f(1, 1, 1);
+	qglColor4f(1, 1, 1, 1);
+}
 
-	R_EmitWireBox(mins, maxs);
-
-	qglColor3f(1, 1, 1);
+void R_EndLinesRendering()
+{
+	qglColor4f(1, 1, 1, 1);
 	qglEnable(GL_TEXTURE_2D);
 	R_CullFace(true);
 	qglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	R_DepthTest(true);
+}
+
+void R_DrawBBox(vec3_t mins, vec3_t maxs)
+{
+	R_BeginLinesRendering();
+
+	R_EmitWireBox(mins, maxs);
+
+	R_EndLinesRendering();
 }
 
 
