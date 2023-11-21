@@ -412,9 +412,6 @@ void SCR_Sky_f (void)
 	{
 		color[0] = color[1] = color[2] = 1;
 	}
-
-	Com_Printf("Cmd_Argc=%i\n", Cmd_Argc());
-
 	re.SetSky (Cmd_Argv(1), rotate, axis, color);
 }
 

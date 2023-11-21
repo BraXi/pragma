@@ -182,13 +182,15 @@ void CL_ParseConfigString (void)
 
 	// do something apropriate 
 
-	if (i >= CS_LIGHTS && i < CS_LIGHTS+MAX_LIGHTSTYLES)
-		CL_SetLightstyle (i - CS_LIGHTS);
-
-	if (i >= CS_SKY && i < CS_SKYCOLOR+1)
+	if (i >= CS_LIGHTS && i < CS_LIGHTS + MAX_LIGHTSTYLES)
+	{
+		CL_SetLightstyle(i - CS_LIGHTS);
+	}
+	else if (i >= CS_SKY && i < CS_HUD)
+	{
 		if (cl.refresh_prepped)
 			CL_SetSkyFromConfigstring();
-
+	}
 	else if (i >= CS_MODELS && i < CS_MODELS+MAX_MODELS)
 	{
 		if (cl.refresh_prepped)
