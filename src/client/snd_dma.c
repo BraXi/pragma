@@ -42,7 +42,7 @@ int			s_registration_sequence;
 channel_t   channels[MAX_CHANNELS];
 
 qboolean	snd_initialized = false;
-int			sound_started=0;
+int			sound_started = 0;
 
 dma_t		dma;
 
@@ -208,12 +208,22 @@ sfx_t *S_FindName (char *name, qboolean create)
 	sfx_t	*sfx;
 
 	if (!name)
-		Com_Error (ERR_FATAL, "S_FindName: NULL\n");
+	{
+		Com_Error(ERR_FATAL, "S_FindName: NULL\n");
+		return NULL;
+	}
+
 	if (!name[0])
+	{
 		Com_Error (ERR_FATAL, "S_FindName: empty name\n");
+		return NULL;
+	}
 
 	if (strlen(name) >= MAX_QPATH)
+	{
 		Com_Error (ERR_FATAL, "Sound name too long: %s", name);
+		return NULL;
+	}
 
 	// see if already loaded
 	for (i=0 ; i < num_sfx ; i++)
@@ -380,7 +390,7 @@ channel_t *S_PickChannel(int entnum, int entchannel)
 	channel_t	*ch;
 
 	if (entchannel<0)
-		Com_Error (ERR_DROP, "S_PickChannel: entchannel<0");
+		Com_Error (ERR_DROP, "S_PickChannel: entchannel < 0");
 
 // Check for replacement sound, or find the best one to replace
     first_to_die = -1;

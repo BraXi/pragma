@@ -85,8 +85,8 @@ remove(entity)
 */
 void PFSV_remove(void)
 {
-	gentity_t* ent;
-	if ((ent = Scr_GetParmEdict(0)) && ent->inuse)
+	gentity_t* ent = Scr_GetParmEdict(0);
+	if (ent && ent->inuse)
 		SV_FreeEntity(ent);
 }
 

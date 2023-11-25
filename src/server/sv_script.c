@@ -388,7 +388,7 @@ static void cprintf(gentity_t* ent, int level, char* fmt, ...)
 {
 	char		msg[1024];
 	va_list		argptr;
-	int			n;
+	int			n = 0;
 
 	if (ent)
 	{

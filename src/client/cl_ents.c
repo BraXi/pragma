@@ -273,8 +273,8 @@ rest of the data stream.
 */
 void CL_ParsePacketEntities (frame_t *oldframe, frame_t *newframe)
 {
-	int			newnum;
-	int			bits;
+	int				newnum;
+	unsigned int	bits;
 	entity_state_t	*oldstate = NULL;
 	int			oldindex, oldnum;
 

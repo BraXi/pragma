@@ -373,3 +373,5 @@ FodyWeavers.xsd
 /build/main
 /tools/ericw-tools/doc
 /stuff/netradiant-gamepack
+/stuff
+/build/engine.exe.lastcodeanalysissucceeded

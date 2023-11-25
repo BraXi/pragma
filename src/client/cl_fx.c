@@ -1542,8 +1542,7 @@ void CL_TrapParticles (centity_t *ent)
 	{
 
 	
-	int			i, j, k;
-	cparticle_t	*p;
+	int			i, k;
 	float		vel;
 	vec3_t		dir;
 	vec3_t		org;

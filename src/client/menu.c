@@ -3407,7 +3407,6 @@ void PlayerConfig_MenuDraw( void )
 	if ( s_pmi[s_player_model_box.curvalue].skindisplaynames )
 	{
 		static int yaw;
-		int maxframe = 29;
 		centity_t entity;
 
 		memset( &entity, 0, sizeof( entity ) );

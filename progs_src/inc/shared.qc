@@ -11,25 +11,10 @@ string string_null = "";
 vector vec_null = '0 0 0';
 vector vec3_origin = vec_null; //temporary, ugly
 
-#define ENTITYNUM_NONE -1	// returned by trace function to mark nothing was hit
-
-// angle indexes
-#define	PITCH		0		// up / down
-#define	YAW			1		// left / right
-#define	ROLL		2		// fall over
 
 // ------------------------------------------------------
 // BG - defines shared by cgame and svgame
 // ------------------------------------------------------
-
-//
-// button bits
-//
-#define	BUTTON_ATTACK	1
-#define	BUTTON_USE		2
-#define	BUTTON_RELOAD	4
-#define	BUTTON_MELEE	8
-#define	BUTTON_ANY		128		// any key whatsoever
 
 
 // .waterlevel levels
@@ -37,8 +22,6 @@ enum
 {
 	WL_NOTINWATER = 0, 	// not in water
 	WL_TOUCHING, 		// touching water
-	
-/* players only below */	
 	WL_HALFWAY,			// half in water
 	WL_UNDERWATER		// head under water
 };
@@ -60,6 +43,7 @@ enum
 /* add custom stats below */
 	STAT_WEAPON,
 	STAT_AMMO_RESERVE,
+	STAT_MONSTERS_KILLED
 };
 
 
@@ -102,14 +86,18 @@ typedef struct
 	
 	float	fireTime;
 	float	reloadTime;
-
+	float	reloadEmptyTime;
+	
 	float	vkick;
 	
 	string	viewModel;
 	string	worldModel;
 	
 	float	muzzleflash; //effect+fire sound
+	
+	string	sfx_raise;
 	string	sfx_reload;
+	string	sfx_reload_empty;
 	
 	// [firstframe, lastframe, speed]
 	vector	anim_idle;
@@ -117,6 +105,7 @@ typedef struct
 	vector	anim_drop;
 	vector	anim_raise;
 	vector	anim_reload;
+	vector	anim_reload_empty;
 } WeaponDef;
 
 void() BG_InitWeapons;

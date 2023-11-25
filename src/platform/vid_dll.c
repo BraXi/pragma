@@ -282,14 +282,8 @@ MainWndProc
 main window procedure
 ====================
 */
-LONG WINAPI MainWndProc (
-    HWND    hWnd,
-    UINT    uMsg,
-    WPARAM  wParam,
-    LPARAM  lParam)
+LONG WINAPI MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	LONG			lRet = 0;
-
 	if ( uMsg == MSH_MOUSEWHEEL )
 	{
 		if ( ( ( int ) wParam ) > 0 )
@@ -519,7 +513,8 @@ void VID_UpdateWindowPosAndSize( int x, int y )
 	w = r.right - r.left;
 	h = r.bottom - r.top;
 
-	MoveWindow( cl_hwnd, r_xpos->value, r_ypos->value, w, h, TRUE );
+	MoveWindow(cl_hwnd, x, y, w, h, TRUE);
+//	MoveWindow( cl_hwnd, r_xpos->value, r_ypos->value, w, h, TRUE );
 }
 
 /*
@@ -584,11 +579,11 @@ qboolean VID_LoadRefresh( char *name )
 	ri.Vid_MenuInit = VID_MenuInit;
 	ri.Vid_NewWindow = VID_NewWindow;
 
-	if ( ( GetRefAPI = (void *) GetProcAddress( reflib_library, "GetRefAPI" ) ) == 0 )
+	GetRefAPI = (GetRefAPI_t)GetProcAddress(reflib_library, "GetRefAPI");
+	if ( (GetRefAPI) == 0 )
 		Com_Error( ERR_FATAL, "GetProcAddress failed on %s", name );
 
-	re = GetRefAPI( ri );
-
+	re = GetRefAPI(ri);
 	if (re.api_version != API_VERSION)
 	{
 		VID_FreeReflib ();

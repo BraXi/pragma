@@ -220,11 +220,11 @@ static void PFCG_drawfill(void)
 	re.NewDrawFill(rect, color);
 }
 
-void PFCG_GetCursorPos(vec2_t* out)
+static void PFCG_GetCursorPos(void)
 {
 }
 
-void PFCG_SetCursorPos(int x, int y)
+static void PFCG_SetCursorPos(void)
 {
 }
 

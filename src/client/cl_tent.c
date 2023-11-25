@@ -64,9 +64,7 @@ laser_t		cl_lasers[MAX_LASERS];
 
 cl_sustain_t	cl_sustains[MAX_SUSTAINS];
 
-//PGM
 extern void CL_TeleportParticles (vec3_t org);
-//PGM
 
 void CL_BlasterParticles (vec3_t org, vec3_t dir);
 void CL_ExplosionParticles (vec3_t org);
@@ -133,7 +131,8 @@ void CL_RegisterTEntSounds (void)
 	cl_sfx_rockexp = S_RegisterSound ("weapons/rocklx1a.wav");
 	cl_sfx_grenexp = S_RegisterSound ("weapons/grenlx1a.wav");
 	cl_sfx_watrexp = S_RegisterSound ("weapons/xpld_wat.wav");
-
+	cl_sfx_lightning = S_RegisterSound("weapons/tesla.wav");
+	cl_sfx_disrexp = S_RegisterSound("weapons/disrupthit.wav");
 
 	S_RegisterSound ("player/land1.wav");
 	S_RegisterSound ("player/fall2.wav");
@@ -145,8 +144,7 @@ void CL_RegisterTEntSounds (void)
 		cl_sfx_footsteps[i] = S_RegisterSound (name);
 	}
 
-	cl_sfx_lightning = S_RegisterSound ("weapons/tesla.wav");
-	cl_sfx_disrexp = S_RegisterSound ("weapons/disrupthit.wav");
+
 }	
 
 /*
@@ -161,18 +159,18 @@ void CL_RegisterTEntModels (void)
 
 	cl_mod_impact_small = re.RegisterModel("models/fx/impact_small.md3");
 
-	cl_mod_explode = re.RegisterModel ("models/objects/explode/tris.md2");
-	cl_mod_parasite_segment = re.RegisterModel ("models/monsters/parasite/segment/tris.md2");
-	cl_mod_grapple_cable = re.RegisterModel ("models/ctf/segment/tris.md2");
-	cl_mod_parasite_tip = re.RegisterModel ("models/monsters/parasite/tip/tris.md2");
-	cl_mod_explo4 = re.RegisterModel ("models/objects/r_explode/tris.md2");
-	cl_mod_bfg_explo = re.RegisterModel ("sprites/s_bfg2.sp2");
-	cl_mod_powerscreen = re.RegisterModel ("models/items/armor/effect/tris.md2");
+	cl_mod_explode = NULL; // re.RegisterModel("sprites/explosion1.spr"); // re.RegisterModel("models/objects/explode/tris.md2");
+	cl_mod_parasite_segment = NULL; // re.RegisterModel ("models/monsters/parasite/segment/tris.md2");
+	cl_mod_grapple_cable = NULL; // re.RegisterModel ("models/ctf/segment/tris.md2");
+	cl_mod_parasite_tip = NULL; // re.RegisterModel ("models/monsters/parasite/tip/tris.md2");
+	cl_mod_explo4 = NULL; // re.RegisterModel ("models/objects/r_explode/tris.md2");
+	cl_mod_bfg_explo = NULL; // re.RegisterModel ("sprites/s_bfg2.sp2");
+	cl_mod_powerscreen = NULL; // re.RegisterModel ("models/items/armor/effect/tris.md2");
 
-	cl_mod_explo4_big = re.RegisterModel ("models/objects/r_explode2/tris.md2");
-	cl_mod_lightning = re.RegisterModel ("models/proj/lightning/tris.md2");
-	cl_mod_heatbeam = re.RegisterModel ("models/proj/beam/tris.md2");
-	cl_mod_monster_heatbeam = re.RegisterModel ("models/proj/widowbeam/tris.md2");
+	cl_mod_explo4_big = NULL; // re.RegisterModel ("models/objects/r_explode2/tris.md2");
+	cl_mod_lightning = NULL; // re.RegisterModel ("models/proj/lightning/tris.md2");
+	cl_mod_heatbeam = NULL; // re.RegisterModel ("models/proj/beam/tris.md2");
+	cl_mod_monster_heatbeam = NULL; // re.RegisterModel ("models/proj/widowbeam/tris.md2");
 }	
 
 /*
@@ -185,11 +183,8 @@ void CL_ClearTEnts (void)
 	memset (cl_beams, 0, sizeof(cl_beams));
 	memset (cl_explosions, 0, sizeof(cl_explosions));
 	memset (cl_lasers, 0, sizeof(cl_lasers));
-
-//ROGUE
 	memset (cl_playerbeams, 0, sizeof(cl_playerbeams));
 	memset (cl_sustains, 0, sizeof(cl_sustains));
-//ROGUE
 }
 
 /*
@@ -203,7 +198,7 @@ explosion_t *CL_AllocExplosion (void)
 	int		time;
 	int		index;
 	
-	for (i=0 ; i<MAX_EXPLOSIONS ; i++)
+	for (i = 0; i < MAX_EXPLOSIONS; i++)
 	{
 		if (cl_explosions[i].type == ex_free)
 		{

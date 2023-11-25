@@ -74,7 +74,7 @@ cvar_t	*m_side;
 //
 cvar_t	*info_password;
 cvar_t	*info_spectator;
-cvar_t	*name;
+cvar_t	*cl_name;
 cvar_t	*rate;
 cvar_t	*fov;
 cvar_t	*msg;
@@ -161,7 +161,7 @@ Begins recording a demo from the current position
 void CL_Record_f (void)
 {
 	char	name[MAX_OSPATH];
-	char	buf_data[MAX_MSGLEN];
+	byte	buf_data[MAX_MSGLEN];
 	sizebuf_t	buf;
 	int		i;
 	int		len;
@@ -507,10 +507,10 @@ void CL_Rcon_f (void)
 		return;
 	}
 
-	message[0] = (char)255;
-	message[1] = (char)255;
-	message[2] = (char)255;
-	message[3] = (char)255;
+	message[0] = (byte)255;
+	message[1] = (byte)255;
+	message[2] = (byte)255;
+	message[3] = (byte)255;
 	message[4] = 0;
 
 	NET_Config (true);		// allow remote
@@ -580,7 +580,7 @@ This is also called on Com_Error, so it shouldn't cause any errors
 */
 void CL_Disconnect (void)
 {
-	byte	final[32];
+	char	final[32];
 
 	if (cls.state == ca_disconnected)
 		return;
@@ -1100,7 +1100,7 @@ void CL_InitLocal (void)
 	//
 	info_password = Cvar_Get ("password", "", CVAR_USERINFO);
 	info_spectator = Cvar_Get ("spectator", "0", CVAR_USERINFO);
-	name = Cvar_Get ("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
+	cl_name = Cvar_Get ("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
 	rate = Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE);	// FIXME
 	msg = Cvar_Get ("msg", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	cl_hand = Cvar_Get ("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);

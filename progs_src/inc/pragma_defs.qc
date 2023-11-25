@@ -2,16 +2,41 @@
 // defines in here must match q_shared.h !
 
 
-// --------------------------------------
-// shared by both client and server:
-// --------------------------------------
+//
+// returned by trace function to mark nothing was hit, used in .groundentity_num
+//
+#define ENTITYNUM_NONE -1	
 
+//
+// angle indexes
+//
+#define	PITCH		0		// up / down
+#define	YAW			1		// left / right
+#define	ROLL		2		// fall over
+
+
+//
+// button bits
+//
+#define	BUTTON_ATTACK	1
+#define	BUTTON_USE		2
+#define	BUTTON_RELOAD	4
+#define	BUTTON_MELEE	8
+#define	BUTTON_ANY		128		// any key whatsoever
+
+
+//
 // print levels
+//
 float PRINT_LOW		= 0;	// pickup messages
 float PRINT_MEDIUM	= 1;	// death messages
 float PRINT_HIGH	= 2;	// critical messages
 float PRINT_CHAT	= 3;	// chat message
 
+
+//
+// contents
+//
 int CONTENTS_SOLID			= 1i;		// an eye is never valid in a solid
 int CONTENTS_WINDOW			= 2i;		// translucent, but not watery
 int CONTENTS_AUX			= 4i;
@@ -40,7 +65,10 @@ int CONTENTS_DETAIL			= 0x8000000i;	// brushes to be added after vis leafs
 int CONTENTS_TRANSLUCENT	= 0x10000000i;	// auto set if any surface has trans
 int CONTENTS_LADDER			= 0x20000000i;
 
+
+//
 // content masks
+//
 int MASK_ALL			= -1;
 int MASK_SOLID			= (CONTENTS_SOLID|CONTENTS_WINDOW);
 int MASK_PLAYERSOLID	= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER);
@@ -51,7 +79,10 @@ int MASK_OPAQUE			= (CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA);
 int MASK_SHOT			= (CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER);
 int MASK_CURRENT		= (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN);
 
-//surface flags
+
+//
+// surface flags
+//
 float SURF_LIGHT		= 1;		// value will hold the light strength
 float SURF_SLICK		= 2;		// effects game physics (pmove.qc)
 float SURF_SKY			= 4;		// don't draw, but add to skybox
@@ -61,10 +92,14 @@ float SURF_TRANS66		= 32;		// 66% translucent
 float SURF_FLOWING		= 64;		// scroll towards angle
 float SURF_NODRAW		= 128;		// don't bother referencing the texture
 
-// .svflags
+
+//
+// entity server flags (.svflags)
+//
 float SVF_NOCLIENT			= 1;	// don't send entity to clients, even if it has effects
 float SVF_DEADMONSTER		= 2;	// treat as CONTENTS_DEADMONSTER for collision
 float SVF_MONSTER			= 4;	// treat as CONTENTS_MONSTER for collision
+//float SVF_NOCULL			= 8;	// always send this entity to clients regardless of PVS/PHS
 
 
 // entity_state_t->effects
@@ -95,7 +130,10 @@ float SVF_MONSTER			= 4;	// treat as CONTENTS_MONSTER for collision
 #define EF_TAGTRAIL			2097152
 #define EF_TRACKERTRAIL		4194304
 
-// entity_state_t->renderfx flags
+
+//
+// .renderFlags
+//
 #define	RF_MINLIGHT			1		// allways have some light, never go full dark
 #define	RF_VIEWERMODEL		2		// don't draw through eyes, only mirrors
 #define	RF_VIEW_MODEL		4		// only draw through eyes
