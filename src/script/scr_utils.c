@@ -136,18 +136,28 @@ static int ScrInternal_GetParmOffset(unsigned int parm)
 Scr_VarString
 ============
 */
+#define TEMP_VARSTRINGS 8
+static int vstr = 0;
 char* Scr_VarString(int first)
 {
+	static char out[TEMP_VARSTRINGS][256];
 	int		i, param;
-	static char out[256];
 
-	out[0] = 0;
+	if (vstr >= TEMP_VARSTRINGS)
+		vstr = 0;
+	else
+		vstr++;
+
+	out[vstr][0] = 0;
+
 	for (i = first; i < Scr_NumArgs(); i++)
 	{
 		param = ScrInternal_GetParmOffset(i);
-		strcat(out, G_STRING(param));
+		strcat(out[vstr], G_STRING(param));
 	}
-	return out;
+
+
+	return out[vstr];
 }
 
 /*
