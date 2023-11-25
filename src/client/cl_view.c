@@ -373,6 +373,7 @@ float CalcFov (float fov_x, float width, float height)
 
 //============================================================================
 
+#ifdef _DEBUG
 // gun frame debugging functions
 void V_Gun_Next_f (void)
 {
@@ -403,7 +404,7 @@ void V_Gun_Model_f (void)
 	if(gun_model)
 		Com_Printf("gun_model set to: %s\n", name);
 }
-
+#endif
 //============================================================================
 
 /*
@@ -542,9 +543,12 @@ V_Init
 */
 void V_Init (void)
 {
+#ifdef _DEBUG
+	// these should be cheats!
 	Cmd_AddCommand ("gun_next", V_Gun_Next_f);
 	Cmd_AddCommand ("gun_prev", V_Gun_Prev_f);
 	Cmd_AddCommand ("gun_model", V_Gun_Model_f);
+#endif
 
 	Cmd_AddCommand ("viewpos", V_Viewpos_f);
 

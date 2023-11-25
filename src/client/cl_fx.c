@@ -37,10 +37,10 @@ MUZZLE FLASHES
 
 muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES] =
 {
-	//	forward,	right,	up,		light radius,	light color,		volume,	sound
-		{66.0f,		-4.8f,	-3.5f,	200,			{1, 0.9, 0.7},		1.0f,	"weapons/deagle/shot.wav"}, 	// FX_MUZZLEFLASH_PISTOL
-		{66.0f,		-4.8f,	-3.5f,	260,			{1, 1, 0.7},		1.0f,	"weapons/ak47/shot.wav"},	// FX_MUZZLEFLASH_RIFLE
-		{66.0f,		-4.8f,	-3.5f,	200,			{1, 1, 0.7},		1.0f,	NULL}	// FX_MUZZLEFLASH_SHOTGUN
+	//	forward,	right,	up,		light radius,	light color,		scale,	volume,	sound
+		{44.0f,		-4.8f,	-3.5f,	200,			{1, 0.9, 0.7},		1.4f,	1.0f,	"weapons/deagle/shot.wav"}, 	// FX_MUZZLEFLASH_PISTOL
+		{66.0f,		-4.8f,	-3.5f,	260,			{1, 1, 0.7},		1.0f,	1.0f,	"weapons/ak47/shot.wav"},	// FX_MUZZLEFLASH_RIFLE
+		{66.0f,		-4.8f,	-3.5f,	200,			{1, 1, 0.7},		1.0f,	1.0f,	NULL}	// FX_MUZZLEFLASH_SHOTGUN
 };
 
 /*

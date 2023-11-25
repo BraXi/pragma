@@ -313,6 +313,8 @@ typedef struct muzzleflash_s
 	float dlight_radius;
 	vec3_t dlight_color;
 
+	float	flashscale;
+
 	float	volume;
 	char* sound;
 } muzzleflash_t;

@@ -821,7 +821,10 @@ void PFSV_bprint(void)
 PFSV_centerprint
 
 Center print message to a single client, if entity is world broadcast to everyone
-centerprint(entity, string, ...)
+
+void centerprint(entity who, string text, ...)
+
+centerprint(player, "hello", " world!");
 ===============
 */
 void PFSV_centerprint(void)
