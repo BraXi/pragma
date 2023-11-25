@@ -113,7 +113,7 @@ static cvar_t		*map_noareas;
 int		c_pointcontents;
 int		c_traces, c_brush_traces;
 
-void	CM_InitBoxHull(void);
+static void CM_InitBoxHull(void);
 void	FloodAreaConnections(void);
 
 /*
@@ -1377,7 +1377,7 @@ trace_t CM_BoxTrace(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, int head
 	if (start[0] == end[0] && start[1] == end[1] && start[2] == end[2])
 	{
 		int		leafs[1024];
-		int		i, numleafs;
+		int		numleafs;
 		vec3_t	c1, c2;
 		int		topnode;
 

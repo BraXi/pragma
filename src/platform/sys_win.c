@@ -180,7 +180,8 @@ char *Sys_ConsoleInput (void)
 {
 	INPUT_RECORD	recs[1024];
 	int		dummy;
-	int		ch, numread, numevents;
+	int		ch, numread;
+	LPDWORD numevents;
 
 	if (!dedicated || !dedicated->value)
 		return NULL;
@@ -258,7 +259,7 @@ Print text to the dedicated console
 */
 void Sys_ConsoleOutput (char *string)
 {
-	int		dummy;
+	LPDWORD		dummy;
 	char	text[256];
 
 	if (!dedicated || !dedicated->value)

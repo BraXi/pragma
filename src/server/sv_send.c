@@ -101,8 +101,7 @@ void SV_BroadcastPrintf (int level, char *fmt, ...)
 	if (dedicated->value)
 	{
 		char	copy[1024];
-		int		i;
-		
+
 		// mask off high bits
 		for (i=0 ; i<1023 && string[i] ; i++)
 			copy[i] = string[i]&127;
