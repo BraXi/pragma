@@ -143,10 +143,9 @@ char* Scr_VarString(int first)
 	static char out[TEMP_VARSTRINGS][256];
 	int		i, param;
 
+	vstr++;
 	if (vstr >= TEMP_VARSTRINGS)
 		vstr = 0;
-	else
-		vstr++;
 
 	out[vstr][0] = 0;
 
