@@ -1542,21 +1542,31 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 
 	if (gun_frame)
 	{
-		viewmodel.frame = gun_frame;	// development tool
-		viewmodel.oldframe = gun_frame;	// development tool
+		// development tool
+		viewmodel.frame = gun_frame;
+		viewmodel.oldframe = gun_frame;
+		viewmodel.backlerp = 1.0 - cl.lerpfrac;
 	}
 	else
 	{
 		viewmodel.frame = ps->viewmodel_frame;
-		if (viewmodel.frame == 0)
-			viewmodel.oldframe = 0;	// just changed weapons, don't lerp from old
+
+		// just changed weapons, don't lerp from oldframe and remove muzzleflash if present
+		if (ps->viewmodel_index != ops->viewmodel_index)
+		{
+			cl.muzzleflash_time = 0;
+			viewmodel.oldframe = viewmodel.frame;
+			viewmodel.backlerp = 1;
+		}
 		else
+		{
 			viewmodel.oldframe = ops->viewmodel_frame;
+			viewmodel.backlerp = 1.0 - cl.lerpfrac;
+		}
 	}
 
+	VectorCopy(viewmodel.origin, viewmodel.oldorigin);
 	viewmodel.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
-	viewmodel.backlerp = 1.0 - cl.lerpfrac;
-	VectorCopy (viewmodel.origin, viewmodel.oldorigin);	// don't lerp at all
 	V_AddEntity (&viewmodel);
 
 #if 1
@@ -1582,8 +1592,8 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 
 	flash.frame = flash.oldframe = cl.muzzleflash_frame;
 	flash.renderfx = RF_FULLBRIGHT | RF_DEPTHHACK | RF_VIEW_MODEL | RF_SCALE | RF_TRANSLUCENT;
-	flash.scale = 2.0;
-	flash.alpha = 0.8;
+	flash.scale = mz->flashscale;
+	flash.alpha = 0.7;
 	flash.model = cl_mod_view_muzzleflash;
 	V_AddEntity(&flash);
 #endif
