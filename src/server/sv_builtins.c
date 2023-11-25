@@ -869,16 +869,18 @@ void PFSV_isplayer(void)
 ===============
 PFSV_setviewmodel
 
-Sets view model for player, zeroes view model frame, angles and offset
-returns model index
+Sets view (gun, etc) model for player, if new model is diferent to old it
+will reset view model frame, angles and offset
+returns current view model index
 
-setviewmodel(entity, string)
+float newviewmodelindex = setviewmodel(entity player, string viewModelName)
 ===============
 */
 void PFSV_setviewmodel(void)
 {
-	gentity_t	*ent;
-	char		*model;
+	gentity_t* ent;
+	char* model;
+	int			newmodelindex;
 
 	ent = Scr_GetParmEdict(0);
 	model = Scr_GetParmString(1);
@@ -889,17 +891,18 @@ void PFSV_setviewmodel(void)
 		return;
 	}
 
-	if (model == "")
-		ent->client->ps.viewmodel_index = 0;
-	else
-		ent->client->ps.viewmodel_index = SV_ModelIndex(model);
+	newmodelindex = SV_ModelIndex(model);
 
-	ent->client->ps.viewmodel_frame = 0;
-	VectorClear(ent->client->ps.viewmodel_angles);
-	VectorClear(ent->client->ps.viewmodel_offset);
+	if (ent->client->ps.viewmodel_index != newmodelindex)
+	{
+		ent->client->ps.viewmodel_index = newmodelindex;
+		ent->client->ps.viewmodel_frame = 0;
+		VectorClear(ent->client->ps.viewmodel_angles);
+		VectorClear(ent->client->ps.viewmodel_offset);
+	}
+
 	Scr_ReturnFloat(ent->client->ps.viewmodel_index);
 }
-
 /*
 ===============
 PFSV_setviewmodelparms
