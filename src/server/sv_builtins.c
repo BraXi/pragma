@@ -126,8 +126,9 @@ void PFSV_getent(void)
 PFSV_nextent
 
 finds next active entity, returns world if no entity found
-
 entity nextent(entity previousEnt)
+
+entity firstplayer = nextent(world);
 =================
 */
 void PFSV_nextent(void)
@@ -158,6 +159,8 @@ retent:
 PFSV_find
 
 entity find(entity start, .string field, string match);
+
+not implemented, ugh I forgot
 =================
 */
 void PFSV_find(void)
@@ -168,20 +171,11 @@ void PFSV_find(void)
 
 /*
 =================
-PFSV_findradius
-
-Returns a chain of entities that have origins within a spherical area
-findradius(origin, radius, nonsolid)
-=================
-*/
-
-/*
-=================
 findradius
 
 Returns entities that have origins within a spherical area
 
-findradius (entity from, origin, radius)
+findradius(entity from, origin, radius)
 =================
 */
 void PFSV_findradius(void)
@@ -227,6 +221,8 @@ PFSV_entnum
 returns entity's index
 
 float entnum(entity ent)
+
+float num = entnum(self);
 =================
 */
 void PFSV_getEntNum(void)
@@ -245,7 +241,9 @@ This is the only valid way to move an object without using the physics of the wo
 Directly changing origin will not set internal links correctly, so clipping would be messed up.  
 This should be called when an object is spawned, and then only if it is teleported.
 
-setorigin(entity, origin)
+void setorigin(entity ent, vector origin)
+
+setorigin(player, spawnpoint.origin);
 =================
 */
 void PFSV_setorigin(void)
@@ -262,7 +260,12 @@ void PFSV_setorigin(void)
 /*
 =================
 PFSV_setmodel
-setmodel(entity,string)
+
+Sets entity's model (modelindex0)
+
+void setmodel(entity ent, string modelname)
+
+setmodel(player, "models/characters/paula.md3");
 =================
 */
 void PFSV_setmodel(void)
@@ -310,7 +313,9 @@ PFSV_setsize
 This will set entity's bbox size and link entity to the world
 For players it additionaly sets bbox size used in prediction and pmove
 
-setsize(entity,vector,vector)
+void setsize(entity ent, vector mins, vector maxs)
+
+setsize(player, '-16 16 0', '16 16 56');
 =================
 */
 void PFSV_setsize(void)
@@ -344,7 +349,11 @@ void PFSV_setsize(void)
 /*
 =================
 PFSV_linkentity
-linkentity(entity)
+
+Links entity to the interaction links, should be called when 
+entities bbox or solidity changes (setmodel and setsize do this)
+
+void linkentity(entity ent)
 =================
 */
 void PFSV_linkentity(void)
@@ -359,7 +368,11 @@ void PFSV_linkentity(void)
 /*
 =================
 PFSV_unlinkentity
-linkentity(entity)
+
+unlink entity from world, unlinked solid entity 
+will not be collidable unless linked again.
+
+void linkentity(entity ent)
 =================
 */
 void PFSV_unlinkentity(void)
@@ -374,7 +387,7 @@ void PFSV_unlinkentity(void)
 /*
 =================
 PFSV_PointContents
-contents pointcontents(vector)
+float contents = pointcontents(vector point)
 =================
 */
 void PFSV_contents(void)
@@ -390,7 +403,10 @@ PFSV_trace
 Moves the given mins/maxs volume through the world from start to end.
 ignoreEnt and entities owned by ignoreEnt are explicitly not checked.
 
-trace(start, min, max, end, ignoreEnt, contentmask)
+void trace(vector start, vector mins, vector maxs, vector end, entity ignoreEnt, int contentmask)
+
+trace(self.origin, self.mins, self.maxs, self.origin - '0 0 256', self, MASK_PLAYERSOLID);
+setorigin(self, trace_endpos);
 =================
 */
 void PFSV_trace(void)
@@ -440,7 +456,8 @@ void PFSV_trace(void)
 /*
 =================
 PFSV_sound
-playsound(vector pos, entity ent, float channel, float sound_num, float volume, float attenuation, float timeOffset)
+
+void playsound(vector pos, entity ent, float channel, string soundFileName, float volume, float attenuation, float timeOffset)
 
 Each entity can have eight independant sound sources, like voice, weapon, feet, etc.
 If (channel & 8), the sound will be sent to everyone, not just things in the PHS.
@@ -450,6 +467,8 @@ Timeofs can range from 0.0 to 0.255 to cause sounds to be started later in the f
 If origin is [0,0,0], the origin is determined from the entity origin or the midpoint of the entity box for bmodels.
 
 FIXME: if entity isn't in PHS, they must be forced to be sent or have the origin explicitly sent.
+
+playsound(vec3_origin, player, CHAN_WEAPON, "weapons/noammoclick.wav", 0.5, ATTN_NORM, 0);
 =================
 */
 void PFSV_sound(void)
@@ -502,8 +521,11 @@ void PFSV_AreasConnected(void)
 =================
 PFSV_inPVS
 
-Checks if two points are in PVS, lso checks portalareas so that doors block sight
-float inPVS(vector,vector)
+Checks if two points are in PVS, also checks portalareas so that doors block sight
+
+float inPVS(vecto p1r, vector p1)
+
+float canPotentialySeeEachOther = inPVS(player.origin, monster.origin);
 =================
 */
 void PFSV_inPVS(void)
@@ -546,7 +568,9 @@ PF_inPHS
 
 Checks if two points are in PHS, also checks portalareas so that doors block sound
 
-float inPHS(vector, vector)
+float inPHS(vector p1, vector p1)
+
+float canPotentialyHearEachOther = inPHS(player.origin, monster.origin);
 =================
 */
 void PFSV_inPHS(void)
@@ -613,7 +637,10 @@ static void SV_Configstring(int index, char *val) //move to sv_main
 =================
 PFSV_Configstring
 Sets the server's configstring and sends update to all clients
-configstring(key,value)
+
+void configstring(float csindex, string value)
+
+configstring(CS_SKY, "cloudynight");
 =================
 */
 void PFSV_configstring(void)
@@ -631,8 +658,12 @@ void PFSV_configstring(void)
 /*
 =================
 PFSV_lightstyle
+
 Sets the lightstyle animation string where 'a' is total darkness, 'm' is fullbright, 'z' is double bright
-lightstyle(num,style)
+
+void lightstyle(float lightStyleIndex, string lightStyle)
+
+lightstyle(0, "aamm"); // flickering world lighting!
 =================
 */
 void PFSV_lightstyle(void)
@@ -684,8 +715,12 @@ static void MSG_Unicast(gentity_t* ent, qboolean reliable)
 ===============
 PFSV_unicast
 
-Sends the contents of the mutlicast buffer to a single client
-unicast(entity,float)
+Sends the contents of the mutlicast buffer to a single client,
+if 2nd argument is true message will be sent as reliable.
+
+void unicast(entity who, float isReliable)
+
+unicast(player, true);
 ===============
 */
 void PFSV_Unicast(void)
@@ -703,15 +738,21 @@ void PFSV_Unicast(void)
 ===============
 PFSV_multicast
 
-Sends the contents of sv.multicast to a subset of the clients, then clears sv.multicast.
-multicast(vector,float)
+Sends the contents of sv.multicast which were written with MSG_Write* 
+functions to a subset of the clients, then clears sv.multicast.
 
+void multicast(vector position, float sendto)
+
+sendto:
 MULTICAST_ALL		broadcast to everyone on server (origin can be NULL)
 MULTICAST_PVS		send to clients potentially visible from org
 MULTICAST_PHS		send to clients potentially hearable from org
 MULTICAST_ALL_R		same as MULTICAST_ALL but reliable (when you want all clients to receive message)
 MULTICAST_PHS_R		same as MULTICAST_PHS but reliable
 MULTICAST_PVS_R		same as MULTICAST_pvs but reliable
+
+
+multicast(monster.origin, MULTICAST_PVS);
 ===============
 */
 void PFSV_Multicast(void)
@@ -746,8 +787,12 @@ void PFSV_WriteAngle(void)		{ MSG_WriteAngle(&sv.multicast,		Scr_GetParmFloat(0)
 ===============
 PFSV_stuffcmd
 
-Send reliable string directly to clients' command execution buffer, if target entity is world we send to all clients
-stuffcmd(entity, string, ...)
+Send reliable string directly to clients' command execution 
+buffer, if target entity is world we send to all clients
+
+void stuffcmd(entity who, string text, ...)
+
+stuffcmd(player, "echo redirecting to another server; wait 10; disconnect; wait 1; connect 192.168.0.1:27000");
 ===============
 */
 void PFSV_stuffcmd(void)
@@ -782,7 +827,9 @@ void PFSV_stuffcmd(void)
 PFSV_cprint
 
 Print message to a single client
-cprint(entity, float printlevel, string, ...)
+void cprint(entity who, float printlevel, string text, ...)
+
+cprint(player, PRINT_HIGH, "Picked up big pack of ammo!");
 ===============
 */
 void PFSV_sprint(void)
@@ -807,8 +854,11 @@ void PFSV_sprint(void)
 /*
 ===============
 PFSV_bprint
+
 Print message to a all clients
-bprint(float printlevel, string, ...)
+
+void bprint(float printlevel, string text, ...)
+bprint(PRINT_CHAT, "This string is printed to chat for everyone");
 ===============
 */
 void PFSV_bprint(void)
@@ -837,18 +887,26 @@ void PFSV_centerprint(void)
 	msg = Scr_VarString(1);
 
 	entnum = NUM_FOR_EDICT(ent);
-	if (entnum != 0 && (entnum < 1 || entnum > sv_maxclients->value))
+
+	if (entnum > sv_maxclients->value || entnum < 0)
 	{
 		Scr_RunError("centerprint() to a non-client entity %i\n", entnum);
 		return;
 	}
 
+	if (!ent->inuse)
+	{
+		Scr_RunError("centerprint() to unused entity %i\n", entnum);
+		return;
+	}
+
+
 	MSG_WriteByte(&sv.multicast, SVC_CENTERPRINT);
 	MSG_WriteString(&sv.multicast, msg);
 
-	if (entnum == 0)
+	if (entnum == 0) // send to all
 		SV_Multicast(vec3_origin, MULTICAST_ALL_R);
-	else
+	else // send to a single client
 		MSG_Unicast(ent, true);
 }
 
