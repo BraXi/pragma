@@ -97,6 +97,7 @@ void PF_dprint(void)
 PF_resetrunaway
 
 Resets the infinite loop check counter, to prevent an incorrect 'runaway infinite loop' error when a lot of script must be run.
+Useful when iterating on a large number of entities in a loop
 
 void resetrunaway()
 =================
@@ -110,7 +111,7 @@ void PF_resetrunaway(void)
 =================
 PF_traceon
 
-Begin execution tracing, use traceoff() to mark end of trace, devmode only.
+Begin execution tracing, use traceoff() to mark end of trace.
 Result will be displayed in console after program completes.
 At the beginning of program execution (in engine) this is always reset to false.
 void traceon()
@@ -125,7 +126,7 @@ void PF_traceon(void)
 =================
 PF_traceoff
 
-Stop execution tracing, devmode only.
+Stop script execution tracing.
 At the beginning of program execution (in engine) this is always reset to false.
 void traceoff()
 =================
@@ -137,9 +138,11 @@ void PF_traceoff(void)
 
 /*
 =================
-PF_break
-Crashes engine (useful for debugger), devmode only.
-break()
+PF_crash
+
+Forces engine to crash (useful for debugger).
+
+void crash()
 =================
 */
 void PF_crash(void)
@@ -366,7 +369,9 @@ void PF_ftos(void)
 	if (v == (int)v)
 		sprintf(string_temp, "%d", (int)v);
 	else
-		sprintf(string_temp, "%5.1f", v);
+		sprintf(string_temp, "%f", v);
+//		sprintf(string_temp, "%5.1f", v);
+
 	Scr_ReturnString(string_temp);
 }
 
