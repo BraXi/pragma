@@ -1076,6 +1076,7 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 	Z_FreeTags(TAG_SVMODELDATA);
 	memset (&sv, 0, sizeof(sv));
 
+	SV_FreeDevTools();
 	Com_SetServerState (sv.state);
 
 	// free server static data

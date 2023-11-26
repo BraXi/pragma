@@ -47,6 +47,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef enum { MOD_BAD, MOD_BRUSH, MOD_SPRITE, MOD_MD3, MOD_BXMDL } modtype_t;
 
+typedef struct debugline_s
+{
+	vec3_t p1, p2;
+	vec3_t color;
+	int thickness;
+	qboolean depthTest;
+	float drawtime;
+} debugline_t;
+
+extern debugline_t* debugLines;
+
 
 typedef struct sizebuf_s
 {

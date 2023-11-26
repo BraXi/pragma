@@ -274,10 +274,9 @@ void R_EmitWirePoint(vec3_t origin)
 	qglEnd();
 }
 
-
-void R_BeginLinesRendering()
+void R_BeginLinesRendering(qboolean dt)
 {
-	R_DepthTest(false);
+	R_DepthTest(dt);
 	qglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	qglDisable(GL_TEXTURE_2D);
 	R_CullFace(false);
@@ -293,9 +292,62 @@ void R_EndLinesRendering()
 	R_DepthTest(true);
 }
 
+void R_DrawDebugLine(debugline_t *line)
+{
+	qglColor3fv(line->color);
+
+//	R_EmitWirePoint(line->p1);
+
+	qglLineWidth(line->thickness);
+
+	qglBegin(GL_LINES);
+		qglVertex3fv(line->p1);
+		qglVertex3fv(line->p2);
+	qglEnd();
+}
+
+/*
+=============
+R_DrawDebugLines
+=============
+*/
+void R_DrawDebugLines(void)
+{
+	int		i;
+	debugline_t* line;
+
+	qglPushMatrix();
+	R_BeginLinesRendering(true);
+	for (i = 0; i < r_newrefdef.num_debuglines; i++)
+	{
+		line = &r_newrefdef.debuglines[i];
+		if (!line->depthTest)
+			continue;
+		R_DrawDebugLine(line);
+	}
+	R_EndLinesRendering();
+
+#if 1
+	R_WriteToDepthBuffer(GL_FALSE);
+	R_BeginLinesRendering(false);
+	for (i = 0; i < r_newrefdef.num_debuglines; i++)
+	{
+		line = &r_newrefdef.debuglines[i];
+		if (line->depthTest)
+			continue;
+		R_DrawDebugLine(line);
+	}
+	R_EndLinesRendering();
+	R_WriteToDepthBuffer(GL_TRUE);
+#endif
+	qglPopMatrix();
+}
+
+
+
 void R_DrawBBox(vec3_t mins, vec3_t maxs)
 {
-	R_BeginLinesRendering();
+	R_BeginLinesRendering(true);
 
 	R_EmitWireBox(mins, maxs);
 

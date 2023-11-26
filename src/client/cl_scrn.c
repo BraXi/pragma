@@ -1376,6 +1376,7 @@ void SCR_UpdateScreen (void)
 
 			V_RenderView ( separation[i] );
 
+
 			SCR_DrawStats ();
 			if (cl.frame.playerstate.stats[STAT_LAYOUT] & 1)
 				SCR_DrawLayout ();

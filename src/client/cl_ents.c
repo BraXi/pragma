@@ -1740,8 +1740,6 @@ void CL_AddEntities (void)
 	CL_AddLightStyles ();
 }
 
-
-
 /*
 ===============
 CL_GetEntitySoundOrigin

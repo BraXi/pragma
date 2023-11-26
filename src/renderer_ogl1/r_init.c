@@ -422,15 +422,14 @@ void	Draw_TileClear(int x, int y, int w, int h, char* name);
 void	Draw_Fill(int x, int y, int w, int h);
 void	Draw_FadeScreen(float* rgba);
 
-void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
-void R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
-void R_DrawFill(rect_t rect, rgba_t color);
+void	R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+void	R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
+void	R_DrawFill(rect_t rect, rgba_t color);
 
-void RR_SetColor(float r, float g, float b, float a)
+static void	RR_SetColor(float r, float g, float b, float a)
 {
 	qglColor4f(r,g,b,a);
 }
-
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -447,11 +446,13 @@ refexport_t GetRefAPI(refimport_t rimp)
 	re.api_version = API_VERSION;
 
 	re.BeginRegistration = R_BeginRegistration;
+	re.EndRegistration = R_EndRegistration;
+
 	re.RegisterModel = R_RegisterModel;
 	re.RegisterSkin = R_RegisterSkin;
-	re.RegisterPic = R_RegisterPic; //was Draw_FindPic
+	re.RegisterPic = R_RegisterPic;
+
 	re.SetSky = R_SetSky;
-	re.EndRegistration = R_EndRegistration;
 
 	re.RenderFrame = R_RenderFrame;
 

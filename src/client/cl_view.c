@@ -47,6 +47,9 @@ centity_t	r_entities[MAX_ENTITIES];
 int			r_numparticles;
 particle_t	r_particles[MAX_PARTICLES];
 
+int			r_numdebuglines;
+debugline_t	r_debuglines[MAX_DEBUG_LINES];
+
 lightstyle_t	r_lightstyles[MAX_LIGHTSTYLES];
 
 /*
@@ -61,13 +64,13 @@ void V_ClearScene (void)
 	r_numdlights = 0;
 	r_numentities = 0;
 	r_numparticles = 0;
+	r_numdebuglines = 0;
 }
 
 
 /*
 =====================
 V_AddEntity
-
 =====================
 */
 void V_AddEntity(centity_t* ent)
@@ -81,6 +84,20 @@ void V_AddEntity(centity_t* ent)
 }
 
 
+/*
+=====================
+V_AddDebugLine
+=====================
+*/
+void V_AddDebugLine(debugline_t *line)
+{
+	if (r_numdebuglines >= MAX_DEBUG_LINES)
+	{
+		Com_DPrintf(DP_REND, "V_AddDebugLine: r_numdebuglines >= MAX_DEBUG_LINES\n");
+		return;
+	}
+	r_debuglines[r_numdebuglines++] = *line;
+}
 /*
 =====================
 V_AddParticle
@@ -407,12 +424,13 @@ void V_Gun_Model_f (void)
 #endif
 //============================================================================
 
+
 /*
 ==================
 V_RenderView
-
 ==================
 */
+extern void SV_AddDebugLines();
 void V_RenderView( float stereo_separation )
 {
 	extern int entitycmpfnc( const centity_t *, const centity_t * );
@@ -443,12 +461,18 @@ void V_RenderView( float stereo_separation )
 		// v_forward, etc.
 		CL_AddEntities ();
 
+		SV_AddDebugLines();
+
+
 		if (cl_testparticles->value)
 			V_TestParticles ();
+
 		if (cl_testentities->value)
 			V_TestEntities ();
+
 		if (cl_testlights->value)
 			V_TestLights ();
+
 		if (cl_testblend->value)
 		{
 			cl.refdef.blend[0] = 1;
@@ -456,6 +480,7 @@ void V_RenderView( float stereo_separation )
 			cl.refdef.blend[2] = 0.25;
 			cl.refdef.blend[3] = 0.5;
 		}
+
 
 		// offset vieworg appropriately if we're doing stereo separation
 		if ( stereo_separation != 0 )
@@ -484,21 +509,29 @@ void V_RenderView( float stereo_separation )
 
 		if (!cl_add_entities->value)
 			r_numentities = 0;
+
 		if (!cl_add_particles->value)
 			r_numparticles = 0;
+
 		if (!cl_add_lights->value)
 			r_numdlights = 0;
+
 		if (!cl_add_blend->value)
-		{
 			VectorClear (cl.refdef.blend);
-		}
+
 
 		cl.refdef.num_entities = r_numentities;
 		cl.refdef.entities = r_entities;
+
 		cl.refdef.num_particles = r_numparticles;
 		cl.refdef.particles = r_particles;
+
+		cl.refdef.num_debuglines = r_numdebuglines;
+		cl.refdef.debuglines = r_debuglines;
+
 		cl.refdef.num_dlights = r_numdlights;
 		cl.refdef.dlights = r_dlights;
+
 		cl.refdef.lightstyles = r_lightstyles;
 
 		cl.refdef.rdflags = cl.frame.playerstate.rdflags;
@@ -516,9 +549,7 @@ void V_RenderView( float stereo_separation )
 	re.SetColor(1, 1, 1, 1);
 
 	SCR_AddDirtyPoint (scr_vrect.x, scr_vrect.y);
-	SCR_AddDirtyPoint (scr_vrect.x+scr_vrect.width-1,
-		scr_vrect.y+scr_vrect.height-1);
-
+	SCR_AddDirtyPoint (scr_vrect.x+scr_vrect.width-1, scr_vrect.y+scr_vrect.height-1);
 
 //	SCR_DrawCrosshair ();
 }

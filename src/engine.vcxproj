@@ -89,6 +89,7 @@
     <ClCompile Include="script\scr_builtins_shared.c" />
     <ClCompile Include="script\scr_utils.c" />
     <ClCompile Include="server\sv_ai.c" />
+    <ClCompile Include="server\sv_devtools.c" />
     <ClCompile Include="server\sv_load.c" />
     <ClCompile Include="server\sv_gentity.c" />
     <ClCompile Include="server\sv_physics.c" />

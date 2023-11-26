@@ -181,6 +181,9 @@
     <ClCompile Include="server\sv_ai.c">
       <Filter>server</Filter>
     </ClCompile>
+    <ClCompile Include="server\sv_devtools.c">
+      <Filter>server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="platform\resource.h" />

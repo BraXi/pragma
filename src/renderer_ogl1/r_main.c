@@ -750,6 +750,8 @@ R_RenderView
 r_newrefdef must be set before the first call
 ================
 */
+
+extern void R_DrawDebugLines(void);
 void R_RenderView (refdef_t *fd)
 {
 	if (r_norefresh->value)
@@ -781,7 +783,9 @@ void R_RenderView (refdef_t *fd)
 
 	R_DrawWorld ();
 
-	R_DrawEntitiesOnList ();
+	R_DrawEntitiesOnList();
+
+	R_DrawDebugLines();
 
 	R_RenderDlights ();
 

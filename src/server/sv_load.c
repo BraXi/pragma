@@ -226,7 +226,6 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 	md3Header_t* in;
 //	md3Frame_t* frame;
 	md3Tag_t* tag;
-	int				size = 0;
 
 	in = (md3Header_t*)buffer;
 

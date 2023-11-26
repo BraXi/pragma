@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	MAX_ENTITIES	512		// max visible entities, was 128 [previously MAX_ENTITIES]
 #define	MAX_PARTICLES	8192	// was 4096
 #define	MAX_LIGHTSTYLES	256
+#define MAX_DEBUG_LINES	512
 
 #define POWERSUIT_SCALE		4.0F
 
@@ -107,15 +108,15 @@ typedef struct
 	float		white;			// highest of rgb
 } lightstyle_t;
 
-typedef struct
-{
-	vec3_t		start;
-	vec3_t		end;
-	vec3_t		color;
-	byte		depthtest;
+//typedef struct
+//{
+//	vec3_t		start;
+//	vec3_t		end;
+//	vec3_t		color;
+//	byte		depthtest;
 //	vec3_t		*points;
 //	unsigned int numpoints;
-} debugline_t;
+//} debugline_t;
 
 typedef struct
 {
@@ -146,7 +147,7 @@ typedef struct
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'2')
+#define	API_VERSION		('B'+'X'+'I'+'3')
 
 //
 // these are the functions exported by the refresh module
@@ -176,11 +177,14 @@ typedef struct
 	// an implicit "pics/" prepended to the name. (a pic name that starts with a
 	// slash will not use the "pics/" prefix or the ".pcx" postfix)
 	void	(*BeginRegistration) (char *map);
+	void	(*EndRegistration) (void);
+
 	struct model_s *(*RegisterModel) (char *name);
 	struct image_s *(*RegisterSkin) (char *name);
 	struct image_s *(*RegisterPic) (char *name);
+
 	void	(*SetSky) (char *name, float rotate, vec3_t axis, vec3_t color);
-	void	(*EndRegistration) (void);
+
 
 	void	(*RenderFrame) (refdef_t *fd);
 
@@ -193,7 +197,6 @@ typedef struct
 	void	(*DrawFill) (int x, int y, int w, int h);
 	void	(*DrawFadeScreen) (float *rgba);
 
-
 	// Draw images for cinematic rendering (which can have a different palette). Note that calls
 	void	(*DrawStretchRaw) (int x, int y, int w, int h, int cols, int rows, byte *data);
 
@@ -202,7 +205,6 @@ typedef struct
 	void	(*NewDrawFill) (rect_t rect, rgba_t color);
 
 	void	(*SetColor)(float r, float g, float b, float a);
-
 
 	/*
 	** video mode and refresh state management entry points

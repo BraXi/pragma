@@ -33,11 +33,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	LATENCY_COUNTS		16
 #define	RATE_MESSAGES		10
 #define	MAX_STRINGCMDS		8		// how many console commands can client issue to server in a single message
-
 // MAX_CHALLENGES is made large to prevent a denial of service attack 
 // that could cycle all of them out before legitimate users connected
-#define	MAX_CHALLENGES	1024
+#define	MAX_CHALLENGES		1024
 
+extern debugline_t* sv_debugLines;// [MAX_DEBUG_LINES]
 
 typedef struct svmodel_s
 {
@@ -336,6 +336,12 @@ void SV_FreeEntity(gentity_t* ent);
 void SV_InitEntity(gentity_t* ent);
 void SV_RunEntity(gentity_t* ent);
 qboolean SV_RunThink(gentity_t* ent);
+
+//
+// sv_devtools.c
+//
+void SV_InitDevTools();
+void SV_FreeDevTools();
 
 //
 // sv_world.c
