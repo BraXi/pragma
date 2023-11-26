@@ -110,7 +110,7 @@ void M_PushMenu ( void (*draw) (void), const char *(*key) (int k) )
 {
 	int		i;
 
-//	if (Cvar_VariableValue ("sv_maxclients") == 1 && Com_ServerState ())
+	if (Cvar_VariableValue ("sv_maxclients") == 1 && Com_ServerState ())
 //		Cvar_Set ("paused", "1"); // braxi: console no longer pauses the game
 
 	// if this menu is already present, drop back to that level

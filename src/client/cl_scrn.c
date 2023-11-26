@@ -609,8 +609,10 @@ void SCR_BeginLoadingPlaque(void)
 	cl.sound_prepped = false;		// don't play ambients
 	if (cls.disable_screen)
 		return;
+
 	//	if (developer->value)
 	//		return; //not needed, printing to remote console
+
 	if (cls.state == ca_disconnected)
 		return;	
 
@@ -625,6 +627,7 @@ void SCR_BeginLoadingPlaque(void)
 		scr_draw_loading = 2;	// clear to balack first
 	else
 		scr_draw_loading = 1;
+
 	SCR_UpdateScreen ();
 	cls.disable_screen = Sys_Milliseconds ();
 	cls.disable_servercount = cl.servercount;

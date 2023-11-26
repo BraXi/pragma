@@ -398,8 +398,7 @@ void CL_SendConnectPacket (void)
 	port = Cvar_VariableValue ("qport");
 	userinfo_modified = false;
 
-	Netchan_OutOfBandPrint (NS_CLIENT, adr, "connect %i %i %i \"%s\"\n",
-		PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo() );
+	Netchan_OutOfBandPrint (NS_CLIENT, adr, "connect %i %i %i \"%s\"\n", PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo() );
 }
 
 /*
@@ -691,13 +690,11 @@ void CL_Packet_f (void)
 =================
 CL_Changing_f
 
-Just sent as a hint to the client that they should
-drop to full console
+Just sent as a hint to the client that they should drop to full console
 =================
 */
 void CL_Changing_f (void)
 {
-	//ZOID
 	//if we are downloading, we don't change!  This so we don't suddenly stop downloading a map
 	if (cls.download)
 		return;
@@ -752,12 +749,12 @@ Handle a reply from a ping
 */
 void CL_ParseStatusMessage (void)
 {
-	char	*s;
+	char	*str;
 
-	s = MSG_ReadString(&net_message);
+	str = MSG_ReadString(&net_message);
 
-	Com_Printf ("%s\n", s);
-	M_AddToServerList (net_from, s);
+	Com_Printf("%s - %s\n", NET_AdrToString(net_from), str);
+	M_AddToServerList (net_from, str);
 }
 
 
@@ -828,7 +825,9 @@ void CL_ConnectionlessPacket (void)
 
 	c = Cmd_Argv(0);
 
+#ifdef _DEBUG
 	Com_Printf ("%s: %s\n", NET_AdrToString (net_from), c);
+#endif
 
 	// server connection
 	if (!strcmp(c, "client_connect"))
@@ -1112,61 +1111,50 @@ void CL_InitLocal (void)
 
 #ifdef _DEBUG
 	Cmd_AddCommand("clents", CL_PrintEnts_f);
+	Cmd_AddCommand("packet", CL_Packet_f); // this is dangerous to leave in release builds
 #endif
 
-	Cmd_AddCommand ("cmd", CL_ForwardToServer_f);
-	Cmd_AddCommand ("pause", CL_Pause_f);
-	Cmd_AddCommand ("pingservers", CL_PingServers_f);
+	Cmd_AddCommand("rcon", CL_Rcon_f);
 
-	Cmd_AddCommand ("userinfo", CL_Userinfo_f);
-	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
+	Cmd_AddCommand("connect", CL_Connect_f);
+	Cmd_AddCommand("reconnect", CL_Reconnect_f);
+	Cmd_AddCommand("disconnect", CL_Disconnect_f);
 
-	Cmd_AddCommand ("changing", CL_Changing_f);
-	Cmd_AddCommand ("disconnect", CL_Disconnect_f);
+	Cmd_AddCommand("pingservers", CL_PingServers_f);
+
+	Cmd_AddCommand("cmd", CL_ForwardToServer_f);
+	Cmd_AddCommand("pause", CL_Pause_f);
+
+	Cmd_AddCommand("userinfo", CL_Userinfo_f);
+	Cmd_AddCommand("snd_restart", CL_Snd_Restart_f);
+
 	Cmd_AddCommand ("record", CL_Record_f);
 	Cmd_AddCommand ("stop", CL_Stop_f);
 
 	Cmd_AddCommand ("quit", CL_Quit_f);
 
-	Cmd_AddCommand ("connect", CL_Connect_f);
-	Cmd_AddCommand ("reconnect", CL_Reconnect_f);
-
-	Cmd_AddCommand ("rcon", CL_Rcon_f);
-
-#ifdef _DEBUG  // this is dangerous to leave in release builds
- 	Cmd_AddCommand ("packet", CL_Packet_f);
-#endif
-	Cmd_AddCommand ("precache", CL_Precache_f);
-
-	Cmd_AddCommand ("download", CL_Download_f);
+	Cmd_AddCommand("changing", CL_Changing_f);
+	Cmd_AddCommand("precache", CL_Precache_f);
+	Cmd_AddCommand("download", CL_Download_f);
 
 	//
 	// forward to server commands
 	//
-	// the only thing this does is allow command completion
-	// to work -- all unknown commands are automatically
-	// forwarded to the server
-//	Cmd_AddCommand ("wave", NULL);
-//	Cmd_AddCommand ("inven", NULL);
+	// the only thing this does is allow command completion to work
+	// all unknown commands are automatically forwarded to the server
+
 	Cmd_AddCommand ("kill", NULL);
 	Cmd_AddCommand ("use", NULL);
 	Cmd_AddCommand ("reload", NULL);
 	Cmd_AddCommand ("melee", NULL);
-	Cmd_AddCommand ("drop", NULL);
 	Cmd_AddCommand ("say", NULL);
 	Cmd_AddCommand ("say_team", NULL);
 	Cmd_AddCommand ("info", NULL);
-	Cmd_AddCommand ("prog", NULL);
+
 	Cmd_AddCommand ("give", NULL);
 	Cmd_AddCommand ("god", NULL);
 	Cmd_AddCommand ("notarget", NULL);
 	Cmd_AddCommand ("noclip", NULL);
-	Cmd_AddCommand ("invuse", NULL);
-	Cmd_AddCommand ("invprev", NULL);
-	Cmd_AddCommand ("invnext", NULL);
-	Cmd_AddCommand ("invdrop", NULL);
-	Cmd_AddCommand ("weapnext", NULL);
-	Cmd_AddCommand ("weapprev", NULL);
 }
 
 

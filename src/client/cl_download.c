@@ -221,13 +221,13 @@ static void CL_DownloadMapTextures(float allowDownload, char* fileDir, char* fil
 
 void CL_RequestNextDownload(void)
 {
-#if 0
 	unsigned	map_checksum;		// for detecting cheater maps
-	char		*mapFileName;
+	char* mapFileName;
 
 	if (cls.state != ca_connected)
 		return;
 
+#if 0
 	if (!allow_download->value && precache_check < ENV_CNT)
 		precache_check = ENV_CNT;
 
@@ -260,15 +260,18 @@ void CL_RequestNextDownload(void)
 	{
 		precache_check = ENV_CNT + 1;
 		
-		CM_LoadMap(mapFileName, true, &map_checksum);
 
-		if (map_checksum != atoi(cl.configstrings[CS_MAPCHECKSUM]))
-		{
-			Com_Error(ERR_DROP, "Local map version differs from server: %i != '%s'\n", map_checksum, cl.configstrings[CS_MAPCHECKSUM]);
-			return;
-		}
 	}
 #endif
+	mapFileName = cl.configstrings[CS_MODELS + 1];
+	CM_LoadMap(mapFileName, true, &map_checksum);
+
+	if (map_checksum != atoi(cl.configstrings[CS_MAPCHECKSUM]))
+	{
+		Com_Error(ERR_DROP, "Local map version differs from server: %i != '%s'\n", map_checksum, cl.configstrings[CS_MAPCHECKSUM]);
+		return;
+}
+
 //	CL_DownloadSkyImages((allow_download->value && allow_download_maps->value), TEXTURE_CNT);
 //	CL_DownloadMapTextures((allow_download->value && allow_download_maps->value), "textures", "wal", TEXTURE_CNT + 999);
 

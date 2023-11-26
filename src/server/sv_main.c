@@ -232,6 +232,7 @@ void SVC_Info (void)
 				count++;
 
 		Com_sprintf (string, sizeof(string), "%16s %8s %2i/%2i\n", hostname->string, sv.name, count, (int)sv_maxclients->value);
+		Com_sprintf(string, sizeof(string), "%16s %8s %i/%i\n", hostname->string, sv.name, count, (int)sv_maxclients->value);
 	}
 
 	Netchan_OutOfBandPrint (NS_SERVER, net_from, "info\n%s", string);

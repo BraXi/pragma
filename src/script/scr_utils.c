@@ -7,17 +7,10 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 See the attached GNU General Public License v2 for more details.
 */
-
 // scr_utils.c
-
-//#include "../qcommon/qcommon.h"
-//#include "scriptvm.h"
-//#include "script_internals.h"
-//#include "../server/sv_game.h"
 
 #include "../server/server.h"
 #include "script_internals.h"
-
 
 #define	G_INT(o)			(*(int *)&active_qcvm->globals[o])
 #define	G_EDICT(o)			((gentity_t *)((byte *)active_qcvm->entities + *(int *)&active_qcvm->globals[o]))
