@@ -51,7 +51,12 @@ void PF_none(void)
 /*
 ===============
 PF_print
+
 Print message to server's console
+
+void print(string text, ...)
+
+print("hello world\n");
 ===============
 */
 void PF_print(void)
@@ -65,7 +70,12 @@ void PF_print(void)
 /*
 ===============
 PF_dprint
+
 Print message to server's console when developer is enabled
+
+void dprint(string text, ...)
+
+dprint("entity at ", vtos(self.origin), " is stuck in solid!\n");
 ===============
 */
 void PF_dprint(void)
@@ -87,6 +97,8 @@ void PF_dprint(void)
 PF_resetrunaway
 
 Resets the infinite loop check counter, to prevent an incorrect 'runaway infinite loop' error when a lot of script must be run.
+
+void resetrunaway()
 =================
 */
 void PF_resetrunaway(void)
@@ -141,7 +153,7 @@ void PF_crash(void)
 PF_printstack
 
 Displays current program execution stack in console, devmode only.
-printstack()
+void printstack()
 =================
 */
 void PF_printstack(void)
@@ -155,9 +167,12 @@ void PF_printstack(void)
 /*
 =================
 PF_localcmd
-Executes text in local execution buffer
 
-localcmd(string)
+Executes [commandstring] in local command execution buffer
+
+void localcmd(string commandstring)
+
+localcmd("gamemap test2");
 =================
 */
 void PF_localcmd(void)
@@ -176,7 +191,12 @@ void PF_localcmd(void)
 /*
 ==============
 PF_argc
+
+returns the number of arguments of a command received from client
+
 float argc()
+
+float numargs = argc();
 ==============
 */
 void PF_argc(void)
@@ -187,7 +207,13 @@ void PF_argc(void)
 /*
 ==============
 PF_argv
-string argv(float)
+
+returns the value of argument [argumentnum] of a command received from client
+
+string argv(float argnum)
+
+string cmdname = argv(0);
+string cmdvalue = argv(1);
 ==============
 */
 void PF_argv(void)
@@ -208,7 +234,11 @@ void PF_argv(void)
 =================
 PF_cvar
 
-float cvar(string)
+returns the value of a cvar as a float
+
+float cvar(string cvarname)
+
+float cheatsenabled = cvar("sv_cheats");
 =================
 */
 void PF_cvar(void)
@@ -239,7 +269,10 @@ void PF_cvar(void)
 =================
 PF_cvarstring
 
-string cvarstring(string)
+returtns the value of a cvar as a string
+string cvarstring(string cvarname)
+
+string message = cvarstring("motd");
 =================
 */
 void PF_cvarstring(void)
@@ -269,7 +302,11 @@ void PF_cvarstring(void)
 =================
 PF_cvarset
 
-void cvarset(string, string)
+sets value of a cvar
+
+void cvarset(string cvarname, string value, ...)
+
+cvarset("motd", "welcome to ", hostname, " server!");
 =================
 */
 void PF_cvarset(void)
