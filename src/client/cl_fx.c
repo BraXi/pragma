@@ -278,14 +278,16 @@ void CL_ParseMuzzleFlash(void)
 
 	if (cl.playernum + 1 == entity_num) // this is our local player
 	{
-//		cl.muzzleflash_frame = rand() & 10; //what a shitty rng
-//		printf("cl.muzzleflash_frame = %i\n", cl.muzzleflash);
+		cl.muzzleflash_time = cl.time + 90;
+
 		cl.muzzleflash = effectNum;
+		if (effectNum >= FX_WEAPON_MUZZLEFLASHES || effectNum < 0)
+			cl.muzzleflash = FX_MUZZLEFLASH_PISTOL;
+
 		cl.muzzleflash_frame++;
 		if (cl.muzzleflash_frame > 9)
 			cl.muzzleflash_frame = 0;
 
-		cl.muzzleflash_time = cl.time + 90;
 		AngleVectors(cl.viewangles, v_fwd, v_right, v_up);
 		VectorMA(dlight->origin, 44, v_fwd, dlight->origin);
 		VectorMA(dlight->origin, 5, v_right, dlight->origin);

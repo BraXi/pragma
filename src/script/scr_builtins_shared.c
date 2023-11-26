@@ -369,21 +369,21 @@ void PF_strlen(void)
 =================
 PF_strat
 
-return char from a str at index
-string strat(string,float index)
+returns a char at a given pos in src string
 
-//FIXME: CRASHING
+string strat(string src, float pos)
+
+string str = "abc";
+string letter_b = strat(str,1); // letter_b == b
 =================
 */
 void PF_strat(void)
 {
-#if 1
-	Scr_RunError("PF_strat: borked\n");
-#else
-	char
 	char* str;
 	size_t len;
 	int at;
+
+	static char tempchar[2];
 
 	str = Scr_GetParmString(0);
 	at = (int)Scr_GetParmFloat(1);
@@ -391,12 +391,12 @@ void PF_strat(void)
 
 	if (at >= 0 || at < len)
 	{
-		str = str[at];
-		Scr_ReturnString(str);
+		tempchar[0] = str[at];
+		tempchar[1] = 0; // null terminated
+		Scr_ReturnString(tempchar);
 		return;
 	}
 	Scr_ReturnString("");
-#endif
 }
 
 /*
@@ -478,6 +478,8 @@ void Scr_InitSharedBuiltins()
 	Scr_DefineBuiltin(PF_ftos, PF_ALL, "ftos", "string(float f)");
 	Scr_DefineBuiltin(PF_stof, PF_ALL, "stof", "float(string s)");
 	Scr_DefineBuiltin(PF_vtos, PF_ALL, "vtos", "string(vector v1)");
+
+//	Scr_DefineBuiltin(PF_itoc, PF_ALL, "itoc", "string(float i)");
 
 	// math
 	Scr_InitMathBuiltins();

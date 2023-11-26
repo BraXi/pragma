@@ -252,17 +252,18 @@ void CL_RequestNextDownload(void)
 		return;
 
 	// download all images
-	if( CL_DownloadFiles(allow_download->value, CS_IMAGES, MAX_IMAGES, "pics", ".pcx", ENV_CNT) )
+	if (CL_DownloadFiles(allow_download->value, CS_IMAGES, MAX_IMAGES, "pics", ".pcx", ENV_CNT))
 		return;
 
 	// perform BSP checksum to detect cheater maps
 	if (precache_check == ENV_CNT)
 	{
 		precache_check = ENV_CNT + 1;
-		
+
 
 	}
 #endif
+
 	mapFileName = cl.configstrings[CS_MODELS + 1];
 	CM_LoadMap(mapFileName, true, &map_checksum);
 
@@ -270,7 +271,8 @@ void CL_RequestNextDownload(void)
 	{
 		Com_Error(ERR_DROP, "Local map version differs from server: %i != '%s'\n", map_checksum, cl.configstrings[CS_MAPCHECKSUM]);
 		return;
-}
+	}
+
 
 //	CL_DownloadSkyImages((allow_download->value && allow_download_maps->value), TEXTURE_CNT);
 //	CL_DownloadMapTextures((allow_download->value && allow_download_maps->value), "textures", "wal", TEXTURE_CNT + 999);
