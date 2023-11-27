@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // that could cycle all of them out before legitimate users connected
 #define	MAX_CHALLENGES		1024
 
-extern debugline_t* sv_debugLines;// [MAX_DEBUG_LINES]
+extern debugprimitive_t* sv_debugPrimitives;// [MAX_DEBUG_PRIMITIVES]
 
 typedef struct svmodel_s
 {

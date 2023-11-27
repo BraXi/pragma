@@ -28,26 +28,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	MAX_ENTITIES	512		// max visible entities, was 128 [previously MAX_ENTITIES]
 #define	MAX_PARTICLES	8192	// was 4096
 #define	MAX_LIGHTSTYLES	256
-#define MAX_DEBUG_LINES	512
+#define MAX_DEBUG_PRIMITIVES	512
 
-#define POWERSUIT_SCALE		4.0F
-
-#define SHELL_RED_COLOR		0xF2
-#define SHELL_GREEN_COLOR	0xD0
-#define SHELL_BLUE_COLOR	0xF3
-
-#define SHELL_RG_COLOR		0xDC
-//#define SHELL_RB_COLOR		0x86
-#define SHELL_RB_COLOR		0x68
-#define SHELL_BG_COLOR		0x78
-
-//ROGUE
-#define SHELL_DOUBLE_COLOR	0xDF // 223
-#define	SHELL_HALF_DAM_COLOR	0x90
-#define SHELL_CYAN_COLOR	0x72
-//ROGUE
-
-#define SHELL_WHITE_COLOR	0xD7
 
 //
 // CLIENT ENTITY
@@ -108,15 +90,6 @@ typedef struct
 	float		white;			// highest of rgb
 } lightstyle_t;
 
-//typedef struct
-//{
-//	vec3_t		start;
-//	vec3_t		end;
-//	vec3_t		color;
-//	byte		depthtest;
-//	vec3_t		*points;
-//	unsigned int numpoints;
-//} debugline_t;
 
 typedef struct
 {
@@ -142,8 +115,8 @@ typedef struct
 	int				num_particles;
 	particle_t		*particles;
 
-	int				num_debuglines;
-	debugline_t		*debuglines;
+	int				num_debugprimitives;
+	debugprimitive_t		*debugprimitives;
 } refdef_t;
 
 

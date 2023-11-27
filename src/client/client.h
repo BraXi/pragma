@@ -523,7 +523,7 @@ extern struct model_s *gun_model;
 void V_Init (void);
 void V_RenderView( float stereo_separation );
 void V_AddEntity (centity_t *ent);
-void V_AddDebugLine(debugline_t *line);
+void V_AddDebugPrimitive(debugprimitive_t *obj);
 void V_AddParticle (vec3_t org, vec3_t color, float alpha);
 void V_AddLight (vec3_t org, float intensity, float r, float g, float b);
 void V_AddLightStyle (int style, float r, float g, float b);

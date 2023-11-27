@@ -1616,18 +1616,18 @@ void PFSV_touchentities(void)
 
 /*
 =================
-PFSV_debugline
+PFSV_drawline
 
-void debugline(vector p1, vector p2, vector color, float thickness, float depthTest, float drawtime)
+void drawline(vector p1, vector p2, vector color, float thickness, float depthTest, float drawtime)
 
 Draws a debug line between two points, does not work on dedicated servers
 For listen servers only the host will see the lines.
 
-debugline(self.origin, self.goal_entity.origin, '1 0 0', 1, 0, g_frameTime);
+drawline(self.origin, self.goal_entity.origin, '1 0 0', 1, true, g_frameTime);
 =================
 */
 extern void SV_AddDebugLine(vec3_t p1, vec3_t p2, vec3_t color, float thickness, float drawtime, qboolean depthtested);
-void PFSV_debugline(void)
+void PFSV_drawline(void)
 {
 	float	*p1, *p2, *color;
 	float	thickness, drawtime;
@@ -1649,8 +1649,75 @@ void PFSV_debugline(void)
 	SV_AddDebugLine(p1, p2,color, thickness, drawtime, depthtested);
 }
 
+/*
+=================
+PFSV_drawpoint
 
+void drawpoint(vector p1, vector p2, vector color, float thickness, float depthTest, float drawtime)
 
+Draws a debug point, does not work on dedicated servers
+For listen servers only the host will see the point.
+
+drawpoint(self.origin, '1 0 0', 1, false, g_frameTime);
+=================
+*/
+extern void SV_AddDebugPoint(vec3_t p1, vec3_t color, float thickness, float drawtime, qboolean depthtested);
+void PFSV_drawpoint(void)
+{
+	float	*p1, *color;
+	float	thickness, drawtime;
+	qboolean depthtested;
+
+	if (dedicated->value)
+		return;
+
+	//	if (sv_maxclients->value > 1)
+	//		return;
+
+	p1 = Scr_GetParmVector(0);
+	color = Scr_GetParmVector(1);
+	thickness = Scr_GetParmFloat(2);
+	depthtested = Scr_GetParmFloat(3) > 0 ? true : false;
+	drawtime = Scr_GetParmFloat(4);
+
+	SV_AddDebugPoint(p1, color, thickness, drawtime, depthtested);
+}
+
+/*
+=================
+PFSV_drawbox
+
+void drawbox(vector pos, vector mins, vector maxs, vector color, float thickness, float depthTest, float drawtime)
+
+Draws a debug point, does not work on dedicated servers
+For listen servers only the host will see the point.
+
+drawbox(self.origin, self.mins, self.maxs, '1 0 0', 1, false, g_frameTime);
+=================
+*/
+extern void SV_AddDebugBox(vec3_t pos, vec3_t p1, vec3_t p2, vec3_t color, float thickness, float drawtime, qboolean depthtested);
+void PFSV_drawbox(void)
+{
+	float	*origin, *p1, *p2, *color;
+	float	thickness, drawtime;
+	qboolean depthtested;
+
+	if (dedicated->value)
+		return;
+
+	//	if (sv_maxclients->value > 1)
+	//		return;
+
+	origin = Scr_GetParmVector(0);
+	p1 = Scr_GetParmVector(1);
+	p2 = Scr_GetParmVector(2);
+	color = Scr_GetParmVector(3);
+	thickness = Scr_GetParmFloat(4);
+	depthtested = Scr_GetParmFloat(5) > 0 ? true : false;
+	drawtime = Scr_GetParmFloat(6);
+
+	SV_AddDebugBox(origin, p1, p2, color, thickness, drawtime, depthtested);
+}
 
 /*
 =================
@@ -1748,5 +1815,10 @@ void SV_InitScriptBuiltins()
 
 	Scr_DefineBuiltin(PFSV_touchentities, PF_SV, "touchentities", "float(entity e, float at)");
 
-	Scr_DefineBuiltin(PFSV_debugline, PF_SV, "debugline", "void(vector p1, vector p2, vector c, float th, float dt, float t)");
+	Scr_DefineBuiltin(PFSV_drawline, PF_SV, "drawline", "void(vector p1, vector p2, vector c, float th, float dt, float t)");
+	Scr_DefineBuiltin(PFSV_drawpoint, PF_SV, "drawpoint", "void(vector p, vector c, float th, float dt, float t)");
+	Scr_DefineBuiltin(PFSV_drawbox, PF_SV, "drawbox", "void(vector p, vector p1, vector p2, vector c, float th, float dt, float t)");
+
+	//(vector pos, vector mins, vector maxs, vector color, float thickness, float depthTest, float drawtime)
+
 }

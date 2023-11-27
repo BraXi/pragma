@@ -47,8 +47,8 @@ centity_t	r_entities[MAX_ENTITIES];
 int			r_numparticles;
 particle_t	r_particles[MAX_PARTICLES];
 
-int			r_numdebuglines;
-debugline_t	r_debuglines[MAX_DEBUG_LINES];
+int			r_numdebugprimitives;
+debugprimitive_t	r_debugprimitives[MAX_DEBUG_PRIMITIVES];
 
 lightstyle_t	r_lightstyles[MAX_LIGHTSTYLES];
 
@@ -64,7 +64,7 @@ void V_ClearScene (void)
 	r_numdlights = 0;
 	r_numentities = 0;
 	r_numparticles = 0;
-	r_numdebuglines = 0;
+	r_numdebugprimitives = 0;
 }
 
 
@@ -86,22 +86,22 @@ void V_AddEntity(centity_t* ent)
 
 /*
 =====================
-V_AddDebugLine
+V_AddDebugPrimitive
 =====================
 */
-void V_AddDebugLine(debugline_t *line)
+void V_AddDebugPrimitive(debugprimitive_t *obj)
 {
-	if (r_numdebuglines >= MAX_DEBUG_LINES)
+	if (r_numdebugprimitives >= MAX_DEBUG_PRIMITIVES)
 	{
-		Com_DPrintf(DP_REND, "V_AddDebugLine: r_numdebuglines >= MAX_DEBUG_LINES\n");
+		Com_DPrintf(DP_REND, "V_AddDebugPrimitive: r_numdebugprimitives >= MAX_DEBUG_PRIMITIVES\n");
 		return;
 	}
-	r_debuglines[r_numdebuglines++] = *line;
+	r_debugprimitives[r_numdebugprimitives++] = *obj;
 }
+
 /*
 =====================
 V_AddParticle
-
 =====================
 */
 void V_AddParticle (vec3_t org, vec3_t color, float alpha)
@@ -140,7 +140,6 @@ void V_AddLight (vec3_t org, float intensity, float r, float g, float b)
 /*
 =====================
 V_AddLightStyle
-
 =====================
 */
 void V_AddLightStyle (int style, float r, float g, float b)
@@ -161,7 +160,7 @@ void V_AddLightStyle (int style, float r, float g, float b)
 ================
 V_TestParticles
 
-If cl_testparticles is set, create 4096 particles in the view
+If cl_testparticles is set, create MAX_PARTICLES particles in the view
 ================
 */
 void V_TestParticles (void)
@@ -430,7 +429,7 @@ void V_Gun_Model_f (void)
 V_RenderView
 ==================
 */
-extern void SV_AddDebugLines();
+extern void SV_AddDebugPrimitives();
 void V_RenderView( float stereo_separation )
 {
 	extern int entitycmpfnc( const centity_t *, const centity_t * );
@@ -461,7 +460,7 @@ void V_RenderView( float stereo_separation )
 		// v_forward, etc.
 		CL_AddEntities ();
 
-		SV_AddDebugLines();
+		SV_AddDebugPrimitives();
 
 
 		if (cl_testparticles->value)
@@ -526,8 +525,8 @@ void V_RenderView( float stereo_separation )
 		cl.refdef.num_particles = r_numparticles;
 		cl.refdef.particles = r_particles;
 
-		cl.refdef.num_debuglines = r_numdebuglines;
-		cl.refdef.debuglines = r_debuglines;
+		cl.refdef.num_debugprimitives = r_numdebugprimitives;
+		cl.refdef.debugprimitives = r_debugprimitives;
 
 		cl.refdef.num_dlights = r_numdlights;
 		cl.refdef.dlights = r_dlights;

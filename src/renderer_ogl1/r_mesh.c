@@ -244,7 +244,112 @@ void R_DrawEntityModel(centity_t* ent)
 }
 
 
-void R_EmitWireBox(vec3_t mins, vec3_t maxs)
+/*
+=============
+R_BeginLinesRendering
+=============
+*/
+void R_BeginLinesRendering(qboolean dt)
+{
+	R_DepthTest(dt);
+	qglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	qglDisable(GL_TEXTURE_2D);
+	R_CullFace(false);
+	qglColor4f(1, 1, 1, 1);
+}
+
+/*
+=============
+R_EndLinesRendering
+=============
+*/
+void R_EndLinesRendering()
+{
+	qglColor4f(1, 1, 1, 1);
+	qglEnable(GL_TEXTURE_2D);
+	R_CullFace(true);
+	qglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	R_DepthTest(true);
+}
+
+
+/*
+=============
+R_DrawDebugLine
+=============
+*/
+static void R_DrawDebugLine(debugprimitive_t *line)
+{
+	qglBegin(GL_LINES);
+		qglVertex3fv(line->p1);
+		qglVertex3fv(line->p2);
+	qglEnd();
+}
+
+/*
+=============
+R_DrawWirePoint
+=============
+*/
+static void R_DrawWirePoint(vec3_t origin)
+{
+	int size = 8;
+	qglBegin(GL_LINES);
+		qglVertex3f(origin[0] - size, origin[1], origin[2]);
+		qglVertex3f(origin[0] + size, origin[1], origin[2]);
+		qglVertex3f(origin[0], origin[1] - size, origin[2]);
+		qglVertex3f(origin[0], origin[1] + size, origin[2]);
+		qglVertex3f(origin[0], origin[1], origin[2] - size);
+		qglVertex3f(origin[0], origin[1], origin[2] + size);
+	qglEnd();
+}
+
+static void R_DrawWireBoundingBox(vec3_t mins, vec3_t maxs)
+{
+	qglBegin(GL_LINES);
+		qglVertex3f(mins[0], mins[1], mins[2]);
+		qglVertex3f(maxs[0], mins[1], mins[2]);
+
+		qglVertex3f(mins[0], maxs[1], mins[2]);
+		qglVertex3f(maxs[0], maxs[1], mins[2]);
+
+		qglVertex3f(mins[0], mins[1], maxs[2]);
+		qglVertex3f(maxs[0], mins[1], maxs[2]);
+
+		qglVertex3f(mins[0], maxs[1], maxs[2]);
+		qglVertex3f(maxs[0], maxs[1], maxs[2]);
+
+		qglVertex3f(mins[0], mins[1], mins[2]);
+		qglVertex3f(mins[0], maxs[1], mins[2]);
+
+		qglVertex3f(maxs[0], mins[1], mins[2]);
+		qglVertex3f(maxs[0], maxs[1], mins[2]);
+
+		qglVertex3f(mins[0], mins[1], maxs[2]);
+		qglVertex3f(mins[0], maxs[1], maxs[2]);
+
+		qglVertex3f(maxs[0], mins[1], maxs[2]);
+		qglVertex3f(maxs[0], maxs[1], maxs[2]);
+
+		qglVertex3f(mins[0], mins[1], mins[2]);
+		qglVertex3f(mins[0], mins[1], maxs[2]);
+
+		qglVertex3f(mins[0], maxs[1], mins[2]);
+		qglVertex3f(mins[0], maxs[1], maxs[2]);
+
+		qglVertex3f(maxs[0], mins[1], mins[2]);
+		qglVertex3f(maxs[0], mins[1], maxs[2]);
+
+		qglVertex3f(maxs[0], maxs[1], mins[2]);
+		qglVertex3f(maxs[0], maxs[1], maxs[2]);
+	qglEnd();
+}
+/*
+=============
+R_DrawWireBox
+=============
+*/
+static void R_DrawWireBox(vec3_t mins, vec3_t maxs)
 {
 	qglBegin(GL_QUAD_STRIP);
 	qglVertex3f(mins[0], mins[1], mins[2]);
@@ -260,52 +365,6 @@ void R_EmitWireBox(vec3_t mins, vec3_t maxs)
 	qglEnd();
 }
 
-void R_EmitWirePoint(vec3_t origin)
-{
-	int size = 8;
-
-	qglBegin(GL_LINES);
-	qglVertex3f(origin[0] - size, origin[1], origin[2]);
-	qglVertex3f(origin[0] + size, origin[1], origin[2]);
-	qglVertex3f(origin[0], origin[1] - size, origin[2]);
-	qglVertex3f(origin[0], origin[1] + size, origin[2]);
-	qglVertex3f(origin[0], origin[1], origin[2] - size);
-	qglVertex3f(origin[0], origin[1], origin[2] + size);
-	qglEnd();
-}
-
-void R_BeginLinesRendering(qboolean dt)
-{
-	R_DepthTest(dt);
-	qglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	qglDisable(GL_TEXTURE_2D);
-	R_CullFace(false);
-	qglColor4f(1, 1, 1, 1);
-}
-
-void R_EndLinesRendering()
-{
-	qglColor4f(1, 1, 1, 1);
-	qglEnable(GL_TEXTURE_2D);
-	R_CullFace(true);
-	qglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	R_DepthTest(true);
-}
-
-void R_DrawDebugLine(debugline_t *line)
-{
-	qglColor3fv(line->color);
-
-//	R_EmitWirePoint(line->p1);
-
-	qglLineWidth(line->thickness);
-
-	qglBegin(GL_LINES);
-		qglVertex3fv(line->p1);
-		qglVertex3fv(line->p2);
-	qglEnd();
-}
-
 /*
 =============
 R_DrawDebugLines
@@ -314,32 +373,61 @@ R_DrawDebugLines
 void R_DrawDebugLines(void)
 {
 	int		i;
-	debugline_t* line;
+	debugprimitive_t* line;
 
 	qglPushMatrix();
 	R_BeginLinesRendering(true);
-	for (i = 0; i < r_newrefdef.num_debuglines; i++)
+	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
-		line = &r_newrefdef.debuglines[i];
+		line = &r_newrefdef.debugprimitives[i];
 		if (!line->depthTest)
 			continue;
-		R_DrawDebugLine(line);
+
+		qglColor3fv(line->color);
+		qglLineWidth(line->thickness);
+		switch (line->type)
+		{
+		case DPRIMITIVE_LINE:
+			R_DrawDebugLine(line);
+			break;
+		case DPRIMITIVE_POINT:
+			R_DrawWirePoint(line->p1);
+			break;
+		case DPRIMITIVE_BOX:
+			R_DrawWireBoundingBox(line->p1, line->p2);
+			break;
+		}
 	}
 	R_EndLinesRendering();
 
-#if 1
 	R_WriteToDepthBuffer(GL_FALSE);
 	R_BeginLinesRendering(false);
-	for (i = 0; i < r_newrefdef.num_debuglines; i++)
+	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
-		line = &r_newrefdef.debuglines[i];
+		line = &r_newrefdef.debugprimitives[i];
 		if (line->depthTest)
 			continue;
-		R_DrawDebugLine(line);
+
+		qglColor3fv(line->color);
+		qglLineWidth(line->thickness);
+		switch (line->type)
+		{
+		case DPRIMITIVE_LINE:
+			R_DrawDebugLine(line);
+			break;
+		case DPRIMITIVE_POINT:
+			R_DrawWirePoint(line->p1);
+			break;
+		case DPRIMITIVE_BOX:
+			R_DrawWireBoundingBox(line->p1, line->p2);
+			break;
+		}
 	}
 	R_EndLinesRendering();
 	R_WriteToDepthBuffer(GL_TRUE);
-#endif
+
+	qglColor3f(1,1,1);
+	qglLineWidth(1.0f);
 	qglPopMatrix();
 }
 
@@ -349,7 +437,7 @@ void R_DrawBBox(vec3_t mins, vec3_t maxs)
 {
 	R_BeginLinesRendering(true);
 
-	R_EmitWireBox(mins, maxs);
+//	R_EmitWireBox(mins, maxs);
 
 	R_EndLinesRendering();
 }
