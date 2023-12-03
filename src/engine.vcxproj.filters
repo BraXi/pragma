@@ -184,6 +184,9 @@
     <ClCompile Include="server\sv_devtools.c">
       <Filter>server</Filter>
     </ClCompile>
+    <ClCompile Include="qcommon\navigation.c">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="platform\resource.h" />

@@ -1121,7 +1121,11 @@ void PFSV_getviewoffset(void)
 ===============
 PFSV_saveclientfield
 
+saves persistent client data across map changes
+
 void saveclientfield(entity player, float index, float val)
+
+saveclientfield(self, PS_HEALTH, self.health);
 ===============
 */
 void PFSV_saveclientfield(void)
@@ -1152,7 +1156,11 @@ void PFSV_saveclientfield(void)
 ===============
 PFSV_loadclientfield
 
+loads persistent data
+
 float loadclientfield(entity player, float index)
+
+self.health = loadclientfield(self, PS_HEALTH);
 ===============
 */
 void PFSV_loadclientfield(void)
@@ -1225,6 +1233,11 @@ void PFSV_loadglobal(void)
 PFSV_changemap
 
 float changemap(string nextmap, float savepers)
+
+Starts a new map, set savepers to true to keep persistent client/globals 
+fields across levels. Returns true if the bsp 'maps/[nextmap].bsp' exists on server.
+
+float mapexists = changemap("test", true);
 ===============
 */
 void PFSV_changemap(void)
@@ -1290,8 +1303,13 @@ void PFSV_setstat(void)
 }
 
 
+/*
+===============
+PFSV_setviewangles
 
-
+void setviewangles(entity player, vector viewAngles)
+===============
+*/
 void PFSV_setviewangles(void)
 {
 	gentity_t* ent;
@@ -1309,7 +1327,13 @@ void PFSV_setviewangles(void)
 	VectorCopy(client->ps.viewangles, ent->v.v_angle);
 }
 
+/*
+===============
+PFSV_kickangles
 
+void kickangles(entity player, vector kickDirAndForce)
+===============
+*/
 void PFSV_kickangles(void)
 {
 	gentity_t* ent;
@@ -1330,6 +1354,8 @@ void PFSV_kickangles(void)
 /*
 ===============
 PFSV_pmove
+
+deprecated, subject to remove
 
 void pmove(float index, float val)
 ===============
@@ -1453,24 +1479,6 @@ void PFSV_pmove(void)
 
 	SV_LinkEdict(ent);
 }
-
-/*
-
-	goal = VM_TO_ENT(ent->v.goal_entity);
-	if (goal == sv.edicts)
-		goal = NULL;
-
-qboolean SV_CheckBottom(gentity_t* actor)
-void SV_MoveToGoal(gentity_t* actor, gentity_t* goal, float dist)
-SV_WalkMove(gentity_t* actor, float yaw, float dist)
-
-	goal = VM_TO_ENT(actor->v.goal_entity);
-	if (goal == sv.edicts)
-	{
-		Com_sprintf("SV_MoveToGoal: aborted because goal is world for entity %i\n", NUM_FOR_ENT(actor));
-	}
-
-*/
 
 /*
 =================
@@ -1689,8 +1697,8 @@ PFSV_drawbox
 
 void drawbox(vector pos, vector mins, vector maxs, vector color, float thickness, float depthTest, float drawtime)
 
-Draws a debug point, does not work on dedicated servers
-For listen servers only the host will see the point.
+Draws a debug box, does not work on dedicated servers
+For listen servers only the host will see the box.
 
 drawbox(self.origin, self.mins, self.maxs, '1 0 0', 1, false, g_frameTime);
 =================
@@ -1718,6 +1726,136 @@ void PFSV_drawbox(void)
 
 	SV_AddDebugBox(origin, p1, p2, color, thickness, drawtime, depthtested);
 }
+
+/*
+=================
+PFSV_drawtext
+
+void drawtext(vector pos, vector color, float fontsize, float depthTest, float drawtime, string str, ...)
+
+Draws a debug string.
+For listen servers only the host will see the lines.
+
+drawtext(self.origin, '1 1 1', 2.0, false, 0.1, self.classname);
+=================
+*/
+void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, char* text);
+void PFSV_drawstring(void)
+{
+	float	*pos, *color;
+	float	fontsize, drawtime;
+	qboolean depthtested;
+	char	*str;
+
+	if (dedicated->value)
+		return;
+
+	//	if (sv_maxclients->value > 1)
+	//		return;
+
+	pos = Scr_GetParmVector(0);
+	color = Scr_GetParmVector(1);
+	fontsize = Scr_GetParmFloat(2);
+	depthtested = Scr_GetParmFloat(3) > 0 ? true : false;
+	drawtime = Scr_GetParmFloat(4);
+	str = Scr_VarString(5);
+
+	if(!str || str[0] == 0)
+		return;
+
+	SV_AddDebugString(pos, color, fontsize, drawtime, depthtested, str);
+}
+
+/*
+=================
+PFSV_nav_init
+
+void nav_init(float numnodes)
+=================
+*/
+extern void Nav_Init();
+void PFSV_nav_init(void)
+{
+	Nav_Init();
+}
+
+/*
+=================
+PFSV_nav_addpathnode
+
+void nav_addpathnode(vector pos)
+=================
+*/
+extern int Nav_AddPathNode(float x, float y, float z);
+void PFSV_nav_addpathnode(void)
+{
+	float* pos = Scr_GetParmVector(0);
+	Scr_ReturnFloat(Nav_AddPathNode(pos[0], pos[1], pos[2]));
+}
+
+/*
+=================
+PFSV_nav_linkpathnode
+
+void nav_linkpathnode(float node, float linkto)
+=================
+*/
+extern void Nav_AddPathNodeLink(int nodeId, int linkTo);
+void PFSV_nav_linkpathnode(void)
+{
+	Nav_AddPathNodeLink((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1));
+}
+
+
+/*
+=================
+PFSV_nav_getnearestnode
+
+float node = nav_getnearestnode(vector pos)
+=================
+*/
+int Nav_GetNearestNode(vec3_t origin);
+void PFSV_nav_getnearestnode(void)
+{
+	vec3_t v;
+	float* pos = Scr_GetParmVector(0);
+
+	VectorCopy(pos, v);
+
+	Scr_ReturnFloat(Nav_GetNearestNode(v));
+}
+
+/*
+=================
+PFSV_nav_searchpath
+
+float nextnode = nav_searchpath(float start, float end)
+=================
+*/
+int Nav_SearchPath(int startWaypoint, int goalWaypoint);
+void PFSV_nav_searchpath(void)
+{
+	float n;
+	n = Nav_SearchPath((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1));
+
+	Scr_ReturnFloat(n);
+}
+
+/*
+=================
+PFSV_nav_addpathnode
+
+vector nav_getnodepos(float n)
+=================
+*/
+extern void Nav_GetNodePos(int num, float* x, float* y, float* z);
+void PFSV_nav_getnodepos(void)
+{
+	vec3_t v;
+	Nav_GetNodePos(Scr_GetParmFloat(0), &v[0], &v[1], &v[2]);
+	Scr_ReturnVector(v);
+}
+
 
 /*
 =================
@@ -1815,10 +1953,17 @@ void SV_InitScriptBuiltins()
 
 	Scr_DefineBuiltin(PFSV_touchentities, PF_SV, "touchentities", "float(entity e, float at)");
 
+	// debug
 	Scr_DefineBuiltin(PFSV_drawline, PF_SV, "drawline", "void(vector p1, vector p2, vector c, float th, float dt, float t)");
 	Scr_DefineBuiltin(PFSV_drawpoint, PF_SV, "drawpoint", "void(vector p, vector c, float th, float dt, float t)");
-	Scr_DefineBuiltin(PFSV_drawbox, PF_SV, "drawbox", "void(vector p, vector p1, vector p2, vector c, float th, float dt, float t)");
+	Scr_DefineBuiltin(PFSV_drawbox, PF_SV, "drawbox", "void(vector p, vector p1, vector p2, vector c, float th, float dt, float t)"); // fixme?
+	Scr_DefineBuiltin(PFSV_drawstring, PF_SV, "drawstring", "void(vector p, vector c, float fs, float dt, float t, string s, ...)");
 
-	//(vector pos, vector mins, vector maxs, vector color, float thickness, float depthTest, float drawtime)
-
+	// navigation
+	Scr_DefineBuiltin(PFSV_nav_init, PF_SV, "nav_init", "void(float n)");
+	Scr_DefineBuiltin(PFSV_nav_addpathnode, PF_SV, "nav_addpathnode", "float(vector p)");
+	Scr_DefineBuiltin(PFSV_nav_linkpathnode, PF_SV, "nav_linkpathnode", "void(float n, float lt)");
+	Scr_DefineBuiltin(PFSV_nav_getnearestnode, PF_SV, "nav_getnearestnode", "float(vector p)");
+	Scr_DefineBuiltin(PFSV_nav_searchpath, PF_SV, "nav_searchpath", "float(float n1, float n2)");
+	Scr_DefineBuiltin(PFSV_nav_getnodepos, PF_SV, "nav_getnodepos", "vector(float n)");
 }

@@ -1144,7 +1144,99 @@ skipwhite:
 	return com_token;
 }
 
+#if 0
 
+/*
+==============
+COM_TokenizeString
+
+Parse a token out of a string
+==============
+*/
+char* parser_null_string = "";;
+static int parser_argc = 0;
+static char parser_args[1024];
+static char* parser_argv[MAX_STRING_TOKENS];
+static char parser_args[MAX_STRING_CHARS];
+void COM_TokenizeString(char* text)
+{
+	int		i;
+	char* token;
+
+	// clear the args from the last string
+	for (i = 0; i < parser_argc; i++)
+		Z_Free(parser_argv[i]);
+
+	parser_argc = 0;
+	parser_args[0] = 0;
+
+	while (1)
+	{
+		// skip whitespace up to a /n
+		while (*text && *text <= ' ' && *text != '\n')
+		{
+			text++;
+		}
+
+		if (*text == '\n')
+		{	// a newline seperates commands in the buffer
+			text++;
+			break;
+		}
+
+		if (!*text)
+			return;
+
+		// set parser_args to everything after the first arg
+		if (parser_argc == 1)
+		{
+			int		l;
+
+			strcpy(parser_args, text);
+
+			// strip off any trailing whitespace
+			l = strlen(parser_args) - 1;
+			for (; l >= 0; l--)
+				if (parser_args[l] <= ' ')
+					parser_args[l] = 0;
+				else
+					break;
+		}
+
+		token = COM_Parse(&text);
+		if (!text)
+			return;
+
+		if (parser_argc < MAX_STRING_TOKENS)
+		{
+			parser_argv[parser_argc] = Z_Malloc(strlen(token) + 1);
+			strcpy(parser_argv[parser_argc], token);
+			parser_argc++;
+		}
+	}
+
+}
+
+int COM_TokenNumArgs()
+{
+	return parser_argc;
+}
+
+char* COM_TokenGetArg(int arg)
+{
+	if (arg >= parser_argc)
+		return parser_null_string;
+	return parser_argv[arg];
+}
+
+char* COM_TokenArgs()
+{
+	static char* null_string = "";
+	if (!parser_args)
+		return null_string;
+	return parser_args;
+}
+#endif
 /*
 ===============
 Com_PageInMemory

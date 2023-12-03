@@ -47,16 +47,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef enum { MOD_BAD, MOD_BRUSH, MOD_SPRITE, MOD_MD3 } modtype_t;
 
-typedef enum { DPRIMITIVE_LINE, DPRIMITIVE_POINT, DPRIMITIVE_BOX } dprimitive_t;
+//============================================================================
+typedef enum { DPRIMITIVE_LINE, DPRIMITIVE_POINT, DPRIMITIVE_BOX, DPRIMITIVE_TEXT } dprimitive_t;
+
 typedef struct debugline_s
 {
 	dprimitive_t type;
-	vec3_t p1, p2;
+	vec3_t p1, p2;			// absmin & absmax if DPRIMITIVE_BOX
 	vec3_t color;
-	int thickness;
+	float thickness;			// font size if DPRIMITIVE_TEXT
 	qboolean depthTest;
 	float drawtime;
+	char text[MAX_QPATH];				// if DPRIMITIVE_TEXT
 } debugprimitive_t;
+
+//============================================================================
 
 
 typedef struct sizebuf_s

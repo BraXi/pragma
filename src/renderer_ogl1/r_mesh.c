@@ -370,6 +370,7 @@ static void R_DrawWireBox(vec3_t mins, vec3_t maxs)
 R_DrawDebugLines
 =============
 */
+extern void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t color);
 void R_DrawDebugLines(void)
 {
 	int		i;
@@ -383,29 +384,7 @@ void R_DrawDebugLines(void)
 		if (!line->depthTest)
 			continue;
 
-		qglColor3fv(line->color);
-		qglLineWidth(line->thickness);
-		switch (line->type)
-		{
-		case DPRIMITIVE_LINE:
-			R_DrawDebugLine(line);
-			break;
-		case DPRIMITIVE_POINT:
-			R_DrawWirePoint(line->p1);
-			break;
-		case DPRIMITIVE_BOX:
-			R_DrawWireBoundingBox(line->p1, line->p2);
-			break;
-		}
-	}
-	R_EndLinesRendering();
-
-	R_WriteToDepthBuffer(GL_FALSE);
-	R_BeginLinesRendering(false);
-	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
-	{
-		line = &r_newrefdef.debugprimitives[i];
-		if (line->depthTest)
+		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
 		qglColor3fv(line->color);
@@ -424,7 +403,81 @@ void R_DrawDebugLines(void)
 		}
 	}
 	R_EndLinesRendering();
+
+#if 1
+	GL_TexEnv(GL_MODULATE);
+	R_AlphaTest(true);
+	R_DepthTest(true);
+	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
+	{
+		line = &r_newrefdef.debugprimitives[i];
+		if (!line->depthTest)
+			continue;
+
+		switch (line->type)
+		{
+		case DPRIMITIVE_TEXT:
+
+			R_DrawString3D(line->text, line->p1, line->thickness, 1, line->color);
+			break;
+		}
+	}
+	GL_TexEnv(GL_REPLACE);
+	R_AlphaTest(false);
+#endif
+
+#if 1
+	R_WriteToDepthBuffer(GL_FALSE);
+	R_BeginLinesRendering(false);
+	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
+	{
+		line = &r_newrefdef.debugprimitives[i];
+		if (line->depthTest)
+			continue;
+		if (line->type == DPRIMITIVE_TEXT)
+			continue;
+
+		qglColor3fv(line->color);
+		qglLineWidth(line->thickness);
+		switch (line->type)
+		{
+		case DPRIMITIVE_LINE:
+			R_DrawDebugLine(line);
+			break;
+		case DPRIMITIVE_POINT:
+			R_DrawWirePoint(line->p1);
+			break;
+		case DPRIMITIVE_BOX:
+			R_DrawWireBoundingBox(line->p1, line->p2);
+			break;
+		}
+	}
+	R_EndLinesRendering();
+
+
+//	R_CullFace(false);
+	GL_TexEnv(GL_MODULATE);
+	R_AlphaTest(true);
+	R_DepthTest(false);
+	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
+	{
+		line = &r_newrefdef.debugprimitives[i];
+		if (line->depthTest)
+			continue;
+
+		switch (line->type)
+		{
+		case DPRIMITIVE_TEXT:
+
+			R_DrawString3D(line->text, line->p1, line->thickness, 1, line->color);
+			break;
+		}
+	}
+	GL_TexEnv(GL_REPLACE);
+	R_AlphaTest(false);
+	R_DepthTest(true);
 	R_WriteToDepthBuffer(GL_TRUE);
+#endif
 
 	qglColor3f(1,1,1);
 	qglLineWidth(1.0f);

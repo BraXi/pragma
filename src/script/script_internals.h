@@ -181,6 +181,8 @@ typedef struct qcvm_s
 	int				pr_numparms;
 
 	char			*callFromFuncName;			// printtrace
+
+	FILE			*logfile;
 }qcvm_t;
 
 typedef struct

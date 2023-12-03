@@ -26,6 +26,7 @@ void SV_FreeDevTools()
 {
 	if (sv_debugPrimitives)
 		Z_Free(sv_debugPrimitives);
+	sv_debugPrimitives = NULL;
 }
 
 /*
@@ -56,7 +57,7 @@ void SV_AddDebugLine(vec3_t p1, vec3_t p2, vec3_t color, float thickness, float 
 	debugprimitive_t* object = sv_debugPrimitives;
 	for (int i = 0; i < MAX_DEBUG_PRIMITIVES; i++, object++)
 	{
-		if (sv.gameTime > object->drawtime)
+		if (sv.gameTime >= object->drawtime)
 		{
 			object->type = DPRIMITIVE_LINE;
 			object->drawtime = sv.gameTime + drawtime;
@@ -129,6 +130,38 @@ void SV_AddDebugBox(vec3_t pos, vec3_t p1, vec3_t p2, vec3_t color, float thickn
 	Com_Printf("SV_AddDebugLine: no free debug primitives\n");
 }
 
+/*
+=================
+SV_AddDebugString
+=================
+*/
+void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, char* text)
+{
+#if 1
+	if (!sv_debugPrimitives || !developer->value || dedicated->value > 0)
+		return;
+
+	debugprimitive_t* object = sv_debugPrimitives;
+	for (int i = 0; i < MAX_DEBUG_PRIMITIVES; i++, object++)
+	{
+		if (sv.gameTime > object->drawtime)
+		{
+			object->type = DPRIMITIVE_TEXT;
+			object->drawtime = sv.gameTime + drawtime;
+			object->depthTest = depthtested;
+			object->thickness = fontSize;
+
+			Com_sprintf(object->text, sizeof(object->text), text);
+
+			VectorCopy(pos, object->p1);
+			//VectorClear(object->p2);
+			VectorCopy(color, object->color);
+			return;
+		}
+	}
+	Com_Printf("SV_AddDebugString: no free debug primitives\n");
+#endif
+}
 /*
 =================
 SV_AddDebugPrimitives

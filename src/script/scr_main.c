@@ -403,6 +403,36 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 		((int*)vm->globals)[i] = LittleLong(((int*)vm->globals)[i]);
 }
 
+/*
+===============
+Scr_Logfile
+===============
+*/
+static void Scr_Logfile(qcvm_t *vm)
+{
+	char name[MAX_OSPATH];
+
+//	if (vm->logfile)
+//	{
+//		Com_Printf("closed logfile %s\n");
+//		fclose(vm->logfile);
+//		vm->logfile = NULL;
+//		return;
+//	}
+
+	sprintf(name, "%s/%s.log", FS_Gamedir(), Scr_VMName(vm->progsType));
+
+	vm->logfile = fopen(name, "w");
+	if (!vm->logfile)
+		return;
+
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+
+	fprintf(vm->logfile, "---- opened logfile %d-%02d-%02d %02d:%02d:%02d ----\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	fflush(active_qcvm->logfile);
+//	Com_Printf("opened logfile: %s\n", name);
+}
 
 /*
 ===============
@@ -447,6 +477,8 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 		Cmd_AddCommand("edicts", cmd_printedicts_f);
 	}
 
+	Scr_Logfile(vm);
+
 	// print statistics
 	dprograms_t* progs = vm->progs;
 	Com_Printf("-------------------------------------\n");
@@ -476,15 +508,21 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 	qcvm_t *vm = qcvm[vmtype];
 
 	if (!vm)
-	{
 		return;
-	}
 
 	if (vm->entities)
 		Z_Free(vm->entities);
 
 	if (vm->progs)
 		Z_Free(vm->progs);
+
+	if (vm->logfile)
+	{
+
+		fprintf(vm->logfile, "---- closed logfile ----\n");
+		fclose(vm->logfile);
+		vm->logfile = NULL;
+	}
 
 	Z_Free(vm);
 

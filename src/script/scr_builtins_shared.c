@@ -474,8 +474,40 @@ void PF_vtos(void)
 {
 	float* vec = Scr_GetParmVector(0);
 	char* string_temp = progstring();
-	sprintf(string_temp, "%f %f %f", vec[0], vec[1], vec[2]);
+	sprintf(string_temp, "%5.1f %5.1f %5.1f", vec[0], vec[1], vec[2]);
 	Scr_ReturnString(string_temp);
+}
+
+/*
+=================
+PF_logprint
+
+Appends text to logfile in gamedir, inserts date and time when timeStamp is true 
+void logprint(float timeStamp, string text, ...)
+
+logprint(true, self.name, " killed ", other.name, "\n" );
+=================
+*/
+void PF_logprint(void)
+{
+	char	*str;
+	qboolean timestamp;
+
+	timestamp = Scr_GetParmFloat(0) > 0 ? true : false;
+	str = Scr_VarString(1);
+
+	if (timestamp)
+	{
+		time_t t = time(NULL);
+		struct tm tm = *localtime(&t);
+		fprintf(active_qcvm->logfile, "%d-%02d-%02d %02d:%02d:%02d: ", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	}
+
+	if(active_qcvm->logfile)
+	{
+		fprintf(active_qcvm->logfile, str);
+		fflush(active_qcvm->logfile);
+	}
 }
 
 
@@ -520,6 +552,9 @@ void Scr_InitSharedBuiltins()
 	Scr_DefineBuiltin(PF_ftos, PF_ALL, "ftos", "string(float f)");
 	Scr_DefineBuiltin(PF_stof, PF_ALL, "stof", "float(string s)");
 	Scr_DefineBuiltin(PF_vtos, PF_ALL, "vtos", "string(vector v1)");
+
+	// files
+	Scr_DefineBuiltin(PF_logprint, PF_ALL, "logprint", "void(float ts, string s, ...)");
 
 //	Scr_DefineBuiltin(PF_itoc, PF_ALL, "itoc", "string(float i)");
 

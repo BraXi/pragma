@@ -376,3 +376,7 @@ FodyWeavers.xsd
 /stuff
 /build/engine.exe.lastcodeanalysissucceeded
 /build_map_zombies — kopia.BAT
+/build/baspr/maps
+/src/qcommon/navigation — kopia (2).c
+/src/qcommon/navigation — kopia.c
+/build_map_zombies — kopia — kopia.BAT

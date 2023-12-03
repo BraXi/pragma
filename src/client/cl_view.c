@@ -80,6 +80,7 @@ void V_AddEntity(centity_t* ent)
 		Com_DPrintf(DP_REND, "V_AddEntity: r_numentities >= MAX_ENTITIES\n");
 		return;
 	}
+
 	r_entities[r_numentities++] = *ent;
 }
 
@@ -96,6 +97,7 @@ void V_AddDebugPrimitive(debugprimitive_t *obj)
 		Com_DPrintf(DP_REND, "V_AddDebugPrimitive: r_numdebugprimitives >= MAX_DEBUG_PRIMITIVES\n");
 		return;
 	}
+
 	r_debugprimitives[r_numdebugprimitives++] = *obj;
 }
 
@@ -109,7 +111,11 @@ void V_AddParticle (vec3_t org, vec3_t color, float alpha)
 	particle_t	*p;
 
 	if (r_numparticles >= MAX_PARTICLES)
+	{
+		Com_DPrintf(DP_REND, "V_AddParticle: r_numparticles >= MAX_PARTICLES\n");
 		return;
+	}
+
 	p = &r_particles[r_numparticles++];
 	VectorCopy (org, p->origin);
 	VectorCopy(color, p->color);
@@ -127,7 +133,11 @@ void V_AddLight (vec3_t org, float intensity, float r, float g, float b)
 	dlight_t	*dl;
 
 	if (r_numdlights >= MAX_DLIGHTS)
+	{
+		Com_DPrintf(DP_REND, "V_AddLight: r_numdlights >= MAX_DLIGHTS\n");
 		return;
+	}
+
 	dl = &r_dlights[r_numdlights++];
 	VectorCopy (org, dl->origin);
 	dl->intensity = intensity;
@@ -147,7 +157,11 @@ void V_AddLightStyle (int style, float r, float g, float b)
 	lightstyle_t	*ls;
 
 	if (style < 0 || style > MAX_LIGHTSTYLES)
-		Com_Error (ERR_DROP, "Bad light style %i", style);
+	{
+		Com_Error(ERR_DROP, "V_AddLightStyle: Bad light style %i", style);
+		return;
+	}
+	
 	ls = &r_lightstyles[style];
 
 	ls->white = r+g+b;
@@ -170,18 +184,17 @@ void V_TestParticles (void)
 	float		d, r, u;
 
 	r_numparticles = MAX_PARTICLES;
-	for (i=0 ; i<r_numparticles ; i++)
+	for (i = 0; i < r_numparticles; i++)
 	{
 		d = i*0.25;
 		r = 4*((i&7)-3.5);
 		u = 4*(((i>>3)&7)-3.5);
 		p = &r_particles[i];
 
-		for (j=0 ; j<3 ; j++)
-			p->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*d +
-			cl.v_right[j]*r + cl.v_up[j]*u;
+		for (j = 0; j < 3; j++)
+			p->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*d + cl.v_right[j]*r + cl.v_up[j]*u;
 
-		VectorSet(p->color, 0.382353, 0.882353, 0.482353);//p->color = 8;
+		VectorSet(p->color, 0.382353, 0.882353, 0.482353);
 		p->alpha = cl_testparticles->value;
 	}
 }

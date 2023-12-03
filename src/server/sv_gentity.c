@@ -334,14 +334,12 @@ char* SV_ParseEntity(char* data, gentity_t * ent)
 			//			}
 			continue;
 		}
-		else
-
-			if (anglehack)
-			{
-				char	temp[32];
-				strcpy(temp, token);
-				sprintf(token, "0 %s 0", temp);
-			}
+		else if (anglehack)
+		{
+			char	temp[32];
+			strcpy(temp, token);
+			sprintf(token, "0 %s 0", temp);
+		}
 
 		if (!Scr_ParseEpair((void*)&ent->v, key, token))
 			Com_Error(ERR_DROP, "%s: parse error", __FUNCTION__);
