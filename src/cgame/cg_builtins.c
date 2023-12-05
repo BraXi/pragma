@@ -210,7 +210,7 @@ static void PFCG_MSG_ReadPos(void)		{ vec3_t v; MSG_ReadPos(&net_message, v); Sc
 static void PFCG_MSG_ReadAngle(void)	{ Scr_ReturnFloat(MSG_ReadAngle(&net_message)); }
 static void PFCG_MSG_ReadAngle16(void)	{ Scr_ReturnFloat(MSG_ReadAngle16(&net_message)); }
 static void PFCG_MSG_ReadDir(void)		{ /*PFCG_MSG_ReadPos();*/  vec3_t v; MSG_ReadDir(&net_message, v); Scr_ReturnVector(v); }
-
+static void PFCG_MSG_ReadString(void)	{ char *str = MSG_ReadString(&net_message); Scr_ReturnString(str); }
 /*
 =================
 PFCG_drawstring
@@ -406,6 +406,7 @@ void CG_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_MSG_ReadAngle, PF_CL, "MSG_ReadAngle", "float()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadAngle16, PF_CL, "MSG_ReadAngle16", "float()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadDir, PF_CL, "MSG_ReadDir", "vector()");
+	Scr_DefineBuiltin(PFCG_MSG_ReadString, PF_CL, "MSG_ReadString", "string()");
 
 	// drawing
 	Scr_DefineBuiltin(PFCG_drawstring, PF_CL, "drawstring", "void(vector xya, float fs, vector c, float a, string s1, ...)");
