@@ -26,7 +26,7 @@ const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 {
 	{VM_NONE, NULL, 0, "shared"},
 	{VM_SVGAME, "progs/svgame.dat", 37418, "svgame"},
-	{VM_CLGAME, "progs/cgame.dat", 9909, "clgame"},
+	{VM_CLGAME, "progs/cgame.dat", 42847, "clgame"},
 	{VM_GUI, "progs/guis.dat", 0, "gui"}
 };
 

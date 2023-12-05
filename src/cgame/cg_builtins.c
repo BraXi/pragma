@@ -1,7 +1,24 @@
+/*
+pragma
+Copyright (C) 2023 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+
+See the attached GNU General Public License v2 for more details.
+*/
+
 #include "../client/client.h"
 
-
 extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
+extern struct sfx_t* CG_FindOrRegisterSound(char* filename);
+
+
+static void CheckEmptyString(char* s) // definitely need to make it a shared code...
+{
+	if(s[0] <= ' ')
+		Scr_RunError("Bad string");
+}
 
 /*
 =================
@@ -15,6 +32,65 @@ anglevectors(self.v_angle);
 void PFCG_AngleVectors(void)
 {
 	AngleVectors(Scr_GetParmVector(0), cl.script_globals->v_forward, cl.script_globals->v_right, cl.script_globals->v_up);
+}
+
+/*
+=================
+PFCG_precache_model
+
+Returns true if MD3/SP2 model was loaded, false otherwise.
+
+float precache_model(string filename)
+=================
+*/
+void PFCG_precache_model(void)
+{
+	float loaded;
+	char* filename = Scr_GetParmString(0);
+	CheckEmptyString(filename);
+
+	loaded = (re.RegisterModel(filename) != NULL ? 1.0f : 0.0f);
+	Scr_ReturnFloat(loaded);
+}
+
+/*
+=================
+PFSV_precache_sound
+
+Returns true if sound was loaded, false otherwise.
+File must be in 'sound/' directory.
+
+float precache_sound(string filename)
+=================
+*/
+void PFCG_precache_sound(void)
+{
+	float loaded;
+	char* filename = Scr_GetParmString(0);
+	CheckEmptyString(filename);
+
+	loaded = (CG_FindOrRegisterSound(filename) != NULL ? 1.0f : 0.0f);
+	Scr_ReturnFloat(loaded);
+}
+
+/*
+=================
+PFSV_precache_image
+
+Returns true if image was loaded, false otherwise.
+File must be in 'guipics/' directory.
+
+float precache_image(string filename)
+=================
+*/
+void PFCG_precache_image(void)
+{
+	float loaded;
+	char* filename = Scr_GetParmString(0);
+	CheckEmptyString(filename);
+
+	loaded = (re.RegisterPic(filename) != NULL ? 1.0f : 0.0f);
+	Scr_ReturnFloat(loaded);
 }
 
 /*
@@ -220,6 +296,75 @@ static void PFCG_drawfill(void)
 	re.NewDrawFill(rect, color);
 }
 
+/*
+=================
+PFCG_localsound
+
+plays 2D sound for local client with no attenuation
+
+void localsound( string filename, float volume );
+=================
+*/
+void PFCG_localsound(void)
+{
+	struct sfx_t* sfx;
+	char* filename;
+	float volume;
+
+	filename = Scr_GetParmString(0);
+	volume = Scr_GetParmFloat(1);
+
+	sfx = CG_FindOrRegisterSound(filename);
+	if (!sfx)
+		return;
+
+	S_StartSound(NULL, cl.playernum + 1, CHAN_2D /*CHAN_AUTO*/, sfx, volume, ATTN_NORM, 0);
+}
+
+/*
+=================
+PFCG_playsound
+
+plays sound for local client
+
+if origin is vec3_origin, the sound will be dynamically 
+sourced from the entity to which index was specifiednum
+
+void playsound( vector pos, float entNum, string fileName, float channel, float volume, float attenuation, float timeOffset );
+
+playsound( vec3_origin, localplayernum+1, "player/pain1.wav", CHAN_BODY, 1.0, ATTN_NORM, 0.0 );
+=================
+*/
+void PFCG_playsound(void)
+{
+	char* filename;
+
+	float	*pos;
+	int		entNum;
+	int		chan;
+	float	volume;
+	float	attenuation;
+	float	timeoffset;
+
+	pos = Scr_GetParmVector(0);
+	entNum = (int)Scr_GetParmFloat(1);
+	filename = Scr_GetParmString(2);
+	chan = (int)Scr_GetParmFloat(3);
+	volume = Scr_GetParmFloat(4);
+	attenuation = Scr_GetParmFloat(5);
+	timeoffset = Scr_GetParmFloat(6);
+
+	struct sfx_t* sfx = CG_FindOrRegisterSound(filename);
+	if (!sfx)
+		return;
+
+	if ((int)pos[0] == 0 && (int)pos[1] == 0 && (int)pos[2] == 0)
+		pos = NULL; //hack
+
+	S_StartSound(pos, entNum, chan, sfx, volume, attenuation, timeoffset);
+}
+
+
 static void PFCG_GetCursorPos(void)
 {
 }
@@ -237,12 +382,20 @@ Register builtins which can be shared by both client and server progs
 */
 void CG_InitScriptBuiltins()
 {
+	// precache
+	Scr_DefineBuiltin(PFCG_precache_model, PF_CL, "precache_model", "float(string fn)");
+	Scr_DefineBuiltin(PFCG_precache_sound, PF_CL, "precache_sound", "float(string fn)");
+	Scr_DefineBuiltin(PFCG_precache_image, PF_CL, "precache_image", "float(string fn)");
+
+	// collision
 	Scr_DefineBuiltin(PFCG_pointcontents, PF_CL, "pointcontents", "float(vector v)");
 	Scr_DefineBuiltin(PFCG_trace, PF_CL, "trace", "void(vector s, vector bmins, vector bmaxs, vector e, float ie, int cm)");
 
+	// config strings and stats
 	Scr_DefineBuiltin(PFCG_getconfigstring, PF_CL, "getconfigstring", "string(int idx)");
 	Scr_DefineBuiltin(PFCG_getstat, PF_CL, "getstat", "float(float idx)");
 
+	// message reading
 	Scr_DefineBuiltin(PFCG_MSG_ReadChar, PF_CL, "MSG_ReadChar", "int()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadByte, PF_CL, "MSG_ReadByte", "int()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadShort, PF_CL, "MSG_ReadShort", "int()");
@@ -254,7 +407,12 @@ void CG_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_MSG_ReadAngle16, PF_CL, "MSG_ReadAngle16", "float()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadDir, PF_CL, "MSG_ReadDir", "vector()");
 
+	// drawing
 	Scr_DefineBuiltin(PFCG_drawstring, PF_CL, "drawstring", "void(vector xya, float fs, vector c, float a, string s1, ...)");
 	Scr_DefineBuiltin(PFCG_drawimage, PF_CL, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string img)");
 	Scr_DefineBuiltin(PFCG_drawfill, PF_CL, "drawfill", "void(float x, float y, float w, float h, vector c, float a)");
+
+	// sound
+	Scr_DefineBuiltin(PFCG_localsound, PF_CL, "localsound", "void(string s, float v)");
+	Scr_DefineBuiltin(PFCG_playsound, PF_CL, "playsound", "void(vector v, float en, string snd, float ch, float vol, float att, float tofs)");
 }

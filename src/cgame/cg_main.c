@@ -1,3 +1,13 @@
+/*
+pragma
+Copyright (C) 2023 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+
+See the attached GNU General Public License v2 for more details.
+*/
+
 #include "../client/client.h"
 
 static qboolean cg_allow_drawcalls;
@@ -6,7 +16,7 @@ static qboolean cg_allow_drawcalls;
 ===============
 CL_ShutdownClientGame
 
-Called when engine is closing or it is changing to a different game directory.
+Called when engine is closing, changing map or it is changing to a different game directory.
 ===============
 */
 void CL_ShutdownClientGame()
@@ -19,15 +29,15 @@ void CL_ShutdownClientGame()
 ===============
 CL_InitClientGame
 
-Called when engine is starting or it is changing to a different game (mod) directory.
+Called when engine is starting, connection to server is established, or it is changing to a different game (mod) directory.
+
+Calls progs function CG_Main so scripts can begin initialization
 ===============
 */
 void CL_InitClientGame()
 {
 	Com_Printf("CL_InitClientGame\n");
-//	return;
 	Scr_BindVM(VM_NONE);
-
 	Scr_CreateScriptVM(VM_CLGAME, 512, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
 	Scr_BindVM(VM_CLGAME); // so we can get proper entity size and ptrs
 
@@ -37,23 +47,55 @@ void CL_InitClientGame()
 	cl.qcvm_active = true;
 	cl.script_globals = Scr_GetGlobals();
 
+	cl.script_globals->localplayernum = cl.playernum;
 	Scr_Execute(VM_CLGAME, cl.script_globals->CG_Main, __FUNCTION__);
 }
 
+/*
+===============
+CG_IsActive
+
+Returns true if CG qcvm is properly loaded
+===============
+*/
 static qboolean CG_IsActive()
 {
 	return cl.qcvm_active;
 }
 
-void CG_Main()
+
+/*
+===============
+CG_ServerCommand
+
+Handles incomming 'SVC_CGCMD [command (byte)] [...]' commands from server
+===============
+*/
+void CG_ServerCommand()
 {
+	float cmd;
+
 	if (CG_IsActive() == false)
 		return;
 
-	Scr_Execute(VM_CLGAME, cl.script_globals->CG_Main, __FUNCTION__);
+	cmd = (float)MSG_ReadByte(&net_message);
+
+	Scr_BindVM(VM_CLGAME);
+
+	Scr_AddFloat(0, cmd);
+	Scr_Execute(VM_CLGAME, cl.script_globals->CG_ServerCommand, __FUNCTION__);
+
+	Scr_BindVM(VM_NONE);
 }
 
 
+/*
+===============
+CG_Frame
+
+This calls progs function CG_Frame at the beginning of each client frame
+===============
+*/
 void CG_Frame(float frametime, int time, float realtime)
 {
 	if (CG_IsActive() == false)
@@ -70,6 +112,13 @@ void CG_Frame(float frametime, int time, float realtime)
 }
 
 
+/*
+===============
+CG_DrawGUI
+
+This calls progs function CG_DrawGUI and allows rendering via builtins
+===============
+*/
 void CG_DrawGUI()
 {
 	if (CG_IsActive() == false || cls.state != ca_active)
@@ -83,6 +132,8 @@ void CG_DrawGUI()
 /*
 ====================
 CG_CanDrawCall
+
+Returns true if progs are allowed to draw
 ====================
 */
 qboolean CG_CanDrawCall()
@@ -244,4 +295,23 @@ int	CG_PointContents(vec3_t point)
 	}
 
 	return contents;
+}
+
+/*
+====================
+CG_FindOrRegisterSound
+
+Returns sfx or NULL if sound file cannot be found or cannot be loaded
+====================
+*/
+struct sfx_t* CG_FindOrRegisterSound(char *filename)
+{
+	struct sfx_t* sfx;
+	sfx = S_RegisterSound(filename);
+	if (!sfx)
+	{
+		Com_Printf("CG_FindOrRegisterSound: cannot load '%s'\n", filename);
+		return NULL;
+	}
+	return sfx;
 }

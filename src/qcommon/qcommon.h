@@ -251,6 +251,7 @@ enum svc_ops_e
 	SVC_TEMP_ENTITY,
 	SVC_LAYOUT,
 	SVC_INVENTORY,
+	SVC_CGCMD,					// handled in cgame progs: [byte cmd] ....
 
 	SVC_NOP,
 	SVC_DISCONNECT,
@@ -264,7 +265,7 @@ enum svc_ops_e
 	SVC_CENTERPRINT,			// [string] to put in center of the screen
 	SVC_DOWNLOAD,				// [short] size [size bytes]
 	SVC_PLAYERINFO,				// variable
-	SVC_PACKET_ENTITIES,			// [...]
+	SVC_PACKET_ENTITIES,		// [...]
 	SVC_DELTA_PACKET_ENTITIES,	// [...]
 	SVC_FRAME
 };

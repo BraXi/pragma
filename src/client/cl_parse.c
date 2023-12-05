@@ -29,6 +29,7 @@ char *svc_strings[256] =
 	"svc_temp_entity",
 	"svc_layout",
 	"svc_inventory",
+	"svc_cgcmd",
 
 	"svc_nop",
 	"svc_disconnect",
@@ -400,7 +401,7 @@ void CL_ParseServerMessage (void)
 			break;
 			
 		case SVC_CONFIGSTRING:
-			CL_ParseConfigString ();
+			CL_ParseConfigString();
 			break;
 			
 		case SVC_SOUND:
@@ -417,6 +418,10 @@ void CL_ParseServerMessage (void)
 
 		case SVC_MUZZLEFLASH:
 			CL_ParseMuzzleFlash ();
+			break;
+
+		case SVC_CGCMD:
+			CG_ServerCommand();
 			break;
 \
 		case SVC_DOWNLOAD:

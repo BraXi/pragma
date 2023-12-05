@@ -11,7 +11,7 @@ See the attached GNU General Public License v2 for more details.
 
 // =================================================================================
 
-static void CheckEmptyString(char* s)
+static void CheckEmptyString(char* s)  // definitely need to make it a shared code...
 {
 	if (s[0] <= ' ')
 		Scr_RunError("Bad string");

@@ -22,14 +22,14 @@ typedef struct cl_globalvars_s
 {
 	int	pad[28];
 
-	float frametime;
-	int time; 
-	float realtime;
+	float			frametime;
+	int				time; 
+	float			realtime;
 
-	int vid_width;
-	int vid_height;
+	int				vid_width;
+	int				vid_height;
 
-	float localplayernum;
+	float			localplayernum;
 
 	vec3_t			v_forward, v_up, v_right;
 
@@ -42,23 +42,24 @@ typedef struct cl_globalvars_s
 	float			trace_surface_value;
 	scr_entity_t	trace_ent;
 
-	float /*pmtype_t*/	pm_state_pm_type;		// byte
-	vec3_t		pm_state_origin;		// floats
-	vec3_t		pm_state_velocity;		// floats
-	float		pm_state_gravity;		// short
-	vec3_t		pm_state_mins;			// char [-127,127 range]
-	vec3_t		pm_state_maxs;			// char [-127,127 range]
-	float		pm_state_pm_flags;		// byte [0-255]
-	float		pm_state_pm_time;		// byte [0-255]
-	vec3_t		pm_state_delta_angles;	// shorts, use ANGLE2SHORT/SHORT2ANGLE
+	float			pm_state_pm_type;		// byte pmtype_t
+	vec3_t			pm_state_origin;		// floats
+	vec3_t			pm_state_velocity;		// floats
+	float			pm_state_gravity;		// short
+	vec3_t			pm_state_mins;			// char [-127,127 range]
+	vec3_t			pm_state_maxs;			// char [-127,127 range]
+	float			pm_state_pm_flags;		// byte [0-255]
+	float			pm_state_pm_time;		// byte [0-255]
+	vec3_t			pm_state_delta_angles;	// shorts, use ANGLE2SHORT/SHORT2ANGLE
 
-	vec3_t		cam_viewangles;
-	vec3_t		cam_viewoffset;
+	vec3_t			cam_viewangles;			// current camera angles
+	vec3_t			cam_viewoffset;			// current camera position
 
-	scr_func_t CG_Main;
-	scr_func_t CG_Frame;
-	scr_func_t CG_DrawGUI;
-	scr_func_t CG_PlayerMove;
+	scr_func_t		CG_Main;
+	scr_func_t		CG_Frame;
+	scr_func_t		CG_DrawGUI;
+	scr_func_t		CG_PlayerMove;			// CG_PlayerMove(vector cmdMove, vector cmdAngles, float cmdMsec)
+	scr_func_t		CG_ServerCommand;		// CG_ServerCommand(float cmd) // cmd is byte 0-255 limited
 } cl_globalvars_t;
 
 
