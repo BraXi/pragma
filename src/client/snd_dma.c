@@ -682,6 +682,23 @@ void S_StartSound(vec3_t origin, int entnum, int entchannel, sfx_t *sfx, float f
 	ps->prev->next = ps;
 }
 
+/*
+==================
+S_StopEntitySounds
+==================
+*/
+void S_StopEntitySounds(int entnum)
+{
+	for (int i = 0; i < MAX_CHANNELS; i++)
+	{
+		if (channels[i].entnum == entnum)
+		{
+			channels[i].end = 0;
+			channels[i].sfx = NULL;
+			return;
+		}
+	}
+}
 
 /*
 ==================

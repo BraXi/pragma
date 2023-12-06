@@ -214,7 +214,7 @@ PROTOCOL
 
 // protocol.h -- communications protocols
 
-#define PROTOCOL_REVISION 1
+#define PROTOCOL_REVISION 2
 #ifdef PROTOCOL_EXTENDED_ASSETS
 	#define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION)
 #else
@@ -254,19 +254,30 @@ enum svc_ops_e
 	SVC_CGCMD,					// handled in cgame progs: [byte cmd] ....
 
 	SVC_NOP,
+
 	SVC_DISCONNECT,
 	SVC_RECONNECT,
+
 	SVC_SOUND,					// <see code>
+	SVC_STOPSOUND,				// [byte] entity index
+
 	SVC_PRINT,					// [byte] id [string] null terminated string
+
 	SVC_STUFFTEXT,				// [string] stuffed into client's console buffer, should be \n terminated
+
 	SVC_SERVERDATA,				// [long] protocol ...
 	SVC_CONFIGSTRING,			// [short] [string]
-	SVC_SPAWNBASELINE,		
+	SVC_SPAWNBASELINE,
+
 	SVC_CENTERPRINT,			// [string] to put in center of the screen
+
 	SVC_DOWNLOAD,				// [short] size [size bytes]
+
 	SVC_PLAYERINFO,				// variable
+
 	SVC_PACKET_ENTITIES,		// [...]
 	SVC_DELTA_PACKET_ENTITIES,	// [...]
+
 	SVC_FRAME
 };
 

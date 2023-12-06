@@ -385,7 +385,8 @@ float stof(string)
 */
 void PF_stof(void)
 {
-	Scr_ReturnFloat( atof(Scr_GetParmString(0)) );
+	char* str = Scr_GetParmString(0);
+	Scr_ReturnFloat( atof(str) );
 }
 
 /*

@@ -25,6 +25,7 @@ void S_Shutdown (void);
 
 // if origin is NULL, the sound will be dynamically sourced from the entity
 void S_StartSound (vec3_t origin, int entnum, int entchannel, struct sfx_s *sfx, float fvol,  float attenuation, float timeofs);
+void S_StopEntitySounds(int entnum);
 void S_StartLocalSound (char *s);
 
 void S_RawSamples (int samples, int rate, int width, int channels, byte *data);

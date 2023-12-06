@@ -32,17 +32,27 @@ char *svc_strings[256] =
 	"svc_cgcmd",
 
 	"svc_nop",
+
 	"svc_disconnect",
 	"svc_reconnect",
+
 	"svc_sound",
+	"svc_stopsound",
+
 	"svc_print",
+
 	"svc_stufftext",
+
 	"svc_serverdata",
 	"svc_configstring",
-	"svc_spawnbaseline",	
+	"svc_spawnbaseline",
+
 	"svc_centerprint",
+
 	"svc_download",
+
 	"svc_playerinfo",
+
 	"svc_packet_entities",
 	"svc_delta_packet_entities",
 	"svc_frame"
@@ -292,6 +302,21 @@ void CL_ParseStartSoundPacket(void)
 	S_StartSound (pos, ent, channel, cl.sound_precache[sound_num], volume, attenuation, ofs);
 }       
 
+/*
+==================
+CL_ParseStopSoundPacket
+==================
+*/
+void CL_ParseStopSoundPacket(void)
+{
+	int entnum = MSG_ReadShort(&net_message);
+
+	if (entnum > MAX_GENTITIES || entnum < 0)
+		Com_Error(ERR_DROP, "CL_ParseStopSoundPacket: ent = %i", entnum);
+
+	S_StopEntitySounds(entnum);
+}
+
 
 void SHOWNET(char *s)
 {
@@ -406,6 +431,10 @@ void CL_ParseServerMessage (void)
 			
 		case SVC_SOUND:
 			CL_ParseStartSoundPacket();
+			break;
+
+		case SVC_STOPSOUND:
+			CL_ParseStopSoundPacket();
 			break;
 			
 		case SVC_SPAWNBASELINE:

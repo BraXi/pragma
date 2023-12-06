@@ -372,6 +372,33 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 	}
 }           
 
+/*
+==================
+SV_StopSounds
+==================
+*/
+void SV_StopSounds(gentity_t* entity)
+{
+	int entnum;
+
+	if (!entity)
+	{
+		Com_Error(ERR_DROP, "SV_StopSounds: NULL entity");
+		return; //msvc..
+	}
+
+	entnum = NUM_FOR_EDICT(entity);
+	if (entnum >= MAX_GENTITIES || entnum < 0)
+	{
+		Com_Error(ERR_DROP, "SV_StopSounds: wrong entity number %i", entnum);
+	}
+
+	entity->s.loopingSound = entity->v.loopsound = 0; // stop looping sound too
+
+	MSG_WriteByte(&sv.multicast, SVC_STOPSOUND);
+	MSG_WriteShort(&sv.multicast, entnum);
+	SV_Multicast(vec3_origin, MULTICAST_ALL); // send to everyone
+}
 
 /*
 ===============================================================================
