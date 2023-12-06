@@ -97,7 +97,7 @@ typedef struct sv_entvars_s
 	float			solid;		// SOLID_NOT etc
 	float			movetype;	// MOVETYPE_NONE etc
 	float			gravity;	// [0-1.0]
-	int			clipmask;	
+	int				clipmask;	
 	float			groundentity_num; // -1 = in air, 0 world, etc..
 	float			groundentity_linkcount;
 	vec3_t			size;		// DON'T CHANGE! set by linkentity()
@@ -114,8 +114,10 @@ typedef struct sv_entvars_s
 	scr_func_t		touch;		// void(float planeDist, vector planeNormal, float surfaceFlags)
 
 	// general
-	float			svflags;	// SVF_* flags
 	float			flags;		// FL_* flags
+	float			svflags;	// SVF_* flags
+	float			showto;		// if (svflags & SVF_SINGLECLIENT) entity will only be sent to this client 
+								// if (svflags & SVF_ONLYTEAM) entity will only be sent to clients matching `.team`
 
 	float			nextthink;	// time to run think function
 	scr_func_t		think;		// void()

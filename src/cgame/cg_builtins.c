@@ -43,7 +43,7 @@ Returns true if MD3/SP2 model was loaded, false otherwise.
 float precache_model(string filename)
 =================
 */
-void PFCG_precache_model(void)
+static void PFCG_precache_model(void)
 {
 	float loaded;
 	char* filename = Scr_GetParmString(0);
@@ -63,7 +63,7 @@ File must be in 'sound/' directory.
 float precache_sound(string filename)
 =================
 */
-void PFCG_precache_sound(void)
+static void PFCG_precache_sound(void)
 {
 	float loaded;
 	char* filename = Scr_GetParmString(0);
@@ -83,7 +83,7 @@ File must be in 'guipics/' directory.
 float precache_image(string filename)
 =================
 */
-void PFCG_precache_image(void)
+static void PFCG_precache_image(void)
 {
 	float loaded;
 	char* filename = Scr_GetParmString(0);
@@ -140,7 +140,7 @@ int contents = pointcontents(vector point)
 =================
 */
 extern int CG_PointContents(vec3_t point);
-void PFCG_pointcontents(void)
+static void PFCG_pointcontents(void)
 {
 	float* point = Scr_GetParmVector(0);
 	Scr_ReturnFloat(CG_PointContents(point));
@@ -157,7 +157,7 @@ trace(vector start, vector minS, vector maxS, vector end, float ignoreEnt, int c
 =================
 */
 extern trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum);
-void PFCG_trace(void)
+static void PFCG_trace(void)
 {
 	trace_t		trace;
 	float* start, * end, * min, * max;
@@ -305,7 +305,7 @@ plays 2D sound for local client with no attenuation
 void localsound( string filename, float volume );
 =================
 */
-void PFCG_localsound(void)
+static void PFCG_localsound(void)
 {
 	struct sfx_t* sfx;
 	char* filename;
@@ -335,7 +335,7 @@ void playsound( vector pos, float entNum, string fileName, float channel, float 
 playsound( vec3_origin, localplayernum+1, "player/pain1.wav", CHAN_BODY, 1.0, ATTN_NORM, 0.0 );
 =================
 */
-void PFCG_playsound(void)
+static void PFCG_playsound(void)
 {
 	char* filename;
 

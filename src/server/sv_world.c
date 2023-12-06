@@ -494,6 +494,14 @@ void SV_LinkEdict (gentity_t *ent)
 	//get all leafs, including solids
 	num_leafs = CM_BoxLeafnums (ent->v.absmin, ent->v.absmax, leafs, MAX_TOTAL_ENT_LEAFS, &topnode);
 
+	// Q3A: if none of the leafs were inside the map, the
+	// entity is outside the world and can be considered unlinked
+	if (!num_leafs) 
+	{
+		Com_DPrintf(DP_SV, "%s: entity %i is outside the world at %f %f %f\n", __FUNCTION__, NUM_FOR_ENT(ent), ent->v.origin[0], ent->v.origin[1], ent->v.origin[2]);
+		return;
+	}
+
 	// set areas
 	for (i=0 ; i<num_leafs ; i++)
 	{

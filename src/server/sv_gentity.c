@@ -31,8 +31,8 @@ void SV_InitEntity(gentity_t* ent)
 
 	ent->s.number = NUM_FOR_EDICT(ent);
 	ent->v.classname = Scr_SetString("no_class");
-	ent->v.gravity = 1.0;
 
+	ent->v.gravity = 1.0;
 	ent->v.groundentity_num = -1;
 }
 
@@ -83,7 +83,10 @@ Marks the entity as free
 void SV_FreeEntity(gentity_t* ent)
 {
 	if (!ent)
+	{
 		Com_Error(ERR_DROP, "SV_FreeEntity: !ent\n");
+		return; //msvc..
+	}
 
 	if (NUM_FOR_EDICT(ent) <= sv_maxclients->value)
 	{
@@ -104,8 +107,9 @@ void SV_FreeEntity(gentity_t* ent)
 	if(ent && ent->inuse)
 		sv.num_edicts--;
 
-//	memset(ent, 0, Scr_GetEntitySize()); // clear whole entity
-	memset(&ent->v, 0, Scr_GetEntityFieldsSize()); // clear script fields
+	Scr_BindVM(VM_SVGAME);
+	memset(ent, 0, Scr_GetEntitySize()); // clear whole entity, thats what Q2 does
+//	memset(&ent->v, 0, Scr_GetEntityFieldsSize()); // clear script fields
 
 	ent->v.classname = Scr_SetString("freed");
 	ent->freetime = sv.gameTime;

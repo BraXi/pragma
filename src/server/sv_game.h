@@ -38,6 +38,9 @@ typedef struct link_s
 #define	SVF_NOCLIENT		1	// don't send entity to clients, even if it has effects
 #define	SVF_DEADMONSTER		2	// treat as CONTENTS_DEADMONSTER for collision
 #define	SVF_MONSTER			4	// treat as CONTENTS_MONSTER for collision
+#define	SVF_NOCULL			8	// entity will be _always_ sent regardless of PVS/PHS
+#define	SVF_SINGLECLIENT	16	// send to only one client
+#define	SVF_ONLYTEAM		32	// send to clients in a team
 
 // edict->v.flags
 #define	FL_FLY				1	// phys

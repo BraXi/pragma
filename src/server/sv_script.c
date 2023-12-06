@@ -213,27 +213,49 @@ Called when a player drops from the server.
 Will not be called between levels.
 ============
 */
-void Scr_ClientDisconnect(gentity_t* ent)
+void Scr_ClientDisconnect(gentity_t* self)
 {
-	if (!ent->client)
+	gentity_t* ent;
+	if (!self->client)
 		return;
 
-	sv.script_globals->self = GENT_TO_PROG(ent);
+	Scr_BindVM(VM_SVGAME);
+	for (int i = 1; i < sv.num_edicts; i++)
+	{
+		ent = ENT_FOR_NUM(i);
+
+		// find and clear .owner field
+		if (VM_TO_ENT(ent->v.owner) == self)
+		{
+			ent->v.owner = ENT_TO_VM(sv.edicts); //0;
+		}
+
+		// find gentities that were only shown to that particular 
+		// client, and make sure they become visible to everyone
+		if (((int)ent->v.svflags & SVF_SINGLECLIENT))
+		{
+			if (ent->v.showto == NUM_FOR_ENT(ent))
+			{
+				(int)ent->v.svflags &= ~SVF_SINGLECLIENT;
+				ent->v.showto = 0;
+//				break;
+			}
+		}	
+	}
+
+	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(VM_SVGAME, sv.script_globals->ClientDisconnect, __FUNCTION__);
 
 	sv.script_globals->self = GENT_TO_PROG(sv.edicts);
 
-	SV_UnlinkEdict(ent);
+	SV_UnlinkEdict(self);
 
-	memset(&ent->v, 0, Scr_GetEntityFieldsSize());
-
-	SV_InitEntity(ent); // clear ALL fields, but later on mark it as unised
-//	ent->v.modelindex[0] = 0;
-//	ent->v.solid = SOLID_NOT;
-	ent->inuse = false;
-	ent->v.classname = Scr_SetString("disconnected");
-	ent->client->pers.connected = false;
+//	memset(&self->v, 0, Scr_GetEntityFieldsSize());
+	SV_InitEntity(self); // clear ALL fields, but mark it as unused
+	self->inuse = false;
+	self->v.classname = Scr_SetString("disconnected");
+	self->client->pers.connected = false;
 }
 
 

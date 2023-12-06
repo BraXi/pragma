@@ -263,7 +263,7 @@ void PF_cvar(void)
 		return;
 	}
 
-	Com_DPrintf(0, "cvar(%s): not found\n", str);
+//	Com_DPrintf(0, "cvar(%s): not found\n", str);
 	Scr_ReturnFloat(0);
 }
 
@@ -297,7 +297,7 @@ void PF_cvarstring(void)
 		return;
 	}
 
-	Com_DPrintf(0, "cvarstring(%s): not found\n", str);
+//	Com_DPrintf(0, "cvarstring(%s): not found\n", str);
 	Scr_ReturnString(retstr_none);
 }
 

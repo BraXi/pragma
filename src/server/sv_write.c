@@ -522,7 +522,8 @@ void SV_BuildClientFrame (client_t *client)
 	frame->first_entity = svs.next_client_entities;
 
 	c_fullsend = 0;
-
+	
+	// ignore entity 0 which is world and begin from entity 1 which may be a player...
 	for (e = 1; e < sv.max_edicts; e++) //sv.num_edicts
 	{
 		ent = EDICT_NUM(e);
@@ -531,69 +532,85 @@ void SV_BuildClientFrame (client_t *client)
 		if (!ent->inuse)
 			continue;
 
-		// ignore ents without visible models
+		// ignore ents which don't want to be broadcasted
 		if (((int)ent->v.svflags & SVF_NOCLIENT))
 			continue;
 
-		// ignore ents without visible models unless they have an effect
+		//
+		// ignore ents that are hidden to players
+		//
+
+		// send only to _THAT ONE_ client
+		if (((int)ent->v.svflags & SVF_SINGLECLIENT) && ent->v.showto != NUM_FOR_ENT(clent)) // to avoid -1 offset, just set showto = getentnum(self)
+			continue;
+
+		// send only to clients matching team
+		if (((int)ent->v.svflags & SVF_ONLYTEAM) && ent->v.showto == clent->v.team)
+			continue;
+
+		// ignore ents without visible models unless they have an effect, looping sound or event
 		if (!ent->s.modelindex && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)
 			continue;
 
-		// ignore if not touching a PV leaf
+		// always send ourselves (the player entity), but ignore others if not touching a PV leaf
+		// if entity has SVF_NOCULL flag it will be _always_ sent regardless of PVS/PHS
 		if (ent != clent)
 		{
-			// check area
-			if (!CM_AreasConnected (clientarea, ent->areanum))
-			{	// doors can legally straddle two areas, so we may need to check another one
-				if (!ent->areanum2 || !CM_AreasConnected (clientarea, ent->areanum2))
-					continue;		// blocked by a door
-			}
+			if (!((int)ent->v.svflags & SVF_NOCULL))
+			{
+				// check area
+				if (!CM_AreasConnected(clientarea, ent->areanum))
+				{	// doors can legally straddle two areas, so we may need to check another one
+					if (!ent->areanum2 || !CM_AreasConnected(clientarea, ent->areanum2))
+						continue;		// blocked by a door
+				}
 
-			// beams just check one point for PHS
-			if (ent->s.renderFlags & RF_BEAM)
-			{
-				l = ent->clusternums[0];
-				if ( !(clientphs[l >> 3] & (1 << (l&7) )) )
-					continue;
-			}
-			else
-			{
-				// FIXME: if an ent has a model and a sound, but isn't
-				// in the PVS, only the PHS, clear the model
-				if (ent->s.loopingSound)
+				// beams just check one point for PHS
+				if (ent->s.renderFlags & RF_BEAM)
 				{
-					bitvector = fatpvs;	//clientphs;
-				}
-				else
-					bitvector = fatpvs;
-
-				if (ent->num_clusters == -1)
-				{	// too many leafs for individual check, go by headnode
-					if (!CM_HeadnodeVisible (ent->headnode, bitvector))
+					l = ent->clusternums[0];
+					if (!(clientphs[l >> 3] & (1 << (l & 7))))
 						continue;
-					c_fullsend++;
 				}
 				else
-				{	// check individual leafs
-					for (i=0 ; i < ent->num_clusters ; i++)
+				{
+					// FIXME: if an ent has a model and a sound, but isn't
+					// in the PVS, only the PHS, clear the model
+					if (ent->s.loopingSound)
 					{
-						l = ent->clusternums[i];
-						if (bitvector[l >> 3] & (1 << (l&7) ))
-							break;
+						bitvector = fatpvs;	//clientphs;
 					}
-					if (i == ent->num_clusters)
-						continue;		// not visible
-				}
+					else
+						bitvector = fatpvs;
 
-				if (!ent->s.modelindex)
-				{	// don't send sounds if they will be attenuated away
-					vec3_t	delta;
-					float	len;
+					if (ent->num_clusters == -1)
+					{	// too many leafs for individual check, go by headnode
+						if (!CM_HeadnodeVisible(ent->headnode, bitvector))
+							continue;
+						c_fullsend++;
+					}
+					else
+					{	// check individual leafs
+						for (i = 0; i < ent->num_clusters; i++)
+						{
+							l = ent->clusternums[i];
+							if (bitvector[l >> 3] & (1 << (l & 7)))
+								break;
+						}
+						if (i == ent->num_clusters)
+							continue;		// not visible
+					}
 
-					VectorSubtract (org, ent->v.origin, delta);
-					len = VectorLength (delta);
-					if (len > 400)
-						continue;
+					if (!ent->s.modelindex)
+					{	// don't send sounds if they will be attenuated away
+						vec3_t	delta;
+						float	len;
+
+						VectorSubtract(org, ent->v.origin, delta);
+						len = VectorLength(delta);
+						if (len > 400)
+							continue;
+					}
 				}
 			}
 		}

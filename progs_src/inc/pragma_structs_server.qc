@@ -108,8 +108,10 @@ void end_sys_globals; // end of struct
 	.void( float pd, vector pn, float sf ) touch;	// void(float planeDist, vector planeNormal, float surfaceFlags)
 
 	// general
+	.float			flags;		// FL_* flags	
 	.float			svflags;	// SVF_* flags
-	.float			flags;		// FL_* flags
+	.float			showto;		// if (svflags & SVF_SINGLECLIENT) entity will only be sent to this client 
+								// if (svflags & SVF_ONLYTEAM) entity will only be sent to clients matching `.team`	
 
 	.float			nextthink;	// time to run think function
 	.void()		think;		// void()
@@ -117,7 +119,7 @@ void end_sys_globals; // end of struct
 
 	// fixme: rename these two to liquid**?
 	.float			watertype;	// CONTENTS_WATER etc
-	.float			waterlevel;	// 0 not in water, 1 touching water (players only: 2 halfway in water, 3 head under water)
+	.float			waterlevel;	// see WL_*
 
 	.float			health;
 	.float			team;

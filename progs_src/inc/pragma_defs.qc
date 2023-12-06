@@ -96,10 +96,12 @@ float SURF_NODRAW		= 128;		// don't bother referencing the texture
 //
 // entity server flags (.svflags)
 //
-float SVF_NOCLIENT			= 1;	// don't send entity to clients, even if it has effects
-float SVF_DEADMONSTER		= 2;	// treat as CONTENTS_DEADMONSTER for collision
-float SVF_MONSTER			= 4;	// treat as CONTENTS_MONSTER for collision
-//float SVF_NOCULL			= 8;	// always send this entity to clients regardless of PVS/PHS
+#define	SVF_NOCLIENT		1	// don't send entity to clients, even if it has effects
+#define	SVF_DEADMONSTER		2	// treat as CONTENTS_DEADMONSTER for collision
+#define	SVF_MONSTER			4	// treat as CONTENTS_MONSTER for collision
+#define	SVF_NOCULL			8	// entity will be _always_ sent regardless of PVS/PHS
+#define	SVF_SINGLECLIENT	16	// send to only one client (.showto must be set to desider player entity number)
+#define	SVF_ONLYTEAM		32	// send only to players in matching team team (.showto must match team)
 
 
 // entity_state_t->effects

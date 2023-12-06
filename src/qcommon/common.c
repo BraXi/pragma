@@ -157,8 +157,7 @@ void Com_DPrintf(dprintLevel_t chan, char *fmt, ...)
 	if (!developer || !developer->value)
 		return;			// don't confuse non-developers with techie stuff...
 
-	if (developer->value == chan ||
-		developer->value == 1337 && (chan == DP_GAME || chan == DP_NET || chan == DP_GAME || chan == DP_SV))
+	if (developer->value == DP_ALL || developer->value == chan || developer->value == 1337 && (chan == DP_NET || chan == DP_GAME || chan == DP_SV))
 	{
 		va_start(argptr, fmt);
 		vsprintf(msg, fmt, argptr);

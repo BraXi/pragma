@@ -554,9 +554,9 @@ void V_RenderView( float stereo_separation )
 
 	re.RenderFrame (&cl.refdef);
 	if (cl_stats->value)
-		Com_Printf ("ent:%i  lt:%i  part:%i\n", r_numentities, r_numdlights, r_numparticles);
+		Com_Printf ("ent:%i  lt:%i  part:%i dbg:%i\n", r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
 	if ( log_stats->value && ( log_stats_file != 0 ) )
-		fprintf( log_stats_file, "%i,%i,%i,",r_numentities, r_numdlights, r_numparticles);
+		fprintf( log_stats_file, "%i,%i,%i,%i,",r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
 
 	re.SetColor(1, 1, 1, 1);
 
