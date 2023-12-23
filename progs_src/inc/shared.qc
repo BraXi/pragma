@@ -16,6 +16,14 @@ vector vec3_origin = vec_null; //temporary, ugly
 // BG - defines shared by cgame and svgame
 // ------------------------------------------------------
 
+// .waterlevel levels
+enum
+{
+	TEAM_NONE = 0,
+	TEAM_SURVIVORS,
+	TEAM_MONSTERS,
+	TEAM_SPECTATOR
+};
 
 // .waterlevel levels
 enum

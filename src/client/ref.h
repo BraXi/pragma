@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	MAX_ENTITIES	512		// max visible entities, was 128 [previously MAX_ENTITIES]
 #define	MAX_PARTICLES	8192	// was 4096
 #define	MAX_LIGHTSTYLES	256
-#define MAX_DEBUG_PRIMITIVES	512
+#define MAX_DEBUG_PRIMITIVES	4096
 
 
 //

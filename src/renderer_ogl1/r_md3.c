@@ -292,19 +292,6 @@ static md3Tag_t* MD3_GetTag(md3Header_t* mod, int frame, const char* tagName)
 	return NULL;
 }
 
-void AxisClear(vec3_t axis[3])
-{
-	axis[0][0] = 1;
-	axis[0][1] = 0;
-	axis[0][2] = 0;
-	axis[1][0] = 0;
-	axis[1][1] = 1;
-	axis[1][2] = 0;
-	axis[2][0] = 0;
-	axis[2][1] = 0;
-	axis[2][2] = 1;
-}
-
 /*
 ================
 MD3_LerpTag

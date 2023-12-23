@@ -23,7 +23,7 @@ int Nav_SearchPath(int startWaypoint, int goalWaypoint);
 
 #define NO_WAYPOINT -1
 #define MAX_WAYPOINTS 1024
-#define MAX_WAYPOINT_CHILDREN 8
+#define MAX_WAYPOINT_LINKS 8
 #define TAG_NODE 1231
 
 #define NAVFL_DISABLED 1		// node is temporarily disabled (ex. doors are locked)
@@ -36,7 +36,7 @@ typedef struct waypoint_s
 //	int flags;
 
 	int linkCount;
-	int links[MAX_WAYPOINT_CHILDREN];
+	int links[MAX_WAYPOINT_LINKS];
 } waypoint_t;
 
 typedef struct pathnode_s pathnode_t;
@@ -117,6 +117,39 @@ int Nav_GetNodesCount()
 	return nav.waypoints_count;
 }
 
+
+/*
+=================
+Nav_GetNodeLinkCount
+=================
+*/
+int Nav_GetNodeLinkCount(int node)
+{
+	if (!Nav_IsInitialized())
+		return 0;
+
+	if (node < 0 || node >= nav.waypoints_count)
+		return 0;
+
+	return nav.waypoints[node].linkCount;
+}
+
+/*
+=================
+Nav_GetNodeLink
+=================
+*/
+int Nav_GetNodeLink(int node, int link)
+{
+	if (!Nav_GetNodeLinkCount(node))
+		return NO_WAYPOINT;
+
+	if (link < 0 || link >= nav.waypoints[node].linkCount)
+		return NO_WAYPOINT;
+
+	return nav.waypoints[node].links[link];
+}
+
 /*
 =================
 Nav_Init
@@ -138,12 +171,13 @@ void Nav_Init()
 	memset(closedNodes, 0, sizeof(closedNodes));
 	memset(&nav, 0, sizeof(nav));
 
+	nav.waypoints_count = 0;
 	nav.waypoints = Z_Malloc(MAX_WAYPOINTS * sizeof(waypoint_t));
 
 	for (int i = 0; i < MAX_WAYPOINTS; i++)
 	{
 		nav.waypoints[i].wpIdx = NO_WAYPOINT;
-		for (int j = 0; j < MAX_WAYPOINT_CHILDREN; j++)
+		for (int j = 0; j < MAX_WAYPOINT_LINKS; j++)
 			nav.waypoints[i].links[j] = NO_WAYPOINT;
 	}
 	Com_Printf("Nav_Init: allocated space for %d waypoints\n", MAX_WAYPOINTS);
@@ -184,7 +218,7 @@ void Nav_AddPathNodeLink(int nodeId, int linkTo)
 	if (nodeId >= MAX_WAYPOINTS || nodeId < 0)
 		return;
 
-	if (nav.waypoints[nodeId].linkCount >= MAX_WAYPOINT_CHILDREN)
+	if (nav.waypoints[nodeId].linkCount >= MAX_WAYPOINT_LINKS)
 		return;
 
 	nodeId = nav.waypoints_count - 1;

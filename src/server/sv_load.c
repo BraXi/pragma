@@ -84,6 +84,27 @@ svmodel_t* SV_ModelForNum(unsigned int index)
 
 /*
 ================
+SV_ModelForName
+
+Returns svmodel
+================
+*/
+svmodel_t* SV_ModelForName(char *name)
+{
+	svmodel_t* model;
+	model = &sv.models[0];
+	for (int i = 0; i < sv.num_models; i++, model++)
+	{
+		if (!model->name[0] || model->type == MOD_BAD)
+			continue;
+		if (!strcmp(model->name, name))
+			return model;
+	}
+	return NULL;
+}
+
+/*
+================
 SV_FindOrCreateAssetIndex
 
 Used to load or find server assets (currently only loads only th important MD3 info).
@@ -136,6 +157,11 @@ static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char*
 	return index;
 }
 
+/*
+=================
+SV_LoadModel
+=================
+*/
 static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 {
 	svmodel_t* model;
@@ -148,7 +174,6 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 		Com_Error(ERR_DROP, "SV_LoadModel: NULL name");
 		return NULL;
 	}
-
 
 	//
 	// search the currently loaded models
@@ -217,9 +242,11 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 	return model;
 }
 
-//
-// md3 format
-//
+/*
+=================
+SV_LoadMD3
+=================
+*/
 static void SV_LoadMD3(svmodel_t* out, void* buffer)
 {
 	int				i, j;
@@ -260,48 +287,53 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 	out->numTags = in->numTags;
 	out->numSurfaces = out->numSurfaces;
 
-	// this is tricky, if we were to copy frames from MD3 straight from file
-	// we'd end up with tagname * numframes * numtags, shit
-
-	// copy tag names
-	memset(out->tagNames, 0, sizeof(out->tagNames));
-	tag = (md3Tag_t*)((byte*)in + in->ofsTags);
-	for (i = 0; i < in->numTags; i++, tag++)
+	if (in->numTags)
 	{
-		if (!tag->name[0])
+		// this is tricky, if we were to copy frames straight from MD3 from file
+		// we'd end up with duplicated tagnames * numframes * numtags
+
+		// copy tag names
+		memset(out->tagNames, 0, sizeof(out->tagNames));
+		tag = (md3Tag_t*)((byte*)in + in->ofsTags);
+		for (i = 0; i < in->numTags; i++, tag++)
 		{
-			Com_Error(ERR_DROP, "SV_LoadMD3: tag #%i in '%s' has empty name\n", i, out->name);
+			if (!tag->name[0])
+			{
+				Com_Error(ERR_DROP, "SV_LoadMD3: tag #%i in '%s' has empty name\n", i, out->name);
+			}
+
+			// lowercase the tag name so search compares are faster
+			_strlwr(tag->name);
+			memcpy(out->tagNames[i], tag->name, sizeof(tag->name));
 		}
 
-		// lowercase the tag name so search compares are faster
-		_strlwr(tag->name);
-		memcpy(out->tagNames[i], tag->name, sizeof(tag->name));
-	}
+		// copy tags
+		out->tagFrames = Z_TagMalloc(sizeof(orientation_t) * in->numTags * in->numFrames, TAG_SVMODELDATA);
 
-	// copy tags
-	out->tagFrames = Z_TagMalloc(sizeof(orientation_t) * in->numTags * in->numFrames, TAG_SVMODELDATA);
-
-	tag = (md3Tag_t*)((byte*)in + in->ofsTags);
-	for (i = 0; i < in->numTags; i++, tag++)
-	{
-		for (j = 0; j < 3; j++)
+		tag = (md3Tag_t*)((byte*)in + in->ofsTags);
+		for (i = 0; i < in->numTags * in->numFrames; i++, tag++)
 		{
-			tag->origin[j] = LittleFloat(tag->origin[j]);
-			tag->axis[0][j] = LittleFloat(tag->axis[0][j]);
-			tag->axis[1][j] = LittleFloat(tag->axis[1][j]);
-			tag->axis[2][j] = LittleFloat(tag->axis[2][j]);
+			for (j = 0; j < 3; j++)
+			{
+				tag->origin[j] = LittleFloat(tag->origin[j]);
+				tag->axis[0][j] = LittleFloat(tag->axis[0][j]);
+				tag->axis[1][j] = LittleFloat(tag->axis[1][j]);
+				tag->axis[2][j] = LittleFloat(tag->axis[2][j]);
+			}
+			VectorCopy(tag->origin, out->tagFrames[i].origin);
+			memcpy(out->tagFrames[i].axis, tag->axis, sizeof(tag->axis));
 		}
-		VectorCopy(tag->origin, out->tagFrames[i].origin);
-		memcpy(out->tagFrames[i].axis, tag->axis, sizeof(tag->axis));
 	}
 
 	out->type = MOD_MD3;
 }
 
 
-//
-// sp2 format
-//
+/*
+=================
+SV_LoadSP2
+=================
+*/
 static void SV_LoadSP2(svmodel_t* out, void* buffer)
 {
 	sp2Header_t* in;
@@ -321,4 +353,83 @@ static void SV_LoadSP2(svmodel_t* out, void* buffer)
 	out->numFrames = in->numframes;
 	out->numSurfaces = 1;
 	out->type = MOD_SPRITE;
+}
+
+
+/*
+=================
+SV_GetTag
+
+returns orientation_t of a tag for a given frame or NULL if not found
+=================
+*/
+orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
+{
+	svmodel_t* mod;
+	orientation_t* tagdata;
+	int index;
+
+	mod = SV_ModelForNum(modelindex);
+	if (!mod || mod->type != MOD_MD3)
+	{
+		Com_Error(ERR_DROP, "SV_GetTag: wrong model for index %i\n", modelindex);
+		return NULL;
+	}
+
+	// it is possible to have a bad frame while changing models, so don't error
+	if (frame >= mod->numFrames)
+		frame = mod->numFrames - 1;
+	else if (frame < 0)
+		frame = 0;
+
+	tagdata = (orientation_t*)((byte*)mod->tagFrames) + (frame * mod->numTags);
+	for (index = 0; index < mod->numTags; index++, tagdata++)
+	{
+		if (!strcmp(mod->tagNames[index], tagName))
+		{
+			return tagdata; // found it
+		}
+	}
+	return NULL;
+}
+
+
+/*
+=================
+SV_PositionTag
+=================
+*/
+orientation_t out;
+orientation_t *SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, char* tagName) 
+{
+	orientation_t	*tag;
+	vec3_t	rotaxis[3];
+
+	tag = SV_GetTag(modelindex, animframe, tagName);
+	if (!tag)
+		return NULL;
+
+	AnglesToAxis(angles, rotaxis);
+	AxisClear(out.axis);
+	AxisCopy(tag->axis, out.axis);
+
+	for (int i = 0; i < 3; i++) 
+	{
+		VectorMA(origin, tag->origin[i], tag->axis[i], out.origin);
+	}
+
+	MatrixMultiply(out.axis, rotaxis, out.axis);
+	return &out;
+}
+
+/*
+=================
+SV_PositionTagOnEntity
+=================
+*/
+orientation_t* SV_PositionTagOnEntity(gentity_t* ent, char* tagName)
+{
+	orientation_t* tag;
+	tag = SV_PositionTag(ent->v.origin, ent->v.angles, (int)ent->v.modelindex, (int)ent->v.animFrame, tagName);
+	return tag;
 }

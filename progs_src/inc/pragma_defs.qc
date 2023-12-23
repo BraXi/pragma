@@ -46,7 +46,7 @@ int CONTENTS_WATER			= 32i;
 int CONTENTS_MIST			= 64i;
 int LAST_VISIBLE_CONTENTS	= CONTENTS_MIST;
 
-// remaining contents are non-visible, and don't eat brushes
+// remaining contents are non-visible, and don't eat brushes
 int CONTENTS_AREAPORTAL		= 0x8000i;
 int CONTENTS_PLAYERCLIP		= 0x10000i;
 int CONTENTS_MONSTERCLIP	= 0x20000i;

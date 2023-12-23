@@ -124,6 +124,9 @@ static void SV_InitGameProgs()
 	sv.edicts = ((gentity_t*)((byte*)Scr_GetEntityPtr()));
 	sv.qcvm_active = true;
 	sv.script_globals = Scr_GetGlobals();
+
+	// set world model
+	sv.edicts[0].v.model = Scr_SetString(sv.configstrings[CS_MODELS + 1]);
 }
 
 /*
@@ -208,6 +211,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
 
 	SV_InitDevTools();
+
 	//
 	// create qcvm for svgame progs
 	//

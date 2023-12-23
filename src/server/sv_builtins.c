@@ -1903,6 +1903,232 @@ void PFSV_nav_getnodepos(void)
 
 /*
 =================
+PFSV_nav_getnodescount
+
+float nav_getnodescount()
+Returns the number of navigation nodes loaded by engine
+=================
+*/
+extern int Nav_GetNodesCount();
+void PFSV_nav_getnodescount(void)
+{
+	Scr_ReturnFloat( Nav_GetNodesCount() );
+}
+
+/*
+=================
+PFSV_nav_getnodelinkcount
+
+float nav_getnodelinkcount(float nodeIndex)
+Returns the links count of a given node
+=================
+*/
+extern int Nav_GetNodeLinkCount(int node);
+void PFSV_nav_getnodelinkcount(void)
+{
+	Scr_ReturnFloat( Nav_GetNodeLinkCount(Scr_GetParmFloat(0)) );
+}
+
+/*
+=================
+PFSV_nav_getnodelink
+
+float nav_getnodelink(float nodeIndex, float linkIndex)
+Returns index to a node which its linked to
+=================
+*/
+extern int Nav_GetNodeLink(int node, int link);
+void PFSV_nav_getnodelink(void)
+{
+	Scr_ReturnFloat( Nav_GetNodeLink(Scr_GetParmFloat(0), Scr_GetParmFloat(1)) );
+}
+
+
+/*
+=================
+PFSV_getframescount
+
+float getframescount(float modelindex)
+Returns the number of animation frames in md3 and sp2 models
+
+float numanimframes = getframescount(self.modelindex);
+=================
+*/
+void PFSV_getframescount(void)
+{
+	int index = (int)Scr_GetParmFloat(0);
+	svmodel_t* mod = SV_ModelForNum(index);
+	if (!mod)
+	{
+		Scr_ReturnFloat(0);
+		Scr_RunError("getframescount(): no model for index %i\n", index);
+		return;
+	}
+	Scr_ReturnFloat(mod->numFrames);
+}
+
+/*
+=================
+PFSV_gettagscount
+
+float gettagscount(float modelindex)
+Returns the number of tags in a specified model
+
+float mdl = precache_model("models/mutant.md3");
+float numtags = gettagscount(mdl);
+=================
+*/
+void PFSV_gettagscount(void)
+{
+	int index = (int)Scr_GetParmFloat(0);
+	svmodel_t* mod = SV_ModelForNum(index);
+	if (!mod)
+	{
+		Scr_ReturnFloat(0);
+		Scr_RunError("getframescount(): no model for index %i\n", index);
+		return;
+	}
+
+	if (mod->type == MOD_MD3)
+		Scr_ReturnFloat(mod->numTags); 
+	else
+	{
+		Scr_ReturnFloat(0);
+//		Scr_RunError("getnumtags(): non MD3 model '%s'\n", mod->name);
+	}
+}
+
+/*
+=================
+PFSV_tagexists
+
+float tagexists(entity ent, string tagName)
+Returns true if tag exists on entity's model
+
+float has_flash = tagexists(self, "tag_flash");
+=================
+*/
+void PFSV_tagexists(void)
+{
+	gentity_t* ent;
+	char* tagName;
+	svmodel_t* model;
+	orientation_t* tag;
+
+	ent = Scr_GetParmString(0);
+	tagName = Scr_GetParmString(1);
+
+	if (!ent->inuse)
+	{
+		Scr_RunError("tagexists(): entity %i not in use\n", NUM_FOR_ENT(ent));
+		return;
+	}
+
+	model = SV_ModelForNum(ent->v.modelindex);
+	if (!model || model->type != MOD_MD3 || !model->numTags)
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+
+	tag = SV_GetTag((int)ent->v.modelindex, 0, tagName);
+	Scr_ReturnFloat(tag != NULL ? 1.0f : 0.0f);
+}
+
+/*
+=================
+PFSV_gettagorigin
+
+vector gettagorigin(entity ent, string tagName)
+
+Returns tag origin in worldspace for entity's current animFrame
+Only .modelindex ('main model') is taken for calculation
+If entity's model has no tags or is not MD3, entity origin will be returned.
+
+vector head_ = gettagorigin(self, "tag_head");
+=================
+*/
+void PFSV_gettagorigin(void)
+{
+	gentity_t *ent;
+	char *tagName;
+	svmodel_t *model;
+	orientation_t* tag;
+
+	ent = Scr_GetParmEdict(0);
+	tagName = Scr_GetParmString(1);
+
+	if (!ent->inuse)
+	{
+		Scr_RunError("gettagorigin(): entity %i not in use\n", NUM_FOR_ENT(ent));
+		return;
+	}
+
+	model = SV_ModelForNum(ent->v.modelindex);
+	if (!model || model->type != MOD_MD3 || !model->numTags)
+	{
+		Scr_ReturnVector(ent->v.origin);
+		return;
+	}
+
+	tag = SV_PositionTagOnEntity(ent, tagName);
+	if (!tag)
+	{
+		Scr_RunError("gettagorigin(): model '%s' nas no tag '%s'\n", model->name, tagName);
+		return;
+	}
+
+	Scr_ReturnVector(tag->origin);
+}
+
+/*
+=================
+PFSV_gettagangles
+
+vector gettagangles(entity ent, string tagName)
+Returns tag angles in worldspace for entity's current animFrame
+Only .modelindex ('main model') is taken for calculation
+If entity's model has no tags or is not MD3, entity angles will be returned.
+
+vector looking_at = gettagangles(self, "tag_head");
+=================
+*/
+void PFSV_gettagangles(void)
+{
+	gentity_t* ent;
+	char* tagName;
+	svmodel_t* model;
+	orientation_t* tag;
+
+	ent = Scr_GetParmEdict(0);
+	tagName = Scr_GetParmString(1);
+
+	if (!ent->inuse)
+	{
+		Scr_RunError("gettagangles(): entity %i not in use\n", NUM_FOR_ENT(ent));
+		return;
+	}
+
+	model = SV_ModelForNum((int)ent->v.modelindex);
+	if (!model || model->type != MOD_MD3 || !model->numTags)
+	{
+		Scr_ReturnVector(ent->v.angles);
+		return;
+	}
+
+	tag = SV_PositionTagOnEntity(ent, tagName);
+	if (!tag)
+	{
+		Scr_RunError("gettagangles(): model '%s' nas no tag '%s'\n", model->name, tagName);
+		return;
+	}
+
+	Scr_ReturnVector(tag->origin);
+}
+
+
+/*
+=================
 SV_InitScriptBuiltins
 
 Register server script functions
@@ -2007,6 +2233,18 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_nav_getnearestnode, PF_SV, "nav_getnearestnode", "float(vector p)");
 	Scr_DefineBuiltin(PFSV_nav_searchpath, PF_SV, "nav_searchpath", "float(float n1, float n2)");
 	Scr_DefineBuiltin(PFSV_nav_getnodepos, PF_SV, "nav_getnodepos", "vector(float n)");
+	Scr_DefineBuiltin(PFSV_nav_getnodescount, PF_SV, "nav_getnodescount", "float()");
+	Scr_DefineBuiltin(PFSV_nav_getnodelinkcount, PF_SV, "nav_getnodelinkcount", "float(float n)");
+	Scr_DefineBuiltin(PFSV_nav_getnodelink, PF_SV, "nav_getnodelink", "float(float n, float l)");
+	
+
+	// models
+	// TODO -- share with cgame
+	Scr_DefineBuiltin(PFSV_getframescount, PF_SV, "getframescount", "float(float midx)");
+	Scr_DefineBuiltin(PFSV_gettagscount, PF_SV, "gettagscount", "float(float midx)");
+	Scr_DefineBuiltin(PFSV_tagexists, PF_SV, "tagexists", "float(entity e, string tn)");
+	Scr_DefineBuiltin(PFSV_gettagorigin, PF_SV, "gettagorigin", "vector(entity e, string tn)");
+	Scr_DefineBuiltin(PFSV_gettagangles, PF_SV, "gettagangles", "vector(entity e, string tn)");
 
 	// debug
 	Scr_DefineBuiltin(PFSV_drawline, PF_SV, "drawline", "void(vector p1, vector p2, vector c, float th, float dt, float t)");

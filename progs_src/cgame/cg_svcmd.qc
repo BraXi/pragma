@@ -19,15 +19,12 @@ Use MSG_Read functions here...
 */
 void(float inCommand) CG_ServerCommand =
 {
-#if 1
-	print("CG command from server: ", ftos(inCommand), "\n");
-#endif	
-	
 	switch(inCommand)
 	{
-	case 0:
+	case 1:
+		localsound("misc/beep.wav", 1.0);
+		print(MSG_ReadString()); // print our message
 		break;
-		
 	default:
 		print("received unknown CG command from server: ", ftos(inCommand), "\n");
 		break;

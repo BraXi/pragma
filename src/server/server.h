@@ -44,7 +44,7 @@ typedef struct svmodel_s
 	char			name[MAX_QPATH];
 	modtype_t		type;
 
-	 cmodel_t	*bmodel; // only if type == MOD_BRUSH
+	cmodel_t		*bmodel; // only if type == MOD_BRUSH
 
 	// only if type == MOD_MD3
 	char			tagNames[MD3_MAX_TAGS][MD3_MAX_NAME];
@@ -257,6 +257,10 @@ int SV_ModelIndex(char* name);
 int SV_SoundIndex(char* name);
 int SV_ImageIndex(char* name);
 svmodel_t* SV_ModelForNum(unsigned int index);
+svmodel_t* SV_ModelForName(char *name);
+orientation_t* SV_GetTag(int modelindex, int frame, char* tagName);
+orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, char* tagName);
+orientation_t* SV_PositionTagOnEntity(gentity_t* ent, char* tagName);
 
 
 //

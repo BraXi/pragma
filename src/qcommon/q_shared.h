@@ -193,7 +193,7 @@ extern long Q_ftol( float f );
 #define VectorNegate(a,b)		(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])
 #define VectorSet(v, x, y, z)	(v[0]=(x), v[1]=(y), v[2]=(z))
 
-void VectorMA (vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
+void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
 
 // just in case you do't want to use the macros
 vec_t _DotProduct (vec3_t v1, vec3_t v2);
@@ -211,6 +211,11 @@ vec_t VectorNormalize2 (vec3_t v, vec3_t out);
 void VectorInverse (vec3_t v);
 void VectorScale (vec3_t in, vec_t scale, vec3_t out);
 int Q_log2(int val);
+
+void AnglesToAxis(const vec3_t angles, vec3_t axis[3]);
+void AxisClear(vec3_t axis[3]);
+void AxisCopy(vec3_t in[3], vec3_t out[3]);
+void MatrixMultiply(float in1[3][3], float in2[3][3], float out[3][3]);
 
 void R_ConcatRotations (float in1[3][3], float in2[3][3], float out[3][3]);
 void R_ConcatTransforms (float in1[3][4], float in2[3][4], float out[3][4]);
@@ -490,14 +495,12 @@ typedef struct
 // prediction
 typedef enum 
 {
-	// can accelerate and turn
-	PM_NORMAL,
-//	PM_NORMAL_NO_CROUCH,
-	PM_SPECTATOR,
-	// no acceleration or turning
-	PM_DEAD,
-	PM_GIB,		// different bounding box
-	PM_FREEZE
+	PM_NORMAL,		// can accelerate and turn
+	PM_NOCLIP,		// fly move, no clipping to world
+	PM_SPECTATOR,	// fly move, clip to world
+	PM_DEAD,		// no acceleration or turning
+	PM_GIB,			// no acceleration or turning, diferent bbox size
+	PM_FREEZE		// cannot move and may hover above ground
 } pmtype_t;
 
 // pmove->pm_flags

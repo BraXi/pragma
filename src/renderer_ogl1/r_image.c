@@ -379,7 +379,7 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 
 	if (targa_header.image_type != TGA_TYPE_RAW_RGB && targa_header.image_type != TGA_TYPE_RUNLENGHT_RGB)
 	{
-		ri.Sys_Error(ERR_DROP, "LoadTGA: Only type 2 and 10 targa RGB images supported\n");
+		ri.Sys_Error(ERR_DROP, "LoadTGA: '%s' Only type 2 and 10 targa RGB images supported\n", name);
 	}
 
 	if (targa_header.colormap_type !=0 || (targa_header.pixel_size != 32 && targa_header.pixel_size != 24))

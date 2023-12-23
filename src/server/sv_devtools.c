@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 // sv_devtools.c
 
 #include "server.h"
-#define MAX_DEBUG_PRIMITIVES 512 // ref.h
+#define MAX_DEBUG_PRIMITIVES 4096 // ref.h
 debugprimitive_t *sv_debugPrimitives;// [MAX_DEBUG_PRIMITIVES] ;
 
 #ifndef DEDICATED_ONLY
