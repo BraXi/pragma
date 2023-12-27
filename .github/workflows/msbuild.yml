@@ -10,6 +10,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+    branches: [ "main" ]
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -19,6 +21,7 @@ env:
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
   # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
   BUILD_CONFIGURATION: Debug
+  BUILD_PLATFORM: x86
 
 permissions:
   contents: read
@@ -41,4 +44,12 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Generate MSBuild archives
+      uses: actions/upload-artifact@v3
+      with:
+        name: pragma-msbuild-${{env.BUILD_PLATFORM}}
+        path: |
+            build/engine.exe
+            build/renderer_ogl1.lib

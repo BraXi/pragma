@@ -257,10 +257,10 @@ void CL_PredictMovement (void)
 
 #ifdef PMOVE_PROGS
 	cl_globalvars_t* vars;
+	vars = cl.script_globals; // Reki (December 27 2023): Can cl.script_globals be NULL? hopefully not.
+
 	if (cl.qcvm_active && cl.entities)
 	{
-		vars = cl.script_globals;
-
 		//
 		// copy pmove state TO cgame
 		//
