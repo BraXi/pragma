@@ -256,31 +256,33 @@ void CL_PredictMovement (void)
 	pm.s = cl.frame.playerstate.pmove;
 
 #ifdef PMOVE_PROGS
-	cl_globalvars_t* vars;
-	vars = cl.script_globals; // Reki (December 27 2023): Can cl.script_globals be NULL? hopefully not.
+	cl_globalvars_t* cgGlobals = NULL;
 
 	if (cl.qcvm_active && cl.entities)
 	{
+		cgGlobals = cl.script_globals;	// Reki (December 27 2023): Can cl.script_globals be NULL? hopefully not. 
+										// BraXi - yup, can be when !cl.qcvm_active
+
 		//
 		// copy pmove state TO cgame
 		//
-		vars->pm_state_pm_type = (int)pm.s.pm_type;
-		vars->pm_state_gravity = (int)pm.s.gravity;
-		vars->pm_state_pm_flags = (int)pm.s.pm_flags;
-		vars->pm_state_pm_time = (int)pm.s.pm_time;
+		cgGlobals->pm_state_pm_type = (int)pm.s.pm_type;
+		cgGlobals->pm_state_gravity = (int)pm.s.gravity;
+		cgGlobals->pm_state_pm_flags = (int)pm.s.pm_flags;
+		cgGlobals->pm_state_pm_time = (int)pm.s.pm_time;
 
 		for (i = 0; i < 3; i++)
 		{
-			vars->pm_state_origin[i] = pm.s.origin[i];
-			vars->pm_state_velocity[i] = pm.s.velocity[i];
-			vars->pm_state_delta_angles[i] = (float)pm.s.delta_angles[i];
+			cgGlobals->pm_state_origin[i] = pm.s.origin[i];
+			cgGlobals->pm_state_velocity[i] = pm.s.velocity[i];
+			cgGlobals->pm_state_delta_angles[i] = (float)pm.s.delta_angles[i];
 
-			vars->pm_state_mins[i] = pm.s.mins[i];
-			vars->pm_state_maxs[i] = pm.s.maxs[i];
+			cgGlobals->pm_state_mins[i] = pm.s.mins[i];
+			cgGlobals->pm_state_maxs[i] = pm.s.maxs[i];
 		}
 
 		// make sure qc knows our number for trace function
-		vars->localplayernum = cl.playernum;
+		cgGlobals->localplayernum = cl.playernum;
 	}
 #else
 	pm.trace = CL_PMTrace;
@@ -304,13 +306,12 @@ void CL_PredictMovement (void)
 		for (i = 0; i < 3; i++)
 			inangles[i] = (float)cmd->angles[i];
 
-		// may crash here or cause qcvm panic
-		if(cl.qcvm_active && cl.entities)
+		if(cl.qcvm_active && cl.entities && cgGlobals != NULL)
 		{
 			//
 			// call cgame's pmove
 			//	
-			Scr_BindVM(VM_CLGAME);
+			Scr_BindVM(VM_CLGAME); // always bing qcvm here, or some weird things may happen when on loopback servers
 			Scr_AddVector(0, inmove);
 			Scr_AddVector(1, inangles);
 			Scr_AddFloat(2, (float)cmd->msec);
@@ -319,23 +320,23 @@ void CL_PredictMovement (void)
 			//
 			// read pmove state FROM cgame
 			//
-			pm.s.pm_type = vars->pm_state_pm_type;
-			pm.s.gravity = vars->pm_state_gravity;
-			pm.s.pm_flags = vars->pm_state_pm_flags;
-			pm.s.pm_time = vars->pm_state_pm_time;
+			pm.s.pm_type = cgGlobals->pm_state_pm_type;
+			pm.s.gravity = cgGlobals->pm_state_gravity;
+			pm.s.pm_flags = cgGlobals->pm_state_pm_flags;
+			pm.s.pm_time = cgGlobals->pm_state_pm_time;
 			pm.viewheight = cl.script_globals->cam_viewoffset[2];
 
 			for (i = 0; i < 3; i++)
 			{
-				pm.s.origin[i] = vars->pm_state_origin[i];
-				pm.s.velocity[i] = vars->pm_state_velocity[i];
-				pm.s.delta_angles[i] = vars->pm_state_delta_angles[i];
+				pm.s.origin[i] = cgGlobals->pm_state_origin[i];
+				pm.s.velocity[i] = cgGlobals->pm_state_velocity[i];
+				pm.s.delta_angles[i] = cgGlobals->pm_state_delta_angles[i];
 
-				pm.s.mins[i] = vars->pm_state_mins[i];
-				pm.s.maxs[i] = vars->pm_state_maxs[i];
+				pm.s.mins[i] = cgGlobals->pm_state_mins[i];
+				pm.s.maxs[i] = cgGlobals->pm_state_maxs[i];
 
-				pm.mins[i] = vars->pm_state_mins[i];
-				pm.maxs[i] = vars->pm_state_maxs[i];
+				pm.mins[i] = cgGlobals->pm_state_mins[i];
+				pm.maxs[i] = cgGlobals->pm_state_maxs[i];
 
 				pm.viewangles[i] = cl.script_globals->cam_viewangles[i];
 			}
