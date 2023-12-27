@@ -4,6 +4,10 @@
 #define PRAGMA_VERSION "0.22"
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
+// Pragma will use pmove in shared cg/sv qc progs instead of C version
+// Enabling USE_PMOVE_IN_PROGS allows mods to have full control over pmove
+#define USE_PMOVE_IN_PROGS 1
+
 // net protocol will use floats for coordinates instead of shorts, this applies to pmove too
 // this also fixes some of pmove issues like dragging players motion towards 0,0,0 and higher jumps
 // all entities can move beyond +/- 4096qu boundary, 

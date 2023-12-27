@@ -201,8 +201,6 @@ Sets cl.predicted_origin and cl.predicted_angles
 =================
 */
 
-#define PMOVE_PROGS 1
-
 void CL_PredictMovement (void)
 {
 	int			ack, current;
@@ -214,7 +212,7 @@ void CL_PredictMovement (void)
 	int			step;
 	int			oldz;
 
-#ifdef PMOVE_PROGS
+#ifdef USE_PMOVE_IN_PROGS
 	vec3_t inmove, inangles;
 #endif
 
@@ -255,7 +253,7 @@ void CL_PredictMovement (void)
 	memset (&pm, 0, sizeof(pm));
 	pm.s = cl.frame.playerstate.pmove;
 
-#ifdef PMOVE_PROGS
+#ifdef USE_PMOVE_IN_PROGS
 	cl_globalvars_t* cgGlobals = NULL;
 
 	if (cl.qcvm_active && cl.entities)
@@ -299,7 +297,7 @@ void CL_PredictMovement (void)
 		frame = ack & (CMD_BACKUP-1);
 		cmd = &cl.cmds[frame];
 
-#ifdef PMOVE_PROGS
+#ifdef USE_PMOVE_IN_PROGS
 		inmove[0] = (float)cmd->forwardmove;
 		inmove[1] = (float)cmd->sidemove;
 		inmove[2] = (float)cmd->upmove;
