@@ -1285,9 +1285,9 @@ void PFSV_changemap(void)
 	//	SV_Map(false, nextmap, false, Scr_GetParmFloat(1), Scr_GetParmFloat(2)); 
 
 	if(Scr_GetParmFloat(1) > 0)
-		Cbuf_ExecuteText(EXEC_APPEND, va("gamemap %s", nextmap));
+		Cbuf_ExecuteText(EXEC_APPEND, va("gamemap %s\n", nextmap));
 	else
-		Cbuf_ExecuteText(EXEC_APPEND, va("map %s", nextmap));
+		Cbuf_ExecuteText(EXEC_APPEND, va("map %s\n", nextmap));
 
 	Scr_ReturnFloat(1);
 }
