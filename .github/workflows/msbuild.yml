@@ -52,4 +52,4 @@ jobs:
         name: pragma-msbuild-${{env.BUILD_PLATFORM}}
         path: |
             build/engine.exe
-            build/renderer_ogl1.lib
+            build/renderer_ogl1.dll
