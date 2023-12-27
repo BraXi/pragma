@@ -49,7 +49,8 @@ jobs:
     - name: Generate MSBuild archives
       uses: actions/upload-artifact@v3
       with:
-        name: pragma-msbuild-${{env.BUILD_PLATFORM}}
+        name: pragma-debug-win-${{env.BUILD_PLATFORM}}
         path: |
             build/engine.exe
             build/renderer_ogl1.dll
+            readme.txt

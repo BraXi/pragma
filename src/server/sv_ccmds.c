@@ -609,7 +609,7 @@ void SV_Map_f (void)
 		Com_sprintf (expanded, sizeof(expanded), "maps/%s.bsp", map);
 		if (FS_LoadFile (expanded, NULL) == -1)
 		{
-			Com_Printf ("Can't find %s\n", expanded);
+			Com_Printf ("Server cannot find map: `%s`\n", expanded);
 			return;
 		}
 	}
