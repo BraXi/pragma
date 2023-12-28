@@ -313,7 +313,6 @@ enum clc_ops_e
 #define	PS_M_FLAGS			(1<<4)
 #define	PS_M_GRAVITY		(1<<5)
 #define	PS_M_DELTA_ANGLES	(1<<6)
-#define	PS_M_BBOX_SIZE		(1<<15) // braxi -- added bbox size, maybe make it byte?
 
 #define	PS_VIEWOFFSET		(1<<7)
 #define	PS_VIEWANGLES		(1<<8)
@@ -323,6 +322,10 @@ enum clc_ops_e
 #define	PS_VIEWMODEL_INDEX	(1<<12)
 #define	PS_VIEWMODEL_FRAME	(1<<13)
 #define	PS_RDFLAGS			(1<<14)
+
+#define PS_EXTRABYTES		(1<<15) // Reki (December 28 2023): added this so we don't shoot ourselves in the foot later, looking for more bytes
+#define	PS_M_BBOX_SIZE		(1<<16) // braxi -- added bbox size, maybe make it byte?
+#define PS_M_FLAGSLONG		(1<<17) // Reki (December 28 2023): if our mod is using a lot of pmove flags, make sure they're networked
 
 
 //==============================================
