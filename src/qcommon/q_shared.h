@@ -535,7 +535,11 @@ typedef struct
 	short		maxs[3];	// 12.3
 #endif
 
+#if PROTOCOL_INT_PMFLAGS == 1
+	int			pm_flags; 		// ducked, jump_held, etc
+#else
 	byte		pm_flags;		// ducked, jump_held, etc
+#endif
 	byte		pm_time;		// each unit = 8 ms
 	short		gravity;
 

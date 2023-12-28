@@ -253,7 +253,13 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 		MSG_WriteByte (msg, ps->pmove.pm_time);
 
 	if (pflags & PS_M_FLAGS)
+	{
+#if PROTOCOL_INT_PMFLAGS == 1
+		MSG_WriteLong (msg, ps->pmove.pm_flags);
+#else
 		MSG_WriteByte (msg, ps->pmove.pm_flags);
+#endif
+	}
 
 	if (pflags & PS_M_GRAVITY)
 		MSG_WriteShort (msg, ps->pmove.gravity);

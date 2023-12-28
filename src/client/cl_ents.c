@@ -447,7 +447,13 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 		state->pmove.pm_time = MSG_ReadByte (&net_message);
 
 	if (flags & PS_M_FLAGS)
+	{
+#if PROTOCOL_INT_PMFLAGS == 1
+		state->pmove.pm_flags = MSG_ReadLong (&net_message);
+#else
 		state->pmove.pm_flags = MSG_ReadByte (&net_message);
+#endif
+	}
 
 	if (flags & PS_M_GRAVITY)
 		state->pmove.gravity = MSG_ReadShort (&net_message);

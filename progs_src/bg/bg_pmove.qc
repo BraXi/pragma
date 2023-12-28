@@ -44,14 +44,30 @@ typedef enum
 //
 // player movement flags
 //
-float PMF_CROUCHING			= 1;	// crouching
-float PMF_JUMP_HELD			= 2;	// holding jump
-float PMF_ON_GROUND			= 4;	// touching ground
-float PMF_TIME_WATERJUMP	= 8;	// pm_time is waterjump
-float PMF_TIME_LAND			= 16;	// pm_time is time before rejump
-float PMF_TIME_TELEPORT		= 32;	// pm_time is non-moving time
-float PMF_NO_PREDICTION		= 64;	// temporarily disables prediction -- !!! THIS MUST MATCH C CODE !!!
-float PMF_FREE				= 128;	// the only free for use pmflag, can't have more without changing pm_flags to short in C network code
+float PMF_CROUCHING			= (1 << 0);	// crouching
+float PMF_JUMP_HELD			= (1 << 1);	// holding jump
+float PMF_ON_GROUND			= (1 << 2);	// touching ground
+float PMF_TIME_WATERJUMP	= (1 << 3);	// pm_time is waterjump
+float PMF_TIME_LAND			= (1 << 4);	// pm_time is time before rejump
+float PMF_TIME_TELEPORT		= (1 << 5);	// pm_time is non-moving time
+float PMF_NO_PREDICTION		= (1 << 6);	// temporarily disables prediction -- !!! THIS MUST MATCH C CODE !!!
+float PMF_FLAG7				= (1 << 7);	// unused
+float PMF_FLAG8				= (1 << 8);	// unused
+float PMF_FLAG9				= (1 << 9);	// unused
+float PMF_FLAG10			= (1 << 10);	// unused
+float PMF_FLAG11			= (1 << 11);	// unused
+float PMF_FLAG12			= (1 << 12);	// unused
+float PMF_FLAG13			= (1 << 13);	// unused
+float PMF_FLAG14			= (1 << 14);	// unused
+float PMF_FLAG15			= (1 << 15);	// unused
+float PMF_FLAG16			= (1 << 16);	// unused
+float PMF_FLAG17			= (1 << 17);	// unused
+float PMF_FLAG18			= (1 << 18);	// unused
+float PMF_FLAG19			= (1 << 19);	// unused
+float PMF_FLAG20			= (1 << 20);	// unused
+float PMF_FLAG21			= (1 << 21);	// unused
+float PMF_FLAG22			= (1 << 22);	// unused
+float PMF_FLAG23			= (1 << 23);	// unused
 // ---------------------------------------------------
 //
 // movement parameters
