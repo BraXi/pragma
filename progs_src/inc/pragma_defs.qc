@@ -303,4 +303,3 @@ float EV_OTHER_TELEPORT		= 7;
 #define	CS_HUD				5		// display program string
 #define CS_AIRACCEL			29		// air acceleration control
 #define	CS_MAXCLIENTS		30
-#define	CS_MAPCHECKSUM		31		// for catching cheater maps

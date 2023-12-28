@@ -476,12 +476,14 @@ typedef void (*xcommand_t) (void);
 void	Cmd_Init (void);
 
 void	Cmd_AddCommand (char *cmd_name, xcommand_t function);
+void	Cmd_AddCommandCG(char *cmd_name, scr_func_t function);
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory
 // if function is NULL, the command will be forwarded to the server
 // as a clc_stringcmd instead of executed locally
 void	Cmd_RemoveCommand (char *cmd_name);
+void	Cmd_RemoveClientGameCommands();
 
 qboolean Cmd_Exists (char *cmd_name);
 // used by the cvar code to check for cvar / command name overlap
@@ -813,7 +815,7 @@ void		Com_SetServerState (int state);
 
 unsigned	Com_BlockChecksum (void *buffer, int length);
 byte		COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
-unsigned short CRC_ChecksumFile(char* name);
+unsigned short CRC_ChecksumFile(char* name, qboolean fatal);
 
 float	frand(void);	// 0 ti 1
 float	crand(void);	// -1 to 1

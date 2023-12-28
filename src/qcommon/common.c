@@ -1424,17 +1424,21 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 CRC_ChecksumFile
 ================
 */
-unsigned short CRC_ChecksumFile(char* name)
+unsigned short CRC_ChecksumFile(char* name, qboolean fatal)
 {
 	int length;
 	byte* buf;
 	unsigned short checksum;
-	//	unsigned checksum;
+//	unsigned checksum;
 
 	length = FS_LoadFile(name, (void**)&buf);
 	if (!buf)
 	{
-		Com_Error(ERR_DROP, "File '%s' is missing\n", name);
+		if(fatal)
+			Com_Error(ERR_DROP, "File '%s' is missing\n", name);
+		else
+			Com_Printf("File '%s' is missing, no CRC check performed\n", name);
+
 		return 0;
 	}
 

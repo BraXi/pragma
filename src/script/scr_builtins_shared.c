@@ -511,6 +511,29 @@ void PF_logprint(void)
 	}
 }
 
+/*
+=================
+PF_crcfile
+
+float crcfile(string filename)
+
+Calculates and returns CRC checksum of a file
+
+float crc_checksum = crcfile("models/player.md3");
+=================
+*/
+void PF_crcfile(void)
+{
+	unsigned short checksum;
+	char* str;
+	str = Scr_GetParmString(0);
+
+	if (strlen(str) <= 0)
+		return;
+
+	checksum = CRC_ChecksumFile(str, false);
+	Scr_ReturnFloat((float)checksum);
+}
 
 /*
 =================
@@ -556,6 +579,8 @@ void Scr_InitSharedBuiltins()
 
 	// files
 	Scr_DefineBuiltin(PF_logprint, PF_ALL, "logprint", "void(float ts, string s, ...)");
+	Scr_DefineBuiltin(PF_crcfile, PF_ALL, "crcfile", "float(string fn)");
+	
 
 //	Scr_DefineBuiltin(PF_itoc, PF_ALL, "itoc", "string(float i)");
 

@@ -531,6 +531,11 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 		Cmd_RemoveCommand("edict");
 		Cmd_RemoveCommand("edicts");
 	}
+	if (vm->progsType == VM_CLGAME)
+	{
+		Cmd_RemoveClientGameCommands();
+	}
+
 	qcvm[vmtype] = NULL;
 
 	Scr_BindVM(VM_NONE);

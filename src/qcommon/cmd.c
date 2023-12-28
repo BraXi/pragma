@@ -488,7 +488,8 @@ typedef struct cmd_function_s
 {
 	struct cmd_function_s	*next;
 	char					*name;
-	xcommand_t				function;
+	xcommand_t				function; // when command is declared in C
+	scr_func_t				prfunction; // when command is declared in QC
 } cmd_function_t;
 
 
@@ -688,7 +689,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 Cmd_AddCommand
 ============
 */
-void	Cmd_AddCommand (char *cmd_name, xcommand_t function)
+void Cmd_AddCommand (char *cmd_name, xcommand_t function)
 {
 	cmd_function_t	*cmd;
 	
@@ -712,6 +713,40 @@ void	Cmd_AddCommand (char *cmd_name, xcommand_t function)
 	cmd = Z_Malloc (sizeof(cmd_function_t));
 	cmd->name = cmd_name;
 	cmd->function = function;
+	cmd->next = cmd_functions;
+	cmd->prfunction = -1;
+	cmd_functions = cmd;
+}
+
+/*
+============
+Cmd_AddCommandCG
+============
+*/
+void Cmd_AddCommandCG(char* cmd_name, scr_func_t function)
+{
+	cmd_function_t* cmd;
+
+	// fail if the command is a variable name
+	if (Cvar_VariableString(cmd_name)[0])
+	{
+		Com_Printf("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
+		return;
+	}
+
+	// fail if the command already exists
+	for (cmd = cmd_functions; cmd; cmd = cmd->next)
+	{
+		if (!strcmp(cmd_name, cmd->name))
+		{
+			Com_Printf("Cmd_AddCommand: %s already defined\n", cmd_name);
+			return;
+		}
+	}
+
+	cmd = Z_Malloc(sizeof(cmd_function_t));
+	cmd->name = cmd_name;
+	cmd->prfunction = function;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
 }
@@ -738,6 +773,34 @@ void	Cmd_RemoveCommand (char *cmd_name)
 		{
 			*back = cmd->next;
 			Z_Free (cmd);
+			return;
+		}
+		back = &cmd->next;
+	}
+}
+
+/*
+============
+Cmd_RemoveClientGameCommands
+============
+*/
+void Cmd_RemoveClientGameCommands()
+{
+	cmd_function_t* cmd, ** back;
+
+	back = &cmd_functions;
+	while (1)
+	{
+		cmd = *back;
+		if (!cmd)
+		{
+			return;
+		}
+
+		if(cmd->prfunction != -1)
+		{
+			*back = cmd->next;
+			Z_Free(cmd);
 			return;
 		}
 		back = &cmd->next;

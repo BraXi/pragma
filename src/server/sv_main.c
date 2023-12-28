@@ -1076,7 +1076,7 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 	Z_FreeTags(TAG_SERVER_GAME);
 	Z_FreeTags(TAG_SERVER_MODELDATA);
 	memset (&sv, 0, sizeof(sv));
-
+	 
 	Nav_Shutdown();
 
 	SV_FreeDevTools();

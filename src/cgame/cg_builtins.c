@@ -364,6 +364,22 @@ static void PFCG_playsound(void)
 	S_StartSound(pos, entNum, chan, sfx, volume, attenuation, timeoffset);
 }
 
+/*
+=================
+PFCG_addcommand
+
+addcommand( string cmdname, void() function )
+
+register console command, all cg commands are removed when dropped from server and during map changes
+
+addcommand( "respawn", cmd_respawn );
+=================
+*/
+static void PFCG_addcommand(void)
+{
+	Cmd_AddCommandCG(Scr_GetParmString(0), Scr_GetParmInt(1));
+}
+
 
 static void PFCG_GetCursorPos(void)
 {
@@ -416,4 +432,7 @@ void CG_InitScriptBuiltins()
 	// sound
 	Scr_DefineBuiltin(PFCG_localsound, PF_CL, "localsound", "void(string s, float v)");
 	Scr_DefineBuiltin(PFCG_playsound, PF_CL, "playsound", "void(vector v, float en, string snd, float ch, float vol, float att, float tofs)");
+
+	// commands
+	Scr_DefineBuiltin(PFCG_addcommand, PF_CL, "addcommand", "void(string cn, void() f)");
 }
