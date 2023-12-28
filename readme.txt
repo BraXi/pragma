@@ -9,4 +9,6 @@ It does replace native C gamecode with QuakeC VM and adds support for client-sid
 Engine does not require Quake2 game data to launch, you can grab minimal package from repo. 
 For more informations visit GitHub page.
 
+Engine source code (https://github.com/BraXi/pragma/src) is GPL-2.0 licensed
+
 - BraXi
