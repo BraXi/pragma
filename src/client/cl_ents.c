@@ -415,7 +415,7 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 
 	flags = MSG_ReadShort (&net_message);
 	if (flags & PS_EXTRABYTES)
-		flags = (MSG_ReadShort (&net_message) << 16) | (flags & 0xFFFF); // Reki: Allow extra bytes, so we don't choke ourselves
+		flags = (MSG_ReadShort (&net_message) << 16) | (flags & 0xFFFF); // reki --  Allow extra bytes, so we don't choke ourselves
 
 	//
 	// parse the pmove_state_t

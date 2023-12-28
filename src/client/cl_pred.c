@@ -258,7 +258,7 @@ void CL_PredictMovement (void)
 
 	if (cl.qcvm_active && cl.entities)
 	{
-		cgGlobals = cl.script_globals;	// Reki (December 27 2023): Can cl.script_globals be NULL? hopefully not. 
+		cgGlobals = cl.script_globals;	// reki -- 27-12-23 Can cl.script_globals be NULL? hopefully not. 
 										// BraXi - yup, can be when !cl.qcvm_active
 
 		//

@@ -167,7 +167,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	{
 		pflags |= PS_M_FLAGS;
 #if PROTOCOL_INT_PMFLAGS == 1
-		if ((ps->pmove.pm_flags ^ ops->pmove.pm_flags) & 0xFFFF0000) // Reki: if we have any big bits delta'd, we need to send them
+		if ((ps->pmove.pm_flags ^ ops->pmove.pm_flags) & 0xFFFF0000) // reki --  if we have any big bits delta'd, we need to send them
 			pflags |= PS_M_FLAGSLONG;
 #endif
 	}
@@ -229,7 +229,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	//
 	MSG_WriteByte (msg, SVC_PLAYERINFO);
 	MSG_WriteShort (msg, pflags);
-	if (pflags & PS_EXTRABYTES) // Reki: Send the extra bytes
+	if (pflags & PS_EXTRABYTES) // reki --  Send the extra bytes
 		MSG_WriteShort(msg, (pflags >> 16));
 	//
 	// write the pmove_state_t

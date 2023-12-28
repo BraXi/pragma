@@ -53,7 +53,7 @@ Key_Event (int key, qboolean down, unsigned time);
 ===============================================================================
 */
 
-// Reki (December 28 2023): Changed buttons to be generic, since we don't know how gamecode will want to use them
+// reki -- 28-12-23 Changed buttons to be generic, since we don't know how gamecode will want to use them
 // If you don't like X-Macros, feel free to swap it out to just a list of defs, I like using them in cases like this.
 #define LIST_BUTTONS \
 	X(0) \
@@ -457,7 +457,7 @@ void CL_InitInput (void)
 	Cmd_AddCommand ("-button" #bit, IN_Button##bit##Up);
 	LIST_BUTTONS
 	#undef X
-	// Reki (December 28 2023): Still have to add aliases for the old commands, this should probably be in the config file instead.
+	// reki -- 28-12-23 Still have to add aliases for the old commands, this should probably be in the config file instead.
 	Cbuf_AddText ("alias +attack +button0\nalias -attack -button0\n");
 	Cbuf_AddText ("alias +use +button1\nalias -use -button1\n");
 	Cbuf_AddText ("alias +reload +button2\nalias -reload -button2\n");
