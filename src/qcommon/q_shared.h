@@ -212,7 +212,7 @@ void VectorInverse (vec3_t v);
 void VectorScale (vec3_t in, vec_t scale, vec3_t out);
 int Q_log2(int val);
 
-void AnglesToAxis(const vec3_t angles, vec3_t axis[3]);
+void AnglesToAxis(vec3_t angles, vec3_t axis[3]);
 void AxisClear(vec3_t axis[3]);
 void AxisCopy(vec3_t in[3], vec3_t out[3]);
 void MatrixMultiply(float in1[3][3], float in2[3][3], float out[3][3]);
@@ -813,9 +813,11 @@ enum
 
 #define CS_AIRACCEL			29		// air acceleration control
 #define	CS_MAXCLIENTS		30
-#define	CS_MAPCHECKSUM		31		// for catching cheater maps
 
-#define	CS_MODELS			32
+#define	CS_CHECKSUM_MAP		31		
+#define	CS_CHECKSUM_CGPROGS 32
+
+#define	CS_MODELS			33
 #define	CS_SOUNDS			(CS_MODELS+MAX_MODELS)
 #define	CS_IMAGES			(CS_SOUNDS+MAX_SOUNDS)
 #define	CS_LIGHTS			(CS_IMAGES+MAX_IMAGES)

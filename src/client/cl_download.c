@@ -221,7 +221,8 @@ static void CL_DownloadMapTextures(float allowDownload, char* fileDir, char* fil
 
 void CL_RequestNextDownload(void)
 {
-	unsigned	map_checksum;		// for detecting cheater maps
+	unsigned	map_checksum;
+	unsigned	cgprogs_checksum;
 	char* mapFileName;
 
 	if (cls.state != ca_connected)
@@ -267,12 +268,18 @@ void CL_RequestNextDownload(void)
 	mapFileName = cl.configstrings[CS_MODELS + 1];
 	CM_LoadMap(mapFileName, true, &map_checksum);
 
-	if (map_checksum != atoi(cl.configstrings[CS_MAPCHECKSUM]))
+	if (map_checksum != atoi(cl.configstrings[CS_CHECKSUM_MAP]))
 	{
-		Com_Error(ERR_DROP, "Local map version differs from server: %i != '%s'\n", map_checksum, cl.configstrings[CS_MAPCHECKSUM]);
+		Com_Error(ERR_DROP, "Local map version differs from server: %i != '%s'\n", map_checksum, cl.configstrings[CS_CHECKSUM_MAP]);
 		return;
 	}
 
+	cgprogs_checksum = Scr_GetProgsCRC(VM_CLGAME);
+	if (cgprogs_checksum != atoi(cl.configstrings[CS_CHECKSUM_CGPROGS]))
+	{
+		Com_Error(ERR_DROP, "Client game differs from server: %i != '%s'\n", cgprogs_checksum, cl.configstrings[CS_CHECKSUM_CGPROGS]);
+		return;
+	}
 
 //	CL_DownloadSkyImages((allow_download->value && allow_download_maps->value), TEXTURE_CNT);
 //	CL_DownloadMapTextures((allow_download->value && allow_download_maps->value), "textures", "wal", TEXTURE_CNT + 999);

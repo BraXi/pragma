@@ -591,6 +591,13 @@ vm_entity_t* Scr_GetEntityPtr()
 	return active_qcvm->entities;
 }
 
+extern unsigned Scr_GetProgsCRC(vmType_t vmType)
+{
+	if (qcvm[vmType] == NULL)
+		return 0;
+	return qcvm[vmType]->crc;
+}
+
 int Scr_GetEntityFieldsSize()
 {
 	CheckScriptVM(__FUNCTION__);

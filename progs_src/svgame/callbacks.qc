@@ -131,7 +131,7 @@ void(float inButtons, float inImpulse, vector inMove, vector inAngles, float inM
 			self.pm_type = PM_NORMAL;
 	}
 	
-	SV_PlayerMove(inMove, inAngles, inMsecTime);
+	SV_PlayerMove(inMove, inAngles, inButtons, inMsecTime);
 
 	if(self.health > 0)
 		touchentities(self, 0); // touch triggers

@@ -795,7 +795,7 @@ int Q_log2(int val)
 AnglesToAxis (Q3)
 =================
 */
-void AnglesToAxis(const vec3_t angles, vec3_t axis[3]) 
+void AnglesToAxis(vec3_t angles, vec3_t axis[3]) 
 {
 	vec3_t	right;
 

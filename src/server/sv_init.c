@@ -129,6 +129,9 @@ static void SV_InitGameProgs()
 	sv.edicts[0].v.model = Scr_SetString(sv.configstrings[CS_MODELS + 1]);
 }
 
+
+
+
 /*
 ================
 SV_SpawnServer
@@ -141,7 +144,7 @@ clients along with it.
 void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
 {
 	int			i;
-	unsigned	checksum;
+	unsigned	checksum_map, checksum_cgprogs;
 	gentity_t	*ent;
 
 	if (attractloop)
@@ -201,7 +204,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	sv.num_models = 1;
 	if (serverstate != ss_game)
 	{
-		sv.models[1].bmodel = CM_LoadMap ("", false, &checksum);	// no real map
+		sv.models[1].bmodel = CM_LoadMap ("", false, &checksum_map);	// no real map
 	}
 	else
 	{
@@ -209,10 +212,26 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 		Com_sprintf (sv.configstrings[CS_MODELS+1],sizeof(sv.configstrings[CS_MODELS+1]), "maps/%s.bsp", server);
 
 		strcpy(sv.models[1].name, sv.configstrings[CS_MODELS + 1]); 
-		sv.models[1].bmodel = CM_LoadMap (sv.models[1].name, false, &checksum);
+		sv.models[1].bmodel = CM_LoadMap (sv.models[1].name, false, &checksum_map);
 	}
-	Com_sprintf (sv.configstrings[CS_MAPCHECKSUM],sizeof(sv.configstrings[CS_MAPCHECKSUM]), "%i", checksum);
 
+	//
+	// we want to do a CRC checksums for currently loaded map and client-game progs
+	// to validate that the client is using exactly _the same data_ as the server and simulation is identical
+	// TODO: server checksums should be private and the server should ask client to send them nicely to compare
+	// otherwise, a malicious client can just slap an "is matching!" response and connect with different files loaded
+	//
+	checksum_cgprogs = CRC_ChecksumFile("progs/cgame.dat");
+
+	Com_sprintf(sv.configstrings[CS_CHECKSUM_MAP], sizeof(sv.configstrings[CS_CHECKSUM_MAP]), "%i", checksum_map);
+	Com_sprintf(sv.configstrings[CS_CHECKSUM_CGPROGS], sizeof(sv.configstrings[CS_CHECKSUM_CGPROGS]), "%i", checksum_cgprogs);
+
+	Com_Printf("client-game progs crc: %d\n", checksum_cgprogs);
+
+
+	//
+	// dev tools
+	//
 	SV_InitDevTools();
 
 	//

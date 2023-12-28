@@ -810,6 +810,7 @@ void		Com_SetServerState (int state);
 
 unsigned	Com_BlockChecksum (void *buffer, int length);
 byte		COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
+unsigned short CRC_ChecksumFile(char* name);
 
 float	frand(void);	// 0 ti 1
 float	crand(void);	// -1 to 1

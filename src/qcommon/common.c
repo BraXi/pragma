@@ -1418,6 +1418,34 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 	return crc;
 }
 
+
+/*
+================
+CRC_ChecksumFile
+================
+*/
+unsigned short CRC_ChecksumFile(char* name)
+{
+	int length;
+	byte* buf;
+	unsigned short checksum;
+	//	unsigned checksum;
+
+	length = FS_LoadFile(name, (void**)&buf);
+	if (!buf)
+	{
+		Com_Error(ERR_DROP, "File '%s' is missing\n", name);
+		return 0;
+	}
+
+	checksum = CRC_Block(buf, length); // CRC
+//	checksum = LittleLong(Com_BlockChecksum(buf, length)); // MD4
+
+	Z_Free(buf);
+	return checksum;
+}
+
+
 //========================================================
 
 float	frand(void)
