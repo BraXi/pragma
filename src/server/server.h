@@ -28,7 +28,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //=============================================================================
 
-#define TAG_SVMODELDATA		123
 #define	MAX_MASTER_SERVERS	8		// max recipients for heartbeat packets
 #define	LATENCY_COUNTS		16
 #define	RATE_MESSAGES		10

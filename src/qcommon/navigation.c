@@ -24,7 +24,7 @@ int Nav_SearchPath(int startWaypoint, int goalWaypoint);
 #define NO_WAYPOINT -1
 #define MAX_WAYPOINTS 1024
 #define MAX_WAYPOINT_LINKS 8
-#define TAG_NODE 1231
+#define TAG_NAV_NODES 1231
 
 #define NAVFL_DISABLED 1		// node is temporarily disabled (ex. doors are locked)
 
@@ -183,6 +183,30 @@ void Nav_Init()
 	Com_Printf("Nav_Init: allocated space for %d waypoints\n", MAX_WAYPOINTS);
 }
 
+/*
+=================
+Nav_Shutdown
+=================
+*/
+void Nav_Shutdown()
+{
+	if (!Nav_IsInitialized())
+		return;
+
+	memset(openNodes, 0, sizeof(openNodes));
+	memset(closedNodes, 0, sizeof(closedNodes));
+	memset(&nav, 0, sizeof(nav));
+
+	nav.waypoints_count = 0;
+
+	if (nav.waypoints != NULL)
+	{
+		Z_Free(nav.waypoints);
+		nav.waypoints = NULL;
+	}
+
+	Z_FreeTags(TAG_NAV_NODES);
+}
 
 /*
 =================
@@ -377,7 +401,7 @@ Nav_AllocNode
 */
 static pathnode_t* Nav_AllocNode()
 {
-	pathnode_t* n = Z_TagMalloc(sizeof(pathnode_t), TAG_NODE);
+	pathnode_t* n = Z_TagMalloc(sizeof(pathnode_t), TAG_NAV_NODES);
 	n->wpIdx = NO_WAYPOINT;
 	return  n;
 }
@@ -417,7 +441,7 @@ int Nav_SearchPath(int startWaypoint, int goalWaypoint)
 	}
 
 #if 1
-	Z_FreeTags(TAG_NODE);
+	Z_FreeTags(TAG_NAV_NODES);
 	// is this too paranoid?
 	memset(openNodes, 0, sizeof(openNodes));
 	memset(closedNodes, 0, sizeof(closedNodes));

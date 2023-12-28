@@ -308,7 +308,7 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 		}
 
 		// copy tags
-		out->tagFrames = Z_TagMalloc(sizeof(orientation_t) * in->numTags * in->numFrames, TAG_SVMODELDATA);
+		out->tagFrames = Z_TagMalloc(sizeof(orientation_t) * in->numTags * in->numFrames, TAG_SERVER_MODELDATA);
 
 		tag = (md3Tag_t*)((byte*)in + in->ofsTags);
 		for (i = 0; i < in->numTags * in->numFrames; i++, tag++)

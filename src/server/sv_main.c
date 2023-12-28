@@ -58,7 +58,7 @@ void Master_Shutdown (void);
 
 qboolean Scr_ClientConnect(gentity_t* ent, char* userinfo);
 void Scr_ClientDisconnect(gentity_t* ent);
-
+extern void Nav_Shutdown();
 //============================================================================
 
 #ifdef _DEBUG
@@ -1073,8 +1073,11 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 	if (svs.gclients)
 		Z_Free(svs.gclients);
 
-	Z_FreeTags(TAG_SVMODELDATA);
+	Z_FreeTags(TAG_SERVER_GAME);
+	Z_FreeTags(TAG_SERVER_MODELDATA);
 	memset (&sv, 0, sizeof(sv));
+
+	Nav_Shutdown();
 
 	SV_FreeDevTools();
 	Com_SetServerState (sv.state);

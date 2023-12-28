@@ -30,7 +30,7 @@ const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 	{VM_GUI, "progs/guis.dat", 0, "gui"}
 };
 
-#define TAG_LEVEL 778
+
 #define	G_INT(o)	(*(int *)&active_qcvm->globals[o])
 
 
@@ -113,7 +113,7 @@ char* Scr_NewString(char* string)
 
 	l = strlen(string) + 1;
 
-	newb = Z_TagMalloc(l, TAG_LEVEL);
+	newb = Z_TagMalloc(l, TAG_SERVER_GAME);
 
 	new_p = newb;
 

@@ -47,6 +47,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #endif
 
+#define TAG_SERVER_MODELDATA 20231
+#define TAG_SERVER_GAME 20232
+
 //============================================================================
 
 typedef enum { MOD_BAD, MOD_BRUSH, MOD_SPRITE, MOD_MD3 } modtype_t;

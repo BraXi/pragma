@@ -202,16 +202,16 @@ void SV_CallSpawn(gentity_t* ent)
 
 	if (strlen(classname) > 60)
 	{
-		printf("CallSpawn: classname \"%s\" is too long\n", classname);
+		printf("SV_CallSpawn: classname '%s' is too long\n", classname);
 		return;
 	}
 
-	// check if someone is trying to spawn world... fixme
-//	if( EDICT_NUM(0)->inuse && stricmp(classname, "worldspawn") == 0 )
-//	{
-//		Com_Error(ERR_DROP, "CallSpawn: only one worldspawn allowed\n", classname);
-//		return;
-//	}
+	// check if someone is trying to spawn world...
+	if( NUM_FOR_ENT(ent) > 0 && EDICT_NUM(0)->inuse && stricmp(classname, "worldspawn") == 0 )
+	{
+		Com_Error(ERR_DROP, "SV_CallSpawn: only one worldspawn allowed\n", classname);
+		return;
+	}
 
 	if (ent == sv.edicts)
 	{
@@ -222,18 +222,18 @@ void SV_CallSpawn(gentity_t* ent)
 	}
 
 	// remove utility entities straight away
-	//if (stricmp(classname, "info_null") == 0 || stricmp(classname, "func_group") == 0)
-	//{
-		//SV_FreeEntity(ent);
-	//	return;
-	//}
+	if (stricmp(classname, "info_null") == 0 || stricmp(classname, "func_group") == 0)
+	{
+		SV_FreeEntity(ent);
+		return;
+	}
 
 	// find spawn fuction in progs
 	sprintf(spawnFuncName, "SP_%s", classname);
 	spawnfunc = Scr_FindFunction(spawnFuncName);
 	if (spawnfunc == -1 && ent != sv.edicts)
 	{
-		Com_DPrintf( DP_SV, "unknown entity: %s\n", classname);
+		Com_DPrintf( DP_SV, "SV_CallSpawn: unknown classname '%s'\n", classname);
 		SV_FreeEntity(ent);
 		return;
 	}
@@ -251,14 +251,14 @@ void SV_CallSpawn(gentity_t* ent)
 	// if returned value from prog is false we delete entity right now (unless its world)
 	if (ent != sv.edicts && Scr_GetReturnFloat() <= 0)
 	{
-		printf("CallSpawn: \"%s\" at (%i %i %i) discarded\n", classname, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+//		printf("CallSpawn: \"%s\" at (%i %i %i) discarded\n", classname, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 		SV_FreeEntity(ent);
 		oldSelf = sv.edicts;
 	}
 //	else
 //		printf("spawned %i:\"%s\" at (%i %i %i)\n",  NUM_FOR_EDICT(ent), classname, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 
-	//restore self & other
+	//restore self & other globals
 	sv.script_globals->self = GENT_TO_PROG(oldSelf);
 	sv.script_globals->other = GENT_TO_PROG(oldOther);
 }
@@ -303,7 +303,8 @@ char* SV_ParseEntity(char* data, gentity_t * ent)
 			Com_Error(ERR_DROP, "%s: EOF without closing brace\n", __FUNCTION__);
 
 		// anglehack is to allow QuakeEd to write single scalar angles
-		// and allow them to be turned into vectors. (FIXME...)
+		// and allow them to be turned into vectors.
+		// BraXi - why the hell level editors still set ANGLE instead of ANGLES? in 2023?
 		if (!strcmp(token, "angle"))
 		{
 			strcpy(token, "angles");
@@ -317,7 +318,7 @@ char* SV_ParseEntity(char* data, gentity_t * ent)
 		// parse value
 		token = COM_Parse(&data);
 		if (!token)
-			Com_Error(ERR_DROP, "%s: !token\n", __FUNCTION__);
+			Com_Error(ERR_DROP, "%s: null token\n", __FUNCTION__);
 
 		if (token[0] == '}')
 			Com_Error(ERR_DROP, "%s: closing brace without data\n", __FUNCTION__);
@@ -332,13 +333,13 @@ char* SV_ParseEntity(char* data, gentity_t * ent)
 		if (!key)
 		{
 			Com_Printf("%s: \"%s\" is not a field\n", __FUNCTION__, keyname);
-			//			if (strncmp(keyname, "sky", 3))
-			//			{
-			//				gi.dprintf("\"%s\" is not a field\n", keyname);
-			//			}
+//			if (strncmp(keyname, "sky", 3))
+//			{
+//				gi.dprintf("\"%s\" is not a field\n", keyname);
+//			}
 			continue;
 		}
-		else if (anglehack)
+		else if (anglehack && token)
 		{
 			char	temp[32];
 			strcpy(temp, token);
@@ -354,23 +355,17 @@ char* SV_ParseEntity(char* data, gentity_t * ent)
 }
 /*
 ==============
-SpawnEntities
+SV_SpawnEntities
 
 Creates a server's entity / program execution context by parsing textual entity definitions out of an ent file.
 ==============
 */
-void SpawnEntities(char* mapname, char* entities, char* spawnpoint)
+void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 {
 	gentity_t	*ent;
 	int			inhibit, discard, total;
 	char		*com_token;
 	int			i;
-
-//	Z_FreeTags(778);
-
-	// set client fields on player ents
-//	for (i = 0; i < sv_maxclients->value; i++)
-//		EDICT_NUM(i+1)->client = game.clients + i;
 
 	ent = NULL;
 	inhibit = discard = total = 0;
@@ -387,7 +382,7 @@ void SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 			break;
 
 		if (com_token[0] != '{')
-			Com_Error(ERR_FATAL, "SpawnEntities: found %s when expecting {\n", com_token);
+			Com_Error(ERR_FATAL, "SV_SpawnEntities: found %s when expecting {\n", com_token);
 
 		if (!ent)
 		{
@@ -399,9 +394,9 @@ void SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 		{
 			ent = SV_SpawnEntity();
 		}
+		
 
 		entities = SV_ParseEntity(entities, ent);
-		//printf("ent %s\n", Scr_GetString(ent->v.classname));
 		SV_CallSpawn(ent);
 
 		//stats
@@ -412,24 +407,5 @@ void SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 		total++;
 	}
 	Com_Printf("'%s' entities: %i inhibited, %i discarded (%i in map total)\n", sv.name, inhibit, discard, total);
-	
-#if 0	
-	for (i = 0; i < 23; i++)
-	{
-		ent = EDICT_NUM(i);
-		printf("inuse %i: %i %s\n", i, ent->inuse, Scr_GetString(ent->v.classname));
-	}
-
-	i = 1;	
-	while (i < sv.num_edicts) 
-	{
-		ent = EDICT_NUM(i);
-		if (ent && (ent->inuse != 0 || ent->inuse != 1))
-			Com_Printf("Invalid entity %d\n", i);
-		i++;
-	}
-#endif
-
-
 }
 

@@ -157,8 +157,11 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	sv.state = ss_dead;
 	Com_SetServerState (sv.state);
 
-	// wipe the entire per-level structure
-	Z_FreeTags(TAG_SVMODELDATA);
+	//
+	// clean memory and wipe the entire per-level structure
+	//
+	Z_FreeTags(TAG_SERVER_GAME);
+	Z_FreeTags(TAG_SERVER_MODELDATA);
 	memset (&sv, 0, sizeof(sv));
 
 	svs.realtime = 0;
@@ -166,7 +169,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	sv.attractloop = attractloop;
 	sv.time = 1000;
 
-	// save name for levels that don't set message
+	// save bsp name for levels that don't set message key properly
 	strcpy (sv.configstrings[CS_NAME], server);
 
 	SZ_Init (&sv.multicast, sv.multicast_buf, sizeof(sv.multicast_buf));
@@ -263,7 +266,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	Cvar_FullSet("gamedate", __DATE__, CVAR_SERVERINFO | CVAR_NOSET);
 
 	// load and spawn all other entities
-	SpawnEntities ( sv.name, CM_EntityString(), spawnpoint );
+	SV_SpawnEntities( sv.name, CM_EntityString(), spawnpoint );
 
 	// call the main function in server progs
 	SV_ScriptMain();

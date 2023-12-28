@@ -132,7 +132,7 @@ extern void Scr_Event_Impact(gentity_t* self, trace_t* trace);
 extern void Scr_Event_Blocked(gentity_t* self, gentity_t* other);
 extern void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurface_t* surf);
 
-extern void SpawnEntities(char* mapname, char* entities, char* spawnpoint);
+extern void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint);
 
 extern void ClientUserinfoChanged(gentity_t* ent, char* userinfo);
 
