@@ -166,10 +166,8 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (ps->pmove.pm_flags != ops->pmove.pm_flags)
 	{
 		pflags |= PS_M_FLAGS;
-#if PROTOCOL_INT_PMFLAGS == 1
 		if ((ps->pmove.pm_flags ^ ops->pmove.pm_flags) & 0xFFFF0000) // reki --  if we have any big bits delta'd, we need to send them
 			pflags |= PS_M_FLAGSLONG;
-#endif
 	}
 
 	if (ps->pmove.gravity != ops->pmove.gravity)
@@ -264,13 +262,9 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	if (pflags & PS_M_FLAGS)
 	{
-#if PROTOCOL_INT_PMFLAGS == 1
 		MSG_WriteShort (msg, ps->pmove.pm_flags);
 		if (pflags & PS_M_FLAGSLONG)
 			MSG_WriteShort (msg, (ps->pmove.pm_flags >> 16));
-#else
-		MSG_WriteByte (msg, ps->pmove.pm_flags);
-#endif
 	}
 
 	if (pflags & PS_M_GRAVITY)

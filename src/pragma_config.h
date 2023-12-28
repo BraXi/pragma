@@ -13,9 +13,6 @@
 // all entities can move beyond +/- 4096qu boundary, 
 #define PROTOCOL_FLOAT_COORDS 1
 
-// pmove will use int for pmflags
-#define PROTOCOL_INT_PMFLAGS 1
-
 // player view angles will use floats instead shorts
 #define PROTOCOL_FLOAT_PLAYERANGLES 0
 
