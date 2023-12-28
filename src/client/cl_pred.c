@@ -312,7 +312,8 @@ void CL_PredictMovement (void)
 			Scr_BindVM(VM_CLGAME); // always bing qcvm here, or some weird things may happen when on loopback servers
 			Scr_AddVector(0, inmove);
 			Scr_AddVector(1, inangles);
-			Scr_AddFloat(2, (float)cmd->msec);
+			Scr_AddFloat(2, (float)cmd->buttons);
+			Scr_AddFloat(3, (float)cmd->msec);
 			Scr_Execute(VM_CLGAME, cl.script_globals->CG_PlayerMove, __FUNCTION__);
 
 			//
