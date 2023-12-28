@@ -227,14 +227,14 @@ void Scr_ClientDisconnect(gentity_t* self)
 		// find and clear .owner field
 		if (VM_TO_ENT(ent->v.owner) == self)
 		{
-			ent->v.owner = ENT_TO_VM(sv.edicts); //0;
+			ent->v.owner = ENT_TO_VM(sv.edicts);
 		}
 
 		// find gentities that were only shown to that particular 
 		// client, and make sure they become visible to everyone
 		if (((int)ent->v.svflags & SVF_SINGLECLIENT))
 		{
-			if (ent->v.showto == NUM_FOR_ENT(ent))
+			if (ent->v.showto == self->s.number) //NUM_FOR_ENT(self))
 			{
 				(int)ent->v.svflags &= ~SVF_SINGLECLIENT;
 				ent->v.showto = 0;
