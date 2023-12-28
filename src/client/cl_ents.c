@@ -414,6 +414,8 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 		memset (state, 0, sizeof(*state));
 
 	flags = MSG_ReadShort (&net_message);
+	if (flags & PS_EXTRABYTES)
+		flags = (MSG_ReadShort (&net_message) << 16) | (flags & 0xFFFF); // reki --  Allow extra bytes, so we don't choke ourselves
 
 	//
 	// parse the pmove_state_t
@@ -447,7 +449,11 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 		state->pmove.pm_time = MSG_ReadByte (&net_message);
 
 	if (flags & PS_M_FLAGS)
-		state->pmove.pm_flags = MSG_ReadByte (&net_message);
+	{
+		state->pmove.pm_flags = MSG_ReadShort (&net_message);
+		if (flags & PS_M_FLAGSLONG)
+			state->pmove.pm_flags = (MSG_ReadShort (&net_message) << 16) | (state->pmove.pm_flags & 0xFFFF);
+	}
 
 	if (flags & PS_M_GRAVITY)
 		state->pmove.gravity = MSG_ReadShort (&net_message);
