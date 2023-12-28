@@ -53,13 +53,24 @@ Key_Event (int key, qboolean down, unsigned time);
 ===============================================================================
 */
 
+// Reki (December 28 2023): Changed buttons to be generic, since we don't know how gamecode will want to use them
+// If you don't like X-Macros, feel free to swap it out to just a list of defs, I like using them in cases like this.
+#define LIST_BUTTONS \
+	X(0) \
+	X(1) \
+	X(2) \
+	X(3) \
+	X(4) \
+	X(5)
 
 kbutton_t	in_klook;
 kbutton_t	in_left, in_right, in_forward, in_back;
 kbutton_t	in_lookup, in_lookdown, in_moveleft, in_moveright;
 kbutton_t	in_strafe, in_speed;
-kbutton_t	in_use, in_attack, in_reload, in_melee;
 kbutton_t	in_up, in_down;
+#define X(bit) kbutton_t in_button##bit;
+LIST_BUTTONS
+#undef X
 
 int			in_impulse;
 
@@ -168,17 +179,11 @@ void IN_SpeedUp(void) {KeyUp(&in_speed);}
 void IN_StrafeDown(void) {KeyDown(&in_strafe);}
 void IN_StrafeUp(void) {KeyUp(&in_strafe);}
 
-void IN_AttackDown(void) {KeyDown(&in_attack);}
-void IN_AttackUp(void) {KeyUp(&in_attack);}
-
-void IN_UseDown (void) {KeyDown(&in_use);}
-void IN_UseUp (void) {KeyUp(&in_use);}
-
-void IN_ReloadDown(void) { KeyDown(&in_reload); }
-void IN_ReloadUp(void) { KeyUp(&in_reload); }
-
-void IN_MeleeDown(void) { KeyDown(&in_melee); }
-void IN_MeleeUp(void) { KeyUp(&in_melee); }
+#define X(bit) \
+void IN_Button##bit##Down(void) { KeyDown(&in_button##bit); } \
+void IN_Button##bit##Up(void) { KeyUp(&in_button##bit); }
+LIST_BUTTONS
+#undef X
 
 void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
 
@@ -346,21 +351,12 @@ void CL_FinishMove (usercmd_t *cmd)
 //
 // figure button bits
 //	
-	if ( in_attack.state & 3 )
-		cmd->buttons |= BUTTON_ATTACK;
-	in_attack.state &= ~2;
-	
-	if (in_use.state & 3)
-		cmd->buttons |= BUTTON_USE;
-	in_use.state &= ~2;
-
-	if (in_reload.state & 3)
-		cmd->buttons |= BUTTON_RELOAD;
-	in_reload.state &= ~2;
-
-	if (in_melee.state & 3)
-		cmd->buttons |= BUTTON_MELEE;
-	in_melee.state &= ~2;
+	#define X(bit) \
+	if (in_button##bit.state & 3) \
+		cmd->buttons |= (1 << bit); \
+	in_button##bit##.state &= ~2;
+	LIST_BUTTONS
+	#undef X
 
 	if (anykeydown && cls.key_dest == key_game)
 		cmd->buttons |= BUTTON_ANY;
@@ -456,14 +452,16 @@ void CL_InitInput (void)
 	Cmd_AddCommand ("-moveright", IN_MoverightUp);
 	Cmd_AddCommand ("+speed", IN_SpeedDown);
 	Cmd_AddCommand ("-speed", IN_SpeedUp);
-	Cmd_AddCommand ("+attack", IN_AttackDown);
-	Cmd_AddCommand ("-attack", IN_AttackUp);
-	Cmd_AddCommand ("+use", IN_UseDown);
-	Cmd_AddCommand ("-use", IN_UseUp);
-	Cmd_AddCommand ("+reload", IN_ReloadDown);
-	Cmd_AddCommand ("-reload", IN_ReloadUp);
-	Cmd_AddCommand ("+melee", IN_MeleeDown);
-	Cmd_AddCommand ("-melee", IN_MeleeUp);
+	#define X(bit) 	\
+	Cmd_AddCommand ("+button" #bit, IN_Button##bit##Down); \
+	Cmd_AddCommand ("-button" #bit, IN_Button##bit##Up);
+	LIST_BUTTONS
+	#undef X
+	// Reki (December 28 2023): Still have to add aliases for the old commands, this should probably be in the config file instead.
+	Cbuf_AddText ("alias +attack +button0\nalias -attack -button0\n");
+	Cbuf_AddText ("alias +use +button1\nalias -use -button1\n");
+	Cbuf_AddText ("alias +reload +button2\nalias -reload -button2\n");
+	Cbuf_AddText ("alias +melee +button3\nalias -melee -button3\n");
 	Cmd_AddCommand ("impulse", IN_Impulse);
 	Cmd_AddCommand ("+klook", IN_KLookDown);
 	Cmd_AddCommand ("-klook", IN_KLookUp);
