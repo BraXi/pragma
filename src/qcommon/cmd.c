@@ -769,7 +769,7 @@ void	Cmd_RemoveCommand (char *cmd_name)
 			Com_Printf ("Cmd_RemoveCommand: %s not added\n", cmd_name);
 			return;
 		}
-		if (!strcmp (cmd_name, cmd->name))
+		if (cmd->prfunction == -1 && !strcmp (cmd_name, cmd->name)) // workaround for crash when name is set to progstring but qcvm is already destroyed
 		{
 			*back = cmd->next;
 			Z_Free (cmd);
@@ -887,12 +887,21 @@ void	Cmd_ExecuteString (char *text)
 	{
 		if (!Q_strcasecmp (cmd_argv[0],cmd->name))
 		{
-			if (!cmd->function)
-			{	// forward to server command
-				Cmd_ExecuteString (va("cmd %s", text));
+			if(cmd->function)
+			{
+				cmd->function();
+			}
+			else if(cmd->prfunction != -1)
+			{
+				Scr_BindVM(VM_CLGAME);
+				Scr_Execute(VM_CLGAME, cmd->prfunction, __FUNCTION__);
 			}
 			else
-				cmd->function ();
+			{	
+				// forward to server command
+				Cmd_ExecuteString(va("cmd %s", text));
+			}
+
 			return;
 		}
 	}

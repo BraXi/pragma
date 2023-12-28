@@ -377,7 +377,8 @@ addcommand( "respawn", cmd_respawn );
 */
 static void PFCG_addcommand(void)
 {
-	Cmd_AddCommandCG(Scr_GetParmString(0), Scr_GetParmInt(1));
+	char* name = Scr_GetParmString(0);
+	Cmd_AddCommandCG(name, Scr_GetParmInt(1));
 }
 
 
