@@ -92,6 +92,7 @@ vector		pmove_cmd_angles;			// shorts, use SHORT2ANGLE / ANGLE2SHORT
 float		pmove_cmd_forwardmove;		// multiplied by `cl_forwardspeed` cvar
 float		pmove_cmd_sidemove;			// multiplied by `cl_sidespeed` cvar
 float		pmove_cmd_upmove;			// multiplied by `cl_upspeed` cvar
+int			pmove_cmd_buttons;			// button bitfield sent by the client
 float		pmove_snapinitial;			// if state has been changed outside pmove
 int			pmove_numtouch;				// number of entities in touch (unused clientside)
 entity		pmove_touchents[pm_maxtouch];	// array of server entities (unused clientside)
@@ -1523,7 +1524,7 @@ Client's entry point to pmove
 ================
 */
 #ifdef CLGAME
-void(vector cmdMove, vector cmdAngles, float cmdMsec) CG_PlayerMove
+void(vector cmdMove, vector cmdAngles, float cmdButtons, float cmdMsec) CG_PlayerMove
 {
 	//
 	// wipe all pmove data
@@ -1539,6 +1540,7 @@ void(vector cmdMove, vector cmdAngles, float cmdMsec) CG_PlayerMove
 	pmove_cmd_upmove = cmdMove_z;
 	pmove_cmd_msec = cmdMsec;
 	pmove_cmd_angles = cmdAngles;
+	pmove_cmd_buttons = cmdButtons;
 
 #if PMOVEDEBUGMENU == 1
 	cvarset("pmdebug_0", "movecmd: ", ftos(cmdMove_x)," FWD, ", ftos(cmdMove_y), " SIDE, ", ftos(cmdMove_z)," UP");
@@ -1578,7 +1580,7 @@ Can be called by either the server or the client
 ================
 */
 #ifdef SVGAME
-void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PlayerMove =
+void(vector cmdMove, vector cmdAngles, int cmdButtons, int cmdMsec) SV_PlayerMove =
 {
 	entity ground;
 	
@@ -1601,6 +1603,7 @@ void(vector cmdMove, vector cmdAngles, int cmdMsec) SV_PlayerMove =
 	pmove_cmd_upmove = cmdMove_z;
 	pmove_cmd_msec = cmdMsec;
 	pmove_cmd_angles = cmdAngles;
+	pmove_cmd_buttons = cmdButtons;
 	
 	pm_state_pm_type = self.pm_type;
 	pm_state_origin = self.origin;

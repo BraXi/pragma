@@ -47,7 +47,7 @@ vector		cam_viewoffset;
 void()		CG_Main;
 void()		CG_Frame;
 void()		CG_DrawGUI;
-void(vector cmdMove, vector cmdAngles, float cmdMsec)	CG_PlayerMove;
+void(vector cmdMove, vector cmdAngles, float cmdButtons, float cmdMsec)	CG_PlayerMove;
 void(float inCommand)	CG_ServerCommand;
 	
 void end_sys_globals;
