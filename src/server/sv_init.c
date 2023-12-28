@@ -40,7 +40,7 @@ void SV_CreateBaseline (void)
 	gentity_t			*svent;
 	int				entnum;	
 
-	for (entnum = 1; entnum < sv.max_edicts; entnum++)//sv.num_edicts
+	for (entnum = 1; entnum < sv.max_edicts; entnum++)
 	{
 		svent = EDICT_NUM(entnum);
 		if (!svent->inuse)
@@ -217,7 +217,6 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	//
 	SV_InitGameProgs();
 
-
 	for (i = 0; i < sv_maxclients->value; i++)
 	{
 		ent = EDICT_NUM(i + 1);
@@ -249,6 +248,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 		sv.models[i + 1].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS + 1 + i]);
 		sv.models[i + 1].type = MOD_BRUSH;
 	}
+
 	//
 	// spawn the rest of the entities on the map
 	//	
@@ -257,13 +257,20 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	sv.state = ss_loading;
 	Com_SetServerState (sv.state);
 
+	// set serverinfo variables before executing any scripts so they can query them
+	Cvar_FullSet("mapname", sv.name, CVAR_SERVERINFO | CVAR_NOSET);
+	Cvar_FullSet("gamename", "pragma", CVAR_SERVERINFO | CVAR_LATCH);
+	Cvar_FullSet("gamedate", __DATE__, CVAR_SERVERINFO | CVAR_NOSET);
+
 	// load and spawn all other entities
 	SpawnEntities ( sv.name, CM_EntityString(), spawnpoint );
-	SV_ScriptMain(); // call the progs main() function
+
+	// call the main function in server progs
+	SV_ScriptMain();
 
 	// run two frames to allow everything to settle
-	SV_RunWorldFrame();
-	SV_RunWorldFrame();
+	for(i = 0; i < 2; i++)
+		SV_RunWorldFrame();
 
 	// all precaches are complete
 	sv.state = serverstate;
@@ -274,11 +281,6 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 
 	// check for a savegame
 	SV_CheckForSavegame();
-
-	// set serverinfo variable
-	Cvar_FullSet("mapname", sv.name, CVAR_SERVERINFO | CVAR_NOSET);
-	Cvar_FullSet("gamename", "pragma", CVAR_SERVERINFO | CVAR_LATCH);
-	Cvar_FullSet("gamedate", __DATE__, CVAR_SERVERINFO | CVAR_NOSET);
 
 	Com_Printf ("-------------------------------------\n");
 }
