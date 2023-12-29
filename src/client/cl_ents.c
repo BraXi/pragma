@@ -1725,12 +1725,14 @@ void CL_AddEntities (void)
 	else if (cl.time < cl.frame.servertime - SV_FRAMETIME_MSEC)
 	{
 		if (cl_showclamp->value)
-			Com_Printf ("low clamp %i\n", cl.frame.servertime- SV_FRAMETIME_MSEC - cl.time);
+			Com_Printf ("low clamp %i\n", cl.frame.servertime - SV_FRAMETIME_MSEC - cl.time);
 		cl.time = cl.frame.servertime - SV_FRAMETIME_MSEC;
 		cl.lerpfrac = 0;
 	}
 	else
-		cl.lerpfrac = 1.0 - (cl.frame.servertime - cl.time) * 0.01;
+	{
+		cl.lerpfrac = 1.0 - ((float)(cl.frame.servertime - cl.time) / (float)SV_FRAMETIME_MSEC);
+	}
 
 	if (cl_timedemo->value)
 		cl.lerpfrac = 1.0;
