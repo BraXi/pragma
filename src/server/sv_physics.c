@@ -156,13 +156,14 @@ SV_CheckVelocity
 */
 void SV_CheckVelocity(gentity_t* ent)
 {
-	int		i;
-	for (i = 0; i < 3; i++)
+	float vel;
+	int i;
+
+	vel = VectorLength(ent->v.velocity);
+	if (vel > sv_maxvelocity->value)
 	{
-		if (ent->v.velocity[i] > sv_maxvelocity->value)
-			ent->v.velocity[i] = sv_maxvelocity->value;
-		else if (ent->v.velocity[i] < -sv_maxvelocity->value)
-			ent->v.velocity[i] = -sv_maxvelocity->value;
+		for (i = 0; i < 3; i++)
+			ent->v.velocity[i] = (ent->v.velocity[i] / vel) * sv_maxvelocity->value;
 	}
 }
 
