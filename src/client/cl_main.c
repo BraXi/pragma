@@ -73,7 +73,6 @@ cvar_t	*m_side;
 // userinfo
 //
 cvar_t	*info_password;
-cvar_t	*info_spectator;
 cvar_t	*cl_name;
 cvar_t	*cl_rate;
 cvar_t	*fov;
@@ -1099,7 +1098,6 @@ void CL_InitLocal (void)
 	// userinfo
 	//
 	info_password = Cvar_Get ("password", "", CVAR_USERINFO);
-	info_spectator = Cvar_Get ("spectator", "0", CVAR_USERINFO);
 	cl_name = Cvar_Get ("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
 	cl_rate = Cvar_Get ("rate", va("%s", NET_RATE_DEFAULT), CVAR_USERINFO | CVAR_ARCHIVE);
 	msg = Cvar_Get ("msg", "1", CVAR_USERINFO | CVAR_ARCHIVE);
