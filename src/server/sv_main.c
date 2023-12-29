@@ -938,7 +938,7 @@ void SV_UserinfoChanged (client_t *cl)
 		cl->rate = NET_RATE_DEFAULT;
 
 	// msg command
-	val = Info_ValueForKey (cl->userinfo, "msg");
+	val = Info_ValueForKey (cl->userinfo, "messagelevel");
 	if (strlen(val))
 	{
 		cl->messagelevel = atoi(val);
