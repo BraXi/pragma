@@ -465,7 +465,7 @@ void CL_Connect_f (void)
 	
 	if (Com_ServerState ())
 	{	// if running a local server, kill it and reissue
-		SV_Shutdown (va("Server quit\n", msg), false);
+		SV_Shutdown ("Server quit\n", false);
 	}
 	else
 	{
@@ -1101,7 +1101,7 @@ void CL_InitLocal (void)
 	info_msglevel = Cvar_Get("messagelevel", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 
 	cl_name = Cvar_Get("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
-	cl_rate = Cvar_Get("rate", va("%s", NET_RATE_DEFAULT), CVAR_USERINFO | CVAR_ARCHIVE);
+	cl_rate = Cvar_Get("rate", va("%i", NET_RATE_DEFAULT), CVAR_USERINFO | CVAR_ARCHIVE);
 	cl_hand = Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	fov = Cvar_Get("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
 

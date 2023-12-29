@@ -18,7 +18,7 @@ void() plr_showanim =
 	self.angles_x = 0;
 //	self.loopsound = precache_sound("effects/teleport.wav");
 //	self.modelindex2 = precache_model("models/md3_test.md3");
-	self.nextthink = g_time + 0.1;
+	self.nextthink = g_time + TIME_50_MS;
 };
 
 /*

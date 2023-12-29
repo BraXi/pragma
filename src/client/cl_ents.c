@@ -1732,6 +1732,7 @@ void CL_AddEntities (void)
 	else
 	{
 		cl.lerpfrac = 1.0 - ((float)(cl.frame.servertime - cl.time) / (float)SV_FRAMETIME_MSEC);
+//		cl.lerpfrac = 1.0 - (cl.frame.servertime - cl.time) * 0.01; // Q2
 	}
 
 	if (cl_timedemo->value)

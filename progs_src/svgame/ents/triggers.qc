@@ -19,8 +19,6 @@ trigger_hurt
 trigger_actorjump / trigger_monsterjump
 */
 
-float timeToSettleThings = 0.2; // wait this time so all entities are ready
-
 //
 //spawnflags
 //
@@ -191,7 +189,7 @@ void(entity activator) trigger_enable =
 float() SP_trigger_multiple =
 {	
 	if( !self.wait )
-		self.wait = timeToSettleThings;
+		self.wait = (g_frameTime * 2);
 	
 	self.touch = trig_multiple_touch;
 	InitTrigger();
@@ -309,8 +307,8 @@ This trigger will always fire.  It is activated by the world.
 float() SP_trigger_always =
 {
 	// we must have some delay to make sure our use targets are present
-	if (self.delay < timeToSettleThings)
-		self.delay = timeToSettleThings;
+	if (self.delay < (g_frameTime * 2))
+		self.delay = (g_frameTime * 2);
 	SUB_UseTargets(self, self);
 	return true;
 };

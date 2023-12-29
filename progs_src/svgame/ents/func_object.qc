@@ -63,7 +63,7 @@ float() SP_func_object =
 		self.solid = SOLID_BSP;
 		self.movetype = MOVETYPE_PUSH;
 		self.think = func_object_release;
-		self.nextthink = g_time + 0.2;
+		self.nextthink = g_time + (g_frameTime * 2);
 	}
 	else
 	{

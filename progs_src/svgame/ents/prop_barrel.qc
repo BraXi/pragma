@@ -92,7 +92,7 @@ void(entity attacker, float damage, float method) prop_barrel_die =
 		FX_Explosion(self.origin + '0 0 20', "medium");
 		barrel_debris(self);
 		self.think = SUB_RemoveMe;
-		self.nextthink = g_time + 0.2;
+		self.nextthink = g_time + (g_frameTime * 2);
 		self.velocity = '0 0 40';
 		RadiusDamage(self, self.activator, self.dmg, self, self.radius, 0);
 	}
@@ -109,7 +109,7 @@ void() prop_barrel_think =
 			DoDamage( self.activator, self.activator, self, 1, DAMAGE_NO_KNOCKBACK, 0 );
 		}
 	}
-	self.nextthink = g_time + 0.1;
+	self.nextthink = g_time + TIME_100_MS;
 };
 
 float() SP_prop_barrel = 
@@ -151,7 +151,7 @@ float() SP_prop_barrel =
 	}
 	
 	self.think = prop_barrel_think;
-	self.nextthink = g_time + 0.2;
+	self.nextthink = g_time + (g_frameTime * 2);
 	
 	linkentity(self);
 	return true;

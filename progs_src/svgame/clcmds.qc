@@ -17,7 +17,7 @@ void() testmodel_rotate =
 	self.animFrame ++;
 	if( self.animFrame > 125 )
 		self.animFrame = 62;
-	self.nextthink = g_time + 0.1;
+	self.nextthink = g_time + TIME_100_MS;
 	self.think = testmodel_rotate;	
 	
 };
@@ -28,7 +28,7 @@ void() ClientCmd_TestModel =
 		testmodel = spawn();
 		setmodel(testmodel, "models/mutant.md3");
 		testmodel.think = testmodel_rotate;
-		testmodel.nextthink = g_time + 0.1;
+		testmodel.nextthink = g_time + TIME_100_MS;
 		self.animFrame = 62;
 	}
 	setorigin(testmodel, self.origin + '0 0 0' );
