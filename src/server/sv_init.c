@@ -374,8 +374,8 @@ void SV_InitGame (void)
 	sv_password = Cvar_Get("sv_password", "", 0);
 	sv_maxentities = Cvar_Get("sv_maxentities", "1024", CVAR_LATCH);
 
-	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "500", CVAR_LATCH);
-	sv_gravity = Cvar_Get("sv_gravity", "800", CVAR_LATCH);
+	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0);
+	sv_gravity = Cvar_Get("sv_gravity", "800", 0);
 
 	// make sure critical cvars are in their proper range
 	if (sv_maxclients->value <= 0)
@@ -408,8 +408,8 @@ void SV_InitGame (void)
 	sv_password = Cvar_Get("sv_password", "", 0);
 	sv_maxentities = Cvar_Get("sv_maxentities", "1024", CVAR_LATCH);
 
-	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "300", CVAR_LATCH);
-	sv_gravity = Cvar_Get("sv_gravity", "800", CVAR_LATCH);
+	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0);
+	sv_gravity = Cvar_Get("sv_gravity", "800", 0);
 
 	// initialize all clients for this game
 	svs.max_clients = sv_maxclients->value;

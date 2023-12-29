@@ -977,8 +977,8 @@ void SV_Init (void)
 	sv_password = Cvar_Get("sv_password", "", 0);
 	sv_maxentities = Cvar_Get("sv_maxentities", "1024", CVAR_LATCH);
 
-	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", CVAR_LATCH);
-	sv_gravity = Cvar_Get("sv_gravity", "800", CVAR_LATCH);
+	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0);
+	sv_gravity = Cvar_Get("sv_gravity", "800", 0);
 
 
 #ifdef _DEBUG
@@ -999,7 +999,7 @@ void SV_Init (void)
 	allow_download_sounds = Cvar_Get ("allow_download_sounds", "1", CVAR_ARCHIVE);
 	allow_download_maps	  = Cvar_Get ("allow_download_maps", "1", CVAR_ARCHIVE);
 
-	sv_noreload = Cvar_Get ("sv_noreload", "0", 0);
+	sv_noreload = Cvar_Get ("sv_noreload", "1", 0);
 
 	public_server = Cvar_Get ("public", "0", 0);
 
