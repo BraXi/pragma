@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define	MAX_MASTER_SERVERS	8		// max recipients for heartbeat packets
 #define	LATENCY_COUNTS		16
-#define	RATE_MESSAGES		10
+#define	RATE_MESSAGES		SERVER_FPS // braxi -- was 10
 #define	MAX_STRINGCMDS		8		// how many console commands can client issue to server in a single message
 // MAX_CHALLENGES is made large to prevent a denial of service attack 
 // that could cycle all of them out before legitimate users connected
@@ -67,6 +67,7 @@ typedef enum
 
 // some qc commands are only valid before the server has finished
 // initializing (precache commands, static sounds / objects, etc)
+// when cvar `sv_nolateloading` is set to 1
 
 typedef struct
 {
@@ -75,7 +76,7 @@ typedef struct
 	qboolean			attractloop;			// running cinematics and demos for the local system only
 	qboolean			loadgame;				// client begins should reuse existing entity
 
-	unsigned			time;					// always sv.framenum * 100 msec
+	unsigned			time;					// always sv.framenum * SV_FRAMETIME_MSEC msec
 	int					framenum;
 
 	char				name[MAX_QPATH];		// BSP map name, or cinematic name
@@ -90,7 +91,8 @@ typedef struct
 	int					entity_size;			// retrieved from progs
 	int					num_edicts;				// increases towards MAX_EDICTS
 
-	int					gameFrame;				// these are diferent from servers because simulation can be paused, server can't
+	// these two are diferent from server's because simulation can be paused, server cannot be
+	int					gameFrame;				
 	float				gameTime;
 
 	char				configstrings[MAX_CONFIGSTRINGS][MAX_QPATH];
