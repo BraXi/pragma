@@ -26,8 +26,8 @@
 #define USE_GLFW 0
 
 // experimental -- variable server fps
-#define SERVER_FPS 10
-//#define SERVER_FPS 20
+//#define SERVER_FPS 10
+#define SERVER_FPS 20
 //#define SERVER_FPS 40
 
 #if SERVER_FPS == 10

@@ -106,7 +106,7 @@ void KeyDown (kbutton_t *b)
 	c = Cmd_Argv(2);
 	b->downtime = atoi(c);
 	if (!b->downtime)
-		b->downtime = sys_frame_time - 100;
+		b->downtime = sys_frame_time - 100; // braxi -- figure out if this does affect servers variable fps
 
 	b->state |= 1 + 2;	// down + impulse down
 }
@@ -364,7 +364,8 @@ void CL_FinishMove (usercmd_t *cmd)
 	// send milliseconds of time to apply the move
 	ms = cls.frametime * 1000;
 	if (ms > 250)
-		ms = 100;		// time was unreasonable
+		ms = SV_FRAMETIME_MSEC;	// time was unreasonable, braxi -- was 100, should likely match server tickrate
+
 	cmd->msec = ms;
 
 	CL_ClampPitch ();

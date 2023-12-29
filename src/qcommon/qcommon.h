@@ -70,6 +70,10 @@ typedef struct debugline_s
 
 //============================================================================
 
+#define NET_RATE_MIN 5000 // was absurdly low (100) in Q2
+#define NET_RATE_MAX 25000
+#define NET_RATE_DEFAULT 15000 // was 5000 in Q2
+//============================================================================
 
 typedef struct sizebuf_s
 {

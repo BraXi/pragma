@@ -907,6 +907,7 @@ Pull specific info from a newly changed userinfo string
 into a more C freindly form.
 =================
 */
+
 void SV_UserinfoChanged (client_t *cl)
 {
 	char	*val;
@@ -928,13 +929,13 @@ void SV_UserinfoChanged (client_t *cl)
 	{
 		i = atoi(val);
 		cl->rate = i;
-		if (cl->rate < 100)
-			cl->rate = 100;
-		if (cl->rate > 15000)
-			cl->rate = 15000;
+		if (cl->rate < NET_RATE_MIN)
+			cl->rate = NET_RATE_MIN;
+		if (cl->rate > NET_RATE_MAX)
+			cl->rate = NET_RATE_MAX;
 	}
 	else
-		cl->rate = 5000;
+		cl->rate = NET_RATE_DEFAULT;
 
 	// msg command
 	val = Info_ValueForKey (cl->userinfo, "msg");
