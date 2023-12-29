@@ -272,16 +272,8 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	if (pflags & PS_M_DELTA_ANGLES)
 	{
-
 		for (i = 0; i < 3; i++)
-		{
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-			MSG_WriteFloat(msg, ps->pmove.delta_angles[i]);
-#else
-			MSG_WriteShort(msg, ps->pmove.delta_angles[i]);
-#endif
-		}
-			
+			MSG_WriteShort(msg, ps->pmove.delta_angles[i]);		
 	}
 
 	// braxi: write bbox size to client for prediction

@@ -521,12 +521,8 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			if (check->client)
 			{	
 				// FIXME PRAGMA: does not rotate player at all
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-				check->client->ps.pmove.delta_angles[YAW] += amove[YAW];
-#else	
 				check->client->ps.pmove.delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
 				check->v.pm_delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
-#endif
 			}
 			else
 			{

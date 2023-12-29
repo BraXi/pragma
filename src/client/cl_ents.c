@@ -462,11 +462,7 @@ void CL_ParsePlayerstate(frame_t *oldframe, frame_t *newframe)
 	{
 		for (i = 0; i < 3; i++)
 		{
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-			state->pmove.delta_angles[i] = MSG_ReadFloat(&net_message);
-#else
 			state->pmove.delta_angles[i] = MSG_ReadShort(&net_message);
-#endif
 		}
 	}
 

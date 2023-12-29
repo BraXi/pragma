@@ -13,9 +13,6 @@
 // all entities can move beyond +/- 4096qu boundary, 
 #define PROTOCOL_FLOAT_COORDS 1
 
-// player view angles will use floats instead shorts
-#define PROTOCOL_FLOAT_PLAYERANGLES 0
-
 // protocol can use shorts when modelindex or soundindex exceed byte
 #define PROTOCOL_EXTENDED_ASSETS 1
 

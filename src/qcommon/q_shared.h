@@ -541,12 +541,7 @@ typedef struct
 
 	// add to command angles to get view direction
 	// changed by spawns, rotating objects, and teleporters
-
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-	vec3_t		delta_angles;
-#else
 	short		delta_angles[3];
-#endif
 } pmove_state_t;
 
 #define PACKED_BSP 31
@@ -566,11 +561,7 @@ typedef struct usercmd_s
 {
 	byte	msec;
 	byte	buttons;
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-	float	angles[3];
-#else
 	short	angles[3];
-#endif
 	short	forwardmove, sidemove, upmove;
 	byte	impulse;		// remove?
 } usercmd_t;

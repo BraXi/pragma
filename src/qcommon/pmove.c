@@ -1266,11 +1266,7 @@ void PM_ClampAngles (void)
 
 	if (pm->s.pm_flags & PMF_TIME_TELEPORT)
 	{
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-		pm->viewangles[YAW] = pm->cmd.angles[YAW] + pm->s.delta_angles[YAW];
-#else
 		pm->viewangles[YAW] = SHORT2ANGLE(pm->cmd.angles[YAW] + pm->s.delta_angles[YAW]);
-#endif
 		pm->viewangles[PITCH] = 0;
 		pm->viewangles[ROLL] = 0;
 	}
@@ -1280,11 +1276,7 @@ void PM_ClampAngles (void)
 		for (i=0 ; i<3 ; i++)
 		{
 			temp = pm->cmd.angles[i] + pm->s.delta_angles[i];
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-			pm->viewangles[i] = temp;
-#else
 			pm->viewangles[i] = SHORT2ANGLE(temp);
-#endif
 		}
 
 		// don't let the player look up or down more than 90 degrees

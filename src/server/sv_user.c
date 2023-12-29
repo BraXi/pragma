@@ -265,12 +265,8 @@ void SV_Begin_f (void)
 		// state when the game is saved, so we need to compensate with deltaangles
 		for (i = 0; i < 3; i++)
 		{
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-			ent->client->ps.pmove.delta_angles[i] = ent->client->ps.viewangles[i];
-#else
 			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->client->ps.viewangles[i]);
 			ent->v.pm_delta_angles[i] = ANGLE2SHORT(ent->client->ps.viewangles[i]);
-#endif
 		}
 			
 	}

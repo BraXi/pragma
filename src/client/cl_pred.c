@@ -226,11 +226,7 @@ void CL_PredictMovement (void)
 	{	// just set angles
 		for (i=0 ; i<3 ; i++)
 		{
-#if PROTOCOL_FLOAT_PLAYERANGLES == 1
-			cl.predicted_angles[i] = cl.viewangles[i] + cl.frame.playerstate.pmove.delta_angles[i];
-#else
 			cl.predicted_angles[i] = cl.viewangles[i] + SHORT2ANGLE(cl.frame.playerstate.pmove.delta_angles[i]);
-#endif
 		}
 		return;
 	}
