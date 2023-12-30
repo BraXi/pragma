@@ -8,27 +8,33 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 void() initAnimTrees;
 
-void() plr_showanim =
+entity tag_attach;
+float mdl_xyz, mdl_gun;
+
+void() testmodel_think =
 {	
 	entity player;
 	player = getent(1);	
 	float numframes = getframescount(self.modelindex);
 	
-//	if(g_frameNum & 2)
-	self.animFrame  ++;
+//	if(g_frameNum & 20)
+		self.animFrame  ++;
 
 	if(self.animFrame > numframes)
 		self.animFrame = 0;
+
+
+	vector tag_pos = gettagorigin(self, "tag_flash");
+	tag_attach.origin_z = tag_pos_y;
+	tag_attach.origin_y = tag_pos_z;
+	tag_attach.origin += '0 0 24';
 	
-	self.angles = player.angles;	
-	self.angles = self.angles + '0 90 0';
-	self.angles_x = 0;
-//	self.loopsound = precache_sound("effects/teleport.wav");
-//	self.modelindex2 = precache_model("models/md3_test.md3");
-	self.nextthink = g_time + TIME_50_MS;
+	print("tag_pos= ", vtos(tag_pos), "\n");
 	
-	drawstring(self.origin + '0 0 38', '1 1 1', 0.25, false, TIME_50_MS, "server frame: ", ftos(g_frameNum));
-	drawstring(self.origin + '0 0 34', '1 1 1', 0.25, false, TIME_50_MS, ftos(self.animFrame), "/", ftos(numframes) );
+	self.nextthink = g_time + 0.2;
+	
+	drawstring(self.origin + '0 0 38', '1 1 1', 0.25, false, TIME_100_MS, "server frame: ", ftos(g_frameNum));
+	drawstring(self.origin + '0 0 34', '1 1 1', 0.25, false, TIME_100_MS, ftos(self.animFrame), "/", ftos(numframes) );
 };
 
 /*
@@ -52,22 +58,30 @@ void() main =
 	developer = cvar("developer");
 	developer_script = cvar("developer_script");
 	
+	mdl_xyz = precache_model("models/dev/xyz.md3");
+	mdl_gun = precache_model("models/v_ak47.md3");
+	
 	initAnimTrees();
+	
 #if 1	
 	// this is not really a good idea for dedicated server
 	if(cvar("dedicated") == 0)
 	{
+		
+		tag_attach = spawn();
+		setmodel(tag_attach, "models/dev/xyz.md3");
+		linkentity(tag_attach);
+		
 		entity e = spawn();
-		//setmodel(e, "models/md3_test.md3");
-		setmodel(e, "models/female.md3");
+
+		setmodel(e, "models/v_ak47.md3");
 		e.origin = '0 0 24';
-//		e.loopsound = precache_sound("effects/teleport.wav");
-//		e.avelocity = '0 90 0';
 		linkentity(e);
-		e.think = plr_showanim;
+		e.think = testmodel_think;
 		e.nextthink = g_time + 1;
 	}
 #endif
+
 //	InitTriggerVectors(); //calculate movedir for each trigger	
 };
 

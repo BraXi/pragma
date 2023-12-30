@@ -524,8 +524,6 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 		vm->logfile = NULL;
 	}
 
-	Z_Free(vm);
-
 	if (vm->progsType == VM_SVGAME)
 	{
 		Cmd_RemoveCommand("edict");
@@ -536,6 +534,7 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 		Cmd_RemoveClientGameCommands();
 	}
 
+	Z_Free(vm);
 	qcvm[vmtype] = NULL;
 
 	Scr_BindVM(VM_NONE);
