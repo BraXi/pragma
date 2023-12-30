@@ -393,34 +393,46 @@ orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
 	return NULL;
 }
 
-
 /*
 =================
 SV_PositionTag
 =================
 */
 orientation_t out;
-orientation_t *SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, char* tagName) 
+orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, char* tagName)
 {
 	orientation_t	*tag;
-	vec3_t	rotaxis[3];
+	orientation_t    parent;
+	vec3_t			tempAxis[3];
 
 	tag = SV_GetTag(modelindex, animframe, tagName);
 	if (!tag)
 		return NULL;
 
-	AnglesToAxis(angles, rotaxis);
-	AxisClear(out.axis);
-	AxisCopy(tag->axis, out.axis);
+	AxisClear(parent.axis);
+	VectorCopy(origin, parent.origin);
+	AnglesToAxis(angles, parent.axis);
+	VectorCopy(parent.origin, out.origin);
 
-	for (int i = 0; i < 3; i++) 
+	AxisClear(out.axis);
+	AnglesToAxis(angles, out.axis);
+
+
+	AxisClear(tempAxis);
+
+	for (int i = 0; i < 3; i++)
 	{
-		VectorMA(origin, tag->origin[i], tag->axis[i], out.origin);
+		VectorMA(out.origin, tag->origin[i], parent.axis[i], out.origin);
 	}
 
-	MatrixMultiply(out.axis, rotaxis, out.axis);
+
+//	MatrixMultiply(tag->axis, parent.axis, out.axis);
+
+	MatrixMultiply(out.axis, parent.axis, tempAxis);
+	MatrixMultiply(tag->axis, tempAxis, out.axis);
 	return &out;
 }
+
 
 /*
 =================

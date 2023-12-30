@@ -2081,6 +2081,7 @@ void PFSV_gettagorigin(void)
 	Scr_ReturnVector(tag->origin);
 }
 
+
 /*
 =================
 PFSV_gettagangles
@@ -2099,6 +2100,8 @@ void PFSV_gettagangles(void)
 	char* tagName;
 	svmodel_t* model;
 	orientation_t* tag;
+	float pitch, yaw, roll;
+	vec3_t out;
 
 	ent = Scr_GetParmEdict(0);
 	tagName = Scr_GetParmString(1);
@@ -2123,7 +2126,30 @@ void PFSV_gettagangles(void)
 		return;
 	}
 
-	Scr_ReturnVector(tag->axis[0]);
+	//
+	// convert axis to angles
+	//
+	pitch = asin(-tag->axis[2][0]);
+	if (cos(pitch) != 0) 
+	{
+		yaw = atan2(tag->axis[2][1] / cos(pitch), tag->axis[2][2] / cos(pitch));
+		roll = atan2(tag->axis[1][0] / cos(pitch), tag->axis[0][0] / cos(pitch));
+	}
+	else
+	{
+		yaw = 0;
+		roll = atan2(-tag->axis[0][1], tag->axis[1][1]);
+	}
+
+	yaw = yaw * 180.0 / M_PI;
+	pitch = pitch * 180.0 / M_PI;
+	roll = roll * 180.0 / M_PI;
+
+	out[0] = pitch;
+	out[1] = yaw;
+	out[2] = roll;
+
+	Scr_ReturnVector(out);
 }
 
 

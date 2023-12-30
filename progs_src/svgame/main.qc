@@ -10,6 +10,7 @@ void() initAnimTrees;
 
 entity tag_attach;
 float mdl_xyz, mdl_gun;
+float ttime = TIME_50_MS;
 
 void() testmodel_think =
 {	
@@ -23,18 +24,22 @@ void() testmodel_think =
 	if(self.animFrame > numframes)
 		self.animFrame = 0;
 
+	self.angles_y = 360;
+	
+	self.angles_y += 4;
+	self.angles_x += 2;
 
 	vector tag_pos = gettagorigin(self, "tag_flash");
-	tag_attach.origin_z = tag_pos_y;
-	tag_attach.origin_y = tag_pos_z;
-	tag_attach.origin += '0 0 24';
+	vector tag_rot = gettagangles(self, "tag_flash");
+	tag_attach.origin = tag_pos;
+	tag_attach.angles = tag_rot;
 	
-	print("tag_pos= ", vtos(tag_pos), "\n");
+	print("'tag_flash' in frame ", ftos(self.animFrame)," tag_pos = ", vtos(tag_pos), ", tag_rot = ", vtos(tag_rot), "\n");
 	
-	self.nextthink = g_time + 0.2;
+	self.nextthink = g_time + ttime;
 	
-	drawstring(self.origin + '0 0 38', '1 1 1', 0.25, false, TIME_100_MS, "server frame: ", ftos(g_frameNum));
-	drawstring(self.origin + '0 0 34', '1 1 1', 0.25, false, TIME_100_MS, ftos(self.animFrame), "/", ftos(numframes) );
+	drawstring(self.origin + '0 0 38', '1 1 1', 0.25, false, ttime, "parent angles: ", vtos(self.angles));
+	drawstring(self.origin + '0 0 34', '1 1 1', 0.25, false, ttime, ftos(self.animFrame), "/", ftos(numframes) );
 };
 
 /*
@@ -70,12 +75,13 @@ void() main =
 		
 		tag_attach = spawn();
 		setmodel(tag_attach, "models/dev/xyz.md3");
+		tag_attach.renderFlags = RF_DEPTHHACK;
 		linkentity(tag_attach);
 		
 		entity e = spawn();
 
 		setmodel(e, "models/v_ak47.md3");
-		e.origin = '0 0 24';
+		e.origin = '0 0 70';
 		linkentity(e);
 		e.think = testmodel_think;
 		e.nextthink = g_time + 1;
