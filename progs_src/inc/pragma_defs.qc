@@ -1,6 +1,21 @@
-// DO. NOT. EDIT.
-// defines in here must match q_shared.h !
+/*
+P R A G M A
+Copyright (C) 2023 BraXi.
 
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+*/
+
+// DO. NOT. EDIT.
+// defines in here must match C code
+
+
+//
+// SERVER_FPS timings
+//
+float TIME_100_MS = 0.1;	// 10 ticks per second, standard Q2
+float TIME_50_MS = 0.05;	// 20 ticks per second, pragma default
+float TIME_25_MS = 0.025;	// 40 ticks per second, must compile engine with SERVER_FPS set to 40
 
 //
 // returned by trace function to mark nothing was hit, used in .groundentity_num

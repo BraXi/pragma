@@ -72,7 +72,7 @@ svmodel_t* SV_ModelForNum(unsigned int index)
 {
 	svmodel_t* mod;
 
-	if (index < 0 || index >= sv.num_models) 
+	if (index < 0 || index > sv.num_models) 
 	{
 		Com_Error(ERR_DROP, "SV_ModelForNum: index %i out of range [0,%i]\n", index, sv.num_models);
 		return NULL; // silence warning

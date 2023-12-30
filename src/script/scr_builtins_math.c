@@ -399,7 +399,7 @@ void Scr_InitMathBuiltins()
 	Scr_DefineBuiltin(PF_normalize, PF_ALL, "normalize", "vector(vector in)");
 	Scr_DefineBuiltin(PF_vlen, PF_ALL, "vectorlength", "float(vector in)");
 	Scr_DefineBuiltin(PF_vectoyaw, PF_ALL, "vectoyaw", "float(vector in)");
-	Scr_DefineBuiltin(PF_vectoangles, PF_ALL, "vectoangles", "float(vector in)");
+	Scr_DefineBuiltin(PF_vectoangles, PF_ALL, "vectoangles", "vector(vector in)");
 
 	Scr_DefineBuiltin(PF_random, PF_ALL, "random", "float()");
 //	Scr_DefineBuiltin(PF_crandom, PF_ALL, false, "float() crandom");

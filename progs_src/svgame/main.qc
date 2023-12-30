@@ -12,13 +12,23 @@ void() plr_showanim =
 {	
 	entity player;
 	player = getent(1);	
-	self.animFrame = player.animFrame;
+	float numframes = getframescount(self.modelindex);
+	
+//	if(g_frameNum & 2)
+	self.animFrame  ++;
+
+	if(self.animFrame > numframes)
+		self.animFrame = 0;
+	
 	self.angles = player.angles;	
-	self.angles = self.angles - '0 180 0';
+	self.angles = self.angles + '0 90 0';
 	self.angles_x = 0;
 //	self.loopsound = precache_sound("effects/teleport.wav");
 //	self.modelindex2 = precache_model("models/md3_test.md3");
 	self.nextthink = g_time + TIME_50_MS;
+	
+	drawstring(self.origin + '0 0 38', '1 1 1', 0.25, false, TIME_50_MS, "server frame: ", ftos(g_frameNum));
+	drawstring(self.origin + '0 0 34', '1 1 1', 0.25, false, TIME_50_MS, ftos(self.animFrame), "/", ftos(numframes) );
 };
 
 /*

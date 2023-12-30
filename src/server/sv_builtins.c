@@ -2123,7 +2123,7 @@ void PFSV_gettagangles(void)
 		return;
 	}
 
-	Scr_ReturnVector(tag->origin);
+	Scr_ReturnVector(tag->axis[0]);
 }
 
 
