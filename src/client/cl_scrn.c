@@ -1276,6 +1276,34 @@ void DrawDownloadNotify()
 //	UI_DrawString(w, h += 96, XALIGN_CENTER, "press [esc] to cancel");
 }
 
+/*
+==================
+SCR_DrawFPS
+
+Draws current FPS
+==================
+*/
+extern int frame_time;
+extern cvar_t* cl_showfps;
+static void SCR_DrawFPS()
+{
+	float color[4];
+	int fps;
+
+	if (!cl_showfps->value)
+		return;
+
+	if (frame_time <= 0)
+		frame_time = 1;
+
+	fps = 1000 / frame_time;
+
+	re.SetColor(1, 1, 1, 1);
+	VectorSet(color, 1, 1, 1);
+	color[3] = 1;
+
+	re.DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 10, 0.8, 1, color);
+}
 
 /*
 ==================
@@ -1410,5 +1438,7 @@ void SCR_UpdateScreen (void)
 			SCR_DrawLoading ();
 		}
 	}
+	SCR_DrawFPS();
+
 	re.EndFrame();
 }

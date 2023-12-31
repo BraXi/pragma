@@ -1566,7 +1566,7 @@ void Qcommon_Init (int argc, char **argv)
 Qcommon_Frame
 =================
 */
-int		time_before, time_between, time_after;
+int		time_before, time_between, time_after, frame_time;
 void Qcommon_Frame (int msec)
 {
 	char	*s;
@@ -1655,6 +1655,7 @@ void Qcommon_Frame (int msec)
 		Com_Printf ("all:%3i sv:%3i gm:%3i cl:%3i rf:%3i\n",
 			all, sv, gm, cl, rf);
 	}	
+	frame_time = time_after - time_before;
 }
 
 /*
