@@ -10,21 +10,18 @@ void() initAnimTrees;
 
 entity tag_attach;
 float mdl_xyz, mdl_gun;
-float ttime = TIME_50_MS;
+float ttime = 0.5;
 
 void() testmodel_think =
 {	
 	entity player;
 	player = getent(1);	
-	float numframes = getframescount(self.modelindex);
 	
-//	if(g_frameNum & 20)
-		self.animFrame  ++;
-
-	if(self.animFrame > numframes)
-		self.animFrame = 0;
-
-	self.angles_y = 360;
+	float numframes = getframescount(self.modelindex);
+		
+//	self.animFrame  ++;
+//	if(self.animFrame > numframes)
+//		self.animFrame = 0;
 	
 	self.angles_y += 4;
 	self.angles_x += 2;
@@ -81,7 +78,7 @@ void() main =
 		entity e = spawn();
 
 		setmodel(e, "models/v_ak47.md3");
-		e.origin = '0 0 70';
+		e.origin = '0 0 30';
 		linkentity(e);
 		e.think = testmodel_think;
 		e.nextthink = g_time + 1;

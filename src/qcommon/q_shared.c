@@ -792,6 +792,36 @@ int Q_log2(int val)
 
 /*
 =================
+AxisToAngles
+=================
+*/
+void AxisToAngles(vec3_t axis[3], vec3_t outAngles)
+{
+	float pitch, yaw, roll;
+
+	pitch = asin(-axis[2][0]);
+	if (cos(pitch) != 0)
+	{
+		yaw = atan2(axis[2][1] / cos(pitch), axis[2][2] / cos(pitch));
+		roll = atan2(axis[1][0] / cos(pitch), axis[0][0] / cos(pitch));
+	}
+	else
+	{	
+		roll = atan2(-axis[0][1], axis[1][1]);
+		yaw = 0;
+	}
+
+	yaw = yaw * 180.0 / M_PI;
+	pitch = pitch * 180.0 / M_PI;
+	roll = roll * 180.0 / M_PI;
+
+	outAngles[0] = 0;
+	outAngles[1] = pitch;
+	outAngles[2] = roll;
+}
+
+/*
+=================
 AnglesToAxis (Q3)
 =================
 */

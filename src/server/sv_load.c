@@ -396,8 +396,47 @@ orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
 /*
 =================
 SV_PositionTag
+
+Returns the tag rotation and origin accounted by given origin and angles
 =================
 */
+
+void AngleVectors2(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
+{
+	float        angle;
+	float        sr, sp, sy, cr, cp, cy;
+
+	angle = angles[YAW] * (M_PI * 2 / 360);
+	sy = sin(angle);
+	cy = cos(angle);
+	angle = angles[PITCH] * (M_PI * 2 / 360);
+	sp = sin(angle);
+	cp = cos(angle);
+	angle = angles[ROLL] * (M_PI * 2 / 360);
+	sr = sin(angle);
+	cr = cos(angle);
+
+	if (forward)
+	{
+		forward[0] = cp * cy;
+		forward[1] = cp * sy;
+		forward[2] = -sp;
+	}
+	if (right)
+	{
+		right[0] = (-1 * sr * sp * cy + -1 * cr * -sy);
+		right[1] = (-1 * sr * sp * sy + -1 * cr * cy);
+		right[2] = -1 * sr * cp;
+	}
+	if (up)
+	{
+		up[0] = (cr * sp * cy + -sr * -sy);
+		up[1] = (cr * sp * sy + -sr * cy);
+		up[2] = cr * cp;
+	}
+}
+
+
 orientation_t out;
 orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, char* tagName)
 {
@@ -412,11 +451,12 @@ orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int 
 	AxisClear(parent.axis);
 	VectorCopy(origin, parent.origin);
 	AnglesToAxis(angles, parent.axis);
-	VectorCopy(parent.origin, out.origin);
 
 	AxisClear(out.axis);
-	AnglesToAxis(angles, out.axis);
+	VectorCopy(parent.origin, out.origin);
 
+//	AngleVectors2(angles, out.axis[0], out.axis[1], out.axis[2]);
+//	AnglesToAxis(angles, out.axis);
 
 	AxisClear(tempAxis);
 
@@ -425,9 +465,10 @@ orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int 
 		VectorMA(out.origin, tag->origin[i], parent.axis[i], out.origin);
 	}
 
+	// translate origin
+//	MatrixMultiply(tag->axis, parent.axis, out.axis); 
 
-//	MatrixMultiply(tag->axis, parent.axis, out.axis);
-
+	// translate rotation and origin
 	MatrixMultiply(out.axis, parent.axis, tempAxis);
 	MatrixMultiply(tag->axis, tempAxis, out.axis);
 	return &out;

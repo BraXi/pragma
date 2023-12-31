@@ -2094,13 +2094,73 @@ If entity's model has no tags or is not MD3, entity angles will be returned.
 vector looking_at = gettagangles(self, "tag_head");
 =================
 */
+
+void VectorAngles(const float* forward, const float* up, float* result, qboolean meshpitch)    //up may be NULL
+{
+	float    yaw, pitch, roll;
+
+	if (forward[1] == 0 && forward[0] == 0)
+	{
+		if (forward[2] > 0)
+		{
+			pitch = -M_PI * 0.5;
+			yaw = up ? atan2(-up[1], -up[0]) : 0;
+		}
+		else
+		{
+			pitch = M_PI * 0.5;
+			yaw = up ? atan2(up[1], up[0]) : 0;
+		}
+		roll = 0;
+	}
+	else
+	{
+		yaw = atan2(forward[1], forward[0]);
+		pitch = -atan2(forward[2], sqrt(forward[0] * forward[0] + forward[1] * forward[1]));
+
+		if (up)
+		{
+			vec_t cp = cos(pitch), sp = sin(pitch);
+			vec_t cy = cos(yaw), sy = sin(yaw);
+			vec3_t tleft, tup;
+			tleft[0] = -sy;
+			tleft[1] = cy;
+			tleft[2] = 0;
+			tup[0] = sp * cy;
+			tup[1] = sp * sy;
+			tup[2] = cp;
+			roll = -atan2(DotProduct(up, tleft), DotProduct(up, tup));
+		}
+		else
+			roll = 0;
+	}
+
+	pitch *= 180 / M_PI;
+	yaw *= 180 / M_PI;
+	roll *= 180 / M_PI;
+	if (meshpitch)
+	{
+//		pitch *= r_meshpitch.value;
+//		roll *= r_meshroll.value;
+	}
+	if (pitch < 0)
+		pitch += 360;
+	if (yaw < 0)
+		yaw += 360;
+	if (roll < 0)
+		roll += 360;
+
+	result[0] = -pitch;
+	result[1] = yaw-180;
+	result[2] = roll+90;
+}
+
 void PFSV_gettagangles(void)
 {
 	gentity_t* ent;
 	char* tagName;
 	svmodel_t* model;
 	orientation_t* tag;
-	float pitch, yaw, roll;
 	vec3_t out;
 
 	ent = Scr_GetParmEdict(0);
@@ -2129,25 +2189,9 @@ void PFSV_gettagangles(void)
 	//
 	// convert axis to angles
 	//
-	pitch = asin(-tag->axis[2][0]);
-	if (cos(pitch) != 0) 
-	{
-		yaw = atan2(tag->axis[2][1] / cos(pitch), tag->axis[2][2] / cos(pitch));
-		roll = atan2(tag->axis[1][0] / cos(pitch), tag->axis[0][0] / cos(pitch));
-	}
-	else
-	{
-		yaw = 0;
-		roll = atan2(-tag->axis[0][1], tag->axis[1][1]);
-	}
+	VectorAngles(tag->axis[0], tag->axis[2], out, true);
 
-	yaw = yaw * 180.0 / M_PI;
-	pitch = pitch * 180.0 / M_PI;
-	roll = roll * 180.0 / M_PI;
-
-	out[0] = pitch;
-	out[1] = yaw;
-	out[2] = roll;
+//	AxisToAngles(tag->axis, out);
 
 	Scr_ReturnVector(out);
 }
