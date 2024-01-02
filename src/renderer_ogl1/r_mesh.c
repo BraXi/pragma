@@ -124,7 +124,7 @@ get lighting information for centity
 	an = ent->angles[1] / 180 * M_PI;
 	model_shadevector[0] = cos(-an);
 	model_shadevector[1] = sin(-an);
-	model_shadevector[2] = 2;
+	model_shadevector[2] = 100;
 	VectorNormalize(model_shadevector);
 }
 

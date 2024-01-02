@@ -1289,9 +1289,12 @@ static void SCR_DrawFPS()
 {
 	float color[4];
 	int fps;
+	char* mapname;
 
 	if (!cl_showfps->value)
 		return;
+
+	mapname = cl.configstrings[CS_MODELS + 1];
 
 	if (frame_time <= 0)
 		frame_time = 1;
@@ -1302,7 +1305,14 @@ static void SCR_DrawFPS()
 	VectorSet(color, 1, 1, 1);
 	color[3] = 1;
 
-	re.DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 10, 0.8, 1, color);
+	if (fps >= 1000)
+		VectorSet(color, 0, 1, 0);
+
+	if ((int)cl_showfps->value == 1 && mapname[0])
+		re.DrawString(va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]), 795, 10, 0.8, 1, color);
+	else
+		re.DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 10, 0.8, 1, color);
+
 }
 
 /*

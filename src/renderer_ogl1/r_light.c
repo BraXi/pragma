@@ -229,7 +229,7 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 	surf = r_worldmodel->surfaces + node->firstsurface;
 	for (i=0 ; i<node->numsurfaces ; i++, surf++)
 	{
-		if (surf->flags&(SURF_DRAWTURB|SURF_DRAWSKY)) 
+		if (surf->flags & (SURF_DRAWTURB|SURF_DRAWSKY)) 
 			continue;	// no lightmaps
 
 		tex = surf->texinfo;
@@ -373,8 +373,7 @@ void R_AddDynamicLights (msurface_t *surf)
 
 		dl = &r_newrefdef.dlights[lnum];
 		frad = dl->intensity;
-		fdist = DotProduct (dl->origin, surf->plane->normal) -
-				surf->plane->dist;
+		fdist = DotProduct (dl->origin, surf->plane->normal) - surf->plane->dist;
 		frad -= fabs(fdist);
 		// rad is now the highest intensity on the plane
 

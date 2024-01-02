@@ -10,7 +10,7 @@ void() initAnimTrees;
 
 entity tag_attach;
 float mdl_xyz, mdl_gun;
-float ttime = 0.5;
+float ttime = 0.05;
 
 void() testmodel_think =
 {	
@@ -19,9 +19,9 @@ void() testmodel_think =
 	
 	float numframes = getframescount(self.modelindex);
 		
-//	self.animFrame  ++;
-//	if(self.animFrame > numframes)
-//		self.animFrame = 0;
+	self.animFrame  ++;
+	if(self.animFrame > numframes)
+		self.animFrame = 0;
 	
 	self.angles_y += 4;
 	self.angles_x += 2;
@@ -31,7 +31,7 @@ void() testmodel_think =
 	tag_attach.origin = tag_pos;
 	tag_attach.angles = tag_rot;
 	
-	print("'tag_flash' in frame ", ftos(self.animFrame)," tag_pos = ", vtos(tag_pos), ", tag_rot = ", vtos(tag_rot), "\n");
+//	print("'tag_flash' in frame ", ftos(self.animFrame)," tag_pos = ", vtos(tag_pos), ", tag_rot = ", vtos(tag_rot), "\n");
 	
 	self.nextthink = g_time + ttime;
 	

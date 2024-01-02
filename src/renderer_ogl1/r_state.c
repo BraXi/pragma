@@ -127,7 +127,9 @@ void R_InitialOGLState()
 		glstate.textureEnabled[tmu] = (tmu == 0);
 		glstate.textureBind[tmu] = 0;
 
-		qglActiveTextureARB(textureTargets[tmu]);
+		if(qglActiveTextureARB)
+			qglActiveTextureARB(textureTargets[tmu]);
+
 		qglBindTexture(GL_TEXTURE_2D, 0);
 
 		if (tmu == 0)

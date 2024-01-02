@@ -238,7 +238,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 			st->st[1] = LittleFloat(st->st[1]);
 		}
 
-		// swap all the XyzNormals and decode normals
+		// swap all the XyzNormals
 		xyz = (md3XyzNormal_t*)((byte*)surf + surf->ofsXyzNormals);
 		for (j = 0; j < surf->numVerts * surf->numFrames; j++, xyz++)
 		{
@@ -247,6 +247,11 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 			xyz->xyz[2] = LittleShort(xyz->xyz[2]);
 
 			xyz->normal = LittleShort(xyz->normal);
+
+			// scale verticles to qu
+			//xyz->xyz[0] = (xyz->xyz[0] / 64);
+			//xyz->xyz[1] = (xyz->xyz[1] / 64);
+			//xyz->xyz[2] = (xyz->xyz[2] / 64);
 		}
 
 		// find the next surface
@@ -385,16 +390,16 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 	outVert[1] = (p1[1] + lerp * (p2[1] - p1[1]));
 	outVert[2] = (p1[2] + lerp * (p2[2] - p1[2]));
 
-	// scale verticles to qu
-	outVert[0] = outVert[0] / 64.0f;
-	outVert[1] = outVert[1] / 64.0f;
-	outVert[2] = outVert[2] / 64.0f;
-
 	// retrieve normal
 	lat = (vert->normal >> 8) & 0xff;
 	lng = (vert->normal & 0xff);
 	lat *= (FUNCTABLE_SIZE / 256);
 	lng *= (FUNCTABLE_SIZE / 256);
+
+	// scale verticles to qu
+	outVert[0] = (outVert[0] / 64);
+	outVert[1] = (outVert[1] / 64);
+	outVert[2] = (outVert[2] / 64);
 
 	outNormal[0] = sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * sinTable[lng];
 	outNormal[1] = sinTable[lat] * sinTable[lng];
@@ -465,12 +470,11 @@ void R_DrawMD3Model(centity_t* ent, lod_t lod, float lerp)
 
 				R_LerpMD3Frame(lerp, index, &oldVert[index], &vert[index], v, n);
 
-				float l = DotProduct(n, model_shadevector);
+				float lambert = DotProduct(n, model_shadevector);
 				if (r_fullbright->value ||currententity->renderfx & RF_FULLBRIGHT)
-					l = 1.0f; 
+					lambert = 1.0f; 
 
-				qglColor4f(1,1,1, ent->alpha);
-				qglColor4f(l * model_shadelight[0], l * model_shadelight[1], l * model_shadelight[2], ent->alpha);
+				qglColor4f(lambert * model_shadelight[0], lambert * model_shadelight[1], lambert * model_shadelight[2], ent->alpha);
 				
 				qglTexCoord2f(texcoord[index].st[0], texcoord[index].st[1]);
 				qglVertex3fv(v);

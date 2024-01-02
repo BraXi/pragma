@@ -223,7 +223,7 @@ void DrawGLFlowingPoly (msurface_t *fa)
 /*
 ** R_DrawTriangleOutlines
 */
-extern void R_BeginLinesRendering();
+extern void R_BeginLinesRendering(qboolean dt);
 extern void R_EndLinesRendering();
 void R_DrawTriangleOutlines (void)
 {
@@ -232,10 +232,9 @@ void R_DrawTriangleOutlines (void)
 
 	if (!r_showtris->value)
 		return;
-
-	ri.Con_Printf(PRINT_LOW, "r_showtris\n");
-	R_WriteToDepthBuffer(false);
-	R_BeginLinesRendering();
+;
+	R_WriteToDepthBuffer(true);
+	R_BeginLinesRendering(r_showtris->value >= 2 ? true : false);
 	for (i = 0; i < MAX_LIGHTMAPS; i++)
 	{
 		msurface_t *surf;
