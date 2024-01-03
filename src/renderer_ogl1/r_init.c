@@ -349,11 +349,9 @@ int R_Init(void* hinstance, void* hWnd)
 		ri.Sys_Error(ERR_FATAL, "GL_ARB_multitexture not found\n");
 	}
 #endif
-
 	ri.Con_Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 	qglActiveTextureARB = 0;
 	qglMultiTexCoord2fARB = 0;
-
 	GL_SetDefaultState();
 	R_InitialOGLState(); //wip
 

@@ -688,11 +688,11 @@ void R_RenderView (refdef_t *fd)
 
 	R_DrawDebugLines();
 
-	R_RenderDlights ();
-
-	R_DrawParticles ();
+//	R_RenderDlights ();
 
 	R_DrawAlphaSurfaces ();
+
+	R_DrawParticles();
 
 	R_ViewBlendEffect();
 
