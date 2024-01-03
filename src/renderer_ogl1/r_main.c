@@ -282,19 +282,15 @@ void R_DrawEntitiesOnList (void)
 	if (!r_drawentities->value)
 		return;
 
-	
-//	ri.Con_Printf(PRINT_LOW, "BEGIN R_DrawEntitiesOnList\n");
 	// draw non-transparent first
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
-//		ri.Con_Printf(PRINT_LOW, "currententity = %i - currentmodel: %s\n", i, currentmodel->name);
 		currententity = &r_newrefdef.entities[i];
 		currentmodel = currententity->model;
 		if ((currententity->renderfx & RF_TRANSLUCENT))
 			continue;	// transparent
 		R_DrawCurrentEntity();
 	}
-//	ri.Con_Printf(PRINT_LOW, "END R_DrawEntitiesOnList\n");
 
 
 	// draw transparent entities
@@ -313,95 +309,6 @@ void R_DrawEntitiesOnList (void)
 	R_WriteToDepthBuffer(GL_TRUE);		// reenable z writing
 }
 
-
-#if 0
-
-void R_DrawEntitiesOnList(void)
-{
-	int		i;
-
-	if (!r_drawentities->value)
-		return;
-
-	// draw non-transparent first
-	for (i = 0; i < r_newrefdef.num_entities; i++)
-	{
-		currententity = &r_newrefdef.entities[i];
-		if (currententity->renderfx & RF_TRANSLUCENT)
-			continue;	// solid
-
-		if (currententity->renderfx & RF_BEAM)
-		{
-			R_DrawBeam(currententity);
-		}
-		else
-		{
-			currentmodel = currententity->model;
-			if (!currentmodel)
-			{
-				R_DrawNullModel();
-				continue;
-			}
-			switch (currentmodel->type)
-			{
-			case MOD_MD3:
-				R_DrawMD3Model(currententity);
-				break;
-			case MOD_BRUSH:
-				R_DrawBrushModel(currententity);
-				break;
-			case MOD_SPRITE:
-				R_DrawSpriteModel(currententity);
-				break;
-			default:
-				ri.Sys_Error(ERR_DROP, "Bad modeltype");
-				break;
-			}
-		}
-	}
-
-	// draw transparent entities
-	// we could sort these if it ever becomes a problem...
-	qglDepthMask(0);		// no z writes
-	for (i = 0; i < r_newrefdef.num_entities; i++)
-	{
-		currententity = &r_newrefdef.entities[i];
-		if (!(currententity->renderfx & RF_TRANSLUCENT))
-			continue;	// solid
-
-		if (currententity->renderfx & RF_BEAM)
-		{
-			R_DrawBeam(currententity);
-		}
-		else
-		{
-			currentmodel = currententity->model;
-
-			if (!currentmodel)
-			{
-				R_DrawNullModel();
-				continue;
-			}
-			switch (currentmodel->type)
-			{
-			case MOD_MD3:
-				R_DrawMD3Model(currententity);
-				break;
-			case MOD_BRUSH:
-				R_DrawBrushModel(currententity);
-				break;
-			case MOD_SPRITE:
-				R_DrawSpriteModel(currententity);
-				break;
-			default:
-				ri.Sys_Error(ERR_DROP, "Bad modeltype");
-				break;
-			}
-		}
-	}
-	qglDepthMask(1);		// back to writing
-}
-#endif
 /*
 ** GL_DrawParticles
 **
@@ -505,9 +412,10 @@ void R_PolyBlend (void)
 	qglVertex3f (10, 100, -100);
 	qglEnd ();
 
-	R_Blend(false);
-	qglEnable (GL_TEXTURE_2D);
 	R_AlphaTest(true);
+	R_Blend(false);
+
+	qglEnable(GL_TEXTURE_2D);
 	qglColor4f(1,1,1,1);
 }
 
