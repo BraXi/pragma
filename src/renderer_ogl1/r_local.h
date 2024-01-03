@@ -211,7 +211,6 @@ extern	cvar_t	*r_finish;
 extern	cvar_t	*r_ztrick;
 extern	cvar_t	*r_clear;
 extern	cvar_t	*r_cull;
-extern	cvar_t	*r_flashblend;
 extern	cvar_t	*r_modulate;
 extern	cvar_t	*r_drawbuffer;
 extern  cvar_t  *gl_driver;

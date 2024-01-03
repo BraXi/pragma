@@ -63,7 +63,6 @@ cvar_t* r_ztrick;
 cvar_t* r_finish;
 cvar_t* r_clear;
 cvar_t* r_cull;
-cvar_t* r_flashblend;
 cvar_t* r_saturatelighting;
 cvar_t* r_swapinterval;
 cvar_t* r_texturemode;
@@ -125,7 +124,6 @@ void R_RegisterCvarsAndCommands(void)
 	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE);
 	r_clear = ri.Cvar_Get("r_clear", "0", 0);
 	r_cull = ri.Cvar_Get("r_cull", "1", CVAR_CHEAT);
-	r_flashblend = ri.Cvar_Get("r_flashblend", "0", 0);
 	r_monolightmap = ri.Cvar_Get("r_monolightmap", "0", CVAR_CHEAT);
 	gl_driver = ri.Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE);
 	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE);
