@@ -851,7 +851,7 @@ void R_DrawInlineBModel (void)
 	if ( !r_flashblend->value )
 	{
 		lt = r_newrefdef.dlights;
-		for (k=0 ; k<r_newrefdef.num_dlights ; k++, lt++)
+		for (k = 0; k < r_newrefdef.num_dlights; k++, lt++)
 		{
 			R_MarkLights (lt, 1<<k, currentmodel->nodes + currentmodel->firstnode);
 		}

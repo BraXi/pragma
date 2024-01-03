@@ -188,7 +188,6 @@ extern cvar_t	*r_vertex_arrays;
 
 extern cvar_t	*gl_ext_swapinterval;
 extern cvar_t	*gl_ext_pointparameters;
-extern cvar_t	*gl_ext_compiled_vertex_array;
 
 extern cvar_t	*r_particle_min_size;
 extern cvar_t	*r_particle_max_size;
@@ -201,7 +200,6 @@ extern	cvar_t	*r_bitdepth;
 extern	cvar_t	*r_mode;
 extern	cvar_t	*r_log;
 extern	cvar_t	*r_lightmap;
-extern	cvar_t	*r_shadows;
 extern	cvar_t	*r_dynamic;
 extern  cvar_t  *r_monolightmap;
 extern	cvar_t	*r_nobind;
@@ -213,7 +211,6 @@ extern	cvar_t	*r_finish;
 extern	cvar_t	*r_ztrick;
 extern	cvar_t	*r_clear;
 extern	cvar_t	*r_cull;
-extern	cvar_t	*r_polyblend;
 extern	cvar_t	*r_flashblend;
 extern	cvar_t	*r_modulate;
 extern	cvar_t	*r_drawbuffer;

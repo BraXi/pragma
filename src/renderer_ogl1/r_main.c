@@ -380,14 +380,11 @@ void R_DrawParticles (void)
 
 /*
 ============
-R_PolyBlend
+R_ViewBlendEffect
 ============
 */
-void R_PolyBlend (void)
+void R_ViewBlendEffect (void)
 {
-	if (!r_polyblend->value)
-		return;
-
 	if (!v_blend[3])
 		return; // transparent
 
@@ -646,10 +643,6 @@ void R_Clear (void)
 
 }
 
-void R_Flash(void)
-{
-	R_PolyBlend ();
-}
 
 /*
 ================
@@ -701,7 +694,7 @@ void R_RenderView (refdef_t *fd)
 
 	R_DrawAlphaSurfaces ();
 
-	R_Flash();
+	R_ViewBlendEffect();
 
 	if (r_speeds->value)
 	{
