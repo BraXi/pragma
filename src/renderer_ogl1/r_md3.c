@@ -457,6 +457,8 @@ void R_DrawMD3Model(centity_t* ent, lod_t lod, float lerp)
 		oldVert = (short*)((byte*)surface + surface->ofsXyzNormals) + (ent->oldframe * surface->numVerts * 4); // current keyframe verts
 		vert = (short*)((byte*)surface + surface->ofsXyzNormals) + (ent->frame * surface->numVerts * 4); // next keyframe verts
 
+		if(r_speeds->value)
+			rperf.alias_tris += surface->numTriangles;
 
 		// for each triangle in surface
 		for (j = 0; j < surface->numTriangles; j++, triangle++)

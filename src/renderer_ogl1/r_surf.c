@@ -36,9 +36,6 @@ msurface_t	*r_alpha_surfaces;
 
 #define	MAX_LIGHTMAPS	128
 
-int		c_visible_lightmaps;
-int		c_visible_textures;
-
 #define GL_LIGHTMAP_FORMAT GL_RGBA
 
 typedef struct
@@ -361,7 +358,7 @@ void R_BlendLightmaps (void)
 	}
 
 	if ( currentmodel == r_worldmodel )
-		c_visible_lightmaps = 0;
+		rperf.visible_lightmaps = 0;
 
 	/*
 	** render static lightmaps first
@@ -371,7 +368,8 @@ void R_BlendLightmaps (void)
 		if ( gl_lms.lightmap_surfaces[i] )
 		{
 			if (currentmodel == r_worldmodel)
-				c_visible_lightmaps++;
+				rperf.visible_lightmaps++;
+
 			GL_Bind( gl_state.lightmap_textures + i);
 
 			for ( surf = gl_lms.lightmap_surfaces[i]; surf != 0; surf = surf->lightmapchain )
@@ -392,7 +390,7 @@ void R_BlendLightmaps (void)
 		GL_Bind( gl_state.lightmap_textures+0 );
 
 		if (currentmodel == r_worldmodel)
-			c_visible_lightmaps++;
+			rperf.visible_lightmaps++;
 
 		newdrawsurf = gl_lms.lightmap_surfaces[0];
 
@@ -477,7 +475,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	image_t		*image;
 	qboolean is_dynamic = false;
 
-	c_brush_polys++;
+	rperf.brush_polys++;
 
 	image = R_TextureAnimation (fa->texinfo);
 
@@ -598,7 +596,7 @@ void R_DrawAlphaSurfaces (void)
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
 		GL_Bind(s->texinfo->image->texnum);
-		c_brush_polys++;
+		rperf.brush_polys++;
 		if (s->texinfo->flags & SURF_TRANS33)
 			qglColor4f (intens,intens,intens,0.33);
 		else if (s->texinfo->flags & SURF_TRANS66)
@@ -629,7 +627,7 @@ void DrawTextureChains (void)
 	msurface_t	*s;
 	image_t		*image;
 
-	c_visible_textures = 0;
+	rperf.visible_textures = 0;
 
 //	GL_TexEnv( GL_REPLACE );
 
@@ -639,7 +637,7 @@ void DrawTextureChains (void)
 			continue;
 		if (!image->texturechain)
 			continue;
-		c_visible_textures++;
+		rperf.visible_textures++;
 
 		for ( s = image->texturechain; s ; s=s->texturechain)
 		{
@@ -743,7 +741,7 @@ dynamic:
 
 		}
 
-		c_brush_polys++;
+		rperf.brush_polys++;
 
 		GL_MBind( GL_TEXTURE0_ARB, image->texnum );
 		GL_MBind( GL_TEXTURE1_ARB, gl_state.lightmap_textures + lmtex );
@@ -787,7 +785,7 @@ dynamic:
 	}
 	else
 	{
-		c_brush_polys++;
+		rperf.brush_polys++;
 
 		GL_MBind( GL_TEXTURE0_ARB, image->texnum );
 		GL_MBind( GL_TEXTURE1_ARB, gl_state.lightmap_textures + lmtex );

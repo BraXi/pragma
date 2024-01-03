@@ -103,6 +103,9 @@ void GL_Bind (int texnum)
 		texnum = font_current->texnum;
 	if ( gl_state.currenttextures[gl_state.currenttmu] == texnum)
 		return;
+
+	rperf.texture_binds++;
+
 	gl_state.currenttextures[gl_state.currenttmu] = texnum;
 	qglBindTexture(GL_TEXTURE_2D, texnum);
 }

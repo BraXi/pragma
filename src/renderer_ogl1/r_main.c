@@ -24,7 +24,6 @@ void R_Clear (void);
 
 viddef_t	vid;
 
-void R_DrawMD3Model(centity_t* ent);
 
 model_t		*r_worldmodel;
 
@@ -44,7 +43,7 @@ cplane_t	frustum[4];
 int			r_visframecount;	// bumped when going to a new PVS
 int			r_framecount;		// used for dlight push checking
 
-int			c_brush_polys, c_alias_polys;
+rperfcounters_t rperf;
 
 float		v_blend[4];			// final blending color
 
@@ -510,8 +509,8 @@ void R_SetupFrame (void)
 	for (i=0 ; i<4 ; i++)
 		v_blend[i] = r_newrefdef.blend[i];
 
-	c_brush_polys = 0;
-	c_alias_polys = 0;
+	rperf.brush_polys = 0;
+	rperf.alias_tris = 0;
 
 	// clear out the portion of the screen that the NOWORLDMODEL defines
 	if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL )
@@ -665,8 +664,9 @@ void R_RenderView (refdef_t *fd)
 
 	if (r_speeds->value)
 	{
-		c_brush_polys = 0;
-		c_alias_polys = 0;
+		rperf.brush_polys = 0;
+		rperf.alias_tris = 0;
+		rperf.texture_binds = 0;
 	}
 
 	R_PushDlights ();
@@ -698,11 +698,12 @@ void R_RenderView (refdef_t *fd)
 
 	if (r_speeds->value)
 	{
-		ri.Con_Printf (PRINT_ALL, "%4i wpoly %4i epoly %i tex %i lmaps\n",
-			c_brush_polys, 
-			c_alias_polys, 
-			c_visible_textures, 
-			c_visible_lightmaps); 
+		ri.Con_Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i vislmaps, %i texbinds\n",
+			rperf.brush_polys,
+			rperf.alias_tris,
+			rperf.visible_textures, 
+			rperf.visible_lightmaps,
+			rperf.texture_binds); 
 	}
 }
 

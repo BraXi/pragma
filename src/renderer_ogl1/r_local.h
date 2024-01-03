@@ -139,6 +139,18 @@ typedef struct
 	float	r, g, b;
 } glvert_t;
 
+typedef struct
+{
+	int	brush_polys;
+	int alias_tris;
+
+	int	texture_binds;
+
+	int	visible_lightmaps;
+	int	visible_textures;
+
+} rperfcounters_t;
+
 
 #define BACKFACE_EPSILON	0.01
 
@@ -156,8 +168,8 @@ extern	model_t		*currentmodel;
 extern	int			r_visframecount;
 extern	int			r_framecount;
 extern	cplane_t	frustum[4];
-extern	int			c_brush_polys, c_alias_polys;
 
+extern rperfcounters_t rperf;
 
 extern	int			gl_filter_min, gl_filter_max;
 
@@ -231,9 +243,6 @@ extern	int		gl_solid_format;
 extern	int		gl_alpha_format;
 extern	int		gl_tex_solid_format;
 extern	int		gl_tex_alpha_format;
-
-extern	int		c_visible_lightmaps;
-extern	int		c_visible_textures;
 
 extern	float	r_world_matrix[16];
 
