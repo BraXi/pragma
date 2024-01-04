@@ -166,13 +166,17 @@ typedef struct mleaf_s
 //===================================================================
 
 //
-// Whole model
+// 
 //
 
-typedef struct bmodel_s
+typedef struct vert_s // for vbo
 {
-	int dummy;
-} bmodel_t;
+	float	xyz[3];
+	float	normal[2];
+	float	texcoord[2];
+//	float	color[4];
+} vert_t;
+
 
 typedef struct model_s
 {
@@ -238,7 +242,9 @@ typedef struct model_s
 
 	byte		*lightdata;
 
-	// for alias models and skins
+//
+// for alias models and sprites
+//
 	image_t		*skins[32];
 
 	int			extradatasize;

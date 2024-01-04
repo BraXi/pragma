@@ -196,10 +196,11 @@ extern	cvar_t	*r_fullbright;
 extern	cvar_t	*r_novis;
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_lerpmodels;
-extern cvar_t	*r_vertex_arrays;
 
 extern cvar_t	*gl_ext_swapinterval;
 extern cvar_t	*gl_ext_pointparameters;
+
+extern cvar_t	*r_overbrightbits;
 
 extern cvar_t	*r_particle_min_size;
 extern cvar_t	*r_particle_max_size;

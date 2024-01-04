@@ -34,7 +34,7 @@ extern float	model_shadelight[3];
 
 /*
 =================
-MD3_DecodeNormals
+MD3_FastDecodeNormals
 
 Decode the lat/lng normal to a 3 float normal
 
@@ -48,7 +48,7 @@ based on:
 https://github.com/id-Software/Quake-III-Arena/blob/dbe4ddb10315479fc00086f08e25d968b4b43c49/q3map/misc_model.c#L210
 =================
 */
-static void MD3_DecodeNormals(model_t* mod, md3Header_t* model)
+static void MD3_FastDecodeNormals(model_t* mod, md3Header_t* model)
 {
 	md3Surface_t* surf;
 	md3XyzNormal_t* xyz;
@@ -76,7 +76,7 @@ static void MD3_DecodeNormals(model_t* mod, md3Header_t* model)
 			mod->normals[i][j][1] = sin(lat) * sin(lng);
 			mod->normals[i][j][2] = cos(lng);
 
-			//			printf("surf %i vert %i normal [%f %f %f]\n", i, j, mod->normals[i][j][0], mod->normals[i][j][1], mod->normals[i][j][2]);
+//			printf("surf %i vert %i normal [%f %f %f]\n", i, j, mod->normals[i][j][0], mod->normals[i][j][1], mod->normals[i][j][2]);
 		}
 		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 	}
@@ -527,74 +527,9 @@ static void MD3_Normals(md3Header_t* model, float yangle)
 			normal[1] = temp[0] * angleSin + temp[1] * angleCos;
 			normal[2] = temp[2];
 
-			printf("yawangle %f = surf %i tri %i normal [%f %f %f]\n", yangle, i, j, normal[0], normal[1], normal[2]);
+//			printf("yawangle %f = surf %i tri %i normal [%f %f %f]\n", yangle, i, j, normal[0], normal[1], normal[2]);
 		}
 		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 	}
-	printf("done.\n");
 }
-#endif
-
-#if 0
-/*
-======================
-CG_PositionEntityOnTag
-
-Modifies the entities position and axis by the given
-tag location
-======================
-*/
-void CG_PositionEntityOnTag(refEntity_t* entity, const refEntity_t* parent,
-	qhandle_t parentModel, char* tagName) {
-	int				i;
-	orientation_t	lerped;
-
-	// lerp the tag
-	trap_R_LerpTag(&lerped, parentModel, parent->oldframe, parent->frame,
-		1.0 - parent->backlerp, tagName);
-
-	// FIXME: allow origin offsets along tag?
-	VectorCopy(parent->origin, entity->origin);
-	for (i = 0; i < 3; i++) {
-		VectorMA(entity->origin, lerped.origin[i], parent->axis[i], entity->origin);
-	}
-
-	// had to cast away the const to avoid compiler problems...
-	MatrixMultiply(lerped.axis, ((refEntity_t*)parent)->axis, entity->axis);
-	entity->backlerp = parent->backlerp;
-}
-
-
-/*
-======================
-CG_PositionRotatedEntityOnTag
-
-Modifies the entities position and axis by the given
-tag location
-======================
-*/
-void CG_PositionRotatedEntityOnTag(centity_t *entity, const refEntity_t* parent, model_t *mod, char* tagName) 
-{
-	int				i;
-	orientation_t	lerped;
-	vec3_t			tempAxis[3];
-
-
-	if(mod->type != MOD_MD3)
-		return
-	//AxisClear( entity->axis );
-	// lerp the tag
-	MD3_LerpTag(&lerped, mod->md3[LOD_HIGH], parent->oldframe, parent->frame, 1.0 - parent->backlerp, tagName);
-
-	VectorCopy(parent->origin, entity->origin);
-	for (i = 0; i < 3; i++) 
-	{
-		VectorMA(entity->origin, lerped.origin[i], parent->axis[i], entity->origin);
-	}
-
-	MatrixMultiply(entity->axis, lerped.axis, tempAxis);
-	MatrixMultiply(tempAxis, ((refEntity_t*)parent)->axis, entity->axis);
-}
-
-
 #endif

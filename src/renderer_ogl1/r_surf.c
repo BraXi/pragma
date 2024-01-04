@@ -22,6 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "r_local.h"
 
+#define GL_COMBINE_EXT 	34160
+#define GL_RGB_SCALE_EXT  34163
+
 static vec3_t	modelorg;		// relative to viewpoint
 
 msurface_t	*r_alpha_surfaces;
@@ -374,8 +377,19 @@ void R_BlendLightmaps (void)
 
 			for ( surf = gl_lms.lightmap_surfaces[i]; surf != 0; surf = surf->lightmapchain )
 			{
-				if ( surf->polys )
-					DrawGLPolyChain( surf->polys, 0, 0 );
+				if (surf->polys)
+				{
+					// --- begin yquake 2 ---
+					// Apply overbright bits to the static lightmaps
+					if (r_overbrightbits->value)
+					{
+						GL_TexEnv(GL_COMBINE_EXT);
+						qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_EXT, r_overbrightbits->value);
+					}
+					// --- end yquake 2 ---
+
+					DrawGLPolyChain(surf->polys, 0, 0);
+				}
 			}
 		}
 	}
@@ -419,10 +433,21 @@ void R_BlendLightmaps (void)
 				// draw all surfaces that use this lightmap
 				for ( drawsurf = newdrawsurf; drawsurf != surf; drawsurf = drawsurf->lightmapchain )
 				{
-					if ( drawsurf->polys )
-						DrawGLPolyChain( drawsurf->polys, 
-							              ( drawsurf->light_s - drawsurf->dlight_s ) * ( 1.0 / 128.0 ), 
-										( drawsurf->light_t - drawsurf->dlight_t ) * ( 1.0 / 128.0 ) );
+					if (drawsurf->polys)
+					{
+						// --- begin yquake 2 ---
+						// Apply overbright bits to the dynamic lightmaps
+						if (r_overbrightbits->value)
+						{
+							GL_TexEnv(GL_COMBINE_EXT);
+							qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_EXT, r_overbrightbits->value);
+						}
+						// --- end yquake 2 ---
+
+						DrawGLPolyChain(drawsurf->polys,
+							(drawsurf->light_s - drawsurf->dlight_s) * (1.0 / 128.0),
+							(drawsurf->light_t - drawsurf->dlight_t) * (1.0 / 128.0));
+					}
 				}
 
 				newdrawsurf = drawsurf;
@@ -480,17 +505,38 @@ void R_RenderBrushPoly (msurface_t *fa)
 	image = R_TextureAnimation (fa->texinfo);
 
 	if (fa->flags & SURF_DRAWTURB)
-	{	
-		GL_Bind( image->texnum );
+	{
+		GL_Bind(image->texnum);
 
-		// warp texture, no lightmaps
-		GL_TexEnv( GL_MODULATE );
-		qglColor4f( gl_state.inverse_intensity, 
-			        gl_state.inverse_intensity,
-					gl_state.inverse_intensity,
-					1.0F );
-		EmitWaterPolys (fa);
-		GL_TexEnv( GL_REPLACE );
+// --- begin yquake2 ---
+		/* This is a hack ontop of a hack. Warping surfaces like those generated
+		   by R_EmitWaterPolys() don't have a lightmap. Original Quake II therefore
+		   negated the global intensity on those surfaces, because otherwise they
+		   would show up much too bright. When we implemented overbright bits this
+		   hack modified the global GL state in an incompatible way. So implement
+		   a new hack, based on overbright bits... Depending on the value set to
+		   r_overbrightbits the result is different:
+
+			0: Old behaviour.
+			1: No overbright bits on the global scene but correct lighting on
+			   warping surfaces.
+			2: Overbright bits on the global scene but not on warping surfaces.
+				They oversaturate otherwise. */
+
+		if (r_overbrightbits->value)
+		{
+			GL_TexEnv(GL_COMBINE_EXT);
+			qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_EXT, 1);
+		}
+		else
+		{
+			GL_TexEnv(GL_MODULATE);
+			qglColor4f(gl_state.inverse_intensity, gl_state.inverse_intensity, gl_state.inverse_intensity, 1.0f);
+		}
+// --- end yquake2 ---
+
+		EmitWaterPolys(fa);
+		GL_TexEnv(GL_REPLACE);
 
 		return;
 	}

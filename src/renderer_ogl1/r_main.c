@@ -813,6 +813,30 @@ void R_BeginFrame( float camera_separation )
 		r_gamma->modified = false;
 	}
 
+	// --- begin yquake 2---
+	// Clamp overbrightbits
+	if (r_overbrightbits->modified)
+	{
+		if (r_overbrightbits->value < 0)
+		{
+			ri.Cvar_Set("r_overbrightbits", "0");
+		}
+		else if (r_overbrightbits->value > 2)
+		{
+			/* braxi -- Setting `r_overbrightbits 3` was crashing, according to GL docs, a value of 3 is WRONG:
+
+			If the pName parameter is GL_RGB_SCALE_EXT, or GL_ALPHA_SCALE,
+			the Parameter(s) parameter is (or points to) a floating-point scale factor.
+			Only three such scale factors are valid: 1.0, 2.0, and 4.0. The default value is 1.0.
+			
+			*/
+			ri.Cvar_Set("r_overbrightbits", "4");
+		}
+
+		r_overbrightbits->modified = false;
+	}
+	// -- end yquake2 ---
+
 	GLimp_BeginFrame( camera_separation );
 
 	/*

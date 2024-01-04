@@ -33,7 +33,7 @@ cvar_t* r_nocull;
 cvar_t* r_lerpmodels;
 cvar_t* r_lefthand;
 
-cvar_t* r_vertex_arrays;
+cvar_t* r_overbrightbits;
 
 cvar_t* r_particle_min_size;
 cvar_t* r_particle_max_size;
@@ -136,6 +136,10 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT);
 	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
+
+	// --- begin yquake2 ---
+	r_overbrightbits = ri.Cvar_Get("r_overbrightbits", "1", CVAR_ARCHIVE);
+	// --- end yquake2 ---
 
 	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", CVAR_CHEAT);
 
@@ -300,7 +304,7 @@ int R_Init(void* hinstance, void* hWnd)
 #ifdef WIN32
 	if (strstr(gl_config.extensions_string, "GL_EXT_compiled_vertex_array"))
 	{
-		ri.Con_Printf(PRINT_ALL, "...enabling GL_EXT_compiled_vertex_array\n");
+//		ri.Con_Printf(PRINT_ALL, "...enabling GL_EXT_compiled_vertex_array\n");
 		qglLockArraysEXT = (void*)qwglGetProcAddress("glLockArraysEXT");
 		qglUnlockArraysEXT = (void*)qwglGetProcAddress("glUnlockArraysEXT");
 	}
