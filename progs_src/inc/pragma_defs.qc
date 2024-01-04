@@ -117,7 +117,6 @@ float SURF_NODRAW		= 128;		// don't bother referencing the texture
 #define	SVF_NOCULL			8	// entity will be _always_ sent regardless of PVS/PHS
 #define	SVF_SINGLECLIENT	16	// send to only one client (.showto must be set to desider player entity number)
 #define	SVF_ONLYTEAM		32	// send only to players in matching team team (.showto must match team)
-#define	SVF_CUSTOMENTITYSTATE		64	// use EntityStateForClient callback
 
 // entity_state_t->effects
 // Effects are things handled on the client side (lights, particles, frame animations)

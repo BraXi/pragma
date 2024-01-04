@@ -41,7 +41,6 @@ typedef struct link_s
 #define	SVF_NOCULL			8	// entity will be _always_ sent regardless of PVS/PHS
 #define	SVF_SINGLECLIENT	16	// send to only one client (.showto must be set to desider player entity number)
 #define	SVF_ONLYTEAM		32	// send only to players in matching team team (.showto must match team)
-#define	SVF_CUSTOMENTITYSTATE		64	// use EntityStateForClient callback to build entity for clients
 
 // edict->v.flags
 #define	FL_FLY				1	// phys

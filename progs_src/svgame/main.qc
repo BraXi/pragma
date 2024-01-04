@@ -51,6 +51,12 @@ float(entity client) TestEntityStateForClient =
 	return true; // show to everyone
 };
 
+void() TestEntityThink =
+{
+	self.EntityStateForClient = 0;
+	print("self.EntityStateForClient = 0\n");
+};
+
 void() test_customstate
 {
 	entity ent;
@@ -59,8 +65,9 @@ void() test_customstate
 	setmodel(ent, "models/mutant.md3");
 	setorigin(ent, '0 0 100');
 	
-	ent.svflags = SVF_CUSTOMENTITYSTATE;
 	ent.EntityStateForClient = TestEntityStateForClient;
+	ent.think = TestEntityThink;
+	ent.nextthink = g_time + 10;
 	
 	linkentity(ent);
 };
@@ -92,7 +99,7 @@ void() main =
 	initAnimTrees();
 	
 #if 1	
-//	test_customstate();
+	test_customstate();
 	// this is not really a good idea for dedicated server
 	if(cvar("dedicated") == 0)
 	{

@@ -565,14 +565,8 @@ void SV_BuildClientFrame (client_t *client)
 		// callback returning false will mean we don't want to send entity
 		// at all to that particular client
 		//
-		if ((int)ent->v.svflags & SVF_CUSTOMENTITYSTATE)
+		if (ent->v.EntityStateForClient > 0)
 		{
-			if (!ent->v.EntityStateForClient)
-			{
-				Com_Printf("WARNING: not broadcasting entity %i (%s) which has no EntityStateForClient callback set\n", e, Scr_GetString(ent->v.classname));
-				continue;
-			}
-
 			// braxi -- !!! FIXME nothing should EVER call remove() and spawn() while in CustomizeForClient !!!
 
 			/* 
