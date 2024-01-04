@@ -118,6 +118,7 @@ typedef struct sv_entvars_s
 	float			svflags;	// SVF_* flags
 	float			showto;		// if (svflags & SVF_SINGLECLIENT) entity will only be sent to this client 
 								// if (svflags & SVF_ONLYTEAM) entity will only be sent to clients matching `.team`
+	scr_func_t		EntityStateForClient;
 
 	float			nextthink;	// time to run think function
 	scr_func_t		think;		// void()

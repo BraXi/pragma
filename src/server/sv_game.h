@@ -39,8 +39,9 @@ typedef struct link_s
 #define	SVF_DEADMONSTER		2	// treat as CONTENTS_DEADMONSTER for collision
 #define	SVF_MONSTER			4	// treat as CONTENTS_MONSTER for collision
 #define	SVF_NOCULL			8	// entity will be _always_ sent regardless of PVS/PHS
-#define	SVF_SINGLECLIENT	16	// send to only one client
-#define	SVF_ONLYTEAM		32	// send to clients in a team
+#define	SVF_SINGLECLIENT	16	// send to only one client (.showto must be set to desider player entity number)
+#define	SVF_ONLYTEAM		32	// send only to players in matching team team (.showto must match team)
+#define	SVF_CUSTOMENTITYSTATE		64	// use EntityStateForClient callback to build entity for clients
 
 // edict->v.flags
 #define	FL_FLY				1	// phys
@@ -115,7 +116,9 @@ struct gentity_s
 
 	float		freetime;			// time when entity was freed
 
-	int			dummy[2]; // proper alignment
+	// this will hold the original state when EntityStateForClient is used
+	entity_state_t		stateBackup;
+	qboolean			bEntityStateForClientChanged;
 
 	gentity_t	*teamchain;
 	gentity_t	*teammaster;

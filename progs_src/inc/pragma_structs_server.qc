@@ -54,7 +54,8 @@ void end_sys_globals; // end of struct
 // entity fields
 //
 	// ----------------------------------------------------
-	// these are copied to entity_state_t
+	// these vars are members of entity_state_t and are networked to clients
+	// EntityStateForClient callback can customize them for clients
 	.vector		origin;
 	.vector		angles;
 	.vector		old_origin;		// for lerping
@@ -66,9 +67,9 @@ void end_sys_globals; // end of struct
 
 	.float		animFrame;		// current animation frame
 	.float		skinnum;		// for MD3 this should be index to .skin file
-	.int			effects;		// PGM - we're filling it, so it needs to be unsigned
+	.int		effects;		// PGM - we're filling it, so it needs to be unsigned
 
-	.int			renderFlags;	// RF_ flags
+	.int		renderFlags;	// RF_ flags
 	.float		renderScale;	// used when renderFlags & RF_SCALE 
 	.vector		renderColor;	// used when renderFlags & RF_COLOR
 	.float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
@@ -82,6 +83,7 @@ void end_sys_globals; // end of struct
 	.float		loopsound_att;	// sound attenuation, one of ATT_
 
 	.int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
+	// end of entity_state_t
 	// ----------------------------------------------------
 
 	.string	classname;	// for spawn functions 
@@ -112,7 +114,8 @@ void end_sys_globals; // end of struct
 	.float			svflags;	// SVF_* flags
 	.float			showto;		// if (svflags & SVF_SINGLECLIENT) entity will only be sent to this client 
 								// if (svflags & SVF_ONLYTEAM) entity will only be sent to clients matching `.team`	
-
+	.float(entity cl) EntityStateForClient;
+	
 	.float			nextthink;	// time to run think function
 	.void()		think;		// void()
 	.void()		prethink;	// void()

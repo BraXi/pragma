@@ -298,10 +298,16 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *netFrom, sizebuf_t *netmessage)
 
 			if (err == WSAEWOULDBLOCK)
 				return false;
+
+#if 1
+			if (!dedicated->value)	// let dedicated servers continue after errors
+				Com_Error(ERR_DROP, "NET_GetPacket: %s", NET_ErrorString());
+#else
 			if (dedicated->value)	// let dedicated servers continue after errors
 				Com_Printf ("NET_GetPacket: %s", NET_ErrorString()); //braxi -- should be same behaviour for localplayer servers
 			else
 				Com_Error (ERR_DROP, "NET_GetPacket: %s", NET_ErrorString());
+#endif
 			return false;
 		}
 

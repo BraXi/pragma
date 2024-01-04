@@ -36,6 +36,9 @@ void Scr_ClientEndServerFrame(gentity_t* ent);
 void SV_ScriptStartFrame();
 void SV_ScriptEndFrame();
 
+void SV_ProgVarsToEntityState(gentity_t* ent);
+//void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
+
 //======================================================================
 
 /*
@@ -66,26 +69,7 @@ void SV_EndWorldFrame(void)
 		if (!ent->inuse)
 			continue;
 
-		VectorCopy(ent->v.origin, ent->s.origin);
-		VectorCopy(ent->v.angles, ent->s.angles);
-		VectorCopy(ent->v.old_origin, ent->s.old_origin);
-
-		ent->s.modelindex = ent->v.modelindex;
-		ent->s.modelindex2 = ent->v.modelindex2;
-		ent->s.modelindex3 = ent->v.modelindex3;
-		ent->s.modelindex4 = ent->v.modelindex3;
-
-		ent->s.frame = (int)ent->v.animFrame;
-		ent->s.skinnum = (int)ent->v.skinnum;
-		ent->s.effects = ent->v.effects;
-
-		ent->s.renderFlags = ent->v.renderFlags;
-		ent->s.renderScale = ent->v.renderScale;
-		VectorCopy(ent->v.renderColor, ent->s.renderColor);
-		ent->s.renderAlpha = ent->v.renderAlpha;
-
-		ent->s.loopingSound = (int)ent->v.loopsound;
-		ent->s.event = (int)ent->v.event;
+		SV_ProgVarsToEntityState(ent);
 
 	}
 	SV_ScriptEndFrame();
@@ -157,7 +141,7 @@ void SV_RunWorldFrame(void)
 
 	SV_ScriptStartFrame();
 
-	for (i = 0; i < sv.max_edicts; i++)//sv.num_edicts
+	for (i = 0; i < sv.max_edicts; i++)
 	{
 		ent = EDICT_NUM(i);
 		if (!ent->inuse)
@@ -232,7 +216,6 @@ int		area_count, area_maxcount;
 int		area_type;
 
 int SV_HullForEntity (gentity_t *ent);
-
 
 // ClearLink is used for new headnodes
 void ClearLink (link_t *l)

@@ -475,6 +475,19 @@ Decides which entities are going to be visible to the client, and
 copies off the playerstat and areabits.
 =============
 */
+extern void SV_ProgVarsToEntityState(gentity_t* ent);
+extern void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
+
+inline void SV_RestoreEntityStateAfterClient(gentity_t* ent)
+{
+	if (ent->bEntityStateForClientChanged)
+	{
+		SV_EntityStateToProgVars(ent, &ent->stateBackup); // restore script fields
+		memcpy(&ent->s, &ent->stateBackup, sizeof(entity_state_t)); // restore entity state
+		ent->bEntityStateForClientChanged = false;
+	}
+}
+
 void SV_BuildClientFrame (client_t *client)
 {
 	int		e, i;
@@ -497,7 +510,7 @@ void SV_BuildClientFrame (client_t *client)
 	// this is the frame we are creating
 	frame = &client->frames[sv.framenum & UPDATE_MASK];
 
-	frame->senttime = svs.realtime; // save it for ping calc later
+	frame->senttime = svs.realtime; // save time for ping calculation later on
 
 	// find the client's PVS
 #if PROTOCOL_FLOAT_COORDS == 1
@@ -518,7 +531,6 @@ void SV_BuildClientFrame (client_t *client)
 	// grab the current player_state_t
 	frame->ps = clent->client->ps;
 
-
 	SV_FatPVS (org);
 	clientphs = CM_ClusterPHS (clientcluster);
 
@@ -528,34 +540,76 @@ void SV_BuildClientFrame (client_t *client)
 
 	c_fullsend = 0;
 	
+	Scr_BindVM(VM_SVGAME);
+
 	// ignore entity 0 which is world and begin from entity 1 which may be a player...
-	for (e = 1; e < sv.max_edicts; e++) //sv.num_edicts
+	for (e = 1; e < sv.max_edicts; e++)
 	{
 		ent = EDICT_NUM(e);
 
-		// ignore free entities
+		//
+		// ignore entities that are hidden to players or don't want to be broadcasted at all
+		//
 		if (!ent->inuse)
-			continue;
-
-		// ignore ents which don't want to be broadcasted
+			continue; // ignore free entities
 		if (((int)ent->v.svflags & SVF_NOCLIENT))
-			continue;
-
-		//
-		// ignore ents that are hidden to players
-		//
-
-		// send only to _THAT ONE_ client
+			continue; // SVF_NOCLIENT entities are never sent to anyone
 		if (((int)ent->v.svflags & SVF_SINGLECLIENT) && ent->v.showto != NUM_FOR_ENT(clent)) // to avoid -1 offset, just set showto = getentnum(self)
-			continue;
-
-		// send only to clients matching team
+			continue; // send entity only to _THAT ONE_ client	
 		if (((int)ent->v.svflags & SVF_ONLYTEAM) && ent->v.showto == clent->v.team)
-			continue;
+			continue; // send entity only to clients which are matching .team field
 
+		//
+		// if entity has its EntityStateForClient callback run it and send
+		// entity with modified entity state, but keep original state around.
+		// callback returning false will mean we don't want to send entity
+		// at all to that particular client
+		//
+		if ((int)ent->v.svflags & SVF_CUSTOMENTITYSTATE)
+		{
+			if (!ent->v.EntityStateForClient)
+			{
+				Com_Printf("WARNING: not broadcasting entity %i (%s) which has no EntityStateForClient callback set\n", e, Scr_GetString(ent->v.classname));
+				continue;
+			}
+
+			// braxi -- !!! FIXME nothing should EVER call remove() and spawn() while in CustomizeForClient !!!
+
+			/* 
+			* float CustomizeForClient(entity player); 	
+			* 
+			* Entity can have its CustomizeForClient function which can modify entitystate on a per client basis
+			* It should also return either true or false, depending if we want to send that entity to the client
+			* 
+			* `self` is the entity we want to customize
+			* `player` is the client we're sending entity to
+			* 
+			*/
+			sv.script_globals->self = ENT_TO_VM(ent);
+			Scr_AddEntity(0, clent);
+			Scr_Execute(VM_SVGAME, ent->v.EntityStateForClient, __FUNCTION__); 
+
+			// only send entitiy if CustomizeForClient tells us to
+			if (Scr_GetReturnFloat() <= 0)
+			{
+				SV_EntityStateToProgVars(ent, &ent->s); // restore progvars from entitystate (it has not been modified yet)
+				continue; 
+			}
+
+			ent->bEntityStateForClientChanged = true;
+			memcpy(&ent->stateBackup, &ent->s, sizeof(entity_state_t));
+
+			SV_ProgVarsToEntityState(ent);
+		}
+		
+		//
 		// ignore ents without visible models unless they have an effect, looping sound or event
+		//
 		if (!ent->s.modelindex && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)
+		{
+			SV_RestoreEntityStateAfterClient(ent);
 			continue;
+		}		
 
 		// always send ourselves (the player entity), but ignore others if not touching a PV leaf
 		// if entity has SVF_NOCULL flag it will be _always_ sent regardless of PVS/PHS
@@ -567,7 +621,10 @@ void SV_BuildClientFrame (client_t *client)
 				if (!CM_AreasConnected(clientarea, ent->areanum))
 				{	// doors can legally straddle two areas, so we may need to check another one
 					if (!ent->areanum2 || !CM_AreasConnected(clientarea, ent->areanum2))
+					{
+						SV_RestoreEntityStateAfterClient(ent);
 						continue;		// blocked by a door
+					}			
 				}
 
 				// beams just check one point for PHS
@@ -575,7 +632,10 @@ void SV_BuildClientFrame (client_t *client)
 				{
 					l = ent->clusternums[0];
 					if (!(clientphs[l >> 3] & (1 << (l & 7))))
+					{
+						SV_RestoreEntityStateAfterClient(ent);
 						continue;
+					}
 				}
 				else
 				{
@@ -591,7 +651,10 @@ void SV_BuildClientFrame (client_t *client)
 					if (ent->num_clusters == -1)
 					{	// too many leafs for individual check, go by headnode
 						if (!CM_HeadnodeVisible(ent->headnode, bitvector))
-							continue;
+						{
+							SV_RestoreEntityStateAfterClient(ent);
+							continue;		// blocked by a door
+						}
 						c_fullsend++;
 					}
 					else
@@ -603,7 +666,10 @@ void SV_BuildClientFrame (client_t *client)
 								break;
 						}
 						if (i == ent->num_clusters)
-							continue;		// not visible
+						{
+							SV_RestoreEntityStateAfterClient(ent);
+							continue;		// blocked by a door
+						}
 					}
 
 					if (!ent->s.modelindex)
@@ -614,7 +680,10 @@ void SV_BuildClientFrame (client_t *client)
 						VectorSubtract(org, ent->v.origin, delta);
 						len = VectorLength(delta);
 						if (len > 400)
-							continue;
+						{
+							SV_RestoreEntityStateAfterClient(ent);
+							continue;		// blocked by a door
+						}
 					}
 				}
 			}
@@ -627,7 +696,8 @@ void SV_BuildClientFrame (client_t *client)
 			Com_DPrintf (DP_SV, "FIXING ENT->S.NUMBER!!!\n");
 			ent->s.number = e;
 		}
-		*state = ent->s; //BRAXI FIXME
+
+		*state = ent->s; // this compiles to memcpy
 
 		// don't mark players missiles as solid
 		if (PROG_TO_GENT(ent->v.owner) == client->edict)

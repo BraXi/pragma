@@ -17,8 +17,7 @@ extern ddef_t* ScrInternal_GlobalAtOfs(int ofs);
 extern ddef_t* Scr_FindEntityField(char* name);
 extern void Scr_PrintEntityFields(vm_entity_t* ent);
 
-//#define ENTVARSOFFSET(a) ((int*)&a->v)
-#define ENTVARSOFFSET(a) ((int*)&a[0] + active_qcvm->offsetToEntVars)
+#define ENTVARSOFFSET(ent) (int*)(&ent[0] + active_qcvm->offsetToEntVars)
 
 /*
 ============

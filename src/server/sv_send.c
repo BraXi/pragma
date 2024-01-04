@@ -415,6 +415,9 @@ FRAME UPDATES
 SV_SendClientDatagram
 =======================
 */
+extern void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
+extern inline void SV_RestoreEntityStateAfterClient(gentity_t* ent);
+
 qboolean SV_SendClientDatagram (client_t *client)
 {
 	byte		msg_buf[MAX_MSGLEN];
@@ -422,14 +425,26 @@ qboolean SV_SendClientDatagram (client_t *client)
 
 	SV_BuildClientFrame (client);
 
+#if 1 //#ifdef PARANOID
+	// clean up after CustomizeForClient...
+	gentity_t* ent;
+	for (int i = 1; i < sv.max_edicts; i++)
+	{
+		ent = EDICT_NUM(i);
+
+		// don't check for inuse boolean here, some dumb idiot
+		// could have removed the entity in CustomizeForClient...
+
+		SV_RestoreEntityStateAfterClient(ent);
+	}
+#endif
+
 	SZ_Init (&msg, msg_buf, sizeof(msg_buf));
 	msg.allowoverflow = true;
 
 	// send over all the relevant entity_state_t and the player_state_t
 	SV_WriteFrameToClient (client, &msg);
 		
-//	Com_Printf("datagram for %s is size = %i of %i max (%i ents visible)\n", client->name, msg.cursize, msg.maxsize, sv.num_edicts-1);
-
 	// copy the accumulated multicast datagram for this client out to the message
 	// it is necessary for this to be after the WriteEntities so that entity references will be current
 	if (client->datagram.overflowed)
@@ -437,6 +452,10 @@ qboolean SV_SendClientDatagram (client_t *client)
 	else
 		SZ_Write (&msg, client->datagram.data, client->datagram.cursize);
 	SZ_Clear (&client->datagram);
+
+#if 0 //handy stats
+	Com_Printf("#%i - datagram for client %i (%s): %i/%ib (%i ents)\n", sv.framenum , client->edict->s.number-1, client->name, msg.cursize, msg.maxsize, client->frames[sv.framenum & UPDATE_MASK].num_entities);
+#endif
 
 	if (msg.overflowed)
 	{	// must have room left for the packet header

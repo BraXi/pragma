@@ -39,6 +39,32 @@ void() testmodel_think =
 	drawstring(self.origin + '0 0 34', '1 1 1', 0.25, false, ttime, ftos(self.animFrame), "/", ftos(numframes) );
 };
 
+
+// test object will be fullbright and red only for a single client
+float(entity client) TestEntityStateForClient =
+{
+	if(client == getent(1)) // local player
+	{
+		self.renderFlags = RF_FULLBRIGHT | RF_COLOR;
+		self.renderColor = '1 0 0';
+	}	
+	return true; // show to everyone
+};
+
+void() test_customstate
+{
+	entity ent;
+	ent = spawn();
+	
+	setmodel(ent, "models/mutant.md3");
+	setorigin(ent, '0 0 100');
+	
+	ent.svflags = SVF_CUSTOMENTITYSTATE;
+	ent.EntityStateForClient = TestEntityStateForClient;
+	
+	linkentity(ent);
+};
+
 /*
 =================
 main
@@ -66,6 +92,7 @@ void() main =
 	initAnimTrees();
 	
 #if 1	
+//	test_customstate();
 	// this is not really a good idea for dedicated server
 	if(cvar("dedicated") == 0)
 	{
@@ -111,5 +138,6 @@ run at the end of each server frame
 void() EndFrame =
 {
 };
+
 
 

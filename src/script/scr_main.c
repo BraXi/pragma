@@ -25,7 +25,7 @@ int scr_numBuiltins = 0;
 const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 {
 	{VM_NONE, NULL, 0, "shared"},
-	{VM_SVGAME, "progs/svgame.dat", 39886, "svgame"},
+	{VM_SVGAME, "progs/svgame.dat", 19248, "svgame"},
 	{VM_CLGAME, "progs/cgame.dat", 42847, "clgame"},
 	{VM_GUI, "progs/guis.dat", 0, "gui"}
 };
@@ -323,7 +323,6 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 		return;
 	}
 
-	vm->offsetToEntVars = 56;
 	vm->progsSize = len;
 	vm->progs = (dprograms_t*)raw;
 	active_qcvm = vm; // just in case..

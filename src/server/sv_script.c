@@ -374,6 +374,71 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	Scr_Execute(VM_SVGAME, sv.script_globals->ClientEndServerFrame, __FUNCTION__);
 }
 
+
+/*
+=================
+SV_ProgVarsToEntityState
+
+Set entity_state_t from prog fields
+=================
+*/
+void SV_ProgVarsToEntityState(gentity_t* ent)
+{
+	VectorCopy(ent->v.origin, ent->s.origin);
+	VectorCopy(ent->v.angles, ent->s.angles);
+	VectorCopy(ent->v.old_origin, ent->s.old_origin);
+
+	ent->s.modelindex = ent->v.modelindex;
+	ent->s.modelindex2 = ent->v.modelindex2;
+	ent->s.modelindex3 = ent->v.modelindex3;
+	ent->s.modelindex4 = ent->v.modelindex3;
+
+	ent->s.frame = (int)ent->v.animFrame;
+	ent->s.skinnum = (int)ent->v.skinnum;
+	ent->s.effects = ent->v.effects;
+
+	ent->s.renderFlags = ent->v.renderFlags;
+	ent->s.renderScale = ent->v.renderScale;
+	VectorCopy(ent->v.renderColor, ent->s.renderColor);
+	ent->s.renderAlpha = ent->v.renderAlpha;
+
+	ent->s.loopingSound = (int)ent->v.loopsound;
+	ent->s.event = (int)ent->v.event;
+}
+
+/*
+=================
+SV_EntityStateToProgVars
+
+Set prog fields from entity_state_t
+=================
+*/
+void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state)
+{
+	VectorCopy(state->origin, ent->v.origin);
+	VectorCopy(state->angles, ent->v.angles);
+	VectorCopy(state->old_origin, ent->v.old_origin);
+
+	ent->v.modelindex = state->modelindex;
+	ent->v.modelindex2 = state->modelindex2;
+	ent->v.modelindex3 = state->modelindex3;
+	ent->v.modelindex4 = state->modelindex3;
+
+	ent->v.animFrame = state->frame;
+	ent->v.skinnum = state->skinnum;
+	ent->v.effects = state->effects;
+
+	ent->v.renderFlags = state->renderFlags;
+	ent->v.renderScale = state->renderScale;
+
+	VectorCopy(state->renderColor, ent->v.renderColor);
+	ent->v.renderAlpha = state->renderAlpha;
+
+	ent->v.loopsound = state->loopingSound;
+	ent->v.event = state->event;
+}
+
+
 /*
 ===========
 ClientUserInfoChanged
