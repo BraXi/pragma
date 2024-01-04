@@ -416,7 +416,7 @@ SV_SendClientDatagram
 =======================
 */
 extern void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
-extern inline void SV_RestoreEntityStateAfterClient(gentity_t* ent);
+extern void SV_RestoreEntityStateAfterClient(gentity_t* ent);
 
 qboolean SV_SendClientDatagram (client_t *client)
 {

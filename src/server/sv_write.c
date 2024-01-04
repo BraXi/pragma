@@ -478,7 +478,7 @@ copies off the playerstat and areabits.
 extern void SV_ProgVarsToEntityState(gentity_t* ent);
 extern void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
 
-inline void SV_RestoreEntityStateAfterClient(gentity_t* ent)
+void SV_RestoreEntityStateAfterClient(gentity_t* ent)
 {
 	if (ent->bEntityStateForClientChanged)
 	{
