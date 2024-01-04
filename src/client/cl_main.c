@@ -1208,17 +1208,26 @@ typedef struct
 	cvar_t	*var;
 } cheatvar_t;
 
-cheatvar_t	cheatvars[] = {
+cheatvar_t	cheatvars[] = 
+{
 	{"timescale", "1"},
 	{"timedemo", "0"},
-	{"r_drawworld", "1"},
-	{"cl_testlights", "0"},
-	{"r_fullbright", "0"},
 	{"paused", "0"},
 	{"fixedtime", "0"},
-	{"sw_draworder", "0"},
+
+	{"cl_testlights", "0"},
+
+	{"r_drawworld", "1"},
+	{"r_drawentities", "1"},
+	{"r_fullbright", "0"},
 	{"r_lightmap", "0"},
+	{"r_monolightmap", "0"},
 	{"r_saturatelighting", "0"},
+	{"r_overbrightbits", "1"},
+	{"r_modulate", "1"},
+	{"r_nobind", "0"},
+	{"r_lockpvs", "0"},
+	
 	{NULL, NULL}
 };
 
