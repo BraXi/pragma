@@ -602,7 +602,7 @@ void SV_Map_f (void)
 	char	*map;
 	char	expanded[MAX_QPATH];
 
-	// if not a pcx, demo, or cinematic, check to make sure the level exists
+	// if not a image, demo, or cinematic, check to make sure the level exists
 	map = Cmd_Argv(1);
 	if (!strstr (map, "."))
 	{
@@ -967,7 +967,7 @@ void SV_ServerRecord_f (void)
 	//
 	// open the demo file
 	//
-	Com_sprintf (name, sizeof(name), "%s/demos/%s.dm2", FS_Gamedir(), Cmd_Argv(1));
+	Com_sprintf (name, sizeof(name), "%s/demos/%s.demo", FS_Gamedir(), Cmd_Argv(1));
 
 	Com_Printf ("recording to %s.\n", name);
 	FS_CreatePath (name);

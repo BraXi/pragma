@@ -1,7 +1,7 @@
 #pragma once
 
 // version string
-#define PRAGMA_VERSION "0.22"
+#define PRAGMA_VERSION "0.23" 
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
 // Pragma will use pmove in shared cg/sv qc progs instead of C version
@@ -19,12 +19,12 @@
 // main engine directory to load assets from, the default 'game'
 #define	BASEDIRNAME	"main" 
 
-// experimental -- use GLFW for windows and input instead of windows api
+// experimental -- use GLFW for windows and input instead of windows api [not implemented yet]
 #define USE_GLFW 0
 
 // experimental -- variable server fps
-//#define SERVER_FPS 10
-#define SERVER_FPS 20
+//#define SERVER_FPS 10		// quake 2
+#define SERVER_FPS 20		// default
 //#define SERVER_FPS 40
 
 #if SERVER_FPS == 10
@@ -37,5 +37,9 @@
 #define SV_FRAMETIME 0.025
 #define SV_FRAMETIME_MSEC 25
 #else
-#pragma error "wrong server fps"
+#pragma error "Wrong SERVER_FPS"
 #endif
+
+
+// version history:
+// 0.23 - 04.01.2024

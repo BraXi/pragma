@@ -192,6 +192,11 @@ void Com_Error (int code, char *fmt, ...)
 	
 	if (code == ERR_DISCONNECT)
 	{
+		Com_Printf("%s\n", msg);
+
+		if(Com_ServerState())
+			SV_Shutdown("Server killed\n", false);
+
 		CL_Drop ();
 		recursive = false;
 		longjmp (abortframe, -1);

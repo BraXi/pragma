@@ -37,9 +37,6 @@
     <ClCompile Include="client\qmenu.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\x86.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="qcommon\cmd.c">
       <Filter>common</Filter>
     </ClCompile>

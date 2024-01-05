@@ -190,7 +190,7 @@ void CL_Record_f (void)
 	//
 	// open the demo file
 	//
-	Com_sprintf (name, sizeof(name), "%s/demos/%s.dm2", FS_Gamedir(), Cmd_Argv(1));
+	Com_sprintf (name, sizeof(name), "%s/demos/%s.demo", FS_Gamedir(), Cmd_Argv(1));
 
 	Com_Printf ("recording to %s.\n", name);
 	FS_CreatePath (name);
@@ -434,7 +434,7 @@ void CL_CheckForResend (void)
 
 	if (!NET_StringToAdr (cls.servername, &adr))
 	{
-		Com_Printf ("Bad server address\n");
+		Com_Printf ("Bad serverAddress address\n");
 		cls.state = ca_disconnected;
 		return;
 	}
@@ -457,11 +457,11 @@ CL_Connect_f
 */
 void CL_Connect_f (void)
 {
-	char	*server;
+	char	*serverAddress;
 
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("usage: connect <server>\n");
+		Com_Printf ("usage: connect <server address> (ip/hostname[:port])\n");
 		return;	
 	}
 	
@@ -474,14 +474,18 @@ void CL_Connect_f (void)
 		CL_Disconnect ();
 	}
 
-	server = Cmd_Argv (1);
+	serverAddress = Cmd_Argv (1);
 
 	NET_Config (true);		// allow remote
-
 	CL_Disconnect ();
 
+	//braxi -- try default port when no port is specified in address
+	if (strchr(serverAddress, ':') == NULL)
+		Com_sprintf(cls.servername, sizeof(cls.servername) - 1, "%s:%i", serverAddress, PORT_SERVER);
+	else
+		strncpy(cls.servername, serverAddress, sizeof(cls.servername) - 1);
+
 	cls.state = ca_connecting;
-	strncpy (cls.servername, server, sizeof(cls.servername)-1);
 	cls.connect_time = -99999;	// CL_CheckForResend() will fire immediately
 }
 
@@ -627,7 +631,7 @@ void CL_Disconnect (void)
 
 void CL_Disconnect_f (void)
 {
-	Com_Error (ERR_DROP, "Disconnected from server");
+	Com_Error (ERR_DISCONNECT, "Disconnected from server");
 }
 
 

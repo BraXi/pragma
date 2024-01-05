@@ -829,8 +829,20 @@ void S_AddLoopSounds (void)
 		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
 		ent = &cl_parse_entities[num];
 
+		// --- begin Reki ---
+		// if it's local to the player don't attenuate at all
+		if (ent->number == cl.playernum + 1)
+		{
+			left_total = 255;
+			right_total = 255;
+		}
+		else
+		{
+			S_SpatializeOrigin(ent->origin, 255.0, SOUND_LOOPATTENUATE, &left_total, &right_total);
+		}
+		// -- end Reki ---
+
 		// find the total contribution of all sounds of this type
-		S_SpatializeOrigin (ent->origin, 255.0, SOUND_LOOPATTENUATE, &left_total, &right_total);
 		for (j=i+1 ; j<cl.frame.num_entities ; j++)
 		{
 			if (sounds[j] != sounds[i])

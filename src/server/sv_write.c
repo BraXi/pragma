@@ -570,10 +570,11 @@ void SV_BuildClientFrame (client_t *client)
 			// braxi -- !!! FIXME nothing should EVER call remove() and spawn() while in CustomizeForClient !!!
 
 			/* 
-			* float CustomizeForClient(entity player); 	
+			* float EntityStateForClient(entity player); 	
 			* 
-			* Entity can have its CustomizeForClient function which can modify entitystate on a per client basis
+			* Entity can have its EntityStateForClient function which can modify entitystate on a per client basis
 			* It should also return either true or false, depending if we want to send that entity to the client
+			* ONLY ENTITY STATE MEMBERS ARE NETWORKED TO CLIENTS (see inc/pragma_structs_server.qc)
 			* 
 			* `self` is the entity we want to customize
 			* `player` is the client we're sending entity to

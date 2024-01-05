@@ -375,17 +375,17 @@ void Cmd_Exec_f (void)
 
 	if (Cmd_Argc () != 2)
 	{
-		Com_Printf ("exec <filename> : execute a script file\n");
+		Com_Printf ("exec <filename>.cfg : execute a configuration file\n");
 		return;
 	}
 
-	len = FS_LoadFile (Cmd_Argv(1), (void **)&f);
+	len = FS_LoadFile (va("%s.cfg",Cmd_Argv(1)), (void**)&f);
 	if (!f)
 	{
-		Com_Printf ("couldn't exec %s\n",Cmd_Argv(1));
+		Com_Printf ("couldn't execute %s.cfg\n",Cmd_Argv(1));
 		return;
 	}
-	Com_Printf ("execing %s\n",Cmd_Argv(1));
+	Com_Printf ("executing %s.cfg\n",Cmd_Argv(1));
 	
 	// the file doesn't have a trailing 0, so we need to copy it off
 	f2 = Z_Malloc(len+1);

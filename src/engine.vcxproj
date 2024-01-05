@@ -71,7 +71,6 @@
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
     <ClCompile Include="client\snd_mix.c" />
-    <ClCompile Include="client\x86.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />
