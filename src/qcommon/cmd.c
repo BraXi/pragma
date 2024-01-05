@@ -368,34 +368,38 @@ qboolean Cbuf_AddLateCommands (void)
 Cmd_Exec_f
 ===============
 */
-void Cmd_Exec_f (void)
+void Cmd_Exec_f(void)
 {
-	char	*f, *f2;
+	char* f, * f2;
 	int		len;
 
-	if (Cmd_Argc () != 2)
+	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("exec <filename>.cfg : execute a configuration file\n");
+		Com_Printf("exec <filename> : execute a configuration file\n");
 		return;
 	}
 
-	len = FS_LoadFile (va("%s.cfg",Cmd_Argv(1)), (void**)&f);
+	if (strchr(Cmd_Argv(1), '.') == NULL)
+		len = FS_LoadFile(va("%s.cfg", Cmd_Argv(1)), (void**)&f);
+	else
+		len = FS_LoadFile(Cmd_Argv(1), (void**)&f);
+
 	if (!f)
 	{
-		Com_Printf ("couldn't execute %s.cfg\n",Cmd_Argv(1));
+		Com_Printf("couldn't execute `%s`\n", Cmd_Argv(1));
 		return;
 	}
-	Com_Printf ("executing %s.cfg\n",Cmd_Argv(1));
-	
+	Com_Printf("executing `%s`...\n", Cmd_Argv(1));
+
 	// the file doesn't have a trailing 0, so we need to copy it off
-	f2 = Z_Malloc(len+1);
-	memcpy (f2, f, len);
+	f2 = Z_Malloc(len + 1);
+	memcpy(f2, f, len);
 	f2[len] = 0;
 
-	Cbuf_InsertText (f2);
+	Cbuf_InsertText(f2);
 
-	Z_Free (f2);
-	FS_FreeFile (f);
+	Z_Free(f2);
+	FS_FreeFile(f);
 }
 
 
