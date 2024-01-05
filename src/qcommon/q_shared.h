@@ -564,7 +564,7 @@ typedef struct usercmd_s
 	byte	buttons;
 	short	angles[3];
 	short	forwardmove, sidemove, upmove;
-	byte	impulse;		// remove?
+	byte	impulse;
 } usercmd_t;
 
 
