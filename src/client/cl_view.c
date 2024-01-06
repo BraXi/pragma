@@ -402,7 +402,7 @@ float CalcFov (float fov_x, float width, float height)
 
 //============================================================================
 
-#ifdef _DEBUG
+
 // gun frame debugging functions
 void V_Gun_Next_f (void)
 {
@@ -451,7 +451,6 @@ void V_Gun_Model_f (void)
 	if(gun_model)
 		Com_Printf("gun_model set to: %s\n", name);
 }
-#endif
 //============================================================================
 
 

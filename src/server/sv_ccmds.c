@@ -800,12 +800,20 @@ void SV_Status_f (void)
 
 	Com_Printf("\n--- server status ---\n\n");
 
-	Com_Printf("hostname  : %s\n", Cvar_VariableString("hostname"));
+
+	if(developer->value)
+		Com_Printf("-- Server running in developer mode (%i) --\n", (int)developer->value);
+	if (sv_cheats->value)
+		Com_Printf("Cheats are allowed\n");
+
+	if (developer->value || sv_cheats->value)
+		Com_Printf("\n");
 
 
-	Com_Printf("map       : %s\n", sv.name);
-	Com_Printf("clients   : %i/%i\n\n", numplayers, svs.max_clients);
-	Com_Printf("entities  : %i/%i\n", sv.num_edicts, sv.max_edicts);
+	Com_Printf("Host name : %s\n", Cvar_VariableString("hostname"));
+	Com_Printf("Map       : %s\n", sv.name);
+	Com_Printf("Clients   : %i / %i\n", numplayers, svs.max_clients);
+	Com_Printf("Entities  : %i / %i\n", sv.num_edicts, sv.max_edicts);
 
 	Com_Printf ("num score ping name            lastmsg address               qport \n");
 	Com_Printf ("--- ----- ---- --------------- ------- --------------------- ------\n");

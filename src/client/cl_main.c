@@ -993,7 +993,6 @@ void CL_Snd_Restart_f (void)
 	CL_RegisterSounds ();
 }
 
-#ifdef _DEBUG
 void printvec(char* str, vec3_t v)
 {
 	Com_Printf("%s: %i %i %i\n", str, (int)v[0], (int)v[1], (int)v[2]);
@@ -1041,7 +1040,6 @@ void CL_PrintEnts_f(void)
 
 	Com_Printf("\nnum frame entities: %i\n", cl.frame.num_entities);
 }
-#endif
 /*
 =================
 CL_InitLocal
