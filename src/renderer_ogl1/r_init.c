@@ -98,16 +98,16 @@ void R_RegisterCvarsAndCommands(void)
 	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT);
 	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT);
 
-	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", 0);
+	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT);
 
 	r_speeds = ri.Cvar_Get("r_speeds", "0", 0);
 
-	r_particle_min_size = ri.Cvar_Get("r_particle_min_size", "2", CVAR_ARCHIVE);
-	r_particle_max_size = ri.Cvar_Get("r_particle_max_size", "40", CVAR_ARCHIVE);
-	r_particle_size = ri.Cvar_Get("r_particle_size", "40", CVAR_ARCHIVE);
-	r_particle_att_a = ri.Cvar_Get("r_particle_att_a", "0.01", CVAR_ARCHIVE);
-	r_particle_att_b = ri.Cvar_Get("r_particle_att_b", "0.0", CVAR_ARCHIVE);
-	r_particle_att_c = ri.Cvar_Get("r_particle_att_c", "0.01", CVAR_ARCHIVE);
+	r_particle_min_size = ri.Cvar_Get("r_particle_min_size", "2", CVAR_ARCHIVE | CVAR_CHEAT);
+	r_particle_max_size = ri.Cvar_Get("r_particle_max_size", "40", CVAR_ARCHIVE | CVAR_CHEAT);
+	r_particle_size = ri.Cvar_Get("r_particle_size", "40", CVAR_ARCHIVE | CVAR_CHEAT);
+	r_particle_att_a = ri.Cvar_Get("r_particle_att_a", "0.01", CVAR_ARCHIVE | CVAR_CHEAT);
+	r_particle_att_b = ri.Cvar_Get("r_particle_att_b", "0.0", CVAR_ARCHIVE | CVAR_CHEAT);
+	r_particle_att_c = ri.Cvar_Get("r_particle_att_c", "0.01", CVAR_ARCHIVE | CVAR_CHEAT);
 
 	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_ARCHIVE | CVAR_CHEAT);
 	r_log = ri.Cvar_Get("r_log", "0", 0);
@@ -138,7 +138,7 @@ void R_RegisterCvarsAndCommands(void)
 	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
 
 	// --- begin yquake2 ---
-	r_overbrightbits = ri.Cvar_Get("r_overbrightbits", "1", CVAR_ARCHIVE);
+	r_overbrightbits = ri.Cvar_Get("r_overbrightbits", "1", CVAR_ARCHIVE | CVAR_CHEAT);
 	// --- end yquake2 ---
 
 	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", CVAR_CHEAT);

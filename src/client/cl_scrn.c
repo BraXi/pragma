@@ -379,6 +379,12 @@ void SCR_Sky_f (void)
 	float	rotate;
 	vec3_t	axis, color;
 
+	if (!CL_CheatsAllowed())
+	{
+		Com_Printf("'%s' - cheats not allowed\n", Cmd_Argv(0));
+		return;
+	}
+
 	if (Cmd_Argc() < 2)
 	{
 		Com_Printf ("Usage: sky <skyname> <rotate> <axis x y z> <color r g b>\n");
@@ -576,11 +582,17 @@ void SCR_DrawConsole (void)
 
 		// weeeewwwy temporarry
 		rgba_t c = { 1,1,1,1 };
-		re.DrawString("Entering Game", 400, 240, 3, 2, c);
+		re.DrawString("Entering Game", 400, 200, 3, 2, c); //240
 		re.DrawString(cls.servername, 400, 290, 2.5, 2, c);
+
 		if (cl.configstrings[CS_MODELS + 1])
 			re.DrawString(cl.configstrings[CS_MODELS + 1], 400, 360, 2, 2, c);
 
+		if (CL_CheatsAllowed())
+		{
+			VectorSet(c, 0.8, 0.2, 0);
+			re.DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
+		}
 
 		return;
 	}

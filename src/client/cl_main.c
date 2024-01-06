@@ -1005,6 +1005,18 @@ void CL_PrintEnts_f(void)
 	int			num;
 	int i;
 	
+	if (!CL_CheatsAllowed())
+	{
+		Com_Printf("'%s' - cheats not allowed\n", Cmd_Argv(0));
+		return;
+	}
+
+	if (developer->value <= 0)
+	{
+		Com_Printf("'%s' - must enable developer mode\n", Cmd_Argv(0));
+		return;
+	}
+
 	for (i = 0; i < cl.frame.num_entities; i++)
 	{
 		num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
@@ -1055,19 +1067,19 @@ void CL_InitLocal (void)
 //
 // register our variables
 //
-	cl_stereo_separation = Cvar_Get( "cl_stereo_separation", "0.4", CVAR_ARCHIVE );
+	cl_stereo_separation = Cvar_Get( "cl_stereo_separation", "0.4", 0 );
 	cl_stereo = Cvar_Get( "cl_stereo", "0", 0 );
 
-	cl_add_blend = Cvar_Get ("cl_blend", "1", 0);
-	cl_add_lights = Cvar_Get ("cl_lights", "1", 0);
-	cl_add_particles = Cvar_Get ("cl_particles", "1", 0);
-	cl_add_entities = Cvar_Get ("cl_entities", "1", 0);
+	cl_add_blend = Cvar_Get ("cl_blend", "1", CVAR_CHEAT);
+	cl_add_lights = Cvar_Get ("cl_lights", "1", CVAR_CHEAT);
+	cl_add_particles = Cvar_Get ("cl_particles", "1", CVAR_CHEAT);
+	cl_add_entities = Cvar_Get ("cl_entities", "1", CVAR_CHEAT);
 	cl_drawviewmodel = Cvar_Get ("cl_drawviewmodel", "1", 0);
 	cl_footsteps = Cvar_Get ("cl_footsteps", "1", 0);
 	cl_predict = Cvar_Get ("cl_predict", "1", 0);
 
 #ifdef _DEBUG
-	cl_minfps = Cvar_Get ("cl_minfps", "5", 0);
+	cl_minfps = Cvar_Get ("cl_minfps", "5", CVAR_CHEAT);
 #endif
 	cl_maxfps = Cvar_Get ("cl_maxfps", "90", 0);
 
@@ -1094,7 +1106,7 @@ void CL_InitLocal (void)
 	cl_showclamp = Cvar_Get ("cl_showclamp", "0", 0);
 	cl_timeout = Cvar_Get ("cl_timeout", "120", 0);
 	cl_paused = Cvar_Get ("paused", "0", 0);
-	cl_timedemo = Cvar_Get ("timedemo", "0", 0);
+	cl_timedemo = Cvar_Get ("timedemo", "0", CVAR_CHEAT);
 
 	cl_showfps = Cvar_Get("cl_showfps", "0", CVAR_ARCHIVE);
 
@@ -1116,9 +1128,9 @@ void CL_InitLocal (void)
 	//
 	// register our commands
 	//
+	Cmd_AddCommand("clents", CL_PrintEnts_f); // cheat, developer mode
 
 #ifdef _DEBUG
-	Cmd_AddCommand("clents", CL_PrintEnts_f);
 	Cmd_AddCommand("packet", CL_Packet_f); // this is dangerous to leave in release builds
 #endif
 
@@ -1214,21 +1226,37 @@ typedef struct
 
 cheatvar_t	cheatvars[] = 
 {
+	// common
 	{"timescale", "1"},
 	{"timedemo", "0"},
 	{"paused", "0"},
 	{"fixedtime", "0"},
 
+	// client
+	{"cl_blend", "1"}, //cl_add_blend
+	{"cl_lights", "1"}, //cl_add_lights
+	{"cl_particles", "1"}, //cl_add_particles
+	{"cl_entities", "1"}, //cl_add_entities
+
+	{"cl_testblend", "0"},
+	{"cl_testparticles", "0"},
+	{"cl_testentities", "0"},
 	{"cl_testlights", "0"},
 
+	// renderer
 	{"r_drawworld", "1"},
 	{"r_drawentities", "1"},
+
+	{"r_lerpmodels", "1"},
+	{"r_showtris", "0"},
+
 	{"r_fullbright", "0"},
 	{"r_lightmap", "0"},
 	{"r_monolightmap", "0"},
 	{"r_saturatelighting", "0"},
 	{"r_overbrightbits", "1"},
 	{"r_modulate", "1"},
+
 	{"r_nobind", "0"},
 	{"r_lockpvs", "0"},
 	
@@ -1242,8 +1270,9 @@ void CL_FixCvarCheats (void)
 	int			i;
 	cheatvar_t	*var;
 
-	if ( !strcmp(cl.configstrings[CS_MAXCLIENTS], "1") || !cl.configstrings[CS_MAXCLIENTS][0] )
-		return;		// single player can cheat
+	// check if server allows for cheating
+	if (CL_CheatsAllowed())
+		return;
 
 	// find all the cvars if we haven't done it yet
 	if (!numcheatvars)

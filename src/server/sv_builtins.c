@@ -631,29 +631,6 @@ void PFSV_inPHS(void)
 
 // =================================================================================
 
-static void SV_Configstring(int index, char *val) //move to sv_main
-{
-	if (index < 0 || index >= MAX_CONFIGSTRINGS)
-	{
-		Com_Error(ERR_DROP, "configstring(): bad index %i\n", index);
-		return;
-	}
-
-	if (!val)
-		val = "";
-
-	strcpy(sv.configstrings[index], val); // change the string in sv
-
-	if (sv.state != ss_loading)
-	{
-		SZ_Clear(&sv.multicast);
-		MSG_WriteChar(&sv.multicast, SVC_CONFIGSTRING);
-		MSG_WriteShort(&sv.multicast, index);
-		MSG_WriteString(&sv.multicast, val);
-		SV_Multicast(vec3_origin, MULTICAST_ALL_R); // send the update to everyone
-	}
-}
-
 /*
 =================
 PFSV_Configstring
@@ -672,7 +649,7 @@ void PFSV_configstring(void)
 	index = (int)Scr_GetParmFloat(0);
 	val = Scr_GetParmString(1);
 
-	SV_Configstring(index, val);
+	SV_SetConfigString(index, val);
 }
 
 
@@ -706,7 +683,7 @@ void PFSV_lightstyle(void)
 		Scr_RunError("lightstyle(): style is too long (max is %i)\n", MAX_QPATH);
 		return;
 	}
-	SV_Configstring(CS_LIGHTS + style, val);
+	SV_SetConfigString(CS_LIGHTS + style, val);
 }
 
 // =================================================================================

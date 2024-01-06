@@ -226,7 +226,7 @@ PROTOCOL
 
 // protocol.h -- communications protocols
 
-#define PROTOCOL_REVISION 3
+#define PROTOCOL_REVISION 4
 #ifdef PROTOCOL_EXTENDED_ASSETS
 	#define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION)
 #else

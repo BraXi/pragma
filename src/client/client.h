@@ -514,6 +514,8 @@ void CL_ParseServerMessage (void);
 void SHOWNET(char *s);
 void CL_Download_f (void);
 
+qboolean CL_CheatsAllowed();
+
 //
 // cl_view.c
 //

@@ -489,4 +489,23 @@ void CL_ParseServerMessage (void)
 
 }
 
+/*
+====================
+CL_ServerAllowsCheats
 
+Returns true if server allows for cheating
+====================
+*/
+qboolean CL_CheatsAllowed()
+{
+	if (cls.state == ca_disconnected)
+		return true;
+
+	if (cl.configstrings[CS_CHEATS_ENABLED][0] && atoi(cl.configstrings[CS_CHEATS_ENABLED]) > 0)
+		return true;
+
+//	if (cl.configstrings[CS_CHEATS_ENABLED][0] && (int)cl.configstrings[CS_CHEATS_ENABLED][0] > 0)
+//		return true;
+
+	return false;
+}

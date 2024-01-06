@@ -779,6 +779,71 @@ void SV_RunGameFrame (void)
 }
 
 /*
+================
+SV_SetConfigString
+================
+*/
+void SV_SetConfigString(int index, char *valueString)
+{
+	if (index < 0 || index >= MAX_CONFIGSTRINGS)
+	{
+		Com_Error(ERR_DROP, "configstring(): bad index %i\n", index);
+		return;
+	}
+
+	if (!valueString)
+		valueString = "";
+
+	// change the string in sv
+	Com_sprintf(sv.configstrings[index], sizeof(sv.configstrings[index]), "%s", valueString);
+//	strcpy(sv.configstrings[index], val); 
+
+	if (sv.state != ss_loading)
+	{
+		SZ_Clear(&sv.multicast);
+		MSG_WriteChar(&sv.multicast, SVC_CONFIGSTRING);
+		MSG_WriteShort(&sv.multicast, index);
+		MSG_WriteString(&sv.multicast, valueString);
+		SV_Multicast(vec3_origin, MULTICAST_ALL_R); // send the update to everyone
+	}
+}
+
+static inline void SV_NotifyWhenCvarChanged(cvar_t* cvar)
+{
+	if (cvar->modified)
+	{
+//		Cvar_Set(cvar->name, cvar->latched_string);
+		SV_BroadcastPrintf(PRINT_HIGH, "Server: `%s` changed to '%s`\n", cvar->name, cvar->string);
+		cvar->modified = false;
+
+		if (cvar == sv_cheats) // haaack no. 9000
+			SV_SetConfigString(CS_CHEATS_ENABLED, cvar->value > 0 ? "1" : "0");  //not cvar->string just in case...
+	}
+}
+
+/*
+================
+SV_UpdateCvars
+================
+*/
+extern cvar_t* hostname;
+void SV_CheckCvars()
+{
+	// give server enough time to initialize
+	if (sv.gameFrame < SERVER_FPS) 
+		return; 
+	if (sv.state != ss_game)
+		return;
+	if (sv_maxclients->value == 1)
+		return;
+
+	SV_NotifyWhenCvarChanged(hostname);
+	SV_NotifyWhenCvarChanged(sv_cheats);
+	SV_NotifyWhenCvarChanged(sv_maxvelocity);
+	SV_NotifyWhenCvarChanged(sv_gravity);
+}
+
+/*
 ==================
 SV_Frame
 ==================
@@ -814,7 +879,8 @@ void SV_Frame (int msec)
 		return;
 	}
 
-	
+	SV_CheckCvars();
+
 	SV_CalcPings();				// update ping based on the last known frame from all clients
 	SV_GiveMsec();				// give the clients some timeslices
 	SV_RunGameFrame();			// let everything in the world think and move
@@ -974,7 +1040,7 @@ void SV_Init (void)
 
 	sv_nolateloading = Cvar_Get("sv_nolateloading", "0", 0);
 
-	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO | CVAR_LATCH);
+	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO);
 	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
 	sv_password = Cvar_Get("sv_password", "", 0);
 	sv_maxentities = Cvar_Get("sv_maxentities", "1024", CVAR_LATCH);

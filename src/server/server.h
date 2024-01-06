@@ -277,6 +277,8 @@ void SV_UserinfoChanged (client_t *cl);
 
 void Master_Heartbeat (void);
 
+void SV_SetConfigString(int index, char *valueString);
+
 //
 // sv_init.c
 //

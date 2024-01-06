@@ -1525,10 +1525,15 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	//
 	memset (&viewmodel, 0, sizeof(viewmodel));
 
-	if (gun_model)
-		viewmodel.model = gun_model;	// development tool
+	if (gun_model && CL_CheatsAllowed())
+	{
+		// development tool
+		viewmodel.model = gun_model;
+	}
 	else
+	{
 		viewmodel.model = cl.model_draw[ps->viewmodel_index];
+	}
 
 	if (!viewmodel.model)
 		return;
@@ -1542,7 +1547,7 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 			ps->viewmodel_angles[i], cl.lerpfrac);
 	}
 
-	if (gun_frame)
+	if (gun_frame && CL_CheatsAllowed())
 	{
 		// development tool
 		viewmodel.frame = gun_frame;

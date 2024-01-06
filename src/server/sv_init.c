@@ -129,9 +129,6 @@ static void SV_InitGameProgs()
 	sv.edicts[0].v.model = Scr_SetString(sv.configstrings[CS_MODELS + 1]);
 }
 
-
-
-
 /*
 ================
 SV_SpawnServer
@@ -290,6 +287,9 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	// call the main function in server progs
 	SV_ScriptMain();
 
+
+	Com_sprintf(sv.configstrings[CS_CHEATS_ENABLED], sizeof(sv.configstrings[CS_CHEATS_ENABLED]), "%i", (int)sv_cheats->value);
+
 	// run two frames to allow everything to settle
 	for(i = 0; i < 2; i++)
 		SV_RunWorldFrame();
@@ -369,7 +369,7 @@ void SV_InitGame (void)
 		Cvar_FullSet ("sv_maxclients", "1", CVAR_SERVERINFO | CVAR_LATCH);
 	}
 
-	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO | CVAR_LATCH);
+	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO);
 	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
 	sv_password = Cvar_Get("sv_password", "", 0);
 	sv_maxentities = Cvar_Get("sv_maxentities", "1024", CVAR_LATCH);
@@ -403,7 +403,7 @@ void SV_InitGame (void)
 
 	dedicated = Cvar_Get("dedicated", "0", CVAR_NOSET);
 
-	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO | CVAR_LATCH);
+	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO);
 	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
 	sv_password = Cvar_Get("sv_password", "", 0);
 	sv_maxentities = Cvar_Get("sv_maxentities", "1024", CVAR_LATCH);

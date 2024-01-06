@@ -800,6 +800,9 @@ void SV_Status_f (void)
 
 	Com_Printf("\n--- server status ---\n\n");
 
+	Com_Printf("hostname  : %s\n", Cvar_VariableString("hostname"));
+
+
 	Com_Printf("map       : %s\n", sv.name);
 	Com_Printf("clients   : %i/%i\n\n", numplayers, svs.max_clients);
 	Com_Printf("entities  : %i/%i\n", sv.num_edicts, sv.max_edicts);

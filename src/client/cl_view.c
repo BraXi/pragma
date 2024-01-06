@@ -406,12 +406,23 @@ float CalcFov (float fov_x, float width, float height)
 // gun frame debugging functions
 void V_Gun_Next_f (void)
 {
+	if (!CL_CheatsAllowed())
+	{
+		Com_Printf("'%s' - cheats not allowed\n", Cmd_Argv(0));
+		return;
+	}
+
 	gun_frame++;
 	Com_Printf ("gun_frame %i\n", gun_frame);
 }
 
 void V_Gun_Prev_f (void)
 {
+	if (!CL_CheatsAllowed())
+	{
+		Com_Printf("'%s' - cheats not allowed\n", Cmd_Argv(0));
+		return;
+	}
 	gun_frame--;
 	if (gun_frame < 0)
 		gun_frame = 0;
@@ -422,11 +433,18 @@ void V_Gun_Model_f (void)
 {
 	char	name[MAX_QPATH];
 
+	if (!CL_CheatsAllowed())
+	{
+		Com_Printf("'%s' - cheats not allowed\n", Cmd_Argv(0));
+		return;
+	}
+
 	if (Cmd_Argc() != 2)
 	{
 		gun_model = NULL;
 		return;
 	}
+
 	Com_sprintf (name, sizeof(name), "models/%s.md3", Cmd_Argv(1));
 	gun_model = re.RegisterModel (name);
 
@@ -553,8 +571,9 @@ void V_RenderView( float stereo_separation )
 	}
 
 	re.RenderFrame (&cl.refdef);
+
 	if (cl_stats->value)
-		Com_Printf ("ent:%i  lt:%i  part:%i dbg:%i\n", r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
+		Com_Printf ("ents:%i dlights:%i particles:%i dbg:%i\n", r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
 	if ( log_stats->value && ( log_stats_file != 0 ) )
 		fprintf( log_stats_file, "%i,%i,%i,%i,",r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
 
@@ -562,8 +581,6 @@ void V_RenderView( float stereo_separation )
 
 	SCR_AddDirtyPoint (scr_vrect.x, scr_vrect.y);
 	SCR_AddDirtyPoint (scr_vrect.x+scr_vrect.width-1, scr_vrect.y+scr_vrect.height-1);
-
-//	SCR_DrawCrosshair ();
 }
 
 
@@ -586,19 +603,17 @@ V_Init
 */
 void V_Init (void)
 {
-#ifdef _DEBUG
-	// these should be cheats!
-	Cmd_AddCommand ("gun_next", V_Gun_Next_f);
+	// these 3 are cheats
+	Cmd_AddCommand ("gun_next", V_Gun_Next_f); 
 	Cmd_AddCommand ("gun_prev", V_Gun_Prev_f);
 	Cmd_AddCommand ("gun_model", V_Gun_Model_f);
-#endif
 
 	Cmd_AddCommand ("viewpos", V_Viewpos_f);
 
-	cl_testblend = Cvar_Get ("cl_testblend", "0", 0);
-	cl_testparticles = Cvar_Get ("cl_testparticles", "0", 0);
-	cl_testentities = Cvar_Get ("cl_testentities", "0", 0);
-	cl_testlights = Cvar_Get ("cl_testlights", "0", 0);
+	cl_testblend = Cvar_Get ("cl_testblend", "0", CVAR_CHEAT);
+	cl_testparticles = Cvar_Get ("cl_testparticles", "0", CVAR_CHEAT);
+	cl_testentities = Cvar_Get ("cl_testentities", "0", CVAR_CHEAT);
+	cl_testlights = Cvar_Get ("cl_testlights", "0", CVAR_CHEAT);
 
 	cl_stats = Cvar_Get ("cl_stats", "0", 0);
 }
