@@ -372,34 +372,34 @@ enum clc_ops_e
 #define	U_ORIGIN_Y			(1<<1)		// current origin
 #define	U_ANGLE_Y			(1<<2)		// current angles
 #define	U_ANGLE_Z			(1<<3)		// current angles
-#define	U_FRAME_8			(1<<4)		// anim frame is a byte
-#define	U_EVENT				(1<<5)		// byte
+#define	U_ANIMFRAME_8		(1<<4)		// anim frame is 0-255
+#define	U_EVENT_8			(1<<5)		// byte
 #define	U_REMOVE			(1<<6)		// REMOVE this entity, don't add it
-#define	U_MOREBITS1			(1<<7)		// read one additional byte
+#define	U_MOREBITS_1		(1<<7)		// -- read one additional byte --
 
 // second byte
 #define	U_NUMBER_16			(1<<8)		// NUMBER8 is implicit if not set
 #define	U_ORIGIN_Z			(1<<9)
 #define	U_ANGLE_X			(1<<10)
-#define	U_MODELINDEX_8		(1<<11)		// BYTE
+#define	U_MODELINDEX_8		(1<<11)		// modelindex is 0-255
 #define U_RENDERFLAGS_8		(1<<12)		// fullbright, etc
-#define U_MODELINDEX_16		(1<<13)		// short, when modelindex > 255
+#define U_MODELINDEX_16		(1<<13)		// when modelindex > 255
 #define	U_EFFECTS_8			(1<<14)		// effects - EF_ flags
-#define	U_MOREBITS2			(1<<15)		// read one additional byte
+#define	U_MOREBITS_2		(1<<15)		// -- read one additional byte --
 
 // third byte
 #define	U_SKIN_8			(1<<16)		// TODO: index to entry in .skin file
-#define	U_FRAME_16			(1<<17)		// frame is a short
-#define	U_RENDERFLAGS_16	(1<<18)		// 8 + 16 = 32
+#define	U_ANIMFRAME_16		(1<<17)		// animframe greater than 255
+#define	U_RENDERFLAGS_16	(1<<18)		// 8 + 16 = 32B
 #define	U_EFFECTS_16		(1<<19)		// effects - EF_ flags, 8 + 16 = 32
 #define	U_MODELINDEX2_8		(1<<20)		// weapons, flags, etc
-#define	U_MODELINDEX3_8		(1<<21)
-#define	U_MODELINDEX4_8		(1<<22)
-#define	U_MOREBITS3			(1<<23)		// read one additional byte
+#define	U_MODELINDEX3_8		(1<<21)		// unused
+#define	U_MODELINDEX4_8		(1<<22)		// unused
+#define	U_MOREBITS_3		(1<<23)		// -- read one additional byte --
 
 // fourth byte
 #define	U_OLDORIGIN			(1<<24)		// id: FIXME: get rid of this, braxi: WHY?
-#define	U_SKIN_16			(1<<25)
+#define	U_ANIMATION			(1<<25)
 #define	U_LOOPSOUND			(1<<26)		// byte/short, index to sounds
 #define	U_PACKEDSOLID		(1<<27)
 #define	U_RENDERSCALE		(1<<28)

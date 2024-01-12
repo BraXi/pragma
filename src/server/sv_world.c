@@ -713,7 +713,7 @@ int SV_HullForEntity(gentity_t* ent)
 	if (ent->v.solid == SOLID_BSP)
 	{
 		// explicit hulls in the BSP model
-		model = sv.models[ent->s.modelindex].bmodel;
+		model = sv.models[(int)ent->v.modelindex].bmodel;
 
 		if (!model)
 		{

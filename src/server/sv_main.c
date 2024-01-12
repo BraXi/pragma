@@ -713,6 +713,12 @@ void SV_CheckTimeouts (void)
 			cl->state = cs_free;	// can now be reused
 			continue;
 		}
+
+		if (i == 0 && !dedicated->value)
+		{
+			continue; // _NEVER_ timeout the HOST player
+		}
+
 		if ( (cl->state == cs_connected || cl->state == cs_spawned) && cl->lastmessage < droppoint)
 		{
 			SV_BroadcastPrintf (PRINT_HIGH, "Player '%s' timed out.\n", cl->name);

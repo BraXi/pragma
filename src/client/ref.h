@@ -54,6 +54,8 @@ typedef struct centity_s
 	/*
 	** misc
 	*/
+
+	float	animbacklerp;			// 0.0 = current, 1.0 = old
 	float	backlerp;				// 0.0 = current, 1.0 = old
 	int		skinnum;				// braxi -- WAS used as RF_BEAM's palette index
 	vec4_t	color;

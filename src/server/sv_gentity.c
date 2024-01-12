@@ -36,6 +36,8 @@ void SV_InitEntity(gentity_t* ent)
 	ent->v.gravity = 1.0;
 	ent->v.groundentity_num = -1;
 
+	ent->v.renderScale = 1.0f;
+
 	ent->teamchain = ent->teammaster = NULL;
 	ent->bEntityStateForClientChanged = false;
 }

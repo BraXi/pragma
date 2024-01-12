@@ -30,6 +30,8 @@ typedef struct sv_globalvars_s
 	float			g_frameTime;
 	float			g_intermissionTime;
 
+	int				sv_time;
+
 	vec3_t			v_forward, v_up, v_right;
 
 	float			trace_allsolid, trace_startsolid, trace_fraction, trace_plane_dist;
@@ -70,7 +72,10 @@ typedef struct sv_entvars_s
 	float		modelindex3;	// models
 	float		modelindex4;	// models
 
+	int			anim;			// index to anim def
+	int			animtime;		// sv.time when animation started
 	float		animFrame;		// current animation frame
+
 	float		skinnum;		// for MD3 this should be index to .skin file
 	int			effects;		// PGM - we're filling it, so it needs to be unsigned
 

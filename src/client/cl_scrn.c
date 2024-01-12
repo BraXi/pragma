@@ -575,8 +575,9 @@ void SCR_DrawConsole (void)
 
 	if (cls.state != ca_active || !cl.refresh_prepped)
 	{	// connected, but can't render
-//		Con_DrawConsole(0.5);
-		//re.DrawFill (0, viddef.height/2, viddef.width, viddef.height/2, 0);
+		Con_DrawConsole(0.5);
+		re.DrawFill (0, viddef.height/2, viddef.width, viddef.height/2, 0);
+#if 0
 		re.SetColor(0.1, 0.1, 0.1, 1);
 		re.DrawFill(0, 0, viddef.width, viddef.height);
 
@@ -593,7 +594,7 @@ void SCR_DrawConsole (void)
 			VectorSet(c, 0.8, 0.2, 0);
 			re.DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
 		}
-
+#endif
 		return;
 	}
 

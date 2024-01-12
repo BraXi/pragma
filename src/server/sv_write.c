@@ -93,7 +93,7 @@ void SV_EmitPacketEntities (client_frame_t *from, client_frame_t *to, sizebuf_t 
 		{	// the old entity isn't present in the new message
 			bits = U_REMOVE;
 			if (oldnum >= 256)
-				bits |= U_NUMBER_16 | U_MOREBITS1;
+				bits |= U_NUMBER_16 | U_MOREBITS_1;
 
 			MSG_WriteByte (msg,	bits&255 );
 			if (bits & 0x0000ff00)

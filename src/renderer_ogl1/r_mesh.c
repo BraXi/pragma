@@ -158,7 +158,7 @@ static void R_EntityAnim(centity_t* ent, char* func)
 
 	// decide if we should lerp
 	if (!r_lerpmodels->value || ent->renderfx & RF_NOANIMLERP)
-		ent->backlerp = 0;
+		ent->animbacklerp = 0;
 }
 
 void R_DrawEntityModel(centity_t* ent)
@@ -172,7 +172,8 @@ void R_DrawEntityModel(centity_t* ent)
 
 	// check if the animation is correct and set lerp
 	R_EntityAnim(ent, __FUNCTION__);
-	lerp = 1.0 - ent->backlerp;
+//	lerp = 1.0 - ent->backlerp;
+	lerp = 1.0 - ent->animbacklerp;
 
 	// setup lighting
 	R_SetEntityShadeLight(ent);

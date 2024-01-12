@@ -413,10 +413,10 @@ void CG_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_getstat, PF_CL, "getstat", "float(float idx)");
 
 	// message reading
-	Scr_DefineBuiltin(PFCG_MSG_ReadChar, PF_CL, "MSG_ReadChar", "int()");
-	Scr_DefineBuiltin(PFCG_MSG_ReadByte, PF_CL, "MSG_ReadByte", "int()");
-	Scr_DefineBuiltin(PFCG_MSG_ReadShort, PF_CL, "MSG_ReadShort", "int()");
-	Scr_DefineBuiltin(PFCG_MSG_ReadLong, PF_CL, "MSG_ReadLong", "int()");
+	Scr_DefineBuiltin(PFCG_MSG_ReadChar, PF_CL, "MSG_ReadChar", "float()");
+	Scr_DefineBuiltin(PFCG_MSG_ReadByte, PF_CL, "MSG_ReadByte", "float()");
+	Scr_DefineBuiltin(PFCG_MSG_ReadShort, PF_CL, "MSG_ReadShort", "float()");
+	Scr_DefineBuiltin(PFCG_MSG_ReadLong, PF_CL, "MSG_ReadLong", "float()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadFloat, PF_CL, "MSG_ReadFloat", "float()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadCoord, PF_CL, "MSG_ReadCoord", "float()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadPos, PF_CL, "MSG_ReadPos", "vector()");

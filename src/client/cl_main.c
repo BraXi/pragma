@@ -1045,6 +1045,7 @@ void CL_PrintEnts_f(void)
 CL_InitLocal
 =================
 */
+extern void CL_Test_f(void);
 void CL_InitLocal (void)
 {
 	cls.state = ca_disconnected;
@@ -1154,6 +1155,9 @@ void CL_InitLocal (void)
 	Cmd_AddCommand("changing", CL_Changing_f);
 	Cmd_AddCommand("precache", CL_Precache_f);
 	Cmd_AddCommand("download", CL_Download_f);
+
+
+	Cmd_AddCommand("test", CL_Test_f);
 
 	//
 	// forward to server commands

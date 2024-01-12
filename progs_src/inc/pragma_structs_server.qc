@@ -25,6 +25,8 @@ Copyright (C) 1997-2001 Id Software, Inc.
 	float		g_frameNum;
 	float		g_frameTime;
 	float		g_intermissionTime;
+	
+	int			sv_time;
 
 	vector		v_forward, v_up, v_right;
 
@@ -60,12 +62,15 @@ void end_sys_globals; // end of struct
 	.vector		angles;
 	.vector		old_origin;		// for lerping
 
-	.float		modelindex;	// models
+	.float		modelindex;		// models
 	.float		modelindex2;	// models
 	.float		modelindex3;	// models
 	.float		modelindex4;	// models
 
+	.int		anim;
+	.int		animtime;		// sv.time when animation was started
 	.float		animFrame;		// current animation frame
+	
 	.float		skinnum;		// for MD3 this should be index to .skin file
 	.int		effects;		// PGM - we're filling it, so it needs to be unsigned
 
@@ -86,8 +91,8 @@ void end_sys_globals; // end of struct
 	// end of entity_state_t
 	// ----------------------------------------------------
 
-	.string	classname;	// for spawn functions 
-	.string	model;		// setmodel() sets this
+	.string			classname;	// for spawn functions 
+	.string			model;		// setmodel() sets this
 
 	// physics
 	.float			solid;		// SOLID_NOT etc

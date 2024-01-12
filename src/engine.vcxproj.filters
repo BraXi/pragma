@@ -184,6 +184,9 @@
     <ClCompile Include="qcommon\navigation.c">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="cgame\modeldef.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="platform\resource.h" />

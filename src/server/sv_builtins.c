@@ -115,7 +115,6 @@ void PFSV_getent(void)
 	if (!ent->inuse)
 	{
 		ent = sv.edicts;
-		Com_Printf("getent(): %i is not in use\n", entnum);
 	}
 
 	Scr_ReturnEntity(ent);
@@ -291,6 +290,13 @@ void PFSV_setmodel(void)
 		Scr_RunError("setmodel(): empty model name for entity %i\n", NUM_FOR_EDICT(ent));
 		return;
 	}
+
+	if (ent->v.solid == SOLID_BSP && name[0] != '*')
+	{
+		Scr_RunError("setmodel(): tried to set non bsp model for %i\n", NUM_FOR_EDICT(ent));
+		return;
+	}
+
 	i = SV_ModelIndex(name);
 	ent->v.model = Scr_SetString(name);
 	ent->v.modelindex = i;
@@ -423,6 +429,9 @@ void PFSV_trace(void)
 
 	ignoreEnt = Scr_GetParmEdict(4);
 	contentmask = Scr_GetParmInt(5);
+
+	if (ignoreEnt == sv.edicts)
+		ignoreEnt = NULL;
 
 	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask);
 
@@ -1588,7 +1597,7 @@ void PFSV_walkmove(void)
 	float		movedist, yaw, result;
 
 	actor = Scr_GetParmEdict(0);
-	yaw = Scr_GetParmFloat(2);
+	yaw = Scr_GetParmFloat(1);
 	movedist = Scr_GetParmFloat(2);
 
 	if (actor == sv.edicts)

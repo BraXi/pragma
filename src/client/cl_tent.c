@@ -879,6 +879,19 @@ void CL_ParseTEnt (void)
 		break;
 	
 	case TE_EXPLOSION1:
+		MSG_ReadPos(&net_message, pos);
+		extern void CL_ExplosionParticles(vec3_t org);
+		CL_ExplosionParticles(pos);
+
+		ex = CL_AllocExplosion();
+		VectorCopy(pos, ex->ent.origin);
+		ex->type = ex_flash;
+		ex->frames = 10;
+		ex->start = cl.frame.servertime - SV_FRAMETIME_MSEC;
+		ex->light = 100 + (rand() % 75);
+		VectorSet(ex->lightcolor, 1.000000, 0.670588, 0.027451);
+		break;
+
 	case TE_EXPLOSION1_BIG:						// PMM
 	case TE_ROCKET_EXPLOSION:
 	case TE_ROCKET_EXPLOSION_WATER:

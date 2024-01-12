@@ -43,6 +43,8 @@ void Scr_Think(gentity_t* self)
 
 	self->v.nextthink = 0;
 
+	
+	sv.script_globals->sv_time = sv.time;
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
@@ -116,6 +118,7 @@ void SV_ScriptMain()
 	sv.script_globals->self = sv.script_globals->worldspawn;
 	sv.script_globals->other = sv.script_globals->worldspawn;
 
+	sv.script_globals->sv_time = sv.time;
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->g_frameNum = sv.gameFrame;
 	sv.script_globals->g_frameTime = SV_FRAMETIME;
@@ -129,6 +132,7 @@ void SV_ScriptStartFrame()
 	sv.script_globals->worldspawn = GENT_TO_PROG(sv.edicts);
 	sv.script_globals->self = sv.script_globals->worldspawn;
 	sv.script_globals->other = sv.script_globals->worldspawn;
+	sv.script_globals->sv_time = sv.time;
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->g_frameNum = sv.gameFrame;
 	sv.script_globals->g_frameTime = SV_FRAMETIME;
@@ -141,6 +145,7 @@ void SV_ScriptEndFrame()
 	sv.script_globals->self = sv.script_globals->worldspawn;
 	sv.script_globals->other = sv.script_globals->worldspawn;
 	sv.script_globals->g_time = sv.gameTime;
+	sv.script_globals->sv_time = sv.time;
 	Scr_Execute(VM_SVGAME, sv.script_globals->EndFrame, __FUNCTION__);
 }
 
@@ -393,6 +398,8 @@ void SV_ProgVarsToEntityState(gentity_t* ent)
 	ent->s.modelindex3 = ent->v.modelindex3;
 	ent->s.modelindex4 = ent->v.modelindex3;
 
+	ent->s.anim = ent->v.anim;
+	ent->s.animtime = ent->v.animtime;
 	ent->s.frame = (int)ent->v.animFrame;
 	ent->s.skinnum = (int)ent->v.skinnum;
 	ent->s.effects = ent->v.effects;
@@ -424,7 +431,10 @@ void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state)
 	ent->v.modelindex3 = state->modelindex3;
 	ent->v.modelindex4 = state->modelindex3;
 
+	ent->v.anim = ent->s.anim;
+	ent->v.animtime = state->animtime;
 	ent->v.animFrame = state->frame;
+
 	ent->v.skinnum = state->skinnum;
 	ent->v.effects = state->effects;
 

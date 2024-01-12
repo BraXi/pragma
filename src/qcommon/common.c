@@ -525,9 +525,14 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	if ( to->frame != from->frame )
 	{
 		if (to->frame < 256)
-			bits |= U_FRAME_8;
+			bits |= U_ANIMFRAME_8;
 		else
-			bits |= U_FRAME_16;
+			bits |= U_ANIMFRAME_16;
+	}
+
+	if (to->anim != from->anim || to->animtime != from->animtime)
+	{
+		bits |= U_ANIMATION;
 	}
 
 	if ( to->effects != from->effects )
@@ -555,7 +560,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 
 	// event is not delta compressed, just 0 compressed
 	if ( to->event  )
-		bits |= U_EVENT;
+		bits |= U_EVENT_8;
 	
 	// main model
 	if (to->modelindex != from->modelindex)
@@ -604,11 +609,11 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	//----------
 
 	if (bits & 0xff000000)
-		bits |= U_MOREBITS3 | U_MOREBITS2 | U_MOREBITS1;
+		bits |= U_MOREBITS_3 | U_MOREBITS_2 | U_MOREBITS_1;
 	else if (bits & 0x00ff0000)
-		bits |= U_MOREBITS2 | U_MOREBITS1;
+		bits |= U_MOREBITS_2 | U_MOREBITS_1;
 	else if (bits & 0x0000ff00)
-		bits |= U_MOREBITS1;
+		bits |= U_MOREBITS_1;
 
 	MSG_WriteByte (msg,	bits&255 );
 
@@ -651,10 +656,17 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 		MSG_WriteByte (msg,	to->modelindex4);
 
 	// animation frame
-	if (bits & U_FRAME_8)
+	if (bits & U_ANIMFRAME_8)
 		MSG_WriteByte (msg, to->frame);
-	if (bits & U_FRAME_16)
+	if (bits & U_ANIMFRAME_16)
 		MSG_WriteShort (msg, to->frame);
+
+	// animation sequence
+	if (bits & U_ANIMATION)
+	{
+		MSG_WriteByte(msg, to->anim);
+		MSG_WriteLong(msg, to->animtime);
+	}
 
 	// index to model skin
 	if (bits & U_SKIN_8)
@@ -743,7 +755,7 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 	}
 
 	// event
-	if (bits & U_EVENT)
+	if (bits & U_EVENT_8)
 		MSG_WriteByte (msg, to->event);
 
 	// solid

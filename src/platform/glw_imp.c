@@ -588,6 +588,7 @@ void GLimp_EndFrame (void)
 	int		err;
 
 	err = qglGetError();
+//	ri.Con_Printf(PRINT_HIGH, "qglGetError=%i\n", err);
 	assert( err == GL_NO_ERROR );
 
 	if ( _stricmp( r_drawbuffer->string, "GL_BACK" ) == 0 )

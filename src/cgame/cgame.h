@@ -19,3 +19,37 @@ extern void CG_DrawGUI();
 extern qboolean CG_CanDrawCall();
 
 extern void CG_ServerCommand();
+
+#define AF_NOLERP 1
+#define AF_LOOPING 2
+
+typedef struct
+{
+	int		soundindex;
+	int		effects;
+} anim_event_t;
+
+typedef struct
+{
+	char			name[MAX_QPATH];
+
+	int				startframe;
+	int				numframes;
+	int				rate;
+
+	int				flags;
+
+	int				numevents;
+	anim_event_t	*events; // [numevents]
+} anim_t;
+
+typedef struct
+{
+	unsigned int starttime;	//sv.time when animation started
+
+	int		startframe;
+	int		numframes;
+	int		rate;
+
+	int		flags;
+} animstate_t;

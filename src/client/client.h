@@ -62,6 +62,7 @@ typedef struct
 	int				parse_entities;	// non-masked index into cl_parse_entities array
 } frame_t;
 
+
 typedef struct
 {
 	entity_state_t	baseline;		// delta from this if not from a previous frame
@@ -69,11 +70,16 @@ typedef struct
 	entity_state_t	prev;			// will always be valid, but might just be a copy of current
 
 	int			serverframe;		// if not current, this ent isn't in the frame
+									// servertime = serverframe * sv_fps;
 
 	int			trailcount;			// for diminishing grenade trails
 	vec3_t		lerp_origin;		// for trails (variable hz)
 
 	int			fly_stoptime;
+
+	animstate_t	anim;
+
+
 } ccentity_t;
 
 

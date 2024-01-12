@@ -52,17 +52,17 @@ int CL_ParseEntityBits (unsigned *bits)
 	int			number;
 
 	total = MSG_ReadByte (&net_message);
-	if (total & U_MOREBITS1)
+	if (total & U_MOREBITS_1)
 	{
 		b = MSG_ReadByte (&net_message);
 		total |= b<<8;
 	}
-	if (total & U_MOREBITS2)
+	if (total & U_MOREBITS_2)
 	{
 		b = MSG_ReadByte (&net_message);
 		total |= b<<16;
 	}
-	if (total & U_MOREBITS3)
+	if (total & U_MOREBITS_3)
 	{
 		b = MSG_ReadByte (&net_message);
 		total |= b<<24;
@@ -103,7 +103,7 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 	if (bits & U_MODELINDEX_8)
 		to->modelindex = MSG_ReadByte (&net_message);
 	if (bits & U_MODELINDEX_16)
-		to->modelindex = MSG_ReadShort(&net_message);
+		to->modelindex = MSG_ReadShort (&net_message);
 
 	// attached models
 	if (bits & U_MODELINDEX2_8)
@@ -114,10 +114,17 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 		to->modelindex4 = MSG_ReadByte (&net_message);
 	
 	// animation frame
-	if (bits & U_FRAME_8)
+	if (bits & U_ANIMFRAME_8)
 		to->frame = MSG_ReadByte (&net_message);
-	if (bits & U_FRAME_16)
+	if (bits & U_ANIMFRAME_16)
 		to->frame = MSG_ReadShort (&net_message);
+
+	// animation sequence
+	if (bits & U_ANIMATION)
+	{
+		to->anim = MSG_ReadByte(&net_message);
+		to->animtime = MSG_ReadLong(&net_message);
+	}
 
 	// index to model skin
 	if (bits & U_SKIN_8)
@@ -186,7 +193,7 @@ void CL_ParseDelta (entity_state_t *from, entity_state_t *to, int number, int bi
 	}
 
 	// event
-	if (bits & U_EVENT)
+	if (bits & U_EVENT_8)
 		to->event = MSG_ReadByte (&net_message);
 	else
 		to->event = 0;
@@ -689,7 +696,7 @@ static unsigned int c_effects, c_renderfx;
 CL_EntityAnimation
 ===============
 */
-static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+static inline void CL_EntityAnimationOld(ccentity_t* clent, entity_state_t* state, centity_t *refent)
 {
 	int		autoanim;
 	unsigned int effects = state->effects;
@@ -715,6 +722,60 @@ static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, 
 	refent->backlerp = 1.0 - cl.lerpfrac;
 }
 
+
+/*
+===============
+CL_EntityAnimation
+===============
+*/
+static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, centity_t* refent)
+{
+	animstate_t* anim = NULL;
+
+	int	progress;
+
+
+
+	/* Case One:
+	* We have animtime set
+	*/
+	if (state->animtime > 0 && clent->current.frame == clent->prev.frame)
+	{
+//		int anim_firstframe = state->frame & 255;
+//		int anim_lastframe = (state->frame >> 8) & 255;
+//		int anim_rate = (state->frame >> 16) & 255;
+//		int anim_flags = (state->frame >> 24) & 255;
+
+		clent->anim.starttime = state->animtime;
+		clent->anim.startframe = state->frame;
+		clent->anim.rate = (1000.0f / 10.0f);
+		anim = &clent->anim;
+	}
+	else
+	{
+		refent->frame = clent->current.frame;
+		refent->oldframe = clent->prev.frame;
+		refent->animbacklerp = refent->backlerp;
+		return;
+	}
+
+	if (anim != NULL && clent->anim.rate > 0)
+	{
+		int progress = ((cl.frame.servertime - state->animtime) / clent->anim.rate);
+		int curanimtime = clent->anim.starttime + (progress * clent->anim.rate);
+
+		refent->animbacklerp = 1.0f - ((cl.time - ((float)curanimtime - SV_FRAMETIME_MSEC)) / clent->anim.rate);
+		clamp(refent->animbacklerp, 0.0f, 1.0f);
+
+		refent->frame = anim->startframe + progress;
+		refent->oldframe = refent->frame -1;
+	}
+}
+
+
+
+
+//	state->animtime = (int)(1000.0 * ent->v.animtime) / 1000.0;
 /*
 ===============
 CL_EntityPositionAndRotation
@@ -807,7 +868,7 @@ static inline void CL_EntityAddParticleTrails(ccentity_t* clent, entity_state_t*
 	if (effects & EF_ROCKET) 
 	{
 		CL_RocketTrail(clent->lerp_origin, refent->origin, clent);
-		V_AddLight(refent->origin, 200, 1, 1, 0);
+		V_AddLight(refent->origin, 128, 1.000000, 0.670588, 0.027451);
 	}
 	/* blaster trail */
 	else if (effects & EF_BLASTER)
@@ -961,6 +1022,8 @@ void CL_AddPacketEntities(frame_t* frame)
 
 		effects = state->effects;
 		renderfx = state->renderFlags;
+
+		rent.backlerp = (1.0 - cl.lerpfrac);
 
 		//
 		// create a new render entity

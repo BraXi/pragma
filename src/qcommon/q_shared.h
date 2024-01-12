@@ -849,6 +849,8 @@ typedef struct entity_state_s
 	int			modelindex;		// main model
 	int			modelindex2, modelindex3, modelindex4;	// attachments
 
+	int			anim;
+	int			animtime;
 	int			frame;			// current animation frame
 	int			skinnum;		// for MD3 this should be index to .skin file
 
@@ -869,6 +871,10 @@ typedef struct entity_state_s
 	int			solid;			// for client side prediction, 8*(bits 0-4) is x/y radius
 								// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
 								// SV_LinkEdict sets this properly
+
+	int			animStartTime;
+	int			animSpeed; // 1000 / animFps = msec
+	float		animLerp;
 } entity_state_t;
 //==============================================
 
