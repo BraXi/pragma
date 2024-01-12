@@ -221,8 +221,11 @@ Will not be called between levels.
 void Scr_ClientDisconnect(gentity_t* self)
 {
 	gentity_t* ent;
+
 	if (!self->client)
 		return;
+
+	SV_SetConfigString((CS_CLIENTS + (NUM_FOR_ENT(self) - 1)), NULL);
 
 	Scr_BindVM(VM_SVGAME);
 	for (int i = 1; i < sv.num_edicts; i++)
@@ -478,6 +481,8 @@ void ClientUserinfoChanged(gentity_t* ent, char* userinfo)
 
 	// save off the userinfo in case we want to check something later
 	strncpy(ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo) - 1);
+
+	SV_SetConfigString((CS_CLIENTS + (NUM_FOR_ENT(ent) - 1)), ent->client->pers.netname);
 }
 
 

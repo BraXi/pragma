@@ -454,7 +454,7 @@ qboolean SV_SendClientDatagram(client_t *client)
 	SZ_Clear (&client->datagram);
 
 #if 0 //handy stats
-	Com_Printf("#%i - datagram for client %i (%s): %i/%ib (%i ents)\n", sv.framenum , client->edict->s.number-1, client->name, msg.cursize, msg.maxsize, client->frames[sv.framenum & UPDATE_MASK].num_entities);
+	Com_Printf("#%i - datagram for %i (%s): %i/%ib (%i ents)\n", sv.framenum , client->edict->s.number-1, client->name, msg.cursize, msg.maxsize, client->frames[sv.framenum & UPDATE_MASK].num_entities);
 #endif
 
 	if (msg.overflowed)

@@ -78,7 +78,7 @@ typedef enum {false, true}	qboolean;
 //
 // per-level limits
 //
-#define	MAX_CLIENTS			128		// absolute limit, [braxi -- was 256]
+#define	MAX_CLIENTS			32		// absolute limit, [braxi -- was 256]
 #define	MAX_GENTITIES		1024	// must change protocol to increase more
 #define	MAX_LIGHTSTYLES		256
 
@@ -797,7 +797,7 @@ enum
 #define	CS_NAME				0		// level name is set in worldspawn's 'message' key
 
 #define	CS_SKY				1		// name of sky image without _<size> postfix
-#define	CS_SKYAXIS			2		// %f %f %f RGB format
+#define	CS_SKYAXIS			2		// %f %f %f XYZ format
 #define	CS_SKYROTATE		3		// boolean. does the sky rotate? 
 #define	CS_SKYCOLOR			4		// %f %f %f RGB format
 
@@ -816,7 +816,9 @@ enum
 #define	CS_LIGHTS			(CS_IMAGES+MAX_IMAGES)
 #define	CS_ITEMS			(CS_LIGHTS+MAX_LIGHTSTYLES)
 #define CS_GENERAL			(CS_ITEMS+MAX_ITEMS)
-#define	MAX_CONFIGSTRINGS	(CS_GENERAL+MAX_GENERAL)
+#define	CS_CLIENTS			(CS_GENERAL+MAX_GENERAL)
+#define	MAX_CONFIGSTRINGS	(CS_CLIENTS+MAX_CLIENTS)
+
 
 
 //==============================================

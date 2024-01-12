@@ -801,8 +801,7 @@ void SV_SetConfigString(int index, char *valueString)
 		valueString = "";
 
 	// change the string in sv
-	Com_sprintf(sv.configstrings[index], sizeof(sv.configstrings[index]), "%s", valueString);
-//	strcpy(sv.configstrings[index], val); 
+	strncpy(sv.configstrings[index], valueString, sizeof(sv.configstrings[index]));
 
 	if (sv.state != ss_loading)
 	{
@@ -1018,7 +1017,8 @@ void SV_UserinfoChanged (client_t *cl)
 	{
 		cl->messagelevel = atoi(val);
 	}
-
+	
+	SV_SetConfigString((CS_CLIENTS + (NUM_FOR_ENT(cl->edict) - 1)), cl->name);
 }
 
 

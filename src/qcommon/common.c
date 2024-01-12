@@ -488,7 +488,7 @@ Writes part of a packetentities message.
 Can delta from either a baseline or a previous packet_entity
 ==================
 */
-void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *msg, qboolean force, qboolean newentity)
+void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to, sizebuf_t* msg, qboolean force, qboolean newentity)
 {
 	int		bits, i;
 
@@ -597,8 +597,25 @@ void MSG_WriteDeltaEntity (entity_state_t *from, entity_state_t *to, sizebuf_t *
 		to->renderColor[2] != from->renderColor[2])
 		bits |= U_RENDERCOLOR;
 
+#if 0 /*original behaviour*/
+	/*
+	* newentity is set to true when entering new PVS, which with many
+	* entities in that particular PVS may overflow datagram for client
+	* because when entering PVS all 'appearing' entities will send old_origins and number
+	*
+	* !! This is very problematic even with entities from baselines !!
+	* In battlequanks there are hundreds of baseline matching entities,
+	* but hundreds old_origins easily overflow datagram size.
+	*/
 	if (newentity || (to->renderFlags & RF_BEAM))
 		bits |= U_OLDORIGIN;
+#else /*new behaviour*/
+	if (newentity || (to->renderFlags & RF_BEAM))
+	{
+		if (to->old_origin[0] != from->old_origin[0] || to->old_origin[1] != from->old_origin[1] || to->old_origin[2] != from->old_origin[2] )
+			bits |= U_OLDORIGIN;
+	}
+#endif
 
 	//
 	// write the message
@@ -1010,7 +1027,7 @@ void *SZ_GetSpace (sizebuf_t *buf, int length)
 		if (length > buf->maxsize)
 			Com_Error (ERR_FATAL, "SZ_GetSpace: %i is > full buffer size", length);
 			
-		Com_Printf ("SZ_GetSpace: overflow\n");
+ 		Com_Printf ("SZ_GetSpace: overflow\n");
 		SZ_Clear (buf); 
 		buf->overflowed = true;
 	}

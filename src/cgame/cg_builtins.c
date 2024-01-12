@@ -114,6 +114,25 @@ static void PFCG_getconfigstring(void)
 
 /*
 =================
+PFCG_getclientname
+
+returns the name of player 
+string name = getclientname(0);
+=================
+*/
+static void PFCG_getclientname(void)
+{
+	int idx = Scr_GetParmInt(0);
+	if (idx < 0 || idx >= MAX_CLIENTS)
+	{
+		Scr_RunError("getclientname(): %i out of range\n", idx);
+		return;
+	}
+	Scr_ReturnString(cl.configstrings[CS_CLIENTS+idx]);
+}
+
+/*
+=================
 PFCG_getstat
 
 return client's stat value for given index
@@ -200,10 +219,10 @@ static void PFCG_trace(void)
 }
 
 // read network packets
-static void PFCG_MSG_ReadChar(void)		{ Scr_ReturnInt(MSG_ReadChar(&net_message)); }
-static void PFCG_MSG_ReadByte(void)		{ Scr_ReturnInt(MSG_ReadByte(&net_message)); }
-static void PFCG_MSG_ReadShort(void)	{ Scr_ReturnInt(MSG_ReadShort(&net_message)); }
-static void PFCG_MSG_ReadLong(void)		{ Scr_ReturnInt(MSG_ReadLong(&net_message)); }
+static void PFCG_MSG_ReadChar(void)		{ Scr_ReturnFloat(MSG_ReadChar(&net_message)); }
+static void PFCG_MSG_ReadByte(void)		{ Scr_ReturnFloat(MSG_ReadByte(&net_message)); }
+static void PFCG_MSG_ReadShort(void)	{ Scr_ReturnFloat(MSG_ReadShort(&net_message)); }
+static void PFCG_MSG_ReadLong(void)		{ Scr_ReturnFloat(MSG_ReadLong(&net_message)); }
 static void PFCG_MSG_ReadFloat(void)	{ Scr_ReturnFloat(MSG_ReadFloat(&net_message)); }
 static void PFCG_MSG_ReadCoord(void)	{ Scr_ReturnFloat(MSG_ReadCoord(&net_message)); }
 static void PFCG_MSG_ReadPos(void)		{ vec3_t v; MSG_ReadPos(&net_message, v); Scr_ReturnVector(v); }
@@ -411,6 +430,7 @@ void CG_InitScriptBuiltins()
 	// config strings and stats
 	Scr_DefineBuiltin(PFCG_getconfigstring, PF_CL, "getconfigstring", "string(int idx)");
 	Scr_DefineBuiltin(PFCG_getstat, PF_CL, "getstat", "float(float idx)");
+	Scr_DefineBuiltin(PFCG_getclientname, PF_CL, "getclientname", "string(int idx)");
 
 	// message reading
 	Scr_DefineBuiltin(PFCG_MSG_ReadChar, PF_CL, "MSG_ReadChar", "float()");

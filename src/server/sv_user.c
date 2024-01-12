@@ -207,8 +207,7 @@ void SV_Baselines_f (void)
 
 	// write a packet full of data
 
-	while ( sv_client->netchan.message.cursize <  MAX_MSGLEN/2
-		&& start < MAX_GENTITIES)
+	while ( sv_client->netchan.message.cursize <  MAX_MSGLEN/2 && start < MAX_GENTITIES)
 	{
 		base = &sv.baselines[start];
 		if (base->modelindex || base->loopingSound || base->effects)
