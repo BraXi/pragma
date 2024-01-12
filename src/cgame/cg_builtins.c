@@ -400,6 +400,32 @@ static void PFCG_addcommand(void)
 	Cmd_AddCommandCG(name, Scr_GetParmInt(1));
 }
 
+/*
+=================
+PFCG_getbindkey
+
+string getbindkey( string bind )
+
+returns the key name for bind
+=================
+*/
+static void PFCG_getbindkey(void)
+{
+	char* binding = Scr_GetParmString(0);
+	char* key;
+
+	key = "unbound";
+	for (int i = 0; i < 256; i++)
+	{
+		if (keybindings[i] && !Q_stricmp(keybindings[i], binding))
+		{
+			key = Key_KeynumToString(i);
+			break;
+		}
+	}
+	Scr_ReturnString(key);
+}
+
 
 static void PFCG_GetCursorPos(void)
 {
@@ -456,4 +482,5 @@ void CG_InitScriptBuiltins()
 
 	// commands
 	Scr_DefineBuiltin(PFCG_addcommand, PF_CL, "addcommand", "void(string cn, void() f)");
+	Scr_DefineBuiltin(PFCG_getbindkey, PF_CL, "getbindkey", "string(string bind)");
 }
