@@ -556,6 +556,42 @@ void SCR_RunConsole (void)
 
 }
 
+static void SCR_DrawLoadingScreen()
+{
+	re.SetColor(0.1, 0.1, 0.1, 1);
+	re.DrawFill(0, 0, viddef.width, viddef.height);
+
+	// weeeewwwy temporarry
+	rgba_t c = { 1,1,1,1 };
+	re.DrawString("Entering Game", 400, 170, 3, 2, c); //240
+
+	// line
+	float rect[4] = { 220, 205, 360, 5 };
+	rgba_t c2 = { 0.8, 0.8, 0.8, 1 };
+	re.NewDrawFill(rect, c2);
+
+	// server address
+	re.DrawString(cls.servername, 400, 225, 1.8, 2, c);
+
+	// display mod name when game is not BASEDIRNAME
+	char* mod = Cvar_VariableString("gamedir");
+	if (Q_stricmp(mod, BASEDIRNAME))
+		re.DrawString(va("Mod: %s", mod), 400, 300, 2, 2, c);
+
+	// map name
+	char* mapname = "";
+	if (cl.configstrings[CS_MODELS + 1][0])
+		mapname = cl.configstrings[CS_MODELS + 1];
+	re.DrawString(va("Loading %s...", mapname), 400, 330, 2, 2, c);
+
+	// cheats
+	if (CL_CheatsAllowed())
+	{
+		VectorSet(c, 0.8, 0.2, 0);
+		re.DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
+	}
+}
+
 /*
 ==================
 SCR_DrawConsole
@@ -574,26 +610,14 @@ void SCR_DrawConsole (void)
 	}
 
 	if (cls.state != ca_active || !cl.refresh_prepped)
-	{	// connected, but can't render
+	{	
+		// connected, but can't render
+
+#if 0
 		Con_DrawConsole(0.5);
 		re.DrawFill (0, viddef.height/2, viddef.width, viddef.height/2, 0);
-#if 0
-		re.SetColor(0.1, 0.1, 0.1, 1);
-		re.DrawFill(0, 0, viddef.width, viddef.height);
-
-		// weeeewwwy temporarry
-		rgba_t c = { 1,1,1,1 };
-		re.DrawString("Entering Game", 400, 200, 3, 2, c); //240
-		re.DrawString(cls.servername, 400, 290, 2.5, 2, c);
-
-		if (cl.configstrings[CS_MODELS + 1])
-			re.DrawString(cl.configstrings[CS_MODELS + 1], 400, 360, 2, 2, c);
-
-		if (CL_CheatsAllowed())
-		{
-			VectorSet(c, 0.8, 0.2, 0);
-			re.DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
-		}
+#else
+		SCR_DrawLoadingScreen();
 #endif
 		return;
 	}

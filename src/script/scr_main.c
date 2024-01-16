@@ -103,39 +103,6 @@ ddef_t* Scr_FindEntityField(char* name)
 
 /*
 =============
-Scr_NewString
-=============
-*/
-char* Scr_NewString(char* string)
-{
-	char* newb, * new_p;
-	int		i, l;
-
-	l = strlen(string) + 1;
-
-	newb = Z_TagMalloc(l, TAG_SERVER_GAME);
-
-	new_p = newb;
-
-	for (i = 0; i < l; i++)
-	{
-		if (string[i] == '\\' && i < l - 1)
-		{
-			i++;
-			if (string[i] == 'n')
-				*new_p++ = '\n';
-			else
-				*new_p++ = '\\';
-		}
-		else
-			*new_p++ = string[i];
-	}
-
-	return newb;
-}
-
-/*
-=============
 Scr_ParseEpair
 
 Can parse either fields or globals
@@ -156,11 +123,15 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s)
 	switch (key->type & ~DEF_SAVEGLOBAL)
 	{
 	case ev_string:
-		*(scr_string_t*)d = Scr_NewString(s) - active_qcvm->strings;
+		*(scr_string_t*)d = COM_NewString(s, TAG_SERVER_GAME) - active_qcvm->strings;
 		break;
 
 	case ev_float:
 		*(float*)d = atof(s);
+		break;
+
+	case ev_integer:
+		*(int*)d = atoi(s);
 		break;
 
 	case ev_vector:

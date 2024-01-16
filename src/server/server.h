@@ -87,9 +87,9 @@ typedef struct
 	qboolean			qcvm_active;
 	sv_globalvars_t*	script_globals;			// qcvm globals
 	gentity_t			*edicts;				// allocated by qcvm
-	int					max_edicts;				// [sv_maxentities]
+	int					max_edicts;				// [sv_maxentities->value]
 	int					entity_size;			// retrieved from progs
-	int					num_edicts;				// increases towards MAX_EDICTS
+	int					num_edicts;				// number of _active_ entities
 
 	// these two are diferent from server's because simulation can be paused, server cannot be
 	int					gameFrame;				
@@ -340,7 +340,7 @@ void SV_BuildClientFrame (client_t *client);
 // sv_gentity.c
 //
 gentity_t* SV_SpawnEntity(void);
-void SV_FreeEntity(gentity_t* ent);
+void SV_FreeEntity(gentity_t* self);
 void SV_InitEntity(gentity_t* ent);
 void SV_RunEntity(gentity_t* ent);
 qboolean SV_RunThink(gentity_t* ent);

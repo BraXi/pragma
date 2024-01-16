@@ -27,6 +27,8 @@ typedef struct gentity_s gentity_t;
 #include "progdefs_server.h" 
 typedef struct centity_s centity_t;
 #include "progdefs_client.h" 
+typedef struct centity_s centity_t;
+#include "progdefs_ui.h" 
 
 
 // used to define in which VM a builtin can be used

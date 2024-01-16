@@ -41,25 +41,6 @@ typedef struct modeldef_s
 	skin_info_t			*skins[4];
 } modeldef_t;
 
-#define	FOFS(type,x) (int)&(((type *)0)->x)
-
-typedef enum
-{
-	F_INT,
-	F_FLOAT,
-	F_STRING,
-	F_BOOLEAN,
-	F_VECTOR3,
-	F_VECTOR4,
-	F_IGNORE
-} fieldtype_t;
-
-typedef struct
-{
-	char* name;
-	fieldtype_t	type;
-	int		ofs;
-} parsefield_t;
 
 static parsefield_t fields_anim[] =
 {
@@ -88,99 +69,8 @@ static parsefield_t fields_skin[] =
 	{"replace", F_STRING, FOFS(skin_info_t,replace)},
 };
 
-char* DEF_NewString(char* string)
-{
-	char	*newstring = NULL, *new_p = NULL;
-	int		pos, length;
 
-	length = strlen(string) + 1;
-	newstring = Z_Malloc(length * sizeof(char));
-
-	if (!newstring)
-	{
-		Com_Error(ERR_DROP, "`%s: malloc failed\n", __FUNCTION__);
-		return NULL; // msvc crap
-	}
-
-	memset(newstring, 0, length * sizeof(char));
-
-	new_p = newstring;
-
-	for (pos = 0; pos < length; pos++)
-	{
-		if (string[pos] == '\\' && pos < length - 1)
-		{
-			pos++;
-			if (string[pos] == 'n')
-				*new_p++ = '\n';
-			else
-				*new_p++ = '\\';
-		}
-		else
-			*new_p++ = string[pos];
-	}
-
-	return newstring;
-}
-
-void DEF_ParseField(char* key, char* value, byte *ptr, parsefield_t* f)
-{
-	float	vec[4];
-
-//	Com_Printf("DEF_ParseField: '%s' - '%s'\n", key, value);
-	for (; f->name; f++)
-	{
-		if (!Q_stricmp(f->name, key))
-		{	
-			// found it
-			switch (f->type)
-			{
-			case F_INT:
-				*(int*)(ptr + f->ofs) = atoi(value);
-				break;
-
-			case F_FLOAT:
-				*(float*)(ptr + f->ofs) = atof(value);
-				break;
-
-			case F_BOOLEAN:
-				if(!Q_stricmp(value, "true"))
-					*(int*)(ptr + f->ofs) = true;
-				else if (!Q_stricmp(value, "false"))
-					*(int*)(ptr + f->ofs) = false;
-				else
-					*(int*)(ptr + f->ofs) = (atoi(value) > 0 ? true : false);
-				break;
-
-			case F_STRING:
-				*(char**)(ptr + f->ofs) = DEF_NewString(value);
-				break;
-
-			case F_VECTOR3:
-				sscanf(value, "%f %f %f", &vec[0], &vec[1], &vec[2]);
-				((float*)(ptr + f->ofs))[0] = vec[0];
-				((float*)(ptr + f->ofs))[1] = vec[1];
-				((float*)(ptr + f->ofs))[2] = vec[2];
-				break;
-
-			case F_VECTOR4:
-				sscanf(value, "%f %f %f %f", &vec[0], &vec[1], &vec[2], &vec[3]);
-				((float*)(ptr + f->ofs))[0] = vec[0];
-				((float*)(ptr + f->ofs))[1] = vec[1];
-				((float*)(ptr + f->ofs))[2] = vec[2];
-				((float*)(ptr + f->ofs))[3] = vec[3];
-				break;
-
-			case F_IGNORE:
-				break;
-			}
-			return;
-		}
-	}
-	Com_Printf("WARNING: %s has unknown field `%s`\n", parseFileName, key);
-}
-
-void DEF_ParseTokens(char* data, modeldef_t* def)
+void DEF_Parse(char* data, modeldef_t* def)
 {
 	char	*token;
 	char	key[256];
@@ -259,11 +149,11 @@ void DEF_ParseTokens(char* data, modeldef_t* def)
 			strncpy(value, token, sizeof(value) - 1);
 
 			if(fields == fields_anim)
-				DEF_ParseField(key, value, def->anims[def->numAnimations-1], fields);
+				COM_ParseField(key, value, def->anims[def->numAnimations - 1], fields);
 			else if (fields == fields_event)
-				DEF_ParseField(key, value, def->events[def->numEvents - 1], fields);
+				COM_ParseField(key, value, def->events[def->numEvents - 1], fields);
 			else if (fields == fields_skin)
-				DEF_ParseField(key, value, def->anims[def->numSkins - 1], fields);
+				COM_ParseField(key, value, def->anims[def->numSkins - 1], fields);
 		}
 	}
 }
@@ -316,38 +206,30 @@ static void DEF_ValidateAnimations(modeldef_t* def)
 qboolean DEF_LoadFile(char* filename, modeldef_t* def)
 {
 	int		len;
-	byte	*raw;
-	char	*text;
-	char	fname[MAX_OSPATH];
+	char	*data = NULL;
 
 	//
 	// load file
 	//
-	len = strlen(filename);
-	//if (l > 4 && !strcmp(level + l - 4, ".cin"))
-
-		//Com_sprintf(filename, sizeof(filename), "defs/%s", arg);
-
-	len = FS_LoadFile(filename, (void**)&raw);
+	len = FS_LoadTextFile(filename, (void**)&data);
 	if (!len || len == -1)
 	{
 		Com_Printf("%s: couldn't load '%s'\n", __FUNCTION__, filename);
 		return false;
 	}
 
-	// NULL terminate the file
-	text = Z_Malloc(len + 1);
-	memcpy(text, raw, len);
-	text[len] = 0;
-	FS_FreeFile(raw); // free file now
+	if (data == NULL)
+	{
+		Com_Printf("WTF\n");
+		return false;
+	}
 
 	parseFileName = filename;
-
 	//
 	// parse definition file
 	//
-	DEF_ParseTokens(text, def);
-	Z_Free(text);
+	DEF_Parse(data, def);
+	FS_FreeFile(data);
 
 	//
 	// check for errors and validate
@@ -362,7 +244,7 @@ qboolean DEF_LoadFile(char* filename, modeldef_t* def)
 
 void CL_Test_f(void)
 {
-#if 0
+#if 1
 	modeldef_t* def = Z_Malloc(sizeof(modeldef_t));
 
 	DEF_LoadFile("defs/test.def", def);

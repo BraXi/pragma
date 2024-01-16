@@ -108,7 +108,7 @@ static void M_Banner( char *name )
 
 void M_PushMenu ( void (*draw) (void), const char *(*key) (int k) )
 {
-	int		i;
+	int		i = 0;
 
 	if (Cvar_VariableValue ("sv_maxclients") == 1 && Com_ServerState ())
 //		Cvar_Set ("paused", "1"); // braxi: console no longer pauses the game

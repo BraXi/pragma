@@ -39,6 +39,7 @@
     <ClInclude Include="qcommon\q_shared.h" />
     <ClInclude Include="script\progdefs_client.h" />
     <ClInclude Include="script\progdefs_server.h" />
+    <ClInclude Include="script\progdefs_ui.h" />
     <ClInclude Include="script\qc_opcodes.h" />
     <ClInclude Include="script\qc_opnames.h" />
     <ClInclude Include="script\scriptvm.h" />
@@ -72,6 +73,7 @@
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
     <ClCompile Include="client\snd_mix.c" />
+    <ClCompile Include="cl_ui.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />

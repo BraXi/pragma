@@ -530,9 +530,6 @@ goes to map jail.bsp.
 void SV_GameMap_f (void)
 {
 	char		*map;
-	int			i;
-	client_t	*cl;
-	qboolean	*savedInuse = NULL;
 
 	if (Cmd_Argc() != 2)
 	{
@@ -552,7 +549,12 @@ void SV_GameMap_f (void)
 		SV_WipeSavegame ("current");
 	}
 	else
-	{	// save the map just exited
+	{
+#if 0	
+		int		i;
+		client_t* cl;
+		qboolean* savedInuse = NULL;
+		// save the map just exited
 		if (sv.state == ss_game)
 		{
 			// clear all the client inuse flags before saving so that
@@ -573,6 +575,7 @@ void SV_GameMap_f (void)
 				cl->edict->inuse = savedInuse[i];
 			free (savedInuse);
 		}
+#endif
 	}
 
 	// start up the next map

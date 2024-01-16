@@ -812,7 +812,6 @@ void SV_SetConfigString(int index, char *valueString)
 		SV_Multicast(vec3_origin, MULTICAST_ALL_R); // send the update to everyone
 	}
 }
-
 static inline void SV_NotifyWhenCvarChanged(cvar_t* cvar)
 {
 	if (cvar->modified)

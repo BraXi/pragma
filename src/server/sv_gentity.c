@@ -73,7 +73,7 @@ gentity_t* SV_SpawnEntity(void)
 	sv.num_edicts++;
 
 	if (sv.num_edicts == sv.max_edicts)
-		Com_Error(ERR_DROP, "SV_SpawnEntity: no free entities, hit %i limit\n", sv.max_edicts);
+		Com_Error(ERR_DROP, "SV_SpawnEntity: no free entities, hit limit of %i entities\n", sv.max_edicts);
 	
 	SV_InitEntity(ent);
 	return ent;
@@ -86,40 +86,56 @@ SV_FreeEntity
 Marks the entity as free
 =================
 */
-void SV_FreeEntity(gentity_t* ent)
+void SV_FreeEntity(gentity_t* self)
 {
-	if (!ent)
+	if (!self)
 	{
 		Com_Error(ERR_DROP, "SV_FreeEntity: !ent\n");
 		return; //msvc..
 	}
 
-	if (NUM_FOR_EDICT(ent) <= sv_maxclients->value)
+	if (self == sv.edicts)
+	{
+		Com_Error(ERR_DROP, "SV_FreeEntity: tried to remove world!\n");
+		return;
+	}
+
+	if (NUM_FOR_EDICT(self) <= sv_maxclients->value)
 	{
 		Com_DPrintf(DP_SV, "tried to free client entity\n");
 		return;
 	}
-	SV_UnlinkEdict(ent);
 
-	if (ent != sv.edicts)
+	SV_UnlinkEdict(self);
+
+	if (self != sv.edicts)
 	{
 		// dereference self and other globals in script if they're us
-		if (PROG_TO_GENT(sv.script_globals->self) == ent)
+		if (PROG_TO_GENT(sv.script_globals->self) == self)
 			sv.script_globals->self = GENT_TO_PROG(sv.edicts);
-		if (PROG_TO_GENT(sv.script_globals->other) == ent)
+		if (PROG_TO_GENT(sv.script_globals->other) == self)
 			sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	}
 
-	if(ent && ent->inuse)
+	Scr_BindVM(VM_SVGAME);
+
+	// walk all entities and unset their .owner if its self
+	Scr_BindVM(VM_SVGAME);
+	for (int i = 1; i < sv.num_edicts; i++)
+	{
+		gentity_t* ent = ENT_FOR_NUM(i);
+		if (VM_TO_ENT(ent->v.owner) == self)
+			ent->v.owner = ENT_TO_VM(sv.edicts);
+	}
+
+	if(self && self->inuse)
 		sv.num_edicts--;
 
-	Scr_BindVM(VM_SVGAME);
-	memset(ent, 0, Scr_GetEntitySize()); // clear whole entity, thats what Q2 does
-//	memset(&ent->v, 0, Scr_GetEntityFieldsSize()); // clear script fields
+	memset(self, 0, Scr_GetEntitySize());
 
-	ent->v.classname = Scr_SetString("freed");
-	ent->freetime = sv.gameTime;
-	ent->inuse = false;
+	self->v.classname = Scr_SetString("freed");
+	self->freetime = sv.gameTime;
+	self->inuse = false;
 }
 
 /*
@@ -261,8 +277,6 @@ void SV_CallSpawn(gentity_t* ent)
 		SV_FreeEntity(ent);
 		oldSelf = sv.edicts;
 	}
-//	else
-//		printf("spawned %i:\"%s\" at (%i %i %i)\n",  NUM_FOR_EDICT(ent), classname, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 
 	//restore self & other globals
 	sv.script_globals->self = GENT_TO_PROG(oldSelf);

@@ -415,6 +415,44 @@ void FS_FreeFile (void *buffer)
 }
 
 /*
+=============
+FS_LoadTextFile
+
+Filename are reletive to the quake search path
+allocated buffer will be filed with file contents, null terminated
+use Z_Free or FS_FreeFile to cleanup buffer
+=============
+*/
+int FS_LoadTextFile(char* filename, char** buffer)
+{
+	int		len;
+	byte	* buf;
+	byte	*raw;
+
+	//
+	// load file
+	//
+	len = FS_LoadFile(filename, (void**)&raw);
+	if (!len || len == -1)
+	{
+		if (buffer)
+			*buffer = NULL;
+		return len;
+	}
+
+	// NULL terminate the file
+	buf = Z_Malloc(len + 1);
+	*buffer = buf;
+
+	memcpy(buf, raw, len);
+	buf[len] = 0;
+
+	FS_FreeFile(raw);
+	return len+1;
+}
+
+
+/*
 =================
 FS_LoadPackFile
 

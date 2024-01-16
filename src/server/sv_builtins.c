@@ -2216,7 +2216,6 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_setsize, PF_SV, "setsize", "void(entity e, vector v1, vector v2)");
 	Scr_DefineBuiltin(PFSV_linkentity, PF_SV, "linkentity", "void(entity e)");
 	Scr_DefineBuiltin(PFSV_unlinkentity, PF_SV, "unlinkentity", "void(entity e)");
-
 	// collision and physics
 	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector v)");
 	Scr_DefineBuiltin(PFSV_trace, PF_SV, "trace", "void(vector p1, vector v1, vector v2, vector p2, entity e, int c)");

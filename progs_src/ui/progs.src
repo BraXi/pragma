@@ -1,0 +1,19 @@
+ui.dat
+
+#define UI 1
+
+// qc extensions
+#include "fteqc_ext.qc"
+
+//
+// includes
+//
+../inc/pragma_structs_ui.qc
+../inc/pragma_funcs_shared.qc
+../inc/pragma_funcs_ui.qc
+../inc/pragma_defs.qc
+
+//
+// user interface
+//
+ui_main.qc

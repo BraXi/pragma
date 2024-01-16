@@ -52,6 +52,28 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //============================================================================
 
+#define	FOFS(type,x) (int)&(((type *)0)->x)
+
+typedef enum
+{
+	F_INT,
+	F_FLOAT,
+	F_STRING,
+	F_BOOLEAN,
+	F_VECTOR3,
+	F_VECTOR4,
+	F_IGNORE
+} fieldtype_t;
+
+typedef struct
+{
+	char* name;
+	fieldtype_t	type;
+	int		ofs;
+} parsefield_t;
+
+//============================================================================
+
 typedef enum { MOD_BAD, MOD_BRUSH, MOD_SPRITE, MOD_MD3 } modtype_t;
 
 //============================================================================
@@ -783,6 +805,8 @@ void	FS_Read (void *buffer, int len, FILE *f);
 
 void	FS_FreeFile (void *buffer);
 
+int		FS_LoadTextFile(char* filename, char** buffer);
+
 void	FS_CreatePath (char *path);
 
 
@@ -841,6 +865,9 @@ void Z_Free (void *ptr);
 void *Z_Malloc (int size);			// returns 0 filled memory
 void *Z_TagMalloc (int size, int tag);
 void Z_FreeTags (int tag);
+
+char* COM_NewString(char* string, int memtag);
+qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f);
 
 void Qcommon_Init (int argc, char **argv);
 void Qcommon_Frame (int msec);

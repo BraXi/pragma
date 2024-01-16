@@ -370,7 +370,7 @@ Cmd_Exec_f
 */
 void Cmd_Exec_f(void)
 {
-	char* f, * f2;
+	char	*data = NULL;
 	int		len;
 
 	if (Cmd_Argc() != 2)
@@ -380,26 +380,20 @@ void Cmd_Exec_f(void)
 	}
 
 	if (strchr(Cmd_Argv(1), '.') == NULL)
-		len = FS_LoadFile(va("%s.cfg", Cmd_Argv(1)), (void**)&f);
+		len = FS_LoadTextFile(va("%s.cfg", Cmd_Argv(1)), (void**)&data);
 	else
-		len = FS_LoadFile(Cmd_Argv(1), (void**)&f);
+		len = FS_LoadTextFile(Cmd_Argv(1), (void**)&data);
 
-	if (!f)
+	if (!data)
 	{
 		Com_Printf("couldn't execute `%s`\n", Cmd_Argv(1));
 		return;
 	}
 	Com_Printf("executing `%s`...\n", Cmd_Argv(1));
 
-	// the file doesn't have a trailing 0, so we need to copy it off
-	f2 = Z_Malloc(len + 1);
-	memcpy(f2, f, len);
-	f2[len] = 0;
+	Cbuf_InsertText(data);
 
-	Cbuf_InsertText(f2);
-
-	Z_Free(f2);
-	FS_FreeFile(f);
+	FS_FreeFile(data);
 }
 
 

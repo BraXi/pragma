@@ -1322,6 +1322,99 @@ void *Z_Malloc (int size)
 	return Z_TagMalloc (size, 0);
 }
 
+//====================================================================================
+
+/*
+=============
+COM_NewString
+=============
+*/
+char* COM_NewString(char* string, int memtag)
+{
+	char* newb, * new_p;
+	int		i, l;
+
+	l = strlen(string) + 1;
+
+	if (memtag > 0)
+		newb = Z_TagMalloc(l, memtag);
+	else
+		newb = Z_Malloc(l);
+
+	new_p = newb;
+
+	for (i = 0; i < l; i++)
+	{
+		if (string[i] == '\\' && i < l - 1)
+		{
+			i++;
+			if (string[i] == 'n')
+				*new_p++ = '\n';
+			else
+				*new_p++ = '\\';
+		}
+		else
+			*new_p++ = string[i];
+	}
+
+	return newb;
+}
+
+qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
+{
+	float	vec[4];
+
+	for (; f->name; f++)
+	{
+		if (!Q_stricmp(f->name, key))
+		{
+			// found it
+			switch (f->type)
+			{
+			case F_INT:
+				*(int*)(basePtr + f->ofs) = atoi(value);
+				break;
+
+			case F_FLOAT:
+				*(float*)(basePtr + f->ofs) = atof(value);
+				break;
+
+			case F_BOOLEAN:
+				if (!Q_stricmp(value, "true"))
+					*(qboolean*)(basePtr + f->ofs) = true;
+				else if (!Q_stricmp(value, "false"))
+					*(qboolean*)(basePtr + f->ofs) = false;
+				else
+					*(qboolean*)(basePtr + f->ofs) = (atoi(value) > 0 ? true : false);
+				break;
+
+			case F_STRING:
+				*(char**)(basePtr + f->ofs) = COM_NewString(value, 0);
+				break;
+
+			case F_VECTOR3:
+				sscanf(value, "%f %f %f", &vec[0], &vec[1], &vec[2]);
+				((float*)(basePtr + f->ofs))[0] = vec[0];
+				((float*)(basePtr + f->ofs))[1] = vec[1];
+				((float*)(basePtr + f->ofs))[2] = vec[2];
+				break;
+
+			case F_VECTOR4:
+				sscanf(value, "%f %f %f %f", &vec[0], &vec[1], &vec[2], &vec[3]);
+				((float*)(basePtr + f->ofs))[0] = vec[0];
+				((float*)(basePtr + f->ofs))[1] = vec[1];
+				((float*)(basePtr + f->ofs))[2] = vec[2];
+				((float*)(basePtr + f->ofs))[3] = vec[3];
+				break;
+
+			case F_IGNORE:
+				break;
+			}
+			return true;
+		}
+	}
+	return false;
+}
 
 //============================================================================
 
