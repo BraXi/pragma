@@ -21,8 +21,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-
-
 #define MAX_PERS_FIELDS		64
 
 // link_t is only used for entity area links now
@@ -32,7 +30,6 @@ typedef struct link_s
 } link_t;
 
 #define	MAX_ENT_CLUSTERS	16
-
 
 // edict->v.svflags
 #define	SVF_NOCLIENT		1	// don't send entity to clients, even if it has effects
@@ -140,8 +137,6 @@ extern void ClientUserinfoChanged(gentity_t* ent, char* userinfo);
 
 extern void ClientCommand(gentity_t* ent);
 extern void SV_RunWorldFrame(void);
-extern void ServerCommand(void);
-extern void InitGame(void);
 
 // savegames stubs
 extern void WriteGame(char* filename, qboolean autosave);

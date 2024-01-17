@@ -1377,6 +1377,11 @@ void CL_Frame (int msec)
 	// run cgame
 	CG_Frame(cls.frametime, cl.time, cls.realtime);
 
+#ifdef NEW_GUI
+	// run ui
+	UI_Main();
+#endif
+
 	// send a new command message to the server
 	CL_SendCommand ();
 
@@ -1453,7 +1458,9 @@ void CL_Init (void)
 	net_message.data = net_message_buffer;
 	net_message.maxsize = sizeof(net_message_buffer);
 
-	M_Init ();	
+#ifdef NEW_GUI
+	UI_Init();
+#endif
 	
 	SCR_Init ();
 	cls.disable_screen = true;	// don't draw yet

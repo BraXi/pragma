@@ -1,42 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="client\cl_cin.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_input.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_main.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_parse.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_scrn.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_view.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\keys.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_dma.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_mix.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_mem.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\menu.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\qmenu.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="qcommon\cmd.c">
       <Filter>common</Filter>
     </ClCompile>
@@ -61,26 +25,14 @@
     <ClCompile Include="qcommon\net_chan.c">
       <Filter>common</Filter>
     </ClCompile>
-    <ClCompile Include="platform\win_input.c">
-      <Filter>platform</Filter>
-    </ClCompile>
     <ClCompile Include="platform\win_net.c">
       <Filter>platform</Filter>
     </ClCompile>
     <ClCompile Include="platform\win_shared.c">
       <Filter>platform</Filter>
     </ClCompile>
-    <ClCompile Include="platform\vid_dll.c">
-      <Filter>platform</Filter>
-    </ClCompile>
-    <ClCompile Include="platform\vid_menu.c">
-      <Filter>platform</Filter>
-    </ClCompile>
     <ClCompile Include="platform\win_main.c">
       <Filter>platform</Filter>
-    </ClCompile>
-    <ClCompile Include="client\console.c">
-      <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="server\sv_ccmds.c">
       <Filter>server</Filter>
@@ -136,32 +88,8 @@
     <ClCompile Include="server\sv_builtins.c">
       <Filter>server</Filter>
     </ClCompile>
-    <ClCompile Include="platform\win_sound.c">
-      <Filter>platform</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_download.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="server\sv_load.c">
       <Filter>server</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_tent.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_ents.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_fx.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_inv.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_newfx.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_pred.c">
-      <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="server\sv_ai.c">
       <Filter>server</Filter>
@@ -175,45 +103,8 @@
     <ClCompile Include="client\cgame\cg_builtins.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
-    <ClCompile Include="client\cgame\cg_main.c">
-      <Filter>client\cgame</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\modeldef.c">
-      <Filter>client\cgame</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="platform\resource.h" />
-    <ClInclude Include="client\client.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\adivtab.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\input.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\keys.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\snd_loc.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\qmenu.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\ref.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\screen.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\sound.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\vid.h">
-      <Filter>client</Filter>
-    </ClInclude>
     <ClInclude Include="qcommon\crc.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -222,9 +113,6 @@
     </ClInclude>
     <ClInclude Include="qcommon\qfiles.h">
       <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="client\console.h">
-      <Filter>client</Filter>
     </ClInclude>
     <ClInclude Include="server\server.h">
       <Filter>server</Filter>
@@ -257,18 +145,9 @@
     <ClInclude Include="script\progdefs_ui.h">
       <Filter>script\headers</Filter>
     </ClInclude>
-    <ClInclude Include="client\cgame\cgame.h">
-      <Filter>client\cgame</Filter>
-    </ClInclude>
     <ClInclude Include="qcommon\anorms.h">
       <Filter>common</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="platform\q2.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="platform\pragma.ico" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="client">

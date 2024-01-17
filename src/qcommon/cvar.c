@@ -372,7 +372,7 @@ qboolean Cvar_Command (void)
 // perform a variable print or set
 	if (Cmd_Argc() == 1)
 	{
-		Com_Printf ("\"%s\" is \"%s\"\n", v->name, v->string);
+		Com_Printf ("cvar \"%s\" is \"%s\"\n", v->name, v->string);
 		return true;
 	}
 

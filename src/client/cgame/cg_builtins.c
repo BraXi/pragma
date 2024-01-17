@@ -8,11 +8,17 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-#include "../client/client.h"
+#include "../../pragma_config.h"
+
+#ifdef DEDICATED_ONLY
+	#include "../../server/server.h"
+	void CG_StubScriptBuiltins();
+#else
+
+#include "../client.h"
 
 extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 extern struct sfx_t* CG_FindOrRegisterSound(char* filename);
-
 
 static void CheckEmptyString(char* s) // definitely need to make it a shared code...
 {
@@ -434,6 +440,7 @@ static void PFCG_GetCursorPos(void)
 static void PFCG_SetCursorPos(void)
 {
 }
+#endif /*not DEDICATED_ONLY*/
 
 /*
 =================
@@ -444,6 +451,9 @@ Register builtins which can be shared by both client and server progs
 */
 void CG_InitScriptBuiltins()
 {
+#ifdef DEDICATED_ONLY
+	CG_StubScriptBuiltins();
+#else
 	// precache
 	Scr_DefineBuiltin(PFCG_precache_model, PF_CL, "precache_model", "float(string fn)");
 	Scr_DefineBuiltin(PFCG_precache_sound, PF_CL, "precache_sound", "float(string fn)");
@@ -483,4 +493,57 @@ void CG_InitScriptBuiltins()
 	// commands
 	Scr_DefineBuiltin(PFCG_addcommand, PF_CL, "addcommand", "void(string cn, void() f)");
 	Scr_DefineBuiltin(PFCG_getbindkey, PF_CL, "getbindkey", "string(string bind)");
+#endif
 }
+
+
+
+#ifdef DEDICATED_ONLY
+static void PFCG_none(void)
+{
+	Com_Error(ERR_FATAL, "client game qc builtin invoked in dedicated server!\n");
+}
+
+void CG_StubScriptBuiltins()
+{
+	// precache
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_model", "float(string fn)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_sound", "float(string fn)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_image", "float(string fn)");
+
+	// collision
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "pointcontents", "float(vector v)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "trace", "void(vector s, vector bmins, vector bmaxs, vector e, float ie, int cm)");
+
+	// config strings and stats
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "getconfigstring", "string(int idx)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "getstat", "float(float idx)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "getclientname", "string(int idx)");
+
+	// message reading
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadChar", "float()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadByte", "float()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadShort", "float()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadLong", "float()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadFloat", "float()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadCoord", "float()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadPos", "vector()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadAngle", "float()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadAngle16", "float()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadDir", "vector()");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadString", "string()");
+
+	// drawing
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawstring", "void(vector xya, float fs, vector c, float a, string s1, ...)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string img)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawfill", "void(float x, float y, float w, float h, vector c, float a)");
+
+	// sound
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "localsound", "void(string s, float v)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "playsound", "void(vector v, float en, string snd, float ch, float vol, float att, float tofs)");
+
+	// commands
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "addcommand", "void(string cn, void() f)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "getbindkey", "string(string bind)");
+}
+#endif

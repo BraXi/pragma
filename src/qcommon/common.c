@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define MAX_NUM_ARGVS	50
 
+qboolean print_time; // so the dedicated server can print time
 
 int		com_argc;
 char	*com_argv[MAX_NUM_ARGVS+1];
@@ -33,11 +34,12 @@ int		realtime;
 
 jmp_buf abortframe;		// an ERR_DROP occured, exit the entire frame
 
+#ifndef DEDICATED_ONLY
+	FILE	*log_stats_file;
+	cvar_t	*host_speeds;
+	cvar_t	*log_stats;
+#endif
 
-FILE	*log_stats_file;
-
-cvar_t	*host_speeds;
-cvar_t	*log_stats;
 cvar_t	*developer;
 cvar_t	*timescale;
 cvar_t	*fixedtime;
@@ -98,14 +100,25 @@ Both client and server can use this, and it will output
 to the apropriate place.
 =============
 */
-void Com_Printf (char *fmt, ...)
+
+
+void Com_Printf(char* fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
 
-	va_start (argptr,fmt);
-	vsprintf (msg,fmt,argptr);
-	va_end (argptr);
+	va_start(argptr, fmt);
+	vsprintf(msg, fmt, argptr);
+	va_end(argptr);
+
+#if 0
+	if (dedicated != NULL && dedicated->value > 0 && print_time == true)
+	{
+		time_t t = time(NULL);
+		struct tm tm = *localtime(&t);
+		printf("[%02d:%02d:%02d]: ", tm.tm_hour, tm.tm_min, tm.tm_sec);
+	}
+#endif
 
 	if (rd_target)
 	{
@@ -118,8 +131,10 @@ void Com_Printf (char *fmt, ...)
 		return;
 	}
 
+#ifndef DEDICATED_ONLY
 	Con_Print (msg);
-		
+#endif
+
 	// also echo to debugging console
 	Sys_ConsoleOutput (msg);
 
@@ -130,7 +145,7 @@ void Com_Printf (char *fmt, ...)
 		
 		if (!logfile)
 		{
-			Com_sprintf (name, sizeof(name), "%s/qconsole.log", FS_Gamedir ());
+			Com_sprintf (name, sizeof(name), "%s/console.log", FS_Gamedir ());
 			logfile = fopen (name, "w");
 		}
 		if (logfile)
@@ -197,7 +212,9 @@ void Com_Error (int code, char *fmt, ...)
 		if(Com_ServerState())
 			SV_Shutdown("Server killed\n", false);
 
+#ifndef DEDICATED_ONLY
 		CL_Drop ();
+#endif
 		recursive = false;
 		longjmp (abortframe, -1);
 	}
@@ -205,14 +222,20 @@ void Com_Error (int code, char *fmt, ...)
 	{
 		Com_Printf ("********************\nERROR: %s\n********************\n", msg);
 		SV_Shutdown (va("Server crashed: %s\n", msg), false);
+
+#ifndef DEDICATED_ONLY
 		CL_Drop ();
+#endif
 		recursive = false;
 		longjmp (abortframe, -1);
 	}
 	else
 	{
 		SV_Shutdown (va("Server fatal crashed: %s\n", msg), false);
+
+#ifndef DEDICATED_ONLY
 		CL_Shutdown ();
+#endif
 	}
 
 	if (logfile)
@@ -235,8 +258,10 @@ Both client and server can use this, and it will do the apropriate things.
 void Com_Quit (void)
 {
 	SV_Shutdown ("Server quit\n", false);
-	CL_Shutdown ();
 
+#ifndef DEDICATED_ONLY
+	CL_Shutdown ();
+#endif
 	if (logfile)
 	{
 		fclose (logfile);
@@ -279,7 +304,7 @@ Handles byte ordering and avoids alignment errors
 
 vec3_t	bytedirs[MD2_NUMVERTEXNORMALS] =
 {
-#include "../client/anorms.h"
+#include "../qcommon/anorms.h"
 };
 
 //
@@ -1369,6 +1394,18 @@ qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
 		if (!Q_stricmp(f->name, key))
 		{
 			// found it
+
+			if (f->type == F_HACK && f->function != NULL)
+			{
+				f->function(value, basePtr);
+				return true;
+			}
+
+			if (f->ofs == -1)
+			{
+				return false;
+			}
+
 			switch (f->type)
 			{
 			case F_INT:
@@ -1597,6 +1634,19 @@ void Qcommon_Init (int argc, char **argv)
 {
 	char	*s;
 
+	print_time = false;
+#ifdef DEDICATED_ONLY
+	s = va("pragma dedicated server %s (%s %s %s)", PRAGMA_VERSION, CPUSTRING, __DATE__, BUILDSTRING);
+	printf("%s\n", s);
+	for( int i = 0; i < strlen(s); i++)
+		printf("=");
+
+	printf("\n\n");
+
+	printf("running %i ticks per second\n", SERVER_FPS);
+	printf("protocol version is %i\n\n", PROTOCOL_VERSION);
+#endif
+
 	if (setjmp (abortframe) )
 		Sys_Error ("Error during initialization");
 
@@ -1612,7 +1662,9 @@ void Qcommon_Init (int argc, char **argv)
 	Cmd_Init ();
 	Cvar_Init ();
 
+#ifndef DEDICATED_ONLY
 	Key_Init ();
+#endif
 
 	// we need to add the early commands twice, because
 	// a basedir or cddir needs to be set before execing
@@ -1623,8 +1675,10 @@ void Qcommon_Init (int argc, char **argv)
 
 	FS_InitFilesystem ();
 
+#ifndef DEDICATED_ONLY
 	Cbuf_AddText ("exec default.cfg\n");
 	Cbuf_AddText ("exec config.cfg\n");
+#endif
 
 	Cbuf_AddEarlyCommands (true);
 	Cbuf_Execute ();
@@ -1635,8 +1689,11 @@ void Qcommon_Init (int argc, char **argv)
     Cmd_AddCommand ("z_stats", Z_Stats_f);
     Cmd_AddCommand ("error", Com_Error_f);
 
+#ifndef DEDICATED_ONLY
 	host_speeds = Cvar_Get ("host_speeds", "0", 0);
 	log_stats = Cvar_Get ("log_stats", "0", 0);
+#endif
+
 	developer = Cvar_Get ("developer", "1337", 0);
 	timescale = Cvar_Get ("timescale", "1", CVAR_CHEAT);
 	fixedtime = Cvar_Get ("fixedtime", "0", CVAR_CHEAT);
@@ -1648,16 +1705,19 @@ void Qcommon_Init (int argc, char **argv)
 	dedicated = Cvar_Get ("dedicated", "0", CVAR_NOSET);
 #endif
 
-	s = va("%S %S %s %s %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP, CPUSTRING, __DATE__, BUILDSTRING);
+	s = va("%s %s %s %s", PRAGMA_VERSION, CPUSTRING, __DATE__, BUILDSTRING);
 	Cvar_Get ("version", s, CVAR_SERVERINFO|CVAR_NOSET);
 
 
 	if (dedicated->value)
 	{
 		Cmd_AddCommand("quit", Com_Quit);
+
+#ifndef DEDICATED_ONLY
 		Com_Printf("pragma %s dedicated server\n", PRAGMA_VERSION);
 		Com_Printf("build: %s\n", PRAGMA_TIMESTAMP);
 		Com_Printf("------------------------------\n");
+#endif
 	}
 
 
@@ -1668,24 +1728,50 @@ void Qcommon_Init (int argc, char **argv)
 	Scr_PreInitVMs();
 
 	SV_Init ();
+
+#ifndef DEDICATED_ONLY
 	CL_Init ();
+#endif
 
 	// add + commands from command line
 	if (!Cbuf_AddLateCommands ())
-	{	// if the user didn't give any commands, run default action
+	{	
+		// if the user didn't give any commands, run default action
 		if (!dedicated->value)
-			Cbuf_AddText ("d1\n");
+			Cbuf_AddText ("opengui main\n");
 		else
 			Cbuf_AddText ("dedicated_start\n");
 		Cbuf_Execute ();
 	}
 	else
-	{	// the user asked for something explicit
+	{	
+#ifndef DEDICATED_ONLY
+		// the user asked for something explicit
 		// so drop the loading plaque
 		SCR_EndLoadingPlaque ();
+#endif
 	}
 
-	Com_Printf ("====== pragma initialized ======\n\n");	
+
+#ifndef DEDICATED_ONLY
+	Com_Printf("====== pragma initialized ======\n\n");
+#else
+	printf("====== Server Initialized ======\n\n");
+	print_time = true;
+
+#if 0
+	if (!logfile_active->value)
+		printf("No active logging.\n");
+
+	extern cvar_t* rcon_password;
+	if (!rcon_password || strlen(rcon_password->string) == 0)
+		printf("No rcon_password set.\n");
+
+	if (Com_ServerState() == 0 /*ss_dead*/)
+		printf("No map loaded, use `map` command to load map.\n");
+#endif
+
+#endif
 }
 
 /*
@@ -1693,15 +1779,17 @@ void Qcommon_Init (int argc, char **argv)
 Qcommon_Frame
 =================
 */
+#ifndef DEDICATED_ONLY
 int		time_before, time_between, time_after, frame_time;
+#endif
+
 void Qcommon_Frame (int msec)
 {
 	char	*s;
-
-
 	if (setjmp (abortframe) )
 		return;			// an ERR_DROP was thrown
 
+#ifndef DEDICATED_ONLY
 	if ( log_stats->modified )
 	{
 		log_stats->modified = false;
@@ -1725,9 +1813,12 @@ void Qcommon_Frame (int msec)
 			}
 		}
 	}
+#endif /*DEDICATED_ONLY*/
 
 	if (fixedtime->value)
+	{
 		msec = fixedtime->value;
+	}
 	else if (timescale->value)
 	{
 		msec *= timescale->value;
@@ -1754,18 +1845,17 @@ void Qcommon_Frame (int msec)
 	} while (s);
 	Cbuf_Execute ();
 
-//	if (host_speeds->value)
-		time_before = Sys_Milliseconds ();
+#ifndef DEDICATED_ONLY
+	time_before = Sys_Milliseconds ();
+#endif /*DEDICATED_ONLY*/
 
 	SV_Frame (msec);
 
-//	if (host_speeds->value)
-		time_between = Sys_Milliseconds ();		
-
+#ifndef DEDICATED_ONLY
+	time_between = Sys_Milliseconds ();		
 	CL_Frame (msec);
 
-//	if (host_speeds->value)
-		time_after = Sys_Milliseconds ();		
+	time_after = Sys_Milliseconds ();		
 
 
 	if (host_speeds->value)
@@ -1783,6 +1873,7 @@ void Qcommon_Frame (int msec)
 			all, sv, gm, cl, rf);
 	}	
 	frame_time = time_after - time_before;
+#endif /*DEDICATED_ONLY*/
 }
 
 /*

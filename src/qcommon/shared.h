@@ -105,10 +105,7 @@ typedef enum {false, true}	qboolean;
 #define	ERR_FATAL			0		// exit the entire game with a popup window
 #define	ERR_DROP			1		// print to console and disconnect from game
 #define	ERR_DISCONNECT		2		// don't kill server
-
-#define	PRINT_ALL			0
-#define PRINT_DEVELOPER		1		// only print when "developer 1"
-#define PRINT_ALERT			2		
+	
 
 typedef enum
 {
@@ -309,7 +306,7 @@ SYSTEM SPECIFIC
 ==============================================================
 */
 
-extern	int	curtime;		// time returned by last Sys_Milliseconds
+extern	int	curtime;		// time returned by last Sys_Milliseconds, FIXME: 64BIT
 
 int		Sys_Milliseconds (void);
 void	Sys_Mkdir (char *path);
@@ -335,7 +332,7 @@ char	*Sys_FindNext ( unsigned musthave, unsigned canthave );
 void	Sys_FindClose (void);
 
 
-// this is only here so the functions in q_shared.c and q_shwin.c can link
+// this is only here so the functions in shared.c and win_shared.c can link
 void Sys_Error (char *error, ...);
 void Com_Printf (char *msg, ...);
 

@@ -26,14 +26,23 @@ typedef struct ui_globalvars_s
 	int				vid_width;
 	int				vid_height;
 
-	float			localplayernum;
+	float			clientState;
 
-	scr_func_t		UI_Main;
+	scr_string_t	currentGuiName;
+
+	scr_func_t		main;
+	scr_func_t		frame;
+	scr_func_t		drawgui;
 } ui_globalvars_t;
 
 
-typedef struct ui_vars_s
+typedef struct ui_itemvars_s
 {
-	scr_string_t	str;
-	float			var;
-} ui_vars_t;
+	scr_string_t name;
+	// also "rect"
+	float		x, y, w, h; 
+
+	// also "rgba"
+	vec3_t		color;
+	float		alpha;
+} ui_itemvars_t;

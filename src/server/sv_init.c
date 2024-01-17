@@ -302,7 +302,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	SV_CreateBaseline();
 
 	// check for a savegame
-	SV_CheckForSavegame();
+//	SV_CheckForSavegame();
 
 	Com_Printf ("-------------------------------------\n");
 }
@@ -327,9 +327,11 @@ void SV_InitGame (void)
 	}
 	else
 	{
+#ifndef DEDICATED_ONLY
 		// make sure the client is down
 		CL_Drop ();
 		SCR_BeginLoadingPlaque ();
+#endif
 	}
 
 	// get any latched variable changes (maxclients, etc)
@@ -500,25 +502,33 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame, qboolea
 	l = strlen(level);
 	if (l > 4 && !strcmp (level+l-4, ".cin") )
 	{
+#ifndef DEDICATED_ONLY
 		SCR_BeginLoadingPlaque ();			// for local system
+#endif
 		SV_BroadcastCommand ("changing\n");
 		SV_SpawnServer (level, spawnpoint, ss_cinematic, attractloop, loadgame);
 	}
 	else if (l > 4 && !strcmp (level+l-4, ".demo") )
 	{
+#ifndef DEDICATED_ONLY
 		SCR_BeginLoadingPlaque ();			// for local system
+#endif
 		SV_BroadcastCommand ("changing\n");
 		SV_SpawnServer (level, spawnpoint, ss_demo, attractloop, loadgame);
 	}
 	else if (l > 4 && !strcmp (level+l-4, ".tga") )
 	{
+#ifndef DEDICATED_ONLY
 		SCR_BeginLoadingPlaque ();			// for local system
+#endif
 		SV_BroadcastCommand ("changing\n");
 		SV_SpawnServer (level, spawnpoint, ss_pic, attractloop, loadgame);
 	}
 	else
 	{
+#ifndef DEDICATED_ONLY
 		SCR_BeginLoadingPlaque ();			// for local system
+#endif
 		SV_BroadcastCommand ("changing\n");
 		SV_SendClientMessages ();
 		SV_SpawnServer (level, spawnpoint, ss_game, attractloop, loadgame);

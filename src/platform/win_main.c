@@ -20,8 +20,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // sys_win.h
 
 #include "../qcommon/qcommon.h"
-#include "winquake.h"
-#include "resource.h"
+
+#ifdef DEDICATED_ONLY
+	#include <windows.h>
+#else
+	#include "winquake.h"
+	#include "resource.h"
+#endif
+
 #include <errno.h>
 #include <float.h>
 #include <fcntl.h>
@@ -29,30 +35,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <direct.h>
 #include <io.h>
 #include <conio.h>
-#include "../platform/conproc.h"
 
-#define MINIMUM_WIN_MEMORY	0x0a00000
-#define MAXIMUM_WIN_MEMORY	0x1000000
-
-//#define DEMO
-
-qboolean s_win95;
-
-int			starttime;
+#ifndef DEDICATED_ONLY
 int			ActiveApp;
 qboolean	Minimized;
+#endif /*DEDICATED_ONLY*/
 
 static HANDLE		hinput, houtput;
 
 unsigned	sys_msg_time;
 unsigned	sys_frame_time;
 
-
-static HANDLE		qwclsemaphore;
-
 #define	MAX_NUM_ARGVS	128
-int			argc;
-char		*argv[MAX_NUM_ARGVS];
+int		argc;
+char	*argv[MAX_NUM_ARGVS];
 
 /*
 ===============================================================================
@@ -68,20 +64,21 @@ void Sys_Error (char *error, ...)
 	va_list		argptr;
 	char		text[1024];
 
+#ifndef DEDICATED_ONLY
 	CL_Shutdown ();
+#endif
+
 	Qcommon_Shutdown ();
 
 	va_start (argptr, error);
 	vsprintf (text, error, argptr);
 	va_end (argptr);
 
+#ifdef DEDICATED_ONLY
+	printf("Sys_Error: %s\n", text);
+#else
 	MessageBox(NULL, text, "Error", 0 /* MB_OK */ );
-
-	if (qwclsemaphore)
-		CloseHandle (qwclsemaphore);
-
-// shut down QHOST hooks if necessary
-	DeinitConProc ();
+#endif
 
 	exit (1);
 }
@@ -90,39 +87,20 @@ void Sys_Quit (void)
 {
 	timeEndPeriod( 1 );
 
+#ifndef DEDICATED_ONLY
 	CL_Shutdown();
+#endif
+
 	Qcommon_Shutdown ();
-	CloseHandle (qwclsemaphore);
+
+#ifndef DEDICATED_ONLY
 	if (dedicated && dedicated->value)
 		FreeConsole ();
-
-// shut down QHOST hooks if necessary
-	DeinitConProc ();
+#endif
 
 	exit (0);
 }
 
-
-void WinError (void)
-{
-	LPVOID lpMsgBuf;
-
-	FormatMessage( 
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
-		GetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		(LPTSTR) &lpMsgBuf,
-		0,
-		NULL 
-	);
-
-	// Display the string.
-	MessageBox( NULL, lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION );
-
-	// Free the buffer.
-	LocalFree( lpMsgBuf );
-}
 
 //================================================================
 
@@ -140,7 +118,6 @@ void Sys_Init (void)
 {
 	OSVERSIONINFO	vinfo;
 
-
 	timeBeginPeriod( 1 );
 
 	vinfo.dwOSVersionInfoSize = sizeof(vinfo);
@@ -152,18 +129,15 @@ void Sys_Init (void)
 		Sys_Error ("pragma requires windows version 4 or greater");
 	if (vinfo.dwPlatformId == VER_PLATFORM_WIN32s)
 		Sys_Error ("pragma doesn't run on Win32s");
-	else if ( vinfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS )
-		s_win95 = true;
 
 	if (dedicated->value)
 	{
+#ifndef DEDICATED_ONLY
 		if (!AllocConsole ())
 			Sys_Error ("Couldn't create dedicated server console");
+#endif
 		hinput = GetStdHandle (STD_INPUT_HANDLE);
 		houtput = GetStdHandle (STD_OUTPUT_HANDLE);
-	
-		// let QHOST hook in
-		InitConProc (argc, argv);
 	}
 }
 
@@ -179,9 +153,8 @@ Sys_ConsoleInput
 char *Sys_ConsoleInput (void)
 {
 	INPUT_RECORD	recs[1024];
-	int		dummy;
-	int		ch, numread;
-	int numevents;
+	int		ch;
+	DWORD dummy, numread, numevents;
 
 	if (!dedicated || !dedicated->value)
 		return NULL;
@@ -206,7 +179,7 @@ char *Sys_ConsoleInput (void)
 			if (!recs[0].Event.KeyEvent.bKeyDown)
 			{
 				ch = recs[0].Event.KeyEvent.uChar.AsciiChar;
-
+			
 				switch (ch)
 				{
 					case '\r':
@@ -259,11 +232,13 @@ Print text to the dedicated console
 */
 void Sys_ConsoleOutput (char *string)
 {
-	int		dummy;
+	DWORD	dummy;
 	char	text[256];
 
+#ifndef DEDICATED_ONLY
 	if (!dedicated || !dedicated->value)
 		return;
+#endif
 
 	if (console_textlen)
 	{
@@ -349,18 +324,19 @@ char *Sys_GetClipboardData( void )
 Sys_AppActivate
 =================
 */
+#ifndef DEDICATED_ONLY
 void Sys_AppActivate (void)
 {
 	ShowWindow ( cl_hwnd, SW_RESTORE);
 	SetForegroundWindow ( cl_hwnd );
 }
-
+#endif
 /*
 ==================
 ParseCommandLine
-
 ==================
 */
+#ifndef DEDICATED_ONLY
 void ParseCommandLine (LPSTR lpCmdLine)
 {
 	argc = 1;
@@ -389,6 +365,47 @@ void ParseCommandLine (LPSTR lpCmdLine)
 	}
 
 }
+#endif
+
+#ifdef DEDICATED_ONLY
+/*
+==================
+main
+
+entry point for dedicated server
+==================
+*/
+int main(int inargc, char** inargv)
+{
+	int		time, oldtime, newtime;
+
+	Qcommon_Init(inargc, inargv);
+	oldtime = Sys_Milliseconds();
+
+	/* main window message loop */
+	while (1)
+	{
+		Sleep(1);
+
+		do
+		{
+			newtime = Sys_Milliseconds();
+			time = newtime - oldtime;
+		} while (time < 1);
+
+#ifndef _M_X64
+		_controlfp(_PC_24, _MCW_PC);
+#endif
+
+		Qcommon_Frame(time);
+
+		oldtime = newtime;
+	}
+
+	// never gets here
+	return TRUE;
+}
+#else
 
 /*
 ==================
@@ -397,77 +414,10 @@ WinMain
 ==================
 */
 HINSTANCE	global_hInstance;
-
-#ifndef USE_GLFW
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-    MSG				msg;
-	int				time, oldtime, newtime;
-
-    /* previous instances do not exist in Win32 */
-    if (hPrevInstance)
-        return 0;
-
-	global_hInstance = hInstance;
-	ParseCommandLine (lpCmdLine);
-
-	Qcommon_Init (argc, argv);
-	oldtime = Sys_Milliseconds ();
-
-#if 1//_DEBUG
-	if (Cvar_VariableValue("debugcon"))
-	{
-		HWND consoleHandle;
-		AllocConsole();
-		freopen("conin$", "r", stdin);
-		freopen("conout$", "w", stdout);
-		freopen("conout$", "w", stderr);
-		consoleHandle = GetConsoleWindow();
-		MoveWindow(consoleHandle, 1, 1, 680, 480, 1);
-		printf("[debugcon enabled]\n");
-	}
-#endif
-
-    /* main window message loop */
-	while (1)
-	{
-		// if at a full screen console, don't update unless needed
-		if (Minimized || (dedicated && dedicated->value) )
-		{
-			Sleep (1);
-		}
-
-		while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
-		{
-			if (!GetMessage (&msg, NULL, 0, 0))
-				Com_Quit ();
-			sys_msg_time = msg.time;
-			TranslateMessage (&msg);
-   			DispatchMessage (&msg);
-		}
-
-		do
-		{
-			newtime = Sys_Milliseconds ();
-			time = newtime - oldtime;
-		} 
-		while (time < 1);
-
-		_controlfp( _PC_24, _MCW_PC );
-		Qcommon_Frame (time);
-
-		oldtime = newtime;
-	}
-
-	// never gets here
-    return TRUE;
-}
-#else
-#include "../libs/include/GLFW/glfw3.h"
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	MSG				msg;
-	int				time, oldtime, newtime;
+	MSG		msg;
+	int		time, oldtime, newtime;
 
 	/* previous instances do not exist in Win32 */
 	if (hPrevInstance)
@@ -479,7 +429,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	Qcommon_Init(argc, argv);
 	oldtime = Sys_Milliseconds();
 
-#if 1
 	if (Cvar_VariableValue("debugcon"))
 	{
 		HWND consoleHandle;
@@ -491,7 +440,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		MoveWindow(consoleHandle, 1, 1, 680, 480, 1);
 		printf("[debugcon enabled]\n");
 	}
-#endif
 
 	/* main window message loop */
 	while (1)

@@ -1,28 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="anorms.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="r_model.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\game\q_shared.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="warpsin.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\platform\glw_win.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="r_local.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="qgl.h">
+    <ClInclude Include="win_qgl.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\client\ref.h">
+    <ClInclude Include="win_glw.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\qcommon\renderer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\qcommon\shared.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -36,15 +33,15 @@
     <ClCompile Include="r_misc.c" />
     <ClCompile Include="r_surf.c" />
     <ClCompile Include="r_warp.c" />
-    <ClCompile Include="..\platform\glw_imp.c" />
-    <ClCompile Include="..\platform\qgl_win.c" />
-    <ClCompile Include="..\platform\q_shwin.c" />
-    <ClCompile Include="..\qcommon\q_shared.c" />
+    <ClCompile Include="..\platform\win_shared.c" />
+    <ClCompile Include="..\qcommon\shared.c" />
     <ClCompile Include="r_draw_new.c" />
     <ClCompile Include="r_init.c" />
     <ClCompile Include="r_md3.c" />
     <ClCompile Include="r_sprite.c" />
     <ClCompile Include="r_state.c" />
+    <ClCompile Include="win_opengl.c" />
+    <ClCompile Include="win_qgl.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

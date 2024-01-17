@@ -285,7 +285,7 @@ void PFSV_setmodel(void)
 	}
 
 	name = Scr_GetParmString(1);
-	if (!name || name == "")
+	if (!name)
 	{
 		Scr_RunError("setmodel(): empty model name for entity %i\n", NUM_FOR_EDICT(ent));
 		return;
@@ -1390,7 +1390,7 @@ deprecated, subject to remove
 void pmove(float index, float val)
 ===============
 */
-
+#if USE_PMOVE_IN_PROGS == 0
 gentity_t* pm_passent;
 // pmove doesn't need to know about passent and contentmask
 trace_t	PM_trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
@@ -1400,10 +1400,12 @@ trace_t	PM_trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
 	else
 		return SV_Trace(start, mins, maxs, end, pm_passent, MASK_DEADSOLID);
 }
-
 extern usercmd_t* last_ucmd;
+#endif
+
 void PFSV_pmove(void)
 {
+#if USE_PMOVE_IN_PROGS == 0
 	gentity_t* ent;
 	gclient_t* client;
 	float* inmove;
@@ -1508,6 +1510,7 @@ void PFSV_pmove(void)
 	VectorCopy(pm.viewangles, client->ps.viewangles);
 
 	SV_LinkEdict(ent);
+#endif
 }
 
 /*
@@ -2216,6 +2219,7 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_setsize, PF_SV, "setsize", "void(entity e, vector v1, vector v2)");
 	Scr_DefineBuiltin(PFSV_linkentity, PF_SV, "linkentity", "void(entity e)");
 	Scr_DefineBuiltin(PFSV_unlinkentity, PF_SV, "unlinkentity", "void(entity e)");
+
 	// collision and physics
 	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector v)");
 	Scr_DefineBuiltin(PFSV_trace, PF_SV, "trace", "void(vector p1, vector v1, vector v2, vector p2, entity e, int c)");

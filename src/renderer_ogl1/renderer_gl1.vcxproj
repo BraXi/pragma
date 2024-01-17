@@ -151,20 +151,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\client\ref.h" />
-    <ClInclude Include="..\game\q_shared.h" />
-    <ClInclude Include="..\platform\glw_win.h" />
-    <ClInclude Include="anorms.h" />
+    <ClInclude Include="..\qcommon\shared.h" />
+    <ClInclude Include="..\qcommon\renderer.h" />
+    <ClInclude Include="win_glw.h" />
     <ClInclude Include="r_local.h" />
     <ClInclude Include="r_model.h" />
-    <ClInclude Include="qgl.h" />
+    <ClInclude Include="win_qgl.h" />
     <ClInclude Include="warpsin.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\qcommon\q_shared.c" />
-    <ClCompile Include="..\platform\glw_imp.c" />
-    <ClCompile Include="..\platform\qgl_win.c" />
-    <ClCompile Include="..\platform\q_shwin.c" />
+    <ClCompile Include="..\qcommon\shared.c" />
+    <ClCompile Include="..\platform\win_shared.c" />
+    <ClCompile Include="win_opengl.c" />
+    <ClCompile Include="win_qgl.c" />
     <ClCompile Include="r_draw.c" />
     <ClCompile Include="r_image.c" />
     <ClCompile Include="r_init.c" />

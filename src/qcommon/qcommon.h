@@ -20,32 +20,57 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // qcommon.h -- definitions common between client and server, but not game.dll
 
-#include "q_shared.h"
-
+#include "shared.h"
 #include "../script/scriptvm.h"
 
-#ifdef _WIN32
+//============================================================================
 
-#ifndef _DEBUG
-#define BUILDSTRING "Win32 RELEASE"
+extern qboolean print_time;
+
+#ifdef _WIN32
+	#ifdef DEDICATED_ONLY
+		#ifndef _DEBUG
+			#define BUILDSTRING "WIN RELEASE DEDSV"
+		#else
+			#define BUILDSTRING "WIN DEBUG DEDSV"
+		#endif
+	#else
+		#ifndef _DEBUG
+			#define BUILDSTRING "WIN RELEASE"
+		#else
+			#define BUILDSTRING "WIN DEBUG"
+		#endif
+	#endif
+#elif defined(__linux__)
+
+	#ifdef DEDICATED_ONLY
+		#ifndef _DEBUG
+			#define BUILDSTRING "LINUX RELEASE DEDSV"
+		#else
+			#define BUILDSTRING "LINUX DEBUG DEDSV"
+		#endif
+	#else
+		#ifndef _DEBUG
+			#define BUILDSTRING "LINUX RELEASE"
+		#else
+			#define BUILDSTRING "LINUX DEBUG"
+		#endif
+	#endif
+
 #else
-#define BUILDSTRING "Win32 DEBUG"
+	#define BUILDSTRING "NON-WIN32"
+	#define	CPUSTRING	"NON-WIN32"
 #endif
 
 #ifdef _M_IX86
-#define	CPUSTRING	"x86"
+	#define	CPUSTRING	"x86"
 #elif defined(_M_X64)
-#define	CPUSTRING	"x64"
+	#define	CPUSTRING	"x64"
 #else
-#define	CPUSTRING	"NON-x86/x64"
+	#define	CPUSTRING	"NON-x86/x64"
 #endif
 
-#else	// !WIN32
-
-#define BUILDSTRING "NON-WIN32"
-#define	CPUSTRING	"NON-WIN32"
-
-#endif
+//============================================================================
 
 #define TAG_SERVER_MODELDATA 20231
 #define TAG_SERVER_GAME 20232
@@ -53,6 +78,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //============================================================================
 
 #define	FOFS(type,x) (int)&(((type *)0)->x)
+typedef void (*parsecommand_t) (char* value, byte* basePtr);
 
 typedef enum
 {
@@ -62,6 +88,8 @@ typedef enum
 	F_BOOLEAN,
 	F_VECTOR3,
 	F_VECTOR4,
+	F_QCFUNC,
+	F_HACK,
 	F_IGNORE
 } fieldtype_t;
 
@@ -70,6 +98,7 @@ typedef struct
 	char* name;
 	fieldtype_t	type;
 	int		ofs;
+	parsecommand_t function;
 } parsefield_t;
 
 //============================================================================
@@ -534,11 +563,12 @@ void	Cmd_ExecuteString (char *text);
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
 
+#ifndef DEDICATED_ONLY
 void	Cmd_ForwardToServer (void);
 // adds the current command line as a clc_stringcmd to the client message.
 // things like godmode, noclip, etc, are commands directed to the server,
 // so when they are typed in at the console, they will need to be forwarded.
-
+#endif
 
 /*
 ==============================================================
@@ -626,7 +656,7 @@ NET
 #define	PORT_ANY	-1
 
 #define	MAX_MSGLEN		1400		// max length of a message
-#define	PACKET_HEADER	10			// two ints and a short
+#define	PACKET_HEADER	10			// two ints and a short, braxi -- unused?
 
 typedef enum {NA_LOOPBACK, NA_BROADCAST, NA_IP } netadrtype_t;
 
@@ -774,10 +804,10 @@ Common between server and client so prediction matches
 ==============================================================
 */
 
+#if USE_PMOVE_IN_PROGS == 0
 extern float pm_airaccelerate;
-
 void Pmove (pmove_t *pmove);
-
+#endif
 /*
 ==============================================================
 
@@ -827,10 +857,11 @@ MISC
 #define	EXEC_INSERT	1		// insert at current position, but don't run yet
 #define	EXEC_APPEND	2		// add to end of the command buffer
 
-#define	PRINT_ALL		0
-#define PRINT_DEVELOPER	1	// only print when "developer 1"
-
-
+// renderer begin
+#define	PRINT_ALL			0
+#define PRINT_DEVELOPER		1		// only print when "developer 1"
+#define PRINT_ALERT			2
+// renderer end
 
 void		Com_BeginRedirect (int target, char *buffer, int buffersize, void (*flush));
 void		Com_EndRedirect (void);
@@ -850,10 +881,12 @@ float	crand(void);	// -1 to 1
 
 extern	cvar_t	*developer;
 extern	cvar_t	*dedicated;
+
+#ifndef DEDICATED_ONLY
 extern	cvar_t	*host_speeds;
 extern	cvar_t	*log_stats;
-
 extern	FILE *log_stats_file;
+#endif
 
 // host_speeds times
 extern	int		time_before_game;
@@ -876,9 +909,10 @@ void Qcommon_Shutdown (void);
 #define MD2_NUMVERTEXNORMALS	162
 extern	vec3_t	bytedirs[MD2_NUMVERTEXNORMALS];
 
+#ifndef DEDICATED_ONLY
 // this is in the client code, but can be used for debugging from server
 void SCR_DebugGraph (float value, vec3_t color);
-
+#endif /*DEDICATED_ONLY*/
 
 /*
 ==============================================================
@@ -890,7 +924,9 @@ NON-PORTABLE SYSTEM SERVICES
 
 void	Sys_Init (void);
 
+#ifndef DEDICATED_ONLY
 void	Sys_AppActivate (void);
+#endif
 
 char	*Sys_ConsoleInput (void);
 void	Sys_ConsoleOutput (char *string);
@@ -907,17 +943,22 @@ CLIENT / SERVER SYSTEMS
 ==============================================================
 */
 
+#ifndef DEDICATED_ONLY
 void CL_Init (void);
 void CL_Drop (void);
 void CL_Shutdown (void);
 void CL_Frame (int msec);
 void Con_Print (char *text);
 void SCR_BeginLoadingPlaque (void);
+#endif
 
 void SV_Init (void);
 void SV_Shutdown (char *finalmsg, qboolean reconnect);
 void SV_Frame (int msec);
 
 qboolean Com_IsServerActive();
+
+#ifndef DEDICATED_ONLY
 qboolean Con_IsClientActive();
+#endif
 

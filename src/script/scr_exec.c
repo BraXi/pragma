@@ -671,8 +671,8 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			ent = VM_TO_ENT(a->edict);
 			if (ent == vm->entities && (vm->progsType == VM_SVGAME && Com_IsServerActive()))
 			{
-				Scr_StackTrace();
-				Scr_RunError("worldspawn entity fields are read only\n");
+				//Scr_StackTrace();
+				Scr_RunError("entity 0 fields are read only\n");
 			}
 			c->_int = (byte*)(ENTVARSOFFSET(ent) + b->_int) - (byte*)vm->entities;
 			break;

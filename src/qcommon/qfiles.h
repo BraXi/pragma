@@ -313,7 +313,7 @@ typedef struct
 // a given brush can contribute multiple content bits
 // multiple brushes can be in a single leaf
 
-// these definitions also need to be in q_shared.h!
+// these definitions also need to be in shared.h!
 
 // lower bits are stronger, and will eat weaker brushes completely
 #define	CONTENTS_SOLID			1		// an eye is never valid in a solid

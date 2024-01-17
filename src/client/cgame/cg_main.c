@@ -8,7 +8,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-#include "../client/client.h"
+#include "../client.h"
 
 static qboolean cg_allow_drawcalls;
 

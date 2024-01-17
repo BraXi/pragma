@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 gentity_t	*sv_entity;	// currently run entity
 
-void ServerCommand(void) {}
 void WriteGame(char* filename, qboolean autosave) {}
 void ReadGame(char* filename) {}
 void WriteLevel(char* filename) {}
@@ -436,8 +435,6 @@ void SV_LinkEdict (gentity_t *ent)
 	if (ent->v.solid == SOLID_BSP && (ent->v.angles[0] || ent->v.angles[1] || ent->v.angles[2]) )
 	{	// expand for rotation
 		float		max, v;
-		int			i;
-
 		max = 0;
 		for (i=0 ; i<3 ; i++)
 		{

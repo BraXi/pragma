@@ -68,8 +68,13 @@ Finds function in progs and returns its number (for execution), returns -1 when 
 scr_func_t Scr_FindFunction(char* funcname)
 {
 	dfunction_t* f = NULL;
-	if (funcname && funcname != "" && (f = ScrInternal_FindFunction(funcname)) != NULL)
+
+	if (!funcname)
+		return -1;
+
+	if((f = ScrInternal_FindFunction(funcname)) != NULL)
 		return (scr_func_t)(f - active_qcvm->functions);
+
 	return -1;
 }
 

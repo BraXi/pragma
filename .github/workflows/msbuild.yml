@@ -53,6 +53,8 @@ jobs:
         path: |
             build/engine.exe
             build/engine.pdb
+            build/pragma_server.exe
+            build/pragma_server.pdb           
             build/renderer_ogl1.dll
             build/renderer_ogl1.pdb
             build/main/dummy.txt

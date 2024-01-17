@@ -1,5 +1,5 @@
 
-#include "../client/client.h"
+#include "../client.h"
 
 static char* parseFileName = "";
 

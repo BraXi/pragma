@@ -19,7 +19,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "../qcommon/qcommon.h"
-#include "winquake.h"
+
+// uncomment to use VirtualAlloc
+//#define VIRTUAL_ALLOC 1
+
+#ifdef DEDICATED_ONLY
+	#include <windows.h>
+#else
+	#include "winquake.h"
+#endif
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -29,28 +38,31 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //===============================================================================
 
-int		hunkcount;
-
-
-byte	*membase;
-int		hunkmaxsize;
-int		cursize;
-
-//#define	VIRTUAL_ALLOC
+static int		hunkcount; // TODO 64BIT ..
+static byte		*membase;
+static int		hunkmaxsize;
+static int		cursize;
 
 void *Hunk_Begin (int maxsize)
 {
 	// reserve a huge chunk of memory, but don't commit any yet
 	cursize = 0;
 	hunkmaxsize = maxsize;
+
 #ifdef VIRTUAL_ALLOC
 	membase = VirtualAlloc (NULL, maxsize, MEM_RESERVE, PAGE_NOACCESS);
+	if (!membase)
+		Sys_Error("Hunk_Begin: VirtualAlloc reserve failed");
 #else
 	membase = malloc (maxsize);
+	if (!membase)
+	{
+		Sys_Error("Hunk_Begin: malloc reserve failed");
+		return NULL; //msvc..
+	}
 	memset (membase, 0, maxsize);
 #endif
-	if (!membase)
-		Sys_Error ("VirtualAlloc reserve failed");
+
 	return (void *)membase;
 }
 
@@ -138,9 +150,9 @@ void Sys_Mkdir (char *path)
 
 //============================================
 
-char	findbase[MAX_OSPATH];
-char	findpath[MAX_OSPATH];
-int		findhandle;
+static char		findbase[MAX_OSPATH];
+static char		findpath[MAX_OSPATH];
+static int		findhandle;
 
 static qboolean CompareAttributes( unsigned found, unsigned musthave, unsigned canthave )
 {

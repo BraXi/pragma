@@ -316,9 +316,11 @@ void PF_anglevectors(void)
 	case VM_SVGAME:
 		PFSV_AngleVectors();
 		break;
+#ifndef DEDICATED_ONLY
 	case VM_CLGAME:
 		PFCG_AngleVectors();
 		break;
+#endif
 	default:
 		Scr_RunError("PF_anglevectors not implemented for this qcvm");
 		break;

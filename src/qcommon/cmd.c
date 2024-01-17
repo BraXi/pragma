@@ -869,7 +869,7 @@ A complete command line has been parsed, so try to execute it
 FIXME: lookupnoadd the token to speed search?
 ============
 */
-void	Cmd_ExecuteString (char *text)
+void Cmd_ExecuteString (char *text)
 {	
 	cmd_function_t	*cmd;
 	cmdalias_t		*a;
@@ -896,8 +896,12 @@ void	Cmd_ExecuteString (char *text)
 			}
 			else
 			{	
+#ifdef DEDICATED_ONLY
+				printf("unknown command: %s\n", text);
+#else
 				// forward to server command
 				Cmd_ExecuteString(va("cmd %s", text));
+#endif
 			}
 
 			return;
@@ -923,8 +927,14 @@ void	Cmd_ExecuteString (char *text)
 	if (Cvar_Command ())
 		return;
 
+#ifdef DEDICATED_ONLY
+	print_time = false;
+	Com_Printf("Unknown command: \"%s\"\n", Cmd_Argv(0));
+	print_time = false;
+#else
 	// send it as a server command if we are connected
 	Cmd_ForwardToServer ();
+#endif
 }
 
 /*
@@ -937,10 +947,14 @@ void Cmd_List_f (void)
 	cmd_function_t	*cmd;
 	int				i;
 
+	print_time = false;
+
 	i = 0;
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next, i++)
 		Com_Printf ("%s\n", cmd->name);
 	Com_Printf ("%i commands\n", i);
+
+	print_time = true;
 }
 
 /*

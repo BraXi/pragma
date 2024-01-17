@@ -27,7 +27,7 @@ const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 	{VM_NONE, NULL, 0, "shared"},
 	{VM_SVGAME, "progs/svgame.dat", 63850, "svgame"},
 	{VM_CLGAME, "progs/cgame.dat", 42847, "clgame"},
-	{VM_GUI, "progs/guis.dat", 0, "gui"}
+	{VM_GUI, "progs/gui.dat", 0, "gui"}
 };
 
 
@@ -313,7 +313,7 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 	vm->crc = CRC_Block(vm->progs, len);
 
 #if PROGS_CHECK_CRC == 1
-	if (vm->progs->crc != vmDefs[vm->progsType].defs_crc_checksum )
+	if (vmDefs[vm->progsType].defs_crc_checksum != 0 && vm->progs->crc != vmDefs[vm->progsType].defs_crc_checksum )
 	{
 		Com_Error(ERR_DROP, "\"%s\" has wrong defs crc = '%i' (recompile progs with up to date headers)\n", filename, vm->progs->crc);
 		return;
@@ -416,7 +416,9 @@ void cmd_printedicts_f(void);
 
 void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs)
 {
+	Scr_BindVM(VM_NONE);
 	Scr_FreeScriptVM(vmType);
+
 //	if (qcvm[progsType] != NULL)
 //		Com_Error(ERR_FATAL, "Tried to create second instance of %s script VM\n", Scr_VMName(progsType));
 
@@ -645,6 +647,7 @@ void Scr_Shutdown()
 	}
 }
 
+#ifndef DEDICATED_ONLY
 typedef enum
 {
 	XALIGN_NONE = 0,
@@ -702,4 +705,4 @@ void PR_Profile(int x, int y)
 		UI_DrawString(x, y+10*i, XALIGN_RIGHT, str[i]);
 }
 
-
+#endif

@@ -45,8 +45,8 @@ typedef enum
 typedef enum
 {
 	VM_NONE,	// no program execution at all
-	VM_SVGAME,	// server
-	VM_CLGAME,	// client
+	VM_SVGAME,	// server game
+	VM_CLGAME,	// client game
 	VM_GUI,		// client gui
 	NUM_SCRIPT_VMS
 } vmType_t;

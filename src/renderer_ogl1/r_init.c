@@ -490,7 +490,7 @@ refexport_t GetRefAPI(refimport_t rimp)
 
 
 #ifndef REF_HARD_LINKED
-// this is only here so the functions in q_shared.c and q_shwin.c can link
+// this is only here so the functions in shared.c and win_shared.c can link
 void Sys_Error(char* error, ...)
 {
 	va_list		argptr;

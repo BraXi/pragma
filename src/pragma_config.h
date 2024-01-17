@@ -1,8 +1,13 @@
 #pragma once
 
+#ifndef PRAGMA_CONFIG_INCLUDED 
+#define PRAGMA_CONFIG_INCLUDED 1
+
 // version string
-#define PRAGMA_VERSION "0.23" 
+#define PRAGMA_VERSION "0.24" 
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
+
+//#define NEW_GUI 1 //experimental wip gui
 
 // Pragma will use pmove in shared cg/sv qc progs instead of C version
 // Enabling USE_PMOVE_IN_PROGS allows mods to have full control over pmove
@@ -42,4 +47,9 @@
 
 
 // version history:
+// 0.24 - 17.01.2024 -- dedicated server
 // 0.23 - 04.01.2024
+
+//#define DEDICATED_ONLY 1
+
+#endif /*PRAGMA_CONFIG_INCLUDED*/

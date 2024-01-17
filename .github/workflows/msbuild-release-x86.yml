@@ -52,6 +52,7 @@ jobs:
         name: pragma-release-win-${{env.BUILD_PLATFORM}}
         path: |
             build/engine.exe
+            build/pragma_server.exe        
             build/renderer_ogl1.dll
             build/main/dummy.txt
             readme.txt

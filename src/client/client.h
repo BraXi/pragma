@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ref.h"
+#include "../qcommon/renderer.h"
 
 #include "vid.h"
 #include "screen.h"
@@ -36,7 +36,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "keys.h"
 #include "console.h"
 
-#include "../cgame/cgame.h"
+#include "./cgame/cgame.h"
+
+#ifdef NEW_GUI
+	#include "./ui/gui.h"
+#endif
+
 //=============================================================================
 
 #define CHAR_SIZEX 8

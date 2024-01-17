@@ -62,8 +62,8 @@ extern void Nav_Shutdown();
 //============================================================================
 
 #ifdef _DEBUG
+#ifndef DEDICATED_ONLY
 // completly out of place, used just in debug builds to see stats
-
 typedef enum
 {
 	XALIGN_NONE = 0,
@@ -88,7 +88,8 @@ void ShowServerStats(int x, int y)
 	UI_DrawString(x, y + 10 * 13, XALIGN_RIGHT, "-- profile --");
 	PR_Profile(x, y + 10 * 14);
 }
-#endif
+#endif /*DEDICATED_ONLY*/
+#endif /*_DEBUG*/
 
 /*
 =====================
@@ -757,8 +758,7 @@ SV_RunGameFrame
 */
 void SV_RunGameFrame (void)
 {
-	if (host_speeds->value)
-		time_before_game = Sys_Milliseconds ();
+	time_before_game = Sys_Milliseconds ();
 
 	// we always need to bump framenum, even if we don't run the world, otherwise 
 	// the delta compression can get confused when a client has the "current" frame
@@ -779,9 +779,7 @@ void SV_RunGameFrame (void)
 		}
 	}
 
-	if (host_speeds->value)
-		time_after_game = Sys_Milliseconds ();
-
+	time_after_game = Sys_Milliseconds ();
 }
 
 /*

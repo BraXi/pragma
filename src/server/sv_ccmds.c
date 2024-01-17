@@ -34,7 +34,6 @@ void SV_ModelList_f(void)
 {
 	int		i, nonbmodels = 0;
 	svmodel_t	* mod;
-	qboolean detailed = Cmd_Argc() > 1 ? true : false;
 
 	static char mtypes[5][4] = { "BAD", "BSP", "SPR", "MD3", "BXM" };
 
@@ -264,6 +263,7 @@ SV_CopySaveGame
 */
 void SV_CopySaveGame (char *src, char *dst)
 {
+	src = dst = NULL;
 #if 0
 	char	name[MAX_OSPATH], name2[MAX_OSPATH];
 	int		l, len;
@@ -375,6 +375,7 @@ autosave is true when changing levels
 */
 void SV_WriteServerFile (qboolean autosave)
 {
+	autosave = false;
 #if 0
 	FILE	*f;
 	cvar_t	*var;
@@ -537,16 +538,16 @@ void SV_GameMap_f (void)
 		return;
 	}
 
-	Com_DPrintf(DP_SV, "SV_GameMap(%s)\n", Cmd_Argv(1));
+//	Com_DPrintf(DP_SV, "SV_GameMap(%s)\n", Cmd_Argv(1));
 
-	FS_CreatePath (va("%s/save/current/", FS_Gamedir()));
+//	FS_CreatePath (va("%s/save/current/", FS_Gamedir()));
 
 	// check for clearing the current savegame
 	map = Cmd_Argv(1);
 	if (map[0] == '*')
 	{
 		// wipe all the *.sav files
-		SV_WipeSavegame ("current");
+//		SV_WipeSavegame ("current");
 	}
 	else
 	{
@@ -587,8 +588,8 @@ void SV_GameMap_f (void)
 	// copy off the level to the autosave slot
 	if (!dedicated->value)
 	{
-		SV_WriteServerFile (true);
-		SV_CopySaveGame ("current", "save0");
+//		SV_WriteServerFile (true);
+//		SV_CopySaveGame ("current", "save0");
 	}
 }
 
@@ -618,7 +619,7 @@ void SV_Map_f (void)
 	}
 
 	sv.state = ss_dead;		// don't save current level when changing
-	SV_WipeSavegame("current");
+//	SV_WipeSavegame("current");
 	SV_GameMap_f ();
 }
 
@@ -639,6 +640,7 @@ SV_Loadgame_f
 */
 void SV_Loadgame_f (void)
 {
+#if 0
 	char	name[MAX_OSPATH];
 	FILE	*f;
 	char	*dir;
@@ -674,6 +676,7 @@ void SV_Loadgame_f (void)
 	// go to the map
 	sv.state = ss_dead;		// don't save current level when changing
 	SV_Map (false, svs.mapcmd, true, false, false);
+#endif
 }
 
 
@@ -732,10 +735,10 @@ void SV_Savegame_f (void)
 	SV_WriteLevelFile ();
 
 	// save server state
-	SV_WriteServerFile (false);
+//	SV_WriteServerFile (false);
 
 	// copy it off
-	SV_CopySaveGame ("current", dir);
+//	SV_CopySaveGame ("current", dir);
 
 	Com_Printf ("Done.\n");
 }
@@ -801,8 +804,8 @@ void SV_Status_f (void)
 		numplayers++;
 	}
 
+	print_time = false;
 	Com_Printf("\n--- server status ---\n\n");
-
 
 	if(developer->value)
 		Com_Printf("-- Server running in developer mode (%i) --\n", (int)developer->value);
@@ -813,8 +816,10 @@ void SV_Status_f (void)
 		Com_Printf("\n");
 
 
-	Com_Printf("Host name : %s\n", Cvar_VariableString("hostname"));
-	Com_Printf("Map       : %s\n", sv.name);
+	Com_Printf("hostname  : %s\n", Cvar_VariableString("hostname"));
+	Com_Printf("map       : %s\n", sv.name);
+	Com_Printf("gamedir   : %s\n\n", FS_Gamedir());
+
 	Com_Printf("Clients   : %i / %i\n", numplayers, svs.max_clients);
 	Com_Printf("Entities  : %i / %i\n", sv.num_edicts, sv.max_edicts);
 
@@ -857,6 +862,7 @@ void SV_Status_f (void)
 		Com_Printf ("\n");
 	}
 	Com_Printf ("\n");
+	print_time = true;
 }
 
 /*
@@ -955,7 +961,7 @@ recorded, but no playerinfo will be stored.  Primarily for demo merging.
 void SV_ServerRecord_f (void)
 {
 	char	name[MAX_OSPATH];
-	char	buf_data[32768];
+	byte	buf_data[32768]; // was char
 	sizebuf_t	buf;
 	int		len;
 	int		i;
@@ -1071,23 +1077,6 @@ void SV_KillServer_f (void)
 	NET_Config ( false );	// close network sockets
 }
 
-/*
-===============
-SV_ServerCommand_f
-
-Let the game dll handle a command
-===============
-*/
-void SV_ServerCommand_f (void)
-{
-	if (!sv.state != ss_game)
-	{
-		Com_Printf ("No game loaded.\n");
-		return;
-	}
-
-	ServerCommand();
-}
 
 //===========================================================
 
@@ -1117,11 +1106,9 @@ void SV_InitOperatorCommands (void)
 	Cmd_AddCommand ("serverrecord", SV_ServerRecord_f);
 	Cmd_AddCommand ("serverstop", SV_ServerStop_f);
 
-	Cmd_AddCommand ("save", SV_Savegame_f);
-	Cmd_AddCommand ("load", SV_Loadgame_f);
+//	Cmd_AddCommand ("save", SV_Savegame_f);
+//	Cmd_AddCommand ("load", SV_Loadgame_f);
 
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
-
-	Cmd_AddCommand ("sv", SV_ServerCommand_f);
 }
 

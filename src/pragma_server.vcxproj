@@ -19,18 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="client\adivtab.h" />
-    <ClInclude Include="client\cgame\cgame.h" />
-    <ClInclude Include="client\client.h" />
-    <ClInclude Include="client\console.h" />
-    <ClInclude Include="client\input.h" />
-    <ClInclude Include="client\keys.h" />
-    <ClInclude Include="client\qmenu.h" />
-    <ClInclude Include="client\ref.h" />
-    <ClInclude Include="client\screen.h" />
-    <ClInclude Include="client\snd_loc.h" />
-    <ClInclude Include="client\sound.h" />
-    <ClInclude Include="client\vid.h" />
     <ClInclude Include="pragma_config.h" />
     <ClInclude Include="qcommon\anorms.h" />
     <ClInclude Include="qcommon\crc.h" />
@@ -46,32 +34,9 @@
     <ClInclude Include="script\script_internals.h" />
     <ClInclude Include="server\server.h" />
     <ClInclude Include="server\sv_game.h" />
-    <ClInclude Include="platform\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\cgame\cg_builtins.c" />
-    <ClCompile Include="client\cgame\cg_main.c" />
-    <ClCompile Include="client\cgame\modeldef.c" />
-    <ClCompile Include="client\cl_cin.c" />
-    <ClCompile Include="client\cl_download.c" />
-    <ClCompile Include="client\cl_ents.c" />
-    <ClCompile Include="client\cl_fx.c" />
-    <ClCompile Include="client\cl_input.c" />
-    <ClCompile Include="client\cl_inv.c" />
-    <ClCompile Include="client\cl_main.c" />
-    <ClCompile Include="client\cl_newfx.c" />
-    <ClCompile Include="client\cl_parse.c" />
-    <ClCompile Include="client\cl_pred.c" />
-    <ClCompile Include="client\cl_scrn.c" />
-    <ClCompile Include="client\cl_tent.c" />
-    <ClCompile Include="client\cl_view.c" />
-    <ClCompile Include="client\console.c" />
-    <ClCompile Include="client\keys.c" />
-    <ClCompile Include="client\menu.c" />
-    <ClCompile Include="client\qmenu.c" />
-    <ClCompile Include="client\snd_dma.c" />
-    <ClCompile Include="client\snd_mem.c" />
-    <ClCompile Include="client\snd_mix.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />
@@ -102,25 +67,15 @@
     <ClCompile Include="server\sv_send.c" />
     <ClCompile Include="server\sv_user.c" />
     <ClCompile Include="server\sv_world.c" />
-    <ClCompile Include="platform\win_input.c" />
     <ClCompile Include="platform\win_net.c" />
     <ClCompile Include="platform\win_shared.c" />
-    <ClCompile Include="platform\win_sound.c" />
     <ClCompile Include="platform\win_main.c" />
-    <ClCompile Include="platform\vid_dll.c" />
-    <ClCompile Include="platform\vid_menu.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="platform\pragma.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="platform\q2.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{a8e87a57-9f0a-4c40-82cf-531407b7843e}</ProjectGuid>
-    <RootNamespace>engine</RootNamespace>
+    <ProjectGuid>{0CA27754-F257-489E-B808-16610454DE81}</ProjectGuid>
+    <RootNamespace>pragma_server</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -174,31 +129,32 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>.\..\build\</OutDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <TargetName>$(ProjectName)</TargetName>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>.\..\build\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>.\..\build\</OutDir>
+    <TargetName>$(ProjectName)_x64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>.\..\build\</OutDir>
+    <TargetName>$(ProjectName)_x64</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;DEDICATED_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>winmm.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -210,12 +166,12 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;DEDICATED_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>

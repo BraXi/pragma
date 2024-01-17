@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // net_wins.c
 
-#include "winsock.h"
+#include <winsock.h>
 #include "../qcommon/qcommon.h"
 
 #define	MAX_LOOPBACK	4
@@ -40,14 +40,14 @@ typedef struct
 //cvar_t		*net_shownet; //braxi -- not used anywhere
 static cvar_t	*net_noudp;
 
-loopback_t	loopbacks[2];
-int			ip_sockets[2];
+static loopback_t	loopbacks[2];
+static int			ip_sockets[2];
 
-char *NET_ErrorString (void);
+static char *NET_ErrorString (void);
 
 //=============================================================================
 
-void NetadrToSockadr (netadr_t *a, struct sockaddr *s)
+static void NetadrToSockadr (netadr_t *a, struct sockaddr *s)
 {
 	memset (s, 0, sizeof(*s));
 
@@ -65,7 +65,7 @@ void NetadrToSockadr (netadr_t *a, struct sockaddr *s)
 	}
 }
 
-void SockadrToNetadr(struct sockaddr* s, netadr_t* a)
+static void SockadrToNetadr(struct sockaddr* s, netadr_t* a)
 {
 	if (s->sa_family == AF_INET)
 	{
@@ -75,7 +75,7 @@ void SockadrToNetadr(struct sockaddr* s, netadr_t* a)
 	}
 }
 
-qboolean	NET_CompareAdr (netadr_t a, netadr_t b)
+qboolean NET_CompareAdr (netadr_t a, netadr_t b)
 {
 	if (a.type != b.type)
 		return false;
@@ -99,7 +99,7 @@ NET_CompareBaseAdr
 Compares without the port
 ===================
 */
-qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
+qboolean NET_CompareBaseAdr (netadr_t a, netadr_t b)
 {
 	if (a.type != b.type)
 		return false;
@@ -129,7 +129,7 @@ char	*NET_AdrToString (netadr_t a)
 
 /*
 =============
-NET_StringToAdr
+NET_StringToSockaddr
 
 localhost
 idnewt
@@ -143,7 +143,7 @@ idnewt:28000
 	copy[1] = s[src + 1];	\
 	sscanf (copy, "%x", &val);	
 
-qboolean	NET_StringToSockaddr (char *s, struct sockaddr *sadr)
+static qboolean NET_StringToSockaddr (char *s, struct sockaddr *sadr)
 {
 	struct hostent	*h;
 	char	*colon;
@@ -195,7 +195,7 @@ idnewt:28000
 192.246.40.70:28000
 =============
 */
-qboolean	NET_StringToAdr (char *s, netadr_t *a)
+qboolean NET_StringToAdr (char *s, netadr_t *a)
 {
 	struct sockaddr sadr;
 	
@@ -215,7 +215,7 @@ qboolean	NET_StringToAdr (char *s, netadr_t *a)
 }
 
 
-qboolean	NET_IsLocalAddress (netadr_t adr)
+qboolean NET_IsLocalAddress (netadr_t adr)
 {
 	return adr.type == NA_LOOPBACK;
 }
@@ -228,7 +228,7 @@ LOOPBACK BUFFERS FOR LOCAL PLAYER
 =============================================================================
 */
 
-qboolean	NET_GetLoopPacket (netsrc_t sock, netadr_t *netFrom, sizebuf_t *netMessage)
+static qboolean NET_GetLoopPacket (netsrc_t sock, netadr_t *netFrom, sizebuf_t *netMessage)
 {
 	int		i;
 	loopback_t	*loop;
@@ -253,7 +253,7 @@ qboolean	NET_GetLoopPacket (netsrc_t sock, netadr_t *netFrom, sizebuf_t *netMess
 }
 
 
-void NET_SendLoopPacket (netsrc_t sock, int length, void *data/*, netadr_t to*/)
+static void NET_SendLoopPacket (netsrc_t sock, int length, void *data/*, netadr_t to*/)
 {
 	int		i;
 	loopback_t	*loop;
@@ -269,7 +269,7 @@ void NET_SendLoopPacket (netsrc_t sock, int length, void *data/*, netadr_t to*/)
 
 //=============================================================================
 
-qboolean	NET_GetPacket (netsrc_t sock, netadr_t *netFrom, sizebuf_t *netmessage)
+qboolean NET_GetPacket (netsrc_t sock, netadr_t *netFrom, sizebuf_t *netmessage)
 {
 	int 	ret;
 	struct sockaddr from;
@@ -290,8 +290,7 @@ qboolean	NET_GetPacket (netsrc_t sock, netadr_t *netFrom, sizebuf_t *netmessage)
 				return false;
 
 		fromlen = sizeof(from);
-		ret = recvfrom (net_socket, netmessage->data, netmessage->maxsize
-			, 0, (struct sockaddr *)&from, &fromlen);
+		ret = recvfrom (net_socket, (char*)netmessage->data, netmessage->maxsize, 0, (struct sockaddr *)&from, &fromlen);
 		if (ret == -1)
 		{
 			err = WSAGetLastError();
@@ -400,7 +399,7 @@ void NET_SendPacket (netsrc_t sock, int length, void *data, netadr_t to)
 NET_Socket
 ====================
 */
-int NET_IPSocket (char *net_interface, int port)
+static int NET_IPSocket (char *net_interface, int port)
 {
 	int					newsocket;
 	struct sockaddr_in	address;
@@ -458,7 +457,7 @@ int NET_IPSocket (char *net_interface, int port)
 NET_OpenIP
 ====================
 */
-void NET_OpenIP (void)
+static void NET_OpenIP (void)
 {
 	cvar_t	*ip;
 	int		port;
@@ -585,7 +584,7 @@ void NET_Init (void)
 	if (r)
 		Com_Error(ERR_FATAL, "Winsock initialization failed.");
 
-	Com_Printf("Winsock Initialized\n");
+//	Com_Printf("Winsock Initialized\n");
 
 	net_noudp = Cvar_Get ("net_noudp", "0", CVAR_NOSET);
 
@@ -611,7 +610,7 @@ void NET_Shutdown (void)
 NET_ErrorString
 ====================
 */
-char *NET_ErrorString (void)
+static char *NET_ErrorString (void)
 {
 	int		code;
 
