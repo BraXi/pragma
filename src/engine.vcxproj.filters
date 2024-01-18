@@ -34,9 +34,6 @@
     <ClCompile Include="client\menu.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\qmenu.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="qcommon\cmd.c">
       <Filter>common</Filter>
     </ClCompile>
@@ -197,9 +194,6 @@
       <Filter>client</Filter>
     </ClInclude>
     <ClInclude Include="client\snd_loc.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\qmenu.h">
       <Filter>client</Filter>
     </ClInclude>
     <ClInclude Include="client\ref.h">

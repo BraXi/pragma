@@ -172,7 +172,7 @@ typedef struct
 	void	(*DrawFill) (int x, int y, int w, int h);
 	void	(*DrawFadeScreen) (float *rgba);
 
-	// Draw images for cinematic rendering (which can have a different palette). Note that calls
+	// Draw images for cinematic rendering (which can have a different palette)
 	void	(*DrawStretchRaw) (int x, int y, int w, int h, int cols, int rows, byte *data);
 
 	void	(*DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color);

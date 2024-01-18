@@ -716,6 +716,7 @@ int SV_HullForEntity(gentity_t* ent)
 		{
 			Scr_RunError("MOVETYPE_PUSH with a non BSP model for entity %s (%i) at [%i %i %i]\n", Scr_GetString(ent->v.classname),
 				NUM_FOR_EDICT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+			return -1; // msvc
 		}
 
 		return model->headnode;

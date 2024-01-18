@@ -759,7 +759,7 @@ void CL_ParseStatusMessage (void)
 	str = MSG_ReadString(&net_message);
 
 	Com_Printf("%s - %s\n", NET_AdrToString(net_from), str);
-	M_AddToServerList (net_from, str);
+//	M_AddToServerList (net_from, str);
 }
 
 

@@ -16,11 +16,14 @@
     <ClInclude Include="win_glw.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\qcommon\renderer.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\qcommon\shared.h">
-      <Filter>include</Filter>
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\platform\winquake.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\qcommon\renderer.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -33,19 +36,33 @@
     <ClCompile Include="r_misc.c" />
     <ClCompile Include="r_surf.c" />
     <ClCompile Include="r_warp.c" />
-    <ClCompile Include="..\platform\win_shared.c" />
-    <ClCompile Include="..\qcommon\shared.c" />
     <ClCompile Include="r_draw_new.c" />
     <ClCompile Include="r_init.c" />
     <ClCompile Include="r_md3.c" />
     <ClCompile Include="r_sprite.c" />
     <ClCompile Include="r_state.c" />
-    <ClCompile Include="win_opengl.c" />
-    <ClCompile Include="win_qgl.c" />
+    <ClCompile Include="win_opengl.c">
+      <Filter>sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\qcommon\shared.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\platform\win_shared.c">
+      <Filter>sys</Filter>
+    </ClCompile>
+    <ClCompile Include="win_qgl.c">
+      <Filter>sys</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
       <UniqueIdentifier>{166774dd-64fd-4cbb-8c3a-9935c23f52c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{6af85753-47d0-4090-8ec1-277bc0852ee2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sys">
+      <UniqueIdentifier>{e472f71e-8143-4259-8f93-02322578c7ab}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

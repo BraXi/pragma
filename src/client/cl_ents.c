@@ -761,7 +761,7 @@ static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, 
 
 	if (anim != NULL && clent->anim.rate > 0)
 	{
-		int progress = ((cl.frame.servertime - state->animtime) / clent->anim.rate);
+		progress = ((cl.frame.servertime - state->animtime) / clent->anim.rate);
 		int curanimtime = clent->anim.starttime + (progress * clent->anim.rate);
 
 		refent->animbacklerp = 1.0f - ((cl.time - ((float)curanimtime - SV_FRAMETIME_MSEC)) / clent->anim.rate);

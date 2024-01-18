@@ -275,7 +275,7 @@ void CL_RequestNextDownload(void)
 	}
 
 	cgprogs_checksum = Scr_GetProgsCRC(VM_CLGAME);
-	if (cgprogs_checksum != atoi(cl.configstrings[CS_CHECKSUM_CGPROGS]))
+	if ((int)cgprogs_checksum != atoi(cl.configstrings[CS_CHECKSUM_CGPROGS]))
 	{
 		Com_Error(ERR_DROP, "Client game differs from server: %i != '%s'\n", cgprogs_checksum, cl.configstrings[CS_CHECKSUM_CGPROGS]);
 		return;
