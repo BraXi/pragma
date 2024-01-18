@@ -33,6 +33,21 @@ vec3_t vec3_origin = {0,0,0};
 #pragma optimize( "", off )
 #endif
 
+#ifdef __linux__
+char* _strlwr(char* x)
+{
+  int b;
+  for(b=0;x[b]!='\0';b++)
+  {
+    if(x[b]>='A'&&x[b]<='Z')
+    {
+      x[b]=x[b]-'A'+'a';
+    }
+  }
+  return x;
+}
+#endif
+
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees )
 {
 	float	m[3][3];

@@ -808,7 +808,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 			Key_Message (key);
 			break;
 		case key_menu:
-			M_Keydown (key);
+			UI_KeyInputHandler(key);
 			break;
 		case key_game:
 		case key_console:
@@ -897,7 +897,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 		Key_Message (key);
 		break;
 	case key_menu:
-		M_Keydown (key);
+		UI_KeyInputHandler(key);
 		break;
 
 	case key_game:

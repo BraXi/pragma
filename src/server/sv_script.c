@@ -244,7 +244,9 @@ void Scr_ClientDisconnect(gentity_t* self)
 		{
 			if (ent->v.showto == self->s.number) //NUM_FOR_ENT(self))
 			{
-				(int)ent->v.svflags &= ~SVF_SINGLECLIENT;
+				int temp = ent->v.svflags;
+				temp &= ~SVF_SINGLECLIENT;
+				ent->v.svflags = temp;
 				ent->v.showto = 0;
 //				break;
 			}

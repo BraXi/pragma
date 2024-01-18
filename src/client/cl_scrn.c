@@ -1424,21 +1424,15 @@ void SCR_UpdateScreen (void)
 		{
 			if (cls.key_dest == key_menu)
 			{
-				M_Draw ();
-//				re.EndFrame();
-//				return;
+				UI_Draw();
 			}
 			else if (cls.key_dest == key_console)
 			{
 				SCR_DrawConsole ();
-//				re.EndFrame();
-//				return;
 			}
 			else
 			{
 				SCR_DrawCinematic();
-//				re.EndFrame();
-//				return;
 			}
 		}
 		else 
@@ -1480,7 +1474,7 @@ void SCR_UpdateScreen (void)
 
 			DrawDownloadNotify();
 
-			M_Draw ();
+			UI_Draw();
 
 			SCR_DrawLoading ();
 		}

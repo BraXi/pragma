@@ -62,6 +62,16 @@ typedef enum {false, true}	qboolean;
 #endif
 
 
+#ifdef __linux__
+// linux hacks
+#define min(a,b) ((a < b) ? a : b)
+#define max(a,b) ((a > b) ? a : b)
+#include <string.h>
+#define stricmp strcasecmp
+
+char* _strlwr(char* x);
+#endif
+
 // angle indexes
 #define	PITCH				0		// up / down
 #define	YAW					1		// left / right

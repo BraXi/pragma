@@ -1624,7 +1624,7 @@ FloodAreaConnections
 
 ====================
 */
-static void	FloodAreaConnections (void)
+void	FloodAreaConnections (void)
 {
 	int		i;
 	carea_t	*area;

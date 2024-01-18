@@ -178,6 +178,12 @@
     <ClCompile Include="client\cgame\modeldef.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
+    <ClCompile Include="client\ui\ui_load.c">
+      <Filter>client\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="client\ui\ui_main.c">
+      <Filter>client\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="platform\resource.h" />
@@ -257,6 +263,12 @@
     <ClInclude Include="qcommon\anorms.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="client\ui\gui.h">
+      <Filter>client\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="client\ui\ui_local.h">
+      <Filter>client\ui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="platform\q2.rc" />
@@ -285,6 +297,9 @@
     </Filter>
     <Filter Include="client\cgame">
       <UniqueIdentifier>{355b264e-e96f-43f9-94c4-037e89a2a0e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="client\ui">
+      <UniqueIdentifier>{120cfd9c-8355-44d1-9928-17e8d0cbd104}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

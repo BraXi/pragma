@@ -29,6 +29,8 @@
     <ClInclude Include="client\screen.h" />
     <ClInclude Include="client\snd_loc.h" />
     <ClInclude Include="client\sound.h" />
+    <ClInclude Include="client\ui\gui.h" />
+    <ClInclude Include="client\ui\ui_local.h" />
     <ClInclude Include="client\vid.h" />
     <ClInclude Include="pragma_config.h" />
     <ClInclude Include="qcommon\anorms.h" />
@@ -70,6 +72,8 @@
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
     <ClCompile Include="client\snd_mix.c" />
+    <ClCompile Include="client\ui\ui_load.c" />
+    <ClCompile Include="client\ui\ui_main.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />

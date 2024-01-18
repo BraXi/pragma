@@ -601,7 +601,7 @@ void CL_Disconnect (void)
 
 	VectorClear (cl.refdef.blend);
 
-	M_ForceMenuOff ();
+	UI_CloseAllGuis();
 
 	cls.connect_time = 0;
 

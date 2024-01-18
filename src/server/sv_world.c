@@ -21,6 +21,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "server.h"
 
+#ifdef __linux__
+#include <limits.h>
+#endif
+
 gentity_t	*sv_entity;	// currently run entity
 
 void WriteGame(char* filename, qboolean autosave) {}

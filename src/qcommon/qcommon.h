@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 // qcommon.h -- definitions common between client and server, but not game.dll
+#pragma once
 
 #include "shared.h"
 #include "../script/scriptvm.h"
@@ -62,10 +63,10 @@ extern qboolean print_time;
 	#define	CPUSTRING	"NON-WIN32"
 #endif
 
-#ifdef _M_IX86
-	#define	CPUSTRING	"x86"
-#elif defined(_M_X64)
-	#define	CPUSTRING	"x64"
+#if defined(__x86_64__) || defined(_M_X64)
+        #define	CPUSTRING	"x64"
+#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+        #define	CPUSTRING	"x86"
 #else
 	#define	CPUSTRING	"NON-x86/x64"
 #endif

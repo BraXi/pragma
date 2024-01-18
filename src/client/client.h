@@ -569,13 +569,6 @@ void CL_EntityEvent (entity_state_t *ent);
 void CL_TrapParticles (centity_t *ent);
 
 //
-// menus
-//
-void M_Keydown (int key);
-void M_Draw (void);
-void M_ForceMenuOff (void);
-
-//
 // cl_inv.c TODO: remove inventory from kernel entirely
 //
 void CL_ParseInventory (void);

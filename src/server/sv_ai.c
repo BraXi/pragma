@@ -289,7 +289,9 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 
 	if ((int)actor->v.flags & FL_PARTIALGROUND)
 	{
-		(int)actor->v.flags &= ~FL_PARTIALGROUND;
+		int temp = (int)actor->v.flags;
+		temp &= ~FL_PARTIALGROUND;
+		actor->v.flags = temp;
 	}
 
 	actor->v.groundentity_num = trace.entitynum;
@@ -398,7 +400,9 @@ SV_FixCheckBottom
 */
 static void SV_FixCheckBottom(gentity_t* actor)
 {
-	(int)actor->v.flags |= FL_PARTIALGROUND;
+	int temp = (int)actor->v.flags;
+	temp |= FL_PARTIALGROUND;
+	actor->v.flags = temp;
 }
 
 

@@ -45,49 +45,4 @@ void UI_DrawString(int x, int y, UI_AlignX alignx, char* string)
 	}
 }
 
-void M_ForceMenuOff (void)
-{
-	cls.key_dest = key_game;
-}
-
-
-/*
-=================
-M_Draw
-=================
-*/
-void M_Draw (void)
-{
-	static float fadeColor[4] = {0,0,0,0.4};
-	if (cls.key_dest != key_menu)
-		return;
-
-	// repaint everything next frame
-	SCR_DirtyScreen ();
-
-	// dim everything behind it down
-	if (cl.cinematictime > 0)
-		re.DrawFill (0,0,viddef.width, viddef.height);
-	else
-	{
-		if (Com_ServerState() == 0)
-			fadeColor[3] = 1;
-		else
-			fadeColor[3] = 0.3;
-
-		re.DrawFadeScreen(fadeColor);
-	}
-		
-}
-
-
-/*
-=================
-M_Keydown
-=================
-*/
-void M_Keydown (int key)
-{
-}
-
 

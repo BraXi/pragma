@@ -85,12 +85,12 @@ void Con_ToggleConsole_f (void)
 
 	if (cls.key_dest == key_console)
 	{
-		M_ForceMenuOff ();
+		UI_CloseAllGuis();
 //		Cvar_Set ("paused", "0"); // braxi: console no longer pauses the game
 	}
 	else
 	{
-		M_ForceMenuOff ();
+		UI_CloseAllGuis();
 		cls.key_dest = key_console;	
 
 // braxi: console no longer pauses the game
@@ -112,7 +112,7 @@ void Con_ToggleChat_f (void)
 	{
 		if (cls.state == ca_active)
 		{
-			M_ForceMenuOff ();
+			UI_CloseAllGuis();
 			cls.key_dest = key_game;
 		}
 	}
