@@ -797,11 +797,6 @@ void Key_Event (int key, qboolean down, unsigned time)
 		if (!down)
 			return;
 
-		if (cl.frame.playerstate.stats[STAT_LAYOUT] && cls.key_dest == key_game)
-		{	// put away help computer / inventory
-			Cbuf_AddText ("cmd putaway\n");
-			return;
-		}
 		switch (cls.key_dest)
 		{
 		case key_message:

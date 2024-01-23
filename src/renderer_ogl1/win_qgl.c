@@ -3035,7 +3035,7 @@ qboolean QGL_Init( const char *dllname )
 		char *buf = NULL;
 
 		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &buf, 0, NULL);
-		ri.Con_Printf( PRINT_ALL, "%s\n", buf );
+		ri.Printf( PRINT_ALL, "%s\n", buf );
 		return false;
 	}
 
@@ -3424,7 +3424,7 @@ void GLimp_EnableLogging( qboolean enable )
 
 			asctime( newtime );
 
-			Com_sprintf( buffer, sizeof(buffer), "%s/gl.log", ri.FS_Gamedir() ); 
+			Com_sprintf( buffer, sizeof(buffer), "%s/gl.log", ri.GetGameDir() ); 
 			glw_state.log_fp = fopen( buffer, "wt" );
 
 			fprintf( glw_state.log_fp, "%s\n", asctime( newtime ) );

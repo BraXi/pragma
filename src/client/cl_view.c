@@ -322,7 +322,6 @@ void CL_PrepRefresh (void)
 	// precache status bar pics
 	Com_Printf ("pics\r"); 
 	SCR_UpdateScreen ();
-	SCR_TouchPics ();
 	Com_Printf ("                                     \r");
 
 	CL_RegisterTEntModels ();

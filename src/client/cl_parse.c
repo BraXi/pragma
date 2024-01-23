@@ -27,8 +27,6 @@ char *svc_strings[256] =
 
 	"svc_muzzleflash",
 	"svc_temp_entity",
-	"svc_layout",
-	"svc_inventory",
 	"svc_cgcmd",
 
 	"svc_nop",
@@ -459,15 +457,6 @@ void CL_ParseServerMessage (void)
 
 		case SVC_FRAME:
 			CL_ParseFrame ();
-			break;
-
-		case SVC_INVENTORY:
-			CL_ParseInventory ();
-			break;
-
-		case SVC_LAYOUT:
-			s = MSG_ReadString (&net_message);
-			strncpy (cl.layout, s, sizeof(cl.layout)-1);
 			break;
 
 		case SVC_PLAYERINFO:

@@ -195,7 +195,7 @@ void GL_TextureMode( char *string )
 
 	if (i == NUM_GL_MODES)
 	{
-		ri.Con_Printf (PRINT_ALL, "bad filter name\n");
+		ri.Printf (PRINT_ALL, "bad filter name\n");
 		return;
 	}
 
@@ -231,7 +231,7 @@ void GL_TextureAlphaMode( char *string )
 
 	if (i == NUM_GL_ALPHA_MODES)
 	{
-		ri.Con_Printf (PRINT_ALL, "bad alpha texture mode name\n");
+		ri.Printf (PRINT_ALL, "bad alpha texture mode name\n");
 		return;
 	}
 
@@ -255,7 +255,7 @@ void GL_TextureSolidMode( char *string )
 
 	if (i == NUM_GL_SOLID_MODES)
 	{
-		ri.Con_Printf (PRINT_ALL, "bad solid texture mode name\n");
+		ri.Printf (PRINT_ALL, "bad solid texture mode name\n");
 		return;
 	}
 
@@ -273,7 +273,7 @@ void	GL_ImageList_f (void)
 	image_t	*image;
 	int		texels;
 
-	ri.Con_Printf (PRINT_ALL, "------------------\n");
+	ri.Printf (PRINT_ALL, "------------------\n");
 	texels = 0;
 
 	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
@@ -284,33 +284,33 @@ void	GL_ImageList_f (void)
 		switch (image->type)
 		{
 		case it_model:
-			ri.Con_Printf (PRINT_ALL, "MDL ");
+			ri.Printf (PRINT_ALL, "MDL ");
 			break;
 		case it_sprite:
-			ri.Con_Printf (PRINT_ALL, "SPR ");
+			ri.Printf (PRINT_ALL, "SPR ");
 			break;
 		case it_texture:
-			ri.Con_Printf (PRINT_ALL, "TEX ");
+			ri.Printf (PRINT_ALL, "TEX ");
 			break;
 		case it_gui:
-			ri.Con_Printf (PRINT_ALL, "GUI ");
+			ri.Printf (PRINT_ALL, "GUI ");
 			break;
 		case it_tga:
-			ri.Con_Printf(PRINT_ALL, "TGA ");
+			ri.Printf(PRINT_ALL, "TGA ");
 			break;
 		case it_sky:
-			ri.Con_Printf(PRINT_ALL, "SKY ");
+			ri.Printf(PRINT_ALL, "SKY ");
 			break;
 		default:
-			ri.Con_Printf (PRINT_ALL, "?   ");
+			ri.Printf (PRINT_ALL, "?   ");
 			break;
 		}
 
-		ri.Con_Printf (PRINT_ALL, "%i: [%ix%i %s]: %s\n",
+		ri.Printf (PRINT_ALL, "%i: [%ix%i %s]: %s\n",
 			i, image->upload_width, image->upload_height, (image->has_alpha ? "RGBA" : "RGB"), image->name);
 	}
-	ri.Con_Printf (PRINT_ALL, "\nTotal texel count (not counting mipmaps): %i\n", texels);
-	ri.Con_Printf(PRINT_ALL, "Total %i out of %i textures in use\n\n", numgltextures, MAX_GLTEXTURES);
+	ri.Printf (PRINT_ALL, "\nTotal texel count (not counting mipmaps): %i\n", texels);
+	ri.Printf(PRINT_ALL, "Total %i out of %i textures in use\n\n", numgltextures, MAX_GLTEXTURES);
 }
 
 /*
@@ -356,10 +356,10 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 	//
 	// load the file
 	//
-	length = ri.FS_LoadFile (name, (void **)&buffer);
+	length = ri.LoadFile (name, (void **)&buffer);
 	if (!buffer)
 	{
-//		ri.Con_Printf (PRINT_DEVELOPER, "Bad tga file %s\n", name);
+//		ri.Printf (PRINT_DEVELOPER, "Bad tga file %s\n", name);
 		return;
 	}
 
@@ -391,11 +391,11 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 
 	if (targa_header.image_type != TGA_TYPE_RAW_RGB && targa_header.image_type != TGA_TYPE_RUNLENGHT_RGB)
 	{
-		ri.Sys_Error(ERR_DROP, "LoadTGA: '%s' Only type 2 and 10 targa RGB images supported\n", name);
+		ri.Error(ERR_DROP, "LoadTGA: '%s' Only type 2 and 10 targa RGB images supported\n", name);
 	}
 
 	if (targa_header.colormap_type !=0 || (targa_header.pixel_size != 32 && targa_header.pixel_size != 24))
-		ri.Sys_Error (ERR_DROP, "LoadTGA: Only 32 or 24 bit images supported (no colormaps)\n");
+		ri.Error (ERR_DROP, "LoadTGA: Only 32 or 24 bit images supported (no colormaps)\n");
 
 	columns = targa_header.width;
 	rows = targa_header.height;
@@ -534,7 +534,7 @@ void LoadTGA (char *name, byte **pic, int *width, int *height)
 			breakOut:;
 		}
 	}
-	ri.FS_FreeFile (buffer);
+	ri.FreeFile (buffer);
 }
 
 
@@ -706,7 +706,7 @@ qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 	upload_height = scaled_height;
 
 	if (scaled_width * scaled_height > sizeof(scaled)/4)
-		ri.Sys_Error (ERR_DROP, "GL_Upload32: too big");
+		ri.Error (ERR_DROP, "GL_Upload32: too big");
 
 	// scan the texture for any non-255 alpha
 	c = width*height;
@@ -727,7 +727,7 @@ qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 	    comp = gl_tex_alpha_format;
 	else 
 	{
-	    ri.Con_Printf (PRINT_ALL, "Unknown number of texture components %i\n", samples);
+	    ri.Printf (PRINT_ALL, "Unknown number of texture components %i\n", samples);
 	    comp = samples;
 	}
 
@@ -804,7 +804,7 @@ Returns has_alpha
 */
 qboolean GL_Upload8 (byte *data, int width, int height,  qboolean mipmap, qboolean is_sky )
 {
-//	ri.Sys_Error(ERR_FATAL, "%s\n", __FUNCTION__);
+//	ri.Error(ERR_FATAL, "%s\n", __FUNCTION__);
 	return false;
 }
 
@@ -830,13 +830,13 @@ image_t *GL_LoadPic (char *name, byte *pic, int width, int height, imagetype_t t
 	if (i == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
-			ri.Sys_Error (ERR_DROP, "MAX_GLTEXTURES");
+			ri.Error (ERR_DROP, "MAX_GLTEXTURES");
 		numgltextures++;
 	}
 	image = &gltextures[i];
 
 	if (strlen(name) >= sizeof(image->name))
-		ri.Sys_Error (ERR_DROP, "GL_LoadPic: \"%s\" is too long", name);
+		ri.Error (ERR_DROP, "GL_LoadPic: \"%s\" is too long", name);
 	strcpy (image->name, name);
 	image->registration_sequence = registration_sequence;
 
@@ -874,12 +874,12 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 
 	if (!name)
 	{
-		//	ri.Sys_Error (ERR_DROP, "GL_FindImage: NULL name");
+		//	ri.Error (ERR_DROP, "GL_FindImage: NULL name");
 		return NULL;
 	}
 	len = strlen(name);
 	if (len<5)
-		return NULL;	//	ri.Sys_Error (ERR_DROP, "GL_FindImage: bad name: %s", name);
+		return NULL;	//	ri.Error (ERR_DROP, "GL_FindImage: bad name: %s", name);
 
 	// look for it
 	for (i=0, image=gltextures ; i<numgltextures ; i++,image++)
@@ -900,14 +900,14 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 		LoadTGA (name, &pic, &width, &height);
 		if (!pic)
 		{
-//			ri.Con_Printf(PRINT_LOW, "GL_FindImage: couldn't load %s\n", name);
+//			ri.Printf(PRINT_LOW, "GL_FindImage: couldn't load %s\n", name);
 			return r_notexture;
 		}
 		image = GL_LoadPic (name, pic, width, height, type, 32);
 	}
 	else
 	{
-		ri.Con_Printf(PRINT_LOW, "GL_FindImage: weird file %s\n", name);
+		ri.Printf(PRINT_LOW, "GL_FindImage: weird file %s\n", name);
 		return r_notexture;
 	}
 

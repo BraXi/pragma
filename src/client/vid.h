@@ -36,6 +36,3 @@ extern	viddef_t	viddef;				// global video state
 void	VID_Init (void);
 void	VID_Shutdown (void);
 void	VID_CheckChanges (void);
-
-void	VID_MenuDraw( void );
-const char *VID_MenuKey( int );

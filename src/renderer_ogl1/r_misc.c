@@ -108,12 +108,12 @@ void GL_ScreenShot_f (void)
 	buffer = malloc(vid.width * vid.height * 3 + 18);
 	if (!buffer)
 	{
-		ri.Con_Printf(PRINT_ALL, "GL_ScreenShot_f: failed to allocate pixels\n");
+		ri.Printf(PRINT_ALL, "GL_ScreenShot_f: failed to allocate pixels\n");
 		return;
 	}
 
 	// create the screenshots directory if it doesn't exist
-	Com_sprintf (checkname, sizeof(checkname), "%s/screenshots", ri.FS_Gamedir());
+	Com_sprintf (checkname, sizeof(checkname), "%s/screenshots", ri.GetGameDir());
 	Sys_Mkdir (checkname);
 
 // 
@@ -125,7 +125,7 @@ void GL_ScreenShot_f (void)
 	{ 
 		picname[5] = i/10 + '0'; 
 		picname[6] = i%10 + '0'; 
-		Com_sprintf (checkname, sizeof(checkname), "%s/screenshots/%s", ri.FS_Gamedir(), picname);
+		Com_sprintf (checkname, sizeof(checkname), "%s/screenshots/%s", ri.GetGameDir(), picname);
 		f = fopen (checkname, "rb");
 		if (!f)
 			break;	// file doesn't exist
@@ -133,7 +133,7 @@ void GL_ScreenShot_f (void)
 	} 
 	if (i==1000) 
 	{
-		ri.Con_Printf (PRINT_ALL, "GL_ScreenShot_f: Couldn't create a file\n"); 
+		ri.Printf (PRINT_ALL, "GL_ScreenShot_f: Couldn't create a file\n"); 
 		free(buffer);
 		return;
  	}
@@ -165,7 +165,7 @@ void GL_ScreenShot_f (void)
 
 
 	free (buffer);
-	ri.Con_Printf (PRINT_ALL, "Wrote %s\n", picname);
+	ri.Printf (PRINT_ALL, "Wrote %s\n", picname);
 } 
 
 /*
@@ -173,10 +173,10 @@ void GL_ScreenShot_f (void)
 */
 void GL_Strings_f( void )
 {
-	ri.Con_Printf (PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string );
-	ri.Con_Printf (PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string );
-	ri.Con_Printf (PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string );
-//	ri.Con_Printf (PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
+	ri.Printf (PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string );
+	ri.Printf (PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string );
+	ri.Printf (PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string );
+//	ri.Printf (PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string );
 }
 
 /*

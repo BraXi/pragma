@@ -541,21 +541,20 @@ qboolean VID_LoadRefresh( char *name )
 		return false;
 	}
 
-	ri.Cmd_AddCommand = Cmd_AddCommand;
-	ri.Cmd_RemoveCommand = Cmd_RemoveCommand;
+	ri.AddCommand = Cmd_AddCommand;
+	ri.RemoveCommand = Cmd_RemoveCommand;
 	ri.Cmd_Argc = Cmd_Argc;
 	ri.Cmd_Argv = Cmd_Argv;
 	ri.Cmd_ExecuteText = Cbuf_ExecuteText;
-	ri.Con_Printf = VID_Printf;
-	ri.Sys_Error = VID_Error;
-	ri.FS_LoadFile = FS_LoadFile;
-	ri.FS_FreeFile = FS_FreeFile;
-	ri.FS_Gamedir = FS_Gamedir;
+	ri.Printf = VID_Printf;
+	ri.Error = VID_Error;
+	ri.LoadFile = FS_LoadFile;
+	ri.FreeFile = FS_FreeFile;
+	ri.GetGameDir = FS_Gamedir;
 	ri.Cvar_Get = Cvar_Get;
 	ri.Cvar_Set = Cvar_Set;
 	ri.Cvar_SetValue = Cvar_SetValue;
 	ri.Vid_GetModeInfo = VID_GetModeInfo;
-	ri.Vid_MenuInit = VID_MenuInit;
 	ri.Vid_NewWindow = VID_NewWindow;
 
 	GetRefAPI = (GetRefAPI_t)GetProcAddress(reflib_library, "GetRefAPI");

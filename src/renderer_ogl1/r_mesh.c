@@ -45,7 +45,7 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 
 	if (ent->alpha <= 0.0f && (ent->renderfx & RF_TRANSLUCENT))
 	{
-		ri.Con_Printf(PRINT_LOW, "%s:  %f alpha!\n", __FUNCTION__, ent->alpha);
+		ri.Printf(PRINT_LOW, "%s:  %f alpha!\n", __FUNCTION__, ent->alpha);
 		return false;
 	}
 	//return false; // completly transparent
@@ -144,14 +144,14 @@ static void R_EntityAnim(rentity_t* ent, char* func)
 	// check if animation is correct
 	if ((ent->frame >= ent->model->numframes) || (ent->frame < 0))
 	{
-//		ri.Con_Printf(PRINT_DEVELOPER, "%s: no such frame %d in '%s'\n", func, ent->frame, ent->model->name);
+//		ri.Printf(PRINT_DEVELOPER, "%s: no such frame %d in '%s'\n", func, ent->frame, ent->model->name);
 		ent->frame = 0;
 		ent->oldframe = 0;
 	}
 
 	if ((ent->oldframe >= ent->model->numframes) || (ent->oldframe < 0))
 	{
-//		ri.Con_Printf(PRINT_DEVELOPER, "%s: no such oldframe %d in '%s'\n", func, ent->frame, ent->model->name);
+//		ri.Printf(PRINT_DEVELOPER, "%s: no such oldframe %d in '%s'\n", func, ent->frame, ent->model->name);
 		ent->frame = 0;
 		ent->oldframe = 0;
 	}
@@ -225,7 +225,7 @@ void R_DrawEntityModel(rentity_t* ent)
 			R_DrawSprite(ent);
 			break;
 		default:
-			ri.Sys_Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);
+			ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);
 		}
 
 		// restore scale

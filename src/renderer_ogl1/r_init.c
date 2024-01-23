@@ -148,10 +148,10 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_renderer = ri.Cvar_Get("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE);
 
-	ri.Cmd_AddCommand("imagelist", GL_ImageList_f);
-	ri.Cmd_AddCommand("screenshot", GL_ScreenShot_f);
-	ri.Cmd_AddCommand("modellist", Mod_Modellist_f);
-	ri.Cmd_AddCommand("gl_strings", GL_Strings_f);
+	ri.AddCommand("imagelist", GL_ImageList_f);
+	ri.AddCommand("screenshot", GL_ScreenShot_f);
+	ri.AddCommand("modellist", Mod_Modellist_f);
+	ri.AddCommand("gl_strings", GL_Strings_f);
 }
 
 /*
@@ -169,7 +169,7 @@ qboolean R_SetMode(void)
 // braxi -- maybe reuse later for smth?
 //	if (r_fullscreen->modified)
 //	{
-//		ri.Con_Printf(PRINT_ALL, "R_SetMode() - CDS not allowed with this driver\n");
+//		ri.Printf(PRINT_ALL, "R_SetMode() - CDS not allowed with this driver\n");
 //		ri.Cvar_SetValue("r_fullscreen", !r_fullscreen->value);
 //		r_fullscreen->modified = false;
 //	}
@@ -189,7 +189,7 @@ qboolean R_SetMode(void)
 		{
 			ri.Cvar_SetValue("r_fullscreen", 0);
 			r_fullscreen->modified = false;
-			ri.Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n");
+			ri.Printf(PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n");
 			if ((err = GLimp_SetMode(&vid.width, &vid.height, r_mode->value, false)) == rserr_ok)
 				return true;
 		}
@@ -197,13 +197,13 @@ qboolean R_SetMode(void)
 		{
 			ri.Cvar_SetValue("gl_mode", gl_state.prev_mode);
 			r_mode->modified = false;
-			ri.Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - invalid mode\n");
+			ri.Printf(PRINT_ALL, "ref_gl::R_SetMode() - invalid mode\n");
 		}
 
 		// try setting it back to something safe
 		if ((err = GLimp_SetMode(&vid.width, &vid.height, gl_state.prev_mode, false)) != rserr_ok)
 		{
-			ri.Con_Printf(PRINT_ALL, "ref_gl::R_SetMode() - could not revert to safe mode\n");
+			ri.Printf(PRINT_ALL, "ref_gl::R_SetMode() - could not revert to safe mode\n");
 			return false;
 		}
 	}
@@ -229,7 +229,7 @@ int R_Init(void* hinstance, void* hWnd)
 		r_turbsin[j] *= 0.5;
 	}
 
-	ri.Con_Printf(PRINT_ALL, "OpenGL 1.4 renderer version : "REF_VERSION"\n");
+	ri.Printf(PRINT_ALL, "OpenGL 1.4 renderer version : "REF_VERSION"\n");
 
 	R_RegisterCvarsAndCommands();
 
@@ -237,7 +237,7 @@ int R_Init(void* hinstance, void* hWnd)
 	if (!QGL_Init(gl_driver->string))
 	{
 		QGL_Shutdown();
-		ri.Con_Printf(PRINT_ALL, "ref_gl::R_Init() - could not load \"%s\"\n", gl_driver->string);
+		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not load \"%s\"\n", gl_driver->string);
 		return -1;
 	}
 
@@ -255,7 +255,7 @@ int R_Init(void* hinstance, void* hWnd)
 	if (!R_SetMode())
 	{
 		QGL_Shutdown();
-		ri.Con_Printf(PRINT_ALL, "ref_gl::R_Init() - could not R_SetMode()\n");
+		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not R_SetMode()\n");
 		return -1;
 	}
 
@@ -263,13 +263,13 @@ int R_Init(void* hinstance, void* hWnd)
 	** get our various GL strings
 	*/
 	gl_config.vendor_string = qglGetString(GL_VENDOR);
-	ri.Con_Printf(PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string);
+	ri.Printf(PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string);
 	gl_config.renderer_string = qglGetString(GL_RENDERER);
-	ri.Con_Printf(PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string);
+	ri.Printf(PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string);
 	gl_config.version_string = qglGetString(GL_VERSION);
-	ri.Con_Printf(PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string);
+	ri.Printf(PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string);
 	gl_config.extensions_string = qglGetString(GL_EXTENSIONS);
-	ri.Con_Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string);
+	ri.Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string);
 
 	strcpy(renderer_buffer, gl_config.renderer_string);
 	_strlwr(renderer_buffer);
@@ -302,23 +302,23 @@ int R_Init(void* hinstance, void* hWnd)
 #ifdef WIN32
 	if (strstr(gl_config.extensions_string, "GL_EXT_compiled_vertex_array"))
 	{
-//		ri.Con_Printf(PRINT_ALL, "...enabling GL_EXT_compiled_vertex_array\n");
+//		ri.Printf(PRINT_ALL, "...enabling GL_EXT_compiled_vertex_array\n");
 		qglLockArraysEXT = (void*)qwglGetProcAddress("glLockArraysEXT");
 		qglUnlockArraysEXT = (void*)qwglGetProcAddress("glUnlockArraysEXT");
 	}
 	else
 	{
-		ri.Con_Printf(PRINT_ALL, "...GL_EXT_compiled_vertex_array not found\n");
+		ri.Printf(PRINT_ALL, "...GL_EXT_compiled_vertex_array not found\n");
 	}
 
 	if (strstr(gl_config.extensions_string, "WGL_EXT_swap_control"))
 	{
 		qwglSwapIntervalEXT = (BOOL(WINAPI*)(int)) qwglGetProcAddress("wglSwapIntervalEXT");
-		ri.Con_Printf(PRINT_ALL, "...enabling WGL_EXT_swap_control\n");
+		ri.Printf(PRINT_ALL, "...enabling WGL_EXT_swap_control\n");
 	}
 	else
 	{
-		ri.Con_Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
+		ri.Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
 	}
 
 	if (strstr(gl_config.extensions_string, "GL_EXT_point_parameters"))
@@ -327,16 +327,16 @@ int R_Init(void* hinstance, void* hWnd)
 		{
 			qglPointParameterfEXT = (void (APIENTRY*)(GLenum, GLfloat)) qwglGetProcAddress("glPointParameterfEXT");
 			qglPointParameterfvEXT = (void (APIENTRY*)(GLenum, const GLfloat*)) qwglGetProcAddress("glPointParameterfvEXT");
-			ri.Con_Printf(PRINT_ALL, "...using GL_EXT_point_parameters\n");
+			ri.Printf(PRINT_ALL, "...using GL_EXT_point_parameters\n");
 		}
 		else
 		{
-			ri.Con_Printf(PRINT_ALL, "...ignoring GL_EXT_point_parameters\n");
+			ri.Printf(PRINT_ALL, "...ignoring GL_EXT_point_parameters\n");
 		}
 	}
 	else
 	{
-		ri.Con_Printf(PRINT_ALL, "...GL_EXT_point_parameters not found\n");
+		ri.Printf(PRINT_ALL, "...GL_EXT_point_parameters not found\n");
 	}
 
 
@@ -348,10 +348,10 @@ int R_Init(void* hinstance, void* hWnd)
 	}
 	else
 	{
-		ri.Sys_Error(ERR_FATAL, "GL_ARB_multitexture not found\n");
+		ri.Error(ERR_FATAL, "GL_ARB_multitexture not found\n");
 	}
 #endif
-	ri.Con_Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
+	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 	qglActiveTextureARB = 0;
 	qglMultiTexCoord2fARB = 0;
 	GL_SetDefaultState();
@@ -374,7 +374,7 @@ int R_Init(void* hinstance, void* hWnd)
 
 	err = qglGetError();
 	if (err != GL_NO_ERROR)
-		ri.Con_Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
+		ri.Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
 	return 1;
 }
 
@@ -385,10 +385,10 @@ R_Shutdown
 */
 void R_Shutdown(void)
 {
-	ri.Cmd_RemoveCommand("modellist");
-	ri.Cmd_RemoveCommand("screenshot");
-	ri.Cmd_RemoveCommand("imagelist");
-	ri.Cmd_RemoveCommand("gl_strings");
+	ri.RemoveCommand("modellist");
+	ri.RemoveCommand("screenshot");
+	ri.RemoveCommand("imagelist");
+	ri.RemoveCommand("gl_strings");
 
 	Mod_FreeAll();
 
@@ -498,7 +498,7 @@ void Sys_Error(char* error, ...)
 	vsprintf(text, error, argptr);
 	va_end(argptr);
 
-	ri.Sys_Error(ERR_FATAL, "%s", text);
+	ri.Error(ERR_FATAL, "%s", text);
 }
 
 void Com_Printf(char* fmt, ...)
@@ -510,7 +510,7 @@ void Com_Printf(char* fmt, ...)
 	vsprintf(text, fmt, argptr);
 	va_end(argptr);
 
-	ri.Con_Printf(PRINT_ALL, "%s", text);
+	ri.Printf(PRINT_ALL, "%s", text);
 }
 
 #endif

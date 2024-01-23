@@ -67,9 +67,6 @@
     <ClCompile Include="platform\vid_dll.c">
       <Filter>platform</Filter>
     </ClCompile>
-    <ClCompile Include="platform\vid_menu.c">
-      <Filter>platform</Filter>
-    </ClCompile>
     <ClCompile Include="platform\win_main.c">
       <Filter>platform</Filter>
     </ClCompile>
@@ -146,9 +143,6 @@
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="client\cl_fx.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_inv.c">
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="client\cl_newfx.c">

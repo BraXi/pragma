@@ -141,8 +141,6 @@ typedef struct
 	//
 	// transient data from server
 	//
-	char		layout[1024];		// general 2D overlay
-	int			inventory[MAX_ITEMS];
 
 	//
 	// non-gameserver infornamtion

@@ -112,14 +112,14 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 	version = LittleLong(pinmodel->version);
 	if (version != MD3_VERSION)
 	{
-		ri.Sys_Error(ERR_DROP, "MOD_LoadMD3: '%s' has wrong version (%i should be %i)\n", mod->name, version, MD3_VERSION);
+		ri.Error(ERR_DROP, "MOD_LoadMD3: '%s' has wrong version (%i should be %i)\n", mod->name, version, MD3_VERSION);
 		return;
 	}
 
 	size = LittleLong(pinmodel->ofsEnd);
 	if(modfilelen != size)
 	{
-		ri.Sys_Error(ERR_DROP, "MOD_LoadMD3: '%s' has weird size (probably broken)\n", mod->name);
+		ri.Error(ERR_DROP, "MOD_LoadMD3: '%s' has weird size (probably broken)\n", mod->name);
 		return;
 	}
 
@@ -140,7 +140,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 
 	if (mod->md3[lod]->numFrames < 1)
 	{
-		ri.Sys_Error(ERR_DROP, "Mod_LoadMD3: %s has no frames\n", mod->name);
+		ri.Error(ERR_DROP, "Mod_LoadMD3: %s has no frames\n", mod->name);
 		return;
 	}
 
@@ -190,11 +190,11 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 
 		if (surf->numVerts > MD3_MAX_VERTS)
 		{
-			ri.Sys_Error(ERR_DROP, "Mod_LoadMD3: %s has more than %i verts on a surface (%i)", mod->name, MD3_MAX_VERTS, surf->numVerts);
+			ri.Error(ERR_DROP, "Mod_LoadMD3: %s has more than %i verts on a surface (%i)", mod->name, MD3_MAX_VERTS, surf->numVerts);
 		}
 		if (surf->numTriangles > MD3_MAX_TRIANGLES)
 		{
-			ri.Sys_Error(ERR_DROP, "Mod_LoadMD3: %s has more than %i triangles on a surface (%i)", mod->name, MD3_MAX_TRIANGLES, surf->numTriangles);
+			ri.Error(ERR_DROP, "Mod_LoadMD3: %s has more than %i triangles on a surface (%i)", mod->name, MD3_MAX_TRIANGLES, surf->numTriangles);
 		}
 
 
@@ -216,7 +216,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 			shader->shaderIndex = mod->skins[j]->texnum;
 			if (mod->skins[j] == r_notexture)
 			{
-				ri.Con_Printf(PRINT_ALL, "Mod_LoadMD3: cannot load '%s' for model '%s'\n", shader->name, mod->name);
+				ri.Printf(PRINT_ALL, "Mod_LoadMD3: cannot load '%s' for model '%s'\n", shader->name, mod->name);
 			}
 
 		}
@@ -429,7 +429,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float lerp)
 	vec3_t v, n; //vert and normal after lerp
 
 	if (lod < 0 || lod >= NUM_LODS)
-		ri.Sys_Error(ERR_DROP, "R_DrawMD3Model: '%s' wrong LOD num %i\n", ent->model->name, lod);
+		ri.Error(ERR_DROP, "R_DrawMD3Model: '%s' wrong LOD num %i\n", ent->model->name, lod);
 
 	model = ent->model->md3[lod];
 	if (model == NULL)

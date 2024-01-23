@@ -84,7 +84,7 @@ static void PFCG_precache_sound(void)
 PFSV_precache_image
 
 Returns true if image was loaded, false otherwise.
-File must be in 'guipics/' directory.
+File must be in 'gfx/' directory.
 
 float precache_image(string filename)
 =================

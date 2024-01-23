@@ -41,10 +41,10 @@ Draw_InitLocal
 void Draw_InitLocal (void)
 {
 	// load fonts
-	font_textures[FONT_SMALL] = GL_FindImage ("guipics/fonts/q2.tga", it_gui);
+	font_textures[FONT_SMALL] = GL_FindImage ("gfx/fonts/q2.tga", it_gui);
 	if (font_textures[FONT_SMALL] == r_notexture)
 	{
-		ri.Sys_Error(ERR_FATAL, "failed to load default font guipics/fonts/q2.tga\n");
+		ri.Error(ERR_FATAL, "failed to load default font gfx/fonts/q2.tga\n");
 		return;
 	}
 
@@ -123,7 +123,7 @@ image_t	*R_RegisterPic (char *name)
 
 	if (name[0] != '/' && name[0] != '\\')
 	{
-		Com_sprintf (fullname, sizeof(fullname), "guipics/%s.tga", name);
+		Com_sprintf (fullname, sizeof(fullname), "gfx/%s.tga", name);
 		gl = GL_FindImage (fullname, it_gui);
 	}
 	else
@@ -163,7 +163,7 @@ void Draw_StretchPic (int x, int y, int w, int h, char *pic)
 	gl = R_RegisterPic (pic);
 	if (!gl)
 	{
-		ri.Con_Printf (PRINT_ALL, "Can't find pic: %s\n", pic);
+		ri.Printf (PRINT_ALL, "Can't find pic: %s\n", pic);
 		return;
 	}
 
@@ -194,7 +194,7 @@ void Draw_Pic (int x, int y, char *pic)
 	gl = R_RegisterPic (pic);
 	if (!gl)
 	{
-		ri.Con_Printf (PRINT_ALL, "Can't find pic: %s\n", pic);
+		ri.Printf (PRINT_ALL, "Can't find pic: %s\n", pic);
 		return;
 	}
 
@@ -226,7 +226,7 @@ void Draw_TileClear (int x, int y, int w, int h, char *pic)
 	image = R_RegisterPic (pic);
 	if (!image)
 	{
-		ri.Con_Printf (PRINT_ALL, "Can't find pic: %s\n", pic);
+		ri.Printf (PRINT_ALL, "Can't find pic: %s\n", pic);
 		return;
 	}
 

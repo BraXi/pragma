@@ -166,7 +166,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	gl = R_RegisterPic(pic);
 	if (!gl)
 	{
-		ri.Con_Printf(PRINT_ALL, "R_DrawStretchedImage: no %s\n", pic);
+		ri.Printf(PRINT_ALL, "R_DrawStretchedImage: no %s\n", pic);
 		return;
 	}
 

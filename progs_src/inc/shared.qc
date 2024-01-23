@@ -41,12 +41,7 @@ enum
 {
 /* these MUST match in C code */	
 	STAT_HEALTH,
-	STAT_AMMO,				// only used in layoutstring
 	STAT_SCORE,
-	STAT_ARMOR,				// only used in layoutstring
-	STAT_LAYOUT,			// 0 don't draw layout programs at all, 1 draw layout, 2 draw inventory and layout
-	STAT_FLASHES,			// cleared each frame, 1 = health, 2 = armor, used only in layoutstring programs
-	STAT_SELECTED_ITEM,		// TODO: remove! used in inventory
 /* add custom stats below */
 	STAT_WEAPON,
 	STAT_AMMO_RESERVE,

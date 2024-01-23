@@ -177,7 +177,6 @@ typedef struct
 
 	void	(*SetSky) (char *name, float rotate, vec3_t axis, vec3_t color);
 
-
 	void	(*RenderFrame) (refdef_t *fd);
 
 	void	(*DrawGetPicSize) (int *w, int *h, char *name);	// will return 0 0 if not found
@@ -213,27 +212,21 @@ typedef struct
 //
 typedef struct
 {
-	void	(*Sys_Error) (int err_level, char *str, ...);
+	void	(*Printf) (int print_level, char* str, ...);
+	void	(*Error) (int err_level, char *str, ...);
 
-	void	(*Cmd_AddCommand) (char *name, void(*cmd)(void));
-	void	(*Cmd_RemoveCommand) (char *name);
+	void	(*AddCommand) (char *name, void(*cmd)(void));
+	void	(*RemoveCommand) (char *name);
 	int		(*Cmd_Argc) (void);
 	char	*(*Cmd_Argv) (int i);
 	void	(*Cmd_ExecuteText) (int exec_when, char *text);
 
-	void	(*Con_Printf) (int print_level, char *str, ...);
-
-	// files will be memory mapped read only
-	// the returned buffer may be part of a larger pak file,
-	// or a discrete file from anywhere in the quake search path
-	// a -1 return means the file does not exist
+	// files will be memory mapped read only the returned buffer may be part of a larger pak file,
+	// or a discrete file from anywhere in the quake search path  a -1 return means the file does not exist
 	// NULL can be passed for buf to just determine existance
-	int		(*FS_LoadFile) (char *name, void **buf);
-	void	(*FS_FreeFile) (void *buf);
-
-	// gamedir will be the current directory that generated
-	// files should be stored to, ie: "f:\quake\id1"
-	char	*(*FS_Gamedir) (void);
+	int		(*LoadFile) (char *name, void **buf);
+	void	(*FreeFile) (void *buf);
+	char	*(*GetGameDir) (void);
 
 	cvar_t	*(*Cvar_Get) (char *name, char *value, int flags);
 	cvar_t	*(*Cvar_Set)( char *name, char *value );

@@ -313,8 +313,6 @@ enum svc_ops_e
 
 	SVC_MUZZLEFLASH,
 	SVC_TEMP_ENTITY,
-	SVC_LAYOUT,
-	SVC_INVENTORY,
 	SVC_CGCMD,					// handled in cgame progs: [byte cmd] ....
 
 	SVC_NOP,

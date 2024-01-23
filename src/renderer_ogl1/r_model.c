@@ -76,7 +76,7 @@ mleaf_t *Mod_PointInLeaf (vec3_t p, model_t *model)
 	cplane_t	*plane;
 	
 	if (!model || !model->nodes)
-		ri.Sys_Error (ERR_DROP, "Mod_PointInLeaf: bad model");
+		ri.Error (ERR_DROP, "Mod_PointInLeaf: bad model");
 
 	node = model->nodes;
 	while (1)
@@ -170,16 +170,16 @@ void Mod_Modellist_f (void)
 	static char mtypes[6][8] = { "BAD", "BSP", "SPRITE", "MD3", "BXMDL" };
 
 	total = 0;
-	ri.Con_Printf (PRINT_ALL,"Loaded models:\n");
+	ri.Printf (PRINT_ALL,"Loaded models:\n");
 	for (i=0, mod=mod_known ; i < mod_numknown ; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;
-		ri.Con_Printf (PRINT_ALL, "%i: %s '%s' [%d frames, %d bytes]\n", i, mtypes[mod->type], mod->name, mod->numframes, mod->extradatasize);
+		ri.Printf (PRINT_ALL, "%i: %s '%s' [%d frames, %d bytes]\n", i, mtypes[mod->type], mod->name, mod->numframes, mod->extradatasize);
 		total += mod->extradatasize;
 	}
-	ri.Con_Printf (PRINT_ALL, "\nTotal resident: %i\n", total);
-	ri.Con_Printf(PRINT_ALL, "Total %i out of %i models in use\n\n", i, MAX_MOD_KNOWN);
+	ri.Printf (PRINT_ALL, "\nTotal resident: %i\n", total);
+	ri.Printf(PRINT_ALL, "Total %i out of %i models in use\n\n", i, MAX_MOD_KNOWN);
 }
 
 /*
@@ -208,7 +208,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	int		i;
 	
 	if (!name[0])
-		ri.Sys_Error (ERR_DROP, "Mod_ForName: NULL name");
+		ri.Error (ERR_DROP, "Mod_ForName: NULL name");
 		
 	//
 	// inline models are grabbed only from worldmodel
@@ -217,7 +217,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	{
 		i = atoi(name+1);
 		if (i < 1 || !r_worldmodel || i >= r_worldmodel->numsubmodels)
-			ri.Sys_Error (ERR_DROP, "bad inline model number");
+			ri.Error (ERR_DROP, "bad inline model number");
 		return &mod_inline[i];
 	}
 
@@ -243,7 +243,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	if (i == mod_numknown)
 	{
 		if (mod_numknown == MAX_MOD_KNOWN)
-			ri.Sys_Error (ERR_DROP, "Mod_ForName: hit limit of %d models", MAX_MOD_KNOWN);
+			ri.Error (ERR_DROP, "Mod_ForName: hit limit of %d models", MAX_MOD_KNOWN);
 		mod_numknown++;
 	}
 	strcpy (mod->name, name);
@@ -251,11 +251,11 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	//
 	// load the file
 	//
-	modfilelen = ri.FS_LoadFile (mod->name, &buf);
+	modfilelen = ri.LoadFile (mod->name, &buf);
 	if (!buf)
 	{
 		if (crash)
-			ri.Sys_Error (ERR_DROP, "Mod_ForName: %s not found", mod->name);
+			ri.Error (ERR_DROP, "Mod_ForName: %s not found", mod->name);
 		memset (mod->name, 0, sizeof(mod->name));
 		return NULL;
 	}
@@ -287,13 +287,13 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		break;
 
 	default:
-		ri.Sys_Error (ERR_DROP,"Mod_ForName: file %s is not a vaild model", mod->name);
+		ri.Error (ERR_DROP,"Mod_ForName: file %s is not a vaild model", mod->name);
 		break;
 	}
 
 	loadmodel->extradatasize = Hunk_End();
 
-	ri.FS_FreeFile (buf);
+	ri.FreeFile (buf);
 
 	return mod;
 }
@@ -365,7 +365,7 @@ void Mod_LoadVertexes (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadVertexes: funny lump size in %s", loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadVertexes: funny lump size in %s", loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -412,7 +412,7 @@ void Mod_LoadSubmodels (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadSubmodels: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadSubmodels: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -447,7 +447,7 @@ void Mod_LoadEdges (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadEdges: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadEdges: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( (count + 1) * sizeof(*out));	
 
@@ -476,7 +476,7 @@ void Mod_LoadTexinfo (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadTexinfo: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadTexinfo: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -500,7 +500,7 @@ void Mod_LoadTexinfo (lump_t *l)
 		out->image = GL_FindImage(name, it_texture);
 		if (!out->image)
 		{
-			ri.Con_Printf(PRINT_ALL, "Mod_LoadTexinfo: couldn't load '%s'\n", name);
+			ri.Printf(PRINT_ALL, "Mod_LoadTexinfo: couldn't load '%s'\n", name);
 			out->image = r_notexture;
 		}
 
@@ -566,7 +566,7 @@ void CalcSurfaceExtents (msurface_t *s)
 		s->extents[i] = (bmaxs[i] - bmins[i]) * 16;
 
 //		if ( !(tex->flags & TEX_SPECIAL) && s->extents[i] > 512 /* 256 */ )
-//			ri.Sys_Error (ERR_DROP, "Bad surface extents");
+//			ri.Error (ERR_DROP, "Bad surface extents");
 	}
 }
 
@@ -591,7 +591,7 @@ void Mod_LoadFaces (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadFaces: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadFaces: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -618,7 +618,7 @@ void Mod_LoadFaces (lump_t *l)
 
 		ti = LittleShort (in->texinfo);
 		if (ti < 0 || ti >= loadmodel->numtexinfo)
-			ri.Sys_Error (ERR_DROP, "Mod_LoadFaces: bad texinfo number");
+			ri.Error (ERR_DROP, "Mod_LoadFaces: bad texinfo number");
 		out->texinfo = loadmodel->texinfo + ti;
 
 		CalcSurfaceExtents (out);
@@ -686,7 +686,7 @@ void Mod_LoadNodes (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadNodes: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadNodes: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -735,7 +735,7 @@ void Mod_LoadLeafs (lump_t *l)
 
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadLeafs: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadLeafs: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -788,7 +788,7 @@ void Mod_LoadMarksurfaces (lump_t *l)
 	
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadMarksurfaces: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadMarksurfaces: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*sizeof(*out));	
 
@@ -799,7 +799,7 @@ void Mod_LoadMarksurfaces (lump_t *l)
 	{
 		j = LittleShort(in[i]);
 		if (j < 0 ||  j >= loadmodel->numsurfaces)
-			ri.Sys_Error (ERR_DROP, "Mod_ParseMarksurfaces: bad surface number");
+			ri.Error (ERR_DROP, "Mod_ParseMarksurfaces: bad surface number");
 		out[i] = loadmodel->surfaces + j;
 	}
 }
@@ -816,10 +816,10 @@ void Mod_LoadSurfedges (lump_t *l)
 	
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadSurfedges: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadSurfedges: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	if (count < 1 || count >= MAX_MAP_SURFEDGES)
-		ri.Sys_Error (ERR_DROP, "Mod_LoadSurfedges: bad surfedges count in %s: %i",
+		ri.Error (ERR_DROP, "Mod_LoadSurfedges: bad surfedges count in %s: %i",
 		loadmodel->name, count);
 
 	out = Hunk_Alloc ( count*sizeof(*out));	
@@ -847,7 +847,7 @@ void Mod_LoadPlanes (lump_t *l)
 	
 	in = (void *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Sys_Error (ERR_DROP, "Mod_LoadPlanes: funny lump size in %s",loadmodel->name);
+		ri.Error (ERR_DROP, "Mod_LoadPlanes: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
 	out = Hunk_Alloc ( count*2*sizeof(*out));	
 	
@@ -883,13 +883,13 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	
 	loadmodel->type = MOD_BRUSH;
 	if (loadmodel != mod_known)
-		ri.Sys_Error (ERR_DROP, "Mod_LoadBSP: Loaded a brush model after the world");
+		ri.Error (ERR_DROP, "Mod_LoadBSP: Loaded a brush model after the world");
 
 	header = (dheader_t *)buffer;
 
 	i = LittleLong (header->version);
 	if (i != BSP_VERSION)
-		ri.Sys_Error (ERR_DROP, "Mod_LoadBSP: %s is wrong version", mod->name);
+		ri.Error (ERR_DROP, "Mod_LoadBSP: %s is wrong version", mod->name);
 
 // swap all the lumps
 	mod_base = (byte *)header;
@@ -929,7 +929,7 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 		starmod->nummodelsurfaces = bm->numfaces;
 		starmod->firstnode = bm->headnode;
 		if (starmod->firstnode >= loadmodel->numnodes)
-			ri.Sys_Error (ERR_DROP, "Mod_LoadBSP: Inline model %i has bad firstnode", i);
+			ri.Error (ERR_DROP, "Mod_LoadBSP: Inline model %i has bad firstnode", i);
 
 		VectorCopy (bm->maxs, starmod->maxs);
 		VectorCopy (bm->mins, starmod->mins);
@@ -968,11 +968,11 @@ void Mod_LoadSP2 (model_t *mod, void *buffer)
 	sprout->numframes = LittleLong (sprin->numframes);
 
 	if (sprout->version != SP2_VERSION)
-		ri.Sys_Error (ERR_DROP, "%s has wrong version number (%i should be %i)",
+		ri.Error (ERR_DROP, "%s has wrong version number (%i should be %i)",
 				 mod->name, sprout->version, SP2_VERSION);
 
 	if (sprout->numframes > 32)
-		ri.Sys_Error (ERR_DROP, "%s has too many frames (%i > %i)",
+		ri.Error (ERR_DROP, "%s has too many frames (%i > %i)",
 				 mod->name, sprout->numframes, 32);
 
 	// byte swap everything

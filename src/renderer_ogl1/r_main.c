@@ -130,7 +130,7 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	if (e->frame < 0 || e->frame >= psprite->numframes)
 	{
-		ri.Con_Printf (PRINT_ALL, "no such sprite frame %i\n", e->frame);
+		ri.Printf (PRINT_ALL, "no such sprite frame %i\n", e->frame);
 		e->frame = 0;
 	}
 
@@ -660,7 +660,7 @@ void R_RenderView (refdef_t *fd)
 	r_newrefdef = *fd;
 
 	if (!r_worldmodel && !( r_newrefdef.rdflags & RDF_NOWORLDMODEL ) )
-		ri.Sys_Error (ERR_DROP, "R_RenderView: NULL worldmodel");
+		ri.Error (ERR_DROP, "R_RenderView: NULL worldmodel");
 
 	if (r_speeds->value)
 	{
@@ -698,7 +698,7 @@ void R_RenderView (refdef_t *fd)
 
 	if (r_speeds->value)
 	{
-		ri.Con_Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i vislmaps, %i texbinds\n",
+		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i vislmaps, %i texbinds\n",
 			rperf.brush_polys,
 			rperf.alias_tris,
 			rperf.visible_textures, 
