@@ -886,14 +886,22 @@ void R_DrawInlineBModel (void)
 	cplane_t	*pplane;
 	float		dot;
 	msurface_t	*psurf;
-	dlight_t	*lt;
+	dlight_t	*light;
+
+#ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
+	vec3_t		lightorg;
+#endif
 
 	// calculate dynamic lighting for bmodel
-
-	lt = r_newrefdef.dlights;
-	for (k = 0; k < r_newrefdef.num_dlights; k++, lt++)
+	light = r_newrefdef.dlights;
+	for (k = 0; k < r_newrefdef.num_dlights; k++, light++)
 	{
-		R_MarkLights (lt, 1<<k, currentmodel->nodes + currentmodel->firstnode);
+#ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
+		VectorSubtract(light->origin, currententity->origin, lightorg);
+		R_MarkLights(light, lightorg, (1 << k), (currentmodel->nodes + currentmodel->firstnode));
+#else
+		R_MarkLights(light, (1<<k), (currentmodel->nodes + currentmodel->firstnode));
+#endif
 	}
 
 	psurf = &currentmodel->surfaces[currentmodel->firstmodelsurface];
@@ -1176,6 +1184,7 @@ void R_DrawWorld (void)
 	// auto cycle the world frame for texture animation
 	memset (&ent, 0, sizeof(ent));
 	ent.frame = (int)(r_newrefdef.time*2);
+
 	currententity = &ent;
 
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;

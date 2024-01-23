@@ -18,15 +18,4 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-void VID_MenuInit( void )
-{
-}
-void VID_MenuDraw (void)
-{
-}
-const char *VID_MenuKey( int key )
-{
-	return "a";
-}
-
 

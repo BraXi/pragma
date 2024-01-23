@@ -259,8 +259,6 @@ int R_Init(void* hinstance, void* hWnd)
 		return -1;
 	}
 
-	ri.Vid_MenuInit();
-
 	/*
 	** get our various GL strings
 	*/

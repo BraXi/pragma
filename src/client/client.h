@@ -155,7 +155,7 @@ typedef struct
 	// server state information
 	//
 	qboolean	attractloop;		// running the attract loop, any key will menu
-	int			servercount;	// server identification for prespawns
+	int			servercount;		// server identification for prespawns
 	char		gamedir[MAX_QPATH];
 	int			playernum;
 

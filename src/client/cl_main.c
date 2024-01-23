@@ -1401,11 +1401,6 @@ void CL_Frame (int msec)
 	// run cgame
 	CG_Frame(cls.frametime, cl.time, cls.realtime);
 
-#ifdef NEW_GUI
-	// run ui
-	UI_Main();
-#endif
-
 	// send a new command message to the server
 	CL_SendCommand ();
 

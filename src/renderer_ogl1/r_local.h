@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifdef _WIN32
-#  include <windows.h>
+#include <windows.h>
 #endif
 
 #include <stdio.h>
@@ -39,11 +39,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define GL_COLOR_INDEX8_EXT GL_COLOR_INDEX
 #endif
 
+#define FIX_BRUSH_LIGHTING 1 // Enable Spike's fix from QS
+
 #include "../qcommon/renderer.h"
 
 #include "win_qgl.h"
 
-#define	REF_VERSION	"0.3"
+#define	REF_VERSION	"0.4"
 
 
 // -- sin table --
@@ -71,19 +73,6 @@ typedef struct
 
 extern	viddef_t	vid;
 
-
-/*
-
-  skins will be outline flood filled and mip mapped
-  pics and sprites with alpha will be outline flood filled
-  pic won't be mip mapped
-
-  model skin
-  sprite frame
-  wall texture
-  pic
-
-*/
 
 typedef enum 
 {
@@ -287,7 +276,12 @@ void EmitWaterPolys (msurface_t *fa);
 void R_AddSkySurface (msurface_t *fa);
 void R_ClearSkyBox (void);
 void R_DrawSkyBox (void);
-void R_MarkLights (dlight_t *light, int bit, mnode_t *node);
+
+#ifdef FIX_BRUSH_LIGHTING
+void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
+#else
+void R_MarkLights(dlight_t* light, int bit, mnode_t* node);
+#endif
 
 #if 0
 short LittleShort (short l);
