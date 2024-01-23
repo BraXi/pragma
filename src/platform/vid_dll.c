@@ -578,15 +578,6 @@ qboolean VID_LoadRefresh( char *name )
 	Com_Printf( "------------------------------------\n");
 	reflib_active = true;
 
-
-	vidref_val = VIDREF_OTHER;
-	if(r_renderer)
-	{
-		if(!strcmp (r_renderer->string, DEFAULT_RENDERER))
-			vidref_val = VIDREF_GL;
-	}
-
-
 	return true;
 }
 

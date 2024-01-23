@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 extern cparticle_t	*active_particles, *free_particles;
 extern cparticle_t	particles[MAX_PARTICLES];
-extern cvar_t		*r_renderer;
 
 extern void MakeNormalVectors (vec3_t forward, vec3_t right, vec3_t up);
 
@@ -76,7 +75,7 @@ void CL_Flashlight (int ent, vec3_t pos)
 {
 	cdlight_t	*dl;
 
-	dl = CL_AllocDlight (ent);
+	dl = CL_AllocDynamicLight (ent);
 	VectorCopy (pos,  dl->origin);
 	dl->radius = 400;
 	dl->minlight = 250;
@@ -95,7 +94,7 @@ void CL_ColorFlash (vec3_t pos, int ent, int intensity, float r, float g, float 
 {
 	cdlight_t	*dl;
 
-	dl = CL_AllocDlight (ent);
+	dl = CL_AllocDynamicLight (ent);
 	VectorCopy (pos,  dl->origin);
 	dl->radius = intensity;
 	dl->minlight = 250;
@@ -544,12 +543,10 @@ void CL_Heatbeam (vec3_t start, vec3_t forward)
 //	MakeNormalVectors (vec, right, up);
 	VectorCopy (cl.v_right, right);
 	VectorCopy (cl.v_up, up);
-	if (vidref_val == VIDREF_GL)
-	{ // GL mode
-		VectorMA (move, -0.5, right, move);
-		VectorMA (move, -0.5, up, move);
-	}
-	// otherwise assume SOFT
+	
+	VectorMA (move, -0.5, right, move);
+	VectorMA (move, -0.5, up, move);
+
 
 	ltime = (float) cl.time/1000.0;
 	start_pt = fmod(ltime*96.0,step);

@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="client\adivtab.h" />
     <ClInclude Include="client\cgame\cgame.h" />
     <ClInclude Include="client\client.h" />
     <ClInclude Include="client\console.h" />
@@ -52,11 +51,14 @@
     <ClCompile Include="client\cgame\cg_builtins.c" />
     <ClCompile Include="client\cgame\cg_main.c" />
     <ClCompile Include="client\cgame\modeldef.c" />
-    <ClCompile Include="client\cl_cin.c" />
+    <ClCompile Include="client\cl_cinematic.c" />
+    <ClCompile Include="client\cl_dlights.c" />
     <ClCompile Include="client\cl_download.c" />
     <ClCompile Include="client\cl_ents.c" />
     <ClCompile Include="client\cl_fx.c" />
+    <ClCompile Include="client\cl_graph.c" />
     <ClCompile Include="client\cl_input.c" />
+    <ClCompile Include="client\cl_lightstyles.c" />
     <ClCompile Include="client\cl_main.c" />
     <ClCompile Include="client\cl_newfx.c" />
     <ClCompile Include="client\cl_parse.c" />

@@ -93,7 +93,6 @@ struct model_s	*cl_mod_grapple_cable;
 struct model_s	*cl_mod_parasite_tip;
 struct model_s	*cl_mod_explo4;
 struct model_s	*cl_mod_bfg_explo;
-struct model_s	*cl_mod_powerscreen;
 // RAFAEL
 struct model_s	*cl_mod_plasmaexplo;
 
@@ -165,7 +164,6 @@ void CL_RegisterTEntModels (void)
 	cl_mod_parasite_tip = NULL; // re.RegisterModel ("models/monsters/parasite/tip/tris.md2");
 	cl_mod_explo4 = NULL; // re.RegisterModel ("models/objects/r_explode/tris.md2");
 	cl_mod_bfg_explo = NULL; // re.RegisterModel ("sprites/s_bfg2.sp2");
-	cl_mod_powerscreen = NULL; // re.RegisterModel ("models/items/armor/effect/tris.md2");
 
 	cl_mod_explo4_big = NULL; // re.RegisterModel ("models/objects/r_explode2/tris.md2");
 	cl_mod_lightning = NULL; // re.RegisterModel ("models/proj/lightning/tris.md2");
@@ -1752,10 +1750,8 @@ CL_AddTEnts
 void CL_AddTEnts (void)
 {
 	CL_AddBeams ();
-	// PMM - draw plasma beams
 	CL_AddPlayerBeams ();
 	CL_AddExplosions ();
 	CL_AddLasers ();
-	// PMM - set up sustain
 	CL_ProcessSustain();
 }

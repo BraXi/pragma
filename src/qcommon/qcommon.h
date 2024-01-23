@@ -910,7 +910,7 @@ extern	vec3_t	bytedirs[MD2_NUMVERTEXNORMALS];
 
 #ifndef DEDICATED_ONLY
 // this is in the client code, but can be used for debugging from server
-void SCR_DebugGraph (float value, vec3_t color);
+void CL_DebugGraph (float value, vec3_t color);
 #endif /*DEDICATED_ONLY*/
 
 /*

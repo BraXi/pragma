@@ -1423,7 +1423,7 @@ void CL_Frame (int msec)
 	S_Update (cl.refdef.vieworg, cl.v_forward, cl.v_right, cl.v_up);
 
 	// advance local effects for next frame
-	CL_RunDLights ();
+	CL_RunDynamicLights ();
 	CL_RunLightStyles ();
 	SCR_RunCinematic ();
 	SCR_RunConsole ();

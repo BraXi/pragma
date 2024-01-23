@@ -47,17 +47,12 @@ vrect_t		scr_vrect;		// position of render window on screen
 cvar_t		*scr_viewsize;
 cvar_t		*scr_conspeed;
 cvar_t		*scr_centertime;
-cvar_t		*scr_showturtle;
 cvar_t		*scr_showpause;
 cvar_t		*scr_printspeed;
-
-cvar_t		*scr_netgraph;
-cvar_t		*scr_timegraph;
-cvar_t		*scr_debuggraph;
-cvar_t		*scr_graphheight;
-cvar_t		*scr_graphscale;
-cvar_t		*scr_graphshift;
 cvar_t		*scr_drawall;
+
+extern void CL_DrawGraphOnScreen();
+extern void CL_InitGraph();
 
 typedef struct
 {
@@ -70,112 +65,6 @@ void SCR_TimeRefresh_f (void);
 void SCR_Loading_f (void);
 
 
-/*
-===============================================================================
-
-BAR GRAPHS
-
-===============================================================================
-*/
-
-/*
-==============
-CL_AddNetgraph
-
-A new packet was just parsed
-==============
-*/
-void CL_AddNetgraph (void)
-{
-	int		i;
-	int		in;
-	int		ping;
-
-	static vec3_t c1 = { 0.654902, 0.231373, 0.168627 };
-	static vec3_t c2 = { 1.000000, 0.749020, 0.058824 };
-
-	// if using the debuggraph for something else, don't
-	// add the net lines
-	if (scr_debuggraph->value || scr_timegraph->value)
-		return;
-
-	for (i=0 ; i<cls.netchan.dropped ; i++)
-		SCR_DebugGraph (30, c1);
-
-	for (i=0 ; i<cl.surpressCount ; i++)
-		SCR_DebugGraph (30, c2);
-
-	// see what the latency was on this packet
-	in = cls.netchan.incoming_acknowledged & (CMD_BACKUP-1);
-	ping = cls.realtime - cl.cmd_time[in];
-	ping /= 30;
-	if (ping > 30)
-		ping = 30;
-
-	static vec3_t c = { 0.000000, 1.000000, 0.000000 };
-	SCR_DebugGraph (ping, c);
-}
-
-
-typedef struct
-{
-	float	value;
-	vec3_t	color; //was int
-} graphsamp_t;
-
-static	int			current;
-static	graphsamp_t	values[1024];
-
-/*
-==============
-SCR_DebugGraph
-==============
-*/
-void SCR_DebugGraph(float value, vec3_t color)
-{
-	values[current&1023].value = value;
-	VectorCopy(color, values[current & 1023].color);
-	current++;
-}
-
-/*
-==============
-SCR_DrawDebugGraph
-==============
-*/
-void SCR_DrawDebugGraph (void)
-{
-	int		a, x, y, w, i, h;
-	float	v;
-
-	//
-	// draw the graph
-	//
-	w = scr_vrect.width;
-
-	x = scr_vrect.x;
-	y = scr_vrect.y+scr_vrect.height;
-
-	re.SetColor(0.482353, 0.482353, 0.482353, 1);
-	re.DrawFill (x, y-scr_graphheight->value, w, scr_graphheight->value);
-
-	for (a=0 ; a<w ; a++)
-	{
-		i = (current-1-a+1024) & 1023;
-		v = values[i].value;
-
-		v = v*scr_graphscale->value + scr_graphshift->value;
-		
-		if (v < 0)
-			v += scr_graphheight->value * (1+(int)(-v/scr_graphheight->value));
-		h = (int)v % (int)scr_graphheight->value;
-
-		re.SetColor(values[i].color[0], values[i].color[1], values[i].color[2], 1);
-		re.DrawFill (x+w-1-a, y - h, 1,	h);
-	}
-	re.SetColor(1, 1, 1, 1);
-
-}
 
 /*
 ===============================================================================
@@ -349,7 +238,7 @@ SCR_SizeUp_f
 Keybinding command
 =================
 */
-void SCR_SizeUp_f (void)
+void SCR_SizeUp_f(void)
 {
 	Cvar_SetValue ("viewsize",scr_viewsize->value+10);
 }
@@ -362,7 +251,7 @@ SCR_SizeDown_f
 Keybinding command
 =================
 */
-void SCR_SizeDown_f (void)
+void SCR_SizeDown_f(void)
 {
 	Cvar_SetValue ("viewsize",scr_viewsize->value-10);
 }
@@ -432,17 +321,13 @@ void SCR_Init (void)
 {
 	scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
 	scr_conspeed = Cvar_Get ("scr_conspeed", "3", 0);
-	scr_showturtle = Cvar_Get ("scr_showturtle", "0", 0);
 	scr_showpause = Cvar_Get ("scr_showpause", "1", 0);
 	scr_centertime = Cvar_Get ("scr_centertime", "2.5", 0);
 	scr_printspeed = Cvar_Get ("scr_printspeed", "8", 0);
-	scr_netgraph = Cvar_Get ("netgraph", "0", 0);
-	scr_timegraph = Cvar_Get ("timegraph", "0", 0);
-	scr_debuggraph = Cvar_Get ("debuggraph", "0", 0);
-	scr_graphheight = Cvar_Get ("graphheight", "32", 0);
-	scr_graphscale = Cvar_Get ("graphscale", "1", 0);
-	scr_graphshift = Cvar_Get ("graphshift", "0", 0);
+
 	scr_drawall = Cvar_Get ("scr_drawall", "0", 0);
+
+	CL_InitGraph();
 
 //
 // register our commands
@@ -1034,11 +919,7 @@ void SCR_UpdateScreen (void)
 
 			re.SetColor(1, 1, 1, 1);
 
-			if (scr_timegraph->value)
-				SCR_DebugGraph (cls.frametime*300, 0);
-
-			if (scr_debuggraph->value || scr_timegraph->value || scr_netgraph->value)
-				SCR_DrawDebugGraph ();
+			CL_DrawGraphOnScreen();
 
 			SCR_DrawPause ();
 

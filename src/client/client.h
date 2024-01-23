@@ -357,7 +357,7 @@ void DrawString (int x, int y, char *s);
 void DrawAltString (int x, int y, char *s);	// toggle high bit
 qboolean	CL_CheckOrDownloadFile (char *filename);
 
-void CL_AddNetgraph (void);
+void CL_AddNetGraph();
 
 //ROGUE
 typedef struct cl_sustain
@@ -453,9 +453,9 @@ void CL_ParseTEnt (void);
 void CL_ParseConfigString (void);
 void CL_ParseMuzzleFlash (void);
 
-void CL_SetLightstyle (int i);
+void CL_SetLightStyleFromCS (int i);
 
-void CL_RunDLights (void);
+void CL_RunDynamicLights (void);
 void CL_RunLightStyles (void);
 
 void CL_AddEntities (void);
@@ -557,7 +557,7 @@ void CL_CheckPredictionError (void);
 //
 // cl_fx.c
 //
-cdlight_t *CL_AllocDlight (int key);
+cdlight_t *CL_AllocDynamicLight (int key);
 void CL_BigTeleportParticles (vec3_t org);
 void CL_RocketTrail (vec3_t start, vec3_t end, ccentity_t *old);
 void CL_DiminishingTrail (vec3_t start, vec3_t end, ccentity_t *old, int flags);

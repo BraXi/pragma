@@ -917,9 +917,4 @@ typedef struct
 
 // ==================
 #define DEFAULT_RENDERER "ogl1"
-//#define DEFAULT_RENDERER "next"
-#define VIDREF_GL		1
-#define VIDREF_OTHER	2
-
-extern int vidref_val;
 // ==================
