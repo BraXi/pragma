@@ -62,19 +62,18 @@
     <ClCompile Include="client\cl_main.c" />
     <ClCompile Include="client\cl_newfx.c" />
     <ClCompile Include="client\cl_parse.c" />
-    <ClCompile Include="client\cl_pred.c" />
-    <ClCompile Include="client\cl_scrn.c" />
-    <ClCompile Include="client\cl_tent.c" />
+    <ClCompile Include="client\cl_predict.c" />
+    <ClCompile Include="client\cl_screen.c" />
+    <ClCompile Include="client\cl_temp_entities.c" />
     <ClCompile Include="client\cl_view.c" />
-    <ClCompile Include="client\console.c" />
-    <ClCompile Include="client\keys.c" />
+    <ClCompile Include="client\cl_console.c" />
+    <ClCompile Include="client\cl_keys.c" />
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
     <ClCompile Include="client\snd_mix.c" />
     <ClCompile Include="client\ui\ui_builtins.c" />
     <ClCompile Include="client\ui\ui_load.c" />
     <ClCompile Include="client\ui\ui_main.c" />
-    <ClCompile Include="client\ui\ui_servers.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />
@@ -116,7 +115,7 @@
     <Image Include="platform\pragma.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="platform\q2.rc" />
+    <ResourceCompile Include="platform\pragma.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -220,7 +219,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>winmm.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

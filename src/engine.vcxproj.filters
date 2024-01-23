@@ -13,13 +13,13 @@
     <ClCompile Include="client\cl_parse.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\cl_scrn.c">
+    <ClCompile Include="client\cl_screen.c">
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="client\cl_view.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\keys.c">
+    <ClCompile Include="client\cl_keys.c">
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="client\snd_dma.c">
@@ -70,7 +70,7 @@
     <ClCompile Include="platform\win_main.c">
       <Filter>platform</Filter>
     </ClCompile>
-    <ClCompile Include="client\console.c">
+    <ClCompile Include="client\cl_console.c">
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="server\sv_ccmds.c">
@@ -136,7 +136,7 @@
     <ClCompile Include="server\sv_load.c">
       <Filter>server</Filter>
     </ClCompile>
-    <ClCompile Include="client\cl_tent.c">
+    <ClCompile Include="client\cl_temp_entities.c">
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="client\cl_ents.c">
@@ -148,7 +148,7 @@
     <ClCompile Include="client\cl_newfx.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\cl_pred.c">
+    <ClCompile Include="client\cl_predict.c">
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="server\sv_ai.c">
@@ -173,9 +173,6 @@
       <Filter>client\ui</Filter>
     </ClCompile>
     <ClCompile Include="client\ui\ui_main.c">
-      <Filter>client\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="client\ui\ui_servers.c">
       <Filter>client\ui</Filter>
     </ClCompile>
     <ClCompile Include="client\ui\ui_builtins.c">
@@ -269,9 +266,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="platform\q2.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="platform\pragma.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -299,5 +293,10 @@
     <Filter Include="client\ui">
       <UniqueIdentifier>{120cfd9c-8355-44d1-9928-17e8d0cbd104}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="platform\pragma.rc">
+      <Filter>platform</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

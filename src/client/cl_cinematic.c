@@ -133,7 +133,6 @@ qboolean SCR_DrawCinematic (void)
 /*
 ==================
 SCR_PlayCinematic
-
 ==================
 */
 void SCR_PlayCinematic (char *arg)

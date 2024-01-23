@@ -457,6 +457,7 @@ void Con_DrawInput (void)
 
 	if (cls.key_dest == key_menu)
 		return;
+
 	if (cls.key_dest != key_console && cls.state == ca_active)
 		return;		// don't draw anything (always draw if not active)
 
@@ -571,7 +572,6 @@ void Con_DrawConsole (float frac)
 	int				row;
 	int				lines;
 	char			version[64];
-//	char			dlbar[1024];
 
 	lines = viddef.height * frac;
 	if (lines <= 0)
@@ -580,8 +580,7 @@ void Con_DrawConsole (float frac)
 	if (lines > viddef.height)
 		lines = viddef.height;
 
-// draw the background
-//	re.DrawTileClear(0, -viddef.height + lines, viddef.width, viddef.height, "backtile");
+	// draw the background
 	re.DrawStretchPic (0, -viddef.height+lines, viddef.width, viddef.height, "console_bg");
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
