@@ -100,8 +100,11 @@
     <ClCompile Include="qcommon\navigation.c">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="client\ui\ui_builtins.c">
+      <Filter>client</Filter>
+    </ClCompile>
     <ClCompile Include="client\cgame\cg_builtins.c">
-      <Filter>client\cgame</Filter>
+      <Filter>client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,9 +170,6 @@
     </Filter>
     <Filter Include="platform">
       <UniqueIdentifier>{2b77c318-d5b8-47fd-99a7-de7f1659962e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="client\cgame">
-      <UniqueIdentifier>{355b264e-e96f-43f9-94c4-037e89a2a0e8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

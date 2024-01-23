@@ -35,7 +35,7 @@ glstate_t  gl_state;
 image_t		*r_notexture;		// use for bad textures
 image_t		*r_particletexture;	// little dot for particles
 
-centity_t	*currententity;
+rentity_t	*currententity;
 model_t		*currentmodel;
 
 cplane_t	frustum[4];
@@ -91,7 +91,7 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 }
 
 
-void R_RotateForEntity (centity_t *e)
+void R_RotateForEntity (rentity_t *e)
 {
     qglTranslatef (e->origin[0],  e->origin[1],  e->origin[2]);
 
@@ -115,7 +115,7 @@ R_DrawSpriteModel
 
 =================
 */
-void R_DrawSpriteModel (centity_t *e)
+void R_DrawSpriteModel (rentity_t *e)
 {
 	float alpha = 1.0F;
 	vec3_t	point;
@@ -242,7 +242,7 @@ static void R_DrawNullModel (void)
 }
 
 
-void R_DrawEntityModel(centity_t* ent);
+void R_DrawEntityModel(rentity_t* ent);
 static inline void R_DrawCurrentEntity()
 {
 	if (currententity->renderfx & RF_BEAM)
@@ -895,7 +895,7 @@ void R_BeginFrame( float camera_separation )
 /*
 ** R_DrawBeam
 */
-void R_DrawBeam( centity_t *e )
+void R_DrawBeam( rentity_t *e )
 {
 #define NUM_BEAM_SEGS 6
 

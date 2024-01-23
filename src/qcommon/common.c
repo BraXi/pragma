@@ -205,12 +205,14 @@ void Com_Error (int code, char *fmt, ...)
 	vsprintf (msg,fmt,argptr);
 	va_end (argptr);
 	
+
+	printf("Com_Error: %s\n", msg);
 	if (code == ERR_DISCONNECT)
 	{
 		Com_Printf("%s\n", msg);
 
 		if(Com_ServerState())
-			SV_Shutdown("Server killed\n", false);
+			SV_Shutdown("Server killed.\n", false);
 
 #ifndef DEDICATED_ONLY
 		CL_Drop ();
@@ -257,7 +259,7 @@ Both client and server can use this, and it will do the apropriate things.
 */
 void Com_Quit (void)
 {
-	SV_Shutdown ("Server quit\n", false);
+	SV_Shutdown ("Server quit.\n", false);
 
 #ifndef DEDICATED_ONLY
 	CL_Shutdown ();
@@ -1391,10 +1393,10 @@ qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
 
 	for (; f->name; f++)
 	{
-		if (!Q_stricmp(f->name, key))
+		if (!strcmp(f->name, key))
 		{
 			// found it
-
+			printf("\nfound %s\n", key);
 			if (f->type == F_HACK && f->function != NULL)
 			{
 				f->function(value, basePtr);

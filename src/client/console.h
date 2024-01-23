@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // console
 //
 
-#define	NUM_CON_TIMES 4
+#define	NUM_CON_TIMES 8
 
 #define		CON_TEXTSIZE	32768
 typedef struct
@@ -48,8 +48,6 @@ typedef struct
 } console_t;
 
 extern	console_t	con;
-
-void Con_DrawCharacter (int cx, int line, int num);
 
 void Con_CheckResize (void);
 void Con_Init (void);

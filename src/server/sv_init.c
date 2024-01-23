@@ -308,6 +308,13 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	// check for a savegame
 //	SV_CheckForSavegame();
 
+	if (dedicated->value)
+	{
+		Com_Printf( "[%s] finished spawning server on map %s (%i max clients).\n", GetTimeStamp(false), sv.configstrings[CS_MODELS + 1], (int)sv_maxclients->value);
+	}
+	else
+		Com_Printf("spawned server on map %s.\n", sv.configstrings[CS_MODELS + 1]);
+
 	Com_Printf ("-------------------------------------\n");
 }
 
@@ -327,7 +334,7 @@ void SV_InitGame (void)
 	if (svs.initialized)
 	{
 		// cause any connected clients to reconnect
-		SV_Shutdown ("Server restarted\n", true);
+		SV_Shutdown ("Server restarted.\n", true);
 	}
 	else
 	{
@@ -464,6 +471,8 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame, qboolea
 	if (sv.state == ss_dead && !sv.loadgame)
 		SV_InitGame ();	// the game is just starting
 
+	
+
 	if (!persGlobals)
 		memset(&svs.saved, 0, sizeof(svs.saved));
 
@@ -502,6 +511,12 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame, qboolea
 	// skip the end-of-unit flag if necessary
 	if (level[0] == '*')
 		strcpy (level, level+1);
+
+
+	if (dedicated->value)
+	{
+		Com_Printf("[%s] *** server is changing map to '%s' ***\n", GetTimeStamp(true), level);
+	}
 
 	l = strlen(level);
 	if (l > 4 && !strcmp (level+l-4, ".cin") )

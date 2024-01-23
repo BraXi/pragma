@@ -138,8 +138,8 @@ void CL_AddLightStyles (void)
 	int		i;
 	clightstyle_t	*ls;
 
-	for (i=0,ls=cl_lightstyle ; i<MAX_LIGHTSTYLES ; i++, ls++)
-		V_AddLightStyle (i, ls->value[0], ls->value[1], ls->value[2]);
+	for (i = 0, ls = cl_lightstyle; i<MAX_LIGHTSTYLES ; i++, ls++)
+		V_AddLightStyle(i, ls->value[0], ls->value[1], ls->value[2]);
 }
 
 /*
@@ -379,7 +379,6 @@ PARTICLE MANAGEMENT
 
 cparticle_t		*active_particles, *free_particles;
 cparticle_t		particles[MAX_PARTICLES];
-int				cl_numparticles = MAX_PARTICLES;
 
 
 /*
@@ -391,13 +390,19 @@ void CL_ClearParticles (void)
 {
 	int		i;
 	
+//	memset(particles, 0, sizeof(particles));
+
 	free_particles = &particles[0];
 	active_particles = NULL;
 
-	for (i = 0; i < cl_numparticles; i++)
-		particles[i].next = &particles[i+1];
+	for (i = 0; i < MAX_PARTICLES; i++)
+	{
+		particles[i].next = &particles[i + 1];
+		particles[i].num = i;
+	}
+		
 
-	particles[cl_numparticles-1].next = NULL;
+	particles[MAX_PARTICLES - 1].next = NULL;
 }
 
 
@@ -424,7 +429,7 @@ void CL_ParticleEffect (vec3_t org, vec3_t dir, vec3_t color, int count)
 		active_particles = p;
 
 		p->time = cl.time;
-		VectorCopy(color, p->color); //p->color = color + (rand()&7); // FIXME this was the only diference between ParticleEffect & 2
+		VectorCopy(color, p->color);
 
 		d = rand()&31;
 		for (j=0 ; j<3 ; j++)
@@ -980,6 +985,10 @@ void CL_DiminishingTrail (vec3_t start, vec3_t end, ccentity_t *old, int flags)
 		if ((rand()&1023) < old->trailcount)
 		{
 			p = free_particles;
+
+			if (p == NULL || p->next == NULL)
+				return;
+
 			free_particles = p->next;
 			p->next = active_particles;
 			active_particles = p;
@@ -1062,7 +1071,7 @@ void CL_RocketTrail (vec3_t start, vec3_t end, ccentity_t *old)
 	vec3_t		vec;
 	float		len;
 	int			j;
-	cparticle_t	*p;
+	cparticle_t	*p = NULL;
 	float		dec;
 
 	// smoke
@@ -1076,6 +1085,7 @@ void CL_RocketTrail (vec3_t start, vec3_t end, ccentity_t *old)
 	dec = 1;
 	VectorScale (vec, dec, vec);
 
+
 	while (len > 0)
 	{
 		len -= dec;
@@ -1086,6 +1096,10 @@ void CL_RocketTrail (vec3_t start, vec3_t end, ccentity_t *old)
 		if ( (rand()&7) == 0)
 		{
 			p = free_particles;
+
+			if (!p || p == NULL || !p->next || p->next == NULL)
+				return;
+
 			free_particles = p->next;
 			p->next = active_particles;
 			active_particles = p;
@@ -1421,7 +1435,7 @@ CL_BfgParticles
 */
 
 #define	BEAMLENGTH			16
-void CL_BfgParticles (centity_t *ent)
+void CL_BfgParticles (rentity_t *ent)
 {
 	int			i;
 	cparticle_t	*p;
@@ -1490,7 +1504,7 @@ CL_TrapParticles
 ===============
 */
 // RAFAEL
-void CL_TrapParticles (centity_t *ent)
+void CL_TrapParticles (rentity_t *ent)
 {
 	vec3_t		move;
 	vec3_t		vec;
@@ -1692,6 +1706,8 @@ void CL_AddParticles (void)
 
 	active = NULL;
 	tail = NULL;
+
+	time = 0.000001;
 
 	for (p=active_particles ; p ; p=next)
 	{

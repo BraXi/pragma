@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -9,7 +9,7 @@ See the attached GNU General Public License v2 for more details.
 */
 // scr_main.c
 
-#define PROGS_CHECK_CRC 1
+#define PROGS_CHECK_CRC 0
 
 #include "../qcommon/qcommon.h"
 #include "script_internals.h"
@@ -105,11 +105,11 @@ ddef_t* Scr_FindEntityField(char* name)
 =============
 Scr_ParseEpair
 
-Can parse either fields or globals
+Can parse either fields or globals, MUST BIND VM BEFORE USE!
 returns false if error
 =============
 */
-qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s)
+qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 {
 	int		i;
 	char	string[128];
@@ -123,7 +123,7 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s)
 	switch (key->type & ~DEF_SAVEGLOBAL)
 	{
 	case ev_string:
-		*(scr_string_t*)d = COM_NewString(s, TAG_SERVER_GAME) - active_qcvm->strings;
+		*(scr_string_t*)d = COM_NewString(s, memtag) - active_qcvm->strings;
 		break;
 
 	case ev_float:
@@ -396,12 +396,10 @@ static void Scr_Logfile(qcvm_t *vm)
 	if (!vm->logfile)
 		return;
 
-	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	Com_Printf("opened logfile: %s\n", name);
 
-	fprintf(vm->logfile, "---- opened logfile %d-%02d-%02d %02d:%02d:%02d ----\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	fprintf(vm->logfile, "---- opened logfile %s ----\n", GetTimeStamp(true));
 	fflush(active_qcvm->logfile);
-//	Com_Printf("opened logfile: %s\n", name);
 }
 
 /*
@@ -490,8 +488,7 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 
 	if (vm->logfile)
 	{
-
-		fprintf(vm->logfile, "---- closed logfile ----\n");
+		fprintf(vm->logfile, "---- closed logfile %s ----\n", GetTimeStamp(true));
 		fclose(vm->logfile);
 		vm->logfile = NULL;
 	}
@@ -596,6 +593,7 @@ void cmd_vm_generatedefs_f(void)
 }
 
 extern void CG_InitScriptBuiltins();
+extern void UI_InitScriptBuiltins();
 extern void SV_InitScriptBuiltins();
 /*
 ===============
@@ -615,6 +613,7 @@ void Scr_PreInitVMs()
 	scr_numBuiltins = 0;
 	Scr_InitSharedBuiltins();
 	CG_InitScriptBuiltins();
+	UI_InitScriptBuiltins();
 	SV_InitScriptBuiltins();
 
 	vm_runaway = Cvar_Get("vm_runaway", va("%i", VM_DEFAULT_RUNAWAY), 0);

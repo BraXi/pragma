@@ -20,56 +20,73 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //
 // THIS FILE IS SHARED BETWEEN RENDERER AND CLIENT (KERNEL)
+// ~~ ANY CHANGE HERE REQUIRES RECOMPILING KERNEL AND RENDERER ~~
 //
 
 #include "../qcommon/qcommon.h"
 
-#define	MAX_DLIGHTS		64		// was 32
-#define	MAX_ENTITIES	512		// max visible entities, was 128 [previously MAX_ENTITIES]
-#define	MAX_PARTICLES	8192	// was 4096
-#define	MAX_LIGHTSTYLES	256
+#define	MAX_DLIGHTS				64		// was 32
+#define	MAX_VISIBLE_ENTITIES	512		// max visible entities, was 128 [previously MAX_ENTITIES]
+#define	MAX_PARTICLES			8192	// was 4096
+#define	MAX_LIGHTSTYLES			256
 #define MAX_DEBUG_PRIMITIVES	4096
 
 
 //
-// CLIENT ENTITY
+// RENDERER ENTITY
 //
-typedef struct centity_s
+typedef struct rentity_s
 {
-	struct model_s		*model;			// opaque type outside refresh
-	float				angles[3];
+	// model opaque type outside refresh
+	struct model_s		*model;			
 
-	/*
-	** most recent data
-	*/
-	float				origin[3];		// also used as RF_BEAM's "from"
+	//
+	// most recent data
+	//
+	vec3_t				angles;
+	vec3_t				origin;		// also used as RF_BEAM's "from"
 	int					frame;			// also used as RF_BEAM's diameter
 
-	/*
-	** previous data for lerping
-	*/
-	float				oldorigin[3];	// also used as RF_BEAM's "to"
+	//
+	// previous data for lerping
+	//
+	vec3_t				oldorigin;	// also used as RF_BEAM's "to"
 	int					oldframe;
 
-	/*
-	** misc
-	*/
 
-	float	animbacklerp;			// 0.0 = current, 1.0 = old
+	//
+	// misc
+	// 
+	
+	// used to lerp animation frames in new anim system
+	// 0.0 = current, 1.0 = old
+	float	animbacklerp;			
+
+	// used to lerp origin and between old & current origin
 	float	backlerp;				// 0.0 = current, 1.0 = old
-	int		skinnum;				// braxi -- WAS used as RF_BEAM's palette index
-	vec4_t	color;
 
-	int		lightstyle;				// for flashing entities
-	float	alpha;					// ignore if RF_TRANSLUCENT isn't set
-	float	scale;					// ignore if RF_SCALE isn't set, MD3 only
+	// braxi -- WAS used as RF_BEAM's palette index
+	int		skinnum;				
+	
+	// index to cl_lightstyles for flashing entities
+	int		lightstyle;	
+
+	// transparency, ignored when renderfx RF_TRANSLUCENT isn't set
+	float	alpha;
+
+	// scale, ignored when renderfx RF_SCALE isn't set, MD3 only
+	float	scale;	
+
+	// base texture color is multiplied by this, ignored when renderfx RF_COLOR isn't set, MD3 only
 	vec3_t	renderColor;
 	
 
 	struct image_s	*skin;			// NULL for inline skin
+
+	// RF flags
 	int		renderfx;
 
-} centity_t;
+} rentity_t;
 
 
 typedef struct
@@ -101,28 +118,28 @@ typedef struct
 	float			vieworg[3];
 	float			viewangles[3];
 	float			blend[4];			// rgba 0-1 full screen blend
-	float			time;				// time is uesed to auto animate
+	float			time;				// time is used to auto animate
 	int				rdflags;			// RDF_UNDERWATER, etc
 
 	byte			*areabits;			// if not NULL, only areas with set bits will be drawn
 
-	lightstyle_t	*lightstyles;	// [MAX_LIGHTSTYLES]
+	lightstyle_t	*lightstyles;		// [MAX_LIGHTSTYLES]
 
 	int				num_entities;
-	centity_t		*entities;
+	rentity_t		*entities;			// [MAX_VISIBLE_ENTITIES]
 
 	int				num_dlights;
-	dlight_t		*dlights;
+	dlight_t		*dlights;			// [MAX_DLIGHTS]
 
 	int				num_particles;
-	particle_t		*particles;
+	particle_t		*particles;			// [MAX_PARTICLES]
 
 	int				num_debugprimitives;
-	debugprimitive_t		*debugprimitives;
+	debugprimitive_t	*debugprimitives; // [MAX_DEBUG_PRIMITIVES]
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'3')
+#define	API_VERSION		('B'+'X'+'I'+'4')
 
 //
 // these are the functions exported by the refresh module
@@ -181,9 +198,9 @@ typedef struct
 
 	void	(*SetColor)(float r, float g, float b, float a);
 
-	/*
-	** video mode and refresh state management entry points
-	*/
+	//
+	// video mode and refresh state management entry points
+	//
 	void	(*BeginFrame)( float camera_separation );
 	void	(*EndFrame) (void);
 
@@ -192,7 +209,7 @@ typedef struct
 } refexport_t;
 
 //
-// these are the functions imported by the refresh module
+// these are the functions imported by the rendering module
 //
 typedef struct
 {

@@ -33,7 +33,7 @@ typedef enum
 typedef struct
 {
 	exptype_t	type;
-	centity_t	ent;
+	rentity_t	ent;
 
 	int			frames;
 	float		light;
@@ -57,7 +57,7 @@ beam_t		cl_playerbeams[MAX_BEAMS];//PMM - added this for player-linked beams.  C
 
 typedef struct
 {
-	centity_t	ent;
+	rentity_t	ent;
 	int			endtime;
 } laser_t;
 laser_t		cl_lasers[MAX_LASERS];
@@ -1225,7 +1225,7 @@ void CL_AddBeams (void)
 	beam_t		*b;
 	vec3_t		dist, org;
 	float		d;
-	centity_t	ent;
+	rentity_t	ent;
 	float		yaw, pitch;
 	float		forward;
 	float		len, steps;
@@ -1365,7 +1365,7 @@ void CL_AddPlayerBeams (void)
 	beam_t		*b;
 	vec3_t		dist, org;
 	float		d;
-	centity_t	ent;
+	rentity_t	ent;
 	float		yaw, pitch;
 	float		forward;
 	float		len, steps;
@@ -1611,7 +1611,7 @@ CL_AddExplosions
 */
 void CL_AddExplosions (void)
 {
-	centity_t	*ent;
+	rentity_t	*ent;
 	int			i;
 	explosion_t	*ex;
 	float		frac;

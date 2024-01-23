@@ -6,6 +6,7 @@
 #include "ui_local.h"
 
 
+void UI_UpdateScriptGlobals();;
 
 uistate_t ui;
 
@@ -15,9 +16,6 @@ ui_item_t* current_item;
 cvar_t* ui_enable;
 cvar_t* ui_maxitems;
 cvar_t* ui_maxguis;
-
-
-
 
 /*
 ===============
@@ -31,7 +29,7 @@ ui_item_t* UI_CreateItemDef(GuiDef_t* gui)
 
 	if (gui->numItems >= MAX_ITEMS_PER_GUI)
 	{
-		Com_Error(ERR_DROP, "%s: max elements in GuiDef\n", __FUNCTION__);
+		Com_Error(ERR_DROP, "%s: max elements in GuiDef '%s'\n", __FUNCTION__, gui->name);
 		return NULL;
 	}
 
@@ -65,6 +63,9 @@ ui_item_t* UI_CreateItemDef(GuiDef_t* gui)
 		newitem->v.alpha = 1.0f;
 
 		newitem->inuse = true;
+
+		ui.script_globals->self = ENT_TO_VM(newitem);
+		Scr_Execute(VM_GUI, ui.script_globals->Callback_InitItemDef, __FUNCTION__);
 	}
 
 	return newitem;
@@ -171,6 +172,9 @@ void UI_OpenGui(char* name)
 	if (gui == NULL)
 		return;
 	gui->openTime = cls.realtime;
+
+	cls.key_dest = key_menu;
+	Com_Printf("opened menu %s\n", name);
 }
 
 /*
@@ -203,21 +207,40 @@ void UI_CloseAllGuis()
 
 /*
 ===============
+UI_NumOpenedGuis
+===============
+*/
+int UI_NumOpenedGuis()
+{
+	int open = 0;
+	for (int i = 0; i < MAX_GUIS; i++)
+	{
+		if (ui.guis[i] && ui.guis[i]->openTime != -1)
+			open++;
+	}
+	return open;
+}
+
+
+/*
+===============
 UI_Draw
 ===============
 */
 void UI_Draw()
 {
 	static float fadeColor[4] = { 0,0,0,0.4 };
-	if (cls.key_dest != key_menu)
-		return;
+//	if (cls.key_dest != key_menu)
+//		return;
 
 	// repaint everything next frame
 	SCR_DirtyScreen();
 
 	// dim everything behind it down
 	if (cl.cinematictime > 0)
+	{
 		re.DrawFill(0, 0, viddef.width, viddef.height);
+	}
 	else
 	{
 		if (Com_ServerState() == 0)
@@ -226,6 +249,36 @@ void UI_Draw()
 			fadeColor[3] = 0.3;
 
 		re.DrawFadeScreen(fadeColor);
+	}
+
+	int i, j;
+	for (i = 0; i < MAX_GUIS; i++)
+	{
+		if (ui.guis[i] == NULL)
+			continue;
+
+		if (ui.guis[i]->openTime == -1)
+			continue;
+
+		Scr_BindVM(VM_GUI);
+
+		current_gui = ui.guis[i];
+
+		ui.script_globals->currentGuiName = Scr_SetString(current_gui->name);
+
+		for (j = 0; j < current_gui->numItems; j++)
+		{
+			if (current_gui->items[j] == NULL)
+				continue;
+
+			UI_UpdateScriptGlobals();
+			ui.script_globals->self = ENT_TO_VM(current_gui->items[j]);
+
+			if(current_gui->items[j]->v.drawfunc != 0)
+				Scr_Execute(VM_GUI, current_gui->items[j]->v.drawfunc, __FUNCTION__);
+			else
+				Scr_Execute(VM_GUI, ui.script_globals->Callback_GenericItemDraw, __FUNCTION__);
+		}
 	}
 }
 
@@ -238,7 +291,7 @@ void UI_KeyInputHandler(int key)
 {
 }
 
-void Cmd_LoadGui_f(void)
+static void Cmd_LoadGui_f(void)
 {
 	char* name = Cmd_Argv(1);
 	if (Cmd_Argc() != 2)
@@ -253,7 +306,7 @@ void Cmd_LoadGui_f(void)
 	UI_LoadGui(Cmd_Argv(1));
 }
 
-void Cmd_OpenGui_f(void)
+static void Cmd_OpenGui_f(void)
 {
 	char* name = Cmd_Argv(1);
 	if (Cmd_Argc() != 2)
@@ -266,7 +319,7 @@ void Cmd_OpenGui_f(void)
 	UI_OpenGui(name);
 }
 
-void Cmd_CloseGui_f(void)
+static void Cmd_CloseGui_f(void)
 {
 	char* name = Cmd_Argv(1);
 	if (Cmd_Argc() != 2)
@@ -279,10 +332,25 @@ void Cmd_CloseGui_f(void)
 	UI_CloseGui(name);
 }
 
-void Cmd_CloseAllGuis_f(void)
+static void Cmd_CloseAllGuis_f(void)
 {
 	UI_CloseAllGuis();
 }
+
+static void Cmd_ListGuis_f(void)
+{
+	int i;
+	GuiDef_t* gui = ui.guis[0];
+
+	for (i = 0; i < MAX_GUIS; i++, gui++)
+	{
+		if (gui == NULL)
+			continue;
+
+		Com_Printf("GuiDef `%s`: %i itemsDefs, %s %s\n", gui->name, gui->numItems, (gui->active == true ? "active" : ""), (gui->openTime != -1 ? "open" : ""));
+	}
+}
+
 
 /*
 ===============
@@ -295,23 +363,29 @@ static void UI_UpdateScriptGlobals()
 	ui.script_globals->time = cl.time;
 	ui.script_globals->realtime = cls.realtime;
 
+	ui.script_globals->vid_width = viddef.width;
+	ui.script_globals->vid_height = viddef.height;
+
+	ui.script_globals->scr_width = scr_vrect.width;
+	ui.script_globals->scr_height = scr_vrect.height;
+
 	ui.script_globals->clientState = cls.state;
+	ui.script_globals->serverState = Com_ServerState();
+
+	ui.script_globals->numServers = ui_numServers;
 }
 
 
 /*
 ===============
-UI_Main
+UI_Execute
 ===============
 */
-void UI_Main()
+void UI_Execute(scr_func_t progFunc)
 {
-	if (1)
-		return;
-
-	UI_UpdateScriptGlobals();
-
+	// pass most recent data to guivm and execute function
 	Scr_BindVM(VM_GUI);
+	UI_UpdateScriptGlobals();
 	Scr_Execute(VM_GUI, ui.script_globals->main, __FUNCTION__);
 }
 
@@ -335,39 +409,43 @@ void UI_LoadProgs()
 ===============
 UI_Init
 
-Called every time client starts and when connecting or disconnecting from server
+Called every time engine starts and when connecting or disconnecting from server
 ===============
 */
 void UI_Init()
 {
-	if (1)
-		return;
+	memset(&ui, 0, sizeof(uistate_t));
 
+	// unused yet
 	ui_enable = Cvar_Get("ui_enable", "1", CVAR_NOSET);
 	ui_maxitems = Cvar_Get("ui_maxitems", "4096", CVAR_NOSET);
 	ui_maxguis = Cvar_Get("ui_maxguis", "32", CVAR_NOSET);
 
-	UI_LoadProgs();
-	UI_UpdateScriptGlobals();
+	if (ui_maxitems->value <= 1024)
+		Cvar_ForceSet("ui_maxitems", "1024");
 
-	UI_LoadGuisFromFile("preload");
-
-	// precache code guis
-//	UI_LoadGui("connect");
-//	UI_LoadGui("loadmap");
-//	UI_LoadGui("main");
-
-	UI_CloseAllGuis();
+	if (ui_maxguis->value <= 8)
+		Cvar_ForceSet("ui_maxguis", "8");
 
 	Cmd_AddCommand("ui_load", Cmd_LoadGui_f);
 	Cmd_AddCommand("ui_open", Cmd_OpenGui_f);
 	Cmd_AddCommand("ui_close", Cmd_CloseGui_f);
 	Cmd_AddCommand("ui_closeall", Cmd_CloseAllGuis_f);
-	Cmd_AddCommand("ui_list", Cmd_LoadGui_f);
+	Cmd_AddCommand("ui_list", Cmd_ListGuis_f);
+
+	// load gui kernel
+	UI_LoadProgs();
+
+	// execute main()
+	UI_Execute(ui.script_globals->main);
+
+	// precache guis used by code
+	UI_LoadGuisFromFile("preload");
 }
 
 /*
 ===============
+UI_Shutdown
 ===============
 */
 void UI_Shutdown()
@@ -375,7 +453,6 @@ void UI_Shutdown()
 	Scr_FreeScriptVM(VM_GUI);
 	Z_FreeTags(TAG_GUI);
 
-	Cmd_RemoveCommand("loadgui");
 	Cmd_RemoveCommand("ui_load");
 	Cmd_RemoveCommand("ui_open");
 	Cmd_RemoveCommand("ui_close");
@@ -384,3 +461,26 @@ void UI_Shutdown()
 }
 
 
+void UI_DrawString(int x, int y, UI_AlignX alignx, char* string)
+{
+	int ofs_x = 0;
+
+	// align text
+	int strX = (strlen(string) * CHAR_SIZEX);
+	if (alignx == XALIGN_CENTER)
+	{
+		ofs_x -= (strX / 2);
+	}
+	else if (alignx == XALIGN_RIGHT)
+	{
+		ofs_x -= ((strlen(string) * CHAR_SIZEX));
+	}
+
+	// draw string
+	while (*string)
+	{
+		re.DrawChar(ofs_x + x, y, *string);
+		x += CHAR_SIZEX;
+		string++;
+	}
+}

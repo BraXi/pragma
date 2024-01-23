@@ -42,7 +42,7 @@ int			r_numdlights;
 dlight_t	r_dlights[MAX_DLIGHTS];
 
 int			r_numentities;
-centity_t	r_entities[MAX_ENTITIES];
+rentity_t	r_entities[MAX_VISIBLE_ENTITIES];
 
 int			r_numparticles;
 particle_t	r_particles[MAX_PARTICLES];
@@ -73,11 +73,11 @@ void V_ClearScene (void)
 V_AddEntity
 =====================
 */
-void V_AddEntity(centity_t* ent)
+void V_AddEntity(rentity_t* ent)
 {
-	if (r_numentities >= MAX_ENTITIES)
+	if (r_numentities >= MAX_VISIBLE_ENTITIES)
 	{
-		Com_DPrintf(DP_REND, "V_AddEntity: r_numentities >= MAX_ENTITIES\n");
+		Com_DPrintf(DP_REND, "V_AddEntity: r_numentities >= MAX_VISIBLE_ENTITIES\n");
 		return;
 	}
 
@@ -211,7 +211,7 @@ void V_TestEntities (void)
 #if 0
 	int			i, j;
 	float		f, r;
-	centity_t	*ent;
+	rentity_t	*ent;
 
 	r_numentities = 32;
 	memset (r_entities, 0, sizeof(r_entities));
@@ -462,7 +462,7 @@ V_RenderView
 extern void SV_AddDebugPrimitives();
 void V_RenderView( float stereo_separation )
 {
-	extern int entitycmpfnc( const centity_t *, const centity_t * );
+	extern int entitycmpfnc( const rentity_t *, const rentity_t * );
 
 	if (cls.state != ca_active)
 		return;

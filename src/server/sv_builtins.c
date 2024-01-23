@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -895,7 +895,7 @@ void PFSV_centerprint(void)
 
 	entnum = NUM_FOR_EDICT(ent);
 
-	if (entnum > sv_maxclients->value || entnum < 0)
+	if (entnum > sv_maxclients->value && entnum != 0)
 	{
 		Scr_RunError("centerprint() to a non-client entity %i\n", entnum);
 		return;
@@ -1301,6 +1301,27 @@ void PFSV_kickclient(void)
 	SV_DropClient(ent->client);
 }
 
+/*
+===============
+PFSV_getclientname
+
+string getclientname(entity player)
+
+returns the name of a player
+===============
+*/
+void PFSV_getclientname(void)
+{
+	gentity_t* ent;
+
+	ent = Scr_GetParmEdict(0);
+	if (!ent->client || ent->client->pers.connected == false)
+	{
+		Scr_RunError("getclientname(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
+		return;
+	}
+	Scr_ReturnString(ent->client->pers.netname);
+}
 
 /*
 ===============
@@ -2203,6 +2224,7 @@ void SV_InitScriptBuiltins()
 	// server general
 	Scr_DefineBuiltin(PFSV_changemap, PF_SV, "changemap", "float(string nm, float pers)");
 	Scr_DefineBuiltin(PFSV_kickclient, PF_SV, "kickclient", "void(entity p)");
+	Scr_DefineBuiltin(PFSV_getclientname, PF_SV, "getclientname", "string(entity e)");
 
 	// entity general
 	Scr_DefineBuiltin(PFSV_spawn, PF_SV, "spawn", "entity()");

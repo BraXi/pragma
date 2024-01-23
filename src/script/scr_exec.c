@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -74,15 +74,25 @@ void Scr_RunError(char* error, ...)
 	va_end(argptr);
 
 	CheckScriptVM(__FUNCTION__);
-
+	Com_Printf("\n\n******** SCRIPT RUNTIME ERROR ********\n\n", vmDefs[active_qcvm->progsType].filename);
+	
+	Com_Printf("Progs : %s (%d crc)\n", vmDefs[active_qcvm->progsType].filename, active_qcvm->crc);
+	Com_Printf("\nError : %s\n\n", string);
+	
+	Com_Printf("Last statement:\n");
 	Scr_PrintStatement(active_qcvm->statements + active_qcvm->xstatement);
+
+	Com_Printf("\nStack Trace: \n");
 	Scr_StackTrace();
+
+	Com_Printf("\n**************************************\n" );
 	active_qcvm->stackDepth = 0;
 
 #ifdef _DEBUG
 	printf("%s\n", string);
 #endif
-	Com_Error(ERR_DROP, "%s", string);
+
+	Com_Error(ERR_DROP, "script runtime error in %s", vmDefs[active_qcvm->progsType].filename);
 }
 
 #define QCVMDEBUGLEVEL 0
@@ -672,7 +682,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			if (ent == vm->entities && (vm->progsType == VM_SVGAME && Com_IsServerActive()))
 			{
 				//Scr_StackTrace();
-				Scr_RunError("entity 0 fields are read only\n");
+				Scr_RunError("tried to modify worldspawn entity fields which are read only\n");
 			}
 			c->_int = (byte*)(ENTVARSOFFSET(ent) + b->_int) - (byte*)vm->entities;
 			break;

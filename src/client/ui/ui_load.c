@@ -1,7 +1,7 @@
 
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -19,46 +19,9 @@ See the attached GNU General Public License v2 for more details.
 #include "ui_local.h"
 
 extern ddef_t* Scr_FindEntityField(char* name); //scr_main.c
-extern qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s); //scr_main.c
+extern qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag); //scr_main.c
 
 static char* gui_filename;
-
-/*
-===============
-ParseHack_SetRect
-===============
-*/
-static void ParseHack_SetRect(char* value, byte* basePtr)
-{
-	float vec[4];
-	sscanf(value, "%f %f %f %f", &vec[0], &vec[1], &vec[2], &vec[3]);
-	current_item->v.x = vec[0];
-	current_item->v.y = vec[1];
-	current_item->v.w = vec[2];
-	current_item->v.h = vec[3];
-}
-
-/*
-===============
-ParseHack_SetColor
-===============
-*/
-static void ParseHack_SetColor(char* value, byte* basePtr)
-{
-	float vec[4];
-	sscanf(value, "%f %f %f %f", &vec[0], &vec[1], &vec[2], &vec[3]);
-	current_item->v.color[0] = vec[0];
-	current_item->v.color[1] = vec[1];
-	current_item->v.color[2] = vec[2];
-	current_item->v.alpha = vec[3];
-}
-
-static parsefield_t field_hacks[] =
-{
-	{"rect", F_HACK, -1, ParseHack_SetRect},
-	{"rgba", F_HACK, -1, ParseHack_SetColor}
-};
-
 
 /*
 ===============
@@ -88,6 +51,7 @@ void UI_ParseGui(char* data)
 	char* token;
 	char	key[256];
 	char	value[256];
+	static char	temp[256];
 	int		keyvalpairnum;
 	ddef_t* scriptVar = NULL;
 	ui_item_t* item = NULL;
@@ -128,6 +92,7 @@ void UI_ParseGui(char* data)
 			if (!data)
 				UI_ParseError("EOF without closing brace");
 
+			memset(key, 0, sizeof(key));
 			strncpy(key, token, sizeof(key) - 1);
 
 			keyvalpairnum++;
@@ -136,6 +101,7 @@ void UI_ParseGui(char* data)
 				if (!Q_stricmp("ITEMDEF", key))
 				{
 					item = UI_CreateItemDef(current_gui);
+					current_item = item;
 				}
 				else
 					UI_ParseError("expected type");
@@ -151,10 +117,18 @@ void UI_ParseGui(char* data)
 			if (token[0] == '}')
 				UI_ParseError("closing brace without data for key '%s'", key);
 
-			current_item = item;
+			strncpy(value, token, sizeof(value) - 1);
+			strncpy(temp, token, sizeof(temp) - 1);
+
+			Cmd_TokenizeString(temp, false); //for qc argc/argv
 
 			Scr_BindVM(VM_GUI);
-			if (!COM_ParseField(key, value, (void*)&item, field_hacks)) // first check hacks
+			ui.script_globals->self = ENT_TO_VM(current_item);
+			Scr_AddString(0, key);
+			Scr_AddString(1, token);
+			Scr_Execute(VM_GUI, ui.script_globals->Callback_ParseItemKeyVal, __FUNCTION__);
+
+			if (Scr_GetReturnFloat() <= 0)
 			{
 				scriptVar = Scr_FindEntityField(key);
 				if (!scriptVar)
@@ -163,13 +137,14 @@ void UI_ParseGui(char* data)
 					continue;
 				}
 
-				if (!Scr_ParseEpair((void*)&item->v, scriptVar, token))
+				if (item != NULL && !Scr_ParseEpair((void*)&item->v, scriptVar, value, TAG_GUI))
 				{
 					UI_ParseError("error parsing key '%s'", key);
 				}
 			}
 		}
 	}
+	current_item = NULL;
 }
 
 
@@ -222,6 +197,8 @@ qboolean UI_LoadGui(char* guiname)
 	// create new gui
 	newgui = Z_TagMalloc(sizeof(GuiDef_t), TAG_GUI);
 	strcpy(newgui->name, guiname);
+
+	newgui->openTime = -1;
 
 	ui.guis[ui.numGuis] = newgui;
 	ui.numGuis++;

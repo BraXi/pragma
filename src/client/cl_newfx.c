@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 extern cparticle_t	*active_particles, *free_particles;
 extern cparticle_t	particles[MAX_PARTICLES];
-extern int			cl_numparticles;
 extern cvar_t		*r_renderer;
 
 extern void MakeNormalVectors (vec3_t forward, vec3_t right, vec3_t up);
@@ -31,7 +30,7 @@ extern void MakeNormalVectors (vec3_t forward, vec3_t right, vec3_t up);
 
 /*
 ======
-vectoangles2 - this is duplicated in the game DLL, but I need it here.
+vectoangles2
 ======
 */
 void vectoangles2 (vec3_t value1, vec3_t angles)

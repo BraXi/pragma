@@ -23,15 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 cvar_t	*freelook;
 
-cvar_t	*adr0;
-cvar_t	*adr1;
-cvar_t	*adr2;
-cvar_t	*adr3;
-cvar_t	*adr4;
-cvar_t	*adr5;
-cvar_t	*adr6;
-cvar_t	*adr7;
-cvar_t	*adr8;
 
 cvar_t	*cl_stereo_separation;
 cvar_t	*cl_stereo;
@@ -602,6 +593,7 @@ void CL_Disconnect (void)
 	VectorClear (cl.refdef.blend);
 
 	UI_CloseAllGuis();
+	UI_OpenGui("main");
 
 	cls.connect_time = 0;
 
@@ -752,13 +744,46 @@ CL_ParseStatusMessage
 Handle a reply from a ping
 =================
 */
+
+
+
 void CL_ParseStatusMessage (void)
 {
-	char	*str;
+	char	*info;
+	char	* token;
+	char	data[96];
 
-	str = MSG_ReadString(&net_message);
+	info = MSG_ReadString(&net_message);
+	Com_Printf("%s - %s\n", NET_AdrToString(net_from), info);
 
-	Com_Printf("%s - %s\n", NET_AdrToString(net_from), str);
+	strcpy(data, info);
+
+	server_entry_t* sv = &ui_servers[ui_numServers];
+
+	// "hostname" "game" "map" "numPlayers" "maxPlayers"
+	token = COM_Parse(&info);
+	if (!info)	return;
+	Com_sprintf(sv->name, sizeof(sv->name), "%s", token);
+
+	token = COM_Parse(&info);
+	if (!info)	return;
+	Com_sprintf(sv->mod, sizeof(sv->mod), "%s", token);
+
+	token = COM_Parse(&info);
+	if (!info)	return;
+	Com_sprintf(sv->map, sizeof(sv->map), "%s", token);
+
+	token = COM_Parse(&info);
+	if (!info)	return;
+	sv->numcl = atoi(token);
+
+	token = COM_Parse(&info);
+	if (!info)	return;
+	sv->maxcl = atoi(token);
+
+	sv->good = true;
+	ui_numServers++;
+
 //	M_AddToServerList (net_from, str);
 }
 
@@ -780,6 +805,7 @@ void CL_PingServers_f (void)
 
 	// send a broadcast packet
 	Com_Printf ("pinging broadcast...\n");
+	ui_numServers = 0;
 
 	net_noudp = Cvar_Get ("net_noudp", "0", CVAR_NOSET);
 	if (!net_noudp->value)
@@ -789,10 +815,15 @@ void CL_PingServers_f (void)
 		Netchan_OutOfBandPrint (NS_CLIENT, adr, va("info %i", PROTOCOL_VERSION));
 	}
 
+#ifdef _DEBUG //testing
+	Cvar_Set("favorite_server_0", "localhost:27910");
+	Cvar_Set("favorite_server_1", "localhost:27920");
+	Cvar_Set("favorite_server_2", "localhost:27930");
+#endif
 	// send a packet to each address book entry
-	for (i=0 ; i<16 ; i++)
+	for (i=0 ; i < 16 ; i++)
 	{
-		Com_sprintf (name, sizeof(name), "adr%i", i);
+		Com_sprintf (name, sizeof(name), "favorite_server_%i", i);
 		adrstring = Cvar_VariableString (name);
 		if (!adrstring || !adrstring[0])
 			continue;
@@ -1053,15 +1084,8 @@ void CL_InitLocal (void)
 
 	CL_InitInput ();
 
-	adr0 = Cvar_Get( "adr0", "", CVAR_ARCHIVE );
-	adr1 = Cvar_Get( "adr1", "", CVAR_ARCHIVE );
-	adr2 = Cvar_Get( "adr2", "", CVAR_ARCHIVE );
-	adr3 = Cvar_Get( "adr3", "", CVAR_ARCHIVE );
-	adr4 = Cvar_Get( "adr4", "", CVAR_ARCHIVE );
-	adr5 = Cvar_Get( "adr5", "", CVAR_ARCHIVE );
-	adr6 = Cvar_Get( "adr6", "", CVAR_ARCHIVE );
-	adr7 = Cvar_Get( "adr7", "", CVAR_ARCHIVE );
-	adr8 = Cvar_Get( "adr8", "", CVAR_ARCHIVE );
+	for( int i = 0; i < 16; i++)
+		Cvar_Get( va("favorite_server_%i", i), "", CVAR_ARCHIVE );
 
 //
 // register our variables

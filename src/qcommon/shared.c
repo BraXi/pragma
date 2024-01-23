@@ -1,6 +1,6 @@
 /*
 P R A G M A
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -47,6 +47,26 @@ char* _strlwr(char* x)
   return x;
 }
 #endif
+
+
+char* GetTimeStamp(qboolean full)
+{
+	time_t		t; 
+	struct tm	tm; 
+	static char	tempStr[128];
+
+	t = time(NULL);
+	tm = *localtime(&t);
+
+	memset(tempStr, 0, sizeof(tempStr));
+
+	if(full)
+		Com_sprintf(tempStr, sizeof(tempStr), "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	else
+		Com_sprintf(tempStr, sizeof(tempStr), "%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+	return tempStr;
+}
 
 void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees )
 {

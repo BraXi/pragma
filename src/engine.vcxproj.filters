@@ -31,9 +31,6 @@
     <ClCompile Include="client\snd_mem.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\menu.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="qcommon\cmd.c">
       <Filter>common</Filter>
     </ClCompile>
@@ -184,6 +181,12 @@
     <ClCompile Include="client\ui\ui_main.c">
       <Filter>client\ui</Filter>
     </ClCompile>
+    <ClCompile Include="client\ui\ui_servers.c">
+      <Filter>client\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="client\ui\ui_builtins.c">
+      <Filter>client\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="platform\resource.h" />
@@ -200,9 +203,6 @@
       <Filter>client</Filter>
     </ClInclude>
     <ClInclude Include="client\snd_loc.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\ref.h">
       <Filter>client</Filter>
     </ClInclude>
     <ClInclude Include="client\screen.h">

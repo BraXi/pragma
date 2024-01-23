@@ -106,7 +106,11 @@ void SV_BroadcastPrintf (int level, char *fmt, ...)
 		for (i=0 ; i<1023 && string[i] ; i++)
 			copy[i] = string[i]&127;
 		copy[i] = 0;
-		Com_Printf ("%s", copy);
+
+		if(dedicated->value)
+			Com_Printf ("[%s] %s", GetTimeStamp(false), copy);
+		else
+			Com_Printf("%s", copy);
 	}
 
 	for (i=0, cl = svs.clients ; i<sv_maxclients->value; i++, cl++)

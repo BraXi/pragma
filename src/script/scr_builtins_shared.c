@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -386,7 +386,7 @@ float stof(string)
 void PF_stof(void)
 {
 	char* str = Scr_GetParmString(0);
-	Scr_ReturnFloat( atof(str) );
+	Scr_ReturnFloat( (float)atof(str) );
 }
 
 /*

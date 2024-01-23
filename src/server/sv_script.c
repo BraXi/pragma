@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -508,7 +508,9 @@ static void cprintf(gentity_t* ent, int level, char* fmt, ...)
 	if (ent)
 		SV_ClientPrintf(svs.clients + (n - 1), level, "%s", msg);
 	else
-		Com_Printf("%s", msg);
+	{
+		Com_Printf("[%s] %s", GetTimeStamp(false), msg); //dedicated
+	}
 }
 
 /*

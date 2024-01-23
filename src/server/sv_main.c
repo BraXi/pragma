@@ -214,27 +214,25 @@ The second parameter should be the current protocol version number.
 */
 void SVC_Info (void)
 {
-	char	string[64];
-	int		i, count;
+	char	string[96];
+	int		i, numPlayers;
 	int		version;
 
+	// ignore in single player and when client is diferent protocol
 	if (sv_maxclients->value == 1)
-		return;		// ignore in single player
+		return;		
 
 	version = atoi (Cmd_Argv(1));
-
 	if (version != PROTOCOL_VERSION)
-		Com_sprintf (string, sizeof(string), "%s: wrong version\n", hostname->string, sizeof(string));
-	else
-	{
-		count = 0;
-		for (i=0 ; i<sv_maxclients->value ; i++)
-			if (svs.clients[i].state >= cs_connected)
-				count++;
+		return;
 
-		Com_sprintf (string, sizeof(string), "%16s %8s %2i/%2i\n", hostname->string, sv.name, count, (int)sv_maxclients->value);
-		Com_sprintf(string, sizeof(string), "%16s %8s %i/%i\n", hostname->string, sv.name, count, (int)sv_maxclients->value);
-	}
+	numPlayers = 0;
+	for (i=0 ; i<sv_maxclients->value ; i++)
+		if (svs.clients[i].state >= cs_connected)
+			numPlayers++;
+
+	// "hostname" "game" "map name", "numplayers", "maxplayers"
+	Com_sprintf (string, sizeof(string), "\"%s\" \"%s\" \"%s\" \"%i\" \"%i\"\n", hostname->string, Cvar_VariableString("game"), sv.name, numPlayers, (int)sv_maxclients->value);
 
 	Netchan_OutOfBandPrint (NS_SERVER, net_from, "info\n%s", string);
 }
@@ -324,8 +322,8 @@ void SVC_DirectConnect (void)
 	version = atoi(Cmd_Argv(1));
 	if (version != PROTOCOL_VERSION)
 	{
-		Netchan_OutOfBandPrint (NS_SERVER, adr, "print\nServer is version %4.2f.\n", PRAGMA_VERSION);
-		Com_DPrintf (DP_SV, "    rejected connect from version %i\n", version);
+		Netchan_OutOfBandPrint (NS_SERVER, adr, "print\nServer is version %f.\n", PRAGMA_VERSION);
+		Com_Printf("[%s] rejected connection from %s (client is diferent version %i)\n", GetTimeStamp(false), NET_AdrToString(net_from), version);
 		return;
 	}
 
@@ -344,7 +342,7 @@ void SVC_DirectConnect (void)
 	{
 		if (!NET_IsLocalAddress (adr))
 		{
-			Com_Printf ("Remote connect in attract loop.  Ignored.\n");
+			Com_Printf("[%s] rejected connection from %s (server in attract loop)\n", GetTimeStamp(false), NET_AdrToString(net_from));
 			Netchan_OutOfBandPrint (NS_SERVER, adr, "print\nConnection refused.\n");
 			return;
 		}
@@ -384,10 +382,12 @@ void SVC_DirectConnect (void)
 		{
 			if (!NET_IsLocalAddress (adr) && (svs.realtime - cl->lastconnect) < ((int)sv_reconnect_limit->value * 1000))
 			{
-				Com_DPrintf (DP_SV, "%s:reconnect rejected : too soon\n", NET_AdrToString (adr));
+				Com_Printf("[%s] rejected connection from %s (too soon)\n", GetTimeStamp(false), NET_AdrToString(net_from));
 				return;
 			}
-			Com_Printf ("%s:reconnect\n", NET_AdrToString (adr));
+
+			Com_Printf("[%s] client %s from %s reconnecting\n", GetTimeStamp(false), (strlen(cl->name) > 0 ? cl->name : ""), NET_AdrToString(net_from));
+
 			newcl = cl;
 			goto gotnewcl;
 		}
@@ -430,6 +430,8 @@ gotnewcl:
 				Info_ValueForKey (userinfo, "rejmsg"));
 		else
 			Netchan_OutOfBandPrint (NS_SERVER, adr, "print\nConnection refused.\n" );
+
+
 		Com_DPrintf (DP_SV, "Game rejected a connection.\n");
 		return;
 	}
@@ -476,11 +478,11 @@ void SVC_RemoteCommand (void)
 	char	remaining[1024];
 
 	i = Rcon_Validate ();
-
+	
 	if (i == 0)
-		Com_Printf ("Bad rcon from %s:\n%s\n", NET_AdrToString (net_from), net_message.data+4);
+		Com_Printf("[%s] bad rcon from %s\n", GetTimeStamp(false), NET_AdrToString(net_from));
 	else
-		Com_Printf ("Rcon from %s:\n%s\n", NET_AdrToString (net_from), net_message.data+4);
+		Com_Printf("[%s] rcon from %s: %s\n", GetTimeStamp(false), NET_AdrToString(net_from), net_message.data+4);
 
 	Com_BeginRedirect (RD_PACKET, sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_FlushRedirect);
 
@@ -1133,6 +1135,10 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 {
 	if (svs.clients)
 		SV_FinalMessage (finalmsg, reconnect);
+
+
+	if (dedicated->value)
+		Com_Printf("[%s] %s\n", GetTimeStamp(true), finalmsg);
 
 	Master_Shutdown ();
 

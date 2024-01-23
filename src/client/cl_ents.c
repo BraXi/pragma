@@ -696,7 +696,7 @@ static unsigned int c_effects, c_renderfx;
 CL_EntityAnimation
 ===============
 */
-static inline void CL_EntityAnimationOld(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+static inline void CL_EntityAnimationOld(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
 	int		autoanim;
 	unsigned int effects = state->effects;
@@ -728,7 +728,7 @@ static inline void CL_EntityAnimationOld(ccentity_t* clent, entity_state_t* stat
 CL_EntityAnimation
 ===============
 */
-static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, centity_t* refent)
+static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, rentity_t* refent)
 {
 	animstate_t* anim = NULL;
 
@@ -781,7 +781,7 @@ static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, 
 CL_EntityPositionAndRotation
 ===============
 */
-static inline void CL_EntityPositionAndRotation(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+static inline void CL_EntityPositionAndRotation(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
 	int i;
 	float	current_angles, previous_angles;
@@ -824,9 +824,8 @@ CL_EntityAddAttachedModels
 Add attached models, but don't use custom skins on them
 ===============
 */
-static inline void CL_EntityAddAttachedModels(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+static inline void CL_EntityAddAttachedModels(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
-	refent->skin = NULL;
 	refent->skinnum = 0;
 	refent->renderfx = 0;
 
@@ -859,7 +858,7 @@ CL_EntityAddParticleTrails
 Add particle trails to entity, they may have dlight attached to them
 ===============
 */
-static inline void CL_EntityAddParticleTrails(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+static inline void CL_EntityAddParticleTrails(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
 	unsigned int effects = state->effects;
 	float intensity;
@@ -979,7 +978,7 @@ CL_EntityAddMiscEffects
 Mostly effects that were previously in trails code but shouldn't be
 ===============
 */
-static inline void CL_EntityAddMiscEffects(ccentity_t* clent, entity_state_t* state, centity_t *refent)
+static inline void CL_EntityAddMiscEffects(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
 	if (state->effects & EF_FLIES)
 	{
@@ -1006,7 +1005,7 @@ void CL_AddPacketEntities(frame_t* frame)
 {
 	ccentity_t		*clent;		// currently parsed client entity
 	entity_state_t	*state;		// current client entity's state
-	centity_t		rent;		// this is refdef entity passed to renderer
+	rentity_t		rent;		// this is refdef entity passed to renderer
 	int				entnum;
 	unsigned int	effects, renderfx;
 
@@ -1048,7 +1047,6 @@ void CL_AddPacketEntities(frame_t* frame)
 
 
 		rent.skinnum = state->skinnum;
-		rent.skin = NULL;
 		rent.model = cl.model_draw[state->modelindex];
 //		rent.renderfx = state->renderFlags; // set later on
 
@@ -1114,7 +1112,7 @@ void CL_AddPacketEntities(frame_t* frame)
 #if 0 // old messy shit, keept to readd beams later
 void CL_AddPacketEntities (frame_t *frame)
 {
-	centity_t			ent;
+	rentity_t			ent;
 	entity_state_t		*s1;
 	float				autorotate;
 	int					i;
@@ -1569,12 +1567,12 @@ extern muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES];
 
 void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 {
-	centity_t	viewmodel; 
+	rentity_t	viewmodel; 
 	int			i;
 
 
 #if 1
-	centity_t	flash;
+	rentity_t	flash;
 	vec3_t  v_fwd, v_right, v_up;
 	muzzleflash_t* mz;
 #endif

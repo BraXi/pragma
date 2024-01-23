@@ -74,28 +74,23 @@ void Con_ToggleConsole_f (void)
 		return;
 	}
 
-	if (cls.state == ca_disconnected)
-	{	// start the demo loop again
-//		Cbuf_AddText ("d1\n");
-//		return;
-	}
-
 	Key_ClearTyping ();
 	Con_ClearNotify ();
 
 	if (cls.key_dest == key_console)
 	{
-		UI_CloseAllGuis();
+		if(UI_NumOpenedGuis() > 0 && cls.state < 4 /*cs_active*/)
+			cls.key_dest = key_menu;
+		else if (cls.state >= 4 /*cs_active*/ && UI_NumOpenedGuis() == 0)
+			cls.key_dest = key_game;
+		else
+			cls.key_dest = key_console;
+
 //		Cvar_Set ("paused", "0"); // braxi: console no longer pauses the game
 	}
 	else
 	{
-		UI_CloseAllGuis();
 		cls.key_dest = key_console;	
-
-// braxi: console no longer pauses the game
-//		if (Cvar_VariableValue("sv_maxclients") == 1 && Com_ServerState ())
-//			Cvar_Set ("paused", "1");
 	}
 }
 
@@ -312,7 +307,7 @@ void Con_Init (void)
 //
 // register our commands
 //
-	con_notifytime = Cvar_Get ("con_notifytime", "3", 0);
+	con_notifytime = Cvar_Get ("con_notifytime", "4", 0);
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
 	Cmd_AddCommand ("togglechat", Con_ToggleChat_f);
@@ -505,7 +500,10 @@ void Con_DrawNotify (void)
 	char	*s;
 	int		skip;
 
-	v = 0;
+	if (cls.state != ca_active)
+		return;
+
+	v = viddef.height - ((viddef.height / 5));
 	for (i= con.current-NUM_CON_TIMES+1 ; i<=con.current ; i++)
 	{
 		if (i < 0)
@@ -519,7 +517,7 @@ void Con_DrawNotify (void)
 		text = con.text + (i % con.totallines)*con.linewidth;
 		
 		for (x = 0 ; x < con.linewidth ; x++)
-			re.DrawChar ( (x+1)<<3, v, text[x]);
+			re.DrawChar (((x+1)<<3), v, text[x]);
 
 		v += 8;
 	}
@@ -529,12 +527,12 @@ void Con_DrawNotify (void)
 	{
 		if (chat_team)
 		{
-			DrawString (8, v, "say_team:");
+			DrawString (8, v, "Say_Team:");
 			skip = 11;
 		}
 		else
 		{
-			DrawString (8, v, "say:");
+			DrawString (8, v, "Say:");
 			skip = 5;
 		}
 

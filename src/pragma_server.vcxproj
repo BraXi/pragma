@@ -37,6 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\cgame\cg_builtins.c" />
+    <ClCompile Include="client\ui\ui_builtins.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />

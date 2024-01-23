@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -13,7 +13,7 @@ See the attached GNU General Public License v2 for more details.
 #include "../script/script_internals.h"
 
 extern ddef_t* Scr_FindEntityField(char* name); //scr_main.c
-extern qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s); //scr_main.c
+extern qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag); //scr_main.c
 
 /*
 =================
@@ -366,7 +366,7 @@ char* SV_ParseEntity(char* data, gentity_t * ent)
 			sprintf(token, "0 %s 0", temp);
 		}
 
-		if (!Scr_ParseEpair((void*)&ent->v, key, token))
+		if (!Scr_ParseEpair((void*)&ent->v, key, token, TAG_SERVER_GAME))
 			Com_Error(ERR_DROP, "%s: parse error", __FUNCTION__);
 	}
 

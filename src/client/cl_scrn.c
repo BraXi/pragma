@@ -603,13 +603,14 @@ void SCR_DrawConsole (void)
 
 	re.SetColor(1, 1, 1, 1);
 	
-	if (cls.state == ca_disconnected || cls.state == ca_connecting)
-	{	// forced full screen console
-		Con_DrawConsole (1.0);
-		return;
-	}
+//	if (cls.state == ca_disconnected || cls.state == ca_connecting)
+//	{	// forced full screen console
+//		Con_DrawConsole (1.0);
+//		return;
+//	}
 
-	if (cls.state != ca_active || !cl.refresh_prepped)
+#if 1
+	if (  cls.state >= ca_connecting && cls.state != ca_active) // || !cl.refresh_prepped)
 	{	
 		// connected, but can't render
 
@@ -619,9 +620,9 @@ void SCR_DrawConsole (void)
 #else
 		SCR_DrawLoadingScreen();
 #endif
-		return;
+//		return;
 	}
-
+#endif
 	if (scr_con_current)
 	{
 		Con_DrawConsole (scr_con_current);
@@ -696,16 +697,11 @@ void SCR_Loading_f (void)
 SCR_TimeRefresh_f
 ================
 */
-int entitycmpfnc( const centity_t *a, const centity_t *b )
+int entitycmpfnc( const rentity_t *a, const rentity_t *b )
 {
 	/*
-	** all other models are sorted by model then skin
+	** all other models are sorted by model
 	*/
-	if ( a->model == b->model )
-	{
-		return ( ( int ) a->skin - ( int ) b->skin );
-	}
-	else
 	{
 		return ( ( int ) a->model - ( int ) b->model );
 	}
@@ -1452,9 +1448,11 @@ void SCR_UpdateScreen (void)
 			if (cl.frame.playerstate.stats[STAT_LAYOUT] & 2)
 				CL_DrawInventory ();
 
+			re.SetColor(1, 1, 1, 1);
 			CG_DrawGUI();
 
 			re.SetColor(1, 1, 1, 1);
+			UI_Draw();
 
 			SCR_DrawNet ();
 //			SCR_DrawServerStats();
@@ -1474,12 +1472,9 @@ void SCR_UpdateScreen (void)
 
 			DrawDownloadNotify();
 
-			UI_Draw();
-
 			SCR_DrawLoading ();
 		}
 	}
 	SCR_DrawFPS();
-
 	re.EndFrame();
 }

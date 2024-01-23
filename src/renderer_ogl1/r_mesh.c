@@ -26,8 +26,8 @@ vec3_t	model_shadevector;
 float	model_shadelight[3];
 
 
-void R_DrawMD3Model(centity_t* ent, lod_t lod, float lerp); // r_md3.c
-void R_DrawSprite(centity_t* ent); // r_sprite.c
+void R_DrawMD3Model(rentity_t* ent, lod_t lod, float lerp); // r_md3.c
+void R_DrawSprite(rentity_t* ent); // r_sprite.c
 
 /*
 =================
@@ -36,7 +36,7 @@ R_EntityShouldRender
 decides whenever entity is visible and should be drawn
 =================
 */
-static qboolean R_EntityShouldRender(centity_t* ent)
+static qboolean R_EntityShouldRender(rentity_t* ent)
 {
 //	vec3_t	bbox[8];
 
@@ -72,7 +72,7 @@ R_SetEntityShadeLight
 get lighting information for centity
 =================
 */
-/*static*/ void R_SetEntityShadeLight(centity_t* ent) // uncomment when md2 is gone
+/*static*/ void R_SetEntityShadeLight(rentity_t* ent) // uncomment when md2 is gone
 {
 	float	scale;
 	float	min;
@@ -139,7 +139,7 @@ get lighting information for centity
 	VectorNormalize(model_shadevector);
 }
 
-static void R_EntityAnim(centity_t* ent, char* func)
+static void R_EntityAnim(rentity_t* ent, char* func)
 {
 	// check if animation is correct
 	if ((ent->frame >= ent->model->numframes) || (ent->frame < 0))
@@ -161,7 +161,7 @@ static void R_EntityAnim(centity_t* ent, char* func)
 		ent->animbacklerp = 0;
 }
 
-void R_DrawEntityModel(centity_t* ent)
+void R_DrawEntityModel(rentity_t* ent)
 {
 	float		lerp;
 	lod_t		lod;

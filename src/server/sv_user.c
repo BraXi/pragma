@@ -146,10 +146,11 @@ void SV_Configstrings_f (void)
 	
 	start = atoi(Cmd_Argv(2));
 
-	// write a packet full of data
+	if(dedicated->value && start == 0)
+		Com_Printf("[%s] client '%s' requested configstrings.\n", GetTimeStamp(false), sv_client->name);
 
-	while ( sv_client->netchan.message.cursize < MAX_MSGLEN/2 
-		&& start < MAX_CONFIGSTRINGS)
+	// write a packet full of data
+	while ( sv_client->netchan.message.cursize < MAX_MSGLEN/2 && start < MAX_CONFIGSTRINGS)
 	{
 		if (sv.configstrings[start][0])
 		{
@@ -194,19 +195,21 @@ void SV_Baselines_f (void)
 	}
 	
 	// handle the case of a level changing while a client was connecting
-	if ( atoi(Cmd_Argv(1)) != svs.spawncount )
+	if ((int)strtol(Cmd_Argv(1), (char**)NULL, 10) != svs.spawncount) //yquake2
 	{
 		Com_Printf ("SV_Baselines_f from different level\n");
 		SV_New_f ();
 		return;
 	}
 	
-	start = atoi(Cmd_Argv(2));
+	start = (int)strtol(Cmd_Argv(2), (char**)NULL, 10); //yquake
+
+	if(dedicated->value && start == 0)
+		Com_Printf("[%s] client '%s' requested baselines.\n", GetTimeStamp(false), sv_client->name);
 
 	memset (&nullstate, 0, sizeof(nullstate));
 
 	// write a packet full of data
-
 	while ( sv_client->netchan.message.cursize <  MAX_MSGLEN/2 && start < MAX_GENTITIES)
 	{
 		base = &sv.baselines[start];
@@ -219,7 +222,6 @@ void SV_Baselines_f (void)
 	}
 
 	// send next command
-
 	if (start == MAX_GENTITIES)
 	{
 		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
@@ -245,7 +247,7 @@ void SV_Begin_f (void)
 //	Com_DPrintf (DP_SV, "Begin() from %s\n", sv_client->name);
 
 	// handle the case of a level changing while a client was connecting
-	if ( atoi(Cmd_Argv(1)) != svs.spawncount )
+	if ((int)strtol(Cmd_Argv(1), (char**)NULL, 10) != svs.spawncount) // yquake2
 	{
 		Com_Printf ("SV_Begin_f from different level\n");
 		SV_New_f ();
@@ -346,7 +348,9 @@ void SV_BeginDownload_f(void)
 	name = Cmd_Argv(1);
 
 	if (Cmd_Argc() > 2)
-		offset = atoi(Cmd_Argv(2)); // downloaded offset
+	{
+		offset = (int)strtol(Cmd_Argv(2), (char**)NULL, 10); // downloaded offset, yquake2
+	}
 
 	// hacked by zoid to allow more control over download
 	// first off, no .. or global allow check
@@ -378,12 +382,18 @@ void SV_BeginDownload_f(void)
 	sv_client->downloadcount = offset;
 
 	if (offset > sv_client->downloadsize)
+	{
 		sv_client->downloadcount = sv_client->downloadsize;
+	}
 
 	// special check for maps, if it came from a pak file, don't allow download  ZOID
 	if (!sv_client->download || (strncmp(name, "maps/", 5) == 0 && file_from_pak))
 	{
 		Com_DPrintf (DP_SV, "Couldn't download %s to %s\n", name, sv_client->name);
+
+		if (dedicated->value)
+			Com_Printf("[%s] client '%s' requested wrong download '%s'\n", GetTimeStamp(false), sv_client->name, name);
+
 		if (sv_client->download) 
 		{
 			FS_FreeFile (sv_client->download);
@@ -397,6 +407,10 @@ void SV_BeginDownload_f(void)
 	}
 
 	SV_NextDownload_f ();
+
+	if (dedicated->value && !offset)
+		Com_Printf("[%s] client '%s' is downloading '%s'\n", GetTimeStamp(false), sv_client->name, name);
+
 	Com_DPrintf (DP_SV, "Downloading %s to %s\n", name, sv_client->name);
 }
 
@@ -462,7 +476,7 @@ to the next server
 */
 void SV_Nextserver_f (void)
 {
-	if ( atoi(Cmd_Argv(1)) != svs.spawncount ) 
+	if ((int)strtol(Cmd_Argv(1), (char**)NULL, 10) != svs.spawncount) //yquake2
 	{
 		Com_DPrintf (DP_SV, "Nextserver() from wrong level, from %s\n", sv_client->name);
 		return;		// leftover from last server

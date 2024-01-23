@@ -163,7 +163,7 @@ extern	int			numgltextures;
 
 extern	image_t		*r_notexture;
 extern	image_t		*r_particletexture;
-extern	centity_t	*currententity;
+extern	rentity_t	*currententity;
 extern	model_t		*currentmodel;
 extern	int			r_visframecount;
 extern	int			r_framecount;
@@ -268,9 +268,9 @@ void	R_Shutdown( void );
 
 void R_RenderView (refdef_t *fd);
 void GL_ScreenShot_f (void);
-void R_DrawBrushModel (centity_t *e);
-void R_DrawSpriteModel (centity_t *e);
-void R_DrawBeam( centity_t *e );
+void R_DrawBrushModel (rentity_t *e);
+void R_DrawSpriteModel (rentity_t *e);
+void R_DrawBeam( rentity_t *e );
 void R_DrawWorld (void);
 void R_RenderDlights (void);
 void R_DrawAlphaSurfaces (void);
@@ -279,7 +279,7 @@ void R_InitParticleTexture (void);
 void Draw_InitLocal (void);
 void GL_SubdivideSurface (msurface_t *fa);
 qboolean R_CullBox (vec3_t mins, vec3_t maxs);
-void R_RotateForEntity (centity_t *e);
+void R_RotateForEntity (rentity_t *e);
 void R_MarkLeaves (void);
 
 glpoly_t *WaterWarpPolyVerts (glpoly_t *p);

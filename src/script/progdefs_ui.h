@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -25,20 +25,30 @@ typedef struct ui_globalvars_s
 
 	int				vid_width;
 	int				vid_height;
+	int				scr_width;
+	int				scr_height;
 
-	float			clientState;
+	float			clientState; //cs_*
+	float			serverState; //ss_*
 
+	float			numServers;
+
+	scr_entity_t	self;
 	scr_string_t	currentGuiName;
 
 	scr_func_t		main;
 	scr_func_t		frame;
-	scr_func_t		drawgui;
+	scr_func_t		Callback_GenericItemDraw;
+	scr_func_t		Callback_ParseItemKeyVal;
+	scr_func_t		Callback_InitItemDef;
 } ui_globalvars_t;
 
 
 typedef struct ui_itemvars_s
 {
 	scr_string_t name;
+	scr_func_t	drawfunc;
+
 	// also "rect"
 	float		x, y, w, h; 
 

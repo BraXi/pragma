@@ -25,7 +25,6 @@
     <ClInclude Include="client\console.h" />
     <ClInclude Include="client\input.h" />
     <ClInclude Include="client\keys.h" />
-    <ClInclude Include="client\ref.h" />
     <ClInclude Include="client\screen.h" />
     <ClInclude Include="client\snd_loc.h" />
     <ClInclude Include="client\sound.h" />
@@ -68,12 +67,13 @@
     <ClCompile Include="client\cl_view.c" />
     <ClCompile Include="client\console.c" />
     <ClCompile Include="client\keys.c" />
-    <ClCompile Include="client\menu.c" />
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
     <ClCompile Include="client\snd_mix.c" />
+    <ClCompile Include="client\ui\ui_builtins.c" />
     <ClCompile Include="client\ui\ui_load.c" />
     <ClCompile Include="client\ui\ui_main.c" />
+    <ClCompile Include="client\ui\ui_servers.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />

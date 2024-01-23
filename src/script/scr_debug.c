@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -235,11 +235,17 @@ void Scr_PrintStatement(dstatement_t* s)
 			Com_Printf(" ");
 	}
 
-	if (s->op == OP_IF || s->op == OP_IFNOT)
-		Com_Printf("%sbranch %i", Scr_GlobalString(s->a), s->b);
+	if (s->op == OP_IF )
+	{
+		Com_Printf("%s IF %i", Scr_GlobalString(s->a), s->b);
+	}
+	else if ( s->op == OP_IFNOT)
+	{
+		Com_Printf("%s IFNOT %i", Scr_GlobalString(s->a), s->b);
+	}
 	else if (s->op == OP_GOTO)
 	{
-		Com_Printf("branch %i", s->a);
+		Com_Printf("GOTO %i", s->a);
 	}
 	else if ((unsigned)(s->op - OP_STORE_F) < 6)
 	{
@@ -276,7 +282,6 @@ void Scr_StackTrace()
 		Com_Printf("<NO STACK>\n");
 		return;
 	}
-
 	active_qcvm->stack[active_qcvm->stackDepth].f = active_qcvm->xfunction;
 	for (i = active_qcvm->stackDepth; i >= 0; i--)
 	{

@@ -75,11 +75,12 @@ void Sys_Error (char *error, ...)
 	va_end (argptr);
 
 #ifdef DEDICATED_ONLY
-	printf("Sys_Error: %s\n", text);
+	printf("Sys_Error: %s at %s\n", text, GetTimeStamp(true));
 #else
 	MessageBox(NULL, text, "Error", 0 /* MB_OK */ );
 #endif
 
+	
 	exit (1);
 }
 

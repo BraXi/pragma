@@ -9,7 +9,7 @@
 #define MAX_ITEMS_PER_GUI 256
 #define MAX_GUI_ITEMS 4096
 
-#define TAG_GUI		202305 //memory
+#define TAG_GUI		202305 //memtag
 
 typedef struct ui_item_s
 {

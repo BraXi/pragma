@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -89,7 +89,7 @@ File must be in 'guipics/' directory.
 float precache_image(string filename)
 =================
 */
-static void PFCG_precache_image(void)
+void PFCG_precache_image(void)
 {
 	float loaded;
 	char* filename = Scr_GetParmString(0);
@@ -107,7 +107,7 @@ returns configstring by index
 string bspname = getconfigstring(CS_MODELS+1);
 =================
 */
-static void PFCG_getconfigstring(void)
+void PFCG_getconfigstring(void) // shared with gui
 {
 	int idx = Scr_GetParmInt(0);
 	if ( idx < 0 || idx >= MAX_CONFIGSTRINGS)
@@ -126,7 +126,7 @@ returns the name of player
 string name = getclientname(0);
 =================
 */
-static void PFCG_getclientname(void)
+void PFCG_getclientname(void)
 {
 	int idx = Scr_GetParmInt(0);
 	if (idx < 0 || idx >= MAX_CLIENTS)
@@ -144,7 +144,7 @@ PFCG_getstat
 return client's stat value for given index
 =================
 */
-static void PFCG_getstat(void)
+void PFCG_getstat(void)
 {
 	int index = Scr_GetParmFloat(0);
 	if (index < 0 || index >= MAX_STATS)
@@ -330,7 +330,7 @@ plays 2D sound for local client with no attenuation
 void localsound( string filename, float volume );
 =================
 */
-static void PFCG_localsound(void)
+void PFCG_localsound(void)
 {
 	struct sfx_t* sfx;
 	char* filename;
@@ -415,7 +415,7 @@ string getbindkey( string bind )
 returns the key name for bind
 =================
 */
-static void PFCG_getbindkey(void)
+void PFCG_getbindkey(void)
 {
 	char* binding = Scr_GetParmString(0);
 	char* key;
@@ -430,15 +430,6 @@ static void PFCG_getbindkey(void)
 		}
 	}
 	Scr_ReturnString(key);
-}
-
-
-static void PFCG_GetCursorPos(void)
-{
-}
-
-static void PFCG_SetCursorPos(void)
-{
 }
 #endif /*not DEDICATED_ONLY*/
 

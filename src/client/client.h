@@ -179,7 +179,7 @@ typedef struct
 	//
 	qboolean			qcvm_active;
 	cl_globalvars_t		*script_globals;	// qcvm globals
-	centity_t			*entities;			// allocated by qcvm
+	rentity_t			*entities;			// allocated by qcvm
 	int					max_entities;
 	int					entity_size;		// retrieved from progs
 	int					num_edicts;			// increases towards MAX_EDICTS
@@ -395,7 +395,8 @@ typedef struct particle_s
 {
 	struct particle_s	*next;
 
-	float		time;
+	int		time;
+	int num; //dbg
 
 	vec3_t		org;
 	vec3_t		vel;
@@ -535,7 +536,7 @@ extern struct model_s *gun_model;
 
 void V_Init (void);
 void V_RenderView( float stereo_separation );
-void V_AddEntity (centity_t *ent);
+void V_AddEntity (rentity_t *ent);
 void V_AddDebugPrimitive(debugprimitive_t *obj);
 void V_AddParticle (vec3_t org, vec3_t color, float alpha);
 void V_AddLight (vec3_t org, float intensity, float r, float g, float b);
@@ -563,10 +564,10 @@ void CL_BigTeleportParticles (vec3_t org);
 void CL_RocketTrail (vec3_t start, vec3_t end, ccentity_t *old);
 void CL_DiminishingTrail (vec3_t start, vec3_t end, ccentity_t *old, int flags);
 void CL_FlyEffect (ccentity_t *ent, vec3_t origin);
-void CL_BfgParticles (centity_t *ent); // unused
+void CL_BfgParticles (rentity_t *ent); // unused
 void CL_AddParticles (void);
 void CL_EntityEvent (entity_state_t *ent);
-void CL_TrapParticles (centity_t *ent);
+void CL_TrapParticles (rentity_t *ent);
 
 //
 // cl_inv.c TODO: remove inventory from kernel entirely

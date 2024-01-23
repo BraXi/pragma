@@ -26,7 +26,7 @@ QUAKE2 SPRITES
 
 #include "r_local.h"
 
-void R_DrawSprite(centity_t* ent)
+void R_DrawSprite(rentity_t* ent)
 {
 	vec3_t	point;
 	sp2Frame_t* frame;

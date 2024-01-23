@@ -1,6 +1,6 @@
 /*
 pragma
-Copyright (C) 2023 BraXi.
+Copyright (C) 2023-2024 BraXi.
 
 Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
@@ -25,9 +25,9 @@ typedef byte vm_entity_t;
 // FIXME -- move server and client stuff out of here
 typedef struct gentity_s gentity_t;
 #include "progdefs_server.h" 
-typedef struct centity_s centity_t;
+typedef struct rentity_s rentity_t;
 #include "progdefs_client.h" 
-typedef struct centity_s centity_t;
+typedef struct rentity_s rentity_t;
 #include "progdefs_ui.h" 
 
 
