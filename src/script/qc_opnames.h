@@ -1,3 +1,13 @@
+/*
+pragma
+Copyright (C) 2023-2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+
+See the attached GNU General Public License v2 for more details.
+*/
+
 #if 0
 /* vanilla Q1QC opcodes */
 "DONE",
@@ -215,8 +225,8 @@ NO_QC_OPC,
 "AND_FI",
 "OR_FI",
 "NE_IF",
-#else
 
+#else
 
 "OP_DONE",	//0
 "OP_MUL_F",

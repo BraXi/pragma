@@ -1,3 +1,13 @@
+/*
+pragma
+Copyright (C) 2023-2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+
+See the attached GNU General Public License v2 for more details.
+*/
+
 #include "client.h"
 
 /*
@@ -106,5 +116,25 @@ void CL_RunDynamicLights(void)
 		dl->radius -= cls.frametime * dl->decay;
 		if (dl->radius < 0)
 			dl->radius = 0;
+	}
+}
+
+
+/*
+===============
+CL_AddDynamicLights
+===============
+*/
+void CL_AddDynamicLights(void)
+{
+	int			i;
+	cdlight_t* dl;
+
+	dl = cl_dlights;
+	for (i = 0; i < MAX_DLIGHTS; i++, dl++)
+	{
+		if (!dl->radius)
+			continue;
+		V_AddLight(dl->origin, dl->radius, dl->color[0], dl->color[1], dl->color[2]);
 	}
 }

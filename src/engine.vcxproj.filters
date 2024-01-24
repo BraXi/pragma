@@ -22,15 +22,6 @@
     <ClCompile Include="client\cl_keys.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\snd_dma.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_mix.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_mem.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="qcommon\cmd.c">
       <Filter>common</Filter>
     </ClCompile>
@@ -139,13 +130,7 @@
     <ClCompile Include="client\cl_temp_entities.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\cl_ents.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_fx.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_newfx.c">
+    <ClCompile Include="client\cl_entities.c">
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="client\cl_predict.c">
@@ -184,10 +169,30 @@
     <ClCompile Include="client\cl_lightstyles.c">
       <Filter>client</Filter>
     </ClCompile>
-    <ClCompile Include="client\cl_graph.c" />
+    <ClCompile Include="client\cl_graph.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\fx\fx_muzzleflash.c">
+      <Filter>client\fx</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_newfx.c">
+      <Filter>client\fx</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_fx.c">
+      <Filter>client\fx</Filter>
+    </ClCompile>
+    <ClCompile Include="client\snd_mix.c">
+      <Filter>client\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="client\snd_mem.c">
+      <Filter>client\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="client\snd_dma.c">
+      <Filter>client\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_particles.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="platform\resource.h" />
     <ClInclude Include="client\client.h">
       <Filter>client</Filter>
     </ClInclude>
@@ -197,13 +202,7 @@
     <ClInclude Include="client\keys.h">
       <Filter>client</Filter>
     </ClInclude>
-    <ClInclude Include="client\snd_loc.h">
-      <Filter>client</Filter>
-    </ClInclude>
     <ClInclude Include="client\screen.h">
-      <Filter>client</Filter>
-    </ClInclude>
-    <ClInclude Include="client\sound.h">
       <Filter>client</Filter>
     </ClInclude>
     <ClInclude Include="client\vid.h">
@@ -264,9 +263,15 @@
     <ClInclude Include="client\ui\ui_local.h">
       <Filter>client\ui</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="platform\pragma.ico" />
+    <ClInclude Include="platform\resource.h">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="client\sound.h">
+      <Filter>client\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="client\snd_loc.h">
+      <Filter>client\sound</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="client">
@@ -293,10 +298,21 @@
     <Filter Include="client\ui">
       <UniqueIdentifier>{120cfd9c-8355-44d1-9928-17e8d0cbd104}</UniqueIdentifier>
     </Filter>
+    <Filter Include="client\fx">
+      <UniqueIdentifier>{6e289b86-d0c0-4358-a264-2e3f559db208}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="client\sound">
+      <UniqueIdentifier>{97e6b15e-4c1a-4883-95cb-0316412def22}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="platform\pragma.rc">
       <Filter>platform</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="platform\pragma.ico">
+      <Filter>platform</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -1,22 +1,13 @@
 /*
+pragma
+Copyright (C) 2023-2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
+See the attached GNU General Public License v2 for more details.
 */
+
 // common.c -- misc functions used in client and server
 #include "qcommon.h"
 #include <setjmp.h>
@@ -212,7 +203,7 @@ void Com_Error (int code, char *fmt, ...)
 		Com_Printf("%s\n", msg);
 
 		if(Com_ServerState())
-			SV_Shutdown("Server killed.\n", false);
+			SV_Shutdown("Server killed.", false);
 
 #ifndef DEDICATED_ONLY
 		CL_Drop ();
@@ -223,7 +214,7 @@ void Com_Error (int code, char *fmt, ...)
 	else if (code == ERR_DROP)
 	{
 		Com_Printf ("********************\nERROR: %s\n********************\n", msg);
-		SV_Shutdown (va("Server crashed: %s\n", msg), false);
+		SV_Shutdown (va("Server crashed: %s", msg), false);
 
 #ifndef DEDICATED_ONLY
 		CL_Drop ();
@@ -233,7 +224,7 @@ void Com_Error (int code, char *fmt, ...)
 	}
 	else
 	{
-		SV_Shutdown (va("Server fatal crashed: %s\n", msg), false);
+		SV_Shutdown (va("Server fatal crashed: %s", msg), false);
 
 #ifndef DEDICATED_ONLY
 		CL_Shutdown ();
@@ -259,7 +250,7 @@ Both client and server can use this, and it will do the apropriate things.
 */
 void Com_Quit (void)
 {
-	SV_Shutdown ("Server quit.\n", false);
+	SV_Shutdown ("Server quit.", false);
 
 #ifndef DEDICATED_ONLY
 	CL_Shutdown ();
@@ -1740,7 +1731,7 @@ void Qcommon_Init (int argc, char **argv)
 	{	
 		// if the user didn't give any commands, run default action
 		if (!dedicated->value)
-			Cbuf_AddText ("opengui main\n");
+			Cbuf_AddText ("ui_open main\n");
 		else
 			Cbuf_AddText ("dedicated_start\n");
 		Cbuf_Execute ();

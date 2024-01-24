@@ -20,15 +20,6 @@ See the attached GNU General Public License v2 for more details.
 #define	RETURN_EDICT(e)		(((int *)active_qcvm->globals)[OFS_RETURN] = ENT_TO_VM(e))
 
 
-// unused
-//#define E_FLOAT(e,o)		(((float*)&e->v)[o])
-//#define E_INT(e,o)			(*(int *)&((float*)&e->v)[o])
-//#define E_VECTOR(e,o)		(&((float*)&e->v)[o])
-//#define E_STRING(e,o)		(ScriptVM->strings + *(string_t *)&((float*)&e->v)[o])
-//#define E_STRING(e,o)		(Scr_GetString(*(string_t *)&((float*)&e->v)[o])) // QuakeWorld
-//#define	RETURN_STRING(s) (((int *)pr_globals)[OFS_RETURN] = PR_SetString(s))
-
-
 /*
 ============
 Scr_DefineBuiltin

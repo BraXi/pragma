@@ -1,165 +1,24 @@
 /*
+pragma
+Copyright (C) 2023-2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
+See the attached GNU General Public License v2 for more details.
 */
+
 // cl_fx.c -- entity effects parsing and management
 
 #include "client.h"
 
-void CL_LogoutEffect (vec3_t org, int type);
-void CL_ItemRespawnParticles (vec3_t org);
+extern void CL_ClearDynamicLights(void);
+extern void CL_ClearLightStyles(void);
 
 static vec3_t avelocities [MD2_NUMVERTEXNORMALS];
 
 extern	struct model_s	*cl_mod_smoke;
 extern	struct model_s	*cl_mod_impact_small;
-
-/*
-==============================================================
-MUZZLE FLASHES
-==============================================================
-*/
-
-muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES] =
-{
-	//	forward,	right,	up,		light radius,	light color,		scale,	volume,	sound
-		{44.0f,		-4.8f,	-3.5f,	200,			{1, 0.9, 0.7},		1.4f,	1.0f,	"weapons/deagle/shot.wav"}, 	// FX_MUZZLEFLASH_PISTOL
-		{66.0f,		-4.8f,	-3.5f,	260,			{1, 1, 0.7},		1.0f,	1.0f,	"weapons/ak47/shot.wav"},	// FX_MUZZLEFLASH_RIFLE
-		{66.0f,		-4.8f,	-3.5f,	200,			{1, 1, 0.7},		1.0f,	1.0f,	NULL}	// FX_MUZZLEFLASH_SHOTGUN
-};
-
-
-
-/*
-==============
-CL_ParseMuzzleFlash
-
-svc_muzzleflash [entnum] [muzzleflashfx]
-==============
-*/
-void CL_ParseMuzzleFlash(void)
-{
-	vec3_t		v_fwd, v_right, v_up;
-	cdlight_t	*dlight;
-	int			entity_num, effectNum;
-	ccentity_t	*cent;
-	float		volume;
-
-	entity_num = MSG_ReadShort (&net_message);
-	if (entity_num < 1 || entity_num >= MAX_GENTITIES)
-		Com_Error (ERR_DROP, "CL_ParseMuzzleFlash: bad entity");
-
-	cent = &cl_entities[entity_num];
-	effectNum = MSG_ReadByte (&net_message);
-
-	dlight = CL_AllocDynamicLight(entity_num);
-	VectorCopy(cent->current.origin, dlight->origin);
-
-	if (cl.playernum + 1 == entity_num) // this is our local player
-	{
-		cl.muzzleflash_time = cl.time + 90;
-
-		cl.muzzleflash = effectNum;
-		if (effectNum >= FX_WEAPON_MUZZLEFLASHES || effectNum < 0)
-			cl.muzzleflash = FX_MUZZLEFLASH_PISTOL;
-
-		cl.muzzleflash_frame++;
-		if (cl.muzzleflash_frame > 9)
-			cl.muzzleflash_frame = 0;
-
-		AngleVectors(cl.viewangles, v_fwd, v_right, v_up);
-		VectorMA(dlight->origin, 44, v_fwd, dlight->origin);
-		VectorMA(dlight->origin, 5, v_right, dlight->origin);
-		VectorMA(dlight->origin, 19, v_up, dlight->origin);
-	}
-	else
-	{
-		AngleVectors(cent->current.angles, v_fwd, v_right, v_up);
-		VectorMA(dlight->origin, 12, v_fwd, dlight->origin);
-		VectorMA(dlight->origin, 16, v_right, dlight->origin);
-	}
-
-	volume = 1;
-
-	if (effectNum >= 0 && effectNum < FX_WEAPON_MUZZLEFLASHES)
-	{
-		muzzleflash_t* mz = &cl_muzzleflashes[effectNum];
-
-		dlight->minlight = 32;
-		dlight->die = cl.time + 140;
-
-		VectorCopy(mz->dlight_color, dlight->color);
-		dlight->radius = mz->dlight_radius + (rand() & 31);
-
-		if(mz->sound != NULL)
-			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound(mz->sound), mz->volume, ATTN_NORM, 0); // should precache sound
-	}
-	else
-	{
-		dlight->minlight = 32;
-		dlight->die = cl.time;
-
-		switch (effectNum)
-		{
-		case FX_MUZZLEFLASH_LOGIN:
-			
-			dlight->die = cl.time + 1.0;
-			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/login.wav"), 1, ATTN_NORM, 0);
-			CL_LogoutEffect(cent->current.origin, effectNum);
-			break;
-		case FX_MUZZLEFLASH_LOGOUT:
-			VectorSet(dlight->color, 1, 0, 0);
-			dlight->die = cl.time + 1.0;
-			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/logout.wav"), 1, ATTN_NORM, 0);
-			CL_LogoutEffect(cent->current.origin, effectNum);
-			break;
-		case FX_MUZZLEFLASH_RESPAWN:
-			VectorSet(dlight->color, 1, 1, 0);
-			dlight->die = cl.time + 1.0;
-			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/respawn.wav"), 1, ATTN_NORM, 0);
-			CL_LogoutEffect(cent->current.origin, effectNum);
-			break;
-		default:
-			break;
-		}
-	}
-}
-
-
-/*
-===============
-CL_AddDLights
-
-===============
-*/
-void CL_AddDLights (void)
-{
-	int			i;
-	cdlight_t	*dl;
-	
-	dl = cl_dlights;
-	for (i = 0; i < MAX_DLIGHTS; i++, dl++)
-	{
-		if (!dl->radius)
-			continue;
-		V_AddLight (dl->origin, dl->radius,dl->color[0], dl->color[1], dl->color[2]);
-	}
-}
 
 
 
@@ -185,7 +44,6 @@ void CL_ClearParticles (void)
 	int		i;
 	
 //	memset(particles, 0, sizeof(particles));
-
 	free_particles = &particles[0];
 	active_particles = NULL;
 

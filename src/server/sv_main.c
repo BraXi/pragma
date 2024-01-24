@@ -1,21 +1,11 @@
 /*
+pragma
+Copyright (C) 2023-2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
 Copyright (C) 1997-2001 Id Software, Inc.
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
+See the attached GNU General Public License v2 for more details.
 */
 
 #include "server.h"
@@ -976,8 +966,7 @@ void Master_Shutdown (void)
 =================
 SV_UserinfoChanged
 
-Pull specific info from a newly changed userinfo string
-into a more C freindly form.
+Pull specific info from a newly changed userinfo string into a more C friendly form.
 =================
 */
 
@@ -1112,13 +1101,11 @@ void SV_FinalMessage (char *message, qboolean reconnect)
 
 	for (i=0, cl = svs.clients ; i<sv_maxclients->value ; i++, cl++)
 		if (cl->state >= cs_connected)
-			Netchan_Transmit (&cl->netchan, net_message.cursize
-			, net_message.data);
+			Netchan_Transmit (&cl->netchan, net_message.cursize, net_message.data);
 
 	for (i=0, cl = svs.clients ; i<sv_maxclients->value ; i++, cl++)
 		if (cl->state >= cs_connected)
-			Netchan_Transmit (&cl->netchan, net_message.cursize
-			, net_message.data);
+			Netchan_Transmit (&cl->netchan, net_message.cursize, net_message.data);
 }
 
 
@@ -1127,8 +1114,7 @@ void SV_FinalMessage (char *message, qboolean reconnect)
 ================
 SV_Shutdown
 
-Called when each game quits,
-before Sys_Quit or Sys_Error
+Called when each game quits, before Sys_Quit or Sys_Error
 ================
 */
 void SV_Shutdown (char *finalmsg, qboolean reconnect)

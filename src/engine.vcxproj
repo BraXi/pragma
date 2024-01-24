@@ -54,7 +54,7 @@
     <ClCompile Include="client\cl_cinematic.c" />
     <ClCompile Include="client\cl_dlights.c" />
     <ClCompile Include="client\cl_download.c" />
-    <ClCompile Include="client\cl_ents.c" />
+    <ClCompile Include="client\cl_entities.c" />
     <ClCompile Include="client\cl_fx.c" />
     <ClCompile Include="client\cl_graph.c" />
     <ClCompile Include="client\cl_input.c" />
@@ -62,12 +62,14 @@
     <ClCompile Include="client\cl_main.c" />
     <ClCompile Include="client\cl_newfx.c" />
     <ClCompile Include="client\cl_parse.c" />
+    <ClCompile Include="client\cl_particles.c" />
     <ClCompile Include="client\cl_predict.c" />
     <ClCompile Include="client\cl_screen.c" />
     <ClCompile Include="client\cl_temp_entities.c" />
     <ClCompile Include="client\cl_view.c" />
     <ClCompile Include="client\cl_console.c" />
     <ClCompile Include="client\cl_keys.c" />
+    <ClCompile Include="client\fx\fx_muzzleflash.c" />
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
     <ClCompile Include="client\snd_mix.c" />
