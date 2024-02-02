@@ -25,6 +25,9 @@
     <ClInclude Include="..\qcommon\renderer.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\qcommon\mathlib.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="r_draw.c" />
@@ -52,6 +55,9 @@
     </ClCompile>
     <ClCompile Include="win_qgl.c">
       <Filter>sys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\qcommon\mathlib.c">
+      <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

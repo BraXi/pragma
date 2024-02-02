@@ -63,8 +63,18 @@ extern qboolean print_time;
 
 //============================================================================
 
-#define TAG_SERVER_MODELDATA 20231
-#define TAG_SERVER_GAME 20232
+typedef enum memtag_s
+{
+	TAG_NONE,
+	TAG_GUI = 100,
+	TAG_FX,
+	TAG_NAV_NODES,
+	TAG_SERVER_MODELDATA,
+	TAG_SERVER_GAME,
+
+	NUM_MEMORY_TAGS
+} memtag_t;
+
 
 //============================================================================
 
@@ -77,6 +87,7 @@ typedef enum
 	F_FLOAT,
 	F_STRING,
 	F_BOOLEAN,
+	F_VECTOR2,
 	F_VECTOR3,
 	F_VECTOR4,
 	F_QCFUNC,
@@ -304,6 +315,9 @@ enum svc_ops_e
 	SVC_MUZZLEFLASH,
 	SVC_TEMP_ENTITY,
 	SVC_CGCMD,					// handled in cgame progs: [byte cmd] ....
+
+	SVC_PLAYFX,					// [byte] effect_index, [pos] origin, [dir] direction, [byte] looping 
+	SVC_PLAYFXONENT,			// [byte] effect_index, [short] entity_num, [byte] tag_id, [byte] looping 
 
 	SVC_NOP,
 
@@ -885,10 +899,10 @@ extern	int		time_after_ref;
 
 void Z_Free (void *ptr);
 void *Z_Malloc (int size);			// returns 0 filled memory
-void *Z_TagMalloc (int size, int tag);
-void Z_FreeTags (int tag);
+void *Z_TagMalloc (int size, memtag_t tag);
+void Z_FreeTags (memtag_t tag);
 
-char* COM_NewString(char* string, int memtag);
+char* COM_NewString(char* string, memtag_t memtag);
 qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f);
 
 void Qcommon_Init (int argc, char **argv);

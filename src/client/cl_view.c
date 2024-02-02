@@ -478,7 +478,7 @@ void V_RenderView( float stereo_separation )
 		// build a refresh entity list and calc cl.sim*
 		// this also calls CL_CalcViewValues which loads
 		// v_forward, etc.
-		CL_AddEntities ();
+		CL_AddEntities();
 
 		SV_AddDebugPrimitives();
 

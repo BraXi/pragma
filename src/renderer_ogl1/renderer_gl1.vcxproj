@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\platform\winquake.h" />
+    <ClInclude Include="..\qcommon\mathlib.h" />
     <ClInclude Include="..\qcommon\shared.h" />
     <ClInclude Include="..\qcommon\renderer.h" />
     <ClInclude Include="win_glw.h" />
@@ -161,6 +162,7 @@
     <ClInclude Include="warpsin.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\qcommon\mathlib.c" />
     <ClCompile Include="..\qcommon\shared.c" />
     <ClCompile Include="..\platform\win_shared.c" />
     <ClCompile Include="win_opengl.c" />

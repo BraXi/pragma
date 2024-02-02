@@ -593,7 +593,7 @@ void CL_CalcViewValues (void)
 		// smooth out stair climbing
 		delta = cls.realtime - cl.predicted_step_time;
 		if (delta < SV_FRAMETIME_MSEC)
-			cl.refdef.vieworg[2] -= cl.predicted_step * (SV_FRAMETIME_MSEC - delta) * 0.01;
+			cl.refdef.vieworg[2] -= cl.predicted_step * (float)(SV_FRAMETIME_MSEC - delta) * 0.01f;
 	}
 	else
 	{	// just use interpolated values
@@ -641,7 +641,7 @@ CL_AddEntities
 Emits all entities, particles, and lights to the refresh
 ===============
 */
-void CL_AddEntities (void)
+void CL_AddEntities()
 {
 	if (cls.state != ca_active)
 		return;

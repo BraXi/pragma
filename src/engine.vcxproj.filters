@@ -190,7 +190,24 @@
     <ClCompile Include="client\snd_dma.c">
       <Filter>client\sound</Filter>
     </ClCompile>
-    <ClCompile Include="client\cl_particles.c" />
+    <ClCompile Include="client\cl_particles.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\fx\fx_load.c">
+      <Filter>client\fx</Filter>
+    </ClCompile>
+    <ClCompile Include="client\fx\fx_main.c">
+      <Filter>client\fx</Filter>
+    </ClCompile>
+    <ClCompile Include="client\fx\fx_play.c">
+      <Filter>client\fx</Filter>
+    </ClCompile>
+    <ClCompile Include="qcommon\net_msg.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="qcommon\mathlib.c">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">
@@ -271,6 +288,15 @@
     </ClInclude>
     <ClInclude Include="client\snd_loc.h">
       <Filter>client\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="client\fx\fx_local.h">
+      <Filter>client\fx</Filter>
+    </ClInclude>
+    <ClInclude Include="client\fx\effects.h">
+      <Filter>client\fx</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\mathlib.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

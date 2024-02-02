@@ -1244,9 +1244,9 @@ just cleared malloc with counters now...
 typedef struct zhead_s
 {
 	struct zhead_s	*prev, *next;
-	short	magic;
-	short	tag;			// for group free
-	int		size;
+	short		magic;
+	memtag_t	tag;			// for group free
+	int			size;
 } zhead_t;
 
 zhead_t		z_chain;
@@ -1290,7 +1290,7 @@ void Z_Stats_f (void)
 Z_FreeTags
 ========================
 */
-void Z_FreeTags (int tag)
+void Z_FreeTags (memtag_t tag)
 {
 	zhead_t	*z, *next;
 
@@ -1307,17 +1307,24 @@ void Z_FreeTags (int tag)
 Z_TagMalloc
 ========================
 */
-void *Z_TagMalloc (int size, int tag)
+void *Z_TagMalloc (int size, memtag_t tag)
 {
 	zhead_t	*z;
 	
 	size = size + sizeof(zhead_t);
 	z = malloc(size);
+
 	if (!z)
-		Com_Error (ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes",size);
+	{
+		Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes", size);
+		return; //msvc..
+	}
+
 	memset (z, 0, size);
+
 	z_count++;
 	z_bytes += size;
+
 	z->magic = Z_MAGIC;
 	z->tag = tag;
 	z->size = size;
@@ -1347,7 +1354,7 @@ void *Z_Malloc (int size)
 COM_NewString
 =============
 */
-char* COM_NewString(char* string, int memtag)
+char* COM_NewString(char* string, memtag_t memtag)
 {
 	char* newb, * new_p;
 	int		i, l;
@@ -1387,7 +1394,6 @@ qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
 		if (!strcmp(f->name, key))
 		{
 			// found it
-			printf("\nfound %s\n", key);
 			if (f->type == F_HACK && f->function != NULL)
 			{
 				f->function(value, basePtr);
@@ -1396,7 +1402,7 @@ qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
 
 			if (f->ofs == -1)
 			{
-				return false;
+				return true;
 			}
 
 			switch (f->type)
@@ -1420,6 +1426,12 @@ qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
 
 			case F_STRING:
 				*(char**)(basePtr + f->ofs) = COM_NewString(value, 0);
+				break;
+
+			case F_VECTOR2:
+				sscanf(value, "%f %f", &vec[0], &vec[1]);
+				((float*)(basePtr + f->ofs))[0] = vec[0];
+				((float*)(basePtr + f->ofs))[1] = vec[1];
 				break;
 
 			case F_VECTOR3:

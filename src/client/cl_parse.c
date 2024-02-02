@@ -20,6 +20,9 @@ char *svc_strings[256] =
 	"svc_temp_entity",
 	"svc_cgcmd",
 
+	"svc_playfx",
+	"svc_playfxontag",
+
 	"svc_nop",
 
 	"svc_disconnect",
@@ -50,6 +53,8 @@ char *svc_strings[256] =
 extern void CL_ParseDownload(void);
 extern void CL_FireEntityEvents(frame_t* frame);
 
+extern void CL_ParsePlayFX();
+extern void CL_ParsePlayFXOnTag();
 /*
 ======================
 CL_RegisterSounds
@@ -442,9 +447,17 @@ void CL_ParseServerMessage (void)
 		case SVC_CGCMD:
 			CG_ServerCommand();
 			break;
-\
+
 		case SVC_DOWNLOAD:
-			CL_ParseDownload ();
+			CL_ParseDownload();
+			break;
+\
+		case SVC_PLAYFX:
+			CL_ParsePlayFX();
+			break;
+
+		case SVC_PLAYFXONENT:
+			CL_ParsePlayFXOnTag();
 			break;
 
 		case SVC_FRAME:

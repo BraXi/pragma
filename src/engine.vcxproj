@@ -22,6 +22,8 @@
     <ClInclude Include="client\cgame\cgame.h" />
     <ClInclude Include="client\client.h" />
     <ClInclude Include="client\console.h" />
+    <ClInclude Include="client\fx\effects.h" />
+    <ClInclude Include="client\fx\fx_local.h" />
     <ClInclude Include="client\input.h" />
     <ClInclude Include="client\keys.h" />
     <ClInclude Include="client\screen.h" />
@@ -33,6 +35,7 @@
     <ClInclude Include="pragma_config.h" />
     <ClInclude Include="qcommon\anorms.h" />
     <ClInclude Include="qcommon\crc.h" />
+    <ClInclude Include="qcommon\mathlib.h" />
     <ClInclude Include="qcommon\qcommon.h" />
     <ClInclude Include="qcommon\qfiles.h" />
     <ClInclude Include="qcommon\shared.h" />
@@ -69,13 +72,17 @@
     <ClCompile Include="client\cl_view.c" />
     <ClCompile Include="client\cl_console.c" />
     <ClCompile Include="client\cl_keys.c" />
+    <ClCompile Include="client\fx\fx_load.c" />
+    <ClCompile Include="client\fx\fx_main.c" />
     <ClCompile Include="client\fx\fx_muzzleflash.c" />
+    <ClCompile Include="client\fx\fx_play.c" />
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
     <ClCompile Include="client\snd_mix.c" />
     <ClCompile Include="client\ui\ui_builtins.c" />
     <ClCompile Include="client\ui\ui_load.c" />
     <ClCompile Include="client\ui\ui_main.c" />
+    <ClCompile Include="qcommon\mathlib.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />
@@ -85,6 +92,7 @@
     <ClCompile Include="qcommon\files.c" />
     <ClCompile Include="qcommon\md4.c" />
     <ClCompile Include="qcommon\net_chan.c" />
+    <ClCompile Include="qcommon\net_msg.c" />
     <ClCompile Include="qcommon\shared.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_debug.c" />

@@ -237,7 +237,7 @@ void CL_SmokeAndFlash(vec3_t origin)
 CL_ParseParticles
 =================
 */
-void CL_ParseParticles (void)
+void CL_ParseParticles (void) // UNUSED
 {
 	int		count;
 	vec3_t	pos, dir;

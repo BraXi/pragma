@@ -454,7 +454,7 @@ void CL_SetLightStyleFromCS (int i);
 void CL_RunDynamicLights (void);
 void CL_RunLightStyles (void);
 
-void CL_AddEntities (void);
+void CL_AddEntities();
 void CL_AddDynamicLights (void);
 void CL_AddTEnts (void);
 void CL_AddLightStyles (void);
@@ -563,15 +563,4 @@ void CL_AddParticles (void);
 void CL_EntityEvent (entity_state_t *ent);
 void CL_TrapParticles (rentity_t *ent);
 
-//
-// cl_inv.c TODO: remove inventory from kernel entirely
-//
-void CL_ParseInventory (void);
-void CL_DrawInventory (void);
 
-#if id386
-void x86_TimerStart( void );
-void x86_TimerStop( void );
-void x86_TimerInit( unsigned long smallest, unsigned longest );
-unsigned long *x86_TimerGetHistogram( void );
-#endif

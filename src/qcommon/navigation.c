@@ -24,7 +24,7 @@ int Nav_SearchPath(int startWaypoint, int goalWaypoint);
 #define NO_WAYPOINT -1
 #define MAX_WAYPOINTS 1024
 #define MAX_WAYPOINT_LINKS 8
-#define TAG_NAV_NODES 1231
+
 
 #define NAVFL_DISABLED 1		// node is temporarily disabled (ex. doors are locked)
 

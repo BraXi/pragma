@@ -12,8 +12,11 @@ See the attached GNU General Public License v2 for more details.
 
 #include "client.h"
 
-cvar_t	*freelook;
+extern void CL_ClearDynamicLights(void);
+extern void CL_ClearLightStyles(void);
+extern void CL_ClearParticles(void);
 
+cvar_t	*freelook;
 
 cvar_t	*cl_stereo_separation;
 cvar_t	*cl_stereo;
@@ -542,7 +545,11 @@ CL_ClearState
 void CL_ClearState (void)
 {
 	S_StopAllSounds ();
-	CL_ClearEffects ();
+
+	CL_ClearParticles();
+	CL_ClearDynamicLights();
+	CL_ClearLightStyles();
+
 	CL_ClearTEnts ();
 
 	CL_ShutdownClientGame();
@@ -1451,6 +1458,7 @@ void CL_Frame (int msec)
 CL_Init
 ====================
 */
+extern void CL_InitEffects();
 void CL_Init (void)
 {
 	if (dedicated->value)
@@ -1471,6 +1479,8 @@ void CL_Init (void)
 #ifdef NEW_GUI
 	UI_Init();
 #endif
+
+	CL_InitEffects();
 	
 	SCR_Init ();
 	cls.disable_screen = true;	// don't draw yet
@@ -1492,6 +1502,7 @@ FIXME: this is a callback from Sys_Quit and Com_Error.  It would be better
 to run quit through here before the final handoff to the sys code.
 ===============
 */
+extern void CL_ShutdownEffects();
 void CL_Shutdown(void)
 {
 	static qboolean isdown = false;
@@ -1506,9 +1517,10 @@ void CL_Shutdown(void)
 	CL_WriteConfiguration (); 
 
 	CL_ShutdownClientGame();
+	CL_ShutdownEffects();
 
 	S_Shutdown();
-	IN_Shutdown ();
+	IN_Shutdown();
 	VID_Shutdown();
 }
 

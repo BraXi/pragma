@@ -278,25 +278,22 @@ void R_DrawEntitiesOnList (void)
 		currententity = &r_newrefdef.entities[i];
 		currentmodel = currententity->model;
 		if ((currententity->renderfx & RF_TRANSLUCENT))
-			continue;	// transparent
+			continue;	// reject transparent
 		R_DrawCurrentEntity();
 	}
 
 
 	// draw transparent entities
-	// todo: sort them
 	R_WriteToDepthBuffer(GL_FALSE);	// no z writes
-//	R_AlphaTest(true); // test
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		currententity = &r_newrefdef.entities[i];
 		currentmodel = currententity->model;
 		if (!(currententity->renderfx & RF_TRANSLUCENT))
-			continue;	// solid
+			continue;	// reject solid
 		R_DrawCurrentEntity();
 	}
-//	R_AlphaTest(false);
-	R_WriteToDepthBuffer(GL_TRUE);		// reenable z writing
+	R_WriteToDepthBuffer(GL_TRUE);	// reenable z writing
 }
 
 /*
@@ -312,14 +309,15 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 	float			color[4];
 
     GL_Bind(r_particletexture->texnum);
+
 	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
 	R_Blend(true);
 	GL_TexEnv( GL_MODULATE );
-	qglBegin( GL_TRIANGLES );
 
 	VectorScale (vup, 1.5, up);
 	VectorScale (vright, 1.5, right);
 
+	qglBegin(GL_TRIANGLES);
 	for ( p = particles, i=0 ; i < num_particles ; i++,p++)
 	{
 		// hack a scale up to keep particles from disapearing
@@ -333,6 +331,9 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 			scale = 1 + scale * 0.004;
 
 		VectorCopy(p->color, color);
+		//VectorScale(vup, p->size[0], up);
+		//VectorScale(vright, p->size[1], right);
+
 		color[3] = p->alpha;
 
 		qglColor4fv( color );

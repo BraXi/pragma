@@ -106,6 +106,9 @@
     <ClCompile Include="client\cgame\cg_builtins.c">
       <Filter>client</Filter>
     </ClCompile>
+    <ClCompile Include="qcommon\mathlib.c">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="qcommon\crc.h">
@@ -149,6 +152,9 @@
       <Filter>script\headers</Filter>
     </ClInclude>
     <ClInclude Include="qcommon\anorms.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\mathlib.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
