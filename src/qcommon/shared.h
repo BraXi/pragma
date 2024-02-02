@@ -111,6 +111,7 @@ typedef enum
 	DP_FS,
 	DP_SND,
 	DP_REND,
+	DP_FX,
 	DP_NET,
 	DP_SV,
 	DP_GAME,

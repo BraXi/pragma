@@ -195,3 +195,7 @@ extern fxsysstate_t fxSys;
 
 int CL_FindEffect(char* name);
 qboolean FX_LoadFromFile(char* name);
+
+
+int FX_GetNumLoadedEffects();
+int FX_GetNumTags();

@@ -236,13 +236,13 @@ void FX_StartFXAttachedToEntity(int effectIndex, int entityIndex, char *tagName)
 
 	if (effectIndex < 0 || effectIndex >= fxSys.numLoadedEffects)
 	{
-		Com_Printf("WARNING: wrong effect index %i (%s)", effectIndex, __FUNCTION__);
+		Com_Printf("WARNING: wrong effect index %i (%s)\n", effectIndex, __FUNCTION__);
 		return;
 	}
 
 	if (entityIndex < 0 || entityIndex >= MAX_GENTITIES)
 	{
-		Com_Printf("WARNING: wrong entity index %i (%s)", entityIndex, __FUNCTION__);
+		Com_Printf("WARNING: wrong entity index %i (%s)\n", entityIndex, __FUNCTION__);
 		return;
 	}
 
@@ -253,14 +253,14 @@ void FX_StartFXAttachedToEntity(int effectIndex, int entityIndex, char *tagName)
 	cent = &cl_entities[entityIndex];
 	if (cent->current.modelindex <= 0)
 	{
-		Com_Printf("WARNING: entity  %i has no model (%s)", entityIndex, __FUNCTION__);
+		Com_Printf("WARNING: entity  %i has no model (%s)\n", entityIndex, __FUNCTION__);
 		return;
 	}
 	
 	runner = FX_SpawnFX();
 	if (runner == NULL)
 	{
-		Com_Printf("%s: no free fx runners", __FUNCTION__);
+		Com_DPrintf(DP_FX, "no free fx runners\n");
 		return;
 	}
 

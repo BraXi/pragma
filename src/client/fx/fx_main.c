@@ -16,12 +16,12 @@ fxsysstate_t fxSys;
 static cvar_t* fx_show;
 
 
-static int FX_GetNumLoadedEffects() // FIXME
+int FX_GetNumLoadedEffects() // FIXME
 {
 	return fxSys.numLoadedEffects;
 }
 
-static int FX_GetNumTags() // FIXME
+int FX_GetNumTags() // FIXME
 {
 	return 1;
 }
@@ -146,6 +146,6 @@ void CL_ShutdownEffects()
 	FX_FreeEffects();
 
 	Cmd_RemoveCommand("loadfx");
-	Cmd_RemoveCommand("removefx");
+	Cmd_RemoveCommand("playfx");
 
 }
