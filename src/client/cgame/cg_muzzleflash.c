@@ -9,9 +9,10 @@ See the attached GNU General Public License v2 for more details.
 */
 
 #include "../client.h"
+#include "cg_local.h"
+
 
 extern void CL_LogoutEffect(vec3_t org, int type);
-extern void CL_ItemRespawnParticles(vec3_t org);
 
 /*
 ==============================================================
@@ -40,7 +41,7 @@ void CL_ParseMuzzleFlash(void)
 	vec3_t		v_fwd, v_right, v_up;
 	cdlight_t* dlight;
 	int			entity_num, effectNum;
-	ccentity_t* cent;
+	clentity_t* cent;
 
 	entity_num = MSG_ReadShort(&net_message);
 	if (entity_num < 1 || entity_num >= MAX_GENTITIES)
@@ -49,7 +50,7 @@ void CL_ParseMuzzleFlash(void)
 	cent = &cl_entities[entity_num];
 	effectNum = MSG_ReadByte(&net_message);
 
-	dlight = CL_AllocDynamicLight(entity_num);
+	dlight = CG_AllocDynamicLight(entity_num);
 	VectorCopy(cent->current.origin, dlight->origin);
 
 	if (cl.playernum + 1 == entity_num) // this is our local player
@@ -82,35 +83,6 @@ void CL_ParseMuzzleFlash(void)
 
 		if (mz->sound != NULL)
 			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound(mz->sound), mz->volume, ATTN_NORM, 0); // should precache sound
-	}
-	else
-	{
-		dlight->minlight = 32;
-		dlight->die = cl.time;
-
-		switch (effectNum)
-		{
-		case FX_MUZZLEFLASH_LOGIN:
-
-			dlight->die = cl.time + 1.0;
-			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/login.wav"), 1, ATTN_NORM, 0);
-			CL_LogoutEffect(cent->current.origin, effectNum);
-			break;
-		case FX_MUZZLEFLASH_LOGOUT:
-			VectorSet(dlight->color, 1, 0, 0);
-			dlight->die = cl.time + 1.0;
-			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/logout.wav"), 1, ATTN_NORM, 0);
-			CL_LogoutEffect(cent->current.origin, effectNum);
-			break;
-		case FX_MUZZLEFLASH_RESPAWN:
-			VectorSet(dlight->color, 1, 1, 0);
-			dlight->die = cl.time + 1.0;
-			S_StartSound(NULL, entity_num, CHAN_WEAPON, S_RegisterSound("effects/respawn.wav"), 1, ATTN_NORM, 0);
-			CL_LogoutEffect(cent->current.origin, effectNum);
-			break;
-		default:
-			break;
-		}
 	}
 }
 

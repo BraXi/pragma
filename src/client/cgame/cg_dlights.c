@@ -8,8 +8,9 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-#include "client.h"
+#include "../client.h"
 
+#include "cg_local.h"
 /*
 ==============================================================
 
@@ -22,10 +23,10 @@ cdlight_t		cl_dlights[MAX_DLIGHTS];
 
 /*
 ================
-CL_ClearDynamicLights
+CG_ClearDynamicLights
 ================
 */
-void CL_ClearDynamicLights(void)
+void CG_ClearDynamicLights(void)
 {
 	memset(cl_dlights, 0, sizeof(cl_dlights));
 }
@@ -33,10 +34,10 @@ void CL_ClearDynamicLights(void)
 
 /*
 ===============
-CL_AllocDynamicLight
+CG_AllocDynamicLight
 ===============
 */
-cdlight_t* CL_AllocDynamicLight(int key)
+cdlight_t* CG_AllocDynamicLight(int key)
 {
 	int		i;
 	cdlight_t* dl;
@@ -83,7 +84,7 @@ void CL_NewDynamicLight(int key, float x, float y, float z, float radius, float 
 {
 	cdlight_t* dl;
 
-	dl = CL_AllocDynamicLight(key);
+	dl = CG_AllocDynamicLight(key);
 	dl->origin[0] = x;
 	dl->origin[1] = y;
 	dl->origin[2] = z;
@@ -94,10 +95,10 @@ void CL_NewDynamicLight(int key, float x, float y, float z, float radius, float 
 
 /*
 ===============
-CL_RunDynamicLights
+CG_RunDynamicLights
 ===============
 */
-void CL_RunDynamicLights(void)
+void CG_RunDynamicLights(void)
 {
 	int			i;
 	cdlight_t* dl;
@@ -122,10 +123,10 @@ void CL_RunDynamicLights(void)
 
 /*
 ===============
-CL_AddDynamicLights
+CG_AddDynamicLights
 ===============
 */
-void CL_AddDynamicLights(void)
+void CG_AddDynamicLights(void)
 {
 	int			i;
 	cdlight_t* dl;

@@ -8,7 +8,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-#include "client.h"
+#include "../client.h"
 
 /*
 ==============================================================
@@ -24,10 +24,12 @@ cparticle_t		particles[MAX_PARTICLES];
 
 /*
 ===============
-CL_ClearParticles
+CG_ClearParticles
+
+Clear all particles
 ===============
 */
-void CL_ClearParticles(void)
+void CG_ClearParticles()
 {
 	int		i;
 
@@ -47,10 +49,12 @@ void CL_ClearParticles(void)
 
 /*
 ===============
-CL_AddParticles
+CG_SimulateAndAddParticles
+
+Simulate and add to scene all active particles
 ===============
 */
-void CL_AddParticles(void)
+void CG_SimulateAndAddParticles()
 {
 	cparticle_t		*p, *next;
 	float			alpha;
@@ -117,28 +121,65 @@ void CL_AddParticles(void)
 	active_particles = active;
 }
 
+/*
+===============
+CG_ParticleFromPool
 
+Grabs particle from pool, returns NULL if all particles are in use
+===============
+*/
+cparticle_t* CG_ParticleFromPool()
+{
+	cparticle_t* p = NULL;
 
+	if (!free_particles)
+		return p; // no free particles
 
-void CL_RunParticleSegment(vec3_t org, vec3_t dir, vec3_t color, int count)
+	p = free_particles;
+	free_particles = p->next;
+	p->next = active_particles;
+	active_particles = p;
+
+	return p;
+}
+
+/*
+===============
+CG_AreThereFreeParticles
+
+Returns true if there are any free particles left
+===============
+*/
+qboolean CG_AreThereFreeParticles()
+{
+	if (!free_particles)
+		return false;
+	return true;
+}
+
+/*
+===============
+CG_GenericParticleEffect
+===============
+*/
+void CG_GenericParticleEffect(vec3_t org, vec3_t dir, vec3_t color, int count, int dirspread, float alphavel, float gravity)
 {
 	int			i, j;
 	cparticle_t* p;
 	float		d;
 
+	if (!count)
+		Com_Error(ERR_DROP, "CG_GenericParticleEffect: !count\n");
+
 	for (i = 0; i < count; i++)
 	{
-		if (!free_particles)
-			return;
-		p = free_particles;
-		free_particles = p->next;
-		p->next = active_particles;
-		active_particles = p;
+		p = CG_ParticleFromPool();
+		if (p == NULL)
+			return; // no free particles
 
 		p->time = cl.time;
 		VectorCopy(color, p->color);
-
-		d = rand() & 31;
+		d = rand() & dirspread;
 		for (j = 0; j < 3; j++)
 		{
 			p->org[j] = org[j] + ((rand() & 7) - 4) + d * dir[j];
@@ -146,9 +187,37 @@ void CL_RunParticleSegment(vec3_t org, vec3_t dir, vec3_t color, int count)
 		}
 
 		p->accel[0] = p->accel[1] = 0;
-		p->accel[2] = -PARTICLE_GRAVITY;
+		p->accel[2] = gravity;
 		p->alpha = 1.0;
 
-		p->alphavel = -1.0 / (0.5 + frand() * 0.3);
+		p->alphavel = -1.0f / (0.5f + frand() * alphavel);
 	}
+}
+
+/*
+=================
+CG_ParseParticleEffectCommand
+
+origin [pos]
+direction [dir]
+color [3x byte]
+count [byte]
+=================
+*/
+void CG_ParseParticleEffectCommand()
+{
+	int		count;
+	vec3_t	pos, dir;
+	vec3_t	color;
+
+	MSG_ReadPos(&net_message, pos);
+	MSG_ReadDir(&net_message, dir);
+
+	color[0] = MSG_ReadByte(&net_message) / 255.0;
+	color[1] = MSG_ReadByte(&net_message) / 255.0;
+	color[2] = MSG_ReadByte(&net_message) / 255.0;
+
+	count = MSG_ReadByte(&net_message);
+
+	CG_PartFX_Generic(pos, dir, color, count);
 }

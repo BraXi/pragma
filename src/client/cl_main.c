@@ -12,10 +12,6 @@ See the attached GNU General Public License v2 for more details.
 
 #include "client.h"
 
-extern void CL_ClearDynamicLights(void);
-extern void CL_ClearLightStyles(void);
-extern void CL_ClearParticles(void);
-
 cvar_t	*freelook;
 
 cvar_t	*cl_stereo_separation;
@@ -24,7 +20,6 @@ cvar_t	*cl_stereo;
 cvar_t	*rcon_client_password;
 cvar_t	*rcon_address;
 
-cvar_t	*cl_footsteps;
 cvar_t	*cl_timeout;
 cvar_t	*cl_predict;
 #ifdef _DEBUG
@@ -69,7 +64,7 @@ cvar_t* cl_showfps;
 client_static_t	cls;
 client_state_t	cl;
 
-ccentity_t		cl_entities[MAX_GENTITIES];
+clentity_t		cl_entities[MAX_GENTITIES];
 
 entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
 
@@ -539,19 +534,11 @@ void CL_Rcon_f (void)
 /*
 =====================
 CL_ClearState
-
 =====================
 */
-void CL_ClearState (void)
+void CL_ClearState ()
 {
 	S_StopAllSounds ();
-
-	CL_ClearParticles();
-	CL_ClearDynamicLights();
-	CL_ClearLightStyles();
-
-	CL_ClearTEnts ();
-
 	CL_ShutdownClientGame();
 
 // wipe the entire cl structure
@@ -1096,7 +1083,6 @@ void CL_InitLocal (void)
 	cl_add_particles = Cvar_Get ("cl_particles", "1", CVAR_CHEAT);
 	cl_add_entities = Cvar_Get ("cl_entities", "1", CVAR_CHEAT);
 	cl_drawviewmodel = Cvar_Get ("cl_drawviewmodel", "1", 0);
-	cl_footsteps = Cvar_Get ("cl_footsteps", "1", 0);
 	cl_predict = Cvar_Get ("cl_predict", "1", 0);
 
 #ifdef _DEBUG
@@ -1420,9 +1406,6 @@ void CL_Frame (int msec)
 	// update audio
 	S_Update (cl.refdef.vieworg, cl.v_forward, cl.v_right, cl.v_up);
 
-	// advance local effects for next frame
-	CL_RunDynamicLights ();
-	CL_RunLightStyles ();
 	SCR_RunCinematic ();
 	SCR_RunConsole ();
 

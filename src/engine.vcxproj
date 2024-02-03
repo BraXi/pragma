@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\cgame\cgame.h" />
+    <ClInclude Include="client\cgame\cg_local.h" />
     <ClInclude Include="client\client.h" />
     <ClInclude Include="client\console.h" />
     <ClInclude Include="client\fx\effects.h" />
@@ -52,29 +53,29 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\cgame\cg_builtins.c" />
+    <ClCompile Include="client\cgame\cg_dlights.c" />
+    <ClCompile Include="client\cgame\cg_events.c" />
+    <ClCompile Include="client\cgame\cg_lightstyles.c" />
     <ClCompile Include="client\cgame\cg_main.c" />
+    <ClCompile Include="client\cgame\cg_muzzleflash.c" />
+    <ClCompile Include="client\cgame\cg_particles.c" />
+    <ClCompile Include="client\cgame\cg_oldfx.c" />
+    <ClCompile Include="client\cgame\cg_temp_entities.c" />
     <ClCompile Include="client\cgame\modeldef.c" />
     <ClCompile Include="client\cl_cinematic.c" />
-    <ClCompile Include="client\cl_dlights.c" />
     <ClCompile Include="client\cl_download.c" />
     <ClCompile Include="client\cl_entities.c" />
-    <ClCompile Include="client\cl_fx.c" />
     <ClCompile Include="client\cl_graph.c" />
     <ClCompile Include="client\cl_input.c" />
-    <ClCompile Include="client\cl_lightstyles.c" />
     <ClCompile Include="client\cl_main.c" />
-    <ClCompile Include="client\cl_newfx.c" />
     <ClCompile Include="client\cl_parse.c" />
-    <ClCompile Include="client\cl_particles.c" />
     <ClCompile Include="client\cl_predict.c" />
     <ClCompile Include="client\cl_screen.c" />
-    <ClCompile Include="client\cl_temp_entities.c" />
     <ClCompile Include="client\cl_view.c" />
     <ClCompile Include="client\cl_console.c" />
     <ClCompile Include="client\cl_keys.c" />
     <ClCompile Include="client\fx\fx_load.c" />
     <ClCompile Include="client\fx\fx_main.c" />
-    <ClCompile Include="client\fx\fx_muzzleflash.c" />
     <ClCompile Include="client\fx\fx_play.c" />
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
@@ -82,6 +83,7 @@
     <ClCompile Include="client\ui\ui_builtins.c" />
     <ClCompile Include="client\ui\ui_load.c" />
     <ClCompile Include="client\ui\ui_main.c" />
+    <ClCompile Include="cl_cgame.c" />
     <ClCompile Include="qcommon\mathlib.c" />
     <ClCompile Include="qcommon\navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />

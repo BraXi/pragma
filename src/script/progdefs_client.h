@@ -59,7 +59,7 @@ typedef struct cl_globalvars_s
 	scr_func_t		CG_Frame;
 	scr_func_t		CG_DrawGUI;
 	scr_func_t		CG_PlayerMove;			// CG_PlayerMove(vector cmdMove, vector cmdAngles, float cmdMsec)
-	scr_func_t		CG_ServerCommand;		// CG_ServerCommand(float cmd) // cmd is byte 0-255 limited
+	scr_func_t		CG_ParseCommandFromServer;		// CG_ParseCommandFromServer(float cmd) // cmd is byte 0-255 limited
 } cl_globalvars_t;
 
 

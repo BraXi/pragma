@@ -10,15 +10,33 @@ See the attached GNU General Public License v2 for more details.
 
 #pragma once
 
-extern void CL_ShutdownClientGame();
-extern void CL_InitClientGame();
+//
+// all loaded media by cgame
+//
+typedef struct
+{
+	struct sfx_s* sfx_ricochet[3];
+	struct sfx_s* sfx_splash[3];
+	struct sfx_s* sfx_explosion[3];
 
-extern void CG_Frame(float frametime, int time, float realtime);
-extern void CG_DrawGUI();
+	struct model_s* mod_v_muzzleflash;
+	struct model_s* mod_w_muzzleflash;
+	struct model_s* impact_small;
+} cgMedia_t;
 
-extern qboolean CG_CanDrawCall();
+extern cgMedia_t cgMedia;
 
-extern void CG_ServerCommand();
+void CG_ClearState();
+
+void CL_ShutdownClientGame();
+void CL_InitClientGame();
+void CG_AddEntities();
+
+void CG_Frame(float frametime, int time, float realtime);
+void CG_DrawGUI();
+
+qboolean CG_CanDrawCall();
+void CG_ParseCommandFromServer();
 
 #define AF_NOLERP 1
 #define AF_LOOPING 2
@@ -53,3 +71,8 @@ typedef struct
 
 	int		flags;
 } animstate_t;
+
+
+//extern	cdlight_t	cl_dlights[MAX_DLIGHTS];
+
+typedef unsigned short cs_index;

@@ -200,7 +200,7 @@ void CL_AddEffectsToScene()
 	int i;
 	fx_runner_t	*fxrunner;
 	fxdef_t		*fx;
-	rentity_t	rent;
+//	rentity_t	rent;
 
 
 	fxrunner = &fxSys.fxRunners[0];
@@ -230,7 +230,7 @@ FX_StartFXAttachedToEntity
 */
 void FX_StartFXAttachedToEntity(int effectIndex, int entityIndex, char *tagName)
 {
-	ccentity_t* cent;
+	clentity_t* cent;
 	fx_runner_t* runner;
 	float fxlength;
 
@@ -320,7 +320,6 @@ void CL_ParsePlayFX()
 	FX_StartFX(effect, origin, dir);
 }
 
-
 /*
 =================
 CL_ParsePlayFXOnTag
@@ -331,7 +330,7 @@ SVC_PLAYFXONTAG -- [short] entity_num, [byte] tag_id, [byte] effect_index
 void CL_ParsePlayFXOnTag()
 {
 	int		entity_num, effect_index, tag_index;
-	ccentity_t* cent;
+//	clentity_t* cent;
 
 	entity_num = MSG_ReadShort(&net_message);
 	if (entity_num < 0 || entity_num >= MAX_GENTITIES)

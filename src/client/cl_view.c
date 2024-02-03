@@ -315,7 +315,7 @@ void CL_PrepRefresh (void)
 	SCR_UpdateScreen ();
 	Com_Printf ("                                     \r");
 
-	CL_RegisterTEntModels ();
+	CG_RegisterMedia ();
 
 
 	for (i=1 ; i<MAX_MODELS && cl.configstrings[CS_MODELS+i][0] ; i++)

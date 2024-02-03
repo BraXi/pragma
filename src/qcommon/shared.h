@@ -392,13 +392,7 @@ typedef enum
 	PM_FREEZE		// cannot move and may hover above ground
 } pmtype_t;
 
-// pmove->pm_flags
-#define	PMF_DUCKED			(1 << 0)
-#define	PMF_JUMP_HELD		(1 << 1)
 #define	PMF_ON_GROUND		(1 << 2)
-#define	PMF_TIME_WATERJUMP	(1 << 3)	// pm_time is waterjump
-#define	PMF_TIME_LAND		(1 << 4)	// pm_time is time before rejump
-#define	PMF_TIME_TELEPORT	(1 << 5)	// pm_time is non-moving time
 #define PMF_NO_PREDICTION	(1 << 6)	// temporarily disables prediction (used for grappling hook)
 
 // this structure needs to be communicated bit-accurate
@@ -491,27 +485,14 @@ typedef struct
 // effects will be sent to the client even if it has a zero index model.
 #define	EF_ROTATEYAW		1		// rotate
 #define	EF_GIB				2		// leave a trail
-#define	EF_BLASTER			4		// redlight + trail
 #define	EF_ROCKET			8		// redlight + trail
-#define	EF_GRENADE			16
-#define	EF_HYPERBLASTER		32
+#define	EF_GRENADE			16		// tiny smoke trail
 #define	EF_ANIM01			64		// automatically cycle between frames 0 and 1 at 2 hz
 #define	EF_ANIM23			128		// automatically cycle between frames 2 and 3 at 2 hz
 #define EF_ANIM_ALL			256		// automatically cycle through all frames at 2hz
 #define EF_ANIM_ALLFAST		512		// automatically cycle through all frames at 10hz
-#define	EF_FLIES			1024
-#define	EF_TELEPORTER		2048	// particle fountain
-#define EF_FLAG1			4096
-#define EF_FLAG2			8192
-#define EF_IONRIPPER		16384
-#define EF_GREENGIB			32768
-#define	EF_BLUEHYPERBLASTER 65536
-#define EF_PLASMA			131072
-#define EF_TRAP				262144
-#define EF_TRACKER_DLIGHT	524288
-#define	EF_DOUBLE			1048576
-#define EF_TAGTRAIL			2097152
-#define EF_TRACKERTRAIL		4194304
+#define EF_GREENGIB			32768	// diminishing green blood trail
+
 
 // entity_state_t->renderfx flags
 #define	RF_MINLIGHT			1		// allways have some light, never go full dark
@@ -544,12 +525,6 @@ enum
 	FX_MUZZLEFLASH_SHOTGUN,
 	FX_WEAPON_MUZZLEFLASHES,
 	FX_MUZZLEFLASH_NEGATIVE_LIGHT,
-
-	// MOVE THESE SOMEWHERE ELSE
-	FX_MUZZLEFLASH_LOGIN,
-	FX_MUZZLEFLASH_LOGOUT,
-	FX_MUZZLEFLASH_RESPAWN,
-	FX_MUZZLEFLASH_ITEMRESPAWN,
 };
 
 
@@ -557,68 +532,16 @@ enum
 //
 // Temp entity events are for things that happen
 // at a location seperate from any existing entity.
-// Temporary entity messages are explicitly constructed
-// and broadcast.
+// Temporary entity messages are explicitly constructed and broadcast.
 typedef enum
 {
-	TE_GUNSHOT,
-	TE_BLOOD,
-	TE_BLASTER,
-	TE_RAILTRAIL,
-	TE_SHOTGUN,
-	TE_EXPLOSION1,
-	TE_EXPLOSION2,
-	TE_ROCKET_EXPLOSION,
-	TE_GRENADE_EXPLOSION,
-	TE_SPARKS,
-	TE_SPLASH,
-	TE_BUBBLETRAIL,
-	TE_SCREEN_SPARKS,
-	TE_SHIELD_SPARKS,
-	TE_BULLET_SPARKS,
-	TE_LASER_SPARKS,
-	TE_PARASITE_ATTACK,
-	TE_ROCKET_EXPLOSION_WATER,
-	TE_GRENADE_EXPLOSION_WATER,
-	TE_MEDIC_CABLE_ATTACK,
-	TE_BFG_EXPLOSION,
-	TE_BFG_BIGEXPLOSION,
-	TE_BOSSTPORT,			// used as '22' in a map, so DON'T RENUMBER!!!
-	TE_BFG_LASER,
-	TE_GRAPPLE_CABLE,
-	TE_WELDING_SPARKS,
-	TE_GREENBLOOD,
-	TE_BLUEHYPERBLASTER,
-	TE_PLASMA_EXPLOSION,
-	TE_TUNNEL_SPARKS,
-//ROGUE
-	TE_BLASTER2,
-	TE_RAILTRAIL2,
 	TE_FLAME,
-	TE_LIGHTNING,
-	TE_DEBUGTRAIL,
-	TE_PLAIN_EXPLOSION,
-	TE_FLASHLIGHT,
-	TE_FORCEWALL,
-	TE_HEATBEAM,
-	TE_MONSTER_HEATBEAM,
-	TE_STEAM,
-	TE_BUBBLETRAIL2,
-	TE_MOREBLOOD,
-	TE_HEATBEAM_SPARKS,
-	TE_HEATBEAM_STEAM,
-	TE_CHAINFIST_SMOKE,
-	TE_ELECTRIC_SPARKS,
-	TE_TRACKER_EXPLOSION,
-	TE_TELEPORT_EFFECT,
-	TE_DBALL_GOAL,
-	TE_WIDOWBEAMOUT,
-	TE_NUKEBLAST,
-	TE_WIDOWSPLASH,
-	TE_EXPLOSION1_BIG,
-	TE_EXPLOSION1_NP,
-	TE_FLECHETTE
-//ROGUE
+	TE_GUNSHOT,
+	TE_BULLET_SPARKS,
+	TE_BLOOD,
+	TE_EXPLOSION,
+	TE_SPLASH,
+	TE_COUNT
 } temp_event_t;
 
 #define SPLASH_UNKNOWN		0

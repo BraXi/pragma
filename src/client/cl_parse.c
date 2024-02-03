@@ -65,7 +65,7 @@ void CL_RegisterSounds (void)
 	int		i;
 
 	S_BeginRegistration ();
-	CL_RegisterTEntSounds ();
+	CG_RegisterSounds();
 	for (i=1 ; i<MAX_SOUNDS; i++)
 	{
 		if (!cl.configstrings[CS_SOUNDS+i][0])
@@ -98,8 +98,9 @@ void CL_ParseServerData (void)
 	int		i;
 	
 	Com_DPrintf (DP_NET, "Serverdata packet received.\n");
+
 //
-// wipe the client_state_t struct
+// wipe the client_state_t struct, shutdown cgame
 //
 	CL_ClearState ();
 	cls.state = ca_connected;
@@ -141,7 +142,8 @@ void CL_ParseServerData (void)
 		// need to prep refresh at next oportunity
 		cl.refresh_prepped = false;
 	}
-
+	
+	// initialize client game
 	CL_InitClientGame();
 }
 
@@ -437,7 +439,7 @@ void CL_ParseServerMessage (void)
 			break;
 
 		case SVC_TEMP_ENTITY:
-			CL_ParseTEnt ();
+			CG_ParseTempEntityCommand();
 			break;
 
 		case SVC_MUZZLEFLASH:
@@ -445,7 +447,7 @@ void CL_ParseServerMessage (void)
 			break;
 
 		case SVC_CGCMD:
-			CG_ServerCommand();
+			CG_ParseCommandFromServer();
 			break;
 
 		case SVC_DOWNLOAD:
@@ -677,7 +679,7 @@ to the current frame
 */
 void CL_DeltaEntity(frame_t* frame, int newnum, entity_state_t* old, int bits)
 {
-	ccentity_t* ent;
+	clentity_t* ent;
 	entity_state_t* state;
 
 	ent = &cl_entities[newnum];

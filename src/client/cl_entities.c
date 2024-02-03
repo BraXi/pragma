@@ -27,7 +27,7 @@ static unsigned int c_effects, c_renderfx;
 CL_EntityAnimation
 ===============
 */
-static inline void CL_EntityAnimationOld(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
+static inline void CL_EntityAnimationOld(clentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
 	int		autoanim;
 	unsigned int effects = state->effects;
@@ -59,7 +59,7 @@ static inline void CL_EntityAnimationOld(ccentity_t* clent, entity_state_t* stat
 CL_EntityAnimation
 ===============
 */
-static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, rentity_t* refent)
+static inline void CL_EntityAnimation(clentity_t* clent, entity_state_t* state, rentity_t* refent)
 {
 	animstate_t* anim = NULL;
 	int	progress;
@@ -106,7 +106,7 @@ static inline void CL_EntityAnimation(ccentity_t* clent, entity_state_t* state, 
 CL_EntityPositionAndRotation
 ===============
 */
-static inline void CL_EntityPositionAndRotation(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
+static inline void CL_EntityPositionAndRotation(clentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
 	int i;
 	float	current_angles, previous_angles;
@@ -149,7 +149,7 @@ CL_EntityAddAttachedModels
 Add attached models, but don't use custom skins on them
 ===============
 */
-static inline void CL_EntityAddAttachedModels(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
+static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
 	refent->skinnum = 0;
 	refent->renderfx = 0;
@@ -183,107 +183,26 @@ CL_EntityAddParticleTrails
 Add particle trails to entity, they may have dlight attached to them
 ===============
 */
-static inline void CL_EntityAddParticleTrails(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
+extern void CG_PartFX_DiminishingTrail(vec3_t start, vec3_t end, clentity_t* old, int flags);
+static inline void CL_EntityAddParticleTrails(clentity_t* clent, entity_state_t* state, rentity_t* refent)
 {
 	unsigned int effects = state->effects;
-	float intensity;
 
 	/* rocket trail */
-	if (effects & EF_ROCKET) 
+	if (effects & EF_ROCKET)
 	{
-		CL_RocketTrail(clent->lerp_origin, refent->origin, clent);
+		CG_PartFX_RocketTrail(clent->lerp_origin, refent->origin, clent);
 		V_AddLight(refent->origin, 128, 1.000000, 0.670588, 0.027451);
-	}
-	/* blaster trail */
-	else if (effects & EF_BLASTER)
-	{
-		if (effects & EF_TRACKER_DLIGHT) /* (EF_BLASTER | EF_TRACKER) special case */
-		{
-			CL_BlasterTrail2(clent->lerp_origin, refent->origin);
-			V_AddLight(refent->origin, 200, 0, 1, 0);
-		}
-		else
-		{
-			CL_BlasterTrail(clent->lerp_origin, refent->origin);
-			V_AddLight(refent->origin, 200, 1, 1, 0);
-		}
-	}
-	/* hyper blaster trail */
-	else if (effects & EF_HYPERBLASTER)
-	{
-		if (effects & EF_TRACKER_DLIGHT) /* (EF_HYPERBLASTER | EF_TRACKER) special case */
-			V_AddLight(refent->origin, 200, 0, 1, 0);
-		else
-			V_AddLight(refent->origin, 200, 1, 1, 0);
 	}
 	/* diminishing blood trail */
 	else if (effects & EF_GIB)
 	{
-		CL_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
+		CG_PartFX_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
 	}
 	/* diminishing 'smoke' trail */
 	else if (effects & EF_GRENADE)
 	{
-		CL_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
-	}
-	else if (effects & EF_FLAG1)
-	{
-		vec3_t c = { 1.000000, 0.000000, 0.000000 };
-		CL_FlagTrail(clent->lerp_origin, refent->origin, c);
-		V_AddLight(refent->origin, 225, 1, 0.1, 0.1);
-	}
-	else if (effects & EF_FLAG2)
-	{
-		vec3_t c = { 0.184314, 0.403922, 0.498039 };
-		CL_FlagTrail(clent->lerp_origin, refent->origin, c);
-		V_AddLight(refent->origin, 225, 0.1, 0.1, 1);
-	}
-	else if (effects & EF_TAGTRAIL)
-	{
-		vec3_t c = { 1.000000, 1.000000, 0.152941 };
-		CL_TagTrail(clent->lerp_origin, refent->origin, c);
-		V_AddLight(refent->origin, 225, 1.0, 1.0, 0.0);
-	}
-	else if (effects & EF_TRACKERTRAIL)
-	{
-		if (effects & EF_TRACKER_DLIGHT) /* (EF_TRACKERTRAIL | EF_TRACKER) special case */
-		{
-			intensity = 50 + (500 * (sin(cl.time / 500.0) + 1.0));
-			
-			V_AddLight(refent->origin, intensity, -1.0, -1.0, -1.0);
-		}
-		else
-		{
-			CL_Tracker_Shell(clent->lerp_origin);
-			V_AddLight(refent->origin, 155, -1.0, -1.0, -1.0);
-		}
-	}
-	else if (effects & EF_TRACKER_DLIGHT)
-	{
-		vec3_t c = { 0,0,0 };
-		CL_TrackerTrail(clent->lerp_origin, refent->origin, c);
-		V_AddLight(refent->origin, 200, -1, -1, -1);
-	}
-	else if (effects & EF_GREENGIB)
-	{
-		CL_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
-	}
-	else if (effects & EF_IONRIPPER)
-	{
-		CL_IonripperTrail(clent->lerp_origin, refent->origin);
-		V_AddLight(refent->origin, 100, 1, 0.5, 0.5);
-	}
-	else if (effects & EF_BLUEHYPERBLASTER)
-	{
-		V_AddLight(refent->origin, 200, 0, 0, 1);
-	}
-	else if (effects & EF_PLASMA)
-	{
-		if (effects & EF_ANIM_ALLFAST) /* (EF_PLASMA | EF_ANIM_ALLFAST) special case */
-		{
-			CL_BlasterTrail(clent->lerp_origin, refent->origin);
-		}
-		V_AddLight(refent->origin, 130, 1, 0.5, 0.5);
+		CG_PartFX_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
 	}
 }
 
@@ -295,32 +214,19 @@ CL_EntityAddMiscEffects
 Mostly effects that were previously in trails code but shouldn't be
 ===============
 */
-static inline void CL_EntityAddMiscEffects(ccentity_t* clent, entity_state_t* state, rentity_t *refent)
+static inline void CL_EntityAddMiscEffects(clentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
-	if (state->effects & EF_FLIES)
-	{
-		CL_FlyEffect(clent, refent->origin);
-	}
-	else if (state->effects & EF_TRAP)
-	{
-		refent->origin[2] += 32;
-		CL_TrapParticles(refent);
-		V_AddLight(refent->origin, ((rand() % 100) + 100), 1, 0.8, 0.1);
-	}
+	// unused currently
 }
 
 /*
 ===============
 CL_AddPacketEntities
-
-FIXME - add beams back
-FIXME - if server sets this entity a dlight, then skip adding dlights from effects
-
 ===============
 */
 void CL_AddPacketEntities(frame_t* frame)
 {
-	ccentity_t		*clent;		// currently parsed client entity
+	clentity_t		*clent;		// currently parsed client entity
 	entity_state_t	*state;		// current client entity's state
 	rentity_t		rent;		// this is refdef entity passed to renderer
 	int				entnum;
@@ -430,8 +336,6 @@ void CL_AddPacketEntities(frame_t* frame)
 CL_AddViewWeapon
 ==============
 */
-
-struct model_s* cl_mod_view_muzzleflash;
 extern muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES];
 
 void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
@@ -531,7 +435,7 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	flash.renderfx = RF_FULLBRIGHT | RF_DEPTHHACK | RF_VIEW_MODEL | RF_SCALE | RF_TRANSLUCENT;
 	flash.scale = mz->flashscale;
 	flash.alpha = 0.7;
-	flash.model = cl_mod_view_muzzleflash;
+	flash.model = cgMedia.mod_v_muzzleflash;
 	V_AddEntity(&flash);
 #endif
 }
@@ -548,7 +452,7 @@ void CL_CalcViewValues (void)
 {
 	int			i;
 	float		lerp, backlerp;
-	ccentity_t	*ent;
+	clentity_t	*ent;
 	frame_t		*oldframe;
 	player_state_t	*ps, *ops;
 
@@ -669,15 +573,11 @@ void CL_AddEntities()
 	if (cl_timedemo->value)
 		cl.lerpfrac = 1.0;
 
-
 	// calculate view first so the heat beam has the right values for the vieworg, and can lock the beam to the gun
 	CL_CalcViewValues ();
 
 	CL_AddPacketEntities (&cl.frame);
-	CL_AddTEnts ();
-	CL_AddParticles ();
-	CL_AddDynamicLights ();
-	CL_AddLightStyles ();
+	CG_AddEntities();
 }
 
 /*
@@ -689,7 +589,7 @@ Called to get the sound spatialization origin
 */
 void CL_GetEntitySoundOrigin (int ent, vec3_t org)
 {
-	ccentity_t	*old;
+	clentity_t	*old;
 
 	if (ent < 0 || ent >= MAX_GENTITIES)
 		Com_Error (ERR_DROP, "CL_GetEntitySoundOrigin: bad ent");
@@ -715,10 +615,6 @@ void CL_FireEntityEvents(frame_t* frame)
 		num = (frame->parse_entities + pnum) & (MAX_PARSE_ENTITIES - 1);
 		s1 = &cl_parse_entities[num];
 		if (s1->event)
-			CL_EntityEvent(s1);
-
-		// EF_TELEPORTER acts like an event, but is not cleared each frame
-		if ((int)s1->effects & EF_TELEPORTER)
-			CL_TeleporterParticles(s1);
+			CG_EntityEvent(s1);
 	}
 }

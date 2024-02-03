@@ -127,9 +127,6 @@
     <ClCompile Include="server\sv_load.c">
       <Filter>server</Filter>
     </ClCompile>
-    <ClCompile Include="client\cl_temp_entities.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="client\cl_entities.c">
       <Filter>client</Filter>
     </ClCompile>
@@ -163,23 +160,8 @@
     <ClCompile Include="client\ui\ui_builtins.c">
       <Filter>client\ui</Filter>
     </ClCompile>
-    <ClCompile Include="client\cl_dlights.c">
-      <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_lightstyles.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="client\cl_graph.c">
       <Filter>client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\fx\fx_muzzleflash.c">
-      <Filter>client\fx</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_newfx.c">
-      <Filter>client\fx</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_fx.c">
-      <Filter>client\fx</Filter>
     </ClCompile>
     <ClCompile Include="client\snd_mix.c">
       <Filter>client\sound</Filter>
@@ -189,9 +171,6 @@
     </ClCompile>
     <ClCompile Include="client\snd_dma.c">
       <Filter>client\sound</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_particles.c">
-      <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="client\fx\fx_load.c">
       <Filter>client\fx</Filter>
@@ -207,6 +186,30 @@
     </ClCompile>
     <ClCompile Include="qcommon\mathlib.c">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_dlights.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_lightstyles.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_particles.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_cgame.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_muzzleflash.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_oldfx.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_temp_entities.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_events.c">
+      <Filter>client\cgame</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -297,6 +300,9 @@
     </ClInclude>
     <ClInclude Include="qcommon\mathlib.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="client\cgame\cg_local.h">
+      <Filter>client\cgame</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

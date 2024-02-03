@@ -55,6 +55,7 @@ extern long Q_ftol(float f);
 #define VectorNegate(a,b)		(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])
 #define VectorSet(v, x, y, z)	(v[0]=(x), v[1]=(y), v[2]=(z))
 
+void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up);
 void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
 
 // just in case you do't want to use the macros

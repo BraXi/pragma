@@ -800,20 +800,6 @@ void		CM_ReadPortalState (FILE *f);
 /*
 ==============================================================
 
-PLAYER MOVEMENT CODE
-
-Common between server and client so prediction matches
-
-==============================================================
-*/
-
-#if USE_PMOVE_IN_PROGS == 0
-extern float pm_airaccelerate;
-void Pmove (pmove_t *pmove);
-#endif
-/*
-==============================================================
-
 FILESYSTEM
 
 ==============================================================

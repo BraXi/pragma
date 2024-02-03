@@ -4,6 +4,21 @@ vec3_t vec3_origin = { 0,0,0 };
 
 #define DEG2RAD( a ) ( a * M_PI ) / 180.0F
 
+void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
+{
+	float		d;
+
+	// this rotate and negat guarantees a vector
+	// not colinear with the original
+	right[1] = -forward[0];
+	right[2] = forward[1];
+	right[0] = forward[2];
+
+	d = DotProduct(right, forward);
+	VectorMA(right, -d, forward, right);
+	VectorNormalize(right);
+	CrossProduct(right, forward, up);
+}
 
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {

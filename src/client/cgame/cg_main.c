@@ -9,18 +9,75 @@ See the attached GNU General Public License v2 for more details.
 */
 
 #include "../client.h"
+#include "cg_local.h"
+
+cgMedia_t cgMedia;
 
 static qboolean cg_allow_drawcalls;
+
+/*
+=================
+CG_RegisterSounds
+
+This is the only right place to load audio.
+Called before entering a new level, and when sound system is restarting
+=================
+*/
+void CG_RegisterSounds()
+{
+	cgMedia.sfx_ricochet[0] = S_RegisterSound("impacts/ricochet1.wav");
+	cgMedia.sfx_ricochet[1] = S_RegisterSound("impacts/ricochet2.wav");
+	cgMedia.sfx_ricochet[2] = S_RegisterSound("impacts/ricochet3.wav");
+}
+
+/*
+=================
+CG_RegisterModels
+
+This is the only right place to load visuals.
+Called before entering a new level, and when renderer is restarting
+=================
+*/
+void CG_RegisterMedia()
+{
+	cgMedia.mod_v_muzzleflash = re.RegisterModel("models/fx/v_muzzleflash.md3");
+	cgMedia.mod_w_muzzleflash = re.RegisterModel("models/fx/w_muzzleflash.md3");
+	cgMedia.impact_small = re.RegisterModel("models/fx/impact_small.md3");
+}
+
+/*
+=================
+CG_ClearState
+
+This is the only right place to load audio.
+Called before entering a new level, and when sound system is restarting
+=================
+*/
+void CG_ClearState()
+{
+	CG_ClearParticles();
+	CG_ClearDynamicLights();
+	CG_ClearLightStyles();
+
+	CL_ClearTEnts();
+}
 
 /*
 ===============
 CL_ShutdownClientGame
 
-Called when engine is closing, changing map or it is changing to a different game directory.
+Called when:
+	engine is closing
+	map is changing
+	changing to a different game directory
+	connecting to server
+	.. and when disconnecting from server.
 ===============
 */
 void CL_ShutdownClientGame()
 {
+	Com_Printf("----- ShutdownClientGame -----\n");
+	CG_ClearState();
 	cg_allow_drawcalls = false;
 	Scr_FreeScriptVM(VM_CLGAME);
 }
@@ -36,8 +93,7 @@ Calls progs function CG_Main so scripts can begin initialization
 */
 void CL_InitClientGame()
 {
-	Com_Printf("CL_InitClientGame\n");
-	Scr_BindVM(VM_NONE);
+	Com_Printf("----- InitClientGame -----\n");
 	Scr_CreateScriptVM(VM_CLGAME, 512, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
 	Scr_BindVM(VM_CLGAME); // so we can get proper entity size and ptrs
 
@@ -55,7 +111,7 @@ void CL_InitClientGame()
 ===============
 CG_IsActive
 
-Returns true if CG qcvm is properly loaded
+Returns true if CG qcvm is active
 ===============
 */
 static qboolean CG_IsActive()
@@ -66,12 +122,12 @@ static qboolean CG_IsActive()
 
 /*
 ===============
-CG_ServerCommand
+CG_ParseCommandFromServer
 
 Handles incomming 'SVC_CGCMD [command (byte)] [...]' commands from server
 ===============
 */
-void CG_ServerCommand()
+void CG_ParseCommandFromServer()
 {
 	float cmd;
 
@@ -83,7 +139,7 @@ void CG_ServerCommand()
 	Scr_BindVM(VM_CLGAME);
 
 	Scr_AddFloat(0, cmd);
-	Scr_Execute(VM_CLGAME, cl.script_globals->CG_ServerCommand, __FUNCTION__);
+	Scr_Execute(VM_CLGAME, cl.script_globals->CG_ParseCommandFromServer, __FUNCTION__);
 
 	Scr_BindVM(VM_NONE);
 }
@@ -98,6 +154,10 @@ This calls progs function CG_Frame at the beginning of each client frame
 */
 void CG_Frame(float frametime, int time, float realtime)
 {
+	// advance local effects for next frame
+	CG_RunDynamicLights();
+	CG_RunLightStyles();
+
 	if (CG_IsActive() == false)
 		return;
 
@@ -314,4 +374,24 @@ struct sfx_t* CG_FindOrRegisterSound(char *filename)
 		return NULL;
 	}
 	return sfx;
+}
+
+
+
+
+
+
+/*
+=================
+CG_AddEntities
+
+Emits all entities, particles, and lights to the refresh
+=================
+*/
+void CG_AddEntities()
+{
+	CG_AddTempEntities();
+	CG_SimulateAndAddParticles();
+	CG_AddDynamicLights();
+	CG_AddLightStyles();
 }
