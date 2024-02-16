@@ -26,7 +26,7 @@ typedef byte vm_entity_t;
 typedef struct gentity_s gentity_t;
 #include "progdefs_server.h" 
 typedef struct rentity_s rentity_t;
-#include "progdefs_client.h" 
+#include "../client/cgame/progdefs_client.h" 
 typedef struct rentity_s rentity_t;
 #include "progdefs_ui.h" 
 

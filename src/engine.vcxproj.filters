@@ -211,6 +211,12 @@
     <ClCompile Include="client\cgame\cg_events.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
+    <ClCompile Include="client\cgame\cg_world.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_localents.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">
@@ -248,9 +254,6 @@
     </ClInclude>
     <ClInclude Include="qcommon\shared.h">
       <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="script\progdefs_client.h">
-      <Filter>script\headers</Filter>
     </ClInclude>
     <ClInclude Include="script\progdefs_server.h">
       <Filter>script\headers</Filter>
@@ -302,6 +305,9 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="client\cgame\cg_local.h">
+      <Filter>client\cgame</Filter>
+    </ClInclude>
+    <ClInclude Include="client\cgame\progdefs_client.h">
       <Filter>client\cgame</Filter>
     </ClInclude>
   </ItemGroup>

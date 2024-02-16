@@ -16,6 +16,7 @@ See the attached GNU General Public License v2 for more details.
 typedef struct
 {
 	struct sfx_s* sfx_ricochet[3];
+	struct sfx_s* sfx_footsteps[3];
 	struct sfx_s* sfx_splash[3];
 	struct sfx_s* sfx_explosion[3];
 
@@ -24,12 +25,29 @@ typedef struct
 	struct model_s* impact_small;
 } cgMedia_t;
 
+typedef struct
+{
+	unsigned int	time;
+
+	//
+	// qcvm
+	//
+	qboolean			qcvm_active;
+	cl_globalvars_t		*script_globals;	// qcvm globals
+	rentity_t*			 entities;			// allocated by qcvm
+	int					max_entities;
+	int					entity_size;		// retrieved from progs
+	int					num_edicts;			// increases towards MAX_EDICTS
+} cg_t;
+
+extern cg_t cg;
+
 extern cgMedia_t cgMedia;
 
 void CG_ClearState();
 
 void CL_ShutdownClientGame();
-void CL_InitClientGame();
+void CG_InitClientGame();
 void CG_AddEntities();
 
 void CG_Frame(float frametime, int time, float realtime);

@@ -964,45 +964,12 @@ void PFSV_setviewmodel(void)
 
 	if (ent->client->ps.viewmodel_index != newmodelindex)
 	{
-		ent->client->ps.viewmodel_index = newmodelindex;
-		ent->client->ps.viewmodel_frame = 0;
-		VectorClear(ent->client->ps.viewmodel_angles);
-		VectorClear(ent->client->ps.viewmodel_offset);
+		ent->v.viewmodel_index = newmodelindex;
 	}
 
-	Scr_ReturnFloat(ent->client->ps.viewmodel_index);
+	Scr_ReturnFloat(ent->v.viewmodel_index);
 }
-/*
-===============
-PFSV_setviewmodelparms
 
-Sets view model frame, angles and offset
-
-setviewmodelparms(entity, frame, angles, offset)
-===============
-*/
-void PFSV_setviewmodelparms(void)
-{
-	gentity_t* ent;
-	gclient_t* cl;
-
-	ent = Scr_GetParmEdict(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("setviewmodelparms(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
-	cl = ent->client;
-	if(cl->ps.viewmodel_index == 0)
-	{
-		Scr_RunError("setviewmodelparms(): client %i has no viewmodel set\n", NUM_FOR_EDICT(ent));
-		return;
-	}
-
-	cl->ps.viewmodel_frame = Scr_GetParmFloat(1);
-	VectorCopy(Scr_GetParmVector(2), cl->ps.viewmodel_angles);
-	VectorCopy(Scr_GetParmVector(3), cl->ps.viewmodel_offset);
-}
 
 /*
 ===============
@@ -1348,7 +1315,7 @@ void PFSV_setstat(void)
 	idx = Scr_GetParmFloat(1);
 	if (idx < 0 || idx >= 32)
 	{
-		Scr_RunError("saveclientfield(): index %i is invaild\n", idx);
+		Scr_RunError("setstat(): index %i is invaild\n", idx);
 		return;
 	}
 	cl->ps.stats[idx] = Scr_GetParmFloat(2);
@@ -1364,6 +1331,9 @@ void setviewangles(entity player, vector viewAngles)
 */
 void PFSV_setviewangles(void)
 {
+#if 1
+	Scr_RunError("setviewangles() was removed!\n");
+#else
 	gentity_t* ent;
 	gclient_t* client;
 
@@ -1377,6 +1347,7 @@ void PFSV_setviewangles(void)
 
 	VectorCopy(Scr_GetParmVector(1), client->ps.viewangles);
 	VectorCopy(client->ps.viewangles, ent->v.v_angle);
+#endif
 }
 
 /*
@@ -1388,6 +1359,9 @@ void kickangles(entity player, vector kickDirAndForce)
 */
 void PFSV_kickangles(void)
 {
+#if 1
+	Scr_RunError("kickangles() was removed!\n");
+#else
 	gentity_t* ent;
 	gclient_t* client;
 
@@ -1400,6 +1374,7 @@ void PFSV_kickangles(void)
 	client = ent->client;
 
 	VectorCopy(Scr_GetParmVector(1), client->ps.kick_angles);
+#endif
 }
 
 
@@ -1414,7 +1389,7 @@ void pmove(float index, float val)
 */
 void PFSV_pmove(void)
 {
-	Scr_RunError("builtin pmove() was removed\n");
+	Scr_RunError("pmove() was removed!\n");
 }
 
 /*
@@ -1488,7 +1463,7 @@ void PFSV_movetogoal(void)
 =================
 PFSV_walkmove
 
-walkmove(entity actor, float yaw, float moveDistance)
+float moved = walkmove(entity actor, float yaw, float moveDistance)
 
 Searches for a path and moves entity [moveDistance] units in yaw direction of [yaw]
 The move will be adjusted for slopes and stairs, but if the move isn't
@@ -1539,6 +1514,7 @@ void PFSV_touchentities(void)
 {
 	gentity_t* ent;
 	int areatype, numtouched;
+	int param;
 
 	ent = Scr_GetParmEdict(0);
 
@@ -1549,10 +1525,19 @@ void PFSV_touchentities(void)
 		return;
 	}
 
-	if (Scr_GetParmFloat(1) == 0)
+	param = (int)Scr_GetParmFloat(1);
+	if (param == 0)
 		areatype = AREA_TRIGGERS;
-	else //cba to write another error message
+	else if (param == 1)
 		areatype = AREA_SOLID;
+	else if (param == 2)
+		areatype = AREA_PATHNODES;
+	else
+	{
+		Scr_RunError("touchentities() unknown area_type %i\n", param);
+		Scr_ReturnFloat(0);
+		return;
+	}
 
 	numtouched = SV_TouchEntities(ent, areatype);
 	Scr_ReturnFloat(numtouched);
@@ -1727,7 +1712,9 @@ extern int Nav_AddPathNode(float x, float y, float z);
 void PFSV_nav_addpathnode(void)
 {
 	float* pos = Scr_GetParmVector(0);
-	Scr_ReturnFloat(Nav_AddPathNode(pos[0], pos[1], pos[2]));
+	int num = Nav_AddPathNode(pos[0], pos[1], pos[2]);
+	Scr_ReturnFloat(num);
+	printf("nav_addpathnode %i\n", num);
 }
 
 /*
@@ -1737,7 +1724,7 @@ PFSV_nav_linkpathnode
 void nav_linkpathnode(float node, float linkto)
 =================
 */
-extern void Nav_AddPathNodeLink(int nodeId, int linkTo);
+extern qboolean Nav_AddPathNodeLink(int nodeId, int linkTo);
 void PFSV_nav_linkpathnode(void)
 {
 	Nav_AddPathNodeLink((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1));
@@ -1756,9 +1743,7 @@ void PFSV_nav_getnearestnode(void)
 {
 	vec3_t v;
 	float* pos = Scr_GetParmVector(0);
-
 	VectorCopy(pos, v);
-
 	Scr_ReturnFloat(Nav_GetNearestNode(v));
 }
 
@@ -1774,7 +1759,6 @@ void PFSV_nav_searchpath(void)
 {
 	float n;
 	n = Nav_SearchPath((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1));
-
 	Scr_ReturnFloat(n);
 }
 
@@ -1819,7 +1803,8 @@ Returns the links count of a given node
 extern int Nav_GetNodeLinkCount(int node);
 void PFSV_nav_getnodelinkcount(void)
 {
-	Scr_ReturnFloat( Nav_GetNodeLinkCount(Scr_GetParmFloat(0)) );
+	int num = Nav_GetNodeLinkCount(Scr_GetParmFloat(0));
+	Scr_ReturnFloat( num );
 }
 
 /*
@@ -1960,6 +1945,7 @@ void PFSV_gettagorigin(void)
 	model = SV_ModelForNum(ent->v.modelindex);
 	if (!model || model->type != MOD_MD3 || !model->numTags)
 	{
+	//	Scr_RunError(Scr_GetString(ent->v.model));
 		Scr_ReturnVector(ent->v.origin);
 		return;
 	}
@@ -1987,7 +1973,6 @@ If entity's model has no tags or is not MD3, entity angles will be returned.
 vector looking_at = gettagangles(self, "tag_head");
 =================
 */
-
 void VectorAngles(const float* forward, const float* up, float* result, qboolean meshpitch)    //up may be NULL
 {
 	float    yaw, pitch, roll;
@@ -2043,9 +2028,17 @@ void VectorAngles(const float* forward, const float* up, float* result, qboolean
 	if (roll < 0)
 		roll += 360;
 
+#if 1 
+	// DUMB HACK BECAUSE I HAVENT PAID ATTENTION TO HOW MD3 TAGS WERE SUPPOSED TO BE 
+	// ORIENTED AND AT THIS POINT I DON'T WANT TO BOTHER RECOMPILING ALL THE MODELS
 	result[0] = -pitch;
-	result[1] = yaw-180;
-	result[2] = roll+90;
+	result[1] = yaw - 180;
+	result[2] = roll + 270;
+#else
+	result[0] = pitch;
+	result[1] = yaw;
+	result[2] = roll;
+#endif
 }
 
 void PFSV_gettagangles(void)
@@ -2090,6 +2083,7 @@ void PFSV_gettagangles(void)
 }
 
 
+static void PFSV_none(void) { Scr_RunError("BUILTIN WAS REMOVED\n"); }
 /*
 =================
 SV_InitScriptBuiltins
@@ -2171,7 +2165,7 @@ void SV_InitScriptBuiltins()
 	// client
 	Scr_DefineBuiltin(PFSV_isplayer, PF_SV, "isplayer", "float(entity e)");
 	Scr_DefineBuiltin(PFSV_setviewmodel, PF_SV, "setviewmodel", "float(entity e, string s)");
-	Scr_DefineBuiltin(PFSV_setviewmodelparms, PF_SV, "setviewmodelparms", "void(entity e, float f, vector v1, vector v2)");
+	Scr_DefineBuiltin(PFSV_none, PF_SV, "setviewmodelparms", "void(entity e, float f, vector v1, vector v2)");
 	Scr_DefineBuiltin(PFSV_setfieldofview, PF_SV, "setfieldofview", "void(entity e, float f)");
 	Scr_DefineBuiltin(PFSV_getfieldofview, PF_SV, "getfieldofview", "float(entity e)");
 	Scr_DefineBuiltin(PFSV_setviewblend, PF_SV, "setviewblend", "void(entity e, vector v1, float f)");

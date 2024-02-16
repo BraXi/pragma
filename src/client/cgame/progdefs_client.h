@@ -11,11 +11,10 @@ See the attached GNU General Public License v2 for more details.
 
 #ifndef scr_func_t
 	typedef int scr_func_t;
-	typedef vec3_t scr_vec_t;
+//	typedef vec3_t scr_vec_t;
 	typedef int scr_entity_t;
 	typedef int scr_string_t;
 #endif
-
 
 // prog globals
 typedef struct cl_globalvars_s

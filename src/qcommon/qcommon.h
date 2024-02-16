@@ -379,7 +379,7 @@ enum clc_ops_e
 #define	PS_BLEND			(1<<10)
 #define	PS_FOV				(1<<11)
 #define	PS_VIEWMODEL_INDEX	(1<<12)
-#define	PS_VIEWMODEL_FRAME	(1<<13)
+#define	PS_VIEWMODEL_PARAMS	(1<<13)
 #define	PS_RDFLAGS			(1<<14)
 
 #define PS_EXTRABYTES		(1<<15) // reki -- 28-12-23 added this so we don't shoot ourselves in the foot later, looking for more bytes
@@ -422,8 +422,8 @@ enum clc_ops_e
 // _16 = short
 
 // try to pack the common update flags into the first byte
-#define	U_ORIGIN_X			(1<<0)		// current origin
-#define	U_ORIGIN_Y			(1<<1)		// current origin
+#define	U_ETYPE				(1<<0)		// entity type
+#define	U_ORIGIN_XY			(1<<1)		// current origin
 #define	U_ANGLE_Y			(1<<2)		// current angles
 #define	U_ANGLE_Z			(1<<3)		// current angles
 #define	U_ANIMFRAME_8		(1<<4)		// anim frame is 0-255

@@ -67,14 +67,14 @@ static inline void CL_EntityAnimation(clentity_t* clent, entity_state_t* state, 
 	/* Case One:
 	* We have animtime set
 	*/
-	if (state->animtime > 0 && clent->current.frame == clent->prev.frame)
+	if (state->animStartTime > 0 && clent->current.frame == clent->prev.frame)
 	{
 //		int anim_firstframe = state->frame & 255;
 //		int anim_lastframe = (state->frame >> 8) & 255;
 //		int anim_rate = (state->frame >> 16) & 255;
 //		int anim_flags = (state->frame >> 24) & 255;
 
-		clent->anim.starttime = state->animtime;
+		clent->anim.starttime = state->animStartTime;
 		clent->anim.startframe = state->frame;
 		clent->anim.rate = (1000.0f / 10.0f);
 		anim = &clent->anim;
@@ -89,7 +89,7 @@ static inline void CL_EntityAnimation(clentity_t* clent, entity_state_t* state, 
 
 	if (anim != NULL && clent->anim.rate > 0)
 	{
-		progress = ((cl.frame.servertime - state->animtime) / clent->anim.rate);
+		progress = ((cl.frame.servertime - state->animStartTime) / clent->anim.rate);
 		int curanimtime = clent->anim.starttime + (progress * clent->anim.rate);
 
 		refent->animbacklerp = 1.0f - ((cl.time - ((float)curanimtime - SV_FRAMETIME_MSEC)) / clent->anim.rate);
@@ -224,6 +224,7 @@ static inline void CL_EntityAddMiscEffects(clentity_t* clent, entity_state_t* st
 CL_AddPacketEntities
 ===============
 */
+static char *etypes[] = { "ET_GENERAL", "ET_PLAYER","ET_PATHNODE", "ET_ACTOR" };
 void CL_AddPacketEntities(frame_t* frame)
 {
 	clentity_t		*clent;		// currently parsed client entity
@@ -247,6 +248,12 @@ void CL_AddPacketEntities(frame_t* frame)
 
 		rent.backlerp = (1.0 - cl.lerpfrac);
 
+		if (clent->current.eType > 0)
+		{
+
+
+			Com_Printf("clent %i is %s\n", state->number, etypes[clent->current.eType]);
+		}
 		//
 		// create a new render entity
 		//
@@ -405,7 +412,7 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 			viewmodel.backlerp = 1.0 - cl.lerpfrac;
 		}
 	}
-
+	viewmodel.animbacklerp = viewmodel.backlerp;
 	VectorCopy(viewmodel.origin, viewmodel.oldorigin);
 	viewmodel.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
 	V_AddEntity (&viewmodel);

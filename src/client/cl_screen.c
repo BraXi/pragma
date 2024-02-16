@@ -353,16 +353,14 @@ SCR_DrawPause
 */
 void SCR_DrawPause (void)
 {
-	int		w, h;
-
 	if (!scr_showpause->value)		// turn off for screenshots
 		return;
 
 	if (!cl_paused->value)
 		return;
 
-	re.DrawGetPicSize (&w, &h, "pause");
-	re.DrawPic ((viddef.width-w)/2, viddef.height/2 + 8, "pause");
+	static rgba_t col_white = { 1.0f, 1.0f, 1.0f, 1.0f };
+	re.DrawString("[Game Paused]", 400, 10, 1.0, XALIGN_CENTER, col_white);
 }
 
 /*

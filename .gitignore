@@ -387,3 +387,5 @@ FodyWeavers.xsd
 /build/battlecity
 /build/pragma_battlequanks
 /build/pragma_battlequanks.zip
+/build_map_aitest.BAT
+/src/client/cgame/cg_particles — kopia.c

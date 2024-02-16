@@ -23,9 +23,9 @@ void CG_EntityEvent(entity_state_t* ent)
 {
 	switch (ent->event)
 	{
-//	case EV_FOOTSTEP:
-//		S_StartSound (NULL, ent->number, CHAN_BODY, cl_sfx_footsteps[rand()&3], 1, ATTN_NORM, 0); // TODO: footstep sounds based on surface type (wood, metal, grass, etc)
-//		break;
+	case EV_FOOTSTEP:
+		S_StartSound (NULL, ent->number, CHAN_BODY, cgMedia.sfx_footsteps[rand()&3], 1, ATTN_NORM, 0); // TODO: footstep sounds based on surface type (wood, metal, grass, etc)
+		break;
 	case EV_FALLSHORT:
 		S_StartSound(NULL, ent->number, CHAN_AUTO, S_RegisterSound("player/land1.wav"), 1, ATTN_NORM, 0);
 		break;

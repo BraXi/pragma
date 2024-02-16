@@ -212,7 +212,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 
 	Scr_BindVM(vmtype);
-//	CheckScriptVM(__FUNCTION__);
+	CheckScriptVM(__FUNCTION__);
 
 	vm = active_qcvm;
 

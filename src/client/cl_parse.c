@@ -144,7 +144,7 @@ void CL_ParseServerData (void)
 	}
 	
 	// initialize client game
-	CL_InitClientGame();
+	CG_InitClientGame();
 }
 
 /*
@@ -558,6 +558,11 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	VectorCopy(from->origin, to->old_origin);
 	to->number = number;
 
+	// entity type
+	if (bits & U_ETYPE)
+	{
+		to->eType = MSG_ReadByte(&net_message);
+	}
 
 	// main model
 	if (bits & U_MODELINDEX_8)
@@ -582,8 +587,8 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	// animation sequence
 	if (bits & U_ANIMATION)
 	{
-		to->anim = MSG_ReadByte(&net_message);
-		to->animtime = MSG_ReadLong(&net_message);
+		to->animationIdx = MSG_ReadByte(&net_message);
+		to->animStartTime = MSG_ReadLong(&net_message);
 	}
 
 	// index to model skin
@@ -623,10 +628,11 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 		to->renderAlpha = MSG_ReadByte(&net_message) * (1.0f / 255.0f);
 
 	// current origin
-	if (bits & U_ORIGIN_X)
+	if (bits & U_ORIGIN_XY)
+	{
 		to->origin[0] = MSG_ReadCoord(&net_message);
-	if (bits & U_ORIGIN_Y)
 		to->origin[1] = MSG_ReadCoord(&net_message);
+	}
 	if (bits & U_ORIGIN_Z)
 		to->origin[2] = MSG_ReadCoord(&net_message);
 
@@ -975,7 +981,7 @@ void CL_ParsePlayerstate(frame_t* oldframe, frame_t* newframe)
 #endif
 	}
 
-	if (flags & PS_VIEWMODEL_FRAME)
+	if (flags & PS_VIEWMODEL_PARAMS)
 	{
 		state->viewmodel_frame = MSG_ReadByte(&net_message); // braxi -- do I need more than 256 frames for viewmodel?
 

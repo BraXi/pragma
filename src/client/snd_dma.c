@@ -579,6 +579,11 @@ void S_IssuePlaysound (playsound_t *ps)
 
 	ch->pos = 0;
 	sc = S_LoadSound (ch->sfx);
+	if (!sc)
+	{
+		ch->end = 0;
+		return;
+	}
     ch->end = paintedtime + sc->length;
 
 	// free the playsound
@@ -798,7 +803,7 @@ void S_AddLoopSounds (void)
 	if (!cl.sound_prepped)
 		return;
 
-	for (i=0 ; i<cl.frame.num_entities ; i++)
+	for (i=0 ; i<cl.frame.num_entities; i++)
 	{
 		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
 		ent = &cl_parse_entities[num];

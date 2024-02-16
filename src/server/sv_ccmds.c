@@ -33,10 +33,19 @@ void SV_ModelList_f(void)
 		return;
 	}
 
+#if 0
+	Com_Printf("\nCS MODELS:\n");
+	Com_Printf("==============\n");
+
+	char* name;
+	int start = CS_MODELS;
+	for (int index = 1; index < start+MAX_MODELS && sv.configstrings[start + index][0]; index++)
+		Com_Printf("%i: %s\n", index, sv.configstrings[start + index]);
+#endif
 	Com_Printf("\nserver models:\n");
 	Com_Printf("==============\n");
 
-	for (i = 0, mod = &sv.models[i]; i < sv.num_models; i++, mod++)
+	for (i = 1, mod = &sv.models[MODELINDEX_WORLD]; i < sv.num_models; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;

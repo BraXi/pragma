@@ -38,6 +38,8 @@ void SV_InitEntity(gentity_t* ent)
 
 	ent->v.renderScale = 1.0f;
 
+	ent->v.nodeIndex = -1;
+
 	ent->teamchain = ent->teammaster = NULL;
 	ent->bEntityStateForClientChanged = false;
 }
@@ -145,7 +147,6 @@ SV_RunEntity
 */
 void SV_RunEntity(gentity_t* ent)
 {
-	Scr_EntityPreThink(ent);
 	SV_RunEntityPhysics(ent);
 }
 
@@ -175,7 +176,7 @@ qboolean SV_RunThink(gentity_t* ent)
 SV_TouchEntities
 
 Touches all entities overlaping with ent's bbox
-areatype could either be AREA_SOLID or AREA_TRIGGERS
+areatype could either be AREA_SOLID, AREA_TRIGGERS or AREA_PATHNODES
 Returns the number of touched ents
 ============
 */
@@ -184,10 +185,10 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 	int			i, num, touched;
 	gentity_t* touch[MAX_GENTITIES], * hit;
 
-// dead things don't activate triggers!
-// BRAXI -- WHAT IF DEAD THINGS WANT TO 
-//	if ((ent->client || ((int)ent->v.svflags & SVF_MONSTER)) && (ent->v.health <= 0))
-//		return;
+#if 0
+	if (areatype == AREA_PATHNODES && !((int)ent->v.svflags & SVF_MONSTER))
+		return;
+#endif
 
 	num = SV_AreaEdicts(ent->v.absmin, ent->v.absmax, touch, MAX_GENTITIES, areatype);
 	touched = 0;

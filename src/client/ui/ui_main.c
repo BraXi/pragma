@@ -255,7 +255,7 @@ void UI_Draw()
 	}
 	else
 	{
-		if (Com_ServerState() == 0)
+		if (Com_ServerState() == 0 && cls.state != ca_active)
 			fadeColor[3] = 1;
 		else
 			fadeColor[3] = 0.3;
@@ -426,6 +426,7 @@ Called every time engine starts and when connecting or disconnecting from server
 */
 void UI_Init()
 {
+	Com_Printf("------- GUI Initialization -------\n");
 	memset(&ui, 0, sizeof(uistate_t));
 
 	// unused yet
@@ -453,6 +454,8 @@ void UI_Init()
 
 	// precache guis used by code
 	UI_LoadGuisFromFile("preload");
+
+	Com_Printf("GUI system initialied.\n");
 }
 
 /*

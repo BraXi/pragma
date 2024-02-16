@@ -71,13 +71,9 @@ typedef struct
 	int			trailcount;			// for diminishing grenade trails
 	vec3_t		lerp_origin;		// for trails (variable hz)
 
-	int			fly_stoptime;
-
 	animstate_t	anim;
 
 	cl_entvars_t v;
-
-
 } clentity_t;
 
 
@@ -170,17 +166,6 @@ typedef struct
 
 	struct sfx_s		*sound_precache[MAX_SOUNDS];
 	struct image_s		*image_precache[MAX_IMAGES];
-
-	//
-	// qcvm
-	//
-	qboolean			qcvm_active;
-	cl_globalvars_t		*script_globals;	// qcvm globals
-	rentity_t			*entities;			// allocated by qcvm
-	int					max_entities;
-	int					entity_size;		// retrieved from progs
-	int					num_edicts;			// increases towards MAX_EDICTS
-
 } client_state_t;
 
 extern	client_state_t	cl;
@@ -349,7 +334,8 @@ void CG_PartFX_Generic (vec3_t org, vec3_t dir, vec3_t color, int count);
 
 typedef struct particle_s
 {
-	struct particle_s	*next;
+	struct particle_s* prev, * next;
+	qboolean inuse;
 
 	int		time;
 	int num; //dbg

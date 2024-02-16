@@ -135,6 +135,17 @@ void SV_RunWorldFrame(void)
 
 	SV_ScriptStartFrame();
 
+	// run prethink!
+	for (i = 0; i < sv.max_edicts; i++)
+	{
+		ent = EDICT_NUM(i);
+		if (!ent->inuse)
+			continue;
+
+		sv_entity = ent;
+		Scr_EntityPreThink(ent);
+	}
+
 	for (i = 0; i < sv.max_edicts; i++)
 	{
 		ent = EDICT_NUM(i);
@@ -154,10 +165,10 @@ void SV_RunWorldFrame(void)
 			if ((groundentity->linkcount != (int)ent->v.groundentity_linkcount))
 			{
 				ent->v.groundentity_num = ENTITYNUM_NULL;
-				//if (!((int)ent->v.flags & (FL_SWIM | FL_FLY)))// && (ent->v.svflags & SVF_MONSTER))
-				//{
-				//	M_CheckGround(ent);
-				//}
+				if (!((int)ent->v.flags & (FL_SWIM | FL_FLY)) && (int)ent->v.svflags & SVF_MONSTER)
+				{
+					M_CheckGround(ent);
+				}
 			}
 		}
 
@@ -196,6 +207,7 @@ typedef struct areanode_s
 	struct areanode_s	*children[2];
 	link_t	trigger_edicts;
 	link_t	solid_edicts;
+	link_t	pathnode_edicts;
 } areanode_t;
 
 #define	AREA_DEPTH	4
@@ -249,6 +261,7 @@ areanode_t *SV_CreateAreaNode (int depth, vec3_t mins, vec3_t maxs)
 
 	ClearLink (&anode->trigger_edicts);
 	ClearLink (&anode->solid_edicts);
+	ClearLink (&anode->pathnode_edicts);
 	
 	if (depth == AREA_DEPTH)
 	{
@@ -287,7 +300,7 @@ void SV_ClearWorld (void)
 {
 	memset (sv_areanodes, 0, sizeof(sv_areanodes));
 	sv_numareanodes = 0;
-	SV_CreateAreaNode (0, sv.models[1].bmodel->mins, sv.models[1].bmodel->maxs);
+	SV_CreateAreaNode (0, sv.models[MODELINDEX_WORLD].bmodel->mins, sv.models[MODELINDEX_WORLD].bmodel->maxs);
 }
 
 
@@ -552,6 +565,8 @@ void SV_LinkEdict (gentity_t *ent)
 	// link it in	
 	if (ent->v.solid == SOLID_TRIGGER)
 		InsertLinkBefore (&ent->area, &node->trigger_edicts);
+	else if (ent->v.solid == SOLID_PATHNODE)
+		InsertLinkBefore(&ent->area, &node->pathnode_edicts);
 	else
 		InsertLinkBefore (&ent->area, &node->solid_edicts);
 
@@ -573,10 +588,19 @@ void SV_AreaEdicts_r (areanode_t *node)
 	count = 0;
 
 	// touch linked edicts
+	start = NULL;
 	if (area_type == AREA_SOLID)
 		start = &node->solid_edicts;
-	else
+	else if (area_type == AREA_TRIGGERS)
 		start = &node->trigger_edicts;
+	else  if (area_type == AREA_PATHNODES)
+		start = &node->pathnode_edicts;
+
+	if (start == NULL)
+	{
+		Com_Error(ERR_DROP, "%s: unknown area_type %i\n", __FUNCTION__, area_type);
+		return;
+	}
 
 	for (l=start->next  ; l != start ; l = next)
 	{
@@ -649,7 +673,7 @@ int SV_PointContents (vec3_t p)
 	float		*angles;
 
 	// get base contents from world
-	contents = CM_PointContents (p, sv.models[1].bmodel->headnode);
+	contents = CM_PointContents (p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
 
 	// or in contents from all the other entities
 	num = SV_AreaEdicts (p, p, touch, MAX_GENTITIES, AREA_SOLID);

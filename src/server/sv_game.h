@@ -25,19 +25,25 @@ typedef struct link_s
 #define	SVF_NOCULL			8	// entity will be _always_ sent regardless of PVS/PHS
 #define	SVF_SINGLECLIENT	16	// send to only one client (.showto must be set to desider player entity number)
 #define	SVF_ONLYTEAM		32	// send only to players in matching team team (.showto must match team)
+#define	SVF_PATHNODE		64	// this entity is an pathnode
+
 
 // edict->v.flags
-#define	FL_FLY				1	// phys
-#define	FL_SWIM				2	// phys implied immunity to drowining
-#define FL_TEAMSLAVE		2	// phys
+#define FL_NOSTEP				1
+#define	FL_FLY					2
+#define	FL_SWIM					4	// implied immunity to drowining
+#define	FL_PARTIALGROUND		8	// not all corners are valid
+#define	FL_AWARE				16	// will zigzag a lot less
+#define	FL_TEAMSLAVE			32	// not the first on the team, used in moves - slaves follow master
 
 // edict->solid values
 typedef enum
 {
 	SOLID_NOT,				// no interaction with other objects
-	SOLID_TRIGGER,			// only touch when inside, after moving
 	SOLID_BBOX,				// touch on edge
-	SOLID_BSP				// bsp clip, touch on edge
+	SOLID_TRIGGER,			// only touch when inside, after moving
+	SOLID_BSP,				// bsp clip, touch on edge
+	SOLID_PATHNODE			// only SVF_MONSTER entities touch when inside, after moving
 } solid_t;
 
 // entity->v.movetype values

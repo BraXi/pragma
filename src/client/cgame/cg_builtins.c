@@ -16,6 +16,7 @@ See the attached GNU General Public License v2 for more details.
 #else
 
 #include "../client.h"
+#include "cg_local.h"
 
 extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 extern struct sfx_t* CG_FindOrRegisterSound(char* filename);
@@ -37,7 +38,7 @@ anglevectors(self.v_angle);
 */
 void PFCG_AngleVectors(void)
 {
-	AngleVectors(Scr_GetParmVector(0), cl.script_globals->v_forward, cl.script_globals->v_right, cl.script_globals->v_up);
+	AngleVectors(Scr_GetParmVector(0), cg.script_globals->v_forward, cg.script_globals->v_right, cg.script_globals->v_up);
 }
 
 /*
@@ -164,7 +165,6 @@ returns CONTENTS_ mask for given point
 int contents = pointcontents(vector point)
 =================
 */
-extern int CG_PointContents(vec3_t point);
 static void PFCG_pointcontents(void)
 {
 	float* point = Scr_GetParmVector(0);
@@ -200,27 +200,27 @@ static void PFCG_trace(void)
 	trace = CG_Trace(start, min, max, end, contentmask, ignoreEntNum); 
 
 	// set globals in progs
-	cl.script_globals->trace_allsolid = trace.allsolid;
-	cl.script_globals->trace_startsolid = trace.startsolid;
-	cl.script_globals->trace_fraction = trace.fraction;
-	cl.script_globals->trace_plane_dist = trace.plane.dist;
-	VectorCopy(trace.plane.normal, cl.script_globals->trace_plane_normal);
-	VectorCopy(trace.endpos, cl.script_globals->trace_endpos);
-//	cl.script_globals->trace_ent = cl.entities;
-	cl.script_globals->trace_entnum = trace.entitynum;
-	cl.script_globals->trace_contents = trace.contents;
+	cg.script_globals->trace_allsolid = trace.allsolid;
+	cg.script_globals->trace_startsolid = trace.startsolid;
+	cg.script_globals->trace_fraction = trace.fraction;
+	cg.script_globals->trace_plane_dist = trace.plane.dist;
+	VectorCopy(trace.plane.normal, cg.script_globals->trace_plane_normal);
+	VectorCopy(trace.endpos, cg.script_globals->trace_endpos);
+//	cg.script_globals->trace_ent = cg.entities;
+	cg.script_globals->trace_entnum = trace.entitynum;
+	cg.script_globals->trace_contents = trace.contents;
 
 	if (trace.surface)
 	{
-		cl.script_globals->trace_surface_name = Scr_SetString(trace.surface->name);
-		cl.script_globals->trace_surface_flags = trace.surface->flags;
-		cl.script_globals->trace_surface_value = trace.surface->value;
+		cg.script_globals->trace_surface_name = Scr_SetString(trace.surface->name);
+		cg.script_globals->trace_surface_flags = trace.surface->flags;
+		cg.script_globals->trace_surface_value = trace.surface->value;
 	}
 	else
 	{
-		cl.script_globals->trace_surface_name = Scr_SetString("");
-		cl.script_globals->trace_surface_flags = 0;
-		cl.script_globals->trace_surface_value = 0;
+		cg.script_globals->trace_surface_name = Scr_SetString("");
+		cg.script_globals->trace_surface_flags = 0;
+		cg.script_globals->trace_surface_value = 0;
 	}
 }
 

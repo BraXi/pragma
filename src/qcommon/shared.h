@@ -76,7 +76,7 @@ char* _strlwr(char* x);
 // per-level limits
 //
 #define	MAX_CLIENTS			32		// absolute limit, [braxi -- was 256]
-#define	MAX_GENTITIES		1024	// must change protocol to increase more
+#define	MAX_GENTITIES		2048	// must change protocol to increase more
 #define	MAX_LIGHTSTYLES		256
 
 #ifdef PROTOCOL_EXTENDED_ASSETS
@@ -329,7 +329,7 @@ COLLISION DETECTION
 // FIXME: eliminate AREA_ distinction?
 #define	AREA_SOLID		1
 #define	AREA_TRIGGERS	2
-
+#define	AREA_PATHNODES	3
 
 // plane_t structure
 // !!! if this is changed, it must be changed in asm code too !!!
@@ -541,6 +541,7 @@ typedef enum
 	TE_BLOOD,
 	TE_EXPLOSION,
 	TE_SPLASH,
+	TE_RAIN,
 	TE_COUNT
 } temp_event_t;
 
@@ -650,6 +651,8 @@ typedef struct entity_state_s
 {
 	int			number;			// edict index
 
+	int			eType;
+
 	vec3_t		origin;
 	vec3_t		angles;
 	vec3_t		old_origin;		// for lerping
@@ -657,20 +660,18 @@ typedef struct entity_state_s
 	int			modelindex;		// main model
 	int			modelindex2, modelindex3, modelindex4;	// attachments
 
-	int			anim;
-	int			animtime;
+	int			animationIdx;
+	int			animStartTime;
+
 	int			frame;			// current animation frame
 	int			skinnum;		// for MD3 this should be index to .skin file
 
 	int			effects;		// PGM - we're filling it, so it needs to be unsigned
+
 	int			renderFlags;	// RF_ flags
 	float		renderScale;	// used when renderFlags & RF_SCALE 
 	vec3_t		renderColor;	// used when renderFlags & RF_COLOR
 	float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
-
-//	vec3_t		lightColor;		// if RF_LIGHT_NEGATIVE, it will substract this ammount of color
-//	float		lightIntensity;	// in quake units
-//	float		lightStyle;		// index to lightstyles
 
 	int			loopingSound;	// for looping sounds, to guarantee shutoff
 
@@ -680,7 +681,7 @@ typedef struct entity_state_s
 								// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
 								// SV_LinkEdict sets this properly
 
-	int			animStartTime;
+	// not networked
 	int			animSpeed; // 1000 / animFps = msec
 	float		animLerp;
 } entity_state_t;

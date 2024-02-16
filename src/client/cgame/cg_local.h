@@ -28,6 +28,18 @@ typedef struct
 	float	minlight;			// don't add when contributing less
 } cdlight_t;
 
+typedef struct localEntity_s
+{
+	struct localEntity_s* prev, * next;
+
+//	float			lifeRate;			// 1.0 / (endTime - startTime)
+
+	vec3_t			origin;
+	vec3_t			angles;
+
+	rentity_t		refEntity;
+
+} localEntity_t;
 
 
 //
@@ -52,3 +64,18 @@ cparticle_t* CG_ParticleFromPool();
 qboolean CG_AreThereFreeParticles();
 void CG_GenericParticleEffect(vec3_t org, vec3_t dir, vec3_t color, int count, int dirspread, float alphavel, float gravity);
 void CG_ParseParticleEffectCommand();
+
+
+//
+// cg_physics.c
+//
+trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum);
+int CG_PointContents(vec3_t point);
+
+
+//
+// cg_localents.c
+//
+void CG_InitLocalEntities();
+void CG_FreeLocalEntity(localEntity_t* le);
+localEntity_t* CG_AllocLocalEntity();

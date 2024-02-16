@@ -34,8 +34,8 @@ See the attached GNU General Public License v2 for more details.
 #define USE_GLFW 0
 
 // experimental -- variable server fps
-//#define SERVER_FPS 10		// quake 2
-#define SERVER_FPS 20		// default
+#define SERVER_FPS 10		// quake 2
+//#define SERVER_FPS 20		// default
 //#define SERVER_FPS 40
 
 #if SERVER_FPS == 10

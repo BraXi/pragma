@@ -462,7 +462,14 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float lerp)
 
 				R_LerpMD3Frame(lerp, index, &oldVert[index], &vert[index], v, n);
 
-				float lambert = DotProduct(n, model_shadevector);
+				float lambert = 1 + DotProduct(n, model_shadevector);
+
+				// poor mans half lambert to prevent models from being too dark
+				if (lambert > 1) 
+					lambert = 1;
+				else if (lambert < 0)
+					lambert = 0;
+
 				if (r_fullbright->value ||currententity->renderfx & RF_FULLBRIGHT)
 					lambert = 1.0f; 
 

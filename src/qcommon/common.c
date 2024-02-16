@@ -511,36 +511,37 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 	int		bits, i;
 
 	if (!to->number)
-		Com_Error (ERR_FATAL, "MSG_WriteDeltaEntity: Unset entity number");
+		Com_Error(ERR_FATAL, "MSG_WriteDeltaEntity: Unset entity number");
 	if (to->number >= MAX_GENTITIES)
-		Com_Error (ERR_FATAL, "MSG_WriteDeltaEntity: Entity number >= MAX_GENTITIES");
+		Com_Error(ERR_FATAL, "MSG_WriteDeltaEntity: Entity number >= MAX_GENTITIES");
 
-// send an update
+	// send an update
 	bits = 0;
 
 	if (to->number >= 256)
 		bits |= U_NUMBER_16;		// number8 is implicit otherwise
+	
+	if (to->eType != from->eType)
+		bits |= U_ETYPE;
 
 	// origin
-	if (to->origin[0] != from->origin[0])
-		bits |= U_ORIGIN_X;
-	if (to->origin[1] != from->origin[1])
-		bits |= U_ORIGIN_Y;
+	if (to->origin[0] != from->origin[0] || to->origin[1] != from->origin[1])
+		bits |= U_ORIGIN_XY;
 	if (to->origin[2] != from->origin[2])
 		bits |= U_ORIGIN_Z;
 
 	// angles
-	if ( to->angles[0] != from->angles[0] )
-		bits |= U_ANGLE_X;		
-	if ( to->angles[1] != from->angles[1] )
+	if (to->angles[0] != from->angles[0])
+		bits |= U_ANGLE_X;
+	if (to->angles[1] != from->angles[1])
 		bits |= U_ANGLE_Y;
-	if ( to->angles[2] != from->angles[2] )
+	if (to->angles[2] != from->angles[2])
 		bits |= U_ANGLE_Z;
-		
-	if ( to->skinnum != from->skinnum )
+
+	if (to->skinnum != from->skinnum)
 		bits |= U_SKIN_8;
-		
-	if ( to->frame != from->frame )
+
+	if (to->frame != from->frame)
 	{
 		if (to->frame < 256)
 			bits |= U_ANIMFRAME_8;
@@ -548,57 +549,57 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 			bits |= U_ANIMFRAME_16;
 	}
 
-	if (to->anim != from->anim || to->animtime != from->animtime)
+	if (to->animationIdx != from->animationIdx || to->animStartTime != from->animStartTime)
 	{
 		bits |= U_ANIMATION;
 	}
 
-	if ( to->effects != from->effects )
+	if (to->effects != from->effects)
 	{
 		if (to->effects < 256)
 			bits |= U_EFFECTS_8;
 		else if (to->effects < 32768)
-			bits |= U_EFFECTS_16; 
+			bits |= U_EFFECTS_16;
 		else
-			bits |= U_EFFECTS_8|U_EFFECTS_16;
+			bits |= U_EFFECTS_8 | U_EFFECTS_16;
 	}
-	
-	if ( to->renderFlags != from->renderFlags )
+
+	if (to->renderFlags != from->renderFlags)
 	{
 		if (to->renderFlags < 256)
 			bits |= U_RENDERFLAGS_8;
 		else if (to->renderFlags < 32768)
 			bits |= U_RENDERFLAGS_16;
 		else
-			bits |= U_RENDERFLAGS_8|U_RENDERFLAGS_16;
+			bits |= U_RENDERFLAGS_8 | U_RENDERFLAGS_16;
 	}
-	
-	if ( to->solid != from->solid )
+
+	if (to->solid != from->solid)
 		bits |= U_PACKEDSOLID;
 
 	// event is not delta compressed, just 0 compressed
-	if ( to->event  )
+	if (to->event)
 		bits |= U_EVENT_8;
-	
+
 	// main model
 	if (to->modelindex != from->modelindex)
 	{
 		if (to->modelindex < 256)
 			bits |= U_MODELINDEX_8; // byte
-		else 
+		else
 			bits |= U_MODELINDEX_16; // short
 	}
-	
+
 	// attached models
-	if ( to->modelindex2 != from->modelindex2 )
+	if (to->modelindex2 != from->modelindex2)
 		bits |= U_MODELINDEX2_8;
-	if ( to->modelindex3 != from->modelindex3 )
+	if (to->modelindex3 != from->modelindex3)
 		bits |= U_MODELINDEX3_8;
-	if ( to->modelindex4 != from->modelindex4 )
+	if (to->modelindex4 != from->modelindex4)
 		bits |= U_MODELINDEX4_8;
 
 	// looping sound
-	if ( to->loopingSound != from->loopingSound )
+	if (to->loopingSound != from->loopingSound)
 		bits |= U_LOOPSOUND;
 
 	// render scale
@@ -615,25 +616,11 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 		to->renderColor[2] != from->renderColor[2])
 		bits |= U_RENDERCOLOR;
 
-#if 0 /*original behaviour*/
-	/*
-	* newentity is set to true when entering new PVS, which with many
-	* entities in that particular PVS may overflow datagram for client
-	* because when entering PVS all 'appearing' entities will send old_origins and number
-	*
-	* !! This is very problematic even with entities from baselines !!
-	* In battlequanks there are hundreds of baseline matching entities,
-	* but hundreds old_origins easily overflow datagram size.
-	*/
-	if (newentity || (to->renderFlags & RF_BEAM))
-		bits |= U_OLDORIGIN;
-#else /*new behaviour*/
 	if (newentity || (to->renderFlags & RF_BEAM))
 	{
-		if (to->old_origin[0] != from->old_origin[0] || to->old_origin[1] != from->old_origin[1] || to->old_origin[2] != from->old_origin[2] )
+		if (to->old_origin[0] != from->old_origin[0] || to->old_origin[1] != from->old_origin[1] || to->old_origin[2] != from->old_origin[2])
 			bits |= U_OLDORIGIN;
 	}
-#endif
 
 	//
 	// write the message
@@ -650,78 +637,82 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 	else if (bits & 0x0000ff00)
 		bits |= U_MOREBITS_1;
 
-	MSG_WriteByte (msg,	bits&255 );
+	MSG_WriteByte(msg, bits & 255);
 
 	if (bits & 0xff000000)
 	{
-		MSG_WriteByte (msg,	(bits>>8)&255 );
-		MSG_WriteByte (msg,	(bits>>16)&255 );
-		MSG_WriteByte (msg,	(bits>>24)&255 );
+		MSG_WriteByte(msg, (bits >> 8) & 255);
+		MSG_WriteByte(msg, (bits >> 16) & 255);
+		MSG_WriteByte(msg, (bits >> 24) & 255);
 	}
 	else if (bits & 0x00ff0000)
 	{
-		MSG_WriteByte (msg,	(bits>>8)&255 );
-		MSG_WriteByte (msg,	(bits>>16)&255 );
+		MSG_WriteByte(msg, (bits >> 8) & 255);
+		MSG_WriteByte(msg, (bits >> 16) & 255);
 	}
 	else if (bits & 0x0000ff00)
 	{
-		MSG_WriteByte (msg,	(bits>>8)&255 );
+		MSG_WriteByte(msg, (bits >> 8) & 255);
 	}
 
 	//----------
 
 	// ENT NUMBER
 	if (bits & U_NUMBER_16)
-		MSG_WriteShort (msg, to->number);
+		MSG_WriteShort(msg, to->number);
 	else
-		MSG_WriteByte (msg,	to->number);
+		MSG_WriteByte(msg, to->number);
+
+	// entity type
+	if (bits & U_ETYPE)
+		MSG_WriteByte(msg, to->eType);
 
 	// main model
 	if (bits & U_MODELINDEX_8)
-		MSG_WriteByte (msg,	to->modelindex);
+		MSG_WriteByte(msg, to->modelindex);
 	if (bits & U_MODELINDEX_16)
 		MSG_WriteShort(msg, to->modelindex);
 
 	// attached models
 	if (bits & U_MODELINDEX2_8)
-		MSG_WriteByte (msg,	to->modelindex2);
+		MSG_WriteByte(msg, to->modelindex2);
 	if (bits & U_MODELINDEX3_8)
-		MSG_WriteByte (msg,	to->modelindex3);
+		MSG_WriteByte(msg, to->modelindex3);
 	if (bits & U_MODELINDEX4_8)
-		MSG_WriteByte (msg,	to->modelindex4);
+		MSG_WriteByte(msg, to->modelindex4);
 
 	// animation frame
 	if (bits & U_ANIMFRAME_8)
-		MSG_WriteByte (msg, to->frame);
+		MSG_WriteByte(msg, to->frame);
 	if (bits & U_ANIMFRAME_16)
-		MSG_WriteShort (msg, to->frame);
+		MSG_WriteShort(msg, to->frame);
 
 	// animation sequence
 	if (bits & U_ANIMATION)
 	{
-		MSG_WriteByte(msg, to->anim);
-		MSG_WriteLong(msg, to->animtime);
+		MSG_WriteByte(msg, to->animationIdx);
+		MSG_WriteLong(msg, to->animStartTime);
 	}
 
 	// index to model skin
 	if (bits & U_SKIN_8)
-		MSG_WriteByte (msg, to->skinnum);
+		MSG_WriteByte(msg, to->skinnum);
 
 	// effects
-	if ( (bits & (U_EFFECTS_8|U_EFFECTS_16)) == (U_EFFECTS_8|U_EFFECTS_16) )
-		MSG_WriteLong (msg, to->effects);
+	if ((bits & (U_EFFECTS_8 | U_EFFECTS_16)) == (U_EFFECTS_8 | U_EFFECTS_16))
+		MSG_WriteLong(msg, to->effects);
 	else if (bits & U_EFFECTS_8)
-		MSG_WriteByte (msg, to->effects);
+		MSG_WriteByte(msg, to->effects);
 	else if (bits & U_EFFECTS_16)
-		MSG_WriteShort (msg, to->effects);
+		MSG_WriteShort(msg, to->effects);
 
 	// render flags
-	if ( (bits & (U_RENDERFLAGS_8|U_RENDERFLAGS_16)) == (U_RENDERFLAGS_8|U_RENDERFLAGS_16) )
-		MSG_WriteLong (msg, to->renderFlags);
+	if ((bits & (U_RENDERFLAGS_8 | U_RENDERFLAGS_16)) == (U_RENDERFLAGS_8 | U_RENDERFLAGS_16))
+		MSG_WriteLong(msg, to->renderFlags);
 	else if (bits & U_RENDERFLAGS_8)
-		MSG_WriteByte (msg, to->renderFlags);
+		MSG_WriteByte(msg, to->renderFlags);
 	else if (bits & U_RENDERFLAGS_16)
-		MSG_WriteShort (msg, to->renderFlags);
+		MSG_WriteShort(msg, to->renderFlags);
 
 	// render scale
 	if (bits & U_RENDERSCALE)
@@ -753,13 +744,14 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 
 	// render alpha
 	if (bits & U_RENDERALPHA)
-		MSG_WriteByte(msg, (to->renderAlpha*255));
+		MSG_WriteByte(msg, (to->renderAlpha * 255));
 
 	// current origin
-	if (bits & U_ORIGIN_X)
-		MSG_WriteCoord (msg, to->origin[0]);		
-	if (bits & U_ORIGIN_Y)
-		MSG_WriteCoord (msg, to->origin[1]);
+	if (bits & U_ORIGIN_XY)
+	{
+		MSG_WriteCoord(msg, to->origin[0]);
+		MSG_WriteCoord(msg, to->origin[1]);
+	}
 	if (bits & U_ORIGIN_Z)
 		MSG_WriteCoord (msg, to->origin[2]);
 

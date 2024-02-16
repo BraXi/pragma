@@ -16,8 +16,10 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer);
 static void SV_LoadSP2(svmodel_t* out, void* buffer);
 
 static svmodel_t* SV_LoadModel(char* name, qboolean crash);
+static qboolean SV_FileExists(char* name, qboolean crash);
 static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char* func);
 
+svmodel_t sv_nomodel;
 
 /*
 ================
@@ -103,6 +105,7 @@ Used to load or find server assets (currently only loads only th important MD3 i
 */
 static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char* func)
 {
+	static char fullname[MAX_QPATH];
 	int		index;
 
 	if (!name || !name[0])
@@ -119,21 +122,39 @@ static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char*
 	// load asset
 	//
 	if (index == max)
-		Com_Error(ERR_DROP, "%s: hit limit of %i assets", func, max);
+		Com_Error(ERR_DROP, "hit limit of %i assets (%s)", max, func);
 
 	//warn of late precaches or crash depending on sv_nolateloading
 	if (sv.state == ss_game)
 	{
 		if (sv_nolateloading->value > 0)
-			Com_Error(ERR_DROP, "%s: tried to precache '%s' but the server is running\n", func, name);
+			Com_Error(ERR_DROP, "%s: '%s' must be precached first (%s)\n", name, func);
 		else
-			Com_Printf("WARNING: %s: late loading of '%s', consider precaching it in main()\n",func,  name);
+			Com_Printf("WARNING: '%s' not precached (%s)\n", name, func);
 	}
 
-	if(start == CS_MODELS /*&& (name[0] != '*')*/)
-		SV_LoadModel(name, true);
+	if (start == CS_MODELS /*&& (name[0] != '*')*/)
+	{
+		if(SV_LoadModel(name, true) == NULL)
+			return 0;
+	}
 
+	if (start == CS_SOUNDS)
+	{
+		Com_sprintf(fullname, sizeof(fullname), "sound/%s", name);
+		if (SV_FileExists(fullname, (int)developer->value == 1) == false)
+			return 0;
+	}
+	
+	if (start == CS_IMAGES)
+	{
+		Com_sprintf(fullname, sizeof(fullname), "gfx/%s.tga", name);
+		if (SV_FileExists(fullname, (int)developer->value == 1) == false)
+			return 0;
+	}
+	
 	// update configstring
+
 	strncpy(sv.configstrings[start + index], name, sizeof(sv.configstrings[index]));
 
 	if (sv.state != ss_loading)
@@ -146,6 +167,34 @@ static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char*
 	}
 
 	return index;
+}
+
+/*
+=================
+SV_FileExists
+=================
+*/
+static qboolean SV_FileExists(char* name, qboolean crash)
+{
+	int	fileLen;
+
+	if (!name[0])
+	{
+		Com_Error(ERR_DROP, "SV_FileExists: NULL name");
+		return false;
+	}
+
+	fileLen = FS_LoadFile(name, NULL);
+	if (fileLen == -1)
+	{
+		if (crash)
+			Com_Error(ERR_DROP, "'%s' not found", name);
+		else
+			Com_Printf("WARNING: '%s' not found\n", name);
+
+		return false;
+	}
+	return true;
 }
 
 /*
@@ -166,11 +215,16 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 		return NULL;
 	}
 
-	//
+	if (sv.num_models == MAX_MODELS)
+	{
+		Com_Error(ERR_DROP, "SV_LoadModel: hit limit of %d models", MAX_MODELS);
+		return NULL; // shut up compiler
+	}
+
+
 	// search the currently loaded models
 	// if were coming from *Index its been already searched but be paranoid!
-	//
-	for (i = 0, model = &sv.models[i]; i < MAX_MODELS; i++, model++)
+	for (i = 0, model = &sv.models[MODELINDEX_WORLD]; i < MAX_MODELS; i++, model++)
 	{
 		if (!model->name[0])
 			continue;
@@ -178,23 +232,14 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 			return model;
 	}
 
-	//
 	// find a free model slot spot
-	//
-	for (i = 0, model = &sv.models[i]; i < MAX_MODELS; i++, model++)
-	{
-		if (/*model->type == MOD_BAD ||*/ !model->name[0])
-			break;	// free spot
-	}
-
-	sv.num_models++;
-	if (sv.num_models == MAX_MODELS)
-	{
-		Com_Error(ERR_DROP, "SV_LoadModel: hit limit of %d models", MAX_MODELS);
-		return NULL; // shut up compiler
-	}
-
-	crash = false;
+//	for (i = 0, model = &sv.models[MODELINDEX_WORLD]; i < MAX_MODELS; i++, model++)
+//	{
+//		if (model->type == MOD_BAD || !model->name[0])
+//			break;	// free spot
+//	}
+	model = &sv.models[sv.num_models];
+	
 	//
 	// load the file
 	//
@@ -204,7 +249,7 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 	if (!buf)
 	{
 		if (crash)
-			Com_Error(ERR_DROP, "SV_LoadModel: '%s' not found", model->name);
+			Com_Error(ERR_DROP, "model '%s' not found", model->name);
 		memset(model->name, 0, sizeof(model->name));
 		return NULL;
 	}
@@ -219,17 +264,22 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 		SV_LoadSP2(model, buf);
 		break;
 	default:
-		Com_Error(ERR_DROP, "SV_LoadModel: '%s' is not a model", model->name);
+		Com_Error(ERR_DROP, "'%s' is not a model", model->name);
 	}
 
+	if (sv.state == ss_game)
+	{
+		printf("bp\n");
+	}
 	FS_FreeFile(buf);
 
 	if (model->type == MOD_BAD)
 	{
-		Com_Error(ERR_DROP, "SV_LoadModel: bad model '%s'", model->name);
+		Com_Error(ERR_DROP, "bad model '%s'", model->name);
 		return NULL;
 	}
 
+	sv.num_models++;
 	return model;
 }
 

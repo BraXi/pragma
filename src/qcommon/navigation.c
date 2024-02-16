@@ -17,16 +17,13 @@ See the attached GNU General Public License v2 for more details.
 
 void Nav_Init();
 int Nav_AddPathNode(float x, float y, float z);
-void Nav_AddPathNodeLink(int nodeId, int linkTo);
+qboolean Nav_AddPathNodeLink(int nodeId, int linkTo);
 int Nav_GetNearestNode(vec3_t origin);
 int Nav_SearchPath(int startWaypoint, int goalWaypoint);
 
 #define NO_WAYPOINT -1
-#define MAX_WAYPOINTS 1024
+#define MAX_WAYPOINTS (MAX_GENTITIES - 256)
 #define MAX_WAYPOINT_LINKS 8
-
-
-#define NAVFL_DISABLED 1		// node is temporarily disabled (ex. doors are locked)
 
 typedef struct waypoint_s
 {
@@ -109,11 +106,24 @@ static qboolean Nav_IsInitialized()
 
 /*
 =================
+Nav_GetMaxLinksCount
+=================
+*/
+int Nav_GetMaxLinksCount()
+{
+	return MAX_WAYPOINT_LINKS;
+}
+
+
+/*
+=================
 Nav_GetNodesCount
 =================
 */
 int Nav_GetNodesCount()
 {
+	if (!Nav_IsInitialized())
+		return 0;
 	return nav.waypoints_count;
 }
 
@@ -217,6 +227,9 @@ Inserts pathnode at given position, returns index to waypoint
 */
 int Nav_AddPathNode(float x, float y, float z)
 {
+	if (!Nav_IsInitialized())
+		return NO_WAYPOINT;
+
 	if (nav.waypoints_count >= MAX_WAYPOINTS || nav.waypoints_count < 0)
 		return NO_WAYPOINT;
 
@@ -237,17 +250,21 @@ Nav_AddPathNodeLink
 Connect waypoints
 =================
 */
-void Nav_AddPathNodeLink(int nodeId, int linkTo)
+qboolean Nav_AddPathNodeLink(int nodeId, int linkTo)
 {
+	if (!Nav_IsInitialized())
+		return false;
+
 	if (nodeId >= MAX_WAYPOINTS || nodeId < 0)
-		return;
+		return false;
 
 	if (nav.waypoints[nodeId].linkCount >= MAX_WAYPOINT_LINKS)
-		return;
+		return false;
 
-	nodeId = nav.waypoints_count - 1;
+//	nodeId = nav.waypoints_count - 1;
 	nav.waypoints[nodeId].links[nav.waypoints[nodeId].linkCount] = linkTo;
 	nav.waypoints[nodeId].linkCount++;
+	return true;
 }
 
 /*
@@ -598,78 +615,3 @@ int Nav_SearchPath(int startWaypoint, int goalWaypoint)
 	Nav_DebugDrawNodes();
 	return NO_WAYPOINT;
 }
-
-#if 0
-/*
-PRAGMA_NAVIGATION
-$pathnodes_count NUM_WAYPOINTS
-$pathnode INDEX POS_X POS_Y POS_Z NUM_LINKS INDEX_LINK1 INDEX_LINK2 ...
-$pathnode INDEX POS_X POS_Y POS_Z NUM_LINKS INDEX_LINK1 INDEX_LINK2 ...
-$pathnode INDEX POS_X POS_Y POS_Z NUM_LINKS INDEX_LINK1 INDEX_LINK2 ...
-...
-*/
-void Nav_LoadWaypoints(char* mapname)
-{
-	char	fname[MAX_OSPATH];
-	char	line[256];
-	int		linenum = 0;
-	int len;
-	char* token;
-	waypoint_t* wp;
-
-	FILE* file;
-
-	memset(nav.waypoints, 0, sizeof(nav.waypoints));
-	nav.waypoints_count = 0;
-	Com_sprintf(fname, sizeof(fname), "%s/nav/%s.nav", FS_Gamedir(), mapname);
-
-	len = FS_FOpenFile(fname, &file);
-	if (!len || len == -1)
-	{
-		Com_Printf("Missing navigation file: %s\n", fname);
-		return;
-	}
-
-	linenum = 0;
-	while (fgets(line, sizeof(line), file) != NULL)
-	{
-		linenum++;
-
-		COM_TokenizeString(line);
-		if (!COM_TokenNumArgs())
-			continue;
-
-		if (linenum == 1)
-		{
-			//expect: PRAGMA_NAVIGATION
-			if (!Nav_ExpectDef("PRAGMA_NAVIGATION", 1))
-			{
-				FS_FCloseFile(file);
-				Com_Error(ERR_DROP, "error parsing `%s` in line %i\n", fname);
-				return;
-			}
-			continue;
-		}
-		else if (linenum == 2)
-		{
-			//expect: $pathnodes_count nav.waypoints_count
-			if (!Nav_ExpectDef("$pathnodes_count", 2))
-			{
-				FS_FCloseFile(file);
-				Com_Error(ERR_DROP, "error parsing `%s` in line %i\n", fname);
-				return;
-			}
-			nav.waypoints_count = atoi(COM_TokenGetArg(1));
-			continue;
-		}
-
-		//expect: $pathnode INDEX X Y Z NUM_LINKS
-		if (!Nav_ExpectDef("$pathnode", 6))
-		{
-			FS_FCloseFile(file);
-			Com_Error(ERR_DROP, "error parsing `%s` in line %i\n", fname);
-			return;
-		}
-	}
-}
-#endif

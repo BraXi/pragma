@@ -131,59 +131,6 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 
 
 /*
-================
-CL_PMTrace
-================
-*/
-trace_t CL_PMTrace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
-{
-	trace_t	t;
-
-	// check against world
-	t = CM_BoxTrace (start, end, mins, maxs, 0, MASK_PLAYERSOLID);
-	if (t.fraction < 1.0)
-	{
-		t.clent = cl.entities;
-		t.entitynum = 0;
-	}
-
-	// check all other solid models
-	CL_ClipMoveToEntities (start, mins, maxs, end, &t);
-
-	t.entitynum = 0;
-	return t;
-}
-
-int CL_PMpointcontents(vec3_t point)
-{
-	int			i;
-	entity_state_t	*ent;
-	int			num;
-	cmodel_t		*cmodel;
-	int			contents;
-
-	contents = CM_PointContents(point, 0);
-
-	for (i=0 ; i<cl.frame.num_entities ; i++)
-	{
-		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
-		ent = &cl_parse_entities[num];
-
-		if (ent->solid != PACKED_BSP) // special value for bmodel
-			continue;
-
-		cmodel = cl.model_clip[(int)ent->modelindex];
-		if (!cmodel)
-			continue;
-
-		contents |= CM_TransformedPointContents (point, cmodel->headnode, ent->origin, ent->angles);
-	}
-
-	return contents;
-}
-
-
-/*
 =================
 CL_PredictMovement
 
@@ -242,10 +189,10 @@ void CL_PredictMovement (void)
 #ifdef USE_PMOVE_IN_PROGS
 	cl_globalvars_t* cgGlobals = NULL;
 
-	if (cl.qcvm_active && cl.entities)
+	if (cg.qcvm_active && cg.entities)
 	{
-		cgGlobals = cl.script_globals;	// reki -- 27-12-23 Can cl.script_globals be NULL? hopefully not. 
-										// BraXi - yup, can be when !cl.qcvm_active
+		cgGlobals = cg.script_globals;	// reki -- 27-12-23 Can cg.script_globals be NULL? hopefully not. 
+										// BraXi - yup, can be when !cg.qcvm_active
 
 		//
 		// copy pmove state TO cgame
@@ -290,7 +237,7 @@ void CL_PredictMovement (void)
 		for (i = 0; i < 3; i++)
 			inangles[i] = (float)cmd->angles[i];
 
-		if(cl.qcvm_active && cl.entities && cgGlobals != NULL)
+		if(cg.qcvm_active && cg.entities && cgGlobals != NULL)
 		{
 			//
 			// call cgame's pmove
@@ -300,7 +247,7 @@ void CL_PredictMovement (void)
 			Scr_AddVector(1, inangles);
 			Scr_AddFloat(2, (float)cmd->buttons);
 			Scr_AddFloat(3, (float)cmd->msec);
-			Scr_Execute(VM_CLGAME, cl.script_globals->CG_PlayerMove, __FUNCTION__);
+			Scr_Execute(VM_CLGAME, cg.script_globals->CG_PlayerMove, __FUNCTION__);
 
 			//
 			// read pmove state FROM cgame
@@ -309,7 +256,7 @@ void CL_PredictMovement (void)
 			pm.s.gravity = cgGlobals->pm_state_gravity;
 			pm.s.pm_flags = cgGlobals->pm_state_pm_flags;
 			pm.s.pm_time = cgGlobals->pm_state_pm_time;
-			pm.viewheight = cl.script_globals->cam_viewoffset[2];
+			pm.viewheight = cg.script_globals->cam_viewoffset[2];
 
 			for (i = 0; i < 3; i++)
 			{
@@ -323,7 +270,7 @@ void CL_PredictMovement (void)
 				pm.mins[i] = cgGlobals->pm_state_mins[i];
 				pm.maxs[i] = cgGlobals->pm_state_maxs[i];
 
-				pm.viewangles[i] = cl.script_globals->cam_viewangles[i];
+				pm.viewangles[i] = cg.script_globals->cam_viewangles[i];
 			}
 		}
 #else

@@ -136,19 +136,10 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (ps->pmove.pm_type != ops->pmove.pm_type)
 		pflags |= PS_M_TYPE;
 
-	if (ps->pmove.origin[0] != ops->pmove.origin[0]
-		|| ps->pmove.origin[1] != ops->pmove.origin[1]
-		|| ps->pmove.origin[2] != ops->pmove.origin[2] )
+	if (VectorCompare(ps->pmove.origin, ops->pmove.origin) == 0 )
 		pflags |= PS_M_ORIGIN;
 
-	if (ps->pmove.velocity[0] != ops->pmove.velocity[0]
-		|| ps->pmove.velocity[1] != ops->pmove.velocity[1]
-		|| ps->pmove.velocity[2] != ops->pmove.velocity[2] )
-		pflags |= PS_M_VELOCITY;
-
-	if (ps->pmove.velocity[0] != ops->pmove.velocity[0]
-		|| ps->pmove.velocity[1] != ops->pmove.velocity[1]
-		|| ps->pmove.velocity[2] != ops->pmove.velocity[2])
+	if (VectorCompare(ps->pmove.velocity, ops->pmove.velocity) == 0)
 		pflags |= PS_M_VELOCITY;
 
 	if (ps->pmove.pm_time != ops->pmove.pm_time)
@@ -164,38 +155,24 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (ps->pmove.gravity != ops->pmove.gravity)
 		pflags |= PS_M_GRAVITY;
 
-	if (ps->pmove.delta_angles[0] != ops->pmove.delta_angles[0]
-		|| ps->pmove.delta_angles[1] != ops->pmove.delta_angles[1]
-		|| ps->pmove.delta_angles[2] != ops->pmove.delta_angles[2] )
+	if (VectorCompare(ps->pmove.delta_angles, ops->pmove.delta_angles) == 0)
 		pflags |= PS_M_DELTA_ANGLES;
 
-	if (ps->pmove.mins[0] != ops->pmove.mins[0]
-		|| ps->pmove.mins[1] != ops->pmove.mins[1]
-		|| ps->pmove.mins[2] != ops->pmove.mins[2]
-		|| ps->pmove.maxs[0] != ops->pmove.maxs[0]
-		|| ps->pmove.maxs[1] != ops->pmove.maxs[1]
-		|| ps->pmove.maxs[2] != ops->pmove.maxs[2])
+	if (VectorCompare(ps->pmove.mins, ops->pmove.mins) == 0 ||
+		VectorCompare(ps->pmove.maxs, ops->pmove.maxs) == 0 )
 		pflags |= PS_M_BBOX_SIZE;
 
-	if (ps->viewoffset[0] != ops->viewoffset[0]
-		|| ps->viewoffset[1] != ops->viewoffset[1]
-		|| ps->viewoffset[2] != ops->viewoffset[2] )
+	if (VectorCompare(ps->viewoffset, ops->viewoffset) == 0)
 		pflags |= PS_VIEWOFFSET;
 
-	if (ps->viewangles[0] != ops->viewangles[0]
-		|| ps->viewangles[1] != ops->viewangles[1]
-		|| ps->viewangles[2] != ops->viewangles[2] )
+	if (VectorCompare(ps->viewangles, ops->viewangles) == 0)
 		pflags |= PS_VIEWANGLES;
 
-	if (ps->kick_angles[0] != ops->kick_angles[0]
-		|| ps->kick_angles[1] != ops->kick_angles[1]
-		|| ps->kick_angles[2] != ops->kick_angles[2] )
+
+	if (VectorCompare(ps->kick_angles, ops->kick_angles) == 0)
 		pflags |= PS_KICKANGLES;
 
-	if (ps->blend[0] != ops->blend[0]
-		|| ps->blend[1] != ops->blend[1]
-		|| ps->blend[2] != ops->blend[2]
-		|| ps->blend[3] != ops->blend[3] )
+	if (VectorCompare(ps->blend, ops->blend) == 0 || ps->blend[3] != ops->blend[3] ) // RGB A
 		pflags |= PS_BLEND;
 
 	if (ps->fov != ops->fov)
@@ -204,8 +181,12 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (ps->rdflags != ops->rdflags)
 		pflags |= PS_RDFLAGS;
 
-	if (ps->viewmodel_frame != ops->viewmodel_frame)
-		pflags |= PS_VIEWMODEL_FRAME;
+	if (ps->viewmodel_frame != ops->viewmodel_frame ||
+		VectorCompare(ps->viewmodel_offset, ops->viewmodel_offset) == 0 ||
+		VectorCompare(ps->viewmodel_angles, ops->viewmodel_angles) == 0)
+	{
+		pflags |= PS_VIEWMODEL_PARAMS;
+	}
 
 	pflags |= PS_VIEWMODEL_INDEX;
 
@@ -318,7 +299,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 #endif
 	}
 
-	if (pflags & PS_VIEWMODEL_FRAME)
+	if (pflags & PS_VIEWMODEL_PARAMS)
 	{
 		MSG_WriteByte (msg, ps->viewmodel_frame);
 

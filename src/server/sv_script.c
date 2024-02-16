@@ -28,6 +28,8 @@ void Scr_EntityPreThink(gentity_t* self)
 	if (!self->v.prethink)
 		return;
 
+	sv.script_globals->sv_time = sv.time;
+	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->self = GENT_TO_PROG(self);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	Scr_Execute(VM_SVGAME, self->v.prethink, __FUNCTION__);
@@ -41,9 +43,7 @@ void Scr_Think(gentity_t* self)
 		return;
 	}
 
-	self->v.nextthink = 0;
-
-	
+	self->v.nextthink = 0;	
 	sv.script_globals->sv_time = sv.time;
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->self = GENT_TO_PROG(self);
@@ -279,8 +279,6 @@ This will be called once for each client frame, which will usually be a couple t
 runs svgame:ClientThink(float inButtons, float inImpulse, vector inMove, vector inAngles, float inMsecTime)
 ==============
 */
-void ClientMove(gentity_t* ent, usercmd_t* ucmd);
-usercmd_t* last_ucmd;
 void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 {
 	vec3_t move;
@@ -294,8 +292,6 @@ void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 	a[1] = ucmd->angles[1];
 	a[2] = ucmd->angles[2];
 
-	last_ucmd = ucmd; // for pmove
-
 	sv.script_globals->g_frameNum = sv.framenum;
 	sv.script_globals->self = GENT_TO_PROG(ent);
 	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
@@ -308,9 +304,6 @@ void Scr_ClientThink(gentity_t* ent, usercmd_t* ucmd)
 	Scr_AddFloat(4, (int)ucmd->msec);
 
 	Scr_Execute(VM_SVGAME, sv.script_globals->ClientThink, __FUNCTION__);
-
-//	ClientMove(ent, ucmd);
-//	ent->client->ps.pmove = pm;
 
 	pmove_state_t* pm;
 	pm = &ent->client->ps.pmove;
@@ -346,9 +339,34 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	// If it wasn't updated here, the view position would lag a frame
 	// behind the body position when pushed -- "sinking into plats"
 	//
-	ent->client->ps.viewoffset[0] = ent->client->ps.viewoffset[1] = 0;
-	ent->client->ps.viewoffset[2] = ent->v.viewheight;
 
+	Scr_BindVM(VM_SVGAME);
+	sv.script_globals->self = GENT_TO_PROG(ent);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
+	Scr_Execute(VM_SVGAME, sv.script_globals->ClientEndServerFrame, __FUNCTION__);
+
+	//
+	// camera and viewmodel
+	//
+	for (i = 0; i < 3; i++)
+	{
+		ent->client->ps.viewoffset[i] = ent->v.viewoffset[i];
+//		ent->client->ps.viewoffset[2] = ent->v.viewheight; // 0.26 -> moved to QC
+		ent->client->ps.viewangles[i] = ent->v.viewangles[i];
+
+		ent->client->ps.kick_angles[i] = ent->v.kick_angles[i];
+
+		ent->client->ps.viewmodel_angles[i] = ent->v.viewmodel_angles[i];
+		ent->client->ps.viewmodel_offset[i] = ent->v.viewmodel_offset[i];
+
+	}
+
+	ent->client->ps.viewmodel_index = (int)ent->v.viewmodel_index;
+	ent->client->ps.viewmodel_frame = (int)ent->v.viewmodel_frame;
+
+	//
+	// pmove
+	//
 	ent->client->ps.pmove.pm_type = ent->v.pm_type;
 	ent->client->ps.pmove.pm_flags = ent->v.pm_flags;
 	ent->client->ps.pmove.pm_time = ent->v.pm_time;
@@ -361,8 +379,7 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 		ent->client->ps.pmove.delta_angles[i] = ent->v.pm_delta_angles[i];
 	}
 
-	// save results of pmove
-//	ent->client->ps.pmove = pm;
+	// save copy of pmove results
 	ent->client->old_pmove = ent->client->ps.pmove;
 
 #if PROTOCOL_FLOAT_COORDS == 1
@@ -378,10 +395,6 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 		pm->velocity[i] = ent->v.velocity[i] * 8.0;
 	}
 #endif
-
-	sv.script_globals->self = GENT_TO_PROG(ent);
-	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
-	Scr_Execute(VM_SVGAME, sv.script_globals->ClientEndServerFrame, __FUNCTION__);
 }
 
 
@@ -394,6 +407,8 @@ Set entity_state_t from prog fields
 */
 void SV_ProgVarsToEntityState(gentity_t* ent)
 {
+	ent->s.eType = ent->v.eType;
+
 	VectorCopy(ent->v.origin, ent->s.origin);
 	VectorCopy(ent->v.angles, ent->s.angles);
 	VectorCopy(ent->v.old_origin, ent->s.old_origin);
@@ -403,8 +418,8 @@ void SV_ProgVarsToEntityState(gentity_t* ent)
 	ent->s.modelindex3 = ent->v.modelindex3;
 	ent->s.modelindex4 = ent->v.modelindex3;
 
-	ent->s.anim = ent->v.anim;
-	ent->s.animtime = ent->v.animtime;
+	ent->s.animationIdx = ent->v.anim;
+	ent->s.animStartTime = ent->v.animstarttime;
 	ent->s.frame = (int)ent->v.animFrame;
 	ent->s.skinnum = (int)ent->v.skinnum;
 	ent->s.effects = ent->v.effects;
@@ -427,6 +442,8 @@ Set prog fields from entity_state_t
 */
 void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state)
 {
+	ent->v.eType = state->eType;
+
 	VectorCopy(state->origin, ent->v.origin);
 	VectorCopy(state->angles, ent->v.angles);
 	VectorCopy(state->old_origin, ent->v.old_origin);
@@ -436,8 +453,8 @@ void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state)
 	ent->v.modelindex3 = state->modelindex3;
 	ent->v.modelindex4 = state->modelindex3;
 
-	ent->v.anim = ent->s.anim;
-	ent->v.animtime = state->animtime;
+	ent->v.anim = ent->s.animationIdx;
+	ent->v.animstarttime = state->animStartTime;
 	ent->v.animFrame = state->frame;
 
 	ent->v.skinnum = state->skinnum;
@@ -480,6 +497,7 @@ void ClientUserinfoChanged(gentity_t* ent, char* userinfo)
 		ent->client->ps.fov = 90;
 	else if (ent->client->ps.fov > 160)
 		ent->client->ps.fov = 160;
+
 
 	// save off the userinfo in case we want to check something later
 	strncpy(ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo) - 1);

@@ -19,6 +19,9 @@ See the attached GNU General Public License v2 for more details.
 
 //=============================================================================
 
+#define MODELINDEX_WORLD 1
+
+
 #define	MAX_MASTER_SERVERS	8		// max recipients for heartbeat packets
 #define	LATENCY_COUNTS		16
 #define	RATE_MESSAGES		SERVER_FPS // braxi -- was 10

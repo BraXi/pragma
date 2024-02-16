@@ -34,8 +34,20 @@ TE_FLAME
 */
 static void TempEnt_Flame(void)
 {
+	cdlight_t *dlight;
+
 	MSG_ReadPos(&net_message, pos);
 	CG_PartFX_Flame(NULL, pos);
+
+	dlight = CG_AllocDynamicLight(0);
+
+	VectorCopy(pos, dlight->origin);
+	dlight->radius = 128 + (rand() % 37);
+	//dlight->decay = 16;
+	dlight->die = cl.time + 100;
+	VectorSet(dlight->color, 0.98f, 0.83f, 0.46f);
+
+	//252, 212, 119
 }
 
 /*
@@ -50,7 +62,7 @@ static void TempEnt_Blood(void)
 
 	MSG_ReadPos(&net_message, pos);
 	MSG_ReadDir(&net_message, dir);
-	CG_PartFX_Generic(pos, dir, blood_rgb, 60);
+	CG_PartFX_Generic(pos, dir, blood_rgb, 32);
 }
 
 /*
@@ -146,22 +158,34 @@ static void TempEnt_Explosion(void)
 
 	dlight = CG_AllocDynamicLight(0);
 
-	VectorCopy(dlight->origin, pos);
+	VectorCopy(pos, dlight->origin);
 	dlight->radius = 200 + (rand() % 75);
-	dlight->decay = 16;
-	dlight->die = cl.time + 1100;
-	VectorSet(dlight->color, 1.0f, 0.67f, 0.027f);
-//	CL_NewDynamicLight(0, pos[0], pos[1], pos[2] + 8, r, 1000);
+	//dlight->decay = 16;
+	dlight->die = cl.time + 700;
+	VectorSet(dlight->color, 0.98f, 0.74f, 0.46f);
 
-	S_StartSound(pos, 0, 0, cgMedia.sfx_explosion[rand() & 3], 1, ATTN_NORM, 0);
+	int r = rand() & 3;
+	S_StartSound(pos, 0, 0, cgMedia.sfx_explosion[0], 2, ATTN_NORM, 0);
 }
- 
+
+extern void CG_GenericParticleEffect2(vec3_t org, vec3_t dir, vec3_t color, int count, int dirspread, float alphavel, float gravity);
+static void TempEnt_Rain(void)
+{
+	MSG_ReadPos(&net_message, pos);
+
+	vec3_t dir = { 0,0,-1 };
+	vec3_t c = { 0.207f, 0.596f, 0.843f };
+	CG_GenericParticleEffect2(pos, dir, c, 24, 72, 0.6f, -120);
+}
+
+
 /*	TE_FLAME,
 	TE_GUNSHOT,
 	TE_BULLET_SPARKS,
 	TE_BLOOD,
 	TE_EXPLOSION,
 	TE_SPLASH,
+	TE_RAIN,
 	TE_COUNT
 */
 tempEntityDef_t tempEntityDefs[] = // must match temp_event_t
@@ -170,8 +194,9 @@ tempEntityDef_t tempEntityDefs[] = // must match temp_event_t
 	{TE_GUNSHOT, TempEnt_GunShotOrBulletSparks},
 	{TE_BULLET_SPARKS, TempEnt_GunShotOrBulletSparks},
 	{TE_BLOOD, TempEnt_Blood},
-	{TE_EXPLOSION, TempEnt_Splash},
-	{TE_SPLASH, TempEnt_Splash}
+	{TE_EXPLOSION, TempEnt_Explosion},
+	{TE_SPLASH, TempEnt_Splash},
+	{TE_RAIN, TempEnt_Rain}
 };
 
 
@@ -195,6 +220,7 @@ void CG_ParseTempEntityCommand (void)
 {
 	TE_Type = MSG_ReadByte (&net_message);
 
+//	printf("TE_Type= %i\n", TE_Type);
 	if (TE_Type > TE_COUNT)
 	{
 		Com_Error(ERR_DROP, "CG_ParseTempEntityCommand: bad temp entity %i\n", TE_Type);

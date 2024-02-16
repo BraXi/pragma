@@ -319,7 +319,7 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 		return;
 	}
 #else
-	Com_Printf("PROGS CRC CHECK DISABLED, CRC is %i\n", vm->crc);
+	Com_Printf("PROGS CRC CHECK DISABLED, %s CRC checksum is %i\n", filename, vm->crc);
 #endif
 
 	// cast the data from progs

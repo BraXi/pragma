@@ -29,8 +29,6 @@ SV_WalkMove(gentity_t* actor, float yaw, float dist)
 */
 
 #define	STEPSIZE 18
-#define FL_PARTIALGROUND 1
-#define AI_NOSTEP 1
 
 #define	DI_NODIR	-1
 /*
@@ -225,7 +223,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	}
 
 	// push down from a step height above the wished position
-	if (!((int)actor->v.aiflags & AI_NOSTEP))
+	if (!((int)actor->v.flags & FL_NOSTEP))
 		stepsize = STEPSIZE;
 	else
 		stepsize = 1;
@@ -270,6 +268,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 			{
 				SV_LinkEdict(actor);
 				SV_TouchEntities(actor, AREA_TRIGGERS);
+				SV_TouchEntities(actor, AREA_PATHNODES);
 			}
 			actor->v.groundentity_num = ENTITYNUM_NULL; //remove groundent
 			return true;
@@ -290,6 +289,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 			{
 				SV_LinkEdict(actor);
 				SV_TouchEntities(actor, AREA_TRIGGERS);
+				SV_TouchEntities(actor, AREA_PATHNODES);
 			}
 			return true;
 		}
@@ -312,6 +312,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	{
 		SV_LinkEdict(actor);
 		SV_TouchEntities(actor, AREA_TRIGGERS);
+		SV_TouchEntities(actor, AREA_PATHNODES);
 	}
 	return true;
 }
@@ -395,10 +396,12 @@ qboolean SV_StepDirection(gentity_t* actor, float yaw, float dist)
 		}
 		SV_LinkEdict(actor);
 		SV_TouchEntities(actor, AREA_TRIGGERS);
+		SV_TouchEntities(actor, AREA_PATHNODES);
 		return true;
 	}
 	SV_LinkEdict(actor);
 	SV_TouchEntities(actor, AREA_TRIGGERS);
+	SV_TouchEntities(actor, AREA_PATHNODES);
 	return false;
 }
 
@@ -575,5 +578,6 @@ qboolean SV_WalkMove(gentity_t* actor, float yaw, float dist)
 	move[1] = sin(yaw) * dist;
 	move[2] = 0;
 
-	return SV_MoveStep(actor, move, true);
+	int result = SV_MoveStep(actor, move, true);
+	return result;
 }

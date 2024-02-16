@@ -63,17 +63,21 @@ typedef struct sv_entvars_s
 {
 	// ----------------------------------------------------
 	// these are copied to entity_state_t
+
+	float		eType;			// entity type
+
 	vec3_t		origin;
 	vec3_t		angles;
 	vec3_t		old_origin;		// for lerping
 
-	float		modelindex;	// models
+	float		modelindex;		// models
 	float		modelindex2;	// models
 	float		modelindex3;	// models
 	float		modelindex4;	// models
 
 	int			anim;			// index to anim def
-	int			animtime;		// sv.time when animation started
+	int			animstarttime;	// sv.time when animation started
+
 	float		animFrame;		// current animation frame
 
 	float		skinnum;		// for MD3 this should be index to .skin file
@@ -106,8 +110,7 @@ typedef struct sv_entvars_s
 	float			groundentity_num; // -1 = in air, 0 world, etc..
 	float			groundentity_linkcount;
 	vec3_t			size;		// DON'T CHANGE! set by linkentity()
-	scr_entity_t	owner;		
-	scr_entity_t	chain;		// DON'T CHANGE!
+	scr_entity_t	owner;		// will not collide with owner
 
 	vec3_t			mins, maxs; //setsize() sets this
 	vec3_t			absmin, absmax; // DON'T CHANGE!
@@ -136,19 +139,27 @@ typedef struct sv_entvars_s
 	float			health;
 	float			team;
 
-	// ai
+	// ai fields
 	float			yaw_speed;
 	float			ideal_yaw;
-	float			aiflags;
+//	float			aiflags;
 	scr_entity_t	goal_entity;
+	float			nodeIndex;
 
 	// client fields
-	vec3_t			v_angle;	
-	float			viewheight;
+	vec3_t			viewangles;	// was v_angle
+	vec3_t			viewoffset;
+	vec3_t			kick_angles;
+//	float			viewheight; // not used in C code
+
+	vec3_t		viewmodel_angles;
+	vec3_t		viewmodel_offset;
+	float		viewmodel_index;
+	float		viewmodel_frame;
 
 	float		pm_type; //pmtype_t
-	vec3_t		pm_origin;
-	vec3_t		pm_velocity;
+//	vec3_t		pm_origin;
+//	vec3_t		pm_velocity;
 	vec3_t		pm_mins;
 	vec3_t		pm_maxs;
 	float		pm_flags;			// ducked, jump_held, etc
