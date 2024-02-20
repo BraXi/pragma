@@ -57,18 +57,22 @@ typedef struct rentity_s
 	//
 	// misc
 	// 
-	
+
+	struct rentity_s* inheritLight;
+	vec3_t	shadelightpoint; // value from R_LightPoint without any alterations (no applied efx, etc)
+
 	// used to lerp animation frames in new anim system
 	// 0.0 = current, 1.0 = old
 	float	animbacklerp;			
 
 	// used to lerp origin and between old & current origin
-	float	backlerp;				// 0.0 = current, 1.0 = old
+	// 0.0 = current, 1.0 = old
+	float	backlerp;				
 
-	// braxi -- WAS used as RF_BEAM's palette index
+	// index to skin entry
 	int		skinnum;				
 	
-	// index to cl_lightstyles for flashing entities
+	// index to lightstyles for flashing entities
 	int		lightstyle;	
 
 	// transparency, ignored when renderfx RF_TRANSLUCENT isn't set
@@ -86,6 +90,8 @@ typedef struct rentity_s
 	// RF flags
 	int		renderfx;
 
+
+	vec3_t		axis[3];
 } rentity_t;
 
 
@@ -141,7 +147,7 @@ typedef struct
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'4')
+#define	API_VERSION		('B'+'X'+'I'+'5')
 
 //
 // these are the functions exported by the refresh module
@@ -198,6 +204,9 @@ typedef struct
 	void	(*NewDrawFill) (rect_t rect, rgba_t color);
 
 	void	(*SetColor)(float r, float g, float b, float a);
+
+	int		(*TagIndexForName)(struct model_s* model, const char* tagName);
+	qboolean (*LerpTag)(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex);
 
 	//
 	// video mode and refresh state management entry points

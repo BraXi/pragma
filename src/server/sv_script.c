@@ -414,9 +414,6 @@ void SV_ProgVarsToEntityState(gentity_t* ent)
 	VectorCopy(ent->v.old_origin, ent->s.old_origin);
 
 	ent->s.modelindex = ent->v.modelindex;
-	ent->s.modelindex2 = ent->v.modelindex2;
-	ent->s.modelindex3 = ent->v.modelindex3;
-	ent->s.modelindex4 = ent->v.modelindex3;
 
 	ent->s.animationIdx = ent->v.anim;
 	ent->s.animStartTime = ent->v.animstarttime;
@@ -449,9 +446,6 @@ void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state)
 	VectorCopy(state->old_origin, ent->v.old_origin);
 
 	ent->v.modelindex = state->modelindex;
-	ent->v.modelindex2 = state->modelindex2;
-	ent->v.modelindex3 = state->modelindex3;
-	ent->v.modelindex4 = state->modelindex3;
 
 	ent->v.anim = ent->s.animationIdx;
 	ent->v.animstarttime = state->animStartTime;

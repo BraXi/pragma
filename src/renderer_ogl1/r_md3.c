@@ -261,10 +261,14 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 MD3_GetTag
 ================
 */
-static md3Tag_t* MD3_GetTag(md3Header_t* mod, int frame, const char* tagName)
+//static md3Tag_t* MD3_GetTag(md3Header_t* mod, int frame, const char* tagName)
+static md3Tag_t* MD3_GetTag(md3Header_t* mod, int frame, int tagIndex)
 {
 	md3Tag_t* tag;
-	int			i;
+//	int			i;
+
+	if (tagIndex >= mod->numTags || tagIndex < 0)
+		return NULL;
 
 	if (frame >= mod->numFrames)
 	{
@@ -276,15 +280,34 @@ static md3Tag_t* MD3_GetTag(md3Header_t* mod, int frame, const char* tagName)
 		frame = 0;
 	}
 
-	tag = (md3Tag_t*)((byte*)mod + mod->ofsTags) + frame * mod->numTags;
+	tag = (md3Tag_t*)((byte*)mod + mod->ofsTags) + (frame * mod->numTags);
+	tag += (tagIndex * sizeof(md3Tag_t));
+	return tag;
+}
+
+/*
+================
+R_TagIndexForName
+================
+*/
+int R_TagIndexForName(struct model_s *model, const char* tagName)
+{
+	md3Tag_t* tag;
+	int			i;
+
+	if (!model->md3[0])
+		return -1;
+
+	md3Header_t *mod = model->md3[LOD_HIGH];
+	tag = (md3Tag_t*)((byte*)mod + mod->ofsTags);
 	for (i = 0; i < mod->numTags; i++, tag++)
 	{
 		if (!strcmp(tag->name, tagName))
 		{
-			return tag;	// found it
+			return i;	// found it
 		}
 	}
-	return NULL;
+	return -1;
 }
 
 /*
@@ -292,21 +315,22 @@ static md3Tag_t* MD3_GetTag(md3Header_t* mod, int frame, const char* tagName)
 MD3_LerpTag
 ================
 */
-static qboolean MD3_LerpTag(orientation_t* tag, model_t* model, int startFrame, int endFrame, float frac, const char* tagName)
+//static qboolean MD3_LerpTag(orientation_t* tag, model_t* model, int startFrame, int endFrame, float frac, const char* tagName)
+static qboolean MD3_LerpTag(orientation_t* tag, model_t* model, int startFrame, int endFrame, float frac, int tagIndex)
 {
 	md3Tag_t* start, * end;
 	float		frontLerp, backLerp;
 	int			i;
 
-	if (!model->md3[0])
+	if (!model->md3[LOD_HIGH])
 	{
 		AxisClear(tag->axis);
 		VectorClear(tag->origin);
 		return false;
 	}
 
-	start = MD3_GetTag(model->md3[LOD_HIGH], startFrame, tagName);
-	end = MD3_GetTag(model->md3[LOD_HIGH], endFrame, tagName);
+	start = MD3_GetTag(model->md3[LOD_HIGH], startFrame, tagIndex);
+	end = MD3_GetTag(model->md3[LOD_HIGH], endFrame, tagIndex);
 
 	if (!start || !end)
 	{
@@ -344,7 +368,7 @@ static void MD3_ModelBounds(int handle, vec3_t mins, vec3_t maxs)
 	md3Frame_t* frame;
 
 	model = Mod_ForNum(handle);
-	if (!model->md3[0])
+	if (!model->md3[LOD_HIGH])
 	{
 		VectorClear(mins);
 		VectorClear(maxs);
@@ -370,7 +394,7 @@ Smoothly transitions vertices between two animation frames and also calculates n
 static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3XyzNormal_t* vert, vec3_t outVert, vec3_t outNormal)
 {
 	int lat, lng;
-	vec3_t p1, p2;
+	vec3_t p1, p2, n1, n2;
 
 	// linear interpolation between the current and next vertex positions
 	VectorCopy(oldVert->xyz, p1);
@@ -380,20 +404,33 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 	outVert[1] = (p1[1] + lerp * (p2[1] - p1[1]));
 	outVert[2] = (p1[2] + lerp * (p2[2] - p1[2]));
 
-	// retrieve normal
-	lat = (vert->normal >> 8) & 0xff;
-	lng = (vert->normal & 0xff);
-	lat *= (FUNCTABLE_SIZE / 256);
-	lng *= (FUNCTABLE_SIZE / 256);
-
 	// scale verticles to qu
 	outVert[0] = (outVert[0] / 64);
 	outVert[1] = (outVert[1] / 64);
 	outVert[2] = (outVert[2] / 64);
 
-	outNormal[0] = sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * sinTable[lng];
-	outNormal[1] = sinTable[lat] * sinTable[lng];
-	outNormal[2] = sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+	// retrieve and linear interpolate normal
+	lat = (oldVert->normal >> 8) & 0xff;
+	lng = (oldVert->normal & 0xff);
+	lat *= (FUNCTABLE_SIZE / 256);
+	lng *= (FUNCTABLE_SIZE / 256);
+
+	n1[0] = sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * sinTable[lng];
+	n1[1] = sinTable[lat] * sinTable[lng];
+	n1[2] = sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+
+	lat = (vert->normal >> 8) & 0xff;
+	lng = (vert->normal & 0xff);
+	lat *= (FUNCTABLE_SIZE / 256);
+	lng *= (FUNCTABLE_SIZE / 256);
+
+	n2[0] = sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * sinTable[lng];
+	n2[1] = sinTable[lat] * sinTable[lng];
+	n2[2] = sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+
+	outNormal[0] = (n1[0] + lerp * (n2[0] - n1[0]));
+	outNormal[1] = (n1[1] + lerp * (n2[1] - n1[1]));
+	outNormal[2] = (n1[2] + lerp * (n2[2] - n1[2]));
 }
 
 
@@ -404,7 +441,7 @@ R_DrawMD3Model
 Draws md3 model
 =================
 */
-void R_DrawMD3Model(rentity_t* ent, lod_t lod, float lerp)
+void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 {
 	md3Header_t		*model;
 	md3Surface_t	*surface = 0;
@@ -415,6 +452,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float lerp)
 	md3XyzNormal_t	*vert, *oldVert; //interp
 	md3Triangle_t	*triangle;
 	int				i, j, k;
+	float			lambert;
 
 	vec3_t v, n; //vert and normal after lerp
 
@@ -451,38 +489,46 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float lerp)
 			rperf.alias_tris += surface->numTriangles;
 
 		// for each triangle in surface
+		qglBegin(GL_TRIANGLES);
 		for (j = 0; j < surface->numTriangles; j++, triangle++)
 		{
-			qglBegin(GL_TRIANGLES);
-
 			//for each vert in triangle
 			for (k = 0; k < 3; k++)
 			{
 				int index = triangle->indexes[k];
 
-				R_LerpMD3Frame(lerp, index, &oldVert[index], &vert[index], v, n);
+				R_LerpMD3Frame(animlerp, index, &oldVert[index], &vert[index], v, n);
 
-				float lambert = 1 + DotProduct(n, model_shadevector);
+				if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
+				{
+					lambert = 1.0f;
+				}
+				else
+				{
+					// poor mans half lambert to prevent models from being too dark
+					lambert = 1 + DotProduct(n, model_shadevector);
+					if (lambert > 1)
+						lambert = 1;
+					else if (lambert < 0)
+						lambert = 0;
+				}
 
-				// poor mans half lambert to prevent models from being too dark
-				if (lambert > 1) 
-					lambert = 1;
-				else if (lambert < 0)
-					lambert = 0;
-
-				if (r_fullbright->value ||currententity->renderfx & RF_FULLBRIGHT)
-					lambert = 1.0f; 
-
-				qglColor4f(lambert * model_shadelight[0], lambert * model_shadelight[1], lambert * model_shadelight[2], ent->alpha);
-				
+				qglColor4f(lambert * model_shadelight[0], lambert * model_shadelight[1], lambert * model_shadelight[2], ent->alpha);	
 				qglTexCoord2f(texcoord[index].st[0], texcoord[index].st[1]);
 				qglVertex3fv(v);
 				qglNormal3fv(n);
 			}
-			qglEnd();
 		}
+		qglEnd();
+
 		surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
 	}
+}
+
+
+qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex)
+{
+	return MD3_LerpTag(tag, model, startFrame, endFrame, frac, tagIndex);
 }
 
 

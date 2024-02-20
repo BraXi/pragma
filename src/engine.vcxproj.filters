@@ -217,6 +217,9 @@
     <ClCompile Include="client\cgame\cg_localents.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
+    <ClCompile Include="client\cgame\cg_model.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">

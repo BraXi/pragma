@@ -17,7 +17,7 @@ vec3_t	model_shadevector;
 float	model_shadelight[3];
 
 
-void R_DrawMD3Model(rentity_t* ent, lod_t lod, float lerp); // r_md3.c
+void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp); // r_md3.c
 void R_DrawSprite(rentity_t* ent); // r_sprite.c
 
 /*
@@ -75,14 +75,19 @@ get lighting information for centity
 		for (i = 0; i < 3; i++)
 			model_shadelight[i] = ent->renderColor[i];
 	}
-	else if (currententity->renderfx & RF_FULLBRIGHT || r_fullbright->value)
+	else if (pCurrentRefEnt->renderfx & RF_FULLBRIGHT || r_fullbright->value)
 	{
 		for (i = 0; i < 3; i++)
 			model_shadelight[i] = 1.0;
 	}
+	else if (ent->inheritLight != NULL)
+	{
+		VectorCopy(ent->inheritLight->shadelightpoint, model_shadelight);
+	}
 	else
 	{
-		R_LightPoint(currententity->origin, model_shadelight);
+		R_LightPoint(pCurrentRefEnt->origin, model_shadelight);
+		VectorCopy(model_shadelight, ent->shadelightpoint);
 	}
 
 	if (ent->renderfx & RF_MINLIGHT)
@@ -168,7 +173,6 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// setup lighting
 	R_SetEntityShadeLight(ent);
-
 	qglShadeModel(GL_SMOOTH);
 	GL_TexEnv(GL_MODULATE);
 
@@ -230,14 +234,14 @@ void R_DrawEntityModel(rentity_t* ent)
 	GL_TexEnv(GL_REPLACE);
 
 	// restore transparency
-	if (currententity->renderfx & RF_TRANSLUCENT)
+	if (pCurrentRefEnt->renderfx & RF_TRANSLUCENT)
 		R_Blend(false);
 
 	// remove depth hack
-	if (currententity->renderfx & RF_DEPTHHACK)
+	if (pCurrentRefEnt->renderfx & RF_DEPTHHACK)
 		qglDepthRange(gldepthmin, gldepthmax);
 
-	if ((currententity->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
+	if ((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
 	{
 		qglMatrixMode(GL_PROJECTION);
 		qglPopMatrix();

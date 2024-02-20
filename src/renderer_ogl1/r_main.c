@@ -26,8 +26,8 @@ glstate_t  gl_state;
 image_t		*r_notexture;		// use for bad textures
 image_t		*r_particletexture;	// little dot for particles
 
-rentity_t	*currententity;
-model_t		*currentmodel;
+rentity_t	*pCurrentRefEnt;
+model_t		*pCurrentModel;
 
 cplane_t	frustum[4];
 
@@ -117,7 +117,7 @@ void R_DrawSpriteModel (rentity_t *e)
 	// don't even bother culling, because it's just a single
 	// polygon without a surface cache
 
-	psprite = (sp2Header_t *)currentmodel->extradata;
+	psprite = (sp2Header_t *)pCurrentModel->extradata;
 
 	if (e->frame < 0 || e->frame >= psprite->numframes)
 	{
@@ -153,7 +153,7 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	qglColor4f( 1, 1, 1, alpha );
 
-    GL_Bind(currentmodel->skins[e->frame]->texnum);
+    GL_Bind(pCurrentModel->skins[e->frame]->texnum);
 	GL_TexEnv( GL_MODULATE );
 
 	R_AlphaTest(true); // IS THIS REALY CORRECT?
@@ -204,13 +204,13 @@ static void R_DrawNullModel (void)
 	vec3_t	shadelight;
 	int		i;
 
-	if ( currententity->renderfx & RF_FULLBRIGHT )
+	if ( pCurrentRefEnt->renderfx & RF_FULLBRIGHT )
 		model_shadelight[0] = model_shadelight[1] = model_shadelight[2] = 1.0F;
 	else
-		R_LightPoint (currententity->origin, shadelight);
+		R_LightPoint (pCurrentRefEnt->origin, shadelight);
 
     qglPushMatrix ();
-	R_RotateForEntity (currententity);
+	R_RotateForEntity (pCurrentRefEnt);
 
 	qglDisable (GL_TEXTURE_2D);
 	qglColor3fv (shadelight);
@@ -236,25 +236,25 @@ static void R_DrawNullModel (void)
 void R_DrawEntityModel(rentity_t* ent);
 static inline void R_DrawCurrentEntity()
 {
-	if (currententity->renderfx & RF_BEAM)
+	if (pCurrentRefEnt->renderfx & RF_BEAM)
 	{
-		R_DrawBeam(currententity);
+		R_DrawBeam(pCurrentRefEnt);
 	}
 	else
 	{
-		if (!currentmodel)
+		if (!pCurrentModel)
 		{
 			R_DrawNullModel();
 		}
 		else
 		{
-			if (currentmodel->type == MOD_BRUSH)
+			if (pCurrentModel->type == MOD_BRUSH)
 			{
-				R_DrawBrushModel(currententity);
+				R_DrawBrushModel(pCurrentRefEnt);
 			}
 			else
 			{
-				R_DrawEntityModel(currententity);
+				R_DrawEntityModel(pCurrentRefEnt);
 			}
 		}
 	}
@@ -275,9 +275,9 @@ void R_DrawEntitiesOnList (void)
 	// draw non-transparent first
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
-		currententity = &r_newrefdef.entities[i];
-		currentmodel = currententity->model;
-		if ((currententity->renderfx & RF_TRANSLUCENT))
+		pCurrentRefEnt = &r_newrefdef.entities[i];
+		pCurrentModel = pCurrentRefEnt->model;
+		if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
 			continue;	// reject transparent
 		R_DrawCurrentEntity();
 	}
@@ -287,9 +287,9 @@ void R_DrawEntitiesOnList (void)
 	R_WriteToDepthBuffer(GL_FALSE);	// no z writes
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
-		currententity = &r_newrefdef.entities[i];
-		currentmodel = currententity->model;
-		if (!(currententity->renderfx & RF_TRANSLUCENT))
+		pCurrentRefEnt = &r_newrefdef.entities[i];
+		pCurrentModel = pCurrentRefEnt->model;
+		if (!(pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
 			continue;	// reject solid
 		R_DrawCurrentEntity();
 	}

@@ -574,7 +574,7 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 			bits |= U_RENDERFLAGS_8 | U_RENDERFLAGS_16;
 	}
 
-	if (to->solid != from->solid)
+	if (to->packedSolid != from->packedSolid)
 		bits |= U_PACKEDSOLID;
 
 	// event is not delta compressed, just 0 compressed
@@ -584,19 +584,21 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 	// main model
 	if (to->modelindex != from->modelindex)
 	{
-		if (to->modelindex < 256)
-			bits |= U_MODELINDEX_8; // byte
-		else
+		if (to->modelindex > 255)
 			bits |= U_MODELINDEX_16; // short
+		else
+			bits |= U_MODELINDEX_8; // byte
+			
 	}
 
+
 	// attached models
-	if (to->modelindex2 != from->modelindex2)
-		bits |= U_MODELINDEX2_8;
-	if (to->modelindex3 != from->modelindex3)
-		bits |= U_MODELINDEX3_8;
-	if (to->modelindex4 != from->modelindex4)
-		bits |= U_MODELINDEX4_8;
+	if (to->attachments[0].modelindex != from->attachments[0].modelindex || to->attachments[0].parentTag != from->attachments[0].parentTag)
+		bits |= U_ATTACHMENT_8;
+	if (to->attachments[1].modelindex != from->attachments[1].modelindex || to->attachments[1].parentTag != from->attachments[1].parentTag)
+		bits |= U_ATTACHMENT2_8;
+	if (to->attachments[2].modelindex != from->attachments[2].modelindex || to->attachments[2].parentTag != from->attachments[2].parentTag)
+		bits |= U_ATTACHMENT3_8;
 
 	// looping sound
 	if (to->loopingSound != from->loopingSound)
@@ -674,12 +676,21 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 		MSG_WriteShort(msg, to->modelindex);
 
 	// attached models
-	if (bits & U_MODELINDEX2_8)
-		MSG_WriteByte(msg, to->modelindex2);
-	if (bits & U_MODELINDEX3_8)
-		MSG_WriteByte(msg, to->modelindex3);
-	if (bits & U_MODELINDEX4_8)
-		MSG_WriteByte(msg, to->modelindex4);
+	if (bits & U_ATTACHMENT_8)
+	{
+		to->attachments[0].modelindex = MSG_ReadByte(&net_message);
+		to->attachments[0].parentTag = MSG_ReadByte(&net_message);
+	}
+	if (bits & U_ATTACHMENT2_8)
+	{
+		to->attachments[1].modelindex = MSG_ReadByte(&net_message);
+		to->attachments[1].parentTag = MSG_ReadByte(&net_message);
+	}
+	if (bits & U_ATTACHMENT3_8)
+	{
+		to->attachments[2].modelindex = MSG_ReadByte(&net_message);
+		to->attachments[2].parentTag = MSG_ReadByte(&net_message);
+	}
 
 	// animation frame
 	if (bits & U_ANIMFRAME_8)
@@ -789,7 +800,7 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 	if (bits & U_PACKEDSOLID)
 	{
 #if PROTOCOL_FLOAT_COORDS == 1
-		MSG_WriteLong(msg, to->solid);
+		MSG_WriteLong(msg, to->packedSolid);
 #else
 		MSG_WriteShort(msg, to->solid);
 #endif

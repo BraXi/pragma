@@ -1973,7 +1973,7 @@ If entity's model has no tags or is not MD3, entity angles will be returned.
 vector looking_at = gettagangles(self, "tag_head");
 =================
 */
-void VectorAngles(const float* forward, const float* up, float* result, qboolean meshpitch)    //up may be NULL
+static void VectorAngles(const float* forward, const float* up, float* result, qboolean meshpitch)    //up may be NULL
 {
 	float    yaw, pitch, roll;
 

@@ -400,14 +400,15 @@ void R_Shutdown(void)
 //===================================================================
 
 void R_BeginRegistration(char* map);
+void R_EndRegistration(void);
+
 struct model_s* R_RegisterModel(char* name);
 struct image_s* R_RegisterSkin(char* name);
-void R_SetSky(char* name, float rotate, vec3_t axis, vec3_t color);
-void	R_EndRegistration(void);
-
-void	R_RenderFrame(refdef_t* fd);
-
 struct image_s* R_RegisterPic(char* name);
+
+void R_SetSky(char* name, float rotate, vec3_t axis, vec3_t color);
+void R_RenderFrame(refdef_t* fd);
+
 
 void	Draw_Pic(int x, int y, char* name);
 void	Draw_Char(int x, int y, int c);
@@ -418,6 +419,9 @@ void	Draw_FadeScreen(float* rgba);
 void	R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
 void	R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
 void	R_DrawFill(rect_t rect, rgba_t color);
+
+int R_TagIndexForName(struct model_s* model, const char* tagName);
+qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac,int tagIndex);
 
 static void	RR_SetColor(float r, float g, float b, float a)
 {
@@ -458,6 +462,9 @@ refexport_t GetRefAPI(refimport_t rimp)
 	re.DrawFadeScreen = Draw_FadeScreen;
 	re.DrawStretchRaw = Draw_StretchRaw;
 	re.SetColor = RR_SetColor;
+
+	re.TagIndexForName = R_TagIndexForName;
+	re.LerpTag = R_LerpTag;
 
 	// braxi -- newer replacements
 	re.DrawString = R_DrawString;

@@ -78,7 +78,7 @@ image_t *R_TextureAnimation (mtexinfo_t *tex)
 	if (!tex->next)
 		return tex->image;
 
-	c = currententity->frame % tex->numframes;
+	c = pCurrentRefEnt->frame % tex->numframes;
 	while (c)
 	{
 		tex = tex->next;
@@ -351,7 +351,7 @@ void R_BlendLightmaps (void)
 		}
 	}
 
-	if ( currentmodel == r_worldmodel )
+	if ( pCurrentModel == r_worldmodel )
 		rperf.visible_lightmaps = 0;
 
 	/*
@@ -361,7 +361,7 @@ void R_BlendLightmaps (void)
 	{
 		if ( gl_lms.lightmap_surfaces[i] )
 		{
-			if (currentmodel == r_worldmodel)
+			if (pCurrentModel == r_worldmodel)
 				rperf.visible_lightmaps++;
 
 			GL_Bind( gl_state.lightmap_textures + i);
@@ -394,7 +394,7 @@ void R_BlendLightmaps (void)
 
 		GL_Bind( gl_state.lightmap_textures+0 );
 
-		if (currentmodel == r_worldmodel)
+		if (pCurrentModel == r_worldmodel)
 			rperf.visible_lightmaps++;
 
 		newdrawsurf = gl_lms.lightmap_surfaces[0];
@@ -888,16 +888,16 @@ void R_DrawInlineBModel (void)
 	for (k = 0; k < r_newrefdef.num_dlights; k++, light++)
 	{
 #ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
-		VectorSubtract(light->origin, currententity->origin, lightorg);
-		R_MarkLights(light, lightorg, (1 << k), (currentmodel->nodes + currentmodel->firstnode));
+		VectorSubtract(light->origin, pCurrentRefEnt->origin, lightorg);
+		R_MarkLights(light, lightorg, (1 << k), (pCurrentModel->nodes + pCurrentModel->firstnode));
 #else
 		R_MarkLights(light, (1<<k), (currentmodel->nodes + currentmodel->firstnode));
 #endif
 	}
 
-	psurf = &currentmodel->surfaces[currentmodel->firstmodelsurface];
+	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
 
-	if ( currententity->renderfx & RF_TRANSLUCENT )
+	if ( pCurrentRefEnt->renderfx & RF_TRANSLUCENT )
 	{
 		R_Blend(true);
 		qglColor4f (1,1,1,0.25);
@@ -907,7 +907,7 @@ void R_DrawInlineBModel (void)
 	//
 	// draw texture
 	//
-	for (i=0 ; i<currentmodel->nummodelsurfaces ; i++, psurf++)
+	for (i=0 ; i<pCurrentModel->nummodelsurfaces ; i++, psurf++)
 	{
 	// find which side of the node we are on
 		pplane = psurf->plane;
@@ -936,7 +936,7 @@ void R_DrawInlineBModel (void)
 		}
 	}
 
-	if ( !(currententity->renderfx & RF_TRANSLUCENT) )
+	if ( !(pCurrentRefEnt->renderfx & RF_TRANSLUCENT) )
 	{
 		if ( !qglMultiTexCoord2fARB )
 			R_BlendLightmaps ();
@@ -960,10 +960,10 @@ void R_DrawBrushModel (rentity_t *e)
 	int			i;
 	qboolean	rotated;
 
-	if (currentmodel->nummodelsurfaces == 0)
+	if (pCurrentModel->nummodelsurfaces == 0)
 		return;
 
-	currententity = e;
+	pCurrentRefEnt = e;
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
 
 	if (e->angles[0] || e->angles[1] || e->angles[2])
@@ -971,15 +971,15 @@ void R_DrawBrushModel (rentity_t *e)
 		rotated = true;
 		for (i=0 ; i<3 ; i++)
 		{
-			mins[i] = e->origin[i] - currentmodel->radius;
-			maxs[i] = e->origin[i] + currentmodel->radius;
+			mins[i] = e->origin[i] - pCurrentModel->radius;
+			maxs[i] = e->origin[i] + pCurrentModel->radius;
 		}
 	}
 	else
 	{
 		rotated = false;
-		VectorAdd (e->origin, currentmodel->mins, mins);
-		VectorAdd (e->origin, currentmodel->maxs, maxs);
+		VectorAdd (e->origin, pCurrentModel->mins, mins);
+		VectorAdd (e->origin, pCurrentModel->maxs, maxs);
 	}
 
 	if (R_CullBox (mins, maxs))
@@ -1168,7 +1168,7 @@ void R_DrawWorld (void)
 	if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL )
 		return;
 
-	currentmodel = r_worldmodel;
+	pCurrentModel = r_worldmodel;
 
 	VectorCopy (r_newrefdef.vieworg, modelorg);
 
@@ -1176,7 +1176,7 @@ void R_DrawWorld (void)
 	memset (&ent, 0, sizeof(ent));
 	ent.frame = (int)(r_newrefdef.time*2);
 
-	currententity = &ent;
+	pCurrentRefEnt = &ent;
 
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
 
@@ -1423,7 +1423,7 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 	vec3_t		total;
 
 // reconstruct the polygon
-	pedges = currentmodel->edges;
+	pedges = pCurrentModel->edges;
 	lnumverts = fa->numedges;
 	vertpage = 0;
 
@@ -1439,17 +1439,17 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 
 	for (i=0 ; i<lnumverts ; i++)
 	{
-		lindex = currentmodel->surfedges[fa->firstedge + i];
+		lindex = pCurrentModel->surfedges[fa->firstedge + i];
 
 		if (lindex > 0)
 		{
 			r_pedge = &pedges[lindex];
-			vec = currentmodel->vertexes[r_pedge->v[0]].position;
+			vec = pCurrentModel->vertexes[r_pedge->v[0]].position;
 		}
 		else
 		{
 			r_pedge = &pedges[-lindex];
-			vec = currentmodel->vertexes[r_pedge->v[1]].position;
+			vec = pCurrentModel->vertexes[r_pedge->v[1]].position;
 		}
 		s = DotProduct (vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
 		s /= fa->texinfo->image->width;

@@ -23,7 +23,7 @@ void R_DrawSprite(rentity_t* ent)
 	float* up, * right;
 	sp2Header_t* psprite;
 
-	psprite = (sp2Header_t*)currentmodel->extradata;
+	psprite = (sp2Header_t*)pCurrentModel->extradata;
 
 	// advance frame
 	ent->frame %= psprite->numframes;
@@ -46,9 +46,9 @@ void R_DrawSprite(rentity_t* ent)
 		right = vright;
 	}
 
-	qglColor4f(1, 1, 1, currententity->alpha);
+	qglColor4f(1, 1, 1, pCurrentRefEnt->alpha);
 
-	GL_Bind(currentmodel->skins[ent->frame]->texnum);
+	GL_Bind(pCurrentModel->skins[ent->frame]->texnum);
 	GL_TexEnv(GL_MODULATE);
 
 //	if (ent->alpha == 1.0)

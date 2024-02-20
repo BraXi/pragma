@@ -143,8 +143,8 @@ extern	int			numgltextures;
 
 extern	image_t		*r_notexture;
 extern	image_t		*r_particletexture;
-extern	rentity_t	*currententity;
-extern	model_t		*currentmodel;
+extern	rentity_t	*pCurrentRefEnt;
+extern	model_t		*pCurrentModel;
 extern	int			r_visframecount;
 extern	int			r_framecount;
 extern	cplane_t	frustum[4];

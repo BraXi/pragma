@@ -420,22 +420,22 @@ void SV_LinkEdict (gentity_t *ent)
 	case SOLID_BBOX:
 		if (((int)ent->v.svflags & SVF_DEADMONSTER) || VectorCompare(ent->v.mins, ent->v.maxs))
 		{
-			ent->s.solid = 0;
+			ent->s.packedSolid = 0;
 		}
 		else
 		{
 #if PROTOCOL_FLOAT_COORDS == 1
-			ent->s.solid = SV_PackSolid32(ent);
+			ent->s.packedSolid = SV_PackSolid32(ent);
 #else
-			ent->s.solid = SV_PackSolid16(ent);
+			ent->s.packedSolid = SV_PackSolid16(ent);
 #endif
 		}
 		break;
 	case SOLID_BSP:
-		ent->s.solid = PACKED_BSP;      // a SOLID_BBOX will never create this value
+		ent->s.packedSolid = PACKED_BSP;      // a SOLID_BBOX will never create this value
 		break;
 	default:
-		ent->s.solid = 0;
+		ent->s.packedSolid = 0;
 		break;
 	}
 

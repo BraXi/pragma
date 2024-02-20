@@ -571,12 +571,21 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 		to->modelindex = MSG_ReadShort(&net_message);
 
 	// attached models
-	if (bits & U_MODELINDEX2_8)
-		to->modelindex2 = MSG_ReadByte(&net_message);
-	if (bits & U_MODELINDEX3_8)
-		to->modelindex3 = MSG_ReadByte(&net_message);
-	if (bits & U_MODELINDEX4_8)
-		to->modelindex4 = MSG_ReadByte(&net_message);
+	if (bits & U_ATTACHMENT_8)
+	{
+		to->attachments[0].modelindex = MSG_ReadByte(&net_message);
+		to->attachments[0].parentTag = MSG_ReadByte(&net_message);
+	}
+	if (bits & U_ATTACHMENT2_8)
+	{
+		to->attachments[1].modelindex = MSG_ReadByte(&net_message);
+		to->attachments[1].parentTag = MSG_ReadByte(&net_message);
+	}
+	if (bits & U_ATTACHMENT3_8)
+	{
+		to->attachments[2].modelindex = MSG_ReadByte(&net_message);
+		to->attachments[2].parentTag = MSG_ReadByte(&net_message);
+	}
 
 	// animation frame
 	if (bits & U_ANIMFRAME_8)
@@ -668,9 +677,9 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	if (bits & U_PACKEDSOLID)
 	{
 #if PROTOCOL_FLOAT_COORDS == 1
-		to->solid = MSG_ReadLong(&net_message);
+		to->packedSolid = MSG_ReadLong(&net_message);
 #else
-		to->solid = MSG_ReadShort(&net_message);
+		to->packedSolid = MSG_ReadShort(&net_message);
 #endif
 	}
 }
@@ -698,9 +707,6 @@ void CL_DeltaEntity(frame_t* frame, int newnum, entity_state_t* old, int bits)
 
 	// some data changes will force no lerping
 	if (state->modelindex != ent->current.modelindex
-		|| state->modelindex2 != ent->current.modelindex2
-		|| state->modelindex3 != ent->current.modelindex3
-		|| state->modelindex4 != ent->current.modelindex4
 		|| abs(state->origin[0] - ent->current.origin[0]) > 512
 		|| abs(state->origin[1] - ent->current.origin[1]) > 512
 		|| abs(state->origin[2] - ent->current.origin[2]) > 512

@@ -65,7 +65,5 @@ typedef struct cl_globalvars_s
 // gentity_t prog fields
 typedef struct cl_entvars_s
 {
-	scr_string_t	str;
-	float			var;
-	scr_entity_t	ent;
+	vec3_t origin;
 } cl_entvars_t;

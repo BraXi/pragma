@@ -647,6 +647,15 @@ typedef enum
 	EV_OTHER_TELEPORT
 } entity_event_t;
 
+typedef struct ent_model_s
+{
+	int		modelindex;		// index to model
+	int		parentTag;		// parent's tag the model is attached to index is offset by +1
+	int		skin;			// index to skin entry in def
+	int		frame;			// current animation frame
+} ent_model_t;
+
+#define MAX_ATTACHED_MODELS 3
 typedef struct entity_state_s
 {
 	int			number;			// edict index
@@ -658,15 +667,14 @@ typedef struct entity_state_s
 	vec3_t		old_origin;		// for lerping
 
 	int			modelindex;		// main model
-	int			modelindex2, modelindex3, modelindex4;	// attachments
-
 	int			animationIdx;
-	int			animStartTime;
+	unsigned int animStartTime;
+	int			frame;
+	int			skinnum;
 
-	int			frame;			// current animation frame
-	int			skinnum;		// for MD3 this should be index to .skin file
+	ent_model_t attachments[MAX_ATTACHED_MODELS];
 
-	int			effects;		// PGM - we're filling it, so it needs to be unsigned
+	unsigned int effects;		// PGM - we're filling it, so it needs to be unsigned
 
 	int			renderFlags;	// RF_ flags
 	float		renderScale;	// used when renderFlags & RF_SCALE 
@@ -677,9 +685,7 @@ typedef struct entity_state_s
 
 	int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 
-	int			solid;			// for client side prediction, 8*(bits 0-4) is x/y radius
-								// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
-								// SV_LinkEdict sets this properly
+	int			packedSolid;	// entity's bounding box
 
 	// not networked
 	int			animSpeed; // 1000 / animFps = msec

@@ -23,7 +23,7 @@ static int CG_HullForEntity(entity_state_t* ent)
 	vec3_t		bmins, bmaxs;
 
 	// decide which clipping hull to use
-	if (ent->solid == PACKED_BSP)
+	if (ent->packedSolid == PACKED_BSP)
 	{
 		// explicit hulls in the BSP model
 		model = cl.model_clip[ent->modelindex];
@@ -37,9 +37,9 @@ static int CG_HullForEntity(entity_state_t* ent)
 
 	// extract bbox size
 #if PROTOCOL_FLOAT_COORDS == 1
-	MSG_UnpackSolid32(ent->solid, bmins, bmaxs);
+	MSG_UnpackSolid32(ent->packedSolid, bmins, bmaxs);
 #else
-	MSG_UnpackSolid16(ent->solid, bmins, bmaxs);
+	MSG_UnpackSolid16(ent->packedSolid, bmins, bmaxs);
 #endif
 
 	// create a temp hull from bounding box sizes
@@ -63,7 +63,7 @@ static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t
 		num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
 		ent = &cl_parse_entities[num];
 
-		if (ent->solid == 0)
+		if (ent->packedSolid == 0)
 			continue; // not solid
 
 		if (ent->number == ignoreEntNum)
@@ -74,7 +74,7 @@ static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t
 
 		// might intersect
 		headnode = CG_HullForEntity(ent);
-		if (ent->solid == PACKED_BSP)
+		if (ent->packedSolid == PACKED_BSP)
 			angles = ent->angles;
 		else
 			angles = vec3_origin;	// boxes don't rotate
@@ -148,7 +148,7 @@ int	CG_PointContents(vec3_t point)
 		num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
 		ent = &cl_parse_entities[num];
 
-		if (ent->solid != PACKED_BSP) // special value for bmodel
+		if (ent->packedSolid != PACKED_BSP) // special value for bmodel
 			continue;
 
 		cmodel = cl.model_clip[(int)ent->modelindex];

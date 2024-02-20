@@ -71,15 +71,9 @@ typedef struct sv_entvars_s
 	vec3_t		old_origin;		// for lerping
 
 	float		modelindex;		// models
-	float		modelindex2;	// models
-	float		modelindex3;	// models
-	float		modelindex4;	// models
-
 	int			anim;			// index to anim def
 	int			animstarttime;	// sv.time when animation started
-
 	float		animFrame;		// current animation frame
-
 	float		skinnum;		// for MD3 this should be index to .skin file
 	int			effects;		// PGM - we're filling it, so it needs to be unsigned
 

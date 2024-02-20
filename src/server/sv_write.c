@@ -668,7 +668,7 @@ void SV_BuildClientFrame (client_t *client)
 
 		// don't mark players missiles as solid
 		if (PROG_TO_GENT(ent->v.owner) == client->edict)
-			state->solid = 0;
+			state->packedSolid = 0;
 
 		svs.next_client_entities++;
 		frame->num_entities++;

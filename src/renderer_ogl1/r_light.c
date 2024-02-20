@@ -340,7 +340,7 @@ void R_LightPoint (vec3_t p, vec3_t color)
 	dl = r_newrefdef.dlights;
 	for (lnum=0 ; lnum<r_newrefdef.num_dlights ; lnum++, dl++)
 	{
-		VectorSubtract (currententity->origin, dl->origin, dist); // distance
+		VectorSubtract (pCurrentRefEnt->origin, dl->origin, dist); // distance
 		add = dl->intensity - VectorLength(dist);
 		add *= (1.0/256);
 		if (add > 0)
@@ -392,7 +392,7 @@ void R_AddDynamicLights (msurface_t *surf)
 		frad = dl->intensity;
 
 #ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
-		VectorSubtract(dl->origin, currententity->origin, lightofs);
+		VectorSubtract(dl->origin, pCurrentRefEnt->origin, lightofs);
 		fdist = DotProduct(lightofs, surf->plane->normal) - surf->plane->dist;
 #else
 		fdist = DotProduct (dl->origin, surf->plane->normal) - surf->plane->dist;

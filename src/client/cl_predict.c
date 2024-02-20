@@ -82,13 +82,13 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
 		ent = &cl_parse_entities[num];
 
-		if (!ent->solid)
+		if (!ent->packedSolid)
 			continue;
 
 		if (ent->number == cl.playernum+1)
 			continue;
 
-		if (ent->solid == PACKED_BSP)
+		if (ent->packedSolid == PACKED_BSP)
 		{	// special value for bmodel
 			cmodel = cl.model_clip[(int)ent->modelindex];
 			if (!cmodel)
@@ -99,9 +99,9 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 		else
 		{	// encoded bbox
 #if PROTOCOL_FLOAT_COORDS == 1
-			MSG_UnpackSolid32(ent->solid, bmins, bmaxs);
+			MSG_UnpackSolid32(ent->packedSolid, bmins, bmaxs);
 #else
-			MSG_UnpackSolid16(ent->solid, bmins, bmaxs);
+			MSG_UnpackSolid16(ent->packedSolid, bmins, bmaxs);
 #endif
 
 			headnode = CM_HeadnodeForBox (bmins, bmaxs);
