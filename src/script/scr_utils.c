@@ -37,7 +37,7 @@ void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcs
 	}
 
 	if (scr_numBuiltins == (SCRIPTVM_MAXBUILTINS - 1))
-		Com_Error(ERR_FATAL, "increase pr_maxbuiltins\n");
+		Com_Error(ERR_FATAL, "increase pr_maxbuiltins (%i)\n", SCRIPTVM_MAXBUILTINS);
 
 	func = &scr_builtins[scr_numBuiltins];
 	func->execon = type;

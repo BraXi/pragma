@@ -265,10 +265,7 @@ MD3_GetTag
 static md3Tag_t* MD3_GetTag(md3Header_t* mod, int frame, int tagIndex)
 {
 	md3Tag_t* tag;
-//	int			i;
-
-	if (tagIndex >= mod->numTags || tagIndex < 0)
-		return NULL;
+	int			i;
 
 	if (frame >= mod->numFrames)
 	{
@@ -280,9 +277,15 @@ static md3Tag_t* MD3_GetTag(md3Header_t* mod, int frame, int tagIndex)
 		frame = 0;
 	}
 
-	tag = (md3Tag_t*)((byte*)mod + mod->ofsTags) + (frame * mod->numTags);
-	tag += (tagIndex * sizeof(md3Tag_t));
-	return tag;
+	tag = (md3Tag_t*)((byte*)mod + mod->ofsTags) + frame * mod->numTags;
+	for (i = 0; i < mod->numTags; i++, tag++)
+	{
+		if (i == tagIndex)
+		{
+			return tag;	// found it
+		}
+	}
+	return NULL;
 }
 
 /*

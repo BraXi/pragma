@@ -12,7 +12,7 @@ See the attached GNU General Public License v2 for more details.
 #define VM_DEFAULT_RUNAWAY 500000	// number of instructions a single program can execute before it throws infinite loop error
 									// use vm_runaway cvar
 
-#define SCRIPTVM_MAXBUILTINS	160			// maximum number of builtins FIXME -- get rid if this
+#define SCRIPTVM_MAXBUILTINS	200			// maximum number of builtins FIXME -- get rid if this
 
 #ifdef _DEBUG
 	#define SCRIPTVM_PARANOID	1			// paranoia is a lifestyle, enable checks which shouldn't be in RELEASE

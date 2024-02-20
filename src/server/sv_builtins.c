@@ -261,7 +261,7 @@ void PFSV_setorigin(void)
 =================
 PFSV_setmodel
 
-Sets entity's model (modelindex0)
+Sets entity's model, will detach all other models
 
 void setmodel(entity ent, string modelname)
 
@@ -273,7 +273,7 @@ void PFSV_setmodel(void)
 	gentity_t* ent;
 	cmodel_t* mod;
 	char* name;
-	int i;
+	int modelindex;
 
 	ent = Scr_GetParmEdict(0);
 	if (!ent->inuse)
@@ -294,13 +294,19 @@ void PFSV_setmodel(void)
 
 	if (ent->v.solid == SOLID_BSP && name[0] != '*')
 	{
-		Scr_RunError("setmodel(): tried to set non bsp model for %i\n", NUM_FOR_EDICT(ent));
+		Scr_RunError("setmodel(): is SOLID_BSP but tried to set non brushmodel %i\n", NUM_FOR_EDICT(ent));
 		return;
 	}
 
-	i = SV_ModelIndex(name);
+//	modelindex = SV_ModelForName(name); // some entities may setmodel during initialization without precache
+	modelindex = SV_ModelIndex(name);
+	if (modelindex == (int)ent->v.modelindex)
+		return; // model has not changed
+
+	SV_DetachAllModels(ent);
+
 	ent->v.model = Scr_SetString(name);
-	ent->v.modelindex = i;
+	ent->v.modelindex = modelindex;
 
 	// if it is an inline model, get the size information for it
 	if (name[0] == '*')
@@ -389,6 +395,95 @@ void PFSV_unlinkentity(void)
 	if (!ent->inuse || ent == sv.edicts /*don't change world*/)
 		return;
 	SV_UnlinkEdict(ent);
+}
+
+/*
+=================
+PFSV_attach
+
+Attach a model to an entity
+
+void attach(entity ent, string tagname, string modelname)
+attach(self, "tag_head", "models/heads/test.md3");
+=================
+*/
+void PFSV_attach(void)
+{
+	gentity_t* ent;
+	char *tagname;
+	char* model;
+
+	ent = Scr_GetParmEdict(0);
+	tagname = Scr_GetParmString(1);
+	model = Scr_GetParmString(2);
+
+	if (!ent->inuse)
+		return;
+
+	if (ent == sv.edicts)
+	{
+		Scr_RunError("tried to attach model to world entity\n");
+		return;
+	}
+
+	SV_AttachModel(ent, tagname, model);
+}
+
+/*
+=================
+PFSV_detach
+
+Detach model from entity
+
+void detach(entity ent, string modelname)
+detach(self, "models/heads/test.md3");
+=================
+*/
+void PFSV_detach(void)
+{
+	gentity_t* ent;
+	char* model;
+
+	ent = Scr_GetParmEdict(0);
+	model = Scr_GetParmString(1);
+
+	if (!ent->inuse)
+		return;
+
+	if (ent == sv.edicts)
+	{
+		Scr_RunError("detach on world entity\n");
+		return;
+	}
+
+	SV_DetachModel(ent, model);
+}
+
+/*
+=================
+PFSV_detachall
+
+Detach all models from entity
+
+void detachall(entity ent)
+detachall(self);
+=================
+*/
+void PFSV_detachall(void)
+{
+	gentity_t* ent;
+
+	ent = Scr_GetParmEdict(0);
+	if (!ent->inuse)
+		return;
+
+	if (ent == sv.edicts)
+	{
+		Scr_RunError("detach on world entity\n");
+		return;
+	}
+
+	SV_DetachAllModels(ent);
 }
 
 /*
@@ -1690,19 +1785,6 @@ void PFSV_drawstring(void)
 
 /*
 =================
-PFSV_nav_init
-
-void nav_init(float numnodes)
-=================
-*/
-extern void Nav_Init();
-void PFSV_nav_init(void)
-{
-	Nav_Init();
-}
-
-/*
-=================
 PFSV_nav_addpathnode
 
 void nav_addpathnode(vector pos)
@@ -2119,6 +2201,10 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_linkentity, PF_SV, "linkentity", "void(entity e)");
 	Scr_DefineBuiltin(PFSV_unlinkentity, PF_SV, "unlinkentity", "void(entity e)");
 
+	Scr_DefineBuiltin(PFSV_attach, PF_SV, "attach", "void(entity e, string tn, string mn)");
+	Scr_DefineBuiltin(PFSV_detach, PF_SV, "detach", "void(entity e, string mn)");
+	Scr_DefineBuiltin(PFSV_detachall, PF_SV, "detachall", "void(entity e, string mn)");
+
 	// collision and physics
 	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector v)");
 	Scr_DefineBuiltin(PFSV_trace, PF_SV, "trace", "void(vector p1, vector v1, vector v2, vector p2, entity e, int c)");
@@ -2165,7 +2251,6 @@ void SV_InitScriptBuiltins()
 	// client
 	Scr_DefineBuiltin(PFSV_isplayer, PF_SV, "isplayer", "float(entity e)");
 	Scr_DefineBuiltin(PFSV_setviewmodel, PF_SV, "setviewmodel", "float(entity e, string s)");
-	Scr_DefineBuiltin(PFSV_none, PF_SV, "setviewmodelparms", "void(entity e, float f, vector v1, vector v2)");
 	Scr_DefineBuiltin(PFSV_setfieldofview, PF_SV, "setfieldofview", "void(entity e, float f)");
 	Scr_DefineBuiltin(PFSV_getfieldofview, PF_SV, "getfieldofview", "float(entity e)");
 	Scr_DefineBuiltin(PFSV_setviewblend, PF_SV, "setviewblend", "void(entity e, vector v1, float f)");
@@ -2185,7 +2270,6 @@ void SV_InitScriptBuiltins()
 
 	// navigation 
 	// TODO -- share with cgame
-	Scr_DefineBuiltin(PFSV_nav_init, PF_SV, "nav_init", "void(float n)");
 	Scr_DefineBuiltin(PFSV_nav_addpathnode, PF_SV, "nav_addpathnode", "float(vector p)");
 	Scr_DefineBuiltin(PFSV_nav_linkpathnode, PF_SV, "nav_linkpathnode", "void(float n, float lt)");
 	Scr_DefineBuiltin(PFSV_nav_getnearestnode, PF_SV, "nav_getnearestnode", "float(vector p)");

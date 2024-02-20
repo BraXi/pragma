@@ -144,31 +144,6 @@ static inline void CL_EntityPositionAndRotation(clentity_t* clent, entity_state_
 	AnglesToAxis(refent->angles, refent->axis);
 }
 
-orientation_t	out;
-orientation_t* CG_PositionTag(vec3_t origin, vec3_t angles, orientation_t *tag)
-{
-	orientation_t	parent;
-	vec3_t			tempAxis[3];
-
-	AxisClear(parent.axis);
-	VectorCopy(origin, parent.origin);
-	AnglesToAxis(angles, parent.axis);
-
-	AxisClear(out.axis);
-	VectorCopy(parent.origin, out.origin);
-
-	AxisClear(tempAxis);
-	for (int i = 0; i < 3; i++)
-	{
-		VectorMA(out.origin, tag->origin[i], parent.axis[i], out.origin);
-	}
-
-	// translate rotation and origin
-	MatrixMultiply(out.axis, parent.axis, tempAxis);
-	MatrixMultiply(tag->axis, tempAxis, out.axis);
-	return &out;
-}
-
 static void VectorAngles(const float* forward, const float* up, float* result, qboolean meshpitch)    //up may be NULL
 {
 	float    yaw, pitch, roll;
@@ -245,11 +220,9 @@ static void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int
 	orientation_t	lerped;
 	vec3_t			tempAxis[3];
 
-	// lerp the tag
-	re.LerpTag(&lerped, cl.model_draw[parentModel], parent->oldframe, parent->frame, 1.0 - parent->backlerp, tagIndex);
-//	re.LerpTag(&lerped, cl.model_draw[parentModel], parent->oldframe, parent->frame, 1.0 - parent->backlerp, tagName);
+//	Com_Printf("old %i cur %i lerp %f\n", parent->oldframe, parent->frame, 1.0 - parent->backlerp);
+	re.LerpTag(&lerped, cl.model_draw[parentModel], parent->oldframe, parent->frame, 1.0 - parent->animbacklerp, tagIndex);
 
-	// FIXME: allow origin offsets along tag?
 	VectorCopy(parent->origin, entity->origin);
 	for (i = 0; i < 3; i++) 
 	{
@@ -257,8 +230,9 @@ static void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int
 	}
 
 	// cast away const because of compiler problems
-	MatrixMultiply(entity->axis, ((rentity_t*)parent)->axis, tempAxis);
+	MatrixMultiply(entity->axis, parent->axis, tempAxis);
 	MatrixMultiply(lerped.axis, tempAxis, entity->axis);
+	entity->backlerp = parent->backlerp;
 }
 
 /*
@@ -268,112 +242,42 @@ CL_EntityAddAttachedModels
 Add attached models, but don't use custom skins on them
 ===============
 */
-
-
 static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
 	ent_model_t* attachInfo;
 	rentity_t attachEnt;
 	vec3_t angles;
+	rentity_t r;
 
-	refent->frame = 0;
+//	refent->frame = 0;
 	refent->skinnum = 0;
-//	refent->renderfx = 0;
-
+	refent->renderfx = 0;
 	for (int i = 0; i < MAX_ATTACHED_MODELS; i++)
 	{
 		attachInfo = &state->attachments[i];
 		if (attachInfo->modelindex == 0 || attachInfo->parentTag == 0)
 			continue;
+	
+		//memset(&attachEnt, 0, sizeof(attachEnt));
+		attachEnt = *refent;
+		attachEnt.frame = 0;
 
-		memset(&attachEnt, 0, sizeof(attachEnt));
+		r = *refent;
 
-		VectorSet(angles, 0, 360, 0);
-		AnglesToAxis(angles, attachEnt.axis);
-		PositionRotatedEntityOnTag(&attachEnt, refent, clent->current.modelindex, (attachInfo->parentTag - 1));
+//		Com_Printf("1 %.3f %.3f %.3f\n", r.axis[0][0], r.axis[0][1], r.axis[0][2]);
+//		Com_Printf("2 %.3f %.3f %.3f\n", r.axis[1][0], r.axis[1][1], r.axis[1][2]);
+//		Com_Printf("3 %.3f %.3f %.3f\n", r.axis[2][0], r.axis[2][1], r.axis[2][2]);
 
-		attachEnt.model = cl.model_draw[attachInfo->modelindex];
-		attachEnt.inheritLight = refent; // use main model's light calculations
+		AxisClear(attachEnt.axis);
+		PositionRotatedEntityOnTag(&attachEnt, &r, clent->current.modelindex, 0);
 
+		attachEnt.model = cl.model_draw[state->attachments[0].modelindex];
+		attachEnt.inheritLight = refent;
 		VectorAngles(attachEnt.axis[0], attachEnt.axis[2], angles, true);
 		VectorCopy(angles, attachEnt.angles);
+
 		V_AddEntity(&attachEnt);
 	}
-#if 0
-	if (state->modelindex2)
-	{
-		if (clent->current.eType == 3)
-		{
-			//PositionRotatedEntityOnTag(rentity_t * entity, const rentity_t * parent, int parentModel, char* tagName)
-			vec3_t rot;
-			rentity_t head;
-
-			memset(&head, 0, sizeof(head));
-
-			
-
-			r = *refent;
-
-			
-
-			AnglesToAxis(r.angles, r.axis);
-
-			Com_Printf("1 %.3f %.3f %.3f\n", r.axis[0][0], r.axis[0][1], r.axis[0][2]);
-			Com_Printf("2 %.3f %.3f %.3f\n", r.axis[1][0], r.axis[1][1], r.axis[1][2]);
-			Com_Printf("3 %.3f %.3f %.3f\n", r.axis[2][0], r.axis[2][1], r.axis[2][2]);
-
-			rot[0] = 0; rot[1] = 360; rot[2] = 0;
-			AnglesToAxis(rot, head.axis);
-			//AxisClear(head.axis);
-			PositionRotatedEntityOnTag(&head, &r, clent->current.modelindex, "tag_head");
-
-			head.model = cl.model_draw[state->modelindex2];
-			VectorAngles(head.axis[0], head.axis[2], rot, true);
-
-			VectorCopy(rot, head.angles);
-
-
-			V_AddEntity(&head);
-#if 0
-			orientation_t tag;
-			//refent->oldframe = clent->prev.frame;
-			//refent->backlerp = 1.0 - cl.lerpfrac;
-			orientation_t *tag2;
-			vec3_t rot;
-			vec3_t pos;
-			
-			re.LerpTag(&tag, cl.model_draw[state->modelindex], refent->oldframe, refent->frame, (1.0f - refent->animbacklerp), "tag_head");
-			tag2 = CG_PositionTag(clent->current.origin, clent->current.angles, &tag);
-
-			refent->backlerp = (1.0 - cl.lerpfrac);
-			VectorAngles(tag2->axis[0], tag2->axis[2], rot, true);
-
-			//for(int i = 0; i < 3; i++)
-			//	refent->origin[i] = refent->oldorigin[i] = clent->prev.origin[i] + cl.lerpfrac * (clent->current.origin[i] - clent->prev.origin[i]);
-
-			//VectorCopy(tag2->origin, refent->origin);
-			VectorCopy(rot, refent->angles);
-#endif
-		}
-
-
-
-//		rent.renderfx = 0;
-//		rent.alpha = 1;
-	}
-
-	if (state->modelindex3)
-	{
-		refent->model = cl.model_draw[state->modelindex3];
-		V_AddEntity(refent);
-	}
-
-	if (state->modelindex4)
-	{
-		refent->model = cl.model_draw[state->modelindex4];
-		V_AddEntity(refent);
-	}
-#endif
 }
 
 /*
@@ -453,7 +357,7 @@ void CL_AddPacketEntities(frame_t* frame)
 		{
 
 
-			Com_Printf("clent %i is %s\n", state->number, etypes[clent->current.eType]);
+			//Com_Printf("clent %i is %s\n", state->number, etypes[clent->current.eType]);
 		}
 		//
 		// create a new render entity

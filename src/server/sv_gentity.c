@@ -430,3 +430,130 @@ void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 	Com_Printf("'%s' entities: %i inhibited, %i discarded (%i in map total)\n", sv.name, inhibit, discard, total);
 }
 
+
+/*
+==============
+SV_AttachModel
+==============
+*/
+void SV_AttachModel(gentity_t *self, char* tagname, char *model)
+{
+	int i, tag;
+	ent_model_t* attachInfo;
+	svmodel_t* svmod;
+
+	if (!self || !self->inuse)
+		return;
+
+	if (self == sv.edicts)
+	{
+		Com_Error(ERR_DROP, "tried to attach model to world entity\n");
+		return;
+	}
+
+	svmod = SV_ModelForNum((int)self->v.modelindex);
+	if (svmod == NULL || svmod->type != MOD_MD3 || svmod->modelindex == 0)
+	{
+		Com_DPrintf(DP_GAME, "WARNING: entity %s has no model\n", Scr_GetString(self->v.classname));
+		return;
+	}
+
+	if (svmod->numTags == 0)
+	{
+		Com_DPrintf(DP_GAME, "WARNING: entity %s has model without tags\n", Scr_GetString(self->v.classname));
+		return;
+	}
+
+	svmod = SV_ModelForName(model);
+	if (svmod == NULL)
+	{
+		Com_DPrintf(DP_GAME, "WARNING: cannot attach not precached model '%s'\n", model);
+		return;
+	}
+
+	if (svmod->type == MOD_BRUSH)
+	{
+		Com_Error(ERR_DROP, "cannot attach brushmodels!\n");
+		return;
+	}
+
+	tag = SV_TagIndexForName((int)self->v.modelindex, tagname);
+	if (tag == -1)
+	{
+		Com_DPrintf(DP_GAME, "WARNING: cannot attach '%s' to entity %s (missing `%s` tag)\n", model, Scr_GetString(self->v.classname), tagname);
+		return;
+	}
+
+	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
+	{
+		if (self->s.attachments[i].modelindex == svmod->modelindex)
+		{
+			Com_DPrintf(DP_GAME, "WARNING: '%s' already attached to entity %s\n", model, Scr_GetString(self->v.classname));
+			return;
+		}
+	}
+
+	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
+	{
+		attachInfo = &self->s.attachments[i];
+		if (attachInfo->modelindex != 0)
+			continue;
+
+		attachInfo->modelindex = svmod->modelindex;
+		attachInfo->parentTag = tag + 1; // must offset tag by 1 for network
+	}
+}
+
+
+/*
+==============
+SV_DetachModel
+==============
+*/
+void SV_DetachModel(gentity_t* self, char* model)
+{
+	int i;
+	ent_model_t* attachInfo;
+	svmodel_t* svmod;
+
+	if (!self || !self->inuse || self == sv.edicts)
+		return;
+
+	svmod = SV_ModelForName(model);
+	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
+	{
+		attachInfo = &self->s.attachments[i];
+		if (attachInfo->modelindex != svmod->modelindex)
+			continue;
+
+		attachInfo->modelindex = 0;
+		attachInfo->parentTag = 0;
+		return;
+	}
+
+	Com_DPrintf(DP_GAME, "WARNING: model '%s' was not attached to entity %s\n", model, Scr_GetString(self->v.classname));
+}
+
+/*
+==============
+SV_DetachAllModels
+==============
+*/
+void SV_DetachAllModels(gentity_t* self)
+{
+	int i;
+	ent_model_t* attachInfo;
+
+	if (!self || !self->inuse || self == sv.edicts)
+		return;
+
+	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
+	{
+		attachInfo = &self->s.attachments[i];
+		if (attachInfo->modelindex == 0)
+			continue; // parentTag change will cause network broadcast
+
+		attachInfo->modelindex = 0;
+		attachInfo->parentTag = 0;
+	}
+}

@@ -421,7 +421,7 @@ void	R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
 void	R_DrawFill(rect_t rect, rgba_t color);
 
 int R_TagIndexForName(struct model_s* model, const char* tagName);
-qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac,int tagIndex);
+qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex);
 
 static void	RR_SetColor(float r, float g, float b, float a)
 {

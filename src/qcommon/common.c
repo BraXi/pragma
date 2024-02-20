@@ -678,18 +678,18 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 	// attached models
 	if (bits & U_ATTACHMENT_8)
 	{
-		to->attachments[0].modelindex = MSG_ReadByte(&net_message);
-		to->attachments[0].parentTag = MSG_ReadByte(&net_message);
+		MSG_WriteByte(msg, to->attachments[0].modelindex);
+		MSG_WriteByte(msg, to->attachments[0].parentTag);
 	}
 	if (bits & U_ATTACHMENT2_8)
 	{
-		to->attachments[1].modelindex = MSG_ReadByte(&net_message);
-		to->attachments[1].parentTag = MSG_ReadByte(&net_message);
+		MSG_WriteByte(msg, to->attachments[1].modelindex);
+		MSG_WriteByte(msg, to->attachments[1].parentTag);
 	}
 	if (bits & U_ATTACHMENT3_8)
 	{
-		to->attachments[2].modelindex = MSG_ReadByte(&net_message);
-		to->attachments[2].parentTag = MSG_ReadByte(&net_message);
+		MSG_WriteByte(msg, to->attachments[2].modelindex);
+		MSG_WriteByte(msg, to->attachments[2].parentTag);
 	}
 
 	// animation frame

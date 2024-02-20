@@ -80,14 +80,17 @@ get lighting information for centity
 		for (i = 0; i < 3; i++)
 			model_shadelight[i] = 1.0;
 	}
-	else if (ent->inheritLight != NULL)
+	else 
 	{
-		VectorCopy(ent->inheritLight->shadelightpoint, model_shadelight);
-	}
-	else
-	{
-		R_LightPoint(pCurrentRefEnt->origin, model_shadelight);
-		VectorCopy(model_shadelight, ent->shadelightpoint);
+		if (ent->inheritLight != NULL)
+		{
+			VectorCopy(ent->inheritLight->shadelightpoint, model_shadelight);
+		}
+		else
+		{
+			R_LightPoint(pCurrentRefEnt->origin, model_shadelight);
+			VectorCopy(model_shadelight, ent->shadelightpoint);
+		}
 	}
 
 	if (ent->renderfx & RF_MINLIGHT)
@@ -106,7 +109,7 @@ get lighting information for centity
 
 	if (ent->renderfx & RF_GLOW)
 	{
-		scale = 0.1 * sin(r_newrefdef.time * 7);
+		scale = 0.1 * sin(r_newrefdef.time * 7.0);
 		for (i = 0; i < 3; i++)
 		{
 			min = model_shadelight[i] * 0.8;

@@ -239,6 +239,7 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 //			break;	// free spot
 //	}
 	model = &sv.models[sv.num_models];
+	model->modelindex = sv.num_models;
 	
 	//
 	// load the file
@@ -396,6 +397,37 @@ static void SV_LoadSP2(svmodel_t* out, void* buffer)
 	out->type = MOD_SPRITE;
 }
 
+/*
+=================
+SV_TagIndexForName
+
+returns index of a tag or -1 if not found
+=================
+*/
+int SV_TagIndexForName(int modelindex, char* tagName)
+{
+	svmodel_t* mod;
+	orientation_t* tagdata;
+	int index;
+	int frame = 0;
+
+	mod = SV_ModelForNum(modelindex);
+	if (!mod || mod->type != MOD_MD3)
+	{
+		Com_Error(ERR_DROP, "SV_TagIndexForName: wrong model for index %i\n", modelindex);
+		return -1; //doesn't get here
+	}
+
+	tagdata = (orientation_t*)((byte*)mod->tagFrames) + (frame * mod->numTags);
+	for (index = 0; index < mod->numTags; index++, tagdata++)
+	{
+		if (!strcmp(mod->tagNames[index], tagName))
+		{
+			return index; // found it
+		}
+	}
+	return -1;
+}
 
 /*
 =================

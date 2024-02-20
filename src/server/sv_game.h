@@ -126,6 +126,11 @@ extern void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, 
 
 extern void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint);
 
+extern void SV_AttachModel(gentity_t* self, char* tagname, char* model);
+extern void SV_DetachModel(gentity_t* self, char* model);
+extern void SV_DetachAllModels(gentity_t* self);
+
+
 extern void ClientUserinfoChanged(gentity_t* ent, char* userinfo);
 
 extern void ClientCommand(gentity_t* ent);
