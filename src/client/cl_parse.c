@@ -192,7 +192,7 @@ void CL_ParseConfigString (void)
 
 	if (i >= CS_LIGHTS && i < CS_LIGHTS + MAX_LIGHTSTYLES)
 	{
-		CL_SetLightStyleFromCS(i - CS_LIGHTS);
+		CG_LightStyleFromConfigString(i - CS_LIGHTS);
 	}
 	else if (i >= CS_SKY && i < CS_HUD)
 	{
@@ -571,19 +571,31 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 		to->modelindex = MSG_ReadShort(&net_message);
 
 	// attached models
-	if (bits & U_ATTACHMENT_8)
+	if (bits & U_ATTACHMENT_1)
 	{
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		to->attachments[0].modelindex = MSG_ReadShort(&net_message);
+#else
 		to->attachments[0].modelindex = MSG_ReadByte(&net_message);
+#endif
 		to->attachments[0].parentTag = MSG_ReadByte(&net_message);
 	}
-	if (bits & U_ATTACHMENT2_8)
+	if (bits & U_ATTACHMENT_2)
 	{
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		to->attachments[1].modelindex = MSG_ReadShort(&net_message);
+#else
 		to->attachments[1].modelindex = MSG_ReadByte(&net_message);
+#endif
 		to->attachments[1].parentTag = MSG_ReadByte(&net_message);
 	}
-	if (bits & U_ATTACHMENT3_8)
+	if (bits & U_ATTACHMENT_3)
 	{
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		to->attachments[2].modelindex = MSG_ReadShort(&net_message);
+#else
 		to->attachments[2].modelindex = MSG_ReadByte(&net_message);
+#endif
 		to->attachments[2].parentTag = MSG_ReadByte(&net_message);
 	}
 

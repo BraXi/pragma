@@ -779,6 +779,70 @@ int Q_log2(int val)
 
 /*
 =================
+VectorAngles
+Code written by Spoike
+=================
+*/
+void VectorAngles(const float* forward, const float* up, float* result)   //up may be NULL
+{
+	
+	float    yaw, pitch, roll;
+
+	if (forward[1] == 0 && forward[0] == 0)
+	{
+		if (forward[2] > 0)
+		{
+			pitch = -M_PI * 0.5;
+			yaw = up ? atan2(-up[1], -up[0]) : 0;
+		}
+		else
+		{
+			pitch = M_PI * 0.5;
+			yaw = up ? atan2(up[1], up[0]) : 0;
+		}
+		roll = 0;
+	}
+	else
+	{
+		yaw = atan2(forward[1], forward[0]);
+		pitch = -atan2(forward[2], sqrt(forward[0] * forward[0] + forward[1] * forward[1]));
+
+		if (up)
+		{
+			vec_t cp = cos(pitch), sp = sin(pitch);
+			vec_t cy = cos(yaw), sy = sin(yaw);
+			vec3_t tleft, tup;
+			tleft[0] = -sy;
+			tleft[1] = cy;
+			tleft[2] = 0;
+			tup[0] = sp * cy;
+			tup[1] = sp * sy;
+			tup[2] = cp;
+			roll = -atan2(DotProduct(up, tleft), DotProduct(up, tup));
+		}
+		else
+			roll = 0;
+	}
+
+	pitch *= 180 / M_PI;
+	yaw *= 180 / M_PI;
+	roll *= 180 / M_PI;
+
+	if (pitch < 0)
+		pitch += 360;
+	if (yaw < 0)
+		yaw += 360;
+	if (roll < 0)
+		roll += 360;
+
+	result[0] = pitch;
+	result[1] = yaw;
+	result[2] = roll;
+}
+
+
+/*
+=================
 AxisToAngles
 =================
 */

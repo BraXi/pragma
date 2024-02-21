@@ -446,9 +446,9 @@ enum clc_ops_e
 #define	U_ANIMFRAME_16		(1<<17)		// animframe greater than 255
 #define	U_RENDERFLAGS_16	(1<<18)		// 8 + 16 = 32B
 #define	U_EFFECTS_16		(1<<19)		// effects - EF_ flags, 8 + 16 = 32
-#define	U_ATTACHMENT_8		(1<<20)		// weapons, flags, etc
-#define	U_ATTACHMENT2_8		(1<<21)		// unused
-#define	U_ATTACHMENT3_8		(1<<22)		// unused
+#define	U_ATTACHMENT_1		(1<<20)		// 
+#define	U_ATTACHMENT_2		(1<<21)		// 
+#define	U_ATTACHMENT_3		(1<<22)		// 
 #define	U_MOREBITS_3		(1<<23)		// -- read one additional byte --
 
 // fourth byte

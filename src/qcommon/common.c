@@ -594,11 +594,11 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 
 	// attached models
 	if (to->attachments[0].modelindex != from->attachments[0].modelindex || to->attachments[0].parentTag != from->attachments[0].parentTag)
-		bits |= U_ATTACHMENT_8;
+		bits |= U_ATTACHMENT_1;
 	if (to->attachments[1].modelindex != from->attachments[1].modelindex || to->attachments[1].parentTag != from->attachments[1].parentTag)
-		bits |= U_ATTACHMENT2_8;
+		bits |= U_ATTACHMENT_2;
 	if (to->attachments[2].modelindex != from->attachments[2].modelindex || to->attachments[2].parentTag != from->attachments[2].parentTag)
-		bits |= U_ATTACHMENT3_8;
+		bits |= U_ATTACHMENT_3;
 
 	// looping sound
 	if (to->loopingSound != from->loopingSound)
@@ -676,19 +676,31 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 		MSG_WriteShort(msg, to->modelindex);
 
 	// attached models
-	if (bits & U_ATTACHMENT_8)
+	if (bits & U_ATTACHMENT_1)
 	{
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		MSG_WriteShort(msg, to->attachments[0].modelindex);
+#else
 		MSG_WriteByte(msg, to->attachments[0].modelindex);
+#endif
 		MSG_WriteByte(msg, to->attachments[0].parentTag);
 	}
-	if (bits & U_ATTACHMENT2_8)
+	if (bits & U_ATTACHMENT_2)
 	{
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		MSG_WriteShort(msg, to->attachments[1].modelindex);
+#else
 		MSG_WriteByte(msg, to->attachments[1].modelindex);
+#endif
 		MSG_WriteByte(msg, to->attachments[1].parentTag);
 	}
-	if (bits & U_ATTACHMENT3_8)
+	if (bits & U_ATTACHMENT_3)
 	{
+#ifdef PROTOCOL_EXTENDED_ASSETS
+		MSG_WriteShort(msg, to->attachments[2].modelindex);
+#else
 		MSG_WriteByte(msg, to->attachments[2].modelindex);
+#endif
 		MSG_WriteByte(msg, to->attachments[2].parentTag);
 	}
 

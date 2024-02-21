@@ -75,6 +75,7 @@ void VectorInverse(vec3_t v);
 void VectorScale(vec3_t in, vec_t scale, vec3_t out);
 int Q_log2(int val);
 
+void VectorAngles(const float* forward, const float* up, float* result);
 void AxisToAngles(vec3_t axis[3], vec3_t outAngles);
 void AnglesToAxis(vec3_t angles, vec3_t axis[3]);
 void AxisClear(vec3_t axis[3]);

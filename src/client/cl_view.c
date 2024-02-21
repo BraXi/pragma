@@ -71,7 +71,7 @@ void V_AddEntity(rentity_t* ent)
 		Com_DPrintf(DP_REND, "V_AddEntity: r_numentities >= MAX_VISIBLE_ENTITIES\n");
 		return;
 	}
-
+	ent->index = r_numentities;
 	r_entities[r_numentities++] = *ent;
 }
 
@@ -88,7 +88,6 @@ void V_AddDebugPrimitive(debugprimitive_t *obj)
 		Com_DPrintf(DP_REND, "V_AddDebugPrimitive: r_numdebugprimitives >= MAX_DEBUG_PRIMITIVES\n");
 		return;
 	}
-
 	r_debugprimitives[r_numdebugprimitives++] = *obj;
 }
 

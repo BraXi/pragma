@@ -67,12 +67,12 @@ void CG_RunLightStyles(void)
 
 /*
 ================
-CL_SetLightStyleFromCS
+CG_LightStyleFromConfigString
 
 sets lightstyle from configstring
 ================
 */
-void CL_SetLightStyleFromCS(int index)
+void CG_LightStyleFromConfigString(int index)
 {
 	char	*config;
 	size_t	len;

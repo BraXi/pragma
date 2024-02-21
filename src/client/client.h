@@ -380,7 +380,7 @@ void CG_ParseTempEntityCommand (void);
 void CL_ParseConfigString (void);
 void CL_ParseMuzzleFlash (void);
 
-void CL_SetLightStyleFromCS (int i);
+void CG_LightStyleFromConfigString (int i);
 
 void CG_RunDynamicLights (void);
 void CG_RunLightStyles (void);

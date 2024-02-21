@@ -449,8 +449,6 @@ typedef struct usercmd_s
 	byte	impulse;
 } usercmd_t;
 
-
-#define	MAXTOUCH	32
 typedef struct
 {
 	// state (in / out)
@@ -458,24 +456,11 @@ typedef struct
 
 	// command (in)
 	usercmd_t		cmd;
-	qboolean		snapinitial;	// if s has been changed outside pmove
-
-	// results (out)
-	int			numtouch;
-	struct gentity_s	*touchents[MAXTOUCH];
 
 	vec3_t		viewangles;			// clamped
 	float		viewheight;
 
 	vec3_t		mins, maxs;			// bounding box size
-
-	struct gentity_s	*groundentity;
-	int			watertype;
-	int			waterlevel;
-
-	// callbacks to test the world
-	trace_t		(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
-	int			(*pointcontents) (vec3_t point);
 } pmove_t;
 
 
@@ -610,7 +595,6 @@ enum
 
 #define	CS_HUD				5		// display program string
 
-#define CS_AIRACCEL			29		// air acceleration control
 #define	CS_MAXCLIENTS		30
 
 #define	CS_CHECKSUM_MAP		31		

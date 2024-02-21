@@ -15,10 +15,6 @@ See the attached GNU General Public License v2 for more details.
 
 #define NEW_GUI 1 //new gui
 
-// Pragma will use pmove in shared cg/sv qc progs instead of C version
-// Enabling USE_PMOVE_IN_PROGS allows mods to have full control over pmove
-#define USE_PMOVE_IN_PROGS 1
-
 // net protocol will use floats for coordinates instead of shorts, this applies to pmove too
 // this also fixes some of pmove issues like dragging players motion towards 0,0,0 and higher jumps
 // all entities can move beyond +/- 4096qu boundary, 
@@ -52,10 +48,11 @@ See the attached GNU General Public License v2 for more details.
 #endif
 
 // version string
-#define PRAGMA_VERSION "0.25" 
+#define PRAGMA_VERSION "0.26" 
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
 // version history:
+// 0.26 - 21.02.2024
 // 0.25 - 18.01.2024 -- linux dedicated server
 // 0.24 - 17.01.2024 -- win32 dedicated server
 // 0.23 - 04.01.2024

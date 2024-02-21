@@ -149,9 +149,7 @@ void CL_PredictMovement (void)
 	int			step;
 	int			oldz;
 
-#ifdef USE_PMOVE_IN_PROGS
 	vec3_t inmove, inangles;
-#endif
 
 	if (cls.state != ca_active)
 		return;
@@ -186,7 +184,6 @@ void CL_PredictMovement (void)
 	memset (&pm, 0, sizeof(pm));
 	pm.s = cl.frame.playerstate.pmove;
 
-#ifdef USE_PMOVE_IN_PROGS
 	cl_globalvars_t* cgGlobals = NULL;
 
 	if (cg.qcvm_active && cg.entities)
@@ -215,10 +212,6 @@ void CL_PredictMovement (void)
 		// make sure qc knows our number for trace function
 		cgGlobals->localplayernum = cl.playernum;
 	}
-#else
-	pm.trace = CL_PMTrace;
-	pm.pointcontents = CL_PMpointcontents;
-#endif
 
 //	SCR_DebugGraph (current - ack - 1, 0);
 
@@ -230,7 +223,6 @@ void CL_PredictMovement (void)
 		frame = ack & (CMD_BACKUP-1);
 		cmd = &cl.cmds[frame];
 
-#ifdef USE_PMOVE_IN_PROGS
 		inmove[0] = (float)cmd->forwardmove;
 		inmove[1] = (float)cmd->sidemove;
 		inmove[2] = (float)cmd->upmove;
@@ -273,10 +265,6 @@ void CL_PredictMovement (void)
 				pm.viewangles[i] = cg.script_globals->cam_viewangles[i];
 			}
 		}
-#else
-		pm.cmd = *cmd;
-		Pmove (&pm);
-#endif
 		// save for debug checking
 		VectorCopy (pm.s.origin, cl.predicted_origins[frame]);
 	}

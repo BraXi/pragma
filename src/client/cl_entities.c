@@ -144,83 +144,13 @@ static inline void CL_EntityPositionAndRotation(clentity_t* clent, entity_state_
 	AnglesToAxis(refent->angles, refent->axis);
 }
 
-static void VectorAngles(const float* forward, const float* up, float* result, qboolean meshpitch)    //up may be NULL
-{
-	float    yaw, pitch, roll;
-
-	if (forward[1] == 0 && forward[0] == 0)
-	{
-		if (forward[2] > 0)
-		{
-			pitch = -M_PI * 0.5;
-			yaw = up ? atan2(-up[1], -up[0]) : 0;
-		}
-		else
-		{
-			pitch = M_PI * 0.5;
-			yaw = up ? atan2(up[1], up[0]) : 0;
-		}
-		roll = 0;
-	}
-	else
-	{
-		yaw = atan2(forward[1], forward[0]);
-		pitch = -atan2(forward[2], sqrt(forward[0] * forward[0] + forward[1] * forward[1]));
-
-		if (up)
-		{
-			vec_t cp = cos(pitch), sp = sin(pitch);
-			vec_t cy = cos(yaw), sy = sin(yaw);
-			vec3_t tleft, tup;
-			tleft[0] = -sy;
-			tleft[1] = cy;
-			tleft[2] = 0;
-			tup[0] = sp * cy;
-			tup[1] = sp * sy;
-			tup[2] = cp;
-			roll = -atan2(DotProduct(up, tleft), DotProduct(up, tup));
-		}
-		else
-			roll = 0;
-	}
-
-	pitch *= 180 / M_PI;
-	yaw *= 180 / M_PI;
-	roll *= 180 / M_PI;
-	if (meshpitch)
-	{
-		//		pitch *= r_meshpitch.value;
-		//		roll *= r_meshroll.value;
-	}
-	if (pitch < 0)
-		pitch += 360;
-	if (yaw < 0)
-		yaw += 360;
-	if (roll < 0)
-		roll += 360;
-
-#if 0
-	// DUMB HACK BECAUSE I HAVENT PAID ATTENTION TO HOW MD3 TAGS WERE SUPPOSED TO BE 
-	// ORIENTED AND AT THIS POINT I DON'T WANT TO BOTHER RECOMPILING ALL THE MODELS
-	result[0] = -pitch;
-	result[1] = yaw - 180;
-	result[2] = roll + 270;
-#else
-	result[0] = pitch;
-	result[1] = yaw;
-	result[2] = roll;
-#endif
-}
-
-
-//static void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parentModel, char* tagName)
 static void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parentModel, int tagIndex)
 {
 	int				i;
 	orientation_t	lerped;
 	vec3_t			tempAxis[3];
 
-//	Com_Printf("old %i cur %i lerp %f\n", parent->oldframe, parent->frame, 1.0 - parent->backlerp);
+//	Com_Printf("old %i cur %i lerp %f\n", parent->oldframe, parent->frame, 1.0 - parent->animbacklerp);
 	re.LerpTag(&lerped, cl.model_draw[parentModel], parent->oldframe, parent->frame, 1.0 - parent->animbacklerp, tagIndex);
 
 	VectorCopy(parent->origin, entity->origin);
@@ -257,23 +187,18 @@ static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t*
 		attachInfo = &state->attachments[i];
 		if (attachInfo->modelindex == 0 || attachInfo->parentTag == 0)
 			continue;
-	
+
 		//memset(&attachEnt, 0, sizeof(attachEnt));
-		attachEnt = *refent;
+		attachEnt = *refent; // copy all of it
 		attachEnt.frame = 0;
-
 		r = *refent;
-
-//		Com_Printf("1 %.3f %.3f %.3f\n", r.axis[0][0], r.axis[0][1], r.axis[0][2]);
-//		Com_Printf("2 %.3f %.3f %.3f\n", r.axis[1][0], r.axis[1][1], r.axis[1][2]);
-//		Com_Printf("3 %.3f %.3f %.3f\n", r.axis[2][0], r.axis[2][1], r.axis[2][2]);
 
 		AxisClear(attachEnt.axis);
 		PositionRotatedEntityOnTag(&attachEnt, &r, clent->current.modelindex, 0);
 
 		attachEnt.model = cl.model_draw[state->attachments[0].modelindex];
-		attachEnt.inheritLight = refent;
-		VectorAngles(attachEnt.axis[0], attachEnt.axis[2], angles, true);
+//		attachEnt.inheritLight = refent->index;
+		VectorAngles(attachEnt.axis[0], attachEnt.axis[2], angles);
 		VectorCopy(angles, attachEnt.angles);
 
 		V_AddEntity(&attachEnt);
@@ -351,14 +276,11 @@ void CL_AddPacketEntities(frame_t* frame)
 		renderfx = state->renderFlags;
 
 		rent.backlerp = (1.0 - cl.lerpfrac);
-		rent.inheritLight = NULL;
+		rent.inheritLight = -1;
 
-		if (clent->current.eType > 0)
-		{
+		//if (clent->current.eType > 0)
+		//	Com_Printf("clent %i is %s\n", state->number, etypes[clent->current.eType]);
 
-
-			//Com_Printf("clent %i is %s\n", state->number, etypes[clent->current.eType]);
-		}
 		//
 		// create a new render entity
 		//
@@ -454,13 +376,9 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 {
 	rentity_t	viewmodel; 
 	int			i;
-
-
-#if 1
 	rentity_t	flash;
 	vec3_t  v_fwd, v_right, v_up;
 	muzzleflash_t* mz;
-#endif
 
 	// allow the gun to be completely removed
 	if (!cl_drawviewmodel->value)
@@ -522,7 +440,6 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	viewmodel.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
 	V_AddEntity (&viewmodel);
 
-#if 1
 	//
 	// set up muzzleflash
 	//
@@ -549,7 +466,6 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	flash.alpha = 0.7;
 	flash.model = cgMedia.mod_v_muzzleflash;
 	V_AddEntity(&flash);
-#endif
 }
 
 

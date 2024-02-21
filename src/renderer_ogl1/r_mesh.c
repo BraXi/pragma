@@ -16,7 +16,6 @@ See the attached GNU General Public License v2 for more details.
 vec3_t	model_shadevector;
 float	model_shadelight[3];
 
-
 void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp); // r_md3.c
 void R_DrawSprite(rentity_t* ent); // r_sprite.c
 
@@ -36,11 +35,9 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 
 	if (ent->alpha <= 0.0f && (ent->renderfx & RF_TRANSLUCENT))
 	{
-		ri.Printf(PRINT_LOW, "%s:  %f alpha!\n", __FUNCTION__, ent->alpha);
+		ri.Printf(PRINT_LOW, "%s: %f alpha!\n", __FUNCTION__, ent->alpha);
 		return false;
 	}
-	//return false; // completly transparent
-
 
 	// we usually dont cull viwmodels, unless its centered
 	if (ent->renderfx & RF_VIEW_MODEL)
@@ -48,7 +45,6 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 
 	if (!ent->model) // this shouldn't really happen at this point!
 		return false;
-
 
 	if (ent->model->type == MOD_MD3)
 		return true; //todo
@@ -63,7 +59,7 @@ R_SetEntityShadeLight
 get lighting information for centity
 =================
 */
-/*static*/ void R_SetEntityShadeLight(rentity_t* ent) // uncomment when md2 is gone
+void R_SetEntityShadeLight(rentity_t* ent)
 {
 	float	scale;
 	float	min;
@@ -82,9 +78,9 @@ get lighting information for centity
 	}
 	else 
 	{
-		if (ent->inheritLight != NULL)
+		if (ent->inheritLight > 0)
 		{
-			VectorCopy(ent->inheritLight->shadelightpoint, model_shadelight);
+			VectorCopy(r_newrefdef.entities[ent->inheritLight].shadelightpoint, model_shadelight);
 		}
 		else
 		{

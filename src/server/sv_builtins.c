@@ -2055,74 +2055,6 @@ If entity's model has no tags or is not MD3, entity angles will be returned.
 vector looking_at = gettagangles(self, "tag_head");
 =================
 */
-static void VectorAngles(const float* forward, const float* up, float* result, qboolean meshpitch)    //up may be NULL
-{
-	float    yaw, pitch, roll;
-
-	if (forward[1] == 0 && forward[0] == 0)
-	{
-		if (forward[2] > 0)
-		{
-			pitch = -M_PI * 0.5;
-			yaw = up ? atan2(-up[1], -up[0]) : 0;
-		}
-		else
-		{
-			pitch = M_PI * 0.5;
-			yaw = up ? atan2(up[1], up[0]) : 0;
-		}
-		roll = 0;
-	}
-	else
-	{
-		yaw = atan2(forward[1], forward[0]);
-		pitch = -atan2(forward[2], sqrt(forward[0] * forward[0] + forward[1] * forward[1]));
-
-		if (up)
-		{
-			vec_t cp = cos(pitch), sp = sin(pitch);
-			vec_t cy = cos(yaw), sy = sin(yaw);
-			vec3_t tleft, tup;
-			tleft[0] = -sy;
-			tleft[1] = cy;
-			tleft[2] = 0;
-			tup[0] = sp * cy;
-			tup[1] = sp * sy;
-			tup[2] = cp;
-			roll = -atan2(DotProduct(up, tleft), DotProduct(up, tup));
-		}
-		else
-			roll = 0;
-	}
-
-	pitch *= 180 / M_PI;
-	yaw *= 180 / M_PI;
-	roll *= 180 / M_PI;
-	if (meshpitch)
-	{
-//		pitch *= r_meshpitch.value;
-//		roll *= r_meshroll.value;
-	}
-	if (pitch < 0)
-		pitch += 360;
-	if (yaw < 0)
-		yaw += 360;
-	if (roll < 0)
-		roll += 360;
-
-#if 1 
-	// DUMB HACK BECAUSE I HAVENT PAID ATTENTION TO HOW MD3 TAGS WERE SUPPOSED TO BE 
-	// ORIENTED AND AT THIS POINT I DON'T WANT TO BOTHER RECOMPILING ALL THE MODELS
-	result[0] = -pitch;
-	result[1] = yaw - 180;
-	result[2] = roll + 270;
-#else
-	result[0] = pitch;
-	result[1] = yaw;
-	result[2] = roll;
-#endif
-}
-
 void PFSV_gettagangles(void)
 {
 	gentity_t* ent;
@@ -2157,8 +2089,8 @@ void PFSV_gettagangles(void)
 	//
 	// convert axis to angles
 	//
-	VectorAngles(tag->axis[0], tag->axis[2], out, true);
 
+	VectorAngles(tag->axis[0], tag->axis[2], out);
 //	AxisToAngles(tag->axis, out);
 
 	Scr_ReturnVector(out);
