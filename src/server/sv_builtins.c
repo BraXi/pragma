@@ -147,7 +147,6 @@ void PFSV_nextent(void)
 		ent = EDICT_NUM(entnum);
 		if(ent->inuse)
 			break;
-		
 	}
 
 retent:
@@ -978,6 +977,7 @@ Center print message to a single client, if entity is world broadcast to everyon
 void centerprint(entity who, string text, ...)
 
 centerprint(player, "hello", " world!");
+centerprint(world, "hello", " world!"); // center printed to everyone on the server
 ===============
 */
 void PFSV_centerprint(void)
@@ -1056,11 +1056,8 @@ void PFSV_setviewmodel(void)
 	}
 
 	newmodelindex = SV_ModelIndex(model);
-
 	if (ent->client->ps.viewmodel_index != newmodelindex)
-	{
 		ent->v.viewmodel_index = newmodelindex;
-	}
 
 	Scr_ReturnFloat(ent->v.viewmodel_index);
 }

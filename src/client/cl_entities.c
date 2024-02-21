@@ -181,7 +181,7 @@ static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t*
 
 //	refent->frame = 0;
 	refent->skinnum = 0;
-	refent->renderfx = 0;
+//	refent->renderfx = 0;
 	for (int i = 0; i < MAX_ATTACHED_MODELS; i++)
 	{
 		attachInfo = &state->attachments[i];
@@ -194,9 +194,9 @@ static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t*
 		r = *refent;
 
 		AxisClear(attachEnt.axis);
-		PositionRotatedEntityOnTag(&attachEnt, &r, clent->current.modelindex, 0);
+		PositionRotatedEntityOnTag(&attachEnt, &r, clent->current.modelindex, (attachInfo->parentTag - 1));
 
-		attachEnt.model = cl.model_draw[state->attachments[0].modelindex];
+		attachEnt.model = cl.model_draw[state->attachments[i].modelindex];
 //		attachEnt.inheritLight = refent->index;
 		VectorAngles(attachEnt.axis[0], attachEnt.axis[2], angles);
 		VectorCopy(angles, attachEnt.angles);

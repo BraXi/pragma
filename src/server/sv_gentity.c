@@ -496,11 +496,12 @@ void SV_AttachModel(gentity_t *self, char* tagname, char *model)
 	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
 	{
 		attachInfo = &self->s.attachments[i];
-		if (attachInfo->modelindex != 0)
-			continue;
-
-		attachInfo->modelindex = svmod->modelindex;
-		attachInfo->parentTag = tag + 1; // must offset tag by 1 for network
+		if (attachInfo->modelindex == 0)
+		{ 
+			attachInfo->modelindex = svmod->modelindex;
+			attachInfo->parentTag = tag + 1; // must offset tag by 1 for network
+			break;
+		}
 	}
 }
 

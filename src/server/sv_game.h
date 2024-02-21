@@ -84,9 +84,7 @@ struct gclient_s
 	player_state_t			ps;		// communicated by server to clients
 	int						ping;
 	client_persistant_t		pers;
-
-	vec3_t			v_angle;
-	pmove_state_t	old_pmove;
+	pmove_state_t			old_pmove;
 };
 
 #define ENTITYNUM_NULL -1
