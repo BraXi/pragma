@@ -449,7 +449,6 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 
 		memcpy(out->surfNames[i], surf->name, sizeof(surf->name));
 
-		Com_Printf("%s surf %i = %s\n", out->name, i, surf->name);
 		// find the next surface
 		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 

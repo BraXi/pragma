@@ -59,14 +59,11 @@ void SV_ModelList_f(void)
 				for(j = 1; j < mod->def.numAnimations; j++)
 					Com_Printf("     ANIM %.2i: '%s' [start %i, frames %i, end %i]\n", j, mod->def.anims[j].name, mod->def.anims[j].firstFrame, mod->def.anims[j].numFrames, mod->def.anims[j].lastFrame);
 
-			if (mod->def.numSkins > 0)
-			{
-				//for (j = 1; j < mod->def.numSkins; j++)
-					Com_Printf("     SKIN %.2i: surf '%s' -> '%s'\n", 0, "body", "body@zomworker1.tga");
-					Com_Printf("     SKIN %.2i: surf '%s' -> '%s'\n", 1, "body", "body@zomworker2.tga");
-					Com_Printf("     SKIN %.2i: surf '%s' -> '%s'\n", 2, "body", "body@zomworker3.tga");
-					Com_Printf("     SKIN %.2i: surf '%s' -> '%s'\n", 3, "body", "body@zomworker4.tga");
-			}
+			//if (mod->def.numSkins > 0) //todo
+			//{
+			//	for (j = 1; j < mod->def.numSkins; j++)
+			//		Com_Printf("     SKIN %.2i: surf '%s' -> '%s'\n", mod->def.);
+			//}
 
 		}
 		else
