@@ -69,6 +69,9 @@ typedef struct rentity_s
 	// 0.0 = current, 1.0 = old
 	float	backlerp;				
 
+	// hidden = (hiddenPartsBits & (1 << modelSurfaceNum)
+	byte	hiddenPartsBits;
+
 	// index to skin entry
 	int		skinnum;				
 	

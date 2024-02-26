@@ -15,7 +15,7 @@ See the attached GNU General Public License v2 for more details.
 void Scr_SV_OP(eval_t *a, eval_t* b, eval_t* c)
 {
 	gentity_t *ed = VM_TO_ENT(sv.script_globals->self);
-	ed->v.nextthink = sv.script_globals->g_time + 0.1;
+	ed->v.nextthink = sv.script_globals->g_time + SV_FRAMETIME;
 	if (a->_float != ed->v.animFrame)
 	{
 			ed->v.animFrame = a->_float;
@@ -144,8 +144,10 @@ void SV_ScriptEndFrame()
 	sv.script_globals->worldspawn = GENT_TO_PROG(sv.edicts);
 	sv.script_globals->self = sv.script_globals->worldspawn;
 	sv.script_globals->other = sv.script_globals->worldspawn;
-	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->sv_time = sv.time;
+	sv.script_globals->g_time = sv.gameTime;
+	sv.script_globals->g_frameNum = sv.gameFrame;
+	sv.script_globals->g_frameTime = SV_FRAMETIME;
 	Scr_Execute(VM_SVGAME, sv.script_globals->EndFrame, __FUNCTION__);
 }
 

@@ -572,7 +572,8 @@ void SV_BuildClientFrame (client_t *client)
 		//
 		// ignore ents without visible models unless they have an effect, looping sound or event
 		//
-		if (!ent->s.modelindex && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)
+		//if (!ent->s.modelindex && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)	
+		if (!SV_EntityCanBeDrawn(ent) && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)
 		{
 			SV_RestoreEntityStateAfterClient(ent);
 			continue;

@@ -40,7 +40,8 @@
     <ClCompile Include="client\cgame\cg_builtins.c" />
     <ClCompile Include="client\ui\ui_builtins.c" />
     <ClCompile Include="qcommon\mathlib.c" />
-    <ClCompile Include="qcommon\navigation.c" />
+    <ClCompile Include="qcommon\bg_modeldef.c" />
+    <ClCompile Include="qcommon\bg_navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />
     <ClCompile Include="qcommon\common.c" />

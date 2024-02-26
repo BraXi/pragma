@@ -64,7 +64,6 @@
     <ClCompile Include="client\cgame\cg_oldfx.c" />
     <ClCompile Include="client\cgame\cg_temp_entities.c" />
     <ClCompile Include="client\cgame\cg_world.c" />
-    <ClCompile Include="client\cgame\modeldef.c" />
     <ClCompile Include="client\cl_cinematic.c" />
     <ClCompile Include="client\cl_download.c" />
     <ClCompile Include="client\cl_entities.c" />
@@ -88,7 +87,8 @@
     <ClCompile Include="client\ui\ui_main.c" />
     <ClCompile Include="cl_cgame.c" />
     <ClCompile Include="qcommon\mathlib.c" />
-    <ClCompile Include="qcommon\navigation.c" />
+    <ClCompile Include="qcommon\bg_modeldef.c" />
+    <ClCompile Include="qcommon\bg_navigation.c" />
     <ClCompile Include="qcommon\cmd.c" />
     <ClCompile Include="qcommon\cmodel.c" />
     <ClCompile Include="qcommon\common.c" />

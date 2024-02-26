@@ -12,6 +12,8 @@ See the attached GNU General Public License v2 for more details.
 
 #include "server.h"
 
+qboolean ModelDef_LoadFile(char* filename, modeldef_t* def);
+
 static void SV_LoadMD3(svmodel_t* out, void* buffer);
 static void SV_LoadSP2(svmodel_t* out, void* buffer);
 
@@ -142,14 +144,14 @@ static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char*
 	if (start == CS_SOUNDS)
 	{
 		Com_sprintf(fullname, sizeof(fullname), "sound/%s", name);
-		if (SV_FileExists(fullname, (int)developer->value == 1) == false)
+		if (SV_FileExists(fullname, false) == false)
 			return 0;
 	}
 	
 	if (start == CS_IMAGES)
 	{
 		Com_sprintf(fullname, sizeof(fullname), "gfx/%s.tga", name);
-		if (SV_FileExists(fullname, (int)developer->value == 1) == false)
+		if (SV_FileExists(fullname, false) == false)
 			return 0;
 	}
 	
@@ -199,15 +201,64 @@ static qboolean SV_FileExists(char* name, qboolean crash)
 
 /*
 =================
+SV_LoadDefForModel
+
+Loads the .def file for a model when present
+=================
+*/
+static void SV_LoadDefForModel(svmodel_t* model)
+{
+	char defname[MAX_QPATH];
+	int i;
+
+	memset(&model->def, 0, sizeof(model->def));
+
+	if (model->type != MOD_MD3)
+		return;
+
+	strcpy(defname, model->name);
+	COM_StripExtension(model->name, defname);
+	strcat(defname, ".def");
+
+	// first anim is null
+	strcat(model->def.anims[0].name, "*none*");
+	model->def.anims[0].firstFrame = 0;
+	model->def.anims[0].numFrames = 0;
+	model->def.anims[0].lastFrame = 0;
+	model->def.numAnimations = 1;
+
+	if (ModelDef_LoadFile(defname, &model->def))
+	{
+		// def found, see if anims are trully correct
+		for (i = 0; i < model->def.numAnimations; i++)
+		{
+			if (model->def.anims[i].lastFrame > model->numFrames)
+			{
+				Com_Error(ERR_DROP, "Model '%s' has %i frames but animation '%s' exceeds total number of frames\n", model->name, model->numFrames, model->def.anims[i].lastFrame);
+			}
+		}
+	}
+	else
+	{
+		// no def file
+		strcat(model->def.anims[1].name, "*animation*");
+		model->def.anims[1].firstFrame = 0;
+		model->def.anims[1].numFrames = model->numFrames;
+		model->def.anims[1].lastFrame = model->def.anims[1].numFrames;
+		model->def.numAnimations = 2;
+	}
+}
+
+/*
+=================
 SV_LoadModel
 =================
 */
 static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 {
-	svmodel_t* model;
-	unsigned* buf;
-	int			fileLen;
-	int			i;
+	svmodel_t	*model;
+	unsigned	*buf;
+	int			fileLen, i;
 
 	if (!name[0])
 	{
@@ -268,10 +319,6 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 		Com_Error(ERR_DROP, "'%s' is not a model", model->name);
 	}
 
-	if (sv.state == ss_game)
-	{
-		printf("bp\n");
-	}
 	FS_FreeFile(buf);
 
 	if (model->type == MOD_BAD)
@@ -280,6 +327,7 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 		return NULL;
 	}
 
+	SV_LoadDefForModel(model);
 	sv.num_models++;
 	return model;
 }
@@ -295,6 +343,7 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 	md3Header_t* in;
 //	md3Frame_t* frame;
 	md3Tag_t* tag;
+	md3Surface_t* surf;
 
 	in = (md3Header_t*)buffer;
 
@@ -321,13 +370,13 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 
 	if (in->numFrames < 1)
 	{
-		Com_Printf("SV_LoadMD3: '%s' has no frames\n", out->name);
+		Com_Printf("SV_LoadMD3: '%s' is corrupt (doesn't have a single frame)\n", out->name);
 		return;
 	}
 
 	out->numFrames = in->numFrames;
 	out->numTags = in->numTags;
-	out->numSurfaces = out->numSurfaces;
+	out->numSurfaces = in->numSurfaces;
 
 	if (in->numTags)
 	{
@@ -367,6 +416,45 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 		}
 	}
 
+	// swap all the surfaces
+	surf = (md3Surface_t*)((byte*)in + in->ofsSurfaces);
+	for (i = 0; i < in->numSurfaces; i++)
+	{
+		LittleLong(surf->numFrames);
+		LittleLong(surf->numShaders);
+		LittleLong(surf->numTriangles);
+		LittleLong(surf->numVerts);
+		LittleLong(surf->ofsEnd);
+
+		// don't really need these ifs here, but this will probably help a bit
+		if (surf->numVerts > MD3_MAX_VERTS)
+		{
+			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i verts on a surface (%i)", out->name, MD3_MAX_VERTS, surf->numVerts);
+		}
+		if (surf->numTriangles > MD3_MAX_TRIANGLES)
+		{
+			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i triangles on a surface (%i)", out->name, MD3_MAX_TRIANGLES, surf->numTriangles);
+		}
+
+
+		// lowercase the surface name so skin compares are faster
+		_strlwr(surf->name);
+
+		// strip off a trailing _1 or _2
+		j = strlen(surf->name);
+		if (j > 2 && surf->name[j - 2] == '_')
+		{
+			surf->name[j - 2] = 0;
+		}
+
+		memcpy(out->surfNames[i], surf->name, sizeof(surf->name));
+
+		Com_Printf("%s surf %i = %s\n", out->name, i, surf->name);
+		// find the next surface
+		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
+
+	}
+
 	out->type = MOD_MD3;
 }
 
@@ -396,6 +484,35 @@ static void SV_LoadSP2(svmodel_t* out, void* buffer)
 	out->numSurfaces = 1;
 	out->type = MOD_SPRITE;
 }
+
+
+
+/*
+=================
+SV_ModelSurfIndexForName
+=================
+*/
+int SV_ModelSurfIndexForName(int modelindex, char* surfaceName)
+{
+	svmodel_t* mod;
+	int index;
+
+	mod = SV_ModelForNum(modelindex);
+	if (!mod || mod->type != MOD_MD3)
+	{
+		return -1;
+	}
+
+	for (index = 0; index < mod->numSurfaces; index++)
+	{
+		if (!Q_stricmp(mod->surfNames[index], surfaceName))
+		{
+			return index;
+		}
+	}
+	return -1;
+}
+
 
 /*
 =================

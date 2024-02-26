@@ -1048,20 +1048,23 @@ void CL_PrintEnts_f(void)
 		if (ent->modelindex)
 		{
 			if(cl.configstrings[CS_MODELS + ent->modelindex][0] == '*')
-				Com_Printf("brushmodel: %s (modelindex %i)\n", cl.configstrings[CS_MODELS + ent->modelindex], ent->modelindex);
+				Com_Printf("brush: '%s' (modelindex %i)\n", cl.configstrings[CS_MODELS + ent->modelindex], ent->modelindex);
 			else
-				Com_Printf("model: %s (frame %i, skinnum %i, modelindex %i)\n", cl.configstrings[CS_MODELS + ent->modelindex], ent->frame, ent->skinnum, ent->modelindex);
+				Com_Printf("model: '%s' (frame %i, skinnum %i, modelindex %i)\n", cl.configstrings[CS_MODELS + ent->modelindex], ent->frame, ent->skinnum, ent->modelindex);
 		}
 	}
 
 	Com_Printf("\nnum frame entities: %i\n", cl.frame.num_entities);
+}
+
+void CL_Test_f(void)
+{
 }
 /*
 =================
 CL_InitLocal
 =================
 */
-extern void CL_Test_f(void);
 void CL_InitLocal (void)
 {
 	cls.state = ca_disconnected;

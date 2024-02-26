@@ -139,16 +139,13 @@
     <ClCompile Include="server\sv_devtools.c">
       <Filter>server</Filter>
     </ClCompile>
-    <ClCompile Include="qcommon\navigation.c">
+    <ClCompile Include="qcommon\bg_navigation.c">
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="client\cgame\cg_builtins.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
     <ClCompile Include="client\cgame\cg_main.c">
-      <Filter>client\cgame</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\modeldef.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
     <ClCompile Include="client\ui\ui_load.c">
@@ -219,6 +216,9 @@
     </ClCompile>
     <ClCompile Include="client\cgame\cg_model.c">
       <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="qcommon\bg_modeldef.c">
+      <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

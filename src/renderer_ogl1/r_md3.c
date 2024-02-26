@@ -474,6 +474,12 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
 	for (i = 0; i < model->numSurfaces; i++)
 	{	
+		if( (ent->hiddenPartsBits & (1 << i)))
+		{
+			surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
+			continue; // surface is hidden
+		}
+
 		if (surface->numShaders > 0) 
 		{
 			//bind texture

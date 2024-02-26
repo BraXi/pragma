@@ -277,6 +277,7 @@ void CL_AddPacketEntities(frame_t* frame)
 
 		rent.backlerp = (1.0 - cl.lerpfrac);
 		rent.inheritLight = -1;
+		rent.hiddenPartsBits = state->hidePartBits;
 
 		//if (clent->current.eType > 0)
 		//	Com_Printf("clent %i is %s\n", state->number, etypes[clent->current.eType]);

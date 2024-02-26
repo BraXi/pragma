@@ -97,7 +97,7 @@
     <ClCompile Include="server\sv_devtools.c">
       <Filter>server</Filter>
     </ClCompile>
-    <ClCompile Include="qcommon\navigation.c">
+    <ClCompile Include="qcommon\bg_navigation.c">
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="client\ui\ui_builtins.c">
@@ -107,6 +107,9 @@
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="qcommon\mathlib.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="qcommon\bg_modeldef.c">
       <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>

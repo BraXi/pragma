@@ -86,6 +86,7 @@ typedef enum
 	F_INT,
 	F_FLOAT,
 	F_STRING,
+	F_STRINGCOPY,
 	F_BOOLEAN,
 	F_VECTOR2,
 	F_VECTOR3,

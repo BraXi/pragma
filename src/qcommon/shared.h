@@ -129,7 +129,31 @@ MULTICAST_PHS_R,
 MULTICAST_PVS_R
 } multicast_t;
 
+//=============================================
 
+#define DEFAULT_ANIM_RATE 10
+#define MAX_ANIMS 32
+
+typedef struct animation_s
+{
+	char		name[MAX_QPATH];
+	int			firstFrame;
+	int			numFrames;
+	int			lastFrame;
+	int			lerpTime; // 1000 / fps
+	qboolean	looping;
+} animation_t;
+
+
+typedef struct modeldef_s
+{
+	int			numAnimations;
+	int			numSkins;
+	animation_t anims[MAX_ANIMS];
+	//animation_t	*anims[MAX_ANIMS]; 
+} modeldef_t;
+
+//=============================================
 
 extern char* GetTimeStamp(qboolean full);
 
@@ -633,28 +657,28 @@ typedef enum
 
 typedef struct ent_model_s
 {
-	int		modelindex;		// index to model
-	int		parentTag;		// parent's tag the model is attached to index is offset by +1
-	int		skin;			// index to skin entry in def
-	int		frame;			// current animation frame
+	short	modelindex;		// index to model
+	byte	parentTag;		// parent's tag the model is attached to index is offset by +1
 } ent_model_t;
 
 #define MAX_ATTACHED_MODELS 3
 typedef struct entity_state_s
 {
-	int			number;			// edict index
+	short		number;			// edict index
 
-	int			eType;
+	byte		eType;
 
 	vec3_t		origin;
 	vec3_t		angles;
 	vec3_t		old_origin;		// for lerping
 
-	int			modelindex;		// main model
-	int			animationIdx;
+	short		modelindex;		// main model
+	byte		hidePartBits;
+
+	byte		animationIdx;
 	unsigned int animStartTime;
-	int			frame;
-	int			skinnum;
+	short		frame;
+	byte		skinnum;		// byte
 
 	ent_model_t attachments[MAX_ATTACHED_MODELS];
 
@@ -665,9 +689,9 @@ typedef struct entity_state_s
 	vec3_t		renderColor;	// used when renderFlags & RF_COLOR
 	float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
 
-	int			loopingSound;	// for looping sounds, to guarantee shutoff
+	short		loopingSound;	// for looping sounds, to guarantee shutoff
 
-	int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
+	byte		event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 
 	int			packedSolid;	// entity's bounding box
 
@@ -679,7 +703,7 @@ typedef struct entity_state_s
 
 
 // player_state_t is the information needed in addition to pmove_state_t
-// to rendered a view.  There will only be [SV_FPS] player_state_t sent each second,
+// to rendered a view. There will only be [SV_FPS] player_state_t sent each second,
 // but the number of pmove_state_t changes will be reletive to client
 // frame rates
 typedef struct

@@ -558,3 +558,121 @@ void SV_DetachAllModels(gentity_t* self)
 		attachInfo->parentTag = 0;
 	}
 }
+
+
+
+/*
+==============
+SV_HideEntitySurface
+==============
+*/
+void SV_HideEntitySurface(gentity_t* self, char* surfaceName)
+{
+	int surf;
+	svmodel_t* svmod;
+
+	if (!self || !self->inuse || self == sv.edicts)
+		return;
+
+	svmod = SV_ModelForNum((int)self->v.modelindex);
+	if (svmod == NULL || svmod->type != MOD_MD3 || svmod->modelindex == 0)
+	{
+		Com_DPrintf(DP_GAME, "WARNING: entity %s has no model (%s)\n", Scr_GetString(self->v.classname), __FUNCTION__);
+		return;
+	}
+
+	if (svmod->type == MOD_BRUSH)
+	{
+		Com_DPrintf(DP_GAME, "WARNING: brushmodels have no parts! (entity %i)\n", NUM_FOR_ENT(self));
+		return;
+	}
+
+	surf = SV_ModelSurfIndexForName((int)self->v.modelindex, surfaceName);
+	if (surf != -1)
+	{
+		if(!(self->s.hidePartBits & (1 << surf))) // paranoid me
+			self->s.hidePartBits |= (1 << surf);
+	}
+	else
+	{
+		Com_DPrintf(DP_GAME, "WARNING: model '%' has no surface '%s' (%s)\n", svmod->name, surfaceName, __FUNCTION__);
+	}
+}
+
+
+/*
+==============
+SV_ShowEntitySurface
+
+NULL surfaceName will show all parts
+==============
+*/
+void SV_ShowEntitySurface(gentity_t* self, char* surfaceName)
+{
+	int surf;
+
+	if (!self || !self->inuse)
+		return;
+
+	if (surfaceName == NULL)
+	{
+		self->s.hidePartBits = 0; // show all
+	}
+	else
+	{
+		surf = SV_ModelSurfIndexForName((int)self->v.modelindex, surfaceName);
+		if (surf != -1)
+		{
+			int bit = (1 << surf);
+			if ((self->s.hidePartBits & bit)) // paranoid me
+				self->s.hidePartBits &= ~bit;
+		}
+	}
+}
+
+
+/*
+==============
+SV_EntityCanBeDrawn
+
+returns false if all parts of a model are hidden or there's no model at all
+==============
+*/
+qboolean SV_EntityCanBeDrawn(gentity_t* self)
+{
+	svmodel_t* svmod;
+	int i, hidden;
+
+	if ((int)self->v.modelindex <= 0)
+		return false; // no modelindex
+
+	svmod = SV_ModelForNum((int)self->v.modelindex);
+	if (svmod == NULL) // should not happen but meh
+	{
+		Com_Error(ERR_DROP, "entity has modelindex > 0 but svmodel is NULL");
+		return false; 
+	}
+
+	if ((self->v.renderFlags & RF_TRANSLUCENT) && self->v.renderAlpha <= 0)
+		return false; // totally transparent!
+
+	if (svmod->type != MOD_MD3)
+		return true; // quick case, md3s have special handling
+
+	if (self->s.hidePartBits <= 0)
+		return true; // nothing was hidden
+
+	if (svmod->type == MOD_MD3)
+	{
+		hidden = 0;
+		for (i = 0; i < svmod->numSurfaces; i++)
+		{
+			if ((self->s.hidePartBits & (1 << i)))
+				hidden++;
+		}
+		if (svmod->numSurfaces == hidden)
+			return false; // all parts are hidden
+	}
+
+	return true; // visible
+}

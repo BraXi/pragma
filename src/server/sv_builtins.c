@@ -302,6 +302,7 @@ void PFSV_setmodel(void)
 	if (modelindex == (int)ent->v.modelindex)
 		return; // model has not changed
 
+	SV_ShowEntitySurface(ent, NULL); // make all surfaces visible when models change
 	SV_DetachAllModels(ent);
 
 	ent->v.model = Scr_SetString(name);
@@ -484,6 +485,81 @@ void PFSV_detachall(void)
 
 	SV_DetachAllModels(ent);
 }
+
+/*
+=================
+PFSV_hidepart
+
+Hides part of a model, surfaceName is the name of surface to hide.
+Note: calling setmodel() will unhide all parts.
+
+void hidepart(entity ent, string surfaceName)
+hidepart(self, "head");
+=================
+*/
+void PFSV_hidepart(void)
+{
+	gentity_t* ent;
+	char* part;
+
+	ent = Scr_GetParmEdict(0);
+	part  = Scr_GetParmString(1);
+
+	if (!ent->inuse || ent == sv.edicts)
+	{
+		return;
+	}
+	SV_HideEntitySurface(ent, part);
+}
+
+/*
+=================
+PFSV_showpart
+
+Shows previously hidden part of a model, surfaceName is the name of surface to show.
+Note: calling setmodel() will unhide all parts.
+
+void showpart(entity ent, string surfaceName)
+showpart(self, "head");
+=================
+*/
+void PFSV_showpart(void)
+{
+	gentity_t* ent;
+	char* part;
+
+	ent = Scr_GetParmEdict(0);
+	part = Scr_GetParmString(1);
+
+	if (!ent->inuse || ent == sv.edicts)
+	{
+		return;
+	}
+	SV_ShowEntitySurface(ent, part);
+}
+
+/*
+=================
+PFSV_showallparts
+
+Shows all parts of a model which might have been previously hidden.
+Note: calling setmodel() will also unhide all parts.
+
+float showallparts(entity ent)
+showallpart(self);
+=================
+*/
+void PFSV_showallparts(void)
+{
+	gentity_t* ent;
+	ent = Scr_GetParmEdict(0);
+	if (!ent->inuse || ent == sv.edicts)
+	{
+		return;
+	}
+	SV_ShowEntitySurface(ent, NULL);
+}
+
 
 /*
 =================
@@ -2133,6 +2209,10 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_attach, PF_SV, "attach", "void(entity e, string tn, string mn)");
 	Scr_DefineBuiltin(PFSV_detach, PF_SV, "detach", "void(entity e, string mn)");
 	Scr_DefineBuiltin(PFSV_detachall, PF_SV, "detachall", "void(entity e, string mn)");
+
+	Scr_DefineBuiltin(PFSV_hidepart, PF_SV, "hidepart", "void(entity e, string pn)");
+	Scr_DefineBuiltin(PFSV_showpart, PF_SV, "showpart", "void(entity e, string pn)");
+	Scr_DefineBuiltin(PFSV_showallparts, PF_SV, "showallparts", "void(entity e)");
 
 	// collision and physics
 	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector v)");

@@ -582,15 +582,13 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 		bits |= U_EVENT_8;
 
 	// main model
-	if (to->modelindex != from->modelindex)
+	if (to->modelindex != from->modelindex || to->hidePartBits != from->hidePartBits)
 	{
 		if (to->modelindex > 255)
 			bits |= U_MODELINDEX_16; // short
 		else
-			bits |= U_MODELINDEX_8; // byte
-			
+			bits |= U_MODELINDEX_8; // byte	
 	}
-
 
 	// attached models
 	if (to->attachments[0].modelindex != from->attachments[0].modelindex || to->attachments[0].parentTag != from->attachments[0].parentTag)
@@ -674,6 +672,10 @@ void MSG_WriteDeltaEntity(struct entity_state_s* from, struct entity_state_s* to
 		MSG_WriteByte(msg, to->modelindex);
 	if (bits & U_MODELINDEX_16)
 		MSG_WriteShort(msg, to->modelindex);
+
+	// hidden parts
+	if(bits & U_MODELINDEX_8 || bits & U_MODELINDEX_16)
+		MSG_WriteByte(msg, to->hidePartBits);
 
 	// attached models
 	if (bits & U_ATTACHMENT_1)
@@ -1440,7 +1442,7 @@ qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
 				break;
 
 			case F_STRING:
-				*(char**)(basePtr + f->ofs) = COM_NewString(value, 0);
+				*(char**)(basePtr + f->ofs) = COM_NewString(value, 0); // FIXME memtag
 				break;
 
 			case F_VECTOR2:

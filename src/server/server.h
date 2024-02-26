@@ -42,8 +42,11 @@ typedef struct svmodel_s
 	cmodel_t		*bmodel; // only if type == MOD_BRUSH
 
 	// only if type == MOD_MD3
+	char			surfNames[MD3_MAX_SURFACES][MD3_MAX_NAME];
 	char			tagNames[MD3_MAX_TAGS][MD3_MAX_NAME];
 	orientation_t	*tagFrames;	// numTags * numFrames
+
+	modeldef_t		def;
 
 	// common
 	int				numFrames;
@@ -255,6 +258,7 @@ int SV_SoundIndex(char* name);
 int SV_ImageIndex(char* name);
 svmodel_t* SV_ModelForNum(unsigned int index);
 svmodel_t* SV_ModelForName(char *name);
+int SV_ModelSurfIndexForName(int modelindex, char* surfaceName);
 int SV_TagIndexForName(int modelindex, char* tagName);
 orientation_t* SV_GetTag(int modelindex, int frame, char* tagName);
 orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, char* tagName);

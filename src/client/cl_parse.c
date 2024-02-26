@@ -570,6 +570,10 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	if (bits & U_MODELINDEX_16)
 		to->modelindex = MSG_ReadShort(&net_message);
 
+	// hidden parts
+	if (bits & U_MODELINDEX_8 || bits & U_MODELINDEX_16)
+		to->hidePartBits = MSG_ReadByte(&net_message);
+
 	// attached models
 	if (bits & U_ATTACHMENT_1)
 	{
