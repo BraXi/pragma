@@ -498,7 +498,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 			rperf.alias_tris += surface->numTriangles;
 
 		// for each triangle in surface
-		qglBegin(GL_TRIANGLES);
+		glBegin(GL_TRIANGLES);
 		for (j = 0; j < surface->numTriangles; j++, triangle++)
 		{
 			//for each vert in triangle
@@ -522,13 +522,13 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 						lambert = 0;
 				}
 
-				qglColor4f(lambert * model_shadelight[0], lambert * model_shadelight[1], lambert * model_shadelight[2], ent->alpha);	
-				qglTexCoord2f(texcoord[index].st[0], texcoord[index].st[1]);
-				qglVertex3fv(v);
-				qglNormal3fv(n);
+				glColor4f(lambert * model_shadelight[0], lambert * model_shadelight[1], lambert * model_shadelight[2], ent->alpha);	
+				glTexCoord2f(texcoord[index].st[0], texcoord[index].st[1]);
+				glVertex3fv(v);
+				glNormal3fv(n);
 			}
 		}
-		qglEnd();
+		glEnd();
 
 		surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
 	}

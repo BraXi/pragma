@@ -227,7 +227,7 @@ int R_Init(void* hinstance, void* hWnd)
 	// initialize our QGL dynamic bindings
 	if (!QGL_Init(gl_driver->string))
 	{
-		QGL_Shutdown();
+		//QGL_Shutdown();
 		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not load \"%s\"\n", gl_driver->string);
 		return -1;
 	}
@@ -235,7 +235,7 @@ int R_Init(void* hinstance, void* hWnd)
 	// initialize OS-specific parts of OpenGL
 	if (!GLimp_Init(hinstance, hWnd))
 	{
-		QGL_Shutdown();
+		//QGL_Shutdown();
 		return -1;
 	}
 
@@ -245,21 +245,30 @@ int R_Init(void* hinstance, void* hWnd)
 	// create the window and set up the context
 	if (!R_SetMode())
 	{
-		QGL_Shutdown();
+		//QGL_Shutdown();
 		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not R_SetMode()\n");
 		return -1;
 	}
 
+	// load opengl
+	if (!gladLoadGL())
+	{
+		QGL_Shutdown();
+		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not resolve opengl bindings\n");
+		return -1;
+	}
+
+
 	/*
 	** get our various GL strings
 	*/
-	gl_config.vendor_string = qglGetString(GL_VENDOR);
+	gl_config.vendor_string = glGetString(GL_VENDOR);
 	ri.Printf(PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string);
-	gl_config.renderer_string = qglGetString(GL_RENDERER);
+	gl_config.renderer_string = glGetString(GL_RENDERER);
 	ri.Printf(PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string);
-	gl_config.version_string = qglGetString(GL_VERSION);
+	gl_config.version_string = glGetString(GL_VERSION);
 	ri.Printf(PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string);
-	gl_config.extensions_string = qglGetString(GL_EXTENSIONS);
+	gl_config.extensions_string = glGetString(GL_EXTENSIONS);
 	ri.Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string);
 
 	strcpy(renderer_buffer, gl_config.renderer_string);
@@ -291,17 +300,6 @@ int R_Init(void* hinstance, void* hWnd)
 	** grab extensions
 	*/
 #ifdef WIN32
-	if (strstr(gl_config.extensions_string, "GL_EXT_compiled_vertex_array"))
-	{
-//		ri.Printf(PRINT_ALL, "...enabling GL_EXT_compiled_vertex_array\n");
-		qglLockArraysEXT = (void*)qwglGetProcAddress("glLockArraysEXT");
-		qglUnlockArraysEXT = (void*)qwglGetProcAddress("glUnlockArraysEXT");
-	}
-	else
-	{
-		ri.Printf(PRINT_ALL, "...GL_EXT_compiled_vertex_array not found\n");
-	}
-
 	if (strstr(gl_config.extensions_string, "WGL_EXT_swap_control"))
 	{
 		qwglSwapIntervalEXT = (BOOL(WINAPI*)(int)) qwglGetProcAddress("wglSwapIntervalEXT");
@@ -312,39 +310,12 @@ int R_Init(void* hinstance, void* hWnd)
 		ri.Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
 	}
 
-	if (strstr(gl_config.extensions_string, "GL_EXT_point_parameters"))
-	{
-		if (gl_ext_pointparameters->value)
-		{
-			qglPointParameterfEXT = (void (APIENTRY*)(GLenum, GLfloat)) qwglGetProcAddress("glPointParameterfEXT");
-			qglPointParameterfvEXT = (void (APIENTRY*)(GLenum, const GLfloat*)) qwglGetProcAddress("glPointParameterfvEXT");
-			ri.Printf(PRINT_ALL, "...using GL_EXT_point_parameters\n");
-		}
-		else
-		{
-			ri.Printf(PRINT_ALL, "...ignoring GL_EXT_point_parameters\n");
-		}
-	}
-	else
-	{
-		ri.Printf(PRINT_ALL, "...GL_EXT_point_parameters not found\n");
-	}
-
-
-	// GL_ARB_multitexture is mandatory
-	if (strstr(gl_config.extensions_string, "GL_ARB_multitexture"))
-	{
-		qglActiveTextureARB = (void*)qwglGetProcAddress("glActiveTextureARB");
-		qglMultiTexCoord2fARB = (void*)qwglGetProcAddress("glMultiTexCoord2fARB");
-	}
-	else
-	{
-		ri.Error(ERR_FATAL, "GL_ARB_multitexture not found\n");
-	}
 #endif
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
-	qglActiveTextureARB = 0;
-	qglMultiTexCoord2fARB = 0;
+	
+	glActiveTexture = 0;
+	glMultiTexCoord2f = 0;
+
 	GL_SetDefaultState();
 	R_InitialOGLState(); //wip
 
@@ -363,7 +334,7 @@ int R_Init(void* hinstance, void* hWnd)
 	R_InitParticleTexture();
 	Draw_InitLocal();
 
-	err = qglGetError();
+	err = glGetError();
 	if (err != GL_NO_ERROR)
 		ri.Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
 	return 1;
@@ -393,7 +364,7 @@ void R_Shutdown(void)
 	/*
 	** shutdown our QGL subsystem
 	*/
-	QGL_Shutdown();
+//	QGL_Shutdown();
 }
 
 
@@ -425,7 +396,7 @@ qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, in
 
 static void	RR_SetColor(float r, float g, float b, float a)
 {
-	qglColor4f(r,g,b,a);
+	glColor4f(r,g,b,a);
 }
 
 /*

@@ -540,6 +540,7 @@ qboolean VID_LoadRefresh( char *name )
 	ri.Printf = VID_Printf;
 	ri.Error = VID_Error;
 	ri.LoadFile = FS_LoadFile;
+	ri.LoadTextFile = FS_LoadTextFile;
 	ri.FreeFile = FS_FreeFile;
 	ri.GetGameDir = FS_Gamedir;
 	ri.Cvar_Get = Cvar_Get;

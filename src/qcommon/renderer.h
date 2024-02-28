@@ -239,6 +239,7 @@ typedef struct
 	// or a discrete file from anywhere in the quake search path  a -1 return means the file does not exist
 	// NULL can be passed for buf to just determine existance
 	int		(*LoadFile) (char *name, void **buf);
+	int		(*LoadTextFile)(char* filename, char** buffer);
 	void	(*FreeFile) (void *buf);
 	char	*(*GetGameDir) (void);
 

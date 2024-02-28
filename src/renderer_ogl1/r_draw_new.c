@@ -57,16 +57,16 @@ void R_DrawSingleChar(float x, float y, float w, float h, int num)
 
 	GL_Bind(font_current->texnum);
 
-	qglBegin(GL_QUADS);
-	qglTexCoord2f(fcol, frow);
-	qglVertex2f(x, y);
-	qglTexCoord2f(fcol + size, frow);
-	qglVertex2f(x + w, y);
-	qglTexCoord2f(fcol + size, frow + size);
-	qglVertex2f(x + w, y + h);
-	qglTexCoord2f(fcol, frow + size);
-	qglVertex2f(x, y + h);
-	qglEnd();
+	glBegin(GL_QUADS);
+	glTexCoord2f(fcol, frow);
+	glVertex2f(x, y);
+	glTexCoord2f(fcol + size, frow);
+	glVertex2f(x + w, y);
+	glTexCoord2f(fcol + size, frow + size);
+	glVertex2f(x + w, y + h);
+	glTexCoord2f(fcol, frow + size);
+	glVertex2f(x, y + h);
+	glEnd();
 }
 
 
@@ -89,7 +89,7 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	else if (alignx == XALIGN_RIGHT)
 		ofs_x -= ((strlen(string) * CHAR_SIZEX));
 
-	qglColor4fv(color);
+	glColor4fv(color);
 
 	// draw string
 	while (*string)
@@ -117,16 +117,16 @@ void R_DrawSingleChar3D(float x, float y, float z, float fontSize, int num)
 	fcol = col * 0.0625;
 	size = 0.0625;
 
-	qglBegin(GL_QUADS);
-		qglTexCoord2f(fcol, frow);
-		qglVertex3f(x + (-fontSize / 2), -fontSize / 2, 0);
-		qglTexCoord2f(fcol + size, frow);
-		qglVertex3f(x + (fontSize / 2), -fontSize / 2, 0);
-		qglTexCoord2f(fcol + size, frow + size);
-		qglVertex3f(x + (fontSize / 2), fontSize / 2, 0);
-		qglTexCoord2f(fcol, frow + size);
-		qglVertex3f(x + (-fontSize / 2), fontSize / 2, 0);
-	qglEnd();
+	glBegin(GL_QUADS);
+		glTexCoord2f(fcol, frow);
+		glVertex3f(x + (-fontSize / 2), -fontSize / 2, 0);
+		glTexCoord2f(fcol + size, frow);
+		glVertex3f(x + (fontSize / 2), -fontSize / 2, 0);
+		glTexCoord2f(fcol + size, frow + size);
+		glVertex3f(x + (fontSize / 2), fontSize / 2, 0);
+		glTexCoord2f(fcol, frow + size);
+		glVertex3f(x + (-fontSize / 2), fontSize / 2, 0);
+	glEnd();
 
 }
 
@@ -150,13 +150,13 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	else if (alignx == XALIGN_RIGHT)
 		ofs_x -= ((strlen(string) * CHAR_SIZEX));
 
-	qglColor3fv(color);
+	glColor3fv(color);
 
-	qglPushMatrix();
-	qglTranslatef(pos[0], pos[1], pos[2]);
-	qglRotatef(-90, 1.0f, 0.0f, 0.0f); 
-	qglRotatef((-r_newrefdef.viewangles[1])+90, 0.0f, 1.0f, 0.0f); //rotate to always face the camera
-	qglRotatef((-r_newrefdef.viewangles[0]), 1.0f, 0.0f, 0.0f);
+	glPushMatrix();
+	glTranslatef(pos[0], pos[1], pos[2]);
+	glRotatef(-90, 1.0f, 0.0f, 0.0f); 
+	glRotatef((-r_newrefdef.viewangles[1])+90, 0.0f, 1.0f, 0.0f); //rotate to always face the camera
+	glRotatef((-r_newrefdef.viewangles[0]), 1.0f, 0.0f, 0.0f);
 
 	// draw string
 	GL_Bind(font_current->texnum);
@@ -166,7 +166,7 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 		ofs_x += CHAR_SIZEX;
 		string++;
 	}
-	qglPopMatrix();
+	glPopMatrix();
 }
 
 void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
@@ -193,26 +193,26 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 
 	R_Blend(true);
 	//R_BlendFunc(GL_ONE, GL_ONE);;
-	qglAlphaFunc(GL_GREATER, 0.05);
-	qglColor4f(color[0], color[1], color[2], color[3]);
+	glAlphaFunc(GL_GREATER, 0.05);
+	glColor4f(color[0], color[1], color[2], color[3]);
 
 	GL_Bind(gl->texnum);
-	qglBegin(GL_QUADS);
+	glBegin(GL_QUADS);
 	{
-		qglTexCoord2f(gl->sl, gl->tl);
-		qglVertex2f(rect[0], rect[1]);
-		qglTexCoord2f(gl->sh, gl->tl);
-		qglVertex2f(rect[0] + rect[2], rect[1]);
-		qglTexCoord2f(gl->sh, gl->th);
-		qglVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
-		qglTexCoord2f(gl->sl, gl->th);
-		qglVertex2f(rect[0], rect[1] + rect[3]);
+		glTexCoord2f(gl->sl, gl->tl);
+		glVertex2f(rect[0], rect[1]);
+		glTexCoord2f(gl->sh, gl->tl);
+		glVertex2f(rect[0] + rect[2], rect[1]);
+		glTexCoord2f(gl->sh, gl->th);
+		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
+		glTexCoord2f(gl->sl, gl->th);
+		glVertex2f(rect[0], rect[1] + rect[3]);
 	}
-	qglEnd();
+	glEnd();
 
 	R_Blend(false);
-	qglAlphaFunc(GL_GREATER, 0.666);
-	qglColor4f(1, 1, 1, 1);
+	glAlphaFunc(GL_GREATER, 0.666);
+	glColor4f(1, 1, 1, 1);
 
 }
 
@@ -228,23 +228,23 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	R_AdjustToVirtualScreenSize(&rect[2], &rect[3]); // w/h
 
 	R_Blend(true);
-	qglDisable(GL_TEXTURE_2D);
+	glDisable(GL_TEXTURE_2D);
 
-	qglAlphaFunc(GL_GREATER, 0.05);
-	qglColor4f(color[0], color[1], color[2], color[3]);
+	glAlphaFunc(GL_GREATER, 0.05);
+	glColor4f(color[0], color[1], color[2], color[3]);
 
-	qglBegin(GL_QUADS);
+	glBegin(GL_QUADS);
 	{
-		qglVertex2f(rect[0], rect[1]);
-		qglVertex2f(rect[0] + rect[2], rect[1]);
-		qglVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
-		qglVertex2f(rect[0], rect[1] + rect[3]);
+		glVertex2f(rect[0], rect[1]);
+		glVertex2f(rect[0] + rect[2], rect[1]);
+		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
+		glVertex2f(rect[0], rect[1] + rect[3]);
 	}
-	qglEnd();
+	glEnd();
 
 	R_Blend(false);
-	qglEnable(GL_TEXTURE_2D);
+	glEnable(GL_TEXTURE_2D);
 
-	qglAlphaFunc(GL_GREATER, 0.666);
-	qglColor4f(1, 1, 1, 1);
+	glAlphaFunc(GL_GREATER, 0.666);
+	glColor4f(1, 1, 1, 1);
 }

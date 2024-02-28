@@ -99,7 +99,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\renderer_ogl1.def</ModuleDefinitionFile>
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
@@ -165,6 +165,9 @@
     <ClCompile Include="..\qcommon\mathlib.c" />
     <ClCompile Include="..\qcommon\shared.c" />
     <ClCompile Include="..\platform\win_shared.c" />
+    <ClCompile Include="glad.c" />
+    <ClCompile Include="r_fbo.c" />
+    <ClCompile Include="r_progs.c" />
     <ClCompile Include="win_opengl.c" />
     <ClCompile Include="win_qgl.c" />
     <ClCompile Include="r_draw.c" />

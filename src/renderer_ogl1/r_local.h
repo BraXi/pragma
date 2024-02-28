@@ -22,8 +22,11 @@ See the attached GNU General Public License v2 for more details.
 
 #include <stdio.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "include/glad/glad.h"
+//#include "glad.c"
+
+//#include <GL/gl.h>
+//#include <GL/glu.h>
 #include <math.h>
 
 #ifndef GL_COLOR_INDEX8_EXT
@@ -36,7 +39,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "win_qgl.h"
 
-#define	REF_VERSION	"0.4"
+#define	REF_VERSION	"0.4-next"
 
 
 // -- sin table --

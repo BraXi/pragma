@@ -530,15 +530,15 @@ void GLimp_BeginFrame( float camera_separation )
 
 	if ( camera_separation < 0 && gl_state.stereo_enabled )
 	{
-		qglDrawBuffer( GL_BACK_LEFT );
+		glDrawBuffer( GL_BACK_LEFT );
 	}
 	else if ( camera_separation > 0 && gl_state.stereo_enabled )
 	{
-		qglDrawBuffer( GL_BACK_RIGHT );
+		glDrawBuffer( GL_BACK_RIGHT );
 	}
 	else
 	{
-		qglDrawBuffer( GL_BACK );
+		glDrawBuffer( GL_BACK );
 	}
 }
 
@@ -553,8 +553,8 @@ void GLimp_EndFrame (void)
 {
 	int		err;
 
-	err = qglGetError();
-//	ri.Printf(PRINT_HIGH, "qglGetError=%i\n", err);
+	err = glGetError();
+//	ri.Printf(PRINT_HIGH, "glGetError=%i\n", err);
 	assert( err == GL_NO_ERROR );
 
 	if ( _stricmp( r_drawbuffer->string, "GL_BACK" ) == 0 )

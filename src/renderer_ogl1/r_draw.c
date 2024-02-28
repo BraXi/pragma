@@ -48,8 +48,8 @@ void Draw_InitLocal (void)
 //		}
 
 		GL_Bind(font_textures[i]->texnum);
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 	GL_Bind(0);
 
@@ -89,16 +89,16 @@ void Draw_Char (int x, int y, int num)
 
 	GL_Bind (font_current->texnum);
 
-	qglBegin (GL_QUADS);
-	qglTexCoord2f (fcol, frow);
-	qglVertex2f (x, y);
-	qglTexCoord2f (fcol + size, frow);
-	qglVertex2f (x+8, y);
-	qglTexCoord2f (fcol + size, frow + size);
-	qglVertex2f (x+8, y+8);
-	qglTexCoord2f (fcol, frow + size);
-	qglVertex2f (x, y+8);
-	qglEnd ();
+	glBegin (GL_QUADS);
+	glTexCoord2f (fcol, frow);
+	glVertex2f (x, y);
+	glTexCoord2f (fcol + size, frow);
+	glVertex2f (x+8, y);
+	glTexCoord2f (fcol + size, frow + size);
+	glVertex2f (x+8, y+8);
+	glTexCoord2f (fcol, frow + size);
+	glVertex2f (x, y+8);
+	glEnd ();
 }
 
 /*
@@ -158,16 +158,16 @@ void Draw_StretchPic (int x, int y, int w, int h, char *pic)
 	}
 
 	GL_Bind (gl->texnum);
-	qglBegin (GL_QUADS);
-	qglTexCoord2f (gl->sl, gl->tl);
-	qglVertex2f (x, y);
-	qglTexCoord2f (gl->sh, gl->tl);
-	qglVertex2f (x+w, y);
-	qglTexCoord2f (gl->sh, gl->th);
-	qglVertex2f (x+w, y+h);
-	qglTexCoord2f (gl->sl, gl->th);
-	qglVertex2f (x, y+h);
-	qglEnd ();
+	glBegin (GL_QUADS);
+	glTexCoord2f (gl->sl, gl->tl);
+	glVertex2f (x, y);
+	glTexCoord2f (gl->sh, gl->tl);
+	glVertex2f (x+w, y);
+	glTexCoord2f (gl->sh, gl->th);
+	glVertex2f (x+w, y+h);
+	glTexCoord2f (gl->sl, gl->th);
+	glVertex2f (x, y+h);
+	glEnd ();
 
 }
 
@@ -189,16 +189,16 @@ void Draw_Pic (int x, int y, char *pic)
 	}
 
 	GL_Bind (gl->texnum);
-	qglBegin (GL_QUADS);
-	qglTexCoord2f (gl->sl, gl->tl);
-	qglVertex2f (x, y);
-	qglTexCoord2f (gl->sh, gl->tl);
-	qglVertex2f (x+gl->width, y);
-	qglTexCoord2f (gl->sh, gl->th);
-	qglVertex2f (x+gl->width, y+gl->height);
-	qglTexCoord2f (gl->sl, gl->th);
-	qglVertex2f (x, y+gl->height);
-	qglEnd ();
+	glBegin (GL_QUADS);
+	glTexCoord2f (gl->sl, gl->tl);
+	glVertex2f (x, y);
+	glTexCoord2f (gl->sh, gl->tl);
+	glVertex2f (x+gl->width, y);
+	glTexCoord2f (gl->sh, gl->th);
+	glVertex2f (x+gl->width, y+gl->height);
+	glTexCoord2f (gl->sl, gl->th);
+	glVertex2f (x, y+gl->height);
+	glEnd ();
 }
 
 /*
@@ -221,16 +221,16 @@ void Draw_TileClear (int x, int y, int w, int h, char *pic)
 	}
 
 	GL_Bind (image->texnum);
-	qglBegin (GL_QUADS);
-	qglTexCoord2f (x/64.0, y/64.0);
-	qglVertex2f (x, y);
-	qglTexCoord2f ( (x+w)/64.0, y/64.0);
-	qglVertex2f (x+w, y);
-	qglTexCoord2f ( (x+w)/64.0, (y+h)/64.0);
-	qglVertex2f (x+w, y+h);
-	qglTexCoord2f ( x/64.0, (y+h)/64.0 );
-	qglVertex2f (x, y+h);
-	qglEnd ();
+	glBegin (GL_QUADS);
+	glTexCoord2f (x/64.0, y/64.0);
+	glVertex2f (x, y);
+	glTexCoord2f ( (x+w)/64.0, y/64.0);
+	glVertex2f (x+w, y);
+	glTexCoord2f ( (x+w)/64.0, (y+h)/64.0);
+	glVertex2f (x+w, y+h);
+	glTexCoord2f ( x/64.0, (y+h)/64.0 );
+	glVertex2f (x, y+h);
+	glEnd ();
 }
 
 
@@ -243,14 +243,14 @@ Fills a box of pixels with a single color
 */
 void Draw_Fill (int x, int y, int w, int h)
 {
-	qglDisable (GL_TEXTURE_2D);
-	qglBegin (GL_QUADS);
-		qglVertex2f (x,y);
-		qglVertex2f (x+w, y);
-		qglVertex2f (x+w, y+h);
-		qglVertex2f (x, y+h);
-	qglEnd ();
-	qglEnable (GL_TEXTURE_2D);
+	glDisable (GL_TEXTURE_2D);
+	glBegin (GL_QUADS);
+		glVertex2f (x,y);
+		glVertex2f (x+w, y);
+		glVertex2f (x+w, y+h);
+		glVertex2f (x, y+h);
+	glEnd ();
+	glEnable (GL_TEXTURE_2D);
 }
 
 //=============================================================================
@@ -264,20 +264,20 @@ Draw_FadeScreen
 void Draw_FadeScreen (float *rgba)
 {
 	R_Blend(true);
-	qglDisable (GL_TEXTURE_2D);
-	qglAlphaFunc(GL_GREATER, 0.1);
-	qglColor4fv(rgba);
+	glDisable (GL_TEXTURE_2D);
+	glAlphaFunc(GL_GREATER, 0.1);
+	glColor4fv(rgba);
 
-	qglBegin (GL_QUADS);
-		qglVertex2f (0,0);
-		qglVertex2f (vid.width, 0);
-		qglVertex2f (vid.width, vid.height);
-		qglVertex2f (0, vid.height);
-	qglEnd();
+	glBegin (GL_QUADS);
+		glVertex2f (0,0);
+		glVertex2f (vid.width, 0);
+		glVertex2f (vid.width, vid.height);
+		glVertex2f (0, vid.height);
+	glEnd();
 
-	qglColor4f(1,1,1,1);
-	qglAlphaFunc(GL_GREATER, 0.666);
-	qglEnable (GL_TEXTURE_2D);
+	glColor4f(1,1,1,1);
+	glAlphaFunc(GL_GREATER, 0.666);
+	glEnable (GL_TEXTURE_2D);
 	R_Blend(false);
 
 }
@@ -336,23 +336,23 @@ void Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data
 		}
 	}
 
-	qglTexImage2D (GL_TEXTURE_2D, 0, gl_tex_solid_format, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, image32);
+	glTexImage2D (GL_TEXTURE_2D, 0, gl_tex_solid_format, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, image32);
 	
 
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
-	qglBegin (GL_QUADS);
-	qglTexCoord2f (0, 0);
-	qglVertex2f (x, y);
-	qglTexCoord2f (1, 0);
-	qglVertex2f (x+w, y);
-	qglTexCoord2f (1, t);
-	qglVertex2f (x+w, y+h);
-	qglTexCoord2f (0, t);
-	qglVertex2f (x, y+h);
-	qglEnd ();
+	glBegin (GL_QUADS);
+	glTexCoord2f (0, 0);
+	glVertex2f (x, y);
+	glTexCoord2f (1, 0);
+	glVertex2f (x+w, y);
+	glTexCoord2f (1, t);
+	glVertex2f (x+w, y+h);
+	glTexCoord2f (0, t);
+	glVertex2f (x, y+h);
+	glEnd ();
 #endif
 }
 

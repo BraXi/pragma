@@ -59,6 +59,9 @@
     <ClCompile Include="..\qcommon\mathlib.c">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="r_progs.c" />
+    <ClCompile Include="r_fbo.c" />
+    <ClCompile Include="glad.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

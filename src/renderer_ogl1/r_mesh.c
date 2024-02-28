@@ -172,7 +172,7 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// setup lighting
 	R_SetEntityShadeLight(ent);
-	qglShadeModel(GL_SMOOTH);
+	glShadeModel(GL_SMOOTH);
 	GL_TexEnv(GL_MODULATE);
 
 	// 1. transparency
@@ -181,23 +181,23 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// hack the depth range to prevent view model from poking into walls
 	if (ent->renderfx & RF_DEPTHHACK)
-		qglDepthRange(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
+		glDepthRange(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
 
 	// if its a view model and we chose to keep it in left hand 
 	if ((ent->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
 	{
 		extern void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar);
 
-		qglMatrixMode(GL_PROJECTION);
-		qglPushMatrix();
-		qglLoadIdentity();
-		qglScalef(-1, 1, 1);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glScalef(-1, 1, 1);
 		MYgluPerspective(r_newrefdef.fov_y, (float)r_newrefdef.width / r_newrefdef.height, 4, 4096);
-		qglMatrixMode(GL_MODELVIEW);
+		glMatrixMode(GL_MODELVIEW);
 		R_SetCullFace(GL_BACK);
 	}
 
-	qglPushMatrix();
+	glPushMatrix();
 	{
 		// move, rotate and scale
 		ent->angles[PITCH] = -ent->angles[PITCH];
@@ -205,7 +205,7 @@ void R_DrawEntityModel(rentity_t* ent)
 		ent->angles[PITCH] = -ent->angles[PITCH];
 
 		if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
-			qglScalef(ent->scale, ent->scale, ent->scale);
+			glScalef(ent->scale, ent->scale, ent->scale);
 
 		// render model
 		switch (ent->model->type)
@@ -224,12 +224,12 @@ void R_DrawEntityModel(rentity_t* ent)
 
 		// restore scale
 		if (ent->renderfx & RF_SCALE)
-			qglScalef(1.0f, 1.0f, 1.0f);
+			glScalef(1.0f, 1.0f, 1.0f);
 	}
-	qglPopMatrix();
+	glPopMatrix();
 
 	// restore shade model
-	qglShadeModel(GL_FLAT);
+	glShadeModel(GL_FLAT);
 	GL_TexEnv(GL_REPLACE);
 
 	// restore transparency
@@ -238,13 +238,13 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// remove depth hack
 	if (pCurrentRefEnt->renderfx & RF_DEPTHHACK)
-		qglDepthRange(gldepthmin, gldepthmax);
+		glDepthRange(gldepthmin, gldepthmax);
 
 	if ((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
 	{
-		qglMatrixMode(GL_PROJECTION);
-		qglPopMatrix();
-		qglMatrixMode(GL_MODELVIEW);
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
 		R_SetCullFace(GL_FRONT);
 	}
 }
@@ -258,10 +258,10 @@ R_BeginLinesRendering
 void R_BeginLinesRendering(qboolean dt)
 {
 	R_DepthTest(dt);
-	qglPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	qglDisable(GL_TEXTURE_2D);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDisable(GL_TEXTURE_2D);
 	R_CullFace(false);
-	qglColor4f(1, 1, 1, 1);
+	glColor4f(1, 1, 1, 1);
 }
 
 /*
@@ -271,10 +271,10 @@ R_EndLinesRendering
 */
 void R_EndLinesRendering()
 {
-	qglColor4f(1, 1, 1, 1);
-	qglEnable(GL_TEXTURE_2D);
+	glColor4f(1, 1, 1, 1);
+	glEnable(GL_TEXTURE_2D);
 	R_CullFace(true);
-	qglPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	R_DepthTest(true);
 }
 
@@ -286,10 +286,10 @@ R_DrawDebugLine
 */
 static void R_DrawDebugLine(debugprimitive_t *line)
 {
-	qglBegin(GL_LINES);
-		qglVertex3fv(line->p1);
-		qglVertex3fv(line->p2);
-	qglEnd();
+	glBegin(GL_LINES);
+		glVertex3fv(line->p1);
+		glVertex3fv(line->p2);
+	glEnd();
 }
 
 /*
@@ -300,55 +300,55 @@ R_DrawWirePoint
 static void R_DrawWirePoint(vec3_t origin)
 {
 	int size = 8;
-	qglBegin(GL_LINES);
-		qglVertex3f(origin[0] - size, origin[1], origin[2]);
-		qglVertex3f(origin[0] + size, origin[1], origin[2]);
-		qglVertex3f(origin[0], origin[1] - size, origin[2]);
-		qglVertex3f(origin[0], origin[1] + size, origin[2]);
-		qglVertex3f(origin[0], origin[1], origin[2] - size);
-		qglVertex3f(origin[0], origin[1], origin[2] + size);
-	qglEnd();
+	glBegin(GL_LINES);
+		glVertex3f(origin[0] - size, origin[1], origin[2]);
+		glVertex3f(origin[0] + size, origin[1], origin[2]);
+		glVertex3f(origin[0], origin[1] - size, origin[2]);
+		glVertex3f(origin[0], origin[1] + size, origin[2]);
+		glVertex3f(origin[0], origin[1], origin[2] - size);
+		glVertex3f(origin[0], origin[1], origin[2] + size);
+	glEnd();
 }
 
 static void R_DrawWireBoundingBox(vec3_t mins, vec3_t maxs)
 {
-	qglBegin(GL_LINES);
-		qglVertex3f(mins[0], mins[1], mins[2]);
-		qglVertex3f(maxs[0], mins[1], mins[2]);
+	glBegin(GL_LINES);
+		glVertex3f(mins[0], mins[1], mins[2]);
+		glVertex3f(maxs[0], mins[1], mins[2]);
 
-		qglVertex3f(mins[0], maxs[1], mins[2]);
-		qglVertex3f(maxs[0], maxs[1], mins[2]);
+		glVertex3f(mins[0], maxs[1], mins[2]);
+		glVertex3f(maxs[0], maxs[1], mins[2]);
 
-		qglVertex3f(mins[0], mins[1], maxs[2]);
-		qglVertex3f(maxs[0], mins[1], maxs[2]);
+		glVertex3f(mins[0], mins[1], maxs[2]);
+		glVertex3f(maxs[0], mins[1], maxs[2]);
 
-		qglVertex3f(mins[0], maxs[1], maxs[2]);
-		qglVertex3f(maxs[0], maxs[1], maxs[2]);
+		glVertex3f(mins[0], maxs[1], maxs[2]);
+		glVertex3f(maxs[0], maxs[1], maxs[2]);
 
-		qglVertex3f(mins[0], mins[1], mins[2]);
-		qglVertex3f(mins[0], maxs[1], mins[2]);
+		glVertex3f(mins[0], mins[1], mins[2]);
+		glVertex3f(mins[0], maxs[1], mins[2]);
 
-		qglVertex3f(maxs[0], mins[1], mins[2]);
-		qglVertex3f(maxs[0], maxs[1], mins[2]);
+		glVertex3f(maxs[0], mins[1], mins[2]);
+		glVertex3f(maxs[0], maxs[1], mins[2]);
 
-		qglVertex3f(mins[0], mins[1], maxs[2]);
-		qglVertex3f(mins[0], maxs[1], maxs[2]);
+		glVertex3f(mins[0], mins[1], maxs[2]);
+		glVertex3f(mins[0], maxs[1], maxs[2]);
 
-		qglVertex3f(maxs[0], mins[1], maxs[2]);
-		qglVertex3f(maxs[0], maxs[1], maxs[2]);
+		glVertex3f(maxs[0], mins[1], maxs[2]);
+		glVertex3f(maxs[0], maxs[1], maxs[2]);
 
-		qglVertex3f(mins[0], mins[1], mins[2]);
-		qglVertex3f(mins[0], mins[1], maxs[2]);
+		glVertex3f(mins[0], mins[1], mins[2]);
+		glVertex3f(mins[0], mins[1], maxs[2]);
 
-		qglVertex3f(mins[0], maxs[1], mins[2]);
-		qglVertex3f(mins[0], maxs[1], maxs[2]);
+		glVertex3f(mins[0], maxs[1], mins[2]);
+		glVertex3f(mins[0], maxs[1], maxs[2]);
 
-		qglVertex3f(maxs[0], mins[1], mins[2]);
-		qglVertex3f(maxs[0], mins[1], maxs[2]);
+		glVertex3f(maxs[0], mins[1], mins[2]);
+		glVertex3f(maxs[0], mins[1], maxs[2]);
 
-		qglVertex3f(maxs[0], maxs[1], mins[2]);
-		qglVertex3f(maxs[0], maxs[1], maxs[2]);
-	qglEnd();
+		glVertex3f(maxs[0], maxs[1], mins[2]);
+		glVertex3f(maxs[0], maxs[1], maxs[2]);
+	glEnd();
 }
 /*
 =============
@@ -357,18 +357,18 @@ R_DrawWireBox
 */
 static void R_DrawWireBox(vec3_t mins, vec3_t maxs)
 {
-	qglBegin(GL_QUAD_STRIP);
-	qglVertex3f(mins[0], mins[1], mins[2]);
-	qglVertex3f(mins[0], mins[1], maxs[2]);
-	qglVertex3f(maxs[0], mins[1], mins[2]);
-	qglVertex3f(maxs[0], mins[1], maxs[2]);
-	qglVertex3f(maxs[0], maxs[1], mins[2]);
-	qglVertex3f(maxs[0], maxs[1], maxs[2]);
-	qglVertex3f(mins[0], maxs[1], mins[2]);
-	qglVertex3f(mins[0], maxs[1], maxs[2]);
-	qglVertex3f(mins[0], mins[1], mins[2]);
-	qglVertex3f(mins[0], mins[1], maxs[2]);
-	qglEnd();
+	glBegin(GL_QUAD_STRIP);
+	glVertex3f(mins[0], mins[1], mins[2]);
+	glVertex3f(mins[0], mins[1], maxs[2]);
+	glVertex3f(maxs[0], mins[1], mins[2]);
+	glVertex3f(maxs[0], mins[1], maxs[2]);
+	glVertex3f(maxs[0], maxs[1], mins[2]);
+	glVertex3f(maxs[0], maxs[1], maxs[2]);
+	glVertex3f(mins[0], maxs[1], mins[2]);
+	glVertex3f(mins[0], maxs[1], maxs[2]);
+	glVertex3f(mins[0], mins[1], mins[2]);
+	glVertex3f(mins[0], mins[1], maxs[2]);
+	glEnd();
 }
 
 /*
@@ -382,7 +382,7 @@ void R_DrawDebugLines(void)
 	int		i;
 	debugprimitive_t* line;
 
-	qglPushMatrix();
+	glPushMatrix();
 	R_BeginLinesRendering(true);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
@@ -393,8 +393,8 @@ void R_DrawDebugLines(void)
 		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
-		qglColor3fv(line->color);
-		qglLineWidth(line->thickness);
+		glColor3fv(line->color);
+		glLineWidth(line->thickness);
 		switch (line->type)
 		{
 		case DPRIMITIVE_LINE:
@@ -443,8 +443,8 @@ void R_DrawDebugLines(void)
 		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
-		qglColor3fv(line->color);
-		qglLineWidth(line->thickness);
+		glColor3fv(line->color);
+		glLineWidth(line->thickness);
 		switch (line->type)
 		{
 		case DPRIMITIVE_LINE:
@@ -485,9 +485,9 @@ void R_DrawDebugLines(void)
 	R_WriteToDepthBuffer(GL_TRUE);
 #endif
 
-	qglColor3f(1,1,1);
-	qglLineWidth(1.0f);
-	qglPopMatrix();
+	glColor3f(1,1,1);
+	glLineWidth(1.0f);
+	glPopMatrix();
 }
 
 
