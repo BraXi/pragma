@@ -23,15 +23,11 @@ See the attached GNU General Public License v2 for more details.
 #include <stdio.h>
 
 #include "include/glad/glad.h"
-//#include "glad.c"
-
 //#include <GL/gl.h>
 //#include <GL/glu.h>
+
 #include <math.h>
 
-#ifndef GL_COLOR_INDEX8_EXT
-#define GL_COLOR_INDEX8_EXT GL_COLOR_INDEX
-#endif
 
 #define FIX_BRUSH_LIGHTING 1 // Enable Spike's fix from QS
 
@@ -91,11 +87,39 @@ typedef struct image_s
 	qboolean	has_alpha;
 } image_t;
 
+
+//===================================================================
+
+enum
+{
+	PROG_NONE,
+	PROG_TEST,
+	MAX_GLPROGS
+};
+typedef struct glprog_s
+{
+	char name[MAX_QPATH];
+
+	/*GLuint*/ unsigned int		programObject;
+	/*GLuint*/ unsigned int		vertexShader, fragmentShader;
+
+	qboolean isValid;
+} glprog_t;
+
+extern glprog_t glprogs[MAX_GLPROGS];
+extern glprog_t* pCurrentProgram;
+extern int numProgs;
+
 #define	TEXNUM_LIGHTMAPS	1024
 #define	TEXNUM_IMAGES		1153
 
 #define		MAX_GLTEXTURES	1024
 
+glprog_t* R_ProgramIndex(int progindex);
+void R_BindProgram(int progindex);
+void R_UnbindProgram();
+int R_LoadProgram(char* name);
+void R_FreePrograms();
 //===================================================================
 
 typedef enum

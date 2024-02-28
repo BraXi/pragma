@@ -258,6 +258,7 @@ int R_Init(void* hinstance, void* hWnd)
 		return -1;
 	}
 
+	R_FreePrograms();
 
 	/*
 	** get our various GL strings
@@ -315,6 +316,11 @@ int R_Init(void* hinstance, void* hWnd)
 	
 	glActiveTexture = 0;
 	glMultiTexCoord2f = 0;
+
+
+
+	int prog = R_LoadProgram("test");
+	prog = prog;
 
 	GL_SetDefaultState();
 	R_InitialOGLState(); //wip

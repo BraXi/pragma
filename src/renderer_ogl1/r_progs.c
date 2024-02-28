@@ -10,30 +10,34 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-
-
-typedef struct glprog_s
-{
-	char name[MAX_QPATH];
-
-	/*GLuint*/ unsigned int		programObject;
-	/*GLuint*/ unsigned int		vertexShader, fragmentShader;
-
-	qboolean isValid;
-} glprog_t;
-
-
 glprog_t *pCurrentProgram = NULL;
+int numProgs;
 
+glprog_t glprogs[MAX_GLPROGS];
+
+/*
+=================
+R_ProgramIndex
+=================
+*/
+glprog_t *R_ProgramIndex(int progindex)
+{
+	if (progindex >= numProgs || progindex < 0)
+		return NULL;
+
+	return &glprogs[progindex];
+}
 
 /*
 =================
 R_BindProgram
 =================
 */
-void R_BindProgram(glprog_t* prog)
+void R_BindProgram(int progindex)
 {
-	if (prog != NULL && pCurrentProgram == prog)
+	glprog_t* prog = R_ProgramIndex(progindex);
+
+	if (prog == NULL || pCurrentProgram == prog)
 		return;
 
 	if (prog->isValid == false)
@@ -55,8 +59,14 @@ void R_UnbindProgram()
 		return;
 
 	glUseProgram(0);
+	pCurrentProgram = NULL;
 }
 
+/*
+=================
+R_FreeProgram
+=================
+*/
 void R_FreeProgram(glprog_t* prog)
 {
 	if (pCurrentProgram == prog)
@@ -69,9 +79,9 @@ void R_FreeProgram(glprog_t* prog)
 	if (prog->programObject)
 		glDeleteProgram(prog->programObject);
 
-//	memset(prog, 0, sizeof(glprog_t));
-	free(prog);
-	prog = NULL;
+	memset(prog, 0, sizeof(glprog_t));
+//	free(prog);
+//	prog = NULL;
 }
 
 /*
@@ -79,47 +89,47 @@ void R_FreeProgram(glprog_t* prog)
 R_CheckShaderObject
 =================
 */
-static qboolean R_CheckShaderObject(glprog_t *shader, unsigned int shaderObject)
+static qboolean R_CheckShaderObject(glprog_t *prog, unsigned int shaderObject)
 {
-	GLint compiled = 0;
-	GLint blen = 0;
-	GLsizei slen = 0;
+	GLint	isCompiled = 0;
+	char	*errorLog;
 
-#if 0
-	glGetObjectParameteriv((GLuint)shaderObject, GL_COMPILE_STATUS, &compiled);
-	if (!compiled)
+	glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &isCompiled);
+	if (isCompiled == GL_FALSE)
 	{
-		glGetShaderiv((GLuint)shaderObject, GL_INFO_LOG_LENGTH, &blen);
-		if (blen > 1)
-		{
-			GLchar* compiler_log = (GLchar*)malloc(blen);
+		GLint maxLength = 0;
+		glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &maxLength);
 
-			glGetInfoLogARB((GLuint)shaderObject, blen, &slen, compiler_log);
-			ri.Error(ERR_FATAL, "Failed to compile shader %s\n log: %s\n", shader->name, compiler_log);
-			free(compiler_log);
-		}
+		errorLog = (char*)malloc(sizeof(char) * maxLength);
+
+		glGetShaderInfoLog(shaderObject, maxLength, &maxLength, &errorLog[0]);
+		ri.Error(ERR_DROP, "Failed to compile shader object for program %s (error log below)\n%s\n", prog->name, errorLog);
+
+		glDeleteShader(shaderObject);
+		free(errorLog);
 		return false;
 	}
-#endif
+
 	return true;
 }
 
 /*
 =================
-R_CompileShaderProgram
+R_CompileShader
 =================
 */
-static qboolean R_CompileShaderProgram(glprog_t* shader, qboolean isfrag)
+static qboolean R_CompileShader(glprog_t* glprog, qboolean isfrag)
 {
 	char	fileName[MAX_OSPATH];
 	char	*data = NULL;
 	int		len;
 	unsigned int prog;
 
-	Com_sprintf(fileName, sizeof(fileName), "shaders/%s.%s", shader->name);
-	len = FS_LoadTextFile(fileName, (void**)&data);
+	Com_sprintf(fileName, sizeof(fileName), "shaders/%s.%s", glprog->name, isfrag == true ? "fp" : "vp");
+	len = ri.LoadTextFile(fileName, (void**)&data);
 	if (!len || len == -1 || data == NULL)
 	{
+		ri.Error(ERR_FATAL, "failed to load shader: %s\n", fileName);
 		return false;
 	}
 
@@ -127,36 +137,100 @@ static qboolean R_CompileShaderProgram(glprog_t* shader, qboolean isfrag)
 	glShaderSource(prog, 1, (const GLcharARB**)&data, (const GLint*)&len);
 	glCompileShader(prog);
 
-	if(R_CheckShaderObject)
 	if (isfrag == true)
-		shader->fragmentShader = prog;
+		glprog->fragmentShader = prog;
 	else
-		shader->vertexShader = prog;
+		glprog->vertexShader = prog;
 
 	return true;
 }
 
 
-
-static qboolean R_LinkProgram(glprog_t* shader)
+/*
+=================
+R_LinkProgram
+=================
+*/
+static qboolean R_LinkProgram(glprog_t* prog)
 {
 	GLint linked;
 
-	// create program, and link vp and fp to it
-	shader->programObject = glCreateProgram();
-	glAttachShader(shader->programObject, shader->vertexShader);
-	glAttachShader(shader->programObject, shader->fragmentShader);
-	glLinkProgram(shader->programObject);
-
-	glGetProgramiv(shader->programObject, GL_LINK_STATUS, &linked);
-	if(!linked)
+	//
+	// check for errors
+	//
+	if (!R_CheckShaderObject(prog, prog->fragmentShader))
 	{
-		ri.Printf(PRINT_LOW, "Failed to load shader program: %s\n", shader->name);
+		prog->fragmentShader = 0;
 		return false;
 	}
 
-	shader->isValid = true;
-	ri.Printf(PRINT_LOW, "Loaded shader program: %s\n", shader->name);
+	if (!R_CheckShaderObject(prog, prog->vertexShader))
+	{
+		prog->vertexShader = 0;
+		return false;
+	}
+
+	//
+	// create program, and link vp and fp to it
+	//
+	prog->programObject = glCreateProgram();
+	glAttachShader(prog->programObject, prog->vertexShader);
+	glAttachShader(prog->programObject, prog->fragmentShader);
+	glLinkProgram(prog->programObject);
+
+	glGetProgramiv(prog->programObject, GL_LINK_STATUS, &linked);
+	if(!linked)
+	{
+		ri.Printf(PRINT_ALERT, "Failed to load shader program: %s\n", prog->name);
+		return false;
+	}
+
+	prog->isValid = true;
+	ri.Printf(PRINT_LOW, "Loaded shader program: %s\n", prog->name);
 	return true;
 }
 
+/*
+=================
+R_LoadProgram
+=================
+*/
+int R_LoadProgram(char *name)
+{
+	glprog_t* prog;
+	
+	prog = &glprogs[numProgs];
+
+
+	strncpy(prog->name, name, sizeof(prog->name));
+
+	R_CompileShader(prog, true);
+	R_CompileShader(prog, false);
+	R_LinkProgram(prog);
+
+	numProgs++;
+	return numProgs - 1;
+}
+
+
+/*
+=================
+R_FreePrograms
+=================
+*/
+void R_FreePrograms()
+{
+	glprog_t* prog;
+
+	R_UnbindProgram();
+
+	for (int i = 0; i < numProgs; i++)
+	{
+		prog = &glprogs[numProgs];
+		R_FreeProgram(prog);
+	}
+
+	memset(glprogs, 0, sizeof(glprogs));
+	pCurrentProgram = NULL;
+	numProgs = 0;
+}
