@@ -1184,7 +1184,7 @@ void R_DrawWorld (void)
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 	R_ClearSkyBox ();
 
-	if ( glMultiTexCoord2f )
+	if (0) //glMultiTexCoord2f )
 	{
 		GL_EnableMultitexture( !r_fullbright->value );
 

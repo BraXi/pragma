@@ -96,9 +96,19 @@ enum
 	PROG_TEST,
 	MAX_GLPROGS
 };
+
+enum
+{
+	LOC_COLORMAP,
+	NUM_LOCS,
+};
+
 typedef struct glprog_s
 {
 	char name[MAX_QPATH];
+	int index;
+
+	unsigned int locs[3];
 
 	/*GLuint*/ unsigned int		programObject;
 	/*GLuint*/ unsigned int		vertexShader, fragmentShader;
@@ -120,6 +130,19 @@ void R_BindProgram(int progindex);
 void R_UnbindProgram();
 int R_LoadProgram(char* name);
 void R_FreePrograms();
+
+void R_ProgUniform1i(int uniform, int val);
+void R_ProgUniform1f(int uniform, float val);
+void R_ProgUniform2i(int uniform, int val, int val2);
+void R_ProgUniform2f(int uniform, float val, float val2);
+void R_ProgUniformVec2(int uniform, vec2_t v);
+void R_ProgUniform3i(int uniform, int val, int val2, int val3);
+void R_ProgUniform3f(int uniform, float val, float val2, float val3);
+void R_ProgUniformVec3(int uniform, vec3_t v);
+void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4);
+void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4);
+void R_ProgUniformVec4(int uniform, vec4_t v);
+
 //===================================================================
 
 typedef enum

@@ -674,11 +674,13 @@ void R_RenderView (refdef_t *fd)
 
 	R_MarkLeaves ();	// done here so we know if we're in water
 
-	R_BindProgram(0);
-	R_DrawWorld ();
-	R_UnbindProgram();
 
+	R_DrawWorld ();
+
+
+	R_BindProgram(0);
 	R_DrawEntitiesOnList();
+	R_UnbindProgram();
 
 	R_DrawDebugLines();
 
