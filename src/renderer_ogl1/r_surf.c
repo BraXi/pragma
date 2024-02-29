@@ -370,15 +370,6 @@ void R_BlendLightmaps (void)
 			{
 				if (surf->polys)
 				{
-					// --- begin yquake 2 ---
-					// Apply overbright bits to the static lightmaps
-					if (r_overbrightbits->value)
-					{
-						GL_TexEnv(GL_COMBINE_EXT);
-						glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_EXT, r_overbrightbits->value);
-					}
-					// --- end yquake 2 ---
-
 					DrawGLPolyChain(surf->polys, 0, 0);
 				}
 			}
@@ -426,15 +417,6 @@ void R_BlendLightmaps (void)
 				{
 					if (drawsurf->polys)
 					{
-						// --- begin yquake 2 ---
-						// Apply overbright bits to the dynamic lightmaps
-						if (r_overbrightbits->value)
-						{
-							GL_TexEnv(GL_COMBINE_EXT);
-							glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_EXT, r_overbrightbits->value);
-						}
-						// --- end yquake 2 ---
-
 						DrawGLPolyChain(drawsurf->polys,
 							(drawsurf->light_s - drawsurf->dlight_s) * (1.0 / 128.0),
 							(drawsurf->light_t - drawsurf->dlight_t) * (1.0 / 128.0));
@@ -499,32 +481,9 @@ void R_RenderBrushPoly (msurface_t *fa)
 	{
 		GL_Bind(image->texnum);
 
-// --- begin yquake2 ---
-		/* This is a hack ontop of a hack. Warping surfaces like those generated
-		   by R_EmitWaterPolys() don't have a lightmap. Original Quake II therefore
-		   negated the global intensity on those surfaces, because otherwise they
-		   would show up much too bright. When we implemented overbright bits this
-		   hack modified the global GL state in an incompatible way. So implement
-		   a new hack, based on overbright bits... Depending on the value set to
-		   r_overbrightbits the result is different:
-
-			0: Old behaviour.
-			1: No overbright bits on the global scene but correct lighting on
-			   warping surfaces.
-			2: Overbright bits on the global scene but not on warping surfaces.
-				They oversaturate otherwise. */
-
-		if (r_overbrightbits->value)
-		{
-			GL_TexEnv(GL_COMBINE_EXT);
-			glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_EXT, 1);
-		}
-		else
-		{
-			GL_TexEnv(GL_MODULATE);
-			//glColor4f(gl_state.inverse_intensity, gl_state.inverse_intensity, gl_state.inverse_intensity, 1.0f);
-		}
-// --- end yquake2 ---
+		GL_TexEnv(GL_MODULATE);
+		//float inverse_intensity = -r_intensity->value;
+		//glColor4f(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
 
 		EmitWaterPolys(fa);
 		GL_TexEnv(GL_REPLACE);
@@ -626,10 +585,7 @@ void R_DrawAlphaSurfaces (void)
 	R_Blend(true);
 	GL_TexEnv( GL_MODULATE );
 
-	// the textures are prescaled up for a better lighting range,
-	// so scale it back down
-	intens = 1;// gl_state.inverse_intensity;
-
+	intens = 1;
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
 		GL_Bind(s->texinfo->image->texnum);

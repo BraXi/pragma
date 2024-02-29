@@ -115,17 +115,6 @@ void R_SetEntityShadeLight(rentity_t* ent)
 		}
 	}
 
-	// --- begin yquake2 ---
-	// Apply r_overbrightbits to the mesh. If we don't do this they will appear slightly dimmer relative to walls.
-	if (r_overbrightbits->value)
-	{
-		for (i = 0; i < 3; ++i)
-		{
-			model_shadelight[i] *= r_overbrightbits->value;
-		}
-	}
-	// --- end yquake2 ---
-
 	// this is uttery shit
 	an = ent->angles[1] / 180 * M_PI;
 	model_shadevector[0] = cos(-an);

@@ -1267,7 +1267,6 @@ cheatvar_t	cheatvars[] =
 	{"r_lightmap", "0"},
 	{"r_monolightmap", "0"},
 	{"r_saturatelighting", "0"},
-	{"r_overbrightbits", "1"},
 	{"r_modulate", "1"},
 
 	{"r_nobind", "0"},

@@ -575,49 +575,6 @@ void GL_ResampleTexture (unsigned *in, int inwidth, int inheight, unsigned *out,
 
 /*
 ================
-GL_LightScaleTexture
-
-Scale up the pixel values in a texture to increase the lighting range
-================
-*/
-void GL_LightScaleTexture (unsigned *in, int inwidth, int inheight, qboolean only_gamma )
-{
-#if 0
-	if ( only_gamma )
-	{
-		int		i, c;
-		byte	*p;
-
-		p = (byte *)in;
-
-		c = inwidth*inheight;
-		for (i=0 ; i<c ; i++, p+=4)
-		{
-			p[0] = gammatable[p[0]];
-			p[1] = gammatable[p[1]];
-			p[2] = gammatable[p[2]];
-		}
-	}
-	else
-	{
-		int		i, c;
-		byte	*p;
-
-		p = (byte *)in;
-
-		c = inwidth*inheight;
-		for (i=0 ; i<c ; i++, p+=4)
-		{
-			p[0] = gammatable[intensitytable[p[0]]];
-			p[1] = gammatable[intensitytable[p[1]]];
-			p[2] = gammatable[intensitytable[p[2]]];
-		}
-	}
-#endif
-}
-
-/*
-================
 GL_MipMap
 
 Operates in place, quartering the size of the texture
@@ -744,8 +701,6 @@ qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 	}
 	else
 		GL_ResampleTexture (data, width, height, scaled, scaled_width, scaled_height);
-
-	GL_LightScaleTexture (scaled, scaled_width, scaled_height, !mipmap );
 
 	glTexImage2D( GL_TEXTURE_2D, 0, comp, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled );
 
@@ -959,45 +914,6 @@ GL_InitImages
 void	GL_InitImages (void)
 {
 	registration_sequence = 1;
-
-#if 0
-	int		i, j;
-	float	g = r_gamma->value;
-	// init intensity conversions
-	intensity = ri.Cvar_Get ("intensity", "1", 0);
-
-	if ( intensity->value <= 1 )
-		ri.Cvar_Set( "intensity", "1" );
-
-	gl_state.inverse_intensity = 1 / intensity->value;
-
-	for ( i = 0; i < 256; i++ )
-	{
-		if ( g == 1 )
-		{
-			gammatable[i] = i;
-		}
-		else
-		{
-			float inf;
-
-			inf = 255 * pow ( (i+0.5)/255.5 , g ) + 0.5;
-			if (inf < 0)
-				inf = 0;
-			if (inf > 255)
-				inf = 255;
-			gammatable[i] = inf;
-		}
-	}
-
-	for (i=0 ; i<256 ; i++)
-	{
-		j = i*intensity->value;
-		if (j > 255)
-			j = 255;
-		intensitytable[i] = j;
-	}
-#endif
 }
 
 /*

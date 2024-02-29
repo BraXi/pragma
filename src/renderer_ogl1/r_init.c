@@ -24,8 +24,6 @@ cvar_t* r_nocull;
 cvar_t* r_lerpmodels;
 cvar_t* r_lefthand;
 
-cvar_t* r_overbrightbits;
-
 cvar_t* r_particle_min_size;
 cvar_t* r_particle_max_size;
 cvar_t* r_particle_size;
@@ -133,10 +131,6 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT);
 	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
-
-	// --- begin yquake2 ---
-	r_overbrightbits = ri.Cvar_Get("r_overbrightbits", "1", CVAR_ARCHIVE | CVAR_CHEAT);
-	// --- end yquake2 ---
 
 	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", CVAR_CHEAT);
 
