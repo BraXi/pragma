@@ -13,11 +13,7 @@ See the attached GNU General Public License v2 for more details.
 image_t		gltextures[MAX_GLTEXTURES];
 int			numgltextures;
 
-//static byte			 intensitytable[256];
-//static unsigned char gammatable[256];
-
 qboolean GL_Upload32 (unsigned *data, int width, int height,  qboolean mipmap);
-
 
 int		gl_solid_format = 3;
 int		gl_alpha_format = 4;
