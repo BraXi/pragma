@@ -522,7 +522,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 		else
 		{
 			GL_TexEnv(GL_MODULATE);
-			glColor4f(gl_state.inverse_intensity, gl_state.inverse_intensity, gl_state.inverse_intensity, 1.0f);
+			//glColor4f(gl_state.inverse_intensity, gl_state.inverse_intensity, gl_state.inverse_intensity, 1.0f);
 		}
 // --- end yquake2 ---
 
@@ -628,7 +628,7 @@ void R_DrawAlphaSurfaces (void)
 
 	// the textures are prescaled up for a better lighting range,
 	// so scale it back down
-	intens = gl_state.inverse_intensity;
+	intens = 1;// gl_state.inverse_intensity;
 
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{

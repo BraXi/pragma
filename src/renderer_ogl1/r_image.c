@@ -13,10 +13,8 @@ See the attached GNU General Public License v2 for more details.
 image_t		gltextures[MAX_GLTEXTURES];
 int			numgltextures;
 
-static byte			 intensitytable[256];
-static unsigned char gammatable[256];
-
-cvar_t		*intensity;
+//static byte			 intensitytable[256];
+//static unsigned char gammatable[256];
 
 qboolean GL_Upload32 (unsigned *data, int width, int height,  qboolean mipmap);
 
@@ -584,6 +582,7 @@ Scale up the pixel values in a texture to increase the lighting range
 */
 void GL_LightScaleTexture (unsigned *in, int inwidth, int inheight, qboolean only_gamma )
 {
+#if 0
 	if ( only_gamma )
 	{
 		int		i, c;
@@ -614,6 +613,7 @@ void GL_LightScaleTexture (unsigned *in, int inwidth, int inheight, qboolean onl
 			p[2] = gammatable[intensitytable[p[2]]];
 		}
 	}
+#endif
 }
 
 /*
@@ -958,11 +958,11 @@ GL_InitImages
 */
 void	GL_InitImages (void)
 {
-	int		i, j;
-	float	g = r_gamma->value;
-
 	registration_sequence = 1;
 
+#if 0
+	int		i, j;
+	float	g = r_gamma->value;
 	// init intensity conversions
 	intensity = ri.Cvar_Get ("intensity", "1", 0);
 
@@ -997,6 +997,7 @@ void	GL_InitImages (void)
 			j = 255;
 		intensitytable[i] = j;
 	}
+#endif
 }
 
 /*

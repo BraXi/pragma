@@ -820,6 +820,17 @@ void R_BeginFrame( float camera_separation )
 	if ( r_gamma->modified )
 	{
 		r_gamma->modified = false;
+
+		if (r_gamma->value < 0.3)
+			ri.Cvar_Set("r_gamma", "0.3");
+	}
+
+	if (r_intensity->modified)
+	{
+		r_intensity->modified = false;
+
+		if (r_intensity->value < 1)
+			ri.Cvar_Set("r_intensity", "1");
 	}
 
 	// --- begin yquake 2---

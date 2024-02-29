@@ -554,8 +554,9 @@ void GLimp_EndFrame (void)
 	int		err;
 
 	err = glGetError();
-//	ri.Printf(PRINT_HIGH, "glGetError=%i\n", err);
-	assert( err == GL_NO_ERROR );
+	if(err != GL_NO_ERROR)
+		ri.Printf(PRINT_ALERT, "glGetError = %i\n", err);
+	//assert( err == GL_NO_ERROR );
 
 	if ( _stricmp( r_drawbuffer->string, "GL_BACK" ) == 0 )
 	{

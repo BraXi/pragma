@@ -33,6 +33,8 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_PARM2,			"parm2_f",			F_FLOAT },
 
 	{ LOC_SCREENSIZE,		"screensize",		F_VECTOR2 },
+	{ LOC_INTENSITY,		"r_intensity",		F_FLOAT },
+	{ LOC_GAMMA,			"r_gamma",			F_FLOAT },
 	{ LOC_BLUR,				"fx_blur",			F_FLOAT },
 	{ LOC_GRAYSCALE,		"fx_grayscale",		F_FLOAT },
 	{ LOC_INVERSE,			"fx_inverse",		F_FLOAT },

@@ -109,6 +109,9 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 
 	R_ProgUniform2f(pCurrentProgram->locs[LOC_SCREENSIZE], (float)vid.width, (float)vid.height);
 
+	R_ProgUniform1f(pCurrentProgram->locs[LOC_INTENSITY], r_intensity->value);
+	R_ProgUniform1f(pCurrentProgram->locs[LOC_GAMMA], r_gamma->value);
+
 	R_ProgUniform1f(pCurrentProgram->locs[LOC_BLUR], r_postfx_blur->value);
 	R_ProgUniform1f(pCurrentProgram->locs[LOC_GRAYSCALE], r_postfx_grayscale->value);
 	R_ProgUniform1f(pCurrentProgram->locs[LOC_INVERSE], r_postfx_inverse->value);

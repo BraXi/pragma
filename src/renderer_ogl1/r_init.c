@@ -62,6 +62,7 @@ cvar_t* r_texturesolidmode;
 cvar_t* r_lockpvs;
 
 cvar_t* r_fullscreen;
+cvar_t* r_intensity;
 cvar_t* r_gamma;
 cvar_t* r_renderer;
 
@@ -141,6 +142,7 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_fullscreen = ri.Cvar_Get("r_fullscreen", "0", CVAR_ARCHIVE);
 	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE);
+	r_intensity = ri.Cvar_Get("r_intensity", "1.0", CVAR_ARCHIVE);
 
 	r_renderer = ri.Cvar_Get("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE);
 

@@ -117,6 +117,8 @@ typedef enum
 	LOC_PARM1,
 	LOC_PARM2,
 	LOC_SCREENSIZE,
+	LOC_INTENSITY,
+	LOC_GAMMA,
 	LOC_BLUR,
 	LOC_GRAYSCALE,
 	LOC_INVERSE,
@@ -289,8 +291,7 @@ extern  cvar_t  *r_lockpvs;
 
 extern	cvar_t	*r_fullscreen;
 extern	cvar_t	*r_gamma;
-
-extern	cvar_t		*intensity;
+extern	cvar_t	*r_intensity;
 
 extern	int		gl_lightmap_format;
 extern	int		gl_solid_format;
@@ -411,7 +412,7 @@ typedef struct
 
 typedef struct
 {
-	float inverse_intensity;
+//	float inverse_intensity;
 	qboolean fullscreen;
 
 	int     prev_mode;			// previous r_mode->value
