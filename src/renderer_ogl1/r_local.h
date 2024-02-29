@@ -90,25 +90,46 @@ typedef struct image_s
 
 //===================================================================
 
+qboolean R_InitFrameBuffer();
+void R_FreeFrameBuffer();
+void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse);
+
+//===================================================================
 enum
 {
-	PROG_NONE,
-	PROG_TEST,
+	GLPROG_WORLD,
+	GLPROG_WORLD_LIQUID,
+	GLPROG_SKY,
+	GLPROG_ALIAS,
+	GLPROG_SPRITE,
+	GLPROG_PARTICLES,
+	GLPROG_GUI,
+	GLPROG_POSTFX,
 	MAX_GLPROGS
 };
-
-enum
+typedef enum
 {
 	LOC_COLORMAP,
+	LOC_TIME,
+	LOC_SHADEVECTOR,
+	LOC_SHADECOLOR,
+	LOC_PARM0,
+	LOC_PARM1,
+	LOC_PARM2,
+	LOC_SCREENSIZE,
+	LOC_BLUR,
+	LOC_GRAYSCALE,
+	LOC_INVERSE,
+	LOC_NOISE,
 	NUM_LOCS,
-};
+} glprogLoc_t;
 
 typedef struct glprog_s
 {
 	char name[MAX_QPATH];
 	int index;
 
-	unsigned int locs[3];
+	unsigned int locs[NUM_LOCS];
 
 	/*GLuint*/ unsigned int		programObject;
 	/*GLuint*/ unsigned int		vertexShader, fragmentShader;
@@ -128,8 +149,9 @@ extern int numProgs;
 glprog_t* R_ProgramIndex(int progindex);
 void R_BindProgram(int progindex);
 void R_UnbindProgram();
-int R_LoadProgram(char* name);
+int R_LoadProgram(int program, char* name);
 void R_FreePrograms();
+void R_InitProgs();
 
 void R_ProgUniform1i(int uniform, int val);
 void R_ProgUniform1f(int uniform, float val);
@@ -142,6 +164,7 @@ void R_ProgUniformVec3(int uniform, vec3_t v);
 void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4);
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4);
 void R_ProgUniformVec4(int uniform, vec4_t v);
+void R_SetProgUniform(glprogLoc_t loc, byte* val);
 
 //===================================================================
 

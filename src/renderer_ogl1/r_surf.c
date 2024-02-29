@@ -1176,6 +1176,8 @@ void R_DrawWorld (void)
 	memset (&ent, 0, sizeof(ent));
 	ent.frame = (int)(r_newrefdef.time*2);
 
+	R_BindProgram(GLPROG_WORLD);
+
 	pCurrentRefEnt = &ent;
 
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
@@ -1212,10 +1214,14 @@ void R_DrawWorld (void)
 	*/
 	DrawTextureChains ();
 	R_BlendLightmaps ();
+
+	R_UnbindProgram();
 	
 	R_DrawSkyBox ();
 
 	R_DrawTriangleOutlines ();
+
+
 }
 
 

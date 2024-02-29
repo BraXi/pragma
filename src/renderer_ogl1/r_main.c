@@ -294,6 +294,8 @@ void R_DrawEntitiesOnList (void)
 		R_DrawCurrentEntity();
 	}
 	R_WriteToDepthBuffer(GL_TRUE);	// reenable z writing
+
+	R_UnbindProgram();
 }
 
 /*
@@ -564,7 +566,7 @@ void R_SetupGL (void)
 //	yfov = 2*atan((float)r_newrefdef.height/r_newrefdef.width)*180/M_PI;
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity ();
-    MYgluPerspective (r_newrefdef.fov_y,  screenaspect,  4,  4096*2);
+    MYgluPerspective (r_newrefdef.fov_y,  screenaspect,  4, 4096);
 
 	R_SetCullFace(GL_FRONT);
 
@@ -643,6 +645,8 @@ r_newrefdef must be set before the first call
 ================
 */
 
+
+void R_RenderToFBO(qboolean enable);
 extern void R_DrawDebugLines(void);
 void R_RenderView (refdef_t *fd)
 {
@@ -661,6 +665,8 @@ void R_RenderView (refdef_t *fd)
 		rperf.texture_binds = 0;
 	}
 
+
+
 	R_PushDlights ();
 
 	if (r_finish->value)
@@ -674,13 +680,12 @@ void R_RenderView (refdef_t *fd)
 
 	R_MarkLeaves ();	// done here so we know if we're in water
 
+// begin rendering to fbo
+	R_RenderToFBO(true);
 
-	R_DrawWorld ();
+	R_DrawWorld();
 
-
-	R_BindProgram(0);
 	R_DrawEntitiesOnList();
-	R_UnbindProgram();
 
 	R_DrawDebugLines();
 
@@ -689,6 +694,9 @@ void R_RenderView (refdef_t *fd)
 	R_DrawAlphaSurfaces ();
 
 	R_DrawParticles();
+
+	R_RenderToFBO(false);
+// end rendering to fbo
 
 	R_ViewBlendEffect();
 
@@ -759,6 +767,8 @@ static void GL_DrawStereoPattern( void )
 	}
 }
 
+
+
 /*
 @@@@@@@@@@@@@@@@@@@@@
 R_RenderFrame
@@ -770,6 +780,9 @@ void R_RenderFrame (refdef_t *fd)
 	GL_TexEnv(GL_REPLACE);
 	R_RenderView( fd );
 	R_SetGL2D ();
+
+	R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
+//	R_DrawFBO(r_newrefdef.width/2, 0, r_newrefdef.width/2, r_newrefdef.height/2, false); // depth
 }
 
 /*

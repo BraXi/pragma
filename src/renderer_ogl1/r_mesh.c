@@ -130,7 +130,7 @@ void R_SetEntityShadeLight(rentity_t* ent)
 	an = ent->angles[1] / 180 * M_PI;
 	model_shadevector[0] = cos(-an);
 	model_shadevector[1] = sin(-an);
-	model_shadevector[2] = 100;
+	model_shadevector[2] = 0;
 	VectorNormalize(model_shadevector);
 }
 
@@ -216,6 +216,7 @@ void R_DrawEntityModel(rentity_t* ent)
 			break;
 
 		case MOD_SPRITE:
+			R_UnbindProgram();
 			R_DrawSprite(ent);
 			break;
 		default:

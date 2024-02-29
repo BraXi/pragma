@@ -455,7 +455,6 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	md3XyzNormal_t	*vert, *oldVert; //interp
 	md3Triangle_t	*triangle;
 	int				i, j, k;
-	float			lambert;
 
 	vec3_t v, n; //vert and normal after lerp
 
@@ -469,6 +468,16 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 		return;
 	}
 
+	R_BindProgram(GLPROG_ALIAS);
+	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
+		R_ProgUniform1f(pCurrentProgram->locs[LOC_PARM0], 1);
+	else
+		R_ProgUniform1f(pCurrentProgram->locs[LOC_PARM0], 0);
+
+	R_ProgUniformVec3(pCurrentProgram->locs[LOC_SHADECOLOR], model_shadelight);
+	R_ProgUniformVec3(pCurrentProgram->locs[LOC_SHADEVECTOR], model_shadevector);
+	
+	glColor4f(1, 1, 1, ent->alpha);
 
 	// for each surface
 	surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
@@ -508,24 +517,9 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 
 				R_LerpMD3Frame(animlerp, index, &oldVert[index], &vert[index], v, n);
 
-				if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
-				{
-					lambert = 1.0f;
-				}
-				else
-				{
-					// poor mans half lambert to prevent models from being too dark
-					lambert = 1 + DotProduct(n, model_shadevector);
-					if (lambert > 1)
-						lambert = 1;
-					else if (lambert < 0)
-						lambert = 0;
-				}
-
-				glColor4f(lambert * model_shadelight[0], lambert * model_shadelight[1], lambert * model_shadelight[2], ent->alpha);	
 				glTexCoord2f(texcoord[index].st[0], texcoord[index].st[1]);
-				glVertex3fv(v);
 				glNormal3fv(n);
+				glVertex3fv(v);
 			}
 		}
 		glEnd();

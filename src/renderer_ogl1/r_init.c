@@ -65,6 +65,11 @@ cvar_t* r_fullscreen;
 cvar_t* r_gamma;
 cvar_t* r_renderer;
 
+cvar_t* r_postfx_blur;
+cvar_t* r_postfx_grayscale;
+cvar_t* r_postfx_inverse;
+cvar_t* r_postfx_noise;
+
 float sinTable[FUNCTABLE_SIZE];
 
 void GL_Strings_f(void);
@@ -139,6 +144,12 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_renderer = ri.Cvar_Get("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE);
 
+
+	r_postfx_blur = ri.Cvar_Get("r_blur", "0", 0);
+	r_postfx_grayscale = ri.Cvar_Get("r_grayscale", "0", 0);
+	r_postfx_inverse = ri.Cvar_Get("r_inverse", "0", 0);
+	r_postfx_noise = ri.Cvar_Get("r_noise", "0", 0);
+
 	ri.AddCommand("imagelist", GL_ImageList_f);
 	ri.AddCommand("screenshot", GL_ScreenShot_f);
 	ri.AddCommand("modellist", Mod_Modellist_f);
@@ -201,7 +212,7 @@ qboolean R_SetMode(void)
 	return true;
 }
 
-
+qboolean R_InitFrameBuffer();
 /*
 ===============
 R_Init
@@ -227,7 +238,7 @@ int R_Init(void* hinstance, void* hWnd)
 	// initialize our QGL dynamic bindings
 	if (!QGL_Init(gl_driver->string))
 	{
-		//QGL_Shutdown();
+		QGL_Shutdown();
 		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not load \"%s\"\n", gl_driver->string);
 		return -1;
 	}
@@ -235,7 +246,7 @@ int R_Init(void* hinstance, void* hWnd)
 	// initialize OS-specific parts of OpenGL
 	if (!GLimp_Init(hinstance, hWnd))
 	{
-		//QGL_Shutdown();
+		QGL_Shutdown();
 		return -1;
 	}
 
@@ -245,7 +256,7 @@ int R_Init(void* hinstance, void* hWnd)
 	// create the window and set up the context
 	if (!R_SetMode())
 	{
-		//QGL_Shutdown();
+		QGL_Shutdown();
 		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not R_SetMode()\n");
 		return -1;
 	}
@@ -258,7 +269,7 @@ int R_Init(void* hinstance, void* hWnd)
 		return -1;
 	}
 
-	R_FreePrograms();
+	R_InitProgs();
 
 	/*
 	** get our various GL strings
@@ -314,16 +325,12 @@ int R_Init(void* hinstance, void* hWnd)
 #endif
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 	
-	glActiveTexture = 0;
+	//glActiveTexture = 0;
 	glMultiTexCoord2f = 0;
-
-
-
-	int prog = R_LoadProgram("test");
-	prog = prog;
 
 	GL_SetDefaultState();
 	R_InitialOGLState(); //wip
+
 
 	/*
 	** draw our stereo patterns
@@ -339,6 +346,8 @@ int R_Init(void* hinstance, void* hWnd)
 	Mod_Init();
 	R_InitParticleTexture();
 	Draw_InitLocal();
+
+	R_InitFrameBuffer();
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -357,6 +366,8 @@ void R_Shutdown(void)
 	ri.RemoveCommand("screenshot");
 	ri.RemoveCommand("imagelist");
 	ri.RemoveCommand("gl_strings");
+
+	R_FreePrograms();
 
 	Mod_FreeAll();
 

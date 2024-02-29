@@ -563,6 +563,8 @@ void R_DrawSkyBox (void)
 	R_DepthTest(false);
 #endif
 
+	R_BindProgram(GLPROG_SKY);
+
 	GL_TexEnv(GL_MODULATE); // allow sky colors change
 	glColor4f(skycolor[0], skycolor[1], skycolor[2], 1);
 
@@ -606,6 +608,8 @@ void R_DrawSkyBox (void)
 
 	GL_TexEnv(GL_REPLACE);
 	glColor4f(1, 1, 1, 1);
+
+	R_UnbindProgram();
 
 #if 0
 	R_Blend(false);

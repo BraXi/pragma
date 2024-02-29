@@ -15,10 +15,39 @@ int numProgs;
 
 glprog_t glprogs[MAX_GLPROGS];
 
-inline void CheckProg()
+typedef struct glprogloc_s
 {
-	if (pCurrentProgram == NULL || pCurrentProgram->isValid == false)
+	int loc;
+	char* name;
+	fieldtype_t type;
+} glprogloc_t;
+
+static glprogloc_t progUniLocs[NUM_LOCS] =
+{
+	{ LOC_COLORMAP,			"colormap",			F_INT },
+	{ LOC_TIME,				"time",				F_FLOAT },
+	{ LOC_SHADEVECTOR,		"shade_vector",		F_VECTOR3 },
+	{ LOC_SHADECOLOR,		"shade_light",		F_VECTOR3 },
+	{ LOC_PARM0,			"parm0_f",			F_FLOAT },
+	{ LOC_PARM1,			"parm1_f",			F_FLOAT },
+	{ LOC_PARM2,			"parm2_f",			F_FLOAT },
+
+	{ LOC_SCREENSIZE,		"screensize",		F_VECTOR2 },
+	{ LOC_BLUR,				"fx_blur",			F_FLOAT },
+	{ LOC_GRAYSCALE,		"fx_grayscale",		F_FLOAT },
+	{ LOC_INVERSE,			"fx_inverse",		F_FLOAT },
+	{ LOC_NOISE,			"fx_noise",			F_FLOAT },
+
+};
+
+
+inline void CheckProgUni(int uni)
+{
+	if (pCurrentProgram == NULL || pCurrentProgram->isValid == false || uni == -1)
+	{
+//		printf("aa");
 		return;
+	}
 }
 
 /*
@@ -28,9 +57,8 @@ R_ProgramIndex
 */
 glprog_t *R_ProgramIndex(int progindex)
 {
-	if (progindex >= numProgs || progindex < 0)
+	if (progindex >= MAX_GLPROGS || progindex < 0)
 		return NULL;
-
 	return &glprogs[progindex];
 }
 
@@ -80,8 +108,8 @@ int R_FindProgramUniform(char *name)
 		return -1;
 
 	loc = glGetUniformLocation(pCurrentProgram->programObject, name);
-	if(loc == -1)
-		ri.Printf(PRINT_ALERT, "no uniform %s in prog %s\n", name, pCurrentProgram->name);
+//	if(loc == -1)
+//		ri.Printf(PRINT_ALERT, "no uniform %s in prog %s\n", name, pCurrentProgram->name);
 	return loc;
 }
 
@@ -93,7 +121,7 @@ R_ProgUniform1i
 */
 void R_ProgUniform1i(int uniform, int val)
 {
-	CheckProg();
+	CheckProgUni(uniform);
 	glUniform1i(uniform, val);
 }
 
@@ -104,7 +132,7 @@ R_ProgUniform1f
 */
 void R_ProgUniform1f(int uniform, float val)
 {
-	CheckProg();
+	CheckProgUni(uniform);
 	glUniform1f(uniform, val);
 }
 
@@ -116,7 +144,7 @@ R_ProgUniform2i
 */
 void R_ProgUniform2i(int uniform, int val, int val2)
 {
-	CheckProg();
+	CheckProgUni(uniform);
 	glUniform2i(uniform, val, val2);
 }
 
@@ -127,7 +155,7 @@ R_ProgUniform2f
 */
 void R_ProgUniform2f(int uniform, float val, float val2)
 {
-	CheckProg();
+	CheckProgUni(uniform);
 	glUniform2f(uniform, val, val2);
 }
 
@@ -149,7 +177,7 @@ R_ProgUniform3i
 */
 void R_ProgUniform3i(int uniform, int val, int val2, int val3)
 {
-	CheckProg();
+	CheckProgUni(uniform);
 	glUniform3i(uniform, val, val2, val3);
 }
 
@@ -160,7 +188,7 @@ R_ProgUniform3f
 */
 void R_ProgUniform3f(int uniform, float val, float val2, float val3)
 {
-	CheckProg();
+	CheckProgUni(uniform);
 	glUniform3f(uniform, val, val2, val3);
 }
 
@@ -183,7 +211,7 @@ R_ProgUniform4i
 */
 void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4)
 {
-	CheckProg();
+	CheckProgUni(uniform);
 	glUniform4i(uniform, val, val2, val3, val4);
 }
 
@@ -194,7 +222,7 @@ R_ProgUniform3f
 */
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4)
 {
-	CheckProg();
+	CheckProgUni(uniform);
 	glUniform4f(uniform, val, val2, val3, val4);
 }
 
@@ -249,7 +277,7 @@ static qboolean R_CheckShaderObject(glprog_t *prog, unsigned int shaderObject)
 		errorLog = (char*)malloc(sizeof(char) * maxLength);
 
 		glGetShaderInfoLog(shaderObject, maxLength, &maxLength, &errorLog[0]);
-		ri.Error(ERR_DROP, "Failed to compile shader object for program %s (error log below)\n%s\n", prog->name, errorLog);
+		ri.Error(ERR_FATAL, "Failed to compile shader object for program %s (error log below)\n%s\n", prog->name, errorLog);
 
 		glDeleteShader(shaderObject);
 		free(errorLog);
@@ -341,40 +369,48 @@ static qboolean R_LinkProgram(glprog_t* prog)
 R_GetProgLocations
 =================
 */
-static void R_GetProgLocations(glprog_t* prog)
+static void R_FindUniformLocations(glprog_t* prog)
 {
 	R_BindProgram(prog->index);
+
+	// find default uniform locations
+	for (int i = 0; i < NUM_LOCS; i++)
+		prog->locs[progUniLocs[i].loc] = R_FindProgramUniform(progUniLocs[i].name);
+
+	// set default values
+	R_ProgUniform1i(prog->locs[LOC_COLORMAP], 0);
+	R_UnbindProgram();
 }
+
+
 
 /*
 =================
 R_LoadProgram
 =================
 */
-int R_LoadProgram(char *name)
+int R_LoadProgram(int program, char *name)
 {
 	glprog_t* prog;
 	
-	prog = &glprogs[numProgs];
+	prog = R_ProgramIndex(program);
 
+	strcpy(prog->name, name);
 
-	strncpy(prog->name, name, sizeof(prog->name));
+	if (!R_CompileShader(prog, true))
+		return -1;
+	if (!R_CompileShader(prog, false))
+		return -1;
+	if (!R_LinkProgram(prog))
+		return -1;
 
-	R_CompileShader(prog, true);
-	R_CompileShader(prog, false);
-	R_LinkProgram(prog);
-
-	prog->index = numProgs;
+	prog->isValid = true;
+	prog->index = program;
 	numProgs++;
 
-	R_BindProgram(0);
-	prog->locs[LOC_COLORMAP] = R_FindProgramUniform("colormap");
+	R_FindUniformLocations(prog);
 
-	prog->locs[LOC_COLORMAP] = prog->locs[LOC_COLORMAP];
-	R_ProgUniform1i(prog->locs[LOC_COLORMAP], 0);
-	R_UnbindProgram();
-
-	return numProgs - 1;
+	return prog->index;
 }
 
 
@@ -389,7 +425,7 @@ void R_FreePrograms()
 
 	R_UnbindProgram();
 
-	for (int i = 0; i < numProgs; i++)
+	for (int i = 0; i < MAX_GLPROGS; i++)
 	{
 		prog = &glprogs[numProgs];
 		R_FreeProgram(prog);
@@ -398,4 +434,25 @@ void R_FreePrograms()
 	memset(glprogs, 0, sizeof(glprogs));
 	pCurrentProgram = NULL;
 	numProgs = 0;
+}
+
+
+/*
+=================
+R_FreePrograms
+=================
+*/
+void R_InitProgs()
+{
+	R_FreePrograms();
+
+
+	R_LoadProgram(GLPROG_WORLD, "world");
+	R_LoadProgram(GLPROG_WORLD_LIQUID, "world-liquid");
+	R_LoadProgram(GLPROG_SKY, "sky");
+	R_LoadProgram(GLPROG_ALIAS, "aliasmodel");
+	R_LoadProgram(GLPROG_SPRITE, "spritemodel");
+	R_LoadProgram(GLPROG_PARTICLES, "particles");
+	R_LoadProgram(GLPROG_GUI, "gui");
+	R_LoadProgram(GLPROG_POSTFX, "postfx");
 }

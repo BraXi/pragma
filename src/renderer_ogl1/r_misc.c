@@ -175,6 +175,9 @@ void GL_Strings_f( void )
 */
 void GL_SetDefaultState( void )
 {
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	R_UnbindProgram();
+
 	glClearColor (1,0, 0.5 , 0.5);
 	R_SetCullFace(GL_FRONT);
 	glEnable(GL_TEXTURE_2D);
