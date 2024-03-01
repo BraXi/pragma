@@ -604,8 +604,115 @@ Returns has_alpha
 ===============
 */
 
-int		upload_width, upload_height;
+static int		upload_width, upload_height;
 
+#ifndef OLD_UPLOAD
+static char		*upload_name;
+static int IsPowerOfTwo(int x)
+{
+	if (x == 0)
+		return 0;
+	return (x & (x - 1)) == 0;
+}
+
+qboolean GL_Upload32(unsigned* data, int width, int height, qboolean mipmap)
+{
+	int			samples;
+	int			i, c;
+	byte		*scan;
+	int			comp;
+	int			scaled_width, scaled_height;
+
+	if (!IsPowerOfTwo(width) || !IsPowerOfTwo(height))
+	{
+		ri.Error(ERR_FATAL, "Texture \"%s\" [%i x %i] dimensions are not power of two.\n", upload_name, width, height);
+	}
+
+	// let people sample down the world textures for speed
+	// but don't allow for too blurry textures, refuse to downscale 256^2px textures
+	if (mipmap && width >= 256 && height >= 256)
+	{
+		scaled_width = width;
+		scaled_height = height;
+
+		scaled_width >>= (int)r_picmip->value;
+		scaled_height >>= (int)r_picmip->value;
+		
+		if (scaled_width < 256)
+			scaled_width = 256;
+		if (scaled_height < 256)
+			scaled_height = 256;
+
+		upload_width = scaled_width;
+		upload_height = scaled_height;
+	}
+	else
+	{
+		upload_width = width;
+		upload_height = height;
+	}
+
+	// scan the texture for any non-255 alpha
+	c = width * height;
+	scan = ((byte*)data) + 3;
+	samples = gl_solid_format;
+	for (i = 0; i < c; i++, scan += 4)
+	{
+		if (*scan != 255)
+		{
+			samples = gl_alpha_format;
+			break;
+		}
+	}
+
+	if (samples == gl_solid_format) 
+	{
+		comp = gl_tex_solid_format; // rgb
+	}
+	else if (samples == gl_alpha_format)
+	{
+		comp = gl_tex_alpha_format; // rgba
+	}
+	else // weirdo
+	{
+		ri.Error(ERR_FATAL, "Texture \"%s\" is not RGB or RGBA (unknown number of texture components %i)\n", upload_name, samples);
+		comp = samples;
+	}
+
+	if (upload_width != width || upload_height != height)
+	{
+		upload_width = width;
+		upload_height = height;
+		glTexImage2D(GL_TEXTURE_2D, 0, comp, upload_width, upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+#if 0
+		byte* scaled = malloc(sizeof(byte) * upload_width * upload_height * comp);
+		if (!scaled)
+			ri.Error(ERR_FATAL, "malloc failed\n");
+
+		GL_ResampleTexture(data, width, height, scaled, upload_width, upload_height); // this wil crash with too large textures
+		glTexImage2D(GL_TEXTURE_2D, 0, comp, upload_width, upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
+		free(scaled);
+#endif
+	}
+	else
+		glTexImage2D(GL_TEXTURE_2D, 0, comp, upload_width, upload_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	if (mipmap)
+	{
+		glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST); // FIXME: this should be done once in r_init
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_max);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+	}
+	return (samples == gl_alpha_format);
+}
+
+#else defined(OLD_UPLOAD)
 qboolean GL_Upload32 (unsigned *data, int width, int height, qboolean mipmap)
 {
 	int			samples;
@@ -735,39 +842,27 @@ done: ;
 
 	return (samples == gl_alpha_format);
 }
-
-/*
-===============
-GL_Upload8
-
-Returns has_alpha
-===============
-*/
-qboolean GL_Upload8 (byte *data, int width, int height,  qboolean mipmap, qboolean is_sky )
-{
-//	ri.Error(ERR_FATAL, "%s\n", __FUNCTION__);
-	return false;
-}
-
+#endif
 
 /*
 ================
-GL_LoadPic
+R_LoadTexture
 
 This is also used as an entry point for the generated r_notexture
 ================
 */
-image_t *GL_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type, int bits)
+image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, imagetype_t type, int bits)
 {
 	image_t		*image;
 	int			i;
 
 	// find a free image_t
-	for (i=0, image=gltextures ; i<numgltextures ; i++,image++)
+	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
 	{
 		if (!image->texnum)
 			break;
 	}
+
 	if (i == numgltextures)
 	{
 		if (numgltextures == MAX_GLTEXTURES)
@@ -777,24 +872,28 @@ image_t *GL_LoadPic (char *name, byte *pic, int width, int height, imagetype_t t
 	image = &gltextures[i];
 
 	if (strlen(name) >= sizeof(image->name))
-		ri.Error (ERR_DROP, "GL_LoadPic: \"%s\" is too long", name);
+		ri.Error (ERR_DROP, "R_LoadTexture: \"%s\" is too long", name);
 	strcpy (image->name, name);
+
 	image->registration_sequence = registration_sequence;
+
+	upload_name = image->name;
 
 	image->width = width;
 	image->height = height;
 	image->type = type;
 
 	image->texnum = TEXNUM_IMAGES + (image - gltextures);
+
 	GL_Bind(image->texnum);
-	image->has_alpha = GL_Upload32 ((unsigned *)pic, width, height, (image->type != it_gui && image->type != it_sky) );
+	image->has_alpha = GL_Upload32 ((unsigned *)pixels, width, height, (image->type != it_gui && image->type != it_sky) );
 	image->upload_width = upload_width;		// after power of 2 and scales
 	image->upload_height = upload_height;
+	
 	image->sl = 0;
 	image->sh = 1;
 	image->tl = 0;
 	image->th = 1;
-
 
 	return image;
 }
@@ -844,7 +943,7 @@ image_t	*GL_FindImage (char *name, imagetype_t type)
 //			ri.Printf(PRINT_LOW, "GL_FindImage: couldn't load %s\n", name);
 			return r_notexture;
 		}
-		image = GL_LoadPic (name, pic, width, height, type, 32);
+		image = R_LoadTexture (name, pic, width, height, type, 32);
 	}
 	else
 	{

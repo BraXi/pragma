@@ -87,6 +87,10 @@ typedef struct image_s
 	qboolean	has_alpha;
 } image_t;
 
+#define	TEXNUM_LIGHTMAPS	1024
+#define	TEXNUM_IMAGES		1153
+
+#define	MAX_GLTEXTURES		1024
 
 //===================================================================
 
@@ -143,11 +147,6 @@ typedef struct glprog_s
 extern glprog_t glprogs[MAX_GLPROGS];
 extern glprog_t* pCurrentProgram;
 extern int numProgs;
-
-#define	TEXNUM_LIGHTMAPS	1024
-#define	TEXNUM_IMAGES		1153
-
-#define		MAX_GLTEXTURES	1024
 
 glprog_t* R_ProgramIndex(int progindex);
 void R_BindProgram(int progindex);
@@ -270,7 +269,6 @@ extern	cvar_t	*r_lightmap;
 extern	cvar_t	*r_dynamic;
 extern  cvar_t  *r_monolightmap;
 extern	cvar_t	*r_nobind;
-extern	cvar_t	*r_round_down;
 extern	cvar_t	*r_picmip;
 extern	cvar_t	*r_skymip;
 extern	cvar_t	*r_showtris;
@@ -374,7 +372,7 @@ void GL_ResampleTexture (unsigned *in, int inwidth, int inheight, unsigned *out,
 
 struct image_s *R_RegisterSkin (char *name);
 
-image_t *GL_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type, int bits);
+image_t *R_LoadTexture (char *name, byte *pixels, int width, int height, imagetype_t type, int bits);
 image_t	*GL_FindImage (char *name, imagetype_t type);
 void	GL_TextureMode( char *string );
 void	GL_ImageList_f (void);

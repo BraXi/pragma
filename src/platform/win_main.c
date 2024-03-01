@@ -68,7 +68,7 @@ void Sys_Error (char *error, ...)
 #ifdef DEDICATED_ONLY
 	printf("Sys_Error: %s at %s\n", text, GetTimeStamp(true));
 #else
-	MessageBox(NULL, text, "Error", 0 /* MB_OK */ );
+	MessageBox(NULL, text, "Pragma Error", 0 /* MB_OK */ );
 #endif
 
 	

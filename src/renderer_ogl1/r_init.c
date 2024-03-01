@@ -44,7 +44,6 @@ cvar_t* r_dynamic;
 cvar_t* r_monolightmap;
 cvar_t* r_modulate;
 cvar_t* r_nobind;
-cvar_t* r_round_down;
 cvar_t* r_picmip;
 cvar_t* r_skymip;
 cvar_t* r_showtris;
@@ -112,7 +111,6 @@ void R_RegisterCvarsAndCommands(void)
 	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT);
 	r_dynamic = ri.Cvar_Get("r_dynamic", "1", CVAR_CHEAT);
 	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT);
-	r_round_down = ri.Cvar_Get("r_round_down", "0", 0);
 	r_picmip = ri.Cvar_Get("r_picmip", "0", 0);
 	r_skymip = ri.Cvar_Get("r_skymip", "0", 0);
 	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT);
