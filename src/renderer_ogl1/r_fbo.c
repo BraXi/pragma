@@ -136,6 +136,24 @@ R_ApplyPostEffects
 */
 static void R_ApplyPostEffects()
 {
+	if (r_newrefdef.view.fx.intensity > 10.0f)
+		r_newrefdef.view.fx.intensity = 10.0f;
+
+	if (r_newrefdef.view.fx.gamma > 5.0f)
+		r_newrefdef.view.fx.gamma = 5.0f;
+
+	if (r_newrefdef.view.fx.blur > 6.0f)
+		r_newrefdef.view.fx.blur = 6.0f;
+
+	if (r_newrefdef.view.fx.grayscale > 1.0f)
+		r_newrefdef.view.fx.grayscale = 1.0f;
+
+	if (r_newrefdef.view.fx.inverse > 1.0f)
+		r_newrefdef.view.fx.inverse = 1.0f;
+
+	if (r_newrefdef.view.fx.noise > 1.0f)
+		r_newrefdef.view.fx.noise = 1.0f;
+
 	// note to self: I should probably send these in vec4 uniforms or even matrix to save on uniforms and calls
 	R_ProgUniform1f(LOC_INTENSITY, r_newrefdef.view.fx.intensity > 0.0f ? r_newrefdef.view.fx.intensity : r_intensity->value);
 	R_ProgUniform1f(LOC_GAMMA, r_newrefdef.view.fx.gamma > 0.0f ? r_newrefdef.view.fx.gamma : r_gamma->value);
