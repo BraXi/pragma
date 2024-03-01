@@ -124,6 +124,7 @@ typedef struct rdViewFX_s
 {
 	float	blend[4];		// rgba 0-1 full screen blend
 	float	blur;			// 0 no blur
+	float	contrast;
 	float	grayscale;		// 0-1 full grayscale
 	float	inverse;		// 1 inverse
 	float	noise;			

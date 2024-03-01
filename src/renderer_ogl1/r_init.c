@@ -65,6 +65,7 @@ cvar_t* r_gamma;
 cvar_t* r_renderer;
 
 cvar_t* r_postfx_blur;
+cvar_t* r_postfx_contrast;
 cvar_t* r_postfx_grayscale;
 cvar_t* r_postfx_inverse;
 cvar_t* r_postfx_noise;
@@ -141,10 +142,11 @@ void R_RegisterCvarsAndCommands(void)
 	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE);
 
 	r_intensity = ri.Cvar_Get("r_intensity", "1.5", CVAR_CHEAT);
-	r_postfx_blur = ri.Cvar_Get("r_blur", "0", CVAR_CHEAT);
-	r_postfx_grayscale = ri.Cvar_Get("r_grayscale", "0", CVAR_CHEAT);
-	r_postfx_inverse = ri.Cvar_Get("r_inverse", "0", CVAR_CHEAT);
-	r_postfx_noise = ri.Cvar_Get("r_noise", "0", CVAR_CHEAT);
+	r_postfx_blur = ri.Cvar_Get("r_fx_blur", "0", CVAR_CHEAT);
+	r_postfx_contrast = ri.Cvar_Get("r_fx_contrast", "0", CVAR_CHEAT);
+	r_postfx_grayscale = ri.Cvar_Get("r_fx_grayscale", "0", CVAR_CHEAT);
+	r_postfx_inverse = ri.Cvar_Get("r_fx_inverse", "0", CVAR_CHEAT);
+	r_postfx_noise = ri.Cvar_Get("r_fx_noise", "0", CVAR_CHEAT);
 
 	ri.AddCommand("shaderlist", GL_ShaderList_f);
 	ri.AddCommand("imagelist", GL_ImageList_f);
