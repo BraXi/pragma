@@ -146,6 +146,7 @@ void R_RegisterCvarsAndCommands(void)
 	r_postfx_inverse = ri.Cvar_Get("r_inverse", "0", CVAR_CHEAT);
 	r_postfx_noise = ri.Cvar_Get("r_noise", "0", CVAR_CHEAT);
 
+	ri.AddCommand("shaderlist", GL_ShaderList_f);
 	ri.AddCommand("imagelist", GL_ImageList_f);
 	ri.AddCommand("screenshot", GL_ScreenShot_f);
 	ri.AddCommand("modellist", Mod_Modellist_f);

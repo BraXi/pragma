@@ -437,7 +437,7 @@ void R_FreePrograms()
 
 	for (int i = 0; i < MAX_GLPROGS; i++)
 	{
-		prog = &glprogs[numProgs];
+		prog = &glprogs[i];
 		R_FreeProgram(prog);
 	}
 
@@ -465,4 +465,24 @@ void R_InitProgs()
 	R_LoadProgram(GLPROG_PARTICLES, "particles");
 	R_LoadProgram(GLPROG_GUI, "gui");
 	R_LoadProgram(GLPROG_POSTFX, "postfx");
+}
+
+
+void GL_ShaderList_f(void)
+{
+	glprog_t* prog;
+	int cnt = 0;
+
+	ri.Printf(PRINT_ALL, "------------------\n");
+	for (int i = 0; i < MAX_GLPROGS; i++)
+	{
+		prog = &glprogs[i];
+
+		if (prog->isValid)
+		{
+			ri.Printf(PRINT_ALL, "%i '%s'\n", i, prog->name);
+			cnt++;
+		}
+	}
+	ri.Printf(PRINT_ALL, "Total %i shader programs.\n", cnt);
 }
