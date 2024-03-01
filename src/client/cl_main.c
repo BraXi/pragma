@@ -576,7 +576,8 @@ void CL_Disconnect (void)
 	}
 
 	// clear all view effects
-	VectorClear (cl.refdef.view.blend);
+	memset(&cl.refdef.view.fx, 0, sizeof(cl.refdef.view.fx));
+//	VectorClear (cl.refdef.view.fx.blend);
 
 	UI_CloseAllGuis();
 	UI_OpenGui("main");

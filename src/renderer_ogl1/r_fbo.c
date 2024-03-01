@@ -17,6 +17,13 @@ extern cvar_t* r_postfx_grayscale;
 extern cvar_t* r_postfx_inverse;
 extern cvar_t* r_postfx_noise;
 
+/*
+===============
+R_RenderToFBO
+
+Enabling will clear fbo and start rendering to texture.
+===============
+*/
 void R_RenderToFBO(qboolean enable)
 {
 	if (enable)
@@ -34,6 +41,13 @@ void R_RenderToFBO(qboolean enable)
 	}
 }
 
+/*
+===============
+InitFrameBufferDepthBuffer
+
+Create depth render target
+===============
+*/
 static void InitFrameBufferDepthBuffer()
 {
 	glGenRenderbuffers(1, &depth_rb);
@@ -48,6 +62,13 @@ static void InitFrameBufferDepthBuffer()
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
+/*
+===============
+InitFrameBufferDiffuseTexture
+
+Create diffuse texture for rt
+===============
+*/
 static void InitFrameBufferDiffuseTexture()
 {
 	glGenTextures(1, &fbo_tex_diffuse);
@@ -63,6 +84,14 @@ static void InitFrameBufferDiffuseTexture()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+
+/*
+===============
+R_InitFrameBuffer
+
+Create frame buffer and render target for rendering
+===============
+*/
 qboolean R_InitFrameBuffer()
 {
 	InitFrameBufferDiffuseTexture();
@@ -85,6 +114,11 @@ qboolean R_InitFrameBuffer()
 	return true;
 }
 
+/*
+===============
+R_FreeFrameBuffer
+===============
+*/
 void R_FreeFrameBuffer()
 {
 	glDeleteTextures(1, &fbo_tex_diffuse);
@@ -94,7 +128,30 @@ void R_FreeFrameBuffer()
 	glDeleteRenderbuffers(1, &depth_rb);
 }
 
+/*
+===============
+R_ApplyPostEffects
 
+===============
+*/
+static void R_ApplyPostEffects()
+{
+	// note to self: I should probably send these in vec4 uniforms or even matrix to save on uniforms and calls
+	R_ProgUniform1f(LOC_INTENSITY, r_newrefdef.view.fx.intensity > 0.0f ? r_newrefdef.view.fx.intensity : r_intensity->value);
+	R_ProgUniform1f(LOC_GAMMA, r_newrefdef.view.fx.gamma > 0.0f ? r_newrefdef.view.fx.gamma : r_gamma->value);
+	R_ProgUniform1f(LOC_BLUR, r_newrefdef.view.fx.blur > 0.0f ? r_newrefdef.view.fx.blur : r_postfx_blur->value);
+	R_ProgUniform1f(LOC_GRAYSCALE, r_newrefdef.view.fx.grayscale > 0.0f ? r_newrefdef.view.fx.grayscale : r_postfx_grayscale->value);
+	R_ProgUniform1f(LOC_INVERSE, r_newrefdef.view.fx.inverse == 1.0f ? 1.0f :  r_postfx_inverse->value);
+	R_ProgUniform1f(LOC_NOISE, r_newrefdef.view.fx.noise > 0.0f ? r_newrefdef.view.fx.noise :  r_postfx_noise->value);
+}
+
+/*
+===============
+R_DrawFBO
+
+Draw contents of FBO on screen
+===============
+*/
 void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 {
 	rect_t rect;
@@ -106,15 +163,9 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 	glColor4f(1, 1, 1, 1);
 
 	R_BindProgram(GLPROG_POSTFX);
+	R_ProgUniform2f(LOC_SCREENSIZE, (float)vid.width, (float)vid.height);
 
-	// note to self: I should probably send these in vec4 uniforms or even matrix to save on uniforms and calls
-	R_ProgUniform2f(pCurrentProgram->locs[LOC_SCREENSIZE], (float)vid.width, (float)vid.height);
-	R_ProgUniform1f(pCurrentProgram->locs[LOC_INTENSITY], r_intensity->value);
-	R_ProgUniform1f(pCurrentProgram->locs[LOC_GAMMA], r_gamma->value);
-	R_ProgUniform1f(pCurrentProgram->locs[LOC_BLUR], r_postfx_blur->value);
-	R_ProgUniform1f(pCurrentProgram->locs[LOC_GRAYSCALE], r_postfx_grayscale->value);
-	R_ProgUniform1f(pCurrentProgram->locs[LOC_INVERSE], r_postfx_inverse->value);
-	R_ProgUniform1f(pCurrentProgram->locs[LOC_NOISE], r_postfx_noise->value);
+	R_ApplyPostEffects();
 
 	if(diffuse)
 		glBindTexture(GL_TEXTURE_2D, fbo_tex_diffuse);

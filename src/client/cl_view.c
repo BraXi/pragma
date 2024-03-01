@@ -493,10 +493,10 @@ void V_RenderView( float stereo_separation )
 
 		if (cl_testblend->value)
 		{
-			cl.refdef.view.blend[0] = 1;
-			cl.refdef.view.blend[1] = 0.5;
-			cl.refdef.view.blend[2] = 0.25;
-			cl.refdef.view.blend[3] = 0.5;
+			cl.refdef.view.fx.blend[0] = 1;
+			cl.refdef.view.fx.blend[1] = 0.5;
+			cl.refdef.view.fx.blend[2] = 0.25;
+			cl.refdef.view.fx.blend[3] = 0.5;
 		}
 
 
@@ -535,7 +535,7 @@ void V_RenderView( float stereo_separation )
 			r_numdlights = 0;
 
 		if (!cl_add_blend->value)
-			VectorClear (cl.refdef.view.blend);
+			VectorClear (cl.refdef.view.fx.blend);
 
 
 		cl.refdef.num_entities = r_numentities;

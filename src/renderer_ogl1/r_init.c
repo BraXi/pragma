@@ -104,7 +104,7 @@ void R_RegisterCvarsAndCommands(void)
 	r_particle_att_b = ri.Cvar_Get("r_particle_att_b", "0.0", CVAR_ARCHIVE | CVAR_CHEAT);
 	r_particle_att_c = ri.Cvar_Get("r_particle_att_c", "0.01", CVAR_ARCHIVE | CVAR_CHEAT);
 
-	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_ARCHIVE | CVAR_CHEAT);
+	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_CHEAT);
 	r_log = ri.Cvar_Get("r_log", "0", 0);
 	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0);
 	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
@@ -135,16 +135,16 @@ void R_RegisterCvarsAndCommands(void)
 	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", CVAR_CHEAT);
 
 	r_fullscreen = ri.Cvar_Get("r_fullscreen", "0", CVAR_ARCHIVE);
-	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE);
-	r_intensity = ri.Cvar_Get("r_intensity", "1.0", CVAR_ARCHIVE);
 
 	r_renderer = ri.Cvar_Get("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE);
 
+	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE);
 
-	r_postfx_blur = ri.Cvar_Get("r_blur", "0", 0);
-	r_postfx_grayscale = ri.Cvar_Get("r_grayscale", "0", 0);
-	r_postfx_inverse = ri.Cvar_Get("r_inverse", "0", 0);
-	r_postfx_noise = ri.Cvar_Get("r_noise", "0", 0);
+	r_intensity = ri.Cvar_Get("r_intensity", "1.5", CVAR_CHEAT);
+	r_postfx_blur = ri.Cvar_Get("r_blur", "0", CVAR_CHEAT);
+	r_postfx_grayscale = ri.Cvar_Get("r_grayscale", "0", CVAR_CHEAT);
+	r_postfx_inverse = ri.Cvar_Get("r_inverse", "0", CVAR_CHEAT);
+	r_postfx_noise = ri.Cvar_Get("r_noise", "0", CVAR_CHEAT);
 
 	ri.AddCommand("imagelist", GL_ImageList_f);
 	ri.AddCommand("screenshot", GL_ScreenShot_f);

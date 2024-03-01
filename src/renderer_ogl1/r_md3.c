@@ -470,12 +470,12 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 
 	R_BindProgram(GLPROG_ALIAS);
 	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
-		R_ProgUniform1f(pCurrentProgram->locs[LOC_PARM0], 1);
+		R_ProgUniform1f(LOC_PARM0, 1);
 	else
-		R_ProgUniform1f(pCurrentProgram->locs[LOC_PARM0], 0);
+		R_ProgUniform1f(LOC_PARM0, 0);
 
-	R_ProgUniformVec3(pCurrentProgram->locs[LOC_SHADECOLOR], model_shadelight);
-	R_ProgUniformVec3(pCurrentProgram->locs[LOC_SHADEVECTOR], model_shadevector);
+	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
+	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
 	
 	glColor4f(1, 1, 1, ent->alpha);
 

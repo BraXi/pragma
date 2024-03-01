@@ -15,6 +15,8 @@ int numProgs;
 
 glprog_t glprogs[MAX_GLPROGS];
 
+typedef enum { SH_FRAG, SH_VERT } glShaderType_t;
+
 typedef struct glprogloc_s
 {
 	int loc;
@@ -43,13 +45,16 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 };
 
 
-inline void CheckProgUni(int uni)
-{
-	if (pCurrentProgram == NULL || pCurrentProgram->isValid == false || uni == -1)
-	{
-//		printf("aa");
-		return;
-	}
+#define CheckProgUni(uni) \
+{ \
+	if (pCurrentProgram == NULL || pCurrentProgram->isValid == false || uni == -1) \
+	{ \
+		return; \
+	} \
+	if (pCurrentProgram->locs[uni] == -1) \
+	{ \
+		return; \
+	} \
 }
 
 /*
@@ -124,7 +129,7 @@ R_ProgUniform1i
 void R_ProgUniform1i(int uniform, int val)
 {
 	CheckProgUni(uniform);
-	glUniform1i(uniform, val);
+	glUniform1i(pCurrentProgram->locs[uniform], val);
 }
 
 /*
@@ -135,7 +140,7 @@ R_ProgUniform1f
 void R_ProgUniform1f(int uniform, float val)
 {
 	CheckProgUni(uniform);
-	glUniform1f(uniform, val);
+	glUniform1f(pCurrentProgram->locs[uniform], val);
 }
 
 // two params
@@ -147,7 +152,7 @@ R_ProgUniform2i
 void R_ProgUniform2i(int uniform, int val, int val2)
 {
 	CheckProgUni(uniform);
-	glUniform2i(uniform, val, val2);
+	glUniform2i(pCurrentProgram->locs[uniform], val, val2);
 }
 
 /*
@@ -157,8 +162,8 @@ R_ProgUniform2f
 */
 void R_ProgUniform2f(int uniform, float val, float val2)
 {
-	CheckProgUni(uniform);
-	glUniform2f(uniform, val, val2);
+	CheckProgUni(uniform);	
+	glUniform2f(pCurrentProgram->locs[uniform], val, val2);
 }
 
 /*
@@ -180,7 +185,7 @@ R_ProgUniform3i
 void R_ProgUniform3i(int uniform, int val, int val2, int val3)
 {
 	CheckProgUni(uniform);
-	glUniform3i(uniform, val, val2, val3);
+	glUniform3i(pCurrentProgram->locs[uniform], val, val2, val3);
 }
 
 /*
@@ -191,7 +196,7 @@ R_ProgUniform3f
 void R_ProgUniform3f(int uniform, float val, float val2, float val3)
 {
 	CheckProgUni(uniform);
-	glUniform3f(uniform, val, val2, val3);
+	glUniform3f(pCurrentProgram->locs[uniform], val, val2, val3);
 }
 
 /*
@@ -214,7 +219,7 @@ R_ProgUniform4i
 void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4)
 {
 	CheckProgUni(uniform);
-	glUniform4i(uniform, val, val2, val3, val4);
+	glUniform4i(pCurrentProgram->locs[uniform], val, val2, val3, val4);
 }
 
 /*
@@ -225,7 +230,7 @@ R_ProgUniform3f
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4)
 {
 	CheckProgUni(uniform);
-	glUniform4f(uniform, val, val2, val3, val4);
+	glUniform4f(pCurrentProgram->locs[uniform], val, val2, val3, val4);
 }
 
 /*
@@ -235,7 +240,7 @@ R_ProgUniformVec4
 */
 void R_ProgUniformVec4(int uniform, vec4_t v)
 {
-	R_ProgUniform4f(uniform, v[0], v[1], v[2], v[3]);
+	R_ProgUniform4f(pCurrentProgram->locs[uniform], v[0], v[1], v[2], v[3]);
 }
 
 /*
@@ -375,12 +380,15 @@ static void R_FindUniformLocations(glprog_t* prog)
 {
 	R_BindProgram(prog->index);
 
+	for (int i = 0; i < NUM_LOCS; i++)
+		prog->locs[i] = -1;
+
 	// find default uniform locations
 	for (int i = 0; i < NUM_LOCS; i++)
 		prog->locs[progUniLocs[i].loc] = R_FindProgramUniform(progUniLocs[i].name);
 
 	// set default values
-	R_ProgUniform1i(prog->locs[LOC_COLORMAP], 0);
+	R_ProgUniform1i(LOC_COLORMAP, 0);
 	R_UnbindProgram();
 }
 

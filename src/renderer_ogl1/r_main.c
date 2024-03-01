@@ -501,7 +501,7 @@ void R_SetupFrame (void)
 	}
 
 	for (i=0 ; i<4 ; i++)
-		v_blend[i] = r_newrefdef.view.blend[i];
+		v_blend[i] = r_newrefdef.view.fx.blend[i];
 
 	rperf.brush_polys = 0;
 	rperf.alias_tris = 0;
