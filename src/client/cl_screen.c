@@ -593,7 +593,7 @@ void SCR_TimeRefresh_f (void)
 		re.BeginFrame( 0 );
 		for (i=0 ; i<128 ; i++)
 		{
-			cl.refdef.viewangles[1] = i/128.0*360.0;
+			cl.refdef.view.angles[1] = i/128.0*360.0;
 			re.RenderFrame (&cl.refdef);
 		}
 		re.EndFrame();
@@ -602,7 +602,7 @@ void SCR_TimeRefresh_f (void)
 	{
 		for (i=0 ; i<128 ; i++)
 		{
-			cl.refdef.viewangles[1] = i/128.0*360.0;
+			cl.refdef.view.angles[1] = i/128.0*360.0;
 
 			re.BeginFrame( 0 );
 			re.RenderFrame (&cl.refdef);

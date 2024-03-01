@@ -120,17 +120,34 @@ typedef struct
 	float		white;			// highest of rgb
 } lightstyle_t;
 
+typedef struct rdViewFX_s
+{
+	float	blend[4];		// rgba 0-1 full screen blend
+	float	blur;			// 0 no blur
+	float	grayscale;		// 0-1 full grayscale
+	float	inverse;		// 1 inverse
+	float	noise;			
+	float	intensity;		// 2 default
+	float	gamma;
+}rdViewFX_t;
+
+typedef struct rdCamParams_s
+{
+	float	origin[3];
+	float	angles[3];
+	float	fov_x, fov_y;
+	int		flags;			// RDF_UNDERWATER, etc
+
+	rdViewFX_t fx;
+}rdCamParams_t;
 
 typedef struct
 {
 	int				x, y, width, height;// in virtual screen coordinates
-	float			fov_x, fov_y;
 
-	float			vieworg[3];
-	float			viewangles[3];
-	float			blend[4];			// rgba 0-1 full screen blend
 	float			time;				// time is used to auto animate
-	int				rdflags;			// RDF_UNDERWATER, etc
+	
+	rdCamParams_t	view;
 
 	byte			*areabits;			// if not NULL, only areas with set bits will be drawn
 
@@ -150,7 +167,7 @@ typedef struct
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'5')
+#define	API_VERSION		('B'+'X'+'I'+'6')
 
 //
 // these are the functions exported by the refresh module

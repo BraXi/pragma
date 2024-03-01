@@ -944,7 +944,7 @@ void R_DrawBrushModel (rentity_t *e)
 	glColor3f (1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
-	VectorSubtract (r_newrefdef.vieworg, e->origin, modelorg);
+	VectorSubtract (r_newrefdef.view.origin, e->origin, modelorg);
 	if (rotated)
 	{
 		vec3_t	temp;
@@ -1121,12 +1121,12 @@ void R_DrawWorld (void)
 	if (!r_drawworld->value)
 		return;
 
-	if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL )
+	if ( r_newrefdef.view.flags & RDF_NOWORLDMODEL )
 		return;
 
 	pCurrentModel = r_worldmodel;
 
-	VectorCopy (r_newrefdef.vieworg, modelorg);
+	VectorCopy (r_newrefdef.view.origin, modelorg);
 
 	// auto cycle the world frame for texture animation
 	memset (&ent, 0, sizeof(ent));

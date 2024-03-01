@@ -432,13 +432,13 @@ void R_SetFrustum (void)
 	int		i;
 
 	// rotate VPN right by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[0].normal, vup, vpn, -(90-r_newrefdef.fov_x / 2 ) );
+	RotatePointAroundVector( frustum[0].normal, vup, vpn, -(90-r_newrefdef.view.fov_x / 2 ) );
 	// rotate VPN left by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[1].normal, vup, vpn, 90-r_newrefdef.fov_x / 2 );
+	RotatePointAroundVector( frustum[1].normal, vup, vpn, 90-r_newrefdef.view.fov_x / 2 );
 	// rotate VPN up by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[2].normal, vright, vpn, 90-r_newrefdef.fov_y / 2 );
+	RotatePointAroundVector( frustum[2].normal, vright, vpn, 90-r_newrefdef.view.fov_y / 2 );
 	// rotate VPN down by FOV_X/2 degrees
-	RotatePointAroundVector( frustum[3].normal, vright, vpn, -( 90 - r_newrefdef.fov_y / 2 ) );
+	RotatePointAroundVector( frustum[3].normal, vright, vpn, -( 90 - r_newrefdef.view.fov_y / 2 ) );
 
 	for (i=0 ; i<4 ; i++)
 	{
@@ -463,12 +463,12 @@ void R_SetupFrame (void)
 	r_framecount++;
 
 // build the transformation matrix for the given view angles
-	VectorCopy (r_newrefdef.vieworg, r_origin);
+	VectorCopy (r_newrefdef.view.origin, r_origin);
 
-	AngleVectors (r_newrefdef.viewangles, vpn, vright, vup);
+	AngleVectors (r_newrefdef.view.angles, vpn, vright, vup);
 
 // current viewcluster
-	if ( !( r_newrefdef.rdflags & RDF_NOWORLDMODEL ) )
+	if ( !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 	{
 		r_oldviewcluster = r_viewcluster;
 		r_oldviewcluster2 = r_viewcluster2;
@@ -501,13 +501,13 @@ void R_SetupFrame (void)
 	}
 
 	for (i=0 ; i<4 ; i++)
-		v_blend[i] = r_newrefdef.blend[i];
+		v_blend[i] = r_newrefdef.view.blend[i];
 
 	rperf.brush_polys = 0;
 	rperf.alias_tris = 0;
 
 	// clear out the portion of the screen that the NOWORLDMODEL defines
-	if ( r_newrefdef.rdflags & RDF_NOWORLDMODEL )
+	if ( r_newrefdef.view.flags & RDF_NOWORLDMODEL )
 	{
 		glEnable( GL_SCISSOR_TEST );
 		glClearColor( 0.3, 0.3, 0.3, 1 );
@@ -566,7 +566,7 @@ void R_SetupGL (void)
 //	yfov = 2*atan((float)r_newrefdef.height/r_newrefdef.width)*180/M_PI;
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity ();
-    MYgluPerspective (r_newrefdef.fov_y,  screenaspect,  4, 4096);
+    MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096);
 
 	R_SetCullFace(GL_FRONT);
 
@@ -575,10 +575,10 @@ void R_SetupGL (void)
 
     glRotatef (-90,  1, 0, 0);	    // put Z going up
     glRotatef (90,  0, 0, 1);	    // put Z going up
-    glRotatef (-r_newrefdef.viewangles[2],  1, 0, 0);
-    glRotatef (-r_newrefdef.viewangles[0],  0, 1, 0);
-    glRotatef (-r_newrefdef.viewangles[1],  0, 0, 1);
-    glTranslatef (-r_newrefdef.vieworg[0],  -r_newrefdef.vieworg[1],  -r_newrefdef.vieworg[2]);
+    glRotatef (-r_newrefdef.view.angles[2],  1, 0, 0);
+    glRotatef (-r_newrefdef.view.angles[0],  0, 1, 0);
+    glRotatef (-r_newrefdef.view.angles[1],  0, 0, 1);
+    glTranslatef (-r_newrefdef.view.origin[0],  -r_newrefdef.view.origin[1],  -r_newrefdef.view.origin[2]);
 
 
 	glGetFloatv (GL_MODELVIEW_MATRIX, r_world_matrix);
@@ -655,7 +655,7 @@ void R_RenderView (refdef_t *fd)
 
 	r_newrefdef = *fd;
 
-	if (!r_worldmodel && !( r_newrefdef.rdflags & RDF_NOWORLDMODEL ) )
+	if (!r_worldmodel && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 		ri.Error (ERR_DROP, "R_RenderView: NULL worldmodel");
 
 	if (r_speeds->value)

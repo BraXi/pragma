@@ -406,9 +406,9 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	// set up position
 	for (i = 0; i < 3; i++)
 	{
-		viewmodel.origin[i] = cl.refdef.vieworg[i] + ops->viewmodel_offset[i]
+		viewmodel.origin[i] = cl.refdef.view.origin[i] + ops->viewmodel_offset[i]
 			+ cl.lerpfrac * (ps->viewmodel_offset[i] - ops->viewmodel_offset[i]);
-		viewmodel.angles[i] = cl.refdef.viewangles[i] + LerpAngle (ops->viewmodel_angles[i],
+		viewmodel.angles[i] = cl.refdef.view.angles[i] + LerpAngle (ops->viewmodel_angles[i],
 			ps->viewmodel_angles[i], cl.lerpfrac);
 	}
 
@@ -518,7 +518,7 @@ void CL_CalcViewValues (void)
 		backlerp = 1.0 - lerp;
 		for (i=0 ; i<3 ; i++)
 		{
-			cl.refdef.vieworg[i] = cl.predicted_origin[i] + ops->viewoffset[i] 
+			cl.refdef.view.origin[i] = cl.predicted_origin[i] + ops->viewoffset[i] 
 				+ cl.lerpfrac * (ps->viewoffset[i] - ops->viewoffset[i])
 				- backlerp * cl.prediction_error[i];
 		}
@@ -526,16 +526,16 @@ void CL_CalcViewValues (void)
 		// smooth out stair climbing
 		delta = cls.realtime - cl.predicted_step_time;
 		if (delta < SV_FRAMETIME_MSEC)
-			cl.refdef.vieworg[2] -= cl.predicted_step * (float)(SV_FRAMETIME_MSEC - delta) * 0.01f;
+			cl.refdef.view.origin[2] -= cl.predicted_step * (float)(SV_FRAMETIME_MSEC - delta) * 0.01f;
 	}
 	else
 	{	// just use interpolated values
 #if PROTOCOL_FLOAT_COORDS == 1
 		for (i = 0; i < 3; i++)
-			cl.refdef.vieworg[i] = ops->pmove.origin[i] + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] + ps->viewoffset[i] - (ops->pmove.origin[i] + ops->viewoffset[i]));
+			cl.refdef.view.origin[i] = ops->pmove.origin[i] + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] + ps->viewoffset[i] - (ops->pmove.origin[i] + ops->viewoffset[i]));
 #else
 		for (i = 0; i < 3; i++)
-			cl.refdef.vieworg[i] = ops->pmove.origin[i] * 0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] * 0.125 + ps->viewoffset[i] - (ops->pmove.origin[i] * 0.125 + ops->viewoffset[i]));
+			cl.refdef.vieworigin[i] = ops->pmove.origin[i] * 0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] * 0.125 + ps->viewoffset[i] - (ops->pmove.origin[i] * 0.125 + ops->viewoffset[i]));
 #endif
 	}
 
@@ -543,25 +543,25 @@ void CL_CalcViewValues (void)
 	if ( cl.frame.playerstate.pmove.pm_type < PM_DEAD )
 	{	// use predicted values
 		for (i=0 ; i<3 ; i++)
-			cl.refdef.viewangles[i] = cl.predicted_angles[i];
+			cl.refdef.view.angles[i] = cl.predicted_angles[i];
 	}
 	else
 	{	// just use interpolated values
 		for (i=0 ; i<3 ; i++)
-			cl.refdef.viewangles[i] = LerpAngle (ops->viewangles[i], ps->viewangles[i], lerp);
+			cl.refdef.view.angles[i] = LerpAngle (ops->viewangles[i], ps->viewangles[i], lerp);
 	}
 
 	for (i=0 ; i<3 ; i++)
-		cl.refdef.viewangles[i] += LerpAngle (ops->kick_angles[i], ps->kick_angles[i], lerp);
+		cl.refdef.view.angles[i] += LerpAngle (ops->kick_angles[i], ps->kick_angles[i], lerp);
 
-	AngleVectors (cl.refdef.viewangles, cl.v_forward, cl.v_right, cl.v_up);
+	AngleVectors (cl.refdef.view.angles, cl.v_forward, cl.v_right, cl.v_up);
 
 	// interpolate field of view
-	cl.refdef.fov_x = ops->fov + lerp * (ps->fov - ops->fov);
+	cl.refdef.view.fov_x = ops->fov + lerp * (ps->fov - ops->fov);
 
 	// don't interpolate blend color
 	for (i=0 ; i<4 ; i++)
-		cl.refdef.blend[i] = ps->blend[i];
+		cl.refdef.view.blend[i] = ps->blend[i];
 
 	// add the weapon
 	CL_AddViewWeapon (ps, ops);

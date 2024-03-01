@@ -575,7 +575,8 @@ void CL_Disconnect (void)
 			time/1000.0, cl.timedemo_frames*1000.0 / time);
 	}
 
-	VectorClear (cl.refdef.blend);
+	// clear all view effects
+	VectorClear (cl.refdef.view.blend);
 
 	UI_CloseAllGuis();
 	UI_OpenGui("main");
@@ -1406,7 +1407,7 @@ void CL_Frame (int msec)
 		time_after_ref = Sys_Milliseconds ();
 
 	// update audio
-	S_Update (cl.refdef.vieworg, cl.v_forward, cl.v_right, cl.v_up);
+	S_Update (cl.refdef.view.origin, cl.v_forward, cl.v_right, cl.v_up);
 
 	SCR_RunCinematic ();
 	SCR_RunConsole ();

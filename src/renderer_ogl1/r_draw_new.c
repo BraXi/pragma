@@ -155,8 +155,8 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	glPushMatrix();
 	glTranslatef(pos[0], pos[1], pos[2]);
 	glRotatef(-90, 1.0f, 0.0f, 0.0f); 
-	glRotatef((-r_newrefdef.viewangles[1])+90, 0.0f, 1.0f, 0.0f); //rotate to always face the camera
-	glRotatef((-r_newrefdef.viewangles[0]), 1.0f, 0.0f, 0.0f);
+	glRotatef((-r_newrefdef.view.angles[1])+90, 0.0f, 1.0f, 0.0f); //rotate to always face the camera
+	glRotatef((-r_newrefdef.view.angles[0]), 1.0f, 0.0f, 0.0f);
 
 	// draw string
 	GL_Bind(font_current->texnum);

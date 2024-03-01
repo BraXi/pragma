@@ -182,7 +182,7 @@ void V_TestParticles (void)
 		p = &r_particles[i];
 
 		for (j = 0; j < 3; j++)
-			p->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*d + cl.v_right[j]*r + cl.v_up[j]*u;
+			p->origin[j] = cl.refdef.view.origin[j] + cl.v_forward[j]*d + cl.v_right[j]*r + cl.v_up[j]*u;
 
 		VectorSet(p->color, 0.382353, 0.882353, 0.482353);
 		p->alpha = cl_testparticles->value;
@@ -247,7 +247,7 @@ void V_TestLights (void)
 		f = 64 * (i/4) + 128;
 
 		for (j=0 ; j<3 ; j++)
-			dl->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*f +
+			dl->origin[j] = cl.refdef.view.origin[j] + cl.v_forward[j]*f +
 			cl.v_right[j]*r;
 		dl->color[0] = ((i%6)+1) & 1;
 		dl->color[1] = (((i%6)+1) & 2)>>1;
@@ -493,10 +493,10 @@ void V_RenderView( float stereo_separation )
 
 		if (cl_testblend->value)
 		{
-			cl.refdef.blend[0] = 1;
-			cl.refdef.blend[1] = 0.5;
-			cl.refdef.blend[2] = 0.25;
-			cl.refdef.blend[3] = 0.5;
+			cl.refdef.view.blend[0] = 1;
+			cl.refdef.view.blend[1] = 0.5;
+			cl.refdef.view.blend[2] = 0.25;
+			cl.refdef.view.blend[3] = 0.5;
 		}
 
 
@@ -506,21 +506,21 @@ void V_RenderView( float stereo_separation )
 			vec3_t tmp;
 
 			VectorScale( cl.v_right, stereo_separation, tmp );
-			VectorAdd( cl.refdef.vieworg, tmp, cl.refdef.vieworg );
+			VectorAdd( cl.refdef.view.origin, tmp, cl.refdef.view.origin );
 		}
 
 		// never let it sit exactly on a node line, because a water plane can
 		// dissapear when viewed with the eye exactly on it.
 		// the server protocol only specifies to 1/8 pixel, so add 1/16 in each axis
-		cl.refdef.vieworg[0] += 1.0/16;
-		cl.refdef.vieworg[1] += 1.0/16;
-		cl.refdef.vieworg[2] += 1.0/16;
+		cl.refdef.view.origin[0] += 1.0/16;
+		cl.refdef.view.origin[1] += 1.0/16;
+		cl.refdef.view.origin[2] += 1.0/16;
 
 		cl.refdef.x = scr_vrect.x;
 		cl.refdef.y = scr_vrect.y;
 		cl.refdef.width = scr_vrect.width;
 		cl.refdef.height = scr_vrect.height;
-		cl.refdef.fov_y = CalcFov (cl.refdef.fov_x, cl.refdef.width, cl.refdef.height);
+		cl.refdef.view.fov_y = CalcFov (cl.refdef.view.fov_x, cl.refdef.width, cl.refdef.height);
 		cl.refdef.time = cl.time*0.001;
 
 		cl.refdef.areabits = cl.frame.areabits;
@@ -535,7 +535,7 @@ void V_RenderView( float stereo_separation )
 			r_numdlights = 0;
 
 		if (!cl_add_blend->value)
-			VectorClear (cl.refdef.blend);
+			VectorClear (cl.refdef.view.blend);
 
 
 		cl.refdef.num_entities = r_numentities;
@@ -552,7 +552,7 @@ void V_RenderView( float stereo_separation )
 
 		cl.refdef.lightstyles = r_lightstyles;
 
-		cl.refdef.rdflags = cl.frame.playerstate.rdflags;
+		cl.refdef.view.flags = cl.frame.playerstate.rdflags;
 
 		// sort entities for better cache locality
         qsort( cl.refdef.entities, cl.refdef.num_entities, sizeof( cl.refdef.entities[0] ), (int (*)(const void *, const void *))entitycmpfnc );
@@ -579,9 +579,9 @@ V_Viewpos_f
 */
 void V_Viewpos_f (void)
 {
-	Com_Printf ("(%i %i %i) : %i\n", (int)cl.refdef.vieworg[0],
-		(int)cl.refdef.vieworg[1], (int)cl.refdef.vieworg[2], 
-		(int)cl.refdef.viewangles[YAW]);
+	Com_Printf ("(%i %i %i) : %i\n", (int)cl.refdef.view.origin[0],
+		(int)cl.refdef.view.origin[1], (int)cl.refdef.view.origin[2], 
+		(int)cl.refdef.view.angles[YAW]);
 }
 
 /*
