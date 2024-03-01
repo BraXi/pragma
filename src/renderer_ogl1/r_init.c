@@ -363,6 +363,7 @@ void R_Shutdown(void)
 	ri.RemoveCommand("imagelist");
 	ri.RemoveCommand("gl_strings");
 
+	R_FreeFrameBuffer();
 	R_FreePrograms();
 
 	Mod_FreeAll();
