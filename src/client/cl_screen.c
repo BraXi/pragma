@@ -798,9 +798,9 @@ static void SCR_DrawFPS()
 		VectorSet(color, 0, 1, 0);
 
 	if ((int)cl_showfps->value == 1 && mapname[0])
-		re.DrawString(va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]), 795, 10, 0.8, 1, color);
+		re.DrawString(va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]), 795, 5, 0.7, 1, color);
 	else
-		re.DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 10, 0.8, 1, color);
+		re.DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 5, 0.7, 1, color);
 
 }
 
@@ -919,6 +919,12 @@ void SCR_UpdateScreen (void)
 			SCR_DrawLoading ();
 		}
 	}
+
+#if 1
+	float col[4] = { 1,0.4,0.5,1};
+	re.DrawString(va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP), 795, 590, 0.7, 1, col);
+#endif
+
 	SCR_DrawFPS();
 	re.EndFrame();
 }

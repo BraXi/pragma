@@ -83,6 +83,8 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	R_AdjustToVirtualScreenSize(&x, &y); // pos
 	R_AdjustToVirtualScreenSize(&CHAR_SIZEX, &CHAR_SIZEY); // pos
 
+	CHAR_SIZEX = CHAR_SIZEY = (int)CHAR_SIZEX; // hack so text isnt blurry
+
 	// align text
 	int strX = (strlen(string) * CHAR_SIZEX);
 	if (alignx == XALIGN_CENTER)
