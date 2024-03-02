@@ -115,6 +115,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 {
 	int				i;
 	int				pflags;
+	int				fxflags;
 	player_state_t	*ps, *ops;
 	player_state_t	dummy;
 	int				statbits;
@@ -132,6 +133,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	// determine what needs to be sent
 	//
 	pflags = 0;
+	fxflags = 0;
 
 	if (ps->pmove.pm_type != ops->pmove.pm_type)
 		pflags |= PS_M_TYPE;
@@ -172,9 +174,32 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (VectorCompare(ps->kick_angles, ops->kick_angles) == 0)
 		pflags |= PS_KICKANGLES;
 
-	if (VectorCompare(ps->blend, ops->blend) == 0 || ps->blend[3] != ops->blend[3] ) // RGB A
-		pflags |= PS_BLEND;
 
+	// view effects
+	if (VectorCompare(ps->fx.blend, ops->fx.blend) == 0 || ps->fx.blend[3] != ops->fx.blend[3])
+		fxflags |= PS_FX_BLEND;
+
+	if ( ps->fx.blur != ops->fx.blur)
+		fxflags |= PS_FX_BLUR;
+
+	if (ps->fx.contrast != ops->fx.contrast)
+		fxflags |= PS_FX_CONTRAST;
+
+	if (ps->fx.grayscale != ops->fx.grayscale)
+		fxflags |= PS_FX_GRAYSCALE;
+
+	if (ps->fx.inverse != ops->fx.inverse)
+		fxflags |= PS_FX_INVERSE;
+
+	if (ps->fx.noise != ops->fx.noise)
+		fxflags |= PS_FX_NOISE; // noise is for radioactive materials
+
+	if (ps->fx.intensity != ops->fx.intensity)
+		fxflags |= PS_FX_INTENSITY;
+
+	if (fxflags > 0) 
+		pflags |= PS_EFFECTS; // write effects
+	
 	if (ps->fov != ops->fov)
 		pflags |= PS_FOV;
 
@@ -199,6 +224,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	//
 	MSG_WriteByte (msg, SVC_PLAYERINFO);
 	MSG_WriteShort (msg, pflags);
+
 	if (pflags & PS_EXTRABYTES) // reki --  Send the extra bytes
 		MSG_WriteShort(msg, (pflags >> 16));
 	//
@@ -310,11 +336,47 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 			MSG_WriteChar (msg, ps->viewmodel_angles[i]*4);
 	}
 
-	if (pflags & PS_BLEND)
+	if (pflags & PS_EFFECTS)
 	{
-		for (i = 0; i < 4; i++)
-			MSG_WriteByte (msg, ps->blend[i]*255);
+		MSG_WriteByte(msg, fxflags);
+
+		//if (fxflags & PS_FX_BLEND)
+		{
+			for (i = 0; i < 4; i++)
+				MSG_WriteByte(msg, ps->fx.blend[i] * 255);
+		}
+
+		if (fxflags & PS_FX_BLUR)
+		{
+			MSG_WriteByte(msg, ps->fx.blur * 255);
+		}
+
+		if (fxflags & PS_FX_CONTRAST)
+		{
+			MSG_WriteByte(msg, ps->fx.contrast * 255);
+		}
+
+		if (fxflags & PS_FX_GRAYSCALE)
+		{
+			MSG_WriteByte(msg, ps->fx.grayscale * 255);
+		}
+
+//		if (fxflags & PS_FX_INVERSE) // implicit from fxflags
+//		{
+//			MSG_WriteByte(msg, ps->fx.inverse * 255); // changed to on/off toggle
+//		}
+
+		if (fxflags & PS_FX_NOISE)
+		{
+			MSG_WriteByte(msg, ps->fx.noise * 255);
+		}
+
+		if (fxflags & PS_FX_INTENSITY)
+		{
+			MSG_WriteByte(msg, ps->fx.intensity * 255);
+		}
 	}
+
 	if (pflags & PS_FOV)
 		MSG_WriteByte (msg, ps->fov);
 	if (pflags & PS_RDFLAGS)
@@ -542,7 +604,7 @@ void SV_BuildClientFrame (client_t *client)
 			// braxi -- !!! FIXME nothing should EVER call remove() and spawn() while in CustomizeForClient !!!
 
 			/* 
-			* float EntityStateForClient(entity player); 	
+			* float EntityStateForClient(entity player); 
 			* 
 			* Entity can have its EntityStateForClient function which can modify entitystate on a per client basis
 			* It should also return either true or false, depending if we want to send that entity to the client

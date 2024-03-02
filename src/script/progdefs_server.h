@@ -90,7 +90,7 @@ typedef struct sv_entvars_s
 	float		loopsound;		// index to sound from precache_sound() that will constantly loop
 	float		loopsound_att;	// sound attenuation, one of ATT_
 
-	int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
+	float		event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 	// ----------------------------------------------------
 
 	scr_string_t	classname;	// for spawn functions 

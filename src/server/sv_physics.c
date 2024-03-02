@@ -141,6 +141,7 @@ gentity_t* SV_TestEntityPosition(gentity_t* ent)
 		mask = (int)ent->v.clipmask;
 	else
 		mask = MASK_SOLID;
+
 	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask);
 
 	if (trace.startsolid)

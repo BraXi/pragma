@@ -701,6 +701,19 @@ typedef struct entity_state_s
 } entity_state_t;
 //==============================================
 
+#ifndef rdViewFX_t
+typedef struct rdViewFX_s
+{
+	float	blend[4];		// rgba 0-1 full screen blend
+	float	blur;			// 0 no blur
+	float	contrast;
+	float	grayscale;		// 0-1 full grayscale
+	float	inverse;		// 1 inverse
+	float	noise;
+	float	intensity;		// 2 default
+	float	gamma;
+} rdViewFX_t;
+#endif
 
 // player_state_t is the information needed in addition to pmove_state_t
 // to rendered a view. There will only be [SV_FPS] player_state_t sent each second,
@@ -721,7 +734,8 @@ typedef struct
 	int			viewmodel_index;
 	int			viewmodel_frame;
 
-	float		blend[4];		// rgba full screen effect
+	rdViewFX_t	fx;
+//	float		blend[4];		// rgba full screen effect
 	
 	float		fov;			// horizontal field of view
 

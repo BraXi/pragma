@@ -1014,12 +1014,47 @@ void CL_ParsePlayerstate(frame_t* oldframe, frame_t* newframe)
 			state->viewmodel_angles[i] = MSG_ReadChar(&net_message) * 0.25;
 	}
 
-	if (flags & PS_BLEND)
+	if (flags & PS_EFFECTS)
 	{
-		for (i = 0; i < 4; i++)
-			state->blend[i] = MSG_ReadByte(&net_message) / 255.0;
-	}
+		int fxflags = MSG_ReadByte(&net_message);
 
+		//if (fxflags & PS_FX_BLEND)
+		{
+			for (i = 0; i < 4; i++)
+				state->fx.blend[i] = MSG_ReadByte(&net_message) / 255.0; //fixme
+		}
+
+		if (fxflags & PS_FX_BLUR)
+		{
+			state->fx.blur = MSG_ReadByte(&net_message) * (1.0f / 16.0f);
+		}
+
+		if (fxflags & PS_FX_CONTRAST)
+		{
+			state->fx.contrast = MSG_ReadByte(&net_message) / 255.0; //fixme
+		}
+
+		if (fxflags & PS_FX_GRAYSCALE)
+		{
+			state->fx.grayscale = MSG_ReadByte(&net_message) / 255.0;
+		}
+
+		state->fx.inverse = (fxflags & PS_FX_INVERSE);
+//		if (fxflags & PS_FX_INVERSE) // implicit from fxflags
+//		{
+//			MSG_WriteByte(msg, ps->fx.inverse * 255); // changed to on/off toggle
+//		}
+
+		if (fxflags & PS_FX_NOISE)
+		{
+			state->fx.noise = MSG_ReadByte(&net_message) / 255.0;
+		}
+
+		if (fxflags & PS_FX_INTENSITY)
+		{
+			state->fx.intensity = MSG_ReadByte(&net_message) / 255.0; //fixme
+		}
+	}
 	if (flags & PS_FOV)
 		state->fov = MSG_ReadByte(&net_message);
 

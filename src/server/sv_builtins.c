@@ -1208,10 +1208,10 @@ void PFSV_setviewblend(void)
 		return;
 	}
 	cl = ent->client;
-	cl->ps.blend[0] = Scr_GetParmVector(1)[0];
-	cl->ps.blend[1] = Scr_GetParmVector(1)[1];
-	cl->ps.blend[2] = Scr_GetParmVector(1)[2];
-	cl->ps.blend[3] = Scr_GetParmFloat(2);
+	cl->ps.fx.blend[0] = Scr_GetParmVector(1)[0];
+	cl->ps.fx.blend[1] = Scr_GetParmVector(1)[1];
+	cl->ps.fx.blend[2] = Scr_GetParmVector(1)[2];
+	cl->ps.fx.blend[3] = Scr_GetParmFloat(2);
 }
 
 /*

@@ -120,6 +120,7 @@ typedef struct
 	float		white;			// highest of rgb
 } lightstyle_t;
 
+#if 0
 typedef struct rdViewFX_s
 {
 	float	blend[4];		// rgba 0-1 full screen blend
@@ -130,7 +131,8 @@ typedef struct rdViewFX_s
 	float	noise;			
 	float	intensity;		// 2 default
 	float	gamma;
-}rdViewFX_t;
+} rdViewFX_t;
+#endif
 
 typedef struct rdCamParams_s
 {
