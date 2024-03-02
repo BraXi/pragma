@@ -645,7 +645,7 @@ r_newrefdef must be set before the first call
 ================
 */
 
-
+void R_ClearFBO();
 void R_RenderToFBO(qboolean enable);
 extern void R_DrawDebugLines(void);
 void R_RenderView (refdef_t *fd)
@@ -681,6 +681,7 @@ void R_RenderView (refdef_t *fd)
 	R_MarkLeaves ();	// done here so we know if we're in water
 
 // begin rendering to fbo
+	R_ClearFBO();
 	R_RenderToFBO(true);
 
 	R_DrawWorld();
@@ -695,10 +696,10 @@ void R_RenderView (refdef_t *fd)
 
 	R_DrawParticles();
 
-	R_RenderToFBO(false);
-// end rendering to fbo
+	R_ViewBlendEffect(); // braxi -- i don't like the old way of how blend is rendered, but i'll leave it for now and get back to it later
 
-	R_ViewBlendEffect();
+	R_RenderToFBO(false);
+	// end rendering to fbo
 
 	if (r_speeds->value)
 	{

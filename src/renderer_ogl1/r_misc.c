@@ -47,7 +47,7 @@ void R_InitParticleTexture (void)
 			data[y][x][3] = dottexture[x][y]*255;
 		}
 	}
-	r_particletexture = R_LoadTexture("*particle", (byte *)data, 8, 8, it_sprite, 32);
+	r_particletexture = R_LoadTexture("$default_particle", (byte *)data, 8, 8, it_sprite, 32);
 
 	//
 	// also use this for bad textures, but without alpha
@@ -62,7 +62,7 @@ void R_InitParticleTexture (void)
 			data[y][x][3] = 255;
 		}
 	}
-	r_notexture = R_LoadTexture ("*default_texture", (byte *)data, 8, 8, it_texture, 32);
+	r_notexture = R_LoadTexture ("$default_texture", (byte *)data, 8, 8, it_texture, 32);
 }
 
 

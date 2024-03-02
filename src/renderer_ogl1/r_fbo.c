@@ -20,6 +20,21 @@ extern cvar_t* r_postfx_noise;
 
 /*
 ===============
+R_ClearFBO
+
+Enabling will clear fbo and start rendering to texture.
+===============
+*/
+void R_ClearFBO()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+/*
+===============
 R_RenderToFBO
 
 Enabling will clear fbo and start rendering to texture.
@@ -31,7 +46,7 @@ void R_RenderToFBO(qboolean enable)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		//glPushAttrib(GL_VIEWPORT_BIT);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, vid.width, vid.height);
 		glEnable(GL_DEPTH_TEST);
 	}

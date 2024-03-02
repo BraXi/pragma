@@ -848,7 +848,7 @@ done: ;
 ================
 R_LoadTexture
 
-This is also used as an entry point for the generated r_notexture
+This is also used as an entry point for the generated "$particle" & "$default_texture"
 ================
 */
 image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, imagetype_t type, int bits)
