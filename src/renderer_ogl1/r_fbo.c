@@ -210,10 +210,13 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 //	else
 //		glBindTexture(GL_TEXTURE_2D, fbo_tex_depth);
 
-	glBegin(GL_QUADS);
+	glBegin(GL_TRIANGLES);
 	{
 		glTexCoord2f(0.0f, 1.0f);	glVertex2f(rect[0], rect[1]);
 		glTexCoord2f(1.0f, 1.0f);	glVertex2f(rect[0] + rect[2], rect[1]);
+		glTexCoord2f(1.0f, 0.0f);	glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
+
+		glTexCoord2f(0.0f, 1.0f);	glVertex2f(rect[0], rect[1]);
 		glTexCoord2f(1.0f, 0.0f);	glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
 		glTexCoord2f(0.0f, 0.0f);	glVertex2f(rect[0], rect[1] + rect[3]);
 	}

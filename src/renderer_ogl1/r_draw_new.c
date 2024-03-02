@@ -57,15 +57,16 @@ void R_DrawSingleChar(float x, float y, float w, float h, int num)
 
 	GL_Bind(font_current->texnum);
 
-	glBegin(GL_QUADS);
-	glTexCoord2f(fcol, frow);
-	glVertex2f(x, y);
-	glTexCoord2f(fcol + size, frow);
-	glVertex2f(x + w, y);
-	glTexCoord2f(fcol + size, frow + size);
-	glVertex2f(x + w, y + h);
-	glTexCoord2f(fcol, frow + size);
-	glVertex2f(x, y + h);
+	glBegin(GL_TRIANGLES);
+	{
+		glTexCoord2f(fcol, frow);				glVertex2f(x, y);
+		glTexCoord2f(fcol + size, frow);		glVertex2f(x + w, y);
+		glTexCoord2f(fcol + size, frow + size);	glVertex2f(x + w, y + h);
+
+		glTexCoord2f(fcol, frow);				glVertex2f(x, y);
+		glTexCoord2f(fcol + size, frow + size);	glVertex2f(x + w, y + h);
+		glTexCoord2f(fcol, frow + size);		glVertex2f(x, y + h);
+	}
 	glEnd();
 }
 
@@ -117,15 +118,22 @@ void R_DrawSingleChar3D(float x, float y, float z, float fontSize, int num)
 	fcol = col * 0.0625;
 	size = 0.0625;
 
-	glBegin(GL_QUADS);
+	glBegin(GL_TRIANGLES);
+	{
 		glTexCoord2f(fcol, frow);
 		glVertex3f(x + (-fontSize / 2), -fontSize / 2, 0);
 		glTexCoord2f(fcol + size, frow);
 		glVertex3f(x + (fontSize / 2), -fontSize / 2, 0);
 		glTexCoord2f(fcol + size, frow + size);
 		glVertex3f(x + (fontSize / 2), fontSize / 2, 0);
+
+		glTexCoord2f(fcol, frow);
+		glVertex3f(x + (-fontSize / 2), -fontSize / 2, 0);
+		glTexCoord2f(fcol + size, frow + size);
+		glVertex3f(x + (fontSize / 2), fontSize / 2, 0);
 		glTexCoord2f(fcol, frow + size);
 		glVertex3f(x + (-fontSize / 2), fontSize / 2, 0);
+	}
 	glEnd();
 
 }
@@ -197,12 +205,17 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	glColor4f(color[0], color[1], color[2], color[3]);
 
 	GL_Bind(gl->texnum);
-	glBegin(GL_QUADS);
+	glBegin(GL_TRIANGLES);
 	{
 		glTexCoord2f(gl->sl, gl->tl);
 		glVertex2f(rect[0], rect[1]);
 		glTexCoord2f(gl->sh, gl->tl);
 		glVertex2f(rect[0] + rect[2], rect[1]);
+		glTexCoord2f(gl->sh, gl->th);
+		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
+
+		glTexCoord2f(gl->sl, gl->tl);
+		glVertex2f(rect[0], rect[1]);
 		glTexCoord2f(gl->sh, gl->th);
 		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
 		glTexCoord2f(gl->sl, gl->th);
@@ -233,10 +246,13 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4f(color[0], color[1], color[2], color[3]);
 
-	glBegin(GL_QUADS);
+	glBegin(GL_TRIANGLES);
 	{
 		glVertex2f(rect[0], rect[1]);
 		glVertex2f(rect[0] + rect[2], rect[1]);
+		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
+
+		glVertex2f(rect[0], rect[1]);
 		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
 		glVertex2f(rect[0], rect[1] + rect[3]);
 	}

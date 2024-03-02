@@ -51,34 +51,41 @@ void R_DrawSprite(rentity_t* ent)
 	GL_Bind(pCurrentModel->skins[ent->frame]->texnum);
 	GL_TexEnv(GL_MODULATE);
 
-//	if (ent->alpha == 1.0)
-//		glEnable(GL_ALPHA_TEST);
-//	else
-//		glDisable(GL_ALPHA_TEST);
 	R_AlphaTest(ent->alpha == 1.0);
 
-	glBegin(GL_QUADS);
+	glBegin(GL_TRIANGLES);
+	{
 
-	glTexCoord2f(0, 1);
-	VectorMA(vec3_origin, -frame->origin_y, up, point);
-	VectorMA(point, -frame->origin_x, right, point);
-	glVertex3fv(point);
+		glTexCoord2f(0, 1);
+		VectorMA(vec3_origin, -frame->origin_y, up, point);
+		VectorMA(point, -frame->origin_x, right, point);
+		glVertex3fv(point);
 
-	glTexCoord2f(0, 0);
-	VectorMA(vec3_origin, frame->height - frame->origin_y, up, point);
-	VectorMA(point, -frame->origin_x, right, point);
-	glVertex3fv(point);
+		glTexCoord2f(0, 0);
+		VectorMA(vec3_origin, frame->height - frame->origin_y, up, point);
+		VectorMA(point, -frame->origin_x, right, point);
+		glVertex3fv(point);
 
-	glTexCoord2f(1, 0);
-	VectorMA(vec3_origin, frame->height - frame->origin_y, up, point);
-	VectorMA(point, frame->width - frame->origin_x, right, point);
-	glVertex3fv(point);
+		glTexCoord2f(1, 0);
+		VectorMA(vec3_origin, frame->height - frame->origin_y, up, point);
+		VectorMA(point, frame->width - frame->origin_x, right, point);
+		glVertex3fv(point);
 
-	glTexCoord2f(1, 1);
-	VectorMA(vec3_origin, -frame->origin_y, up, point);
-	VectorMA(point, frame->width - frame->origin_x, right, point);
-	glVertex3fv(point);
+		glTexCoord2f(0, 1);
+		VectorMA(vec3_origin, -frame->origin_y, up, point);
+		VectorMA(point, -frame->origin_x, right, point);
+		glVertex3fv(point);
 
+		glTexCoord2f(1, 0);
+		VectorMA(vec3_origin, frame->height - frame->origin_y, up, point);
+		VectorMA(point, frame->width - frame->origin_x, right, point);
+		glVertex3fv(point);
+
+		glTexCoord2f(1, 1);
+		VectorMA(vec3_origin, -frame->origin_y, up, point);
+		VectorMA(point, frame->width - frame->origin_x, right, point);
+		glVertex3fv(point);
+	}
 	glEnd();
 
 	R_AlphaTest(false);

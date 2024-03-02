@@ -158,29 +158,39 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	R_AlphaTest(true); // IS THIS REALY CORRECT?
 
-	glBegin (GL_QUADS);
+	glBegin(GL_TRIANGLES);
+	{
+		glTexCoord2f(0, 1);
+		VectorMA(e->origin, -frame->origin_y, up, point);
+		VectorMA(point, -frame->origin_x, right, point);
+		glVertex3fv(point);
 
-	glTexCoord2f (0, 1);
-	VectorMA (e->origin, -frame->origin_y, up, point);
-	VectorMA (point, -frame->origin_x, right, point);
-	glVertex3fv (point);
+		glTexCoord2f(0, 0);
+		VectorMA(e->origin, frame->height - frame->origin_y, up, point);
+		VectorMA(point, -frame->origin_x, right, point);
+		glVertex3fv(point);
 
-	glTexCoord2f (0, 0);
-	VectorMA (e->origin, frame->height - frame->origin_y, up, point);
-	VectorMA (point, -frame->origin_x, right, point);
-	glVertex3fv (point);
+		glTexCoord2f(1, 0);
+		VectorMA(e->origin, frame->height - frame->origin_y, up, point);
+		VectorMA(point, frame->width - frame->origin_x, right, point);
+		glVertex3fv(point);
 
-	glTexCoord2f (1, 0);
-	VectorMA (e->origin, frame->height - frame->origin_y, up, point);
-	VectorMA (point, frame->width - frame->origin_x, right, point);
-	glVertex3fv (point);
+		glTexCoord2f(0, 1);
+		VectorMA(e->origin, -frame->origin_y, up, point);
+		VectorMA(point, -frame->origin_x, right, point);
+		glVertex3fv(point);
 
-	glTexCoord2f (1, 1);
-	VectorMA (e->origin, -frame->origin_y, up, point);
-	VectorMA (point, frame->width - frame->origin_x, right, point);
-	glVertex3fv (point);
-	
-	glEnd ();
+		glTexCoord2f(1, 0);
+		VectorMA(e->origin, frame->height - frame->origin_y, up, point);
+		VectorMA(point, frame->width - frame->origin_x, right, point);
+		glVertex3fv(point);
+
+		glTexCoord2f(1, 1);
+		VectorMA(e->origin, -frame->origin_y, up, point);
+		VectorMA(point, frame->width - frame->origin_x, right, point);
+		glVertex3fv(point);
+	}
+	glEnd();
 
 	R_AlphaTest(false);
 	GL_TexEnv( GL_REPLACE );
@@ -394,13 +404,17 @@ void R_ViewBlendEffect (void)
 
 	glColor4fv (v_blend);
 
-	glBegin (GL_QUADS);
+	glBegin(GL_TRIANGLES);
+	{
+		glVertex3f(10, 100, 100);
+		glVertex3f(10, -100, 100);
+		glVertex3f(10, -100, -100);
 
-	glVertex3f (10, 100, 100);
-	glVertex3f (10, -100, 100);
-	glVertex3f (10, -100, -100);
-	glVertex3f (10, 100, -100);
-	glEnd ();
+		glVertex3f(10, 100, 100);
+		glVertex3f(10, -100, -100);
+		glVertex3f(10, 100, -100);
+	}
+	glEnd();
 
 	R_AlphaTest(true);
 	R_Blend(false);

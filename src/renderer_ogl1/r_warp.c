@@ -515,9 +515,9 @@ void MakeSkyVec (float s, float t, int axis)
 	vec3_t		v, b;
 	int			j, k;
 
-	b[0] = s*5300;
-	b[1] = t*5300;
-	b[2] = 5300;
+	b[0] = s*2048;
+	b[1] = t*2048;
+	b[2] = 2048;
 
 	for (j=0 ; j<3 ; j++)
 	{
@@ -582,10 +582,11 @@ void R_DrawSkyBox (void)
 	glTranslatef (r_origin[0], r_origin[1], r_origin[2]);
 	glRotatef (r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
 
-	for (i=0 ; i<6 ; i++)
+	for (i = 0; i < 6; i++)
 	{
 		if (skyrotate)
-		{	// hack, forces full sky to draw when rotating
+		{
+			// Hack to force full sky to draw when rotating
 			skymins[0][i] = -1;
 			skymins[1][i] = -1;
 			skymaxs[0][i] = 1;
@@ -595,14 +596,19 @@ void R_DrawSkyBox (void)
 		if (skymins[0][i] >= skymaxs[0][i] || skymins[1][i] >= skymaxs[1][i])
 			continue;
 
-		GL_Bind (sky_images[skytexorder[i]]->texnum);
+		GL_Bind(sky_images[skytexorder[i]]->texnum);
 
-		glBegin (GL_QUADS);
-		MakeSkyVec (skymins[0][i], skymins[1][i], i);
-		MakeSkyVec (skymins[0][i], skymaxs[1][i], i);
-		MakeSkyVec (skymaxs[0][i], skymaxs[1][i], i);
-		MakeSkyVec (skymaxs[0][i], skymins[1][i], i);
-		glEnd ();
+		glBegin(GL_TRIANGLES);
+		{
+			MakeSkyVec(skymins[0][i], skymins[1][i], i);
+			MakeSkyVec(skymins[0][i], skymaxs[1][i], i);
+			MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
+
+			MakeSkyVec(skymins[0][i], skymins[1][i], i);
+			MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
+			MakeSkyVec(skymaxs[0][i], skymins[1][i], i);
+		}
+		glEnd();
 	}
 	glPopMatrix ();
 
