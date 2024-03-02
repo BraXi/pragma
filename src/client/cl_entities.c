@@ -574,14 +574,17 @@ void CL_CalcViewValues()
 	//
 	// calculate view effects
 	//
-
-	// vanilla quake did not interpolate blend colors, we do
-	for ( i = 0; i < 4; i++)
-		cl.refdef.view.fx.blend[i] = ps->fx.blend[i];
-		//cl.refdef.view.fx.blend[i] = ops->fx.blend[i] + lerp * (ps->fx.blend[i] - ops->fx.blend[i]);
+	for (i = 0; i < 4; i++)
+	{
+		cl.refdef.view.fx.blend[i] = ops->fx.blend[i] + lerp * (ps->fx.blend[i] - ops->fx.blend[i]);
+	}
 	
-	
-	//cl.refdef.view.fx.blend[i] = ops->fx.blend[i] + lerp * (ps->fx.blend[i] - ops->fx.blend[i]);
+	//cl.refdef.view.fx.blur = ops->fx.blur + lerp * (ps->fx.blur - ops->fx.blur);
+	cl.refdef.view.fx.contrast = ops->fx.contrast + lerp * (ps->fx.contrast - ops->fx.contrast);
+	cl.refdef.view.fx.grayscale = ops->fx.grayscale + lerp * (ps->fx.grayscale - ops->fx.grayscale);
+	cl.refdef.view.fx.inverse = ps->fx.inverse;
+	cl.refdef.view.fx.intensity = ops->fx.intensity + lerp * (ps->fx.intensity - ops->fx.intensity);
+	cl.refdef.view.fx.noise = ops->fx.noise + lerp * (ps->fx.noise - ops->fx.noise);
 
 	//
 	// add view model

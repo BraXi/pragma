@@ -340,7 +340,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	{
 		MSG_WriteByte(msg, fxflags);
 
-		//if (fxflags & PS_FX_BLEND)
+		if (fxflags & PS_FX_BLEND)
 		{
 			for (i = 0; i < 4; i++)
 				MSG_WriteByte(msg, ps->fx.blend[i] * 255);
@@ -348,12 +348,12 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 		if (fxflags & PS_FX_BLUR)
 		{
-			MSG_WriteByte(msg, ps->fx.blur * 255);
+			MSG_WriteByte(msg, (int)(ps->fx.blur * 32));
 		}
 
 		if (fxflags & PS_FX_CONTRAST)
 		{
-			MSG_WriteByte(msg, ps->fx.contrast * 255);
+			MSG_WriteByte(msg, (int)(ps->fx.contrast * 32));
 		}
 
 		if (fxflags & PS_FX_GRAYSCALE)
@@ -363,7 +363,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 //		if (fxflags & PS_FX_INVERSE) // implicit from fxflags
 //		{
-//			MSG_WriteByte(msg, ps->fx.inverse * 255); // changed to on/off toggle
+//			MSG_WriteByte(msg, ps->fx.inverse * 255);
 //		}
 
 		if (fxflags & PS_FX_NOISE)
@@ -373,7 +373,7 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 		if (fxflags & PS_FX_INTENSITY)
 		{
-			MSG_WriteByte(msg, ps->fx.intensity * 255);
+			MSG_WriteByte(msg, (int)(ps->fx.intensity * 32));
 		}
 	}
 
