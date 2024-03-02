@@ -1138,127 +1138,116 @@ void PFSV_setviewmodel(void)
 	Scr_ReturnFloat(ent->v.viewmodel_index);
 }
 
+enum
+{
+	FX_BLEND = 0,
+	FX_BLUR,
+	FX_CONTRAST,
+	FX_GRAYSCALE,
+	FX_INVERSE,
+	FX_NOISE,
+	FX_INTENSITY,
+	FX_FOV, // not really an effect, but less builtins is better ;)
+	FX_WRONG
+};
 
 /*
 ===============
-PFSV_setfieldofview
+PFSV_setvieweffect
 
-Sets players fov
+sets view effect for a player
 
-setfieldofview(entity, float)
+void setvieweffect(entity ent, float effect, ...);
+setvieweffect(self, FX_BLUR, 3.0);
+setvieweffect(self, FX_BLEND, '0.5 0.1 0.1', 0.3);
 ===============
 */
-void PFSV_setfieldofview(void)
+void PFSV_setvieweffect(void)
 {
 	gentity_t* ent;
 	gclient_t* cl;
+	int fx;
 
 	ent = Scr_GetParmEdict(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
-		Scr_RunError("setfieldofview(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
+		Scr_RunError("setvieweffect(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
 		return;
 	}
 	cl = ent->client;
-	cl->ps.fov = Scr_GetParmFloat(1);
-	if (cl->ps.fov <= 0)
-		cl->ps.fov = 10;
+
+	fx = (int)Scr_GetParmFloat(1);
+
+	if (fx == FX_BLEND && Scr_NumArgs() != 4)
+	{
+		Scr_RunError("setvieweffect(): FX_BLEND requires 3rd color and 4th alpha params\n example: setvieweffect(self, FX_BLEND, '1 0 0', 0.3);\n");
+		return;
+	}
+	if (fx != FX_BLEND && Scr_NumArgs() != 3)
+	{
+		Scr_RunError("setvieweffect(): requires 3 params for effects other than FX_BLEND\n example: setvieweffect(self, FX_BLUR, 1.3);\n");
+		return;
+	}
+
+	switch (fx)
+	{
+	case FX_BLEND: // vector, float
+		cl->ps.fx.blend[0] = Scr_GetParmVector(2)[0];
+		cl->ps.fx.blend[1] = Scr_GetParmVector(2)[1];
+		cl->ps.fx.blend[2] = Scr_GetParmVector(2)[2];
+		cl->ps.fx.blend[3] = Scr_GetParmFloat(3);
+		break;
+	case FX_BLUR: 
+		cl->ps.fx.blur = Scr_GetParmFloat(2);
+		if(cl->ps.fx.blur > 0)
+			cl->ps.fx.blur = cl->ps.fx.blur;
+		break;
+	case FX_CONTRAST:
+		cl->ps.fx.contrast = Scr_GetParmFloat(2);
+		break;
+	case FX_GRAYSCALE:
+		cl->ps.fx.grayscale = Scr_GetParmFloat(2);
+		break;
+	case FX_INVERSE:
+		cl->ps.fx.inverse = Scr_GetParmFloat(2);
+		break;
+	case FX_NOISE:
+		cl->ps.fx.noise = Scr_GetParmFloat(2);
+		break;
+	case FX_INTENSITY:
+		cl->ps.fx.intensity = Scr_GetParmFloat(2);
+		break;
+	case FX_FOV:
+		cl->ps.fov = Scr_GetParmFloat(2);
+		if (cl->ps.fov <= 0)
+			cl->ps.fov = 10;
+		break;
+	default:
+		Scr_RunError("setvieweffect(): unknown effect %i\n", fx);
+		break;
+	};
 }
 
 /*
 ===============
-PFSV_getfieldofview
+PFSV_clearvieweffects
 
-returns players fov
+clear all view effects
 
-float getfieldofview(entity)
+TODO: figure out more network efficient way
 ===============
 */
-void PFSV_getfieldofview(void)
+void PFSV_clearvieweffects(void)
 {
 	gentity_t* ent;
-
 	ent = Scr_GetParmEdict(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
-		Scr_RunError("getfieldofview(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
+		Scr_RunError("clearvieweffects(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
 		return;
 	}
-	Scr_ReturnFloat(ent->client->ps.fov);
+	memset(&ent->client->ps.fx, 0, sizeof(ent->client->ps.fx));
 }
-
-/*
-===============
-PFSV_setviewblend
-
-sets players screen blend colors
-
-setviewblend(entity, vector rgb, float a)
-===============
-*/
-void PFSV_setviewblend(void)
-{
-	gentity_t* ent;
-	gclient_t* cl;
-
-	ent = Scr_GetParmEdict(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("setviewblend(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
-	cl = ent->client;
-	cl->ps.fx.blend[0] = Scr_GetParmVector(1)[0];
-	cl->ps.fx.blend[1] = Scr_GetParmVector(1)[1];
-	cl->ps.fx.blend[2] = Scr_GetParmVector(1)[2];
-	cl->ps.fx.blend[3] = Scr_GetParmFloat(2);
-}
-
-/*
-===============
-PFSV_setviewoffset
-
-setviewoffset(entity, vector)
-===============
-*/
-void PFSV_setviewoffset(void)
-{
-	gentity_t* ent;
-	gclient_t* cl;
-
-	ent = Scr_GetParmEdict(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("setviewoffset(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
-	cl = ent->client;
-	VectorCopy(Scr_GetParmVector(1), cl->ps.viewoffset);
-}
-
-
-/*
-===============
-PFSV_getviewoffset
-
-vector getviewoffset(entity)
-===============
-*/
-void PFSV_getviewoffset(void)
-{
-	gentity_t* ent;
-	gclient_t* cl;
-
-	ent = Scr_GetParmEdict(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("getviewoffset(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
-	cl = ent->client;
-	Scr_ReturnVector(cl->ps.viewoffset);
-}
-
 
 /*
 ===============
@@ -1487,77 +1476,6 @@ void PFSV_setstat(void)
 		return;
 	}
 	cl->ps.stats[idx] = Scr_GetParmFloat(2);
-}
-
-
-/*
-===============
-PFSV_setviewangles
-
-void setviewangles(entity player, vector viewAngles)
-===============
-*/
-void PFSV_setviewangles(void)
-{
-#if 1
-	Scr_RunError("setviewangles() was removed!\n");
-#else
-	gentity_t* ent;
-	gclient_t* client;
-
-	ent = Scr_GetParmEdict(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("setviewangles(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
-	client = ent->client;
-
-	VectorCopy(Scr_GetParmVector(1), client->ps.viewangles);
-	VectorCopy(client->ps.viewangles, ent->v.v_angle);
-#endif
-}
-
-/*
-===============
-PFSV_kickangles
-
-void kickangles(entity player, vector kickDirAndForce)
-===============
-*/
-void PFSV_kickangles(void)
-{
-#if 1
-	Scr_RunError("kickangles() was removed!\n");
-#else
-	gentity_t* ent;
-	gclient_t* client;
-
-	ent = Scr_GetParmEdict(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("kickangles(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
-	client = ent->client;
-
-	VectorCopy(Scr_GetParmVector(1), client->ps.kick_angles);
-#endif
-}
-
-
-/*
-===============
-PFSV_pmove
-
-deprecated, subject to remove
-
-void pmove(float index, float val)
-===============
-*/
-void PFSV_pmove(void)
-{
-	Scr_RunError("pmove() was removed!\n");
 }
 
 /*
@@ -2260,16 +2178,12 @@ void SV_InitScriptBuiltins()
 	// client
 	Scr_DefineBuiltin(PFSV_isplayer, PF_SV, "isplayer", "float(entity e)");
 	Scr_DefineBuiltin(PFSV_setviewmodel, PF_SV, "setviewmodel", "float(entity e, string s)");
-	Scr_DefineBuiltin(PFSV_setfieldofview, PF_SV, "setfieldofview", "void(entity e, float f)");
-	Scr_DefineBuiltin(PFSV_getfieldofview, PF_SV, "getfieldofview", "float(entity e)");
-	Scr_DefineBuiltin(PFSV_setviewblend, PF_SV, "setviewblend", "void(entity e, vector v1, float f)");
-	Scr_DefineBuiltin(PFSV_setviewoffset, PF_SV, "setviewoffset", "void(entity e, vector v1)");
-	Scr_DefineBuiltin(PFSV_getviewoffset, PF_SV, "getviewoffset", "vector(entity e)");
+
+	Scr_DefineBuiltin(PFSV_setvieweffect, PF_SV, "setvieweffect", "void(entity e, float fx, ...)");
+	Scr_DefineBuiltin(PFSV_clearvieweffects, PF_SV, "clearvieweffects", "void(entity e)");
+
 	Scr_DefineBuiltin(PFSV_stuffcmd, PF_SV, "stuffcmd", "void(entity e, string s)"); // overloading strings supported
 	Scr_DefineBuiltin(PFSV_setstat, PF_SV, "setstat", "float(entity e, float sg, float sc)");
-	Scr_DefineBuiltin(PFSV_pmove, PF_SV, "pmove", "float(entity e, vector mv, float cr)");
-	Scr_DefineBuiltin(PFSV_setviewangles, PF_SV, "setviewangles", "vector(entity e, vector a)");
-	Scr_DefineBuiltin(PFSV_kickangles, PF_SV, "kickangles", "vector(entity e, vector a)");
 
 	// persistant data across map changes
 	Scr_DefineBuiltin(PFSV_saveclientfield, PF_SV, "saveclientfield", "void(entity p, float idx, float val)");

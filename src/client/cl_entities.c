@@ -579,7 +579,7 @@ void CL_CalcViewValues()
 		cl.refdef.view.fx.blend[i] = ops->fx.blend[i] + lerp * (ps->fx.blend[i] - ops->fx.blend[i]);
 	}
 	
-	//cl.refdef.view.fx.blur = ops->fx.blur + lerp * (ps->fx.blur - ops->fx.blur);
+	cl.refdef.view.fx.blur = ops->fx.blur + lerp * (ps->fx.blur - ops->fx.blur);
 	cl.refdef.view.fx.contrast = ops->fx.contrast + lerp * (ps->fx.contrast - ops->fx.contrast);
 	cl.refdef.view.fx.grayscale = ops->fx.grayscale + lerp * (ps->fx.grayscale - ops->fx.grayscale);
 	cl.refdef.view.fx.inverse = ps->fx.inverse;
