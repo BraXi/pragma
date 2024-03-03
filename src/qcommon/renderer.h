@@ -248,6 +248,9 @@ typedef struct
 {
 	void	(*Printf) (int print_level, char* str, ...);
 	void	(*Error) (int err_level, char *str, ...);
+	
+	void	*(*MemAlloc)(int size);
+	void	(*MemFree)(void *ptr);
 
 	void	(*AddCommand) (char *name, void(*cmd)(void));
 	void	(*RemoveCommand) (char *name);

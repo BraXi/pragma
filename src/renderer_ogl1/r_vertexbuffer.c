@@ -15,7 +15,14 @@ See the attached GNU General Public License v2 for more details.
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
-static void SetVBOClientState(vbo_t* vbo, qboolean enable)
+/*
+===============
+SetVBOClientState
+
+Enable or disable client states for vertex buffer rendering
+===============
+*/
+static void SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
 {
 	if (enable)
 	{
@@ -48,16 +55,73 @@ static void SetVBOClientState(vbo_t* vbo, qboolean enable)
 
 /*
 ===============
-R_StuffVBO
+R_AllocVertexBuffer
+
+Create vertex buffer object and allocate space for verticles
 ===============
 */
-void R_StuffVBO(vbo_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags)
+vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, unsigned int numIndices)
+{
+	vertexbuffer_t* vbo = NULL;
+
+	vbo = ri.MemAlloc(sizeof(vertexbuffer_t));
+	if (!vbo)
+	{
+		ri.Error(ERR_FATAL, "R_AllocVertexBuffer failed\n");
+		return NULL;
+	}
+
+	vbo->flags = flags;
+
+	glGenBuffers(1, &vbo->vboBuf);
+
+//	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
+//	glBufferData(GL_ARRAY_BUFFER, (numVerts * sizeof(glvert_t)), &vbo->verts->xyz[0], GL_STATIC_DRAW);
+//	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	if (numVerts)
+	{
+		vbo->verts = ri.MemAlloc(sizeof(glvert_t) * numVerts);
+		if (!vbo->verts)
+		{
+			ri.Error(ERR_FATAL, "R_AllocVertexBuffer failed to allocate %i vertices\n", numVerts);
+			return NULL;
+		}
+		vbo->numVerts = numVerts;
+	}
+
+	if ((flags & V_INDICES) && numIndices > 0)
+	{
+		glGenBuffers(1, &vbo->indexBuf);
+		vbo->indices = ri.MemAlloc(sizeof(unsigned short) * numIndices);
+		{
+			ri.Error(ERR_FATAL, "R_AllocVertexBuffer failed to allocate %i indices\n", numIndices);
+			return NULL;
+		}
+
+		vbo->numIndices = numIndices;
+//		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo->indexBuf);
+//		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * 3, vbo->indices, GL_STATIC_DRAW);
+	}
+
+	return vbo;
+}
+
+/*
+===============
+R_UpdateVertexBuffer
+===============
+*/
+void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags)
 {
 	if (vbo->vboBuf == 0)
 		glGenBuffers(1, &vbo->vboBuf);
 
-	vbo->indexBuf = 0;
-//	vbo->verts = verts;
+	if (vbo->verts != NULL && vbo->numVerts != numVerts)
+	{
+		ri.Error(ERR_FATAL, "R_UpdateVertexBuffer probably scrapping allocated verts\n", numVerts);
+	}
+
 	vbo->numVerts = numVerts;
 	vbo->flags = flags;
 
@@ -68,10 +132,33 @@ void R_StuffVBO(vbo_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t f
 
 /*
 ===============
-R_RenderVBO
+R_UpdateVertexBufferIndices
 ===============
 */
-void R_RenderVBO(vbo_t* vbo, unsigned int startVert, unsigned int numVerts)
+void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, unsigned short* indices, unsigned int numIndices)
+{
+	if (vbo->indexBuf == 0)
+		glGenBuffers(1, &vbo->indexBuf);
+
+	if (vbo->indices != NULL && vbo->numIndices != numIndices)
+	{
+		ri.Error(ERR_FATAL, "R_UpdateVertexBufferIndices probably scrapping allocated indices\n", numIndices);
+	}
+
+	vbo->numIndices = numIndices;
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo->indexBuf);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (numIndices * sizeof(unsigned short)), indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+
+/*
+===============
+R_DrawVertexBuffer
+===============
+*/
+void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts)
 {
 	SetVBOClientState(vbo, true);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
@@ -85,7 +172,7 @@ void R_RenderVBO(vbo_t* vbo, unsigned int startVert, unsigned int numVerts)
 		glColorPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(32));
 
 	// case one: we have index buffer
-	if ((vbo->flags & V_INDICES) && vbo->indexBuf)
+	if (vbo->numIndices && vbo->indices != NULL && vbo->indexBuf) //if ((vbo->flags & V_INDICES) && vbo->indexBuf)
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo->indexBuf);
 		
@@ -112,16 +199,33 @@ void R_RenderVBO(vbo_t* vbo, unsigned int startVert, unsigned int numVerts)
 
 /*
 ===============
-R_FreeVBO
+R_FreeVertexBuffer
 ===============
 */
-void R_FreeVBO(vbo_t* vbo)
+void R_FreeVertexBuffer(vertexbuffer_t* vbo)
 {
+	if (!vbo || vbo == NULL)
+		return;
+
 	if(vbo->vboBuf)
 		glDeleteBuffers(1, &vbo->vboBuf);
 
 	if (vbo->indexBuf)
 		glDeleteBuffers(1, &vbo->indexBuf);
 
-	memset(vbo, 0, sizeof(*vbo));
+	if (vbo->indices)
+	{
+		ri.MemFree(vbo->indices);
+		vbo->indices = NULL;
+	}
+
+	if (vbo->verts)
+	{
+		ri.MemFree(vbo->verts);
+		vbo->verts = NULL;
+	}
+
+	ri.MemFree(vbo);
+	vbo = NULL;
+//	memset(vbo, 0, sizeof(*vbo));
 }

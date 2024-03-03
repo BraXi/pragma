@@ -182,14 +182,19 @@ typedef struct
 
 	vboFlags_t		flags;
 	unsigned int	numVerts;
+	unsigned int	numIndices;
+
 	glvert_t		*verts;		// pointer to first verticle, NULL if not allocated by VBO!
-}vbo_t;
+	unsigned short	*indices;	// pointer to indices, NULL if not allocated by VBO!
+} vertexbuffer_t;
 
-vbo_t guiVBO;
+vertexbuffer_t guiVBO;
 
-void R_StuffVBO(vbo_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags);
-void R_RenderVBO(vbo_t* vbo, unsigned int startVert, unsigned int numVerts);
-void R_FreeVBO(vbo_t* vbo);
+vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, unsigned int numIndices);
+void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags);
+void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, unsigned short* indices, unsigned int numIndices);
+void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts);
+void R_FreeVBO(vertexbuffer_t* vbo);
 
 //===================================================================
 typedef enum
@@ -265,18 +270,9 @@ extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_lerpmodels;
 
 extern cvar_t	*gl_ext_swapinterval;
-extern cvar_t	*gl_ext_pointparameters;
-
-extern cvar_t	*r_particle_min_size;
-extern cvar_t	*r_particle_max_size;
-extern cvar_t	*r_particle_size;
-extern cvar_t	*r_particle_att_a;
-extern cvar_t	*r_particle_att_b;
-extern cvar_t	*r_particle_att_c;
 
 extern	cvar_t	*r_bitdepth;
 extern	cvar_t	*r_mode;
-extern	cvar_t	*r_log;
 extern	cvar_t	*r_lightmap;
 extern	cvar_t	*r_dynamic;
 extern  cvar_t  *r_monolightmap;
@@ -489,6 +485,4 @@ int 		GLimp_Init( void *hinstance, void *hWnd );
 void		GLimp_Shutdown( void );
 int     	GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen );
 void		GLimp_AppActivate( qboolean active );
-void		GLimp_EnableLogging( qboolean enable );
-void		GLimp_LogNewFrame( void );
 

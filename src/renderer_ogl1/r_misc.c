@@ -208,19 +208,6 @@ void GL_SetDefaultState( void )
 
 	R_SetTexEnv( GL_REPLACE );
 
-	if ( glPointParameterf )
-	{
-		float attenuations[3];
-
-		attenuations[0] = r_particle_att_a->value;
-		attenuations[1] = r_particle_att_b->value;
-		attenuations[2] = r_particle_att_c->value;
-
-		glEnable( GL_POINT_SMOOTH );
-		glPointParameterf( GL_POINT_SIZE_MIN, r_particle_min_size->value );
-		glPointParameterf( GL_POINT_SIZE_MAX, r_particle_max_size->value );
-		glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION, attenuations );
-	}
 	GL_UpdateSwapInterval();
 }
 

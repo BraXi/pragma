@@ -134,11 +134,11 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 		string++;
 	}
 
-	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, V_UV);
 
 	glColor4fv(color);
 	R_BindTexture(font_current->texnum);
-	R_RenderVBO(&guiVBO, 0, 0);
+	R_DrawVertexBuffer(&guiVBO, 0, 0);
 }
 
 void R_DrawSingleChar3D(float x, float y, float z, float fontSize, int num)
@@ -210,10 +210,10 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 		string++;
 	}
 
-	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, V_UV);
 	glColor3fv(color);
 	R_BindTexture(font_current->texnum);
-	R_RenderVBO(&guiVBO, 0, 0);
+	R_DrawVertexBuffer(&guiVBO, 0, 0);
 
 	glPopMatrix();
 }
@@ -259,9 +259,9 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4f(color[0], color[1], color[2], color[3]);
 
-	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, V_UV);
 	R_BindTexture(gl->texnum);
-	R_RenderVBO(&guiVBO, 0, 0);
+	R_DrawVertexBuffer(&guiVBO, 0, 0);
 
 	R_Blend(false);
 	glAlphaFunc(GL_GREATER, 0.666);
@@ -294,8 +294,8 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4f(color[0], color[1], color[2], color[3]);
 
-	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, 0);
-	R_RenderVBO(&guiVBO, 0, 0);
+	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, 0);
+	R_DrawVertexBuffer(&guiVBO, 0, 0);
 
 	R_Blend(false);
 	glEnable(GL_TEXTURE_2D);

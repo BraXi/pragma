@@ -531,6 +531,9 @@ qboolean VID_LoadRefresh( char *name )
 		return false;
 	}
 
+	ri.MemAlloc = Z_Malloc;
+	ri.MemFree = Z_Free;
+
 	ri.AddCommand = Cmd_AddCommand;
 	ri.RemoveCommand = Cmd_RemoveCommand;
 	ri.Cmd_Argc = Cmd_Argc;

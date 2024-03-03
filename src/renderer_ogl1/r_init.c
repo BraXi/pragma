@@ -24,17 +24,8 @@ cvar_t* r_nocull;
 cvar_t* r_lerpmodels;
 cvar_t* r_lefthand;
 
-cvar_t* r_particle_min_size;
-cvar_t* r_particle_max_size;
-cvar_t* r_particle_size;
-cvar_t* r_particle_att_a;
-cvar_t* r_particle_att_b;
-cvar_t* r_particle_att_c;
-
 cvar_t* gl_ext_swapinterval;
-cvar_t* gl_ext_pointparameters;
 
-cvar_t* r_log;
 cvar_t* r_bitdepth;
 cvar_t* r_drawbuffer;
 cvar_t* gl_driver;
@@ -90,22 +81,14 @@ void R_RegisterCvarsAndCommands(void)
 	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);
 	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT);
 
+	r_speeds = ri.Cvar_Get("r_speeds", "0", 0);
 	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT);
 	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT);
+	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT);
 
 	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT);
 
-	r_speeds = ri.Cvar_Get("r_speeds", "0", 0);
-
-	r_particle_min_size = ri.Cvar_Get("r_particle_min_size", "2", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_max_size = ri.Cvar_Get("r_particle_max_size", "40", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_size = ri.Cvar_Get("r_particle_size", "40", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_att_a = ri.Cvar_Get("r_particle_att_a", "0.01", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_att_b = ri.Cvar_Get("r_particle_att_b", "0.0", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_att_c = ri.Cvar_Get("r_particle_att_c", "0.01", CVAR_ARCHIVE | CVAR_CHEAT);
-
 	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_CHEAT);
-	r_log = ri.Cvar_Get("r_log", "0", 0);
 	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0);
 	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
 	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT);
@@ -123,10 +106,9 @@ void R_RegisterCvarsAndCommands(void)
 	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
 	r_texturesolidmode = ri.Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE);
-	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT);
+
 
 	gl_ext_swapinterval = ri.Cvar_Get("gl_ext_swapinterval", "1", CVAR_ARCHIVE);
-	gl_ext_pointparameters = ri.Cvar_Get("gl_ext_pointparameters", "1", CVAR_ARCHIVE);
 
 	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT);
 	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);

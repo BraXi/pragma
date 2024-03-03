@@ -856,17 +856,6 @@ void R_BeginFrame( float camera_separation )
 		ref->modified = true;
 	}
 
-	if ( r_log->modified )
-	{
-		GLimp_EnableLogging( r_log->value );
-		r_log->modified = false;
-	}
-
-	if ( r_log->value )
-	{
-		GLimp_LogNewFrame();
-	}
-
 	if ( r_gamma->modified )
 	{
 		r_gamma->modified = false;
