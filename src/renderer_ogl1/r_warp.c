@@ -558,14 +558,14 @@ void R_DrawSkyBox (void)
 
 #if 0
 	R_Blend(true);
-	GL_TexEnv( GL_MODULATE );
+	R_SetTexEnv( GL_MODULATE );
 	glColor4f (1,1,1,0.5);
 	R_DepthTest(false);
 #endif
 
 	R_BindProgram(GLPROG_SKY);
 
-	GL_TexEnv(GL_MODULATE); // allow sky colors change
+	R_SetTexEnv(GL_MODULATE); // allow sky colors change
 	glColor4f(skycolor[0], skycolor[1], skycolor[2], 1);
 
 	if (skyrotate)
@@ -596,7 +596,7 @@ void R_DrawSkyBox (void)
 		if (skymins[0][i] >= skymaxs[0][i] || skymins[1][i] >= skymaxs[1][i])
 			continue;
 
-		GL_Bind(sky_images[skytexorder[i]]->texnum);
+		R_BindTexture(sky_images[skytexorder[i]]->texnum);
 
 		glBegin(GL_TRIANGLES);
 		{
@@ -612,14 +612,14 @@ void R_DrawSkyBox (void)
 	}
 	glPopMatrix ();
 
-	GL_TexEnv(GL_REPLACE);
+	R_SetTexEnv(GL_REPLACE);
 	glColor4f(1, 1, 1, 1);
 
 	R_UnbindProgram();
 
 #if 0
 	R_Blend(false);
-	GL_TexEnv(GL_REPLACE);
+	R_SetTexEnv(GL_REPLACE);
 	glColor4f (1,1,1,0.5);
 	R_DepthTest(true);
 #endif
@@ -655,7 +655,7 @@ void R_SetSky (char *name, float rotate, vec3_t axis, vec3_t color)
 #endif
 		Com_sprintf (pathname, sizeof(pathname), "env/%s_%s.tga", skyname, suf[i]);
 
-		sky_images[i] = GL_FindImage (pathname, it_sky);
+		sky_images[i] = R_FindTexture (pathname, it_sky);
 		if (!sky_images[i])
 			sky_images[i] = r_notexture;
 

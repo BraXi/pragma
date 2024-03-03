@@ -137,7 +137,7 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
 
 	glColor4fv(color);
-	GL_Bind(font_current->texnum);
+	R_BindTexture(font_current->texnum);
 	R_RenderVBO(&guiVBO, 0, 0);
 }
 
@@ -212,7 +212,7 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 
 	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
 	glColor3fv(color);
-	GL_Bind(font_current->texnum);
+	R_BindTexture(font_current->texnum);
 	R_RenderVBO(&guiVBO, 0, 0);
 
 	glPopMatrix();
@@ -260,7 +260,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	glColor4f(color[0], color[1], color[2], color[3]);
 
 	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
-	GL_Bind(gl->texnum);
+	R_BindTexture(gl->texnum);
 	R_RenderVBO(&guiVBO, 0, 0);
 
 	R_Blend(false);

@@ -85,10 +85,10 @@ typedef struct _TargaHeader {
 
 /* 
 ================== 
-GL_ScreenShot_f
+R_ScreenShot_f
 ================== 
 */  
-void GL_ScreenShot_f (void) 
+void R_ScreenShot_f (void) 
 {
 	byte		*buffer;
 	char		picname[80]; 
@@ -99,7 +99,7 @@ void GL_ScreenShot_f (void)
 	buffer = malloc(vid.width * vid.height * 3 + 18);
 	if (!buffer)
 	{
-		ri.Printf(PRINT_ALL, "GL_ScreenShot_f: failed to allocate pixels\n");
+		ri.Printf(PRINT_ALL, "R_ScreenShot_f: failed to allocate pixels\n");
 		return;
 	}
 
@@ -124,7 +124,7 @@ void GL_ScreenShot_f (void)
 	} 
 	if (i==1000) 
 	{
-		ri.Printf (PRINT_ALL, "GL_ScreenShot_f: Couldn't create a file\n"); 
+		ri.Printf (PRINT_ALL, "R_ScreenShot_f: Couldn't create a file\n"); 
 		free(buffer);
 		return;
  	}
@@ -194,9 +194,9 @@ void GL_SetDefaultState( void )
 	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 	glShadeModel (GL_FLAT);
 
-	GL_TextureMode( r_texturemode->string );
-	GL_TextureAlphaMode( r_texturealphamode->string );
-	GL_TextureSolidMode( r_texturesolidmode->string );
+	R_SetTextureMode( r_texturemode->string );
+	R_SetTextureAlphaMode( r_texturealphamode->string );
+	R_TextureSolidMode( r_texturesolidmode->string );
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
@@ -206,7 +206,7 @@ void GL_SetDefaultState( void )
 
 	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	GL_TexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 
 	if ( glPointParameterf )
 	{

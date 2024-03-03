@@ -400,7 +400,7 @@ static void R_FindUniformLocations(glprog_t* prog)
 R_LoadProgram
 =================
 */
-int R_LoadProgram(int program, char *name)
+static int R_LoadProgram(int program, char *name)
 {
 	glprog_t* prog;
 	
@@ -450,13 +450,12 @@ void R_FreePrograms()
 
 /*
 =================
-R_FreePrograms
+R_InitPrograms
 =================
 */
-void R_InitProgs()
+void R_InitPrograms()
 {
 	R_FreePrograms();
-
 
 	R_LoadProgram(GLPROG_WORLD, "world");
 	R_LoadProgram(GLPROG_WORLD_LIQUID, "world-liquid");
@@ -469,7 +468,7 @@ void R_InitProgs()
 }
 
 
-void GL_ShaderList_f(void)
+void R_ShaderList_f(void)
 {
 	glprog_t* prog;
 	int cnt = 0;

@@ -48,8 +48,8 @@ void R_DrawSprite(rentity_t* ent)
 
 	glColor4f(1, 1, 1, pCurrentRefEnt->alpha);
 
-	GL_Bind(pCurrentModel->skins[ent->frame]->texnum);
-	GL_TexEnv(GL_MODULATE);
+	R_BindTexture(pCurrentModel->skins[ent->frame]->texnum);
+	R_SetTexEnv(GL_MODULATE);
 
 	R_AlphaTest(ent->alpha == 1.0);
 

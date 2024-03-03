@@ -8,8 +8,9 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-// disable data conversion warnings
+#define FIX_BRUSH_LIGHTING 1 // Enable Spike's fix from QS
 
+// disable data conversion warnings
 #if 0
 #pragma warning(disable : 4244)     // MIPS
 #pragma warning(disable : 4136)     // X86
@@ -17,44 +18,30 @@ See the attached GNU General Public License v2 for more details.
 #endif
 
 #ifdef _WIN32
-#include <windows.h>
+	#include <windows.h>
 #endif
 
 #include <stdio.h>
-
 #include "include/glad/glad.h"
-//#include <GL/gl.h>
-//#include <GL/glu.h>
-
 #include <math.h>
-
-
-#define FIX_BRUSH_LIGHTING 1 // Enable Spike's fix from QS
-
 #include "../qcommon/renderer.h"
-
 #include "win_qgl.h"
 
 #define	REF_VERSION	"0.4-next"
 
 
 // -- sin table --
-//#define RAD2DEG( a ) ( ( (a) * 180.0f ) / M_PI )
+//#define RAD2DEG( a ) ( ( (a) * 180.0f ) / M_PI ) // unused
 #define DEG2RAD( a ) ( ( (a) * M_PI ) / 180.0F )
 
 #define FUNCTABLE_SIZE		1024
 #define FUNCTABLE_MASK		(FUNCTABLE_SIZE-1)
 // -- sin table --
 
-// up / down
-#define	PITCH	0
 
-// left / right
-#define	YAW		1
-
-// fall over
-#define	ROLL	2
-
+#define	PITCH	0	// up / down
+#define	YAW		1	// left / right
+#define	ROLL	2	// fall over
 
 typedef struct
 {
@@ -62,7 +49,6 @@ typedef struct
 } viddef_t;
 
 extern	viddef_t	vid;
-
 
 typedef enum 
 {
@@ -72,28 +58,30 @@ typedef enum
 	it_texture,
 	it_gui,
 	it_sky
-} imagetype_t;
+} texType_t;
 
 typedef struct image_s
 {
-	char	name[MAX_QPATH];			// game path, including extension
-	imagetype_t	type;
-	int		width, height;				// source image
-	int		upload_width, upload_height;	// after power of two and picmip
-	int		registration_sequence;		// 0 = free
-	struct msurface_s	*texturechain;	// for sort-by-texture world drawing
-	int		texnum;						// gl texture binding
-	float	sl, tl, sh, th;				// 0,0 - 1,1
-	qboolean	has_alpha;
+	char			name[MAX_QPATH];			// game path, including extension
+	texType_t		type;
+	int				width, height;				// source image
+	int				upload_width, upload_height;// after power of two and picmip
+	int				registration_sequence;		// 0 = free
+	struct msurface_s	*texturechain;			// for sort-by-texture world drawing
+	int				texnum;						// gl texture binding
+	float			sl, tl, sh, th;				// 0,0 - 1,1
+	qboolean		has_alpha;
 } image_t;
 
 #define	TEXNUM_LIGHTMAPS	1024
 #define	TEXNUM_IMAGES		1153
-
 #define	MAX_GLTEXTURES		1024
 
 //===================================================================
 
+//
+// r_fbo.c
+//
 qboolean R_InitFrameBuffer();
 void R_FreeFrameBuffer();
 void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse);
@@ -133,17 +121,17 @@ typedef enum
 
 typedef struct glprog_s
 {
-	char name[MAX_QPATH];
-	int index;
-
-	unsigned int locs[NUM_LOCS];
-
-	/*GLuint*/ unsigned int		programObject;
-	/*GLuint*/ unsigned int		vertexShader, fragmentShader;
-
-	qboolean isValid;
+	char			name[MAX_QPATH];
+	int				index;
+	unsigned int	locs[NUM_LOCS];
+	unsigned int	programObject; /*GLuint*/ 
+	unsigned int	vertexShader, fragmentShader; /*GLuint*/ 
+	qboolean		isValid;
 } glprog_t;
 
+//
+// r_progs.c
+//
 extern glprog_t glprogs[MAX_GLPROGS];
 extern glprog_t* pCurrentProgram;
 extern int numProgs;
@@ -153,7 +141,7 @@ void R_BindProgram(int progindex);
 void R_UnbindProgram();
 int R_LoadProgram(int program, char* name);
 void R_FreePrograms();
-void R_InitProgs();
+void R_InitPrograms();
 
 void R_ProgUniform1i(int uniform, int val);
 void R_ProgUniform1f(int uniform, float val);
@@ -166,6 +154,8 @@ void R_ProgUniformVec3(int uniform, vec3_t v);
 void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4);
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4);
 void R_ProgUniformVec4(int uniform, vec4_t v);
+
+void	R_ShaderList_f(void);
 
 //===================================================================
 
@@ -183,7 +173,7 @@ typedef enum
 	V_NORMAL = 2,
 	V_COLOR = 4,
 	V_INDICES = 8
-}vboFlags_t;
+} vboFlags_t;
 
 typedef struct
 {
@@ -192,7 +182,7 @@ typedef struct
 
 	vboFlags_t		flags;
 	unsigned int	numVerts;
-	glvert_t		*verts;		// pointer to first verticle
+	glvert_t		*verts;		// pointer to first verticle, NULL if not allocated by VBO!
 }vbo_t;
 
 vbo_t guiVBO;
@@ -205,10 +195,8 @@ void R_FreeVBO(vbo_t* vbo);
 typedef enum
 {
 	rserr_ok,
-
 	rserr_invalid_fullscreen,
 	rserr_invalid_mode,
-
 	rserr_unknown
 } rserr_t;
 
@@ -216,8 +204,6 @@ typedef enum
 
 void GL_SetDefaultState( void );
 void GL_UpdateSwapInterval( void );
-
-extern	float	gldepthmin, gldepthmax;
 
 typedef struct
 {
@@ -252,6 +238,7 @@ extern	cplane_t	frustum[4];
 extern rperfcounters_t rperf;
 
 extern	int			gl_filter_min, gl_filter_max;
+extern	float		gldepthmin, gldepthmax;
 
 //
 // view origin
@@ -265,7 +252,7 @@ extern	vec3_t	r_origin;
 // screen size info
 //
 extern	refdef_t	r_newrefdef;
-extern	int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
+extern	int			r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
 extern	cvar_t	*r_norefresh;
 extern	cvar_t	*r_lefthand;
@@ -323,12 +310,6 @@ extern	int		gl_tex_alpha_format;
 
 extern	float	r_world_matrix[16];
 
-void GL_Bind (int texnum);
-void GL_MBind( GLenum target, int texnum );
-void GL_TexEnv( GLenum value );
-void GL_EnableMultitexture( qboolean enable );
-void GL_SelectTexture( GLenum );
-
 void R_LightPoint (vec3_t p, vec3_t color);
 void R_PushDlights (void);
 
@@ -343,7 +324,7 @@ int 	R_Init( void *hinstance, void *hWnd );
 void	R_Shutdown( void );
 
 void R_RenderView (refdef_t *fd);
-void GL_ScreenShot_f (void);
+void R_ScreenShot_f (void);
 void R_DrawBrushModel (rentity_t *e);
 void R_DrawSpriteModel (rentity_t *e);
 void R_DrawBeam( rentity_t *e );
@@ -393,23 +374,31 @@ void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data
 
 void	R_BeginFrame( float camera_separation );
 
-void GL_ResampleTexture (unsigned *in, int inwidth, int inheight, unsigned *out,  int outwidth, int outheight);
-
 struct image_s *R_RegisterSkin (char *name);
 
-image_t *R_LoadTexture (char *name, byte *pixels, int width, int height, imagetype_t type, int bits);
-image_t	*GL_FindImage (char *name, imagetype_t type);
-void	GL_TextureMode( char *string );
-void	GL_ImageList_f (void);
-void	GL_ShaderList_f(void);
+//
+// r_image.c
+//
+void R_EnableMultitexture(qboolean enable);
+void R_SelectTextureUnit(GLenum texture);
+void R_SetTexEnv(GLenum mode);
+void R_BindTexture(int texnum);
+void R_MultiTextureBind(GLenum target, int texnum);
 
-void	GL_InitImages (void);
-void	GL_ShutdownImages (void);
+image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_t type, int bits);
+image_t	*R_FindTexture(char *name, texType_t type);
 
-void	GL_FreeUnusedImages (void);
+void R_SetTextureMode(char *string);
+void R_TextureList_f(void);
 
-void GL_TextureAlphaMode( char *string );
-void GL_TextureSolidMode( char *string );
+
+void R_InitTextures();
+void R_FreeTextures();
+
+void R_FreeUnusedTextures();
+
+void R_SetTextureAlphaMode(char *string);
+void R_TextureSolidMode(char *string);
 
 /*
 ** GL extension emulation functions

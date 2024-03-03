@@ -40,14 +40,14 @@ Draw_InitLocal
 void Draw_InitLocal (void)
 {
 	// load fonts
-	font_textures[FONT_SMALL] = GL_FindImage ("gfx/fonts/q2.tga", it_gui);
+	font_textures[FONT_SMALL] = R_FindTexture ("gfx/fonts/q2.tga", it_gui);
 	if (font_textures[FONT_SMALL] == r_notexture)
 	{
 		ri.Error(ERR_FATAL, "failed to load default font gfx/fonts/q2.tga\n");
 		return;
 	}
 
-//	font_textures[FONT_CONSOLE] = GL_FindImage("pics/font_console.tga", it_gui);
+//	font_textures[FONT_CONSOLE] = R_FindTexture("pics/font_console.tga", it_gui);
 
 	for (unsigned int i = 0; i < NUM_FONTS; i++)
 	{
@@ -56,11 +56,11 @@ void Draw_InitLocal (void)
 //			font_textures[i] = font_textures[FONT_SMALL]; //fixup
 //		}
 
-		GL_Bind(font_textures[i]->texnum);
+		R_BindTexture(font_textures[i]->texnum);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
-	GL_Bind(0);
+	R_BindTexture(0);
 
 	font_current = font_textures[FONT_SMALL];
 }
@@ -111,7 +111,7 @@ void Draw_Char (int x, int y, int num)
 	SetTexCoords(fcol, frow + size);
 
 	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
-	GL_Bind(font_current->texnum);
+	R_BindTexture(font_current->texnum);
 	R_RenderVBO(&guiVBO, 0, 0);
 }
 
@@ -128,10 +128,10 @@ image_t	*R_RegisterPic (char *name)
 	if (name[0] != '/' && name[0] != '\\')
 	{
 		Com_sprintf (fullname, sizeof(fullname), "gfx/%s.tga", name);
-		gl = GL_FindImage (fullname, it_gui);
+		gl = R_FindTexture (fullname, it_gui);
 	}
 	else
-		gl = GL_FindImage (name+1, it_gui);
+		gl = R_FindTexture (name+1, it_gui);
 
 	return gl;
 }
@@ -186,7 +186,7 @@ void Draw_StretchPic (int x, int y, int w, int h, char *pic)
 	SetTexCoords(gl->sl, gl->th);
 
 	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
-	GL_Bind(gl->texnum);
+	R_BindTexture(gl->texnum);
 	R_RenderVBO(&guiVBO, 0, 0);
 }
 
@@ -222,7 +222,7 @@ void Draw_Pic (int x, int y, char *pic)
 	SetTexCoords(gl->sl, gl->th);
 
 	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
-	GL_Bind(gl->texnum);
+	R_BindTexture(gl->texnum);
 	R_RenderVBO(&guiVBO, 0, 0);
 }
 
@@ -260,7 +260,7 @@ void Draw_TileClear (int x, int y, int w, int h, char *pic)
 	SetTexCoords(x / 64.0f, (y + h) / 64.0f);
 
 	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
-	GL_Bind(image->texnum);
+	R_BindTexture(image->texnum);
 	R_RenderVBO(&guiVBO, 0, 0);
 }
 

@@ -60,9 +60,9 @@
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="r_progs.c" />
-    <ClCompile Include="r_fbo.c" />
+    <ClCompile Include="r_framebuffer.c" />
     <ClCompile Include="glad.c" />
-    <ClCompile Include="r_vbo.c" />
+    <ClCompile Include="r_vertexbuffer.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

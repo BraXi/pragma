@@ -202,7 +202,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 		shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 		for (j = 0; j < surf->numShaders; j++, shader++)
 		{
-			mod->skins[j] = GL_FindImage(shader->name, it_model);
+			mod->skins[j] = R_FindTexture(shader->name, it_model);
 			shader->shaderIndex = mod->skins[j]->texnum;
 			if (mod->skins[j] == r_notexture)
 			{
@@ -493,7 +493,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 		{
 			//bind texture
 			md3Shader = (md3Shader_t*)((byte*)surface + surface->ofsShaders);
-			GL_Bind(md3Shader->shaderIndex);
+			R_BindTexture(md3Shader->shaderIndex);
 		}
 
 		// grab tris, texcoords and verts

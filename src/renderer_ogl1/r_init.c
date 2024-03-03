@@ -146,9 +146,9 @@ void R_RegisterCvarsAndCommands(void)
 	r_postfx_inverse = ri.Cvar_Get("r_fx_inverse", "0", CVAR_CHEAT);
 	r_postfx_noise = ri.Cvar_Get("r_fx_noise", "0", CVAR_CHEAT);
 
-	ri.AddCommand("shaderlist", GL_ShaderList_f);
-	ri.AddCommand("imagelist", GL_ImageList_f);
-	ri.AddCommand("screenshot", GL_ScreenShot_f);
+	ri.AddCommand("shaderlist", R_ShaderList_f);
+	ri.AddCommand("imagelist", R_TextureList_f);
+	ri.AddCommand("screenshot", R_ScreenShot_f);
 	ri.AddCommand("modellist", Mod_Modellist_f);
 	ri.AddCommand("gl_strings", GL_Strings_f);
 }
@@ -266,7 +266,7 @@ int R_Init(void* hinstance, void* hWnd)
 		return -1;
 	}
 
-	R_InitProgs();
+	R_InitPrograms();
 
 	/*
 	** get our various GL strings
@@ -339,7 +339,7 @@ int R_Init(void* hinstance, void* hWnd)
 	for (int i = 0; i < FUNCTABLE_SIZE; i++)
 		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
-	GL_InitImages();
+	R_InitTextures();
 	Mod_Init();
 	R_InitParticleTexture();
 	Draw_InitLocal();
@@ -369,7 +369,7 @@ void R_Shutdown(void)
 
 	Mod_FreeAll();
 
-	GL_ShutdownImages();
+	R_FreeTextures();
 
 	/*
 	** shut down OS specific OpenGL stuff like contexts, etc.

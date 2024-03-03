@@ -162,7 +162,7 @@ void R_DrawEntityModel(rentity_t* ent)
 	// setup lighting
 	R_SetEntityShadeLight(ent);
 	glShadeModel(GL_SMOOTH);
-	GL_TexEnv(GL_MODULATE);
+	R_SetTexEnv(GL_MODULATE);
 
 	// 1. transparency
 	if (ent->renderfx & RF_TRANSLUCENT)
@@ -220,7 +220,7 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// restore shade model
 	glShadeModel(GL_FLAT);
-	GL_TexEnv(GL_REPLACE);
+	R_SetTexEnv(GL_REPLACE);
 
 	// restore transparency
 	if (pCurrentRefEnt->renderfx & RF_TRANSLUCENT)
@@ -401,7 +401,7 @@ void R_DrawDebugLines(void)
 	R_EndLinesRendering();
 
 #if 1
-	GL_TexEnv(GL_MODULATE);
+	R_SetTexEnv(GL_MODULATE);
 	R_AlphaTest(true);
 	R_DepthTest(true);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
@@ -418,7 +418,7 @@ void R_DrawDebugLines(void)
 			break;
 		}
 	}
-	GL_TexEnv(GL_REPLACE);
+	R_SetTexEnv(GL_REPLACE);
 	R_AlphaTest(false);
 #endif
 
@@ -452,7 +452,7 @@ void R_DrawDebugLines(void)
 
 
 //	R_CullFace(false);
-	GL_TexEnv(GL_MODULATE);
+	R_SetTexEnv(GL_MODULATE);
 	R_AlphaTest(true);
 	R_DepthTest(false);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
@@ -469,7 +469,7 @@ void R_DrawDebugLines(void)
 			break;
 		}
 	}
-	GL_TexEnv(GL_REPLACE);
+	R_SetTexEnv(GL_REPLACE);
 	R_AlphaTest(false);
 	R_DepthTest(true);
 	R_WriteToDepthBuffer(GL_TRUE);

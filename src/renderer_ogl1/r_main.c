@@ -153,8 +153,8 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	glColor4f( 1, 1, 1, alpha );
 
-    GL_Bind(pCurrentModel->skins[e->frame]->texnum);
-	GL_TexEnv( GL_MODULATE );
+    R_BindTexture(pCurrentModel->skins[e->frame]->texnum);
+	R_SetTexEnv( GL_MODULATE );
 
 	R_AlphaTest(true); // IS THIS REALY CORRECT?
 
@@ -193,7 +193,7 @@ void R_DrawSpriteModel (rentity_t *e)
 	glEnd();
 
 	R_AlphaTest(false);
-	GL_TexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 
 	R_Blend(false);
 
@@ -312,6 +312,11 @@ void R_DrawEntitiesOnList (void)
 ** GL_DrawParticles
 **
 */
+/*
+=============
+GL_DrawParticles
+=============
+*/
 void GL_DrawParticles( int num_particles, const particle_t particles[] )
 {
 	const particle_t *p;
@@ -320,11 +325,11 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 	float			scale;
 	float			color[4];
 
-    GL_Bind(r_particletexture->texnum);
+    R_BindTexture(r_particletexture->texnum);
 
 	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
 	R_Blend(true);
-	GL_TexEnv( GL_MODULATE );
+	R_SetTexEnv( GL_MODULATE );
 
 	VectorScale (vup, 1.5, up);
 	VectorScale (vright, 1.5, right);
@@ -368,7 +373,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 	R_Blend(false);
 	glColor4f( 1,1,1,1 );
 	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
-	GL_TexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 }
 
 /*
@@ -741,7 +746,7 @@ void R_SetGL2D(void)
 	R_Blend(false);
 	R_AlphaTest(true);
 
-	GL_TexEnv(GL_MODULATE);
+	R_SetTexEnv(GL_MODULATE);
 }
 
 static void GL_DrawColoredStereoLinePair( float r, float g, float b, float y )
@@ -795,7 +800,7 @@ void R_DrawFill(rect_t pos, rgba_t color);
 
 void R_RenderFrame (refdef_t *fd)
 {
-	GL_TexEnv(GL_REPLACE);
+	R_SetTexEnv(GL_REPLACE);
 	R_RenderView( fd );
 	R_SetGL2D ();
 
@@ -910,19 +915,19 @@ void R_BeginFrame( float camera_separation )
 	*/
 	if ( r_texturemode->modified )
 	{
-		GL_TextureMode( r_texturemode->string );
+		R_SetTextureMode( r_texturemode->string );
 		r_texturemode->modified = false;
 	}
 
 	if ( r_texturealphamode->modified )
 	{
-		GL_TextureAlphaMode( r_texturealphamode->string );
+		R_SetTextureAlphaMode( r_texturealphamode->string );
 		r_texturealphamode->modified = false;
 	}
 
 	if ( r_texturesolidmode->modified )
 	{
-		GL_TextureSolidMode( r_texturesolidmode->string );
+		R_TextureSolidMode( r_texturesolidmode->string );
 		r_texturesolidmode->modified = false;
 	}
 

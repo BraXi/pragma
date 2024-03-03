@@ -364,7 +364,7 @@ void R_BlendLightmaps (void)
 			if (pCurrentModel == r_worldmodel)
 				rperf.visible_lightmaps++;
 
-			GL_Bind( gl_state.lightmap_textures + i);
+			R_BindTexture( gl_state.lightmap_textures + i);
 
 			for ( surf = gl_lms.lightmap_surfaces[i]; surf != 0; surf = surf->lightmapchain )
 			{
@@ -383,7 +383,7 @@ void R_BlendLightmaps (void)
 	{
 		LM_InitBlock();
 
-		GL_Bind( gl_state.lightmap_textures+0 );
+		R_BindTexture( gl_state.lightmap_textures+0 );
 
 		if (pCurrentModel == r_worldmodel)
 			rperf.visible_lightmaps++;
@@ -479,22 +479,22 @@ void R_RenderBrushPoly (msurface_t *fa)
 
 	if (fa->flags & SURF_DRAWTURB)
 	{
-		GL_Bind(image->texnum);
+		R_BindTexture(image->texnum);
 
-		GL_TexEnv(GL_MODULATE);
+		R_SetTexEnv(GL_MODULATE);
 		//float inverse_intensity = -r_intensity->value;
 		//glColor4f(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
 
 		EmitWaterPolys(fa);
-		GL_TexEnv(GL_REPLACE);
+		R_SetTexEnv(GL_REPLACE);
 
 		return;
 	}
 	else
 	{
-		GL_Bind( image->texnum );
+		R_BindTexture( image->texnum );
 
-		GL_TexEnv( GL_REPLACE );
+		R_SetTexEnv( GL_REPLACE );
 	}
 
 
@@ -538,7 +538,7 @@ dynamic:
 			R_BuildLightMap( fa, (void *)temp, smax*4 );
 			R_SetCacheState( fa );
 
-			GL_Bind( gl_state.lightmap_textures + fa->lightmaptexturenum );
+			R_BindTexture( gl_state.lightmap_textures + fa->lightmaptexturenum );
 
 			glTexSubImage2D( GL_TEXTURE_2D, 0,
 							  fa->light_s, fa->light_t, 
@@ -583,12 +583,12 @@ void R_DrawAlphaSurfaces (void)
     glLoadMatrixf (r_world_matrix);
 
 	R_Blend(true);
-	GL_TexEnv( GL_MODULATE );
+	R_SetTexEnv( GL_MODULATE );
 
 	intens = 1;
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
-		GL_Bind(s->texinfo->image->texnum);
+		R_BindTexture(s->texinfo->image->texnum);
 		rperf.brush_polys++;
 		if (s->texinfo->flags & SURF_TRANS33)
 			glColor4f (intens,intens,intens,0.33);
@@ -602,7 +602,7 @@ void R_DrawAlphaSurfaces (void)
 			DrawGLPoly (s->polys);
 	}
 
-	GL_TexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 	glColor4f (1,1,1,1);
 	R_Blend(false);
 
@@ -622,7 +622,7 @@ void DrawTextureChains (void)
 
 	rperf.visible_textures = 0;
 
-//	GL_TexEnv( GL_REPLACE );
+//	R_SetTexEnv( GL_REPLACE );
 
 	for ( i = 0, image=gltextures ; i<numgltextures ; i++,image++)
 	{
@@ -639,7 +639,7 @@ void DrawTextureChains (void)
 		}
 	}
 
-	GL_EnableMultitexture( false );
+	R_EnableMultitexture( false );
 	for ( i = 0, image=gltextures ; i<numgltextures ; i++,image++)
 	{
 		if (!image->registration_sequence)
@@ -656,9 +656,9 @@ void DrawTextureChains (void)
 
 		image->texturechain = NULL;
 	}
-//	GL_EnableMultitexture( true );
+//	R_EnableMultitexture( true );
 
-	GL_TexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 }
 
 
@@ -704,7 +704,7 @@ dynamic:
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 			R_SetCacheState( surf );
 
-			GL_MBind( GL_TEXTURE1, gl_state.lightmap_textures + surf->lightmaptexturenum );
+			R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + surf->lightmaptexturenum );
 
 			lmtex = surf->lightmaptexturenum;
 
@@ -722,7 +722,7 @@ dynamic:
 
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 
-			GL_MBind( GL_TEXTURE1, gl_state.lightmap_textures + 0 );
+			R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + 0 );
 
 			lmtex = 0;
 
@@ -736,8 +736,8 @@ dynamic:
 
 		rperf.brush_polys++;
 
-		GL_MBind( GL_TEXTURE0, image->texnum );
-		GL_MBind( GL_TEXTURE1, gl_state.lightmap_textures + lmtex );
+		R_MultiTextureBind( GL_TEXTURE0, image->texnum );
+		R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + lmtex );
 
 		if (surf->texinfo->flags & SURF_FLOWING)
 		{
@@ -780,8 +780,8 @@ dynamic:
 	{
 		rperf.brush_polys++;
 
-		GL_MBind( GL_TEXTURE0, image->texnum );
-		GL_MBind( GL_TEXTURE1, gl_state.lightmap_textures + lmtex );
+		R_MultiTextureBind( GL_TEXTURE0, image->texnum );
+		R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + lmtex );
 
 		if (surf->texinfo->flags & SURF_FLOWING)
 		{
@@ -857,7 +857,7 @@ void R_DrawInlineBModel (void)
 	{
 		R_Blend(true);
 		glColor4f (1,1,1,0.25);
-		GL_TexEnv( GL_MODULATE );
+		R_SetTexEnv( GL_MODULATE );
 	}
 
 	//
@@ -885,9 +885,9 @@ void R_DrawInlineBModel (void)
 			}
 			else
 			{
-				GL_EnableMultitexture( false );
+				R_EnableMultitexture( false );
 				R_RenderBrushPoly( psurf );
-				GL_EnableMultitexture( true );
+				R_EnableMultitexture( true );
 			}
 		}
 	}
@@ -901,7 +901,7 @@ void R_DrawInlineBModel (void)
 	{
 		R_Blend(false);
 		glColor4f (1,1,1,1);
-		GL_TexEnv( GL_REPLACE );
+		R_SetTexEnv( GL_REPLACE );
 	}
 }
 
@@ -964,14 +964,14 @@ void R_DrawBrushModel (rentity_t *e)
 	e->angles[0] = -e->angles[0];	// stupid quake bug
 	e->angles[2] = -e->angles[2];	// stupid quake bug
 
-	GL_EnableMultitexture( !r_fullbright->value );
-	GL_SelectTexture( GL_TEXTURE0 );
-	GL_TexEnv( GL_REPLACE );
-	GL_SelectTexture( GL_TEXTURE1 );
-	GL_TexEnv( GL_MODULATE );
+	R_EnableMultitexture( !r_fullbright->value );
+	R_SelectTextureUnit( GL_TEXTURE0 );
+	R_SetTexEnv( GL_REPLACE );
+	R_SelectTextureUnit( GL_TEXTURE1 );
+	R_SetTexEnv( GL_MODULATE );
 
 	R_DrawInlineBModel ();
-	GL_EnableMultitexture( false );
+	R_EnableMultitexture( false );
 
 	glPopMatrix ();
 }
@@ -1144,20 +1144,20 @@ void R_DrawWorld (void)
 
 	if (0) //glMultiTexCoord2f )
 	{
-		GL_EnableMultitexture( !r_fullbright->value );
+		R_EnableMultitexture( !r_fullbright->value );
 
-		GL_SelectTexture( GL_TEXTURE0 );
-		GL_TexEnv( GL_REPLACE );
-		GL_SelectTexture( GL_TEXTURE1 );
+		R_SelectTextureUnit( GL_TEXTURE0 );
+		R_SetTexEnv( GL_REPLACE );
+		R_SelectTextureUnit( GL_TEXTURE1 );
 
 		if ( r_lightmap->value )
-			GL_TexEnv( GL_REPLACE );
+			R_SetTexEnv( GL_REPLACE );
 		else 
-			GL_TexEnv( GL_MODULATE );
+			R_SetTexEnv( GL_MODULATE );
 
 		R_RecursiveWorldNode (r_worldmodel->nodes);
 
-		GL_EnableMultitexture( false );
+		R_EnableMultitexture( false );
 	}
 	else
 	{
@@ -1297,7 +1297,7 @@ static void LM_UploadBlock( qboolean dynamic )
 		texture = gl_lms.current_lightmap_texture;
 	}
 
-	GL_Bind( gl_state.lightmap_textures + texture );
+	R_BindTexture( gl_state.lightmap_textures + texture );
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -1499,8 +1499,8 @@ void GL_BeginBuildingLightmaps (model_t *m)
 
 	r_framecount = 1;		// no dlightcache
 
-	GL_EnableMultitexture( true );
-	GL_SelectTexture( GL_TEXTURE1 );
+	R_EnableMultitexture( true );
+	R_SelectTextureUnit( GL_TEXTURE1 );
 
 	/*
 	** setup the base lightstyles so the lightmaps won't have to be regenerated
@@ -1564,7 +1564,7 @@ void GL_BeginBuildingLightmaps (model_t *m)
 	/*
 	** initialize the dynamic lightmap texture
 	*/
-	GL_Bind( gl_state.lightmap_textures + 0 );
+	R_BindTexture( gl_state.lightmap_textures + 0 );
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexImage2D( GL_TEXTURE_2D, 
@@ -1585,6 +1585,6 @@ GL_EndBuildingLightmaps
 void GL_EndBuildingLightmaps (void)
 {
 	LM_UploadBlock( false );
-	GL_EnableMultitexture( false );
+	R_EnableMultitexture( false );
 }
 

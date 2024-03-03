@@ -57,7 +57,7 @@ void R_StuffVBO(vbo_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t f
 		glGenBuffers(1, &vbo->vboBuf);
 
 	vbo->indexBuf = 0;
-	vbo->verts = verts;
+//	vbo->verts = verts;
 	vbo->numVerts = numVerts;
 	vbo->flags = flags;
 
@@ -68,7 +68,7 @@ void R_StuffVBO(vbo_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t f
 
 /*
 ===============
-R_StuffVBO
+R_RenderVBO
 ===============
 */
 void R_RenderVBO(vbo_t* vbo, unsigned int startVert, unsigned int numVerts)
