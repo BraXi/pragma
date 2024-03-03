@@ -20,6 +20,15 @@ enum
 	NUM_FONTS
 };
 
+extern int guiVertCount;
+extern  glvert_t guiVerts[1024];
+
+extern void ClearVertexBuffer();
+extern void PushVert(float x, float y, float z);
+extern void SetTexCoords(float s, float t);
+extern void SetNormal(float x, float y, float z);
+extern void SetColor(float r, float g, float b);
+
 static image_t* font_textures[NUM_FONTS];
 image_t* font_current;
 
@@ -87,25 +96,23 @@ void Draw_Char (int x, int y, int num)
 	fcol = col*0.0625;
 	size = 0.0625;
 
-	GL_Bind (font_current->texnum);
+	ClearVertexBuffer();
+	PushVert(x, y, 0);
+	SetTexCoords(fcol, frow);
+	PushVert(x + 8, y, 0);
+	SetTexCoords(fcol + size, frow);
+	PushVert(x + 8, y + 8, 0);
+	SetTexCoords(fcol + size, frow + size);
+	PushVert(x, y, 0);
+	SetTexCoords(fcol, frow);
+	PushVert(x + 8, y + 8, 0);
+	SetTexCoords(fcol + size, frow + size);
+	PushVert(x, y + 8, 0);
+	SetTexCoords(fcol, frow + size);
 
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(fcol, frow);
-		glVertex2f(x, y);
-		glTexCoord2f(fcol + size, frow);
-		glVertex2f(x + 8, y);
-		glTexCoord2f(fcol + size, frow + size);
-		glVertex2f(x + 8, y + 8);
-
-		glTexCoord2f(fcol, frow);
-		glVertex2f(x, y);
-		glTexCoord2f(fcol + size, frow + size);
-		glVertex2f(x + 8, y + 8);
-		glTexCoord2f(fcol, frow + size);
-		glVertex2f(x, y + 8);
-	}
-	glEnd();
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+	GL_Bind(font_current->texnum);
+	R_RenderVBO(&guiVBO, 0, 0);
 }
 
 /*
@@ -164,25 +171,23 @@ void Draw_StretchPic (int x, int y, int w, int h, char *pic)
 		return;
 	}
 
-	GL_Bind (gl->texnum);
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(gl->sl, gl->tl);
-		glVertex2f(x, y);
-		glTexCoord2f(gl->sh, gl->tl);
-		glVertex2f(x + w, y);
-		glTexCoord2f(gl->sh, gl->th);
-		glVertex2f(x + w, y + h);
+	ClearVertexBuffer();
+	PushVert(x, y, 0);
+	SetTexCoords(gl->sl, gl->tl);
+	PushVert(x + w, y, 0);
+	SetTexCoords(gl->sh, gl->tl);
+	PushVert(x + w, y + h, 0);
+	SetTexCoords(gl->sh, gl->th);
+	PushVert(x, y, 0);
+	SetTexCoords(gl->sl, gl->tl);
+	PushVert(x + w, y + h, 0);
+	SetTexCoords(gl->sh, gl->th);
+	PushVert(x, y + h, 0);
+	SetTexCoords(gl->sl, gl->th);
 
-		glTexCoord2f(gl->sl, gl->tl);
-		glVertex2f(x, y);
-		glTexCoord2f(gl->sh, gl->th);
-		glVertex2f(x + w, y + h);
-		glTexCoord2f(gl->sl, gl->th);
-		glVertex2f(x, y + h);
-	}
-	glEnd();
-
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+	GL_Bind(gl->texnum);
+	R_RenderVBO(&guiVBO, 0, 0);
 }
 
 
@@ -202,18 +207,23 @@ void Draw_Pic (int x, int y, char *pic)
 		return;
 	}
 
-	GL_Bind (gl->texnum);
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(gl->sl, gl->tl);	glVertex2f(x, y);
-		glTexCoord2f(gl->sh, gl->tl);	glVertex2f(x + gl->width, y);
-		glTexCoord2f(gl->sh, gl->th);	glVertex2f(x + gl->width, y + gl->height);
+	ClearVertexBuffer();
+	PushVert(x, y, 0);
+	SetTexCoords(gl->sl, gl->tl);
+	PushVert(x + gl->width, y, 0);
+	SetTexCoords(gl->sh, gl->tl);
+	PushVert(x + gl->width, y + gl->height, 0);
+	SetTexCoords(gl->sh, gl->th);	
+	PushVert(x, y, 0);
+	SetTexCoords(gl->sl, gl->tl);
+	PushVert(x + gl->width, y + gl->height, 0);
+	SetTexCoords(gl->sh, gl->th);
+	PushVert(x, y + gl->height, 0);
+	SetTexCoords(gl->sl, gl->th);
 
-		glTexCoord2f(gl->sl, gl->tl);	glVertex2f(x, y);
-		glTexCoord2f(gl->sh, gl->th);	glVertex2f(x + gl->width, y + gl->height);
-		glTexCoord2f(gl->sl, gl->th);	glVertex2f(x, y + gl->height);
-	}
-	glEnd();
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+	GL_Bind(gl->texnum);
+	R_RenderVBO(&guiVBO, 0, 0);
 }
 
 /*
@@ -235,18 +245,23 @@ void Draw_TileClear (int x, int y, int w, int h, char *pic)
 		return;
 	}
 
-	GL_Bind (image->texnum);
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(x / 64.0f, y / 64.0f);				glVertex2f(x, y);
-		glTexCoord2f((x + w) / 64.0f, y / 64.0f);		glVertex2f(x + w, y);
-		glTexCoord2f((x + w) / 64.0f, (y + h) / 64.0f);	glVertex2f(x + w, y + h);
+	ClearVertexBuffer();
+	PushVert(x, y, 0);
+	SetTexCoords(x / 64.0f, y / 64.0f);	
+	PushVert(x + w, y, 0);
+	SetTexCoords((x + w) / 64.0f, y / 64.0f);
+	PushVert(x + w, y + h, 0);
+	SetTexCoords((x + w) / 64.0f, (y + h) / 64.0f);	
+	PushVert(x, y, 0);
+	SetTexCoords(x / 64.0f, y / 64.0f);
+	PushVert(x + w, y + h, 0);
+	SetTexCoords((x + w) / 64.0f, (y + h) / 64.0f);
+	PushVert(x, y + h, 0);
+	SetTexCoords(x / 64.0f, (y + h) / 64.0f);
 
-		glTexCoord2f(x / 64.0f, y / 64.0f);				glVertex2f(x, y);
-		glTexCoord2f((x + w) / 64.0f, (y + h) / 64.0f);	glVertex2f(x + w, y + h);
-		glTexCoord2f(x / 64.0f, (y + h) / 64.0f);		glVertex2f(x, y + h);
-	}
-	glEnd();
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+	GL_Bind(image->texnum);
+	R_RenderVBO(&guiVBO, 0, 0);
 }
 
 
@@ -259,20 +274,17 @@ Fills a box of pixels with a single color
 */
 void Draw_Fill (int x, int y, int w, int h)
 {
-	glDisable (GL_TEXTURE_2D);
+	ClearVertexBuffer();
+	PushVert(x, y, 0);
+	PushVert(x + w, y, 0);
+	PushVert(x + w, y + h, 0);
+	PushVert(x, y, 0);
+	PushVert(x + w, y + h, 0);
+	PushVert(x, y + h, 0);
 
-	glBegin(GL_TRIANGLES);
-	{
-		glVertex2f(x, y);
-		glVertex2f(x + w, y);
-		glVertex2f(x + w, y + h);
-
-		glVertex2f(x, y);
-		glVertex2f(x + w, y + h);
-		glVertex2f(x, y + h);
-	}
-	glEnd();
-
+	glDisable(GL_TEXTURE_2D);
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, 0);
+	R_RenderVBO(&guiVBO, 0, 0);
 	glEnable (GL_TEXTURE_2D);
 }
 
@@ -286,22 +298,22 @@ Draw_FadeScreen
 */
 void Draw_FadeScreen (float *rgba)
 {
+	ClearVertexBuffer();
+
+	PushVert(0, 0, 0);
+	PushVert(vid.width, 0, 0);
+	PushVert(vid.width, vid.height, 0);
+	PushVert(0, 0, 0);
+	PushVert(vid.width, vid.height, 0);
+	PushVert(0, vid.height, 0);
+
 	R_Blend(true);
-	glDisable (GL_TEXTURE_2D);
-	glAlphaFunc(GL_GREATER, 0.1);
+	glDisable(GL_TEXTURE_2D);
+	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4fv(rgba);
 
-	glBegin(GL_TRIANGLES);
-	{
-		glVertex2f(0, 0);
-		glVertex2f(vid.width, 0);
-		glVertex2f(vid.width, vid.height);
-
-		glVertex2f(0, 0);
-		glVertex2f(vid.width, vid.height);
-		glVertex2f(0, vid.height);
-	}
-	glEnd();
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, 0);
+	R_RenderVBO(&guiVBO, 0, 0);
 
 	glColor4f(1,1,1,1);
 	glAlphaFunc(GL_GREATER, 0.666);
@@ -323,53 +335,11 @@ Draw_StretchRaw
 void Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data)
 {
 #if 0
-	unsigned	image32[256*256];
 
-	int			i, j, trows;
-	byte		*source;
-	int			frac, fracstep;
-	float		hscale;
-	int			row;
-	float		t;
-
-	GL_Bind (0);
-
-	if (rows<=256)
-	{
-		hscale = 1;
-		trows = rows;
-	}
-	else
-	{
-		hscale = rows/256.0;
-		trows = 256;
-	}
-	t = rows*hscale / 256;
-
-
-	unsigned *dest;
-	for (i=0 ; i<trows ; i++)
-	{
-		row = (int)(i*hscale);
-		if (row > rows)
-			break;
-		source = data + cols*row;
-		dest = &image32[i*256];
-		fracstep = cols*0x10000/256;
-		frac = fracstep >> 1;
-		for (j=0 ; j<256 ; j++)
-		{
-			dest[j] = r_rawpalette[source[frac>>16]];
-			frac += fracstep;
-		}
-	}
-
-	glTexImage2D (GL_TEXTURE_2D, 0, gl_tex_solid_format, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, image32);
+	glTexImage2D (GL_TEXTURE_2D, 0, gl_tex_solid_format, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	
-
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 
 	glBegin(GL_TRIANGLES);
 	{

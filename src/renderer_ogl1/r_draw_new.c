@@ -14,6 +14,37 @@ extern image_t* font_current;
 
 image_t* R_RegisterPic(char* name);
 
+int guiVertCount;
+glvert_t guiVerts[1024];
+
+void ClearVertexBuffer()
+{
+	guiVertCount = 0;
+}
+
+void PushVert(float x, float y, float z)
+{
+	VectorSet(guiVerts[guiVertCount].xyz, x, y, z);
+	guiVertCount++;
+}
+
+void SetTexCoords(float s, float t)
+{
+	guiVerts[guiVertCount - 1].st[0] = s;
+	guiVerts[guiVertCount - 1].st[1] = t;
+}
+
+void SetNormal(float x, float y, float z)
+{
+	VectorSet(guiVerts[guiVertCount - 1].normal, x, y, z);
+}
+
+void SetColor(float r, float g, float b)
+{
+	VectorSet(guiVerts[guiVertCount - 1].rgb, r, g, b);
+}
+
+
 typedef enum
 {
 	XALIGN_NONE = 0,
@@ -33,7 +64,6 @@ void R_AdjustToVirtualScreenSize(float* x, float* y)
 	if (x) *x *= xscale;
 	if (y) *y *= yscale;
 }
-
 
 void R_DrawSingleChar(float x, float y, float w, float h, int num)
 {
@@ -55,19 +85,23 @@ void R_DrawSingleChar(float x, float y, float w, float h, int num)
 	fcol = col * 0.0625;
 	size = 0.0625;
 
-	GL_Bind(font_current->texnum);
+	PushVert(x, y, 0);
+	SetTexCoords(fcol, frow);
 
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(fcol, frow);				glVertex2f(x, y);
-		glTexCoord2f(fcol + size, frow);		glVertex2f(x + w, y);
-		glTexCoord2f(fcol + size, frow + size);	glVertex2f(x + w, y + h);
+	PushVert(x + w, y, 0);
+	SetTexCoords(fcol + size, frow);
 
-		glTexCoord2f(fcol, frow);				glVertex2f(x, y);
-		glTexCoord2f(fcol + size, frow + size);	glVertex2f(x + w, y + h);
-		glTexCoord2f(fcol, frow + size);		glVertex2f(x, y + h);
-	}
-	glEnd();
+	PushVert(x + w, y + h, 0);
+	SetTexCoords(fcol + size, frow + size);
+
+	PushVert(x, y, 0);
+	SetTexCoords(fcol, frow);
+
+	PushVert(x + w, y + h, 0);
+	SetTexCoords(fcol + size, frow + size);
+
+	PushVert(x, y + h, 0);
+	SetTexCoords(fcol, frow + size);
 }
 
 
@@ -92,15 +126,19 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	else if (alignx == XALIGN_RIGHT)
 		ofs_x -= ((strlen(string) * CHAR_SIZEX));
 
-	glColor4fv(color);
-
-	// draw string
+	ClearVertexBuffer();
 	while (*string)
 	{
 		R_DrawSingleChar(ofs_x + x, y, CHAR_SIZEX, CHAR_SIZEY, *string);
 		x += CHAR_SIZEX;
 		string++;
 	}
+
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+
+	glColor4fv(color);
+	GL_Bind(font_current->texnum);
+	R_RenderVBO(&guiVBO, 0, 0);
 }
 
 void R_DrawSingleChar3D(float x, float y, float z, float fontSize, int num)
@@ -120,24 +158,23 @@ void R_DrawSingleChar3D(float x, float y, float z, float fontSize, int num)
 	fcol = col * 0.0625;
 	size = 0.0625;
 
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(fcol, frow);
-		glVertex3f(x + (-fontSize / 2), -fontSize / 2, 0);
-		glTexCoord2f(fcol + size, frow);
-		glVertex3f(x + (fontSize / 2), -fontSize / 2, 0);
-		glTexCoord2f(fcol + size, frow + size);
-		glVertex3f(x + (fontSize / 2), fontSize / 2, 0);
+	PushVert(x + (-fontSize / 2), -fontSize / 2, 0);
+	SetTexCoords(fcol, frow);
 
-		glTexCoord2f(fcol, frow);
-		glVertex3f(x + (-fontSize / 2), -fontSize / 2, 0);
-		glTexCoord2f(fcol + size, frow + size);
-		glVertex3f(x + (fontSize / 2), fontSize / 2, 0);
-		glTexCoord2f(fcol, frow + size);
-		glVertex3f(x + (-fontSize / 2), fontSize / 2, 0);
-	}
-	glEnd();
+	PushVert(x + (fontSize / 2), -fontSize / 2, 0);
+	SetTexCoords(fcol + size, frow);
 
+	PushVert(x + (fontSize / 2), fontSize / 2, 0);
+	SetTexCoords(fcol + size, frow + size);
+
+	PushVert(x + (-fontSize / 2), -fontSize / 2, 0);
+	SetTexCoords(fcol, frow);
+
+	PushVert(x + (fontSize / 2), fontSize / 2, 0);
+	SetTexCoords(fcol + size, frow + size);
+	
+	PushVert(x + (-fontSize / 2), fontSize / 2, 0);
+	SetTexCoords(fcol, frow + size);
 }
 
 void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t color)
@@ -150,8 +187,6 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	if (!string || !string[0] | !strlen(string))
 		return;
 
-//	pos[2] += 56;
-
 	alignx = XALIGN_CENTER;
 	// align text
 	int strX = (strlen(string) * CHAR_SIZEX);
@@ -160,8 +195,6 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	else if (alignx == XALIGN_RIGHT)
 		ofs_x -= ((strlen(string) * CHAR_SIZEX));
 
-	glColor3fv(color);
-
 	glPushMatrix();
 	glTranslatef(pos[0], pos[1], pos[2]);
 	glRotatef(-90, 1.0f, 0.0f, 0.0f); 
@@ -169,13 +202,19 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	glRotatef((-r_newrefdef.view.angles[0]), 1.0f, 0.0f, 0.0f);
 
 	// draw string
-	GL_Bind(font_current->texnum);
+	ClearVertexBuffer();
 	while (*string)
 	{
 		R_DrawSingleChar3D(ofs_x, pos[1], pos[2], CHAR_SIZEX, *string);
 		ofs_x += CHAR_SIZEX;
 		string++;
 	}
+
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
+	glColor3fv(color);
+	GL_Bind(font_current->texnum);
+	R_RenderVBO(&guiVBO, 0, 0);
+
 	glPopMatrix();
 }
 
@@ -200,30 +239,29 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	R_AdjustToVirtualScreenSize(&rect[0], &rect[1]); // pos
 	R_AdjustToVirtualScreenSize(&rect[2], &rect[3]); // w/h
 
+	ClearVertexBuffer();
+
+	PushVert(rect[0], rect[1], 0);
+	SetTexCoords(gl->sl, gl->tl);
+	PushVert(rect[0] + rect[2], rect[1], 0);
+	SetTexCoords(gl->sh, gl->tl);
+	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
+	SetTexCoords(gl->sh, gl->th);
+	
+	PushVert(rect[0], rect[1], 0);
+	SetTexCoords(gl->sl, gl->tl);
+	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
+	SetTexCoords(gl->sh, gl->th);
+	PushVert(rect[0], rect[1] + rect[3], 0);
+	SetTexCoords(gl->sl, gl->th);
 
 	R_Blend(true);
-	//R_BlendFunc(GL_ONE, GL_ONE);;
 	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4f(color[0], color[1], color[2], color[3]);
 
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, V_UV);
 	GL_Bind(gl->texnum);
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(gl->sl, gl->tl);
-		glVertex2f(rect[0], rect[1]);
-		glTexCoord2f(gl->sh, gl->tl);
-		glVertex2f(rect[0] + rect[2], rect[1]);
-		glTexCoord2f(gl->sh, gl->th);
-		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
-
-		glTexCoord2f(gl->sl, gl->tl);
-		glVertex2f(rect[0], rect[1]);
-		glTexCoord2f(gl->sh, gl->th);
-		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
-		glTexCoord2f(gl->sl, gl->th);
-		glVertex2f(rect[0], rect[1] + rect[3]);
-	}
-	glEnd();
+	R_RenderVBO(&guiVBO, 0, 0);
 
 	R_Blend(false);
 	glAlphaFunc(GL_GREATER, 0.666);
@@ -242,23 +280,22 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	R_AdjustToVirtualScreenSize(&rect[0], &rect[1]); // pos
 	R_AdjustToVirtualScreenSize(&rect[2], &rect[3]); // w/h
 
+	ClearVertexBuffer();
+	PushVert(rect[0], rect[1], 0);
+	PushVert(rect[0] + rect[2], rect[1], 0);
+	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
+	PushVert(rect[0], rect[1], 0);
+	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
+	PushVert(rect[0], rect[1] + rect[3], 0);
+
 	R_Blend(true);
 	glDisable(GL_TEXTURE_2D);
 
 	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4f(color[0], color[1], color[2], color[3]);
 
-	glBegin(GL_TRIANGLES);
-	{
-		glVertex2f(rect[0], rect[1]);
-		glVertex2f(rect[0] + rect[2], rect[1]);
-		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
-
-		glVertex2f(rect[0], rect[1]);
-		glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
-		glVertex2f(rect[0], rect[1] + rect[3]);
-	}
-	glEnd();
+	R_StuffVBO(&guiVBO, guiVerts, guiVertCount, 0);
+	R_RenderVBO(&guiVBO, 0, 0);
 
 	R_Blend(false);
 	glEnable(GL_TEXTURE_2D);

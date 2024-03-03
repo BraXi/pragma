@@ -168,6 +168,7 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="r_fbo.c" />
     <ClCompile Include="r_progs.c" />
+    <ClCompile Include="r_vbo.c" />
     <ClCompile Include="win_opengl.c" />
     <ClCompile Include="win_qgl.c" />
     <ClCompile Include="r_draw.c" />

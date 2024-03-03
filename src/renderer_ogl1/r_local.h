@@ -166,10 +166,42 @@ void R_ProgUniformVec3(int uniform, vec3_t v);
 void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4);
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4);
 void R_ProgUniformVec4(int uniform, vec4_t v);
-void R_SetProgUniform(glprogLoc_t loc, byte* val);
 
 //===================================================================
 
+typedef struct
+{
+	float	xyz[3];
+	float	normal[3];
+	float	st[2];
+	float	rgb[3]; //rgba[4];
+} glvert_t;
+
+typedef enum
+{
+	V_UV = 1,
+	V_NORMAL = 2,
+	V_COLOR = 4,
+	V_INDICES = 8
+}vboFlags_t;
+
+typedef struct
+{
+	unsigned int	vboBuf; //GLuint
+	unsigned int	indexBuf;
+
+	vboFlags_t		flags;
+	unsigned int	numVerts;
+	glvert_t		*verts;		// pointer to first verticle
+}vbo_t;
+
+vbo_t guiVBO;
+
+void R_StuffVBO(vbo_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags);
+void R_RenderVBO(vbo_t* vbo, unsigned int startVert, unsigned int numVerts);
+void R_FreeVBO(vbo_t* vbo);
+
+//===================================================================
 typedef enum
 {
 	rserr_ok,
@@ -186,13 +218,6 @@ void GL_SetDefaultState( void );
 void GL_UpdateSwapInterval( void );
 
 extern	float	gldepthmin, gldepthmax;
-
-typedef struct
-{
-	float	x, y, z;
-	float	s, t;
-	float	r, g, b;
-} glvert_t;
 
 typedef struct
 {

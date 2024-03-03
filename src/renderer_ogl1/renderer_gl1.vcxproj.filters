@@ -62,6 +62,7 @@
     <ClCompile Include="r_progs.c" />
     <ClCompile Include="r_fbo.c" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="r_vbo.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">
