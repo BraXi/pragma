@@ -40,40 +40,44 @@ static void R_UploadMD3ToVertexBuffer(model_t* mod, lod_t lod)
 	md3Surface_t	*pSurface = NULL;
 	md3St_t			*pTexCoord = NULL;
 	md3Triangle_t	*pTriangle = NULL;
-	md3XyzNormal_t	*pVert = NULL, *pOldVert = NULL;
+	md3XyzNormal_t	*pVert, *pOldVert;
 	vec3_t			v, n; //vert and normal after lerp
-	int				surf, tri, trivert;
+	int				surf, tri, trivert, frame, oldframe;
 	int numverts;
 
 	pModel = mod->md3[lod];
 
+	frame = oldframe = 0;
+
 	pSurface = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{	
-		mod->vb[surf] = R_AllocVertexBuffer((V_UV | V_NORMAL), pSurface->numTriangles * 3, 0);
+		mod->vb[surf] = R_AllocVertexBuffer((V_UV | V_NORMAL), ((pSurface->numTriangles * 3) * pModel->numFrames), 0);
 		
-		pTexCoord = (md3St_t*)((byte*)pSurface + pSurface->ofsSt);
-		pTriangle = (md3Triangle_t*)((byte*)pSurface + pSurface->ofsTriangles);
-
-		// leaving for animated models in future
-		pOldVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (0 * pSurface->numVerts * 4); // current keyframe verts
-		pVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (0 * pSurface->numVerts * 4); // next keyframe verts
-
 		numverts = 0;
-		for (tri = 0; tri < pSurface->numTriangles; tri++, pTriangle++)
+		for (frame = 0; frame < pModel->numFrames; frame++)
 		{
-			for (trivert = 0; trivert < 3; trivert++)
+			oldframe = frame;
+
+			pTexCoord = (md3St_t*)((byte*)pSurface + pSurface->ofsSt);
+			pTriangle = (md3Triangle_t*)((byte*)pSurface + pSurface->ofsTriangles);
+			pOldVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (oldframe * pSurface->numVerts * 4); // current keyframe verts
+			pVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (frame * pSurface->numVerts * 4); // next keyframe verts
+
+			for (tri = 0; tri < pSurface->numTriangles; tri++, pTriangle++)
 			{
-				int index = pTriangle->indexes[trivert];
+				for (trivert = 0; trivert < 3; trivert++)
+				{
+					int index = pTriangle->indexes[trivert];
 
-				R_LerpMD3Frame(0.0f, index, &pOldVert[index], &pVert[index], v, n); // 0 is not lerping at all, always "current" frame
+					R_LerpMD3Frame(0.0f, index, &pOldVert[index], &pVert[index], v, n); // 0 is not lerping at all, always "current" frame
 
-				VectorCopy(v, mod->vb[surf]->verts[numverts].xyz);
-				VectorCopy(n, mod->vb[surf]->verts[numverts].normal);
-				mod->vb[surf]->verts[numverts].st[0] = pTexCoord[index].st[0];
-				mod->vb[surf]->verts[numverts].st[1] = pTexCoord[index].st[1];
-
-				numverts++;
+					VectorCopy(v, mod->vb[surf]->verts[numverts].xyz);
+					VectorCopy(n, mod->vb[surf]->verts[numverts].normal);
+					mod->vb[surf]->verts[numverts].st[0] = pTexCoord[index].st[0];
+					mod->vb[surf]->verts[numverts].st[1] = pTexCoord[index].st[1];
+					numverts++;
+				}
 			}
 		}
 		R_UpdateVertexBuffer(mod->vb[surf], mod->vb[surf]->verts, numverts, (V_UV | V_NORMAL));
@@ -510,18 +514,27 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	//
 	// whereas possible, try to render optimized mesh
 	//
-	if (r_fast->value && ent->model->vb[0] && ent->oldframe == 0 && ent->frame == 0)
+	if (r_fast->value && ent->model->vb[0]) // && ent->oldframe == 0 && ent->frame == 0)
 	{
+		
 		for (i = 0; i < model->numSurfaces; i++)
 		{
+			int surfverts = ent->model->vb[i]->numVerts / model->numFrames;
+
+			surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
 			if ((ent->hiddenPartsBits & (1 << i)))
+			{
+				surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
 				continue; // surface is hidden
+			}
 
 			if (r_speeds->value)
-				rperf.alias_tris += ent->model->vb[i]->numVerts/3;
+				rperf.alias_tris += surfverts/3;
 
 			R_BindTexture(ent->model->images[i]->texnum);
-			R_DrawVertexBuffer(ent->model->vb[i], 0, 0);
+			R_DrawVertexBuffer(ent->model->vb[i], ent->frame * surfverts, surfverts);
+
+			surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
 		}
 		return;
 	}
