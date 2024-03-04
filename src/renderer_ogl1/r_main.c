@@ -153,7 +153,7 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	glColor4f( 1, 1, 1, alpha );
 
-    R_BindTexture(pCurrentModel->skins[e->frame]->texnum);
+    R_BindTexture(pCurrentModel->images[e->frame]->texnum);
 	R_SetTexEnv( GL_MODULATE );
 
 	R_AlphaTest(true); // IS THIS REALY CORRECT?

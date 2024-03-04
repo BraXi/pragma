@@ -188,13 +188,11 @@ typedef struct
 	unsigned short	*indices;	// pointer to indices, NULL if not allocated by VBO!
 } vertexbuffer_t;
 
-vertexbuffer_t guiVBO;
-
 vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, unsigned int numIndices);
 void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags);
 void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, unsigned short* indices, unsigned int numIndices);
 void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts);
-void R_FreeVBO(vertexbuffer_t* vbo);
+void R_FreeVertexBuffer(vertexbuffer_t* vbo);
 
 //===================================================================
 typedef enum
@@ -259,6 +257,7 @@ extern	vec3_t	r_origin;
 extern	refdef_t	r_newrefdef;
 extern	int			r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
+extern	cvar_t	*r_fast;
 extern	cvar_t	*r_norefresh;
 extern	cvar_t	*r_lefthand;
 extern	cvar_t	*r_drawentities;

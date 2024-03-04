@@ -14,6 +14,8 @@ extern image_t* font_current;
 
 image_t* R_RegisterPic(char* name);
 
+vertexbuffer_t guiVBO;
+
 int guiVertCount;
 glvert_t guiVerts[1024];
 

@@ -57,7 +57,7 @@ typedef enum {LOD_HIGH, LOD_MEDIUM, LOD_LOW, NUM_LODS} lod_t;
 #define MD3_MAX_LODS		NUM_LODS // was 4, but we want NUM_LODS in pragma
 #define	MD3_MAX_TRIANGLES	8192	// per surface
 #define MD3_MAX_VERTS		4096	// per surface
-#define MD3_MAX_SHADERS		256		// per surface
+#define MD3_MAX_SHADERS		256		// per surface (???)
 #define MD3_MAX_FRAMES		1024	// per model
 #define	MD3_MAX_SURFACES	8		// per model, braxi -- was 32, changed to 8 to fit into network's hidePartBits
 #define MD3_MAX_TAGS		16		// per frame
@@ -131,8 +131,7 @@ typedef struct
 typedef struct 
 {
 	short		xyz[3];
-	short		normal; // decoded in MD3_DecodeNormals
-//	byte		normal[2];
+	short		normal;
 } md3XyzNormal_t;
 
 typedef struct 

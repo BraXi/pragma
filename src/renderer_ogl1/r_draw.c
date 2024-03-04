@@ -20,6 +20,7 @@ enum
 	NUM_FONTS
 };
 
+extern vertexbuffer_t guiVBO;
 extern int guiVertCount;
 extern  glvert_t guiVerts[1024];
 

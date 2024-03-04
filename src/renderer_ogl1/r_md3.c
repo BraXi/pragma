@@ -16,62 +16,120 @@ QUAKE3 MD3 MODELS
 
 #include "r_local.h"
 
+static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3XyzNormal_t* vert, vec3_t outVert, vec3_t outNormal);
 extern model_t* Mod_ForNum(int index);
 
 extern float	sinTable[FUNCTABLE_SIZE];
 extern vec3_t	model_shadevector;
 extern float	model_shadelight[3];
 
+
 /*
 =================
-MD3_FastDecodeNormals
+R_UploadMD3ToVertexBuffer
 
-Decode the lat/lng normal to a 3 float normal
+Upload md3 to vertex buffers, this only works with static models currently
 
-lat *= M_PI / 128;
-lng *= M_PI / 128;
-decode X as cos( lat ) * sin( long )
-decode Y as sin( lat ) * sin( long )
-decode Z as cos( long )
-
-based on:
-https://github.com/id-Software/Quake-III-Arena/blob/dbe4ddb10315479fc00086f08e25d968b4b43c49/q3map/misc_model.c#L210
+TODO: This does currently generate one buffer per model surface group, for first animation frame only.
+TODO: lods
 =================
 */
-static void MD3_FastDecodeNormals(model_t* mod, md3Header_t* model)
+static void R_UploadMD3ToVertexBuffer(model_t* mod, lod_t lod)
 {
-	md3Surface_t* surf;
-	md3XyzNormal_t* xyz;
-	float			lat, lng;
-	//	vec3_t			normal;
+	md3Header_t		*pModel = NULL;
+	md3Surface_t	*pSurface = NULL;
+	md3St_t			*pTexCoord = NULL;
+	md3Triangle_t	*pTriangle = NULL;
+	md3XyzNormal_t	*pVert = NULL, *pOldVert = NULL;
+	vec3_t			v, n; //vert and normal after lerp
+	int				surf, tri, trivert;
+	int numverts;
 
-	surf = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
-	for (int i = 0; i < model->numSurfaces; i++)
-		mod->nv[i] = surf->numVerts;
+	pModel = mod->md3[lod];
 
-	for (int i = 0; i < model->numSurfaces; i++)
-	{
-		mod->nv[i] = surf->numVerts;
-		mod->normals[i] = (vec3_t*)Hunk_Alloc(sizeof(vec3_t) * mod->nv[i]);
+	pSurface = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
+	for (surf = 0; surf < pModel->numSurfaces; surf++)
+	{	
+		mod->vb[surf] = R_AllocVertexBuffer((V_UV | V_NORMAL), pSurface->numTriangles * 3, 0);
+		
+		pTexCoord = (md3St_t*)((byte*)pSurface + pSurface->ofsSt);
+		pTriangle = (md3Triangle_t*)((byte*)pSurface + pSurface->ofsTriangles);
 
-		xyz = (md3XyzNormal_t*)((byte*)surf + surf->ofsXyzNormals);
-		for (int j = 0; j < surf->numVerts; j++, xyz++)
+		// leaving for animated models in future
+		pOldVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (0 * pSurface->numVerts * 4); // current keyframe verts
+		pVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (0 * pSurface->numVerts * 4); // next keyframe verts
+
+		numverts = 0;
+		for (tri = 0; tri < pSurface->numTriangles; tri++, pTriangle++)
 		{
-			lat = (xyz->normal >> 8) & 0xff;
-			lng = (xyz->normal & 0xff);
-			lat *= M_PI / 128;
-			lng *= M_PI / 128;
+			for (trivert = 0; trivert < 3; trivert++)
+			{
+				int index = pTriangle->indexes[trivert];
 
-			mod->normals[i][j][0] = cos(lat) * sin(lng);
-			mod->normals[i][j][1] = sin(lat) * sin(lng);
-			mod->normals[i][j][2] = cos(lng);
+				R_LerpMD3Frame(0.0f, index, &pOldVert[index], &pVert[index], v, n); // 0 is not lerping at all, always "current" frame
 
-//			printf("surf %i vert %i normal [%f %f %f]\n", i, j, mod->normals[i][j][0], mod->normals[i][j][1], mod->normals[i][j][2]);
+				VectorCopy(v, mod->vb[surf]->verts[numverts].xyz);
+				VectorCopy(n, mod->vb[surf]->verts[numverts].normal);
+				mod->vb[surf]->verts[numverts].st[0] = pTexCoord[index].st[0];
+				mod->vb[surf]->verts[numverts].st[1] = pTexCoord[index].st[1];
+
+				numverts++;
+			}
 		}
-		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
+		R_UpdateVertexBuffer(mod->vb[surf], mod->vb[surf]->verts, numverts, (V_UV | V_NORMAL));
+		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
 	}
 }
 
+
+/*
+====================
+MD3_ModelBounds
+====================
+*/
+static void MD3_ModelBounds(int handle, vec3_t mins, vec3_t maxs)
+{
+	model_t* model;
+	md3Header_t* header;
+	md3Frame_t* frame;
+
+	model = Mod_ForNum(handle);
+	if (!model->md3[LOD_HIGH])
+	{
+		VectorClear(mins);
+		VectorClear(maxs);
+		return;
+	}
+
+	header = model->md3[LOD_HIGH];
+
+	frame = (md3Frame_t*)((byte*)header + header->ofsFrames);
+
+	VectorCopy(frame->bounds[0], mins);
+	VectorCopy(frame->bounds[1], maxs);
+}
+
+/*
+====================
+MD3_ModelRadius
+====================
+*/
+static float MD3_ModelRadius(int handle)
+{
+	model_t* model;
+	md3Header_t* header;
+	md3Frame_t* frame;
+
+	model = Mod_ForNum(handle);
+	if (!model->md3[LOD_HIGH])
+	{
+		return 32.0f; // default
+	}
+
+	header = model->md3[LOD_HIGH];
+	frame = (md3Frame_t*)((byte*)header + header->ofsFrames);
+	return frame->radius;
+}
 
 /*
 =================
@@ -202,9 +260,9 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 		shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 		for (j = 0; j < surf->numShaders; j++, shader++)
 		{
-			mod->skins[j] = R_FindTexture(shader->name, it_model);
-			shader->shaderIndex = mod->skins[j]->texnum;
-			if (mod->skins[j] == r_notexture)
+			mod->images[j] = R_FindTexture(shader->name, it_model);
+			shader->shaderIndex = mod->images[j]->texnum;
+			if (mod->images[j] == r_notexture)
 			{
 				ri.Printf(PRINT_ALL, "Mod_LoadMD3: cannot load '%s' for model '%s'\n", shader->name, mod->name);
 			}
@@ -237,22 +295,18 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 			xyz->xyz[2] = LittleShort(xyz->xyz[2]);
 
 			xyz->normal = LittleShort(xyz->normal);
-
-			// scale verticles to qu
-			//xyz->xyz[0] = (xyz->xyz[0] / 64);
-			//xyz->xyz[1] = (xyz->xyz[1] / 64);
-			//xyz->xyz[2] = (xyz->xyz[2] / 64);
 		}
 
 		// find the next surface
 		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 
 	}
+	mod->numframes = mod->md3[lod]->numFrames;
 
-//	MD3_DecodeNormals(mod, mod->md3[lod]);
+	R_UploadMD3ToVertexBuffer(mod, lod);
 
-	VectorSet(mod->mins, -32, -32, -32);
-	VectorSet(mod->maxs, 32, 32, 32);
+	mod->radius = MD3_ModelRadius(mod->index);
+	MD3_ModelBounds(mod->index, mod->mins, mod->maxs);
 }
 
 
@@ -359,33 +413,6 @@ static qboolean MD3_LerpTag(orientation_t* tag, model_t* model, int startFrame, 
 }
 
 
-/*
-====================
-MD3_ModelBounds
-====================
-*/
-static void MD3_ModelBounds(int handle, vec3_t mins, vec3_t maxs)
-{
-	model_t* model;
-	md3Header_t* header;
-	md3Frame_t* frame;
-
-	model = Mod_ForNum(handle);
-	if (!model->md3[LOD_HIGH])
-	{
-		VectorClear(mins);
-		VectorClear(maxs);
-		return;
-	}
-
-	header = model->md3[LOD_HIGH];
-
-	frame = (md3Frame_t*)((byte*)header + header->ofsFrames);
-
-	VectorCopy(frame->bounds[0], mins);
-	VectorCopy(frame->bounds[1], maxs);
-}
-
 
 /*
 =================
@@ -479,7 +506,29 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	
 	glColor4f(1, 1, 1, ent->alpha);
 
-	// for each surface
+
+	//
+	// whereas possible, try to render optimized mesh
+	//
+	if (r_fast->value && ent->model->vb[0] && ent->oldframe == 0 && ent->frame == 0)
+	{
+		for (i = 0; i < model->numSurfaces; i++)
+		{
+			if ((ent->hiddenPartsBits & (1 << i)))
+				continue; // surface is hidden
+
+			if (r_speeds->value)
+				rperf.alias_tris += ent->model->vb[i]->numVerts/3;
+
+			R_BindTexture(ent->model->images[i]->texnum);
+			R_DrawVertexBuffer(ent->model->vb[i], 0, 0);
+		}
+		return;
+	}
+
+	//
+	// use old immediate mode rendering
+	//
 	surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
 	for (i = 0; i < model->numSurfaces; i++)
 	{	
@@ -536,7 +585,7 @@ qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, in
 
 
 #if 0
-static void MD3_Normals(md3Header_t* model, float yangle)
+static void MD3_Normals(md3Header_t* pModel, float yangle)
 {
 	md3Surface_t* surf;
 	md3XyzNormal_t* xyz;
@@ -551,8 +600,8 @@ static void MD3_Normals(md3Header_t* model, float yangle)
 	angleCos = cos(angle);
 	angleSin = sin(angle);
 
-	surf = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
-	for (int i = 0; i < model->numSurfaces; i++)
+	surf = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
+	for (int i = 0; i < pModel->numSurfaces; i++)
 	{
 		xyz = (md3XyzNormal_t*)((byte*)surf + surf->ofsXyzNormals);
 

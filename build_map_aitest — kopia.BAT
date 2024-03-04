@@ -1,7 +1,7 @@
 cd ./tools/ericw-tools/bin
 
 set gamedir=main
-set mapfile=test2
+set mapfile=bench
 
 qbsp -q2bsp -allowupgrade 0  ../../../build/%gamedir%/maps/%mapfile%
 vis -threads 4 ../../../build/%gamedir%/maps/%mapfile%

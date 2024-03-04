@@ -171,10 +171,12 @@ typedef struct vert_s // for vbo
 typedef struct model_s
 {
 	char		name[MAX_QPATH];
+	int			index;		// index to model array
 
 	int			registration_sequence;
 
 	modtype_t	type;
+
 	int			numframes;
 	
 	int			flags;
@@ -235,15 +237,13 @@ typedef struct model_s
 //
 // for alias models and sprites
 //
-	image_t		*skins[32];
+	image_t		*images[32];
 
 	int			extradatasize;
 	void		*extradata;
 
-
 	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MD3
-	int			nv [MD3_MAX_SURFACES];
-	vec3_t		 *normals[MD3_MAX_SURFACES];
+	vertexbuffer_t *vb[MD3_MAX_SURFACES];
 } model_t;
 
 //============================================================================
