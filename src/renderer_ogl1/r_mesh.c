@@ -29,7 +29,10 @@ Decides whenever entity is visible and could be drawn
 static qboolean R_EntityShouldRender(rentity_t* ent)
 {
 	int i;
-	vec3_t mins, maxs;
+	vec3_t mins, maxs, v;
+
+	if (!ent->model) // this shouldn't really happen at this point!
+		return false;
 
 	if (ent->model->type == MOD_SPRITE)
 		return true;
@@ -39,13 +42,20 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 		ri.Printf(PRINT_LOW, "%s: %f alpha!\n", __FUNCTION__, ent->alpha);
 		return false;
 	}
-
-	// we usually dont cull viwmodels, unless its centered
 	if (ent->renderfx & RF_VIEW_MODEL)
+	{
+		// don't cull viwmodels unless its centered
 		return r_lefthand->value == 2 ? false : true;
+	}
+	else if(pCurrentModel->cullDist > 0)
+	{
+		// cull objects based on distance TODO: account for scale or na?
+		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); // FIXME: doesn't account for FOV
+		if (VectorLength(v) > pCurrentModel->cullDist)
+			return false;
+	}
 
-	if (!ent->model) // this shouldn't really happen at this point!
-		return false;
+
 
 	if (ent->model->type == MOD_MD3) 
 	{
