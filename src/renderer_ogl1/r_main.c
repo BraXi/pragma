@@ -75,9 +75,10 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 	if (r_nocull->value)
 		return false;
 
-	for (i=0 ; i<4 ; i++)
+	for (i=0; i < 4; i++)
 		if ( BOX_ON_PLANE_SIDE(mins, maxs, &frustum[i]) == 2)
 			return true;
+
 	return false;
 }
 

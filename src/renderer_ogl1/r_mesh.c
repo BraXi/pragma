@@ -23,17 +23,18 @@ void R_DrawSprite(rentity_t* ent); // r_sprite.c
 =================
 R_EntityShouldRender
 
-decides whenever entity is visible and should be drawn
+Decides whenever entity is visible and could be drawn
 =================
 */
 static qboolean R_EntityShouldRender(rentity_t* ent)
 {
-//	vec3_t	bbox[8];
+	int i;
+	vec3_t mins, maxs;
 
 	if (ent->model->type == MOD_SPRITE)
 		return true;
 
-	if (ent->alpha <= 0.0f && (ent->renderfx & RF_TRANSLUCENT))
+	if (ent->alpha <= 0.01f && (ent->renderfx & RF_TRANSLUCENT))
 	{
 		ri.Printf(PRINT_LOW, "%s: %f alpha!\n", __FUNCTION__, ent->alpha);
 		return false;
@@ -46,8 +47,38 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 	if (!ent->model) // this shouldn't really happen at this point!
 		return false;
 
-	if (ent->model->type == MOD_MD3)
-		return true; //todo
+	if (ent->model->type == MOD_MD3) 
+	{
+		// technicaly this could be used for sprites, but it takes 
+		// more cycles culling than actually rendering them lol
+
+		if (ent->angles[0] || ent->angles[1] || ent->angles[2])
+		{
+			for (i = 0; i < 3; i++)
+			{
+				mins[i] = ent->origin[i] - pCurrentModel->radius;
+				maxs[i] = ent->origin[i] + pCurrentModel->radius;
+			}
+		}
+		else
+		{
+			VectorAdd(ent->origin, ent->model->mins, mins);
+			VectorAdd(ent->origin, pCurrentModel->maxs, maxs);
+		}
+
+		if ((ent->renderfx & RF_SCALE) && ent->scale != 1.0f && ent->scale > 0.0f)
+		{
+			// adjust bbox for scale
+			for (i = 0; i < 3; i++)
+			{
+				mins[i] = mins[i] * ent->scale;
+				maxs[i] = maxs[i] * ent->scale;
+			}
+		}
+
+		if (R_CullBox(mins, maxs))
+			return false;
+	}
 
 	return true;
 }
