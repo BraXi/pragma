@@ -13,7 +13,6 @@ See the attached GNU General Public License v2 for more details.
 
 refimport_t	ri;
 
-cvar_t* r_fast;
 cvar_t* r_nolerpdist;
 
 cvar_t* r_norefresh;
@@ -92,7 +91,6 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT);
 	r_nolerpdist = ri.Cvar_Get("r_nolerpdist", "512", CVAR_CHEAT);
-	r_fast = ri.Cvar_Get("r_fast", "1", CVAR_CHEAT);
 
 	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_CHEAT);
 	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0);

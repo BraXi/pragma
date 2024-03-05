@@ -552,7 +552,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	glColor4f(1, 1, 1, ent->alpha);
 
 
-	if (r_fast->value && ent->model->vb[0])
+	if (ent->model->vb[0])
 	{
 		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); // FIXME: doesn't account for FOV
 		float dist = VectorLength(v);
