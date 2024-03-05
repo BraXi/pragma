@@ -192,6 +192,7 @@ vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, uns
 void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags);
 void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, unsigned short* indices, unsigned int numIndices);
 void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts);
+void R_DeleteVertexBuffers(vertexbuffer_t* vbo); // this is handy for stack allocated vbos
 void R_FreeVertexBuffer(vertexbuffer_t* vbo);
 
 //===================================================================
@@ -212,6 +213,11 @@ typedef struct
 {
 	int	brush_polys;
 	int alias_tris;
+
+	int alias_fasttris;
+	int alias_fastdraws;
+	int alias_lerpverts;
+	int alias_slowdraws;
 
 	int	texture_binds;
 
@@ -258,6 +264,8 @@ extern	refdef_t	r_newrefdef;
 extern	int			r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
 extern	cvar_t	*r_fast;
+extern	cvar_t	*r_nolerpdist;
+
 extern	cvar_t	*r_norefresh;
 extern	cvar_t	*r_lefthand;
 extern	cvar_t	*r_drawentities;

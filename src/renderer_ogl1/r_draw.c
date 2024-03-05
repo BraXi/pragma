@@ -20,7 +20,7 @@ enum
 	NUM_FONTS
 };
 
-extern vertexbuffer_t guiVBO;
+extern vertexbuffer_t vb_gui;
 extern int guiVertCount;
 extern  glvert_t guiVerts[1024];
 
@@ -111,9 +111,9 @@ void Draw_Char (int x, int y, int num)
 	PushVert(x, y + 8, 0);
 	SetTexCoords(fcol, frow + size);
 
-	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, V_UV);
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_BindTexture(font_current->texnum);
-	R_DrawVertexBuffer(&guiVBO, 0, 0);
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
 /*
@@ -186,9 +186,9 @@ void Draw_StretchPic (int x, int y, int w, int h, char *pic)
 	PushVert(x, y + h, 0);
 	SetTexCoords(gl->sl, gl->th);
 
-	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, V_UV);
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_BindTexture(gl->texnum);
-	R_DrawVertexBuffer(&guiVBO, 0, 0);
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
 
@@ -222,9 +222,9 @@ void Draw_Pic (int x, int y, char *pic)
 	PushVert(x, y + gl->height, 0);
 	SetTexCoords(gl->sl, gl->th);
 
-	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, V_UV);
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_BindTexture(gl->texnum);
-	R_DrawVertexBuffer(&guiVBO, 0, 0);
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
 /*
@@ -260,9 +260,9 @@ void Draw_TileClear (int x, int y, int w, int h, char *pic)
 	PushVert(x, y + h, 0);
 	SetTexCoords(x / 64.0f, (y + h) / 64.0f);
 
-	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, V_UV);
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_BindTexture(image->texnum);
-	R_DrawVertexBuffer(&guiVBO, 0, 0);
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
 
@@ -284,8 +284,8 @@ void Draw_Fill (int x, int y, int w, int h)
 	PushVert(x, y + h, 0);
 
 	glDisable(GL_TEXTURE_2D);
-	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, 0);
-	R_DrawVertexBuffer(&guiVBO, 0, 0);
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
 	glEnable (GL_TEXTURE_2D);
 }
 
@@ -313,8 +313,8 @@ void Draw_FadeScreen (float *rgba)
 	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4fv(rgba);
 
-	R_UpdateVertexBuffer(&guiVBO, guiVerts, guiVertCount, 0);
-	R_DrawVertexBuffer(&guiVBO, 0, 0);
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
 
 	glColor4f(1,1,1,1);
 	glAlphaFunc(GL_GREATER, 0.666);

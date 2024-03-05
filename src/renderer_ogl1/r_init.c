@@ -14,6 +14,7 @@ See the attached GNU General Public License v2 for more details.
 refimport_t	ri;
 
 cvar_t* r_fast;
+cvar_t* r_nolerpdist;
 
 cvar_t* r_norefresh;
 cvar_t* r_drawentities;
@@ -65,6 +66,8 @@ float sinTable[FUNCTABLE_SIZE];
 
 void GL_Strings_f(void);
 
+extern vertexbuffer_t lerpVertsBuf[MD3_MAX_SURFACES];
+extern vertexbuffer_t vb_gui;
 /*
 ==================
 R_RegisterCvarsAndCommands
@@ -88,8 +91,8 @@ void R_RegisterCvarsAndCommands(void)
 	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT);
 
 	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT);
-
-	r_fast = ri.Cvar_Get("r_fast", "1", 0);
+	r_nolerpdist = ri.Cvar_Get("r_nolerpdist", "512", CVAR_CHEAT);
+	r_fast = ri.Cvar_Get("r_fast", "1", CVAR_CHEAT);
 
 	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_CHEAT);
 	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0);
@@ -356,6 +359,12 @@ void R_Shutdown(void)
 
 	R_FreeTextures();
 
+	// remove vertex buffers for lerped models and gui rendering
+	R_DeleteVertexBuffers(&vb_gui);
+
+	for(int i = 0; i < MD3_MAX_SURFACES; i++)
+		R_DeleteVertexBuffers(&lerpVertsBuf[i]);
+
 	/*
 	** shut down OS specific OpenGL stuff like contexts, etc.
 	*/
@@ -364,7 +373,7 @@ void R_Shutdown(void)
 	/*
 	** shutdown our QGL subsystem
 	*/
-//	QGL_Shutdown();
+	QGL_Shutdown();
 }
 
 

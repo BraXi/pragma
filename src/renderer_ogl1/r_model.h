@@ -155,19 +155,6 @@ typedef struct mleaf_s
 
 //===================================================================
 
-//
-// 
-//
-
-typedef struct vert_s // for vbo
-{
-	float	xyz[3];
-	float	normal[2];
-	float	texcoord[2];
-//	float	color[4];
-} vert_t;
-
-
 typedef struct model_s
 {
 	char		name[MAX_QPATH];

@@ -19,6 +19,8 @@ QUAKE3 MD3 MODELS
 static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3XyzNormal_t* vert, vec3_t outVert, vec3_t outNormal);
 extern model_t* Mod_ForNum(int index);
 
+extern int modfilelen; // for in Mod_LoadMD3
+
 extern float	sinTable[FUNCTABLE_SIZE];
 extern vec3_t	model_shadevector;
 extern float	model_shadelight[3];
@@ -139,10 +141,10 @@ static float MD3_ModelRadius(int handle)
 =================
 Mod_LoadMD3
 
-Loads Q3 .md3 model
+Loads Quake III MD3 model
 =================
 */
-extern int modfilelen;
+
 #define	LL(x) x=LittleLong(x)
 void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 {
@@ -195,8 +197,6 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 		ri.Error(ERR_DROP, "Mod_LoadMD3: %s has no frames\n", mod->name);
 		return;
 	}
-
-	mod->type = MOD_MD3;
 
 	// swap all the frames
 	frame = (md3Frame_t*)((byte*)mod->md3[lod] + mod->md3[lod]->ofsFrames);
@@ -305,12 +305,13 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 
 	}
+
+	mod->type = MOD_MD3;
 	mod->numframes = mod->md3[lod]->numFrames;
-
-	R_UploadMD3ToVertexBuffer(mod, lod);
-
 	mod->radius = MD3_ModelRadius(mod->index);
 	MD3_ModelBounds(mod->index, mod->mins, mod->maxs);
+
+	R_UploadMD3ToVertexBuffer(mod, lod);
 }
 
 
@@ -376,7 +377,6 @@ int R_TagIndexForName(struct model_s *model, const char* tagName)
 MD3_LerpTag
 ================
 */
-//static qboolean MD3_LerpTag(orientation_t* tag, model_t* model, int startFrame, int endFrame, float frac, const char* tagName)
 static qboolean MD3_LerpTag(orientation_t* tag, model_t* model, int startFrame, int endFrame, float frac, int tagIndex)
 {
 	md3Tag_t* start, * end;
@@ -467,6 +467,46 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 	outNormal[2] = (n1[2] + lerp * (n2[2] - n1[2]));
 }
 
+/*
+=================
+R_FastDrawMD3Model
+=================
+*/
+static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel)
+{
+	md3Surface_t* pSurface = NULL;
+	int				surf, surfverts;
+	qboolean		anythingToDraw = false;
+
+	for (surf = 0; surf < pModel->numSurfaces; surf++)
+	{
+		surfverts = ent->model->vb[surf]->numVerts / pModel->numFrames;
+
+		pSurface = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
+		if ((ent->hiddenPartsBits & (1 << surf)))
+		{
+			pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
+			continue; // surface is hidden
+		}
+
+		if (r_speeds->value)
+		{
+			rperf.alias_tris += surfverts / 3;
+			rperf.alias_fasttris += surfverts / 3;
+		}
+
+		anythingToDraw = true;
+
+		R_BindTexture(r_speeds->value >= 3.0f ? r_notexture->texnum : ent->model->images[surf]->texnum);
+		R_DrawVertexBuffer(ent->model->vb[surf], ent->frame * surfverts, surfverts);
+
+		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
+	}
+
+	if (r_speeds->value && anythingToDraw)
+		rperf.alias_fastdraws++;
+}
+
 
 /*
 =================
@@ -475,16 +515,129 @@ R_DrawMD3Model
 Draws md3 model
 =================
 */
+vertexbuffer_t lerpVertsBuf[MD3_MAX_SURFACES];
+static glvert_t lerpVerts[MD3_MAX_SURFACES][MD3_MAX_VERTS]; // this could be one list instead of MD3_MAX_SURFACES
+static int lerpVertsCount[MD3_MAX_SURFACES];
+
 void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 {
-	md3Header_t		*model;
-	md3Surface_t	*surface = 0;
-	md3Shader_t		*md3Shader = 0;
-	md3Frame_t		*md3Frame = 0;
-	image_t			*shader = NULL;
-	md3St_t			*texcoord;
-	md3XyzNormal_t	*vert, *oldVert; //interp
-	md3Triangle_t	*triangle;
+	md3Header_t		* pModel = NULL;
+	md3Surface_t	* pSurface = NULL;
+	md3St_t			* pTexCoord = NULL;
+	md3Triangle_t	* pTriangle = NULL;
+	md3XyzNormal_t	* pVert, * pOldVert;
+	vec3_t			v, n; //vert and normal after lerp
+	int				surf, tri, trivert;
+
+
+	if (lod < 0 || lod >= NUM_LODS)
+		ri.Error(ERR_DROP, "R_DrawMD3Model: '%s' wrong LOD num %i\n", ent->model->name, lod);
+
+	pModel = ent->model->md3[lod];
+	if (pModel == NULL)
+	{
+		Com_Printf("R_DrawMD3Model: '%s' has no LOD %i model\n", ent->model->name, lod);
+		return;
+	}
+
+	R_BindProgram(GLPROG_ALIAS);
+	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
+		R_ProgUniform1f(LOC_PARM0, 1);
+	else
+		R_ProgUniform1f(LOC_PARM0, 0);
+
+	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
+	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
+	
+	glColor4f(1, 1, 1, ent->alpha);
+
+
+	if (r_fast->value && ent->model->vb[0])
+	{
+		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); // FIXME: doesn't account for FOV
+		float dist = VectorLength(v);
+
+		if (ent->frame == ent->oldframe || dist >= r_nolerpdist->value || animlerp == 1.0f)
+		{
+			R_FastDrawMD3Model(ent, pModel);
+				return;
+		}
+	}
+
+	//
+	// lerp vertices on cpu
+	//
+	pSurface = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
+	for (surf = 0; surf < pModel->numSurfaces; surf++)
+	{
+		lerpVertsCount[surf] = 0;
+
+		if ((ent->hiddenPartsBits & (1 << surf)))
+		{
+			pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
+			continue; // surface is hidden
+		}
+
+		pTexCoord = (md3St_t*)((byte*)pSurface + pSurface->ofsSt);
+		pTriangle = (md3Triangle_t*)((byte*)pSurface + pSurface->ofsTriangles);
+
+		pOldVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (ent->oldframe * pSurface->numVerts * 4);
+		pVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (ent->frame * pSurface->numVerts * 4);
+
+		for (tri = 0; tri < pSurface->numTriangles; tri++, pTriangle++)
+		{
+			for (trivert = 0; trivert < 3; trivert++)
+			{
+				int index = pTriangle->indexes[trivert];
+
+				R_LerpMD3Frame(animlerp, index, &pOldVert[index], &pVert[index], v, n); // 1 is not lerping at all, always "current" frame
+				VectorCopy(v, lerpVerts[surf][lerpVertsCount[surf]].xyz);
+				VectorCopy(n, lerpVerts[surf][lerpVertsCount[surf]].normal);
+				lerpVerts[surf][lerpVertsCount[surf]].st[0] = pTexCoord[index].st[0];
+				lerpVerts[surf][lerpVertsCount[surf]].st[1] = pTexCoord[index].st[1];		
+				lerpVertsCount[surf]++;
+			}
+		}
+
+		if (r_speeds->value)
+		{
+			rperf.alias_tris += lerpVertsCount[surf] / 3;
+			rperf.alias_lerpverts += lerpVertsCount[surf];
+		}
+
+		R_UpdateVertexBuffer(&lerpVertsBuf[surf], lerpVerts[surf], lerpVertsCount[surf], (V_UV | V_NORMAL));
+		
+		R_BindTexture(ent->model->images[surf]->texnum);
+		R_DrawVertexBuffer(&lerpVertsBuf[surf], 0, 0);
+
+		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
+	}
+
+	if (r_speeds->value)
+	{
+		for (surf = 0; surf < pModel->numSurfaces; surf++)
+		{
+			if (lerpVertsCount[surf] > 0)
+			{
+				rperf.alias_slowdraws++;
+				break;
+			}
+		}
+	}
+	
+}
+
+#if 0
+void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
+{
+	md3Header_t* model;
+	md3Surface_t* surface = 0;
+	md3Shader_t* md3Shader = 0;
+	md3Frame_t* md3Frame = 0;
+	image_t* shader = NULL;
+	md3St_t* texcoord;
+	md3XyzNormal_t* vert, * oldVert; //interp
+	md3Triangle_t* triangle;
 	int				i, j, k;
 
 	vec3_t v, n; //vert and normal after lerp
@@ -507,7 +660,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 
 	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
 	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
-	
+
 	glColor4f(1, 1, 1, ent->alpha);
 
 
@@ -516,7 +669,6 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	//
 	if (r_fast->value && ent->model->vb[0]) // && ent->oldframe == 0 && ent->frame == 0)
 	{
-		
 		for (i = 0; i < model->numSurfaces; i++)
 		{
 			int surfverts = ent->model->vb[i]->numVerts / model->numFrames;
@@ -529,7 +681,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 			}
 
 			if (r_speeds->value)
-				rperf.alias_tris += surfverts/3;
+				rperf.alias_tris += surfverts / 3;
 
 			R_BindTexture(ent->model->images[i]->texnum);
 			R_DrawVertexBuffer(ent->model->vb[i], ent->frame * surfverts, surfverts);
@@ -544,14 +696,14 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	//
 	surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
 	for (i = 0; i < model->numSurfaces; i++)
-	{	
-		if( (ent->hiddenPartsBits & (1 << i)))
+	{
+		if ((ent->hiddenPartsBits & (1 << i)))
 		{
 			surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
 			continue; // surface is hidden
 		}
 
-		if (surface->numShaders > 0) 
+		if (surface->numShaders > 0)
 		{
 			//bind texture
 			md3Shader = (md3Shader_t*)((byte*)surface + surface->ofsShaders);
@@ -565,7 +717,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 		oldVert = (short*)((byte*)surface + surface->ofsXyzNormals) + (ent->oldframe * surface->numVerts * 4); // current keyframe verts
 		vert = (short*)((byte*)surface + surface->ofsXyzNormals) + (ent->frame * surface->numVerts * 4); // next keyframe verts
 
-		if(r_speeds->value)
+		if (r_speeds->value)
 			rperf.alias_tris += surface->numTriangles;
 
 		// for each triangle in surface
@@ -589,6 +741,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 		surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
 	}
 }
+#endif
 
 
 qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex)

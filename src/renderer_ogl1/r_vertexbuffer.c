@@ -199,7 +199,23 @@ void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned in
 
 /*
 ===============
+R_DeleteVertexBuffers
+===============
+*/
+void R_DeleteVertexBuffers(vertexbuffer_t* vbo)
+{
+	if (vbo->vboBuf)
+		glDeleteBuffers(1, &vbo->vboBuf);
+
+	if (vbo->indexBuf)
+		glDeleteBuffers(1, &vbo->indexBuf);
+}
+
+/*
+===============
 R_FreeVertexBuffer
+
+this does FREE vertexbuffer
 ===============
 */
 void R_FreeVertexBuffer(vertexbuffer_t* vbo)
@@ -207,11 +223,7 @@ void R_FreeVertexBuffer(vertexbuffer_t* vbo)
 	if (!vbo || vbo == NULL)
 		return;
 
-	if(vbo->vboBuf)
-		glDeleteBuffers(1, &vbo->vboBuf);
-
-	if (vbo->indexBuf)
-		glDeleteBuffers(1, &vbo->indexBuf);
+	R_DeleteVertexBuffers(vbo);
 
 	if (vbo->indices)
 	{

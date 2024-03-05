@@ -142,7 +142,7 @@ static void R_EntityAnim(rentity_t* ent, char* func)
 
 	// decide if we should lerp
 	if (!r_lerpmodels->value || ent->renderfx & RF_NOANIMLERP)
-		ent->animbacklerp = 0;
+		ent->animbacklerp = 0.0f;
 }
 
 void R_DrawEntityModel(rentity_t* ent)
