@@ -514,11 +514,11 @@ void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVer
 	//void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer);
 	glEnableVertexAttribArray(0); // the current vert
 	glBindAttribLocation(pCurrentProgram->programObject, 0, "oldvert");
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + ent->oldframe * framesize);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0));
 
 	glEnableVertexAttribArray(1);
 	glBindAttribLocation(pCurrentProgram->programObject, 1, "vert"); // the next vert in animation
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + ent->frame * framesize);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + framesize);
 
 	//glVertexPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(0)); // attrib 0
 	if (vbo->flags & V_NORMAL)
