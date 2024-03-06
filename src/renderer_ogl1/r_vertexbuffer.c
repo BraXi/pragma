@@ -50,7 +50,6 @@ static void SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
 		if (vbo->flags & V_COLOR)
 			glDisableClientState(GL_COLOR_ARRAY);
 	}
-
 }
 
 /*

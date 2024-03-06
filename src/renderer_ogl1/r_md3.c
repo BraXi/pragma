@@ -467,16 +467,111 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 	outNormal[2] = (n1[2] + lerp * (n2[2] - n1[2]));
 }
 
+static void SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
+{
+	if (enable)
+	{
+		glEnableClientState(GL_VERTEX_ARRAY);
+
+		if (vbo->flags & V_NORMAL)
+			glEnableClientState(GL_NORMAL_ARRAY);
+
+		if (vbo->flags & V_UV)
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		if (vbo->flags & V_COLOR)
+			glEnableClientState(GL_COLOR_ARRAY);
+	}
+	else
+	{
+		glDisableClientState(GL_VERTEX_ARRAY);
+
+		if (vbo->flags & V_NORMAL)
+			glDisableClientState(GL_NORMAL_ARRAY);
+
+		if (vbo->flags & V_UV)
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		if (vbo->flags & V_COLOR)
+			glDisableClientState(GL_COLOR_ARRAY);
+	}
+}
+
+/*
+===============
+DrawVertexBuffer
+===============
+*/
+#define BUFFER_OFFSET(i) ((char*)NULL + (i))
+void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts )
+{
+	vbo->flags = V_UV; // TEST: just pos & texcoord
+	SetVBOClientState(vbo, true);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
+
+	int framesize = sizeof(glvert_t) * vbo->numVerts / ent->model->numframes;
+
+	//void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer);
+	glEnableVertexAttribArray(0); // the current vert
+	glBindAttribLocation(pCurrentProgram->programObject, 0, "oldvert");
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + ent->oldframe * framesize);
+
+	glEnableVertexAttribArray(1);
+	glBindAttribLocation(pCurrentProgram->programObject, 1, "vert"); // the next vert in animation
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + ent->frame * framesize);
+
+	//glVertexPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(0)); // attrib 0
+	if (vbo->flags & V_NORMAL)
+		glNormalPointer(GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(12));
+	if (vbo->flags & V_UV)
+		glTexCoordPointer(2, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(24));
+	if (vbo->flags & V_COLOR)
+		glColorPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(32));
+
+
+
+
+	// case one: we have index buffer
+	if (vbo->numIndices && vbo->indices != NULL && vbo->indexBuf) //if ((vbo->flags & V_INDICES) && vbo->indexBuf)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo->indexBuf);
+
+		//glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices);
+		if (numVerts)
+			glDrawRangeElements(GL_TRIANGLES, startVert, startVert + numVerts, numVerts, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+		else
+			glDrawRangeElements(GL_TRIANGLES, 0, vbo->numVerts, vbo->numVerts, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+	else // case two: we don't have index buffer and for simple primitives like gui we usualy don't
+	{
+		if (!numVerts)
+			glDrawArrays(GL_TRIANGLES, 0, vbo->numVerts);
+		else
+			glDrawArrays(GL_TRIANGLES, startVert, numVerts);
+	}
+
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+
+	SetVBOClientState(vbo, false);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+
 /*
 =================
 R_FastDrawMD3Model
 =================
 */
-static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel)
+static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
 {
 	md3Surface_t* pSurface = NULL;
 	int				surf, surfverts;
 	qboolean		anythingToDraw = false;
+
+	R_ProgUniform1f(LOC_LERP, lerp);
 
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{
@@ -498,7 +593,7 @@ static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel)
 		anythingToDraw = true;
 
 		R_BindTexture(r_speeds->value >= 3.0f ? r_notexture->texnum : ent->model->images[surf]->texnum);
-		R_DrawVertexBuffer(ent->model->vb[surf], ent->frame * surfverts, surfverts);
+		DrawVertexBuffer(ent, ent->model->vb[surf], ent->frame * surfverts, surfverts);
 
 		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
 	}
@@ -557,9 +652,9 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); // FIXME: doesn't account for FOV
 		float dist = VectorLength(v);
 
-		if (ent->frame == ent->oldframe || dist >= r_nolerpdist->value || animlerp == 1.0f)
+		//if (ent->frame == ent->oldframe || dist >= r_nolerpdist->value || animlerp == 1.0f)
 		{
-			R_FastDrawMD3Model(ent, pModel);
+			R_FastDrawMD3Model(ent, pModel, animlerp);
 				return;
 		}
 	}
