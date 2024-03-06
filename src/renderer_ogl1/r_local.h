@@ -105,7 +105,7 @@ typedef enum
 	LOC_TIME,
 	LOC_SHADEVECTOR,
 	LOC_SHADECOLOR,
-	LOC_LERP,
+	LOC_LERPFRAC,
 	LOC_PARM0,
 	LOC_PARM1,
 	LOC_PARM2,
@@ -120,11 +120,23 @@ typedef enum
 	NUM_LOCS,
 } glprogLoc_t;
 
+typedef enum
+{
+	VALOC_POS,
+	VALOC_NORMAL,
+	VALOC_TEXCOORD,
+	VALOC_COLOR,
+	VALOC_OLD_POS,
+	VALOC_OLD_NORMAL,
+	NUM_VALOCS
+} glprogLoc_t;
+
 typedef struct glprog_s
 {
 	char			name[MAX_QPATH];
 	int				index;
-	unsigned int	locs[NUM_LOCS];
+	int				locs[NUM_LOCS];
+	int				valocs[NUM_LOCS];
 	unsigned int	programObject; /*GLuint*/ 
 	unsigned int	vertexShader, fragmentShader; /*GLuint*/ 
 	qboolean		isValid;
@@ -423,6 +435,11 @@ typedef struct
 	const char *vendor_string;
 	const char *version_string;
 	const char *extensions_string;
+
+	int			max_vertex_attribs;
+	int			max_tmu;
+	int			max_frag_uniforms;
+	int			max_vert_uniforms;
 } glconfig_t;
 
 typedef struct

@@ -195,7 +195,48 @@ qboolean R_SetMode(void)
 	return true;
 }
 
-qboolean R_InitFrameBuffer();
+static void R_OpenGLConfig()
+{
+	static char renderer_buffer[1000];
+	static char vendor_buffer[1000];
+
+	gl_config.vendor_string = glGetString(GL_VENDOR);
+	gl_config.renderer_string = glGetString(GL_RENDERER);
+	gl_config.version_string = glGetString(GL_VERSION);
+	gl_config.extensions_string = glGetString(GL_EXTENSIONS);
+
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &gl_config.max_vertex_attribs);
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &gl_config.max_tmu);
+	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &gl_config.max_frag_uniforms);
+	glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &gl_config.max_vert_uniforms);
+
+	ri.Printf(PRINT_ALL, "\n---------- OpenGL Info ---------\n", gl_config.vendor_string);
+	ri.Printf(PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string);
+	ri.Printf(PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string);
+	ri.Printf(PRINT_ALL, "GL_VERSION: %s\n\n", gl_config.version_string);
+	//ri.Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n\n", gl_config.extensions_string);
+	ri.Printf(PRINT_ALL, "MAX_VERTEX_ATTRIBS: %i\n", gl_config.max_vertex_attribs);
+	ri.Printf(PRINT_ALL, "MAX_TEXTURE_IMAGE_UNITS: %i\n", gl_config.max_tmu);
+	ri.Printf(PRINT_ALL, "MAX_FRAGMENT_UNIFORM_COMPONENTS: %i\n", gl_config.max_frag_uniforms);
+	ri.Printf(PRINT_ALL, "MAX_VERTEX_UNIFORM_COMPONENTS: %i\n", gl_config.max_vert_uniforms);
+	ri.Printf(PRINT_ALL, "---------------------------------\n", gl_config.vendor_string);
+
+	strcpy(renderer_buffer, gl_config.renderer_string); 
+	_strlwr(renderer_buffer);
+
+	strcpy(vendor_buffer, gl_config.vendor_string);
+	_strlwr(vendor_buffer);
+
+	if (strstr(renderer_buffer, "nvidia"))
+		gl_config.renderer = GL_RENDERER_NVIDIA;
+	else if (strstr(renderer_buffer, "amd"))
+		gl_config.renderer = GL_RENDERER_AMD;
+	else if (strstr(renderer_buffer, "intel"))
+		gl_config.renderer = GL_RENDERER_INTEL;
+	else
+		gl_config.renderer = GL_RENDERER_OTHER;
+}
+
 /*
 ===============
 R_Init
@@ -203,8 +244,6 @@ R_Init
 */
 int R_Init(void* hinstance, void* hWnd)
 {
-	char renderer_buffer[1000];
-	char vendor_buffer[1000];
 	int		err;
 	int		j;
 	extern float r_turbsin[256];
@@ -252,35 +291,9 @@ int R_Init(void* hinstance, void* hWnd)
 		return -1;
 	}
 
-	R_InitPrograms();
 
-	/*
-	** get our various GL strings
-	*/
-	gl_config.vendor_string = glGetString(GL_VENDOR);
-	ri.Printf(PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string);
-	gl_config.renderer_string = glGetString(GL_RENDERER);
-	ri.Printf(PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string);
-	gl_config.version_string = glGetString(GL_VERSION);
-	ri.Printf(PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string);
-	gl_config.extensions_string = glGetString(GL_EXTENSIONS);
-	ri.Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string);
-
-	strcpy(renderer_buffer, gl_config.renderer_string);
-	_strlwr(renderer_buffer);
-
-	strcpy(vendor_buffer, gl_config.vendor_string);
-	_strlwr(vendor_buffer);
-
-
-	if (strstr(renderer_buffer, "nvidia"))
-		gl_config.renderer = GL_RENDERER_NVIDIA;
-	else if (strstr(renderer_buffer, "amd"))
-		gl_config.renderer = GL_RENDERER_AMD;
-	else if (strstr(renderer_buffer, "intel"))
-		gl_config.renderer = GL_RENDERER_INTEL;
-	else
-		gl_config.renderer = GL_RENDERER_OTHER;
+	// get our various GL strings and consts
+	R_OpenGLConfig();
 
 
 	if (toupper(r_monolightmap->string[1]) != 'F')
@@ -308,8 +321,10 @@ int R_Init(void* hinstance, void* hWnd)
 #endif
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 	
-	//glActiveTexture = 0;
+	glActiveTexture = 0;
 	glMultiTexCoord2f = 0;
+
+	R_InitPrograms();
 
 	GL_SetDefaultState();
 	R_InitialOGLState(); //wip

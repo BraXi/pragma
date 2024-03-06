@@ -30,7 +30,7 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_TIME,				"time",				F_FLOAT },
 	{ LOC_SHADEVECTOR,		"shade_vector",		F_VECTOR3 },
 	{ LOC_SHADECOLOR,		"shade_light",		F_VECTOR3 },
-	{ LOC_LERP,				"lerp",				F_FLOAT },
+	{ LOC_LERPFRAC,			"lerpFrac",			F_FLOAT },
 	{ LOC_PARM0,			"parm0_f",			F_FLOAT },
 	{ LOC_PARM1,			"parm1_f",			F_FLOAT },
 	{ LOC_PARM2,			"parm2_f",			F_FLOAT },
@@ -375,7 +375,7 @@ static qboolean R_LinkProgram(glprog_t* prog)
 
 /*
 =================
-R_GetProgLocations
+R_FindUniformLocations
 =================
 */
 static void R_FindUniformLocations(glprog_t* prog)
@@ -394,7 +394,39 @@ static void R_FindUniformLocations(glprog_t* prog)
 	R_UnbindProgram();
 }
 
+/*
+=================
+R_FindVertexAttrivLocations
+=================
+*/
+static glprogloc_t progVertAtrribLocs[NUM_VALOCS] =
+{
+	{ VALOC_POS,			"inVertPos",		F_VECTOR3 },
+	{ VALOC_NORMAL,			"inNormal",			F_VECTOR3 },
+	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR3 },
+	{ VALOC_COLOR,			"inVertCol",		F_VECTOR3 },
+	{ VALOC_OLD_POS,		"inOldVertPos",		F_VECTOR3 },
+	{ VALOC_OLD_NORMAL,		"inOldNormal",		F_VECTOR3 },
+};
+static void R_FindVertexAttribLocations(glprog_t* prog)
+{
+	int i;
+	R_BindProgram(prog->index);
 
+	for (int i = 0; i < NUM_VALOCS; i++)
+		prog->valocs[i] = -1;
+
+	for (i = 0; i < NUM_VALOCS; i++)
+	{
+		prog->valocs[progVertAtrribLocs[i].loc] = glGetAttribLocation(pCurrentProgram->programObject, progVertAtrribLocs[i].name);
+		if (prog->index == 3 && prog->valocs[progVertAtrribLocs[i].loc] == -1)
+			ri.Printf(PRINT_ALERT, "attrib %s not found\n", progVertAtrribLocs[i].name);
+			
+
+	}
+
+	R_UnbindProgram();
+}
 
 /*
 =================
@@ -421,6 +453,7 @@ static int R_LoadProgram(int program, char *name)
 	numProgs++;
 
 	R_FindUniformLocations(prog);
+	R_FindVertexAttribLocations(prog);
 
 	return prog->index;
 }

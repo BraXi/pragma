@@ -505,34 +505,35 @@ DrawVertexBuffer
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts )
 {
-	vbo->flags = V_UV; // TEST: just pos & texcoord
-	SetVBOClientState(vbo, true);
+//	vbo->flags = V_UV | V_NORMAL;
 	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
 
 	int framesize = sizeof(glvert_t) * vbo->numVerts / ent->model->numframes;
 
 	//void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer);
-	glEnableVertexAttribArray(0); // the current vert
-	glBindAttribLocation(pCurrentProgram->programObject, 0, "oldvert");
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0));
+
+	glEnableVertexAttribArray(0);
+	//glBindAttribLocation(pCurrentProgram->programObject, 0, "inOldVertPos");
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + ent->oldframe * framesize);
 
 	glEnableVertexAttribArray(1);
-	glBindAttribLocation(pCurrentProgram->programObject, 1, "vert"); // the next vert in animation
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + framesize);
+	//glBindAttribLocation(pCurrentProgram->programObject, 1, "inVertPos");
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + ent->frame * framesize);
 
-	//glVertexPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(0)); // attrib 0
-	if (vbo->flags & V_NORMAL)
-		glNormalPointer(GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(12));
-	if (vbo->flags & V_UV)
-		glTexCoordPointer(2, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(24));
-	if (vbo->flags & V_COLOR)
-		glColorPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(32));
+	glEnableVertexAttribArray(2);
+	//glBindAttribLocation(pCurrentProgram->programObject, 2, "inOldNormal");
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(12) + ent->oldframe * framesize);
 
+	glEnableVertexAttribArray(3);
+	//glBindAttribLocation(pCurrentProgram->programObject, 3, "inNormal");
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(12) + ent->frame * framesize);
 
-
+	glEnableVertexAttribArray(4);
+	//glBindAttribLocation(pCurrentProgram->programObject, 4, "inTexCoord");
+	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(24) + ent->frame * framesize);
 
 	// case one: we have index buffer
-	if (vbo->numIndices && vbo->indices != NULL && vbo->indexBuf) //if ((vbo->flags & V_INDICES) && vbo->indexBuf)
+	if (vbo->numIndices && vbo->indices != NULL && vbo->indexBuf)
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo->indexBuf);
 
@@ -554,8 +555,10 @@ void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVer
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
+	glDisableVertexAttribArray(4);
 
-	SetVBOClientState(vbo, false);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -571,7 +574,7 @@ static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
 	int				surf, surfverts;
 	qboolean		anythingToDraw = false;
 
-	R_ProgUniform1f(LOC_LERP, lerp);
+	R_ProgUniform1f(LOC_LERPFRAC, lerp);
 
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{
@@ -593,7 +596,7 @@ static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
 		anythingToDraw = true;
 
 		R_BindTexture(r_speeds->value >= 3.0f ? r_notexture->texnum : ent->model->images[surf]->texnum);
-		DrawVertexBuffer(ent, ent->model->vb[surf], ent->frame * surfverts, surfverts);
+		DrawVertexBuffer(ent, ent->model->vb[surf], 0, surfverts);
 
 		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
 	}

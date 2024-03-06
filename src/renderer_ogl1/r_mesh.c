@@ -169,14 +169,14 @@ static void R_EntityAnim(rentity_t* ent, char* func)
 	// check if animation is correct
 	if ((ent->frame >= ent->model->numframes) || (ent->frame < 0))
 	{
-//		ri.Printf(PRINT_DEVELOPER, "%s: no such frame %d in '%s'\n", func, ent->frame, ent->model->name);
+		ri.Printf(PRINT_DEVELOPER, "%s: no such frame %d in '%s'\n", func, ent->frame, ent->model->name);
 		ent->frame = 0;
 		ent->oldframe = 0;
 	}
 
 	if ((ent->oldframe >= ent->model->numframes) || (ent->oldframe < 0))
 	{
-//		ri.Printf(PRINT_DEVELOPER, "%s: no such oldframe %d in '%s'\n", func, ent->frame, ent->model->name);
+		ri.Printf(PRINT_DEVELOPER, "%s: no such oldframe %d in '%s'\n", func, ent->frame, ent->model->name);
 		ent->frame = 0;
 		ent->oldframe = 0;
 	}
