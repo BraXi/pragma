@@ -273,8 +273,6 @@ extern	vec3_t	r_origin;
 extern	refdef_t	r_newrefdef;
 extern	int			r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
-extern	cvar_t	*r_nolerpdist;
-
 extern	cvar_t	*r_norefresh;
 extern	cvar_t	*r_lefthand;
 extern	cvar_t	*r_drawentities;

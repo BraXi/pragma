@@ -865,13 +865,6 @@ void R_BeginFrame( float camera_separation )
 		ref->modified = true;
 	}
 
-	if (r_nolerpdist->modified)
-	{
-		r_nolerpdist->modified = false;
-		if (r_nolerpdist->value < 128.0f)
-			ri.Cvar_Set("r_nolerpdist", "128");
-	}
-
 	if ( r_gamma->modified )
 	{
 		r_gamma->modified = false;

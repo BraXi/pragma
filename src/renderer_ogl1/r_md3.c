@@ -500,21 +500,16 @@ static void SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
 	}
 }
 
-static checkerror()
-{
-	int err = glGetError();
-	if (err != GL_NO_ERROR)
-		ri.Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
-}
 /*
 ===============
 DrawVertexBuffer
+
+modified version of R_DrawVertexBuffer to account model animation
 ===============
 */
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts )
 {
-//	vbo->flags = V_UV | V_NORMAL;
 	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
 
 	int framesize = sizeof(glvert_t) * vbo->numVerts / ent->model->numframes;
@@ -561,31 +556,59 @@ void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVer
 		else
 			glDrawArrays(GL_TRIANGLES, startVert, numVerts);
 	}
-	checkerror();
+
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(3);
 	glDisableVertexAttribArray(4);
-	checkerror();
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-
 /*
 =================
-R_FastDrawMD3Model
+R_DrawMD3Model
+
+Draws md3 model
+
+TODO: support LODs
 =================
 */
-static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
+void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 {
-	md3Surface_t* pSurface = NULL;
+	md3Header_t		*pModel = NULL;
+	md3Surface_t	*pSurface = NULL;
 	int				surf, surfverts;
+	vec3_t			v;
 	qboolean		anythingToDraw = false;
 
-	R_ProgUniform1f(LOC_LERPFRAC, lerp);
+	if (lod < 0 || lod >= NUM_LODS)
+		ri.Error(ERR_DROP, "R_DrawMD3Model: '%s' wrong LOD num %i\n", ent->model->name, lod);
 
-	glDisable(GL_CULL_FACE);
+	pModel = ent->model->md3[lod];
+	if (pModel == NULL)
+	{
+		Com_Printf("R_DrawMD3Model: '%s' has no LOD %i model\n", ent->model->name, lod);
+		return;
+	}
+
+	if (!ent->model->vb[0])
+		return; // not uploaded to gpu
+
+	R_BindProgram(GLPROG_ALIAS);
+
+	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
+	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
+	R_ProgUniform1f(LOC_LERPFRAC, animlerp);
+
+	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
+		R_ProgUniform1f(LOC_PARM0, 1);
+	else
+		R_ProgUniform1f(LOC_PARM0, 0);
+
+	glColor4f(1, 1, 1, ent->alpha); // GET RID OF GLCOLOR
+
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{
 		surfverts = ent->model->vb[surf]->numVerts / pModel->numFrames;
@@ -604,7 +627,7 @@ static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
 
 		anythingToDraw = true;
 
-		R_BindTexture(r_speeds->value >= 3.0f ? r_notexture->texnum : ent->model->images[surf]->texnum);
+		R_BindTexture(ent->model->images[surf]->texnum);
 		DrawVertexBuffer(ent, ent->model->vb[surf], 0, surfverts);
 
 		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
@@ -614,221 +637,7 @@ static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
 		rperf.alias_drawcalls++;
 }
 
-
-/*
-=================
-R_DrawMD3Model
-
-Draws md3 model
-=================
-*/
-vertexbuffer_t lerpVertsBuf[MD3_MAX_SURFACES];
-static glvert_t lerpVerts[MD3_MAX_SURFACES][MD3_MAX_VERTS]; // this could be one list instead of MD3_MAX_SURFACES
-static int lerpVertsCount[MD3_MAX_SURFACES];
-
-void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
-{
-	md3Header_t		* pModel = NULL;
-	vec3_t			v;
-
-	if (lod < 0 || lod >= NUM_LODS)
-		ri.Error(ERR_DROP, "R_DrawMD3Model: '%s' wrong LOD num %i\n", ent->model->name, lod);
-
-	pModel = ent->model->md3[lod];
-	if (pModel == NULL)
-	{
-		Com_Printf("R_DrawMD3Model: '%s' has no LOD %i model\n", ent->model->name, lod);
-		return;
-	}
-
-	R_BindProgram(GLPROG_ALIAS);
-	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
-		R_ProgUniform1f(LOC_PARM0, 1);
-	else
-		R_ProgUniform1f(LOC_PARM0, 0);
-
-	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
-	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
-	
-	glColor4f(1, 1, 1, ent->alpha);
-
-	if (ent->model->vb[0])
-	{
-		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); // FIXME: doesn't account for FOV
-		float dist = VectorLength(v);
-
-		//if (ent->frame == ent->oldframe || dist >= r_nolerpdist->value || animlerp == 1.0f)
-		{
-			R_FastDrawMD3Model(ent, pModel, animlerp);
-			return;
-		}
-	}
-}
-
-#if 0
-void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
-{
-	md3Header_t* model;
-	md3Surface_t* surface = 0;
-	md3Shader_t* md3Shader = 0;
-	md3Frame_t* md3Frame = 0;
-	image_t* shader = NULL;
-	md3St_t* texcoord;
-	md3XyzNormal_t* vert, * oldVert; //interp
-	md3Triangle_t* triangle;
-	int				i, j, k;
-
-	vec3_t v, n; //vert and normal after lerp
-
-	if (lod < 0 || lod >= NUM_LODS)
-		ri.Error(ERR_DROP, "R_DrawMD3Model: '%s' wrong LOD num %i\n", ent->model->name, lod);
-
-	model = ent->model->md3[lod];
-	if (model == NULL)
-	{
-		Com_Printf("R_DrawMD3Model: '%s' has no LOD %i model\n", ent->model->name, lod);
-		return;
-	}
-
-	R_BindProgram(GLPROG_ALIAS);
-	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
-		R_ProgUniform1f(LOC_PARM0, 1);
-	else
-		R_ProgUniform1f(LOC_PARM0, 0);
-
-	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
-	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
-
-	glColor4f(1, 1, 1, ent->alpha);
-
-
-	//
-	// whereas possible, try to render optimized mesh
-	//
-	if (r_fast->value && ent->model->vb[0]) // && ent->oldframe == 0 && ent->frame == 0)
-	{
-		for (i = 0; i < model->numSurfaces; i++)
-		{
-			int surfverts = ent->model->vb[i]->numVerts / model->numFrames;
-
-			surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
-			if ((ent->hiddenPartsBits & (1 << i)))
-			{
-				surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
-				continue; // surface is hidden
-			}
-
-			if (r_speeds->value)
-				rperf.alias_tris += surfverts / 3;
-
-			R_BindTexture(ent->model->images[i]->texnum);
-			R_DrawVertexBuffer(ent->model->vb[i], ent->frame * surfverts, surfverts);
-
-			surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
-		}
-		return;
-	}
-
-	//
-	// use old immediate mode rendering
-	//
-	surface = (md3Surface_t*)((byte*)model + model->ofsSurfaces);
-	for (i = 0; i < model->numSurfaces; i++)
-	{
-		if ((ent->hiddenPartsBits & (1 << i)))
-		{
-			surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
-			continue; // surface is hidden
-		}
-
-		if (surface->numShaders > 0)
-		{
-			//bind texture
-			md3Shader = (md3Shader_t*)((byte*)surface + surface->ofsShaders);
-			R_BindTexture(md3Shader->shaderIndex);
-		}
-
-		// grab tris, texcoords and verts
-		texcoord = (md3St_t*)((byte*)surface + surface->ofsSt);
-		triangle = (md3Triangle_t*)((byte*)surface + surface->ofsTriangles);
-
-		oldVert = (short*)((byte*)surface + surface->ofsXyzNormals) + (ent->oldframe * surface->numVerts * 4); // current keyframe verts
-		vert = (short*)((byte*)surface + surface->ofsXyzNormals) + (ent->frame * surface->numVerts * 4); // next keyframe verts
-
-		if (r_speeds->value)
-			rperf.alias_tris += surface->numTriangles;
-
-		// for each triangle in surface
-		glBegin(GL_TRIANGLES);
-		for (j = 0; j < surface->numTriangles; j++, triangle++)
-		{
-			//for each vert in triangle
-			for (k = 0; k < 3; k++)
-			{
-				int index = triangle->indexes[k];
-
-				R_LerpMD3Frame(animlerp, index, &oldVert[index], &vert[index], v, n);
-
-				glTexCoord2f(texcoord[index].st[0], texcoord[index].st[1]);
-				glNormal3fv(n);
-				glVertex3fv(v);
-			}
-		}
-		glEnd();
-
-		surface = (md3Surface_t*)((byte*)surface + surface->ofsEnd);
-	}
-}
-#endif
-
-
 qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex)
 {
 	return MD3_LerpTag(tag, model, startFrame, endFrame, frac, tagIndex);
 }
-
-
-#if 0
-static void MD3_Normals(md3Header_t* pModel, float yangle)
-{
-	md3Surface_t* surf;
-	md3XyzNormal_t* xyz;
-
-	float			angle;
-	float			lat, lng;
-	float			angleCos, angleSin;
-	vec3_t			temp;
-	vec3_t			normal;
-
-	angle = yangle / 180 * M_PI;
-	angleCos = cos(angle);
-	angleSin = sin(angle);
-
-	surf = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
-	for (int i = 0; i < pModel->numSurfaces; i++)
-	{
-		xyz = (md3XyzNormal_t*)((byte*)surf + surf->ofsXyzNormals);
-
-		for (int j = 0; j < surf->numVerts; j++, xyz++)
-		{
-			// decode the lat/lng normal to a 3 float normal
-			lat = (xyz->normal >> 8) & 0xff;
-			lng = (xyz->normal & 0xff);
-			lat *= M_PI / 128;
-			lng *= M_PI / 128;
-
-			temp[0] = cos(lat) * sin(lng);
-			temp[1] = sin(lat) * sin(lng);
-			temp[2] = cos(lng);
-
-			// rotate the normal
-			normal[0] = temp[0] * angleCos - temp[1] * angleSin;
-			normal[1] = temp[0] * angleSin + temp[1] * angleCos;
-			normal[2] = temp[2];
-
-//			printf("yawangle %f = surf %i tri %i normal [%f %f %f]\n", yangle, i, j, normal[0], normal[1], normal[2]);
-		}
-		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
-	}
-}
-#endif
