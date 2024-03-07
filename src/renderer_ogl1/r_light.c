@@ -70,7 +70,6 @@ void R_RenderDlights (void)
 											//  advanced yet for this frame
 	R_WriteToDepthBuffer(GL_FALSE);
 	glDisable (GL_TEXTURE_2D);
-	glShadeModel (GL_SMOOTH);
 	R_Blend(true);
 	R_BlendFunc(GL_ONE, GL_ONE);
 

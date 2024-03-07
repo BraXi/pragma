@@ -22,7 +22,11 @@ See the attached GNU General Public License v2 for more details.
 #endif
 
 #include <stdio.h>
-#include "include/glad/glad.h"
+#if 1
+#include "include/glad/glad_gl33core.h"
+#else
+#include "include/glad/glad_gl21.h"
+#endif
 #include <math.h>
 #include "../qcommon/renderer.h"
 #include "win_qgl.h"

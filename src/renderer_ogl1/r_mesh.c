@@ -202,7 +202,6 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// setup lighting
 	R_SetEntityShadeLight(ent);
-	glShadeModel(GL_SMOOTH);
 	R_SetTexEnv(GL_MODULATE);
 
 	// 1. transparency
@@ -260,7 +259,6 @@ void R_DrawEntityModel(rentity_t* ent)
 	glPopMatrix();
 
 	// restore shade model
-	glShadeModel(GL_FLAT);
 	R_SetTexEnv(GL_REPLACE);
 
 	// restore transparency

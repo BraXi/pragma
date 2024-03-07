@@ -192,7 +192,6 @@ void GL_SetDefaultState( void )
 	glColor4f (1,1,1,1);
 
 	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-	glShadeModel (GL_FLAT);
 
 	R_SetTextureMode( r_texturemode->string );
 	R_SetTextureAlphaMode( r_texturealphamode->string );
