@@ -481,12 +481,12 @@ void R_RenderBrushPoly (msurface_t *fa)
 	{
 		R_BindTexture(image->texnum);
 
-		R_SetTexEnv(GL_MODULATE);
+		//R_SetTexEnv(GL_MODULATE);
 		//float inverse_intensity = -r_intensity->value;
 		//R_SetColor4(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
 
 		EmitWaterPolys(fa);
-		R_SetTexEnv(GL_REPLACE);
+		//R_SetTexEnv(GL_REPLACE);
 
 		return;
 	}
@@ -494,7 +494,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	{
 		R_BindTexture( image->texnum );
 
-		R_SetTexEnv( GL_REPLACE );
+		//R_SetTexEnv( GL_REPLACE );
 	}
 
 
@@ -583,7 +583,7 @@ void R_DrawAlphaSurfaces (void)
     glLoadMatrixf (r_world_matrix);
 
 	R_Blend(true);
-	R_SetTexEnv( GL_MODULATE );
+	//R_SetTexEnv( GL_MODULATE );
 
 	intens = 1;
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
@@ -602,7 +602,7 @@ void R_DrawAlphaSurfaces (void)
 			DrawGLPoly (s->polys);
 	}
 
-	R_SetTexEnv( GL_REPLACE );
+	//R_SetTexEnv( GL_REPLACE );
 	R_SetColor4(1,1,1,1);
 	R_Blend(false);
 
@@ -658,7 +658,7 @@ void DrawTextureChains (void)
 	}
 //	R_EnableMultitexture( true );
 
-	R_SetTexEnv( GL_REPLACE );
+	//R_SetTexEnv( GL_REPLACE );
 }
 
 
@@ -857,7 +857,7 @@ void R_DrawInlineBModel (void)
 	{
 		R_Blend(true);
 		R_SetColor4(1,1,1,0.25);
-		R_SetTexEnv( GL_MODULATE );
+		//R_SetTexEnv( GL_MODULATE );
 	}
 
 	//
@@ -901,7 +901,7 @@ void R_DrawInlineBModel (void)
 	{
 		R_Blend(false);
 		R_SetColor4(1,1,1,1);
-		R_SetTexEnv( GL_REPLACE );
+		//R_SetTexEnv( GL_REPLACE );
 	}
 }
 
@@ -966,9 +966,9 @@ void R_DrawBrushModel (rentity_t *e)
 
 	R_EnableMultitexture( !r_fullbright->value );
 	R_SelectTextureUnit( GL_TEXTURE0 );
-	R_SetTexEnv( GL_REPLACE );
+	//R_SetTexEnv( GL_REPLACE );
 	R_SelectTextureUnit( GL_TEXTURE1 );
-	R_SetTexEnv( GL_MODULATE );
+	//R_SetTexEnv( GL_MODULATE );
 
 	R_DrawInlineBModel ();
 	R_EnableMultitexture( false );
@@ -1147,13 +1147,13 @@ void R_DrawWorld (void)
 		R_EnableMultitexture( !r_fullbright->value );
 
 		R_SelectTextureUnit( GL_TEXTURE0 );
-		R_SetTexEnv( GL_REPLACE );
+		//R_SetTexEnv( GL_REPLACE );
 		R_SelectTextureUnit( GL_TEXTURE1 );
 
-		if ( r_lightmap->value )
-			R_SetTexEnv( GL_REPLACE );
-		else 
-			R_SetTexEnv( GL_MODULATE );
+		//if ( r_lightmap->value )
+		//	R_SetTexEnv( GL_REPLACE );
+		//else 
+		//	R_SetTexEnv( GL_MODULATE );
 
 		R_RecursiveWorldNode (r_worldmodel->nodes);
 

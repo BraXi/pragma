@@ -65,6 +65,9 @@ static void VertexBufferAttribs(vertexbuffer_t* vbo, qboolean enable)
 	}
 	else
 	{
+		attrib = 0;
+		glDisableVertexAttribArray(attrib);
+
 		if (vbo->flags & V_NORMAL)
 		{
 			attrib = 1;
@@ -191,17 +194,9 @@ R_DrawVertexBuffer
 ===============
 */
 void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts)
-{
-	VertexBufferAttribs(vbo, true);
+{	
 	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
-
-	glVertexPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(0));
-	if (vbo->flags & V_NORMAL)
-		glNormalPointer(GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(12));	
-	if (vbo->flags & V_UV)
-		glTexCoordPointer(2, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(24));
-	if (vbo->flags & V_COLOR)
-		glColorPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(32));
+	VertexBufferAttribs(vbo, true);
 
 	// case one: we have index buffer
 	if (vbo->numIndices && vbo->indices != NULL && vbo->indexBuf) //if ((vbo->flags & V_INDICES) && vbo->indexBuf)

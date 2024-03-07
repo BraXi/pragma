@@ -565,7 +565,7 @@ void R_DrawSkyBox (void)
 
 	R_BindProgram(GLPROG_SKY);
 
-	R_SetTexEnv(GL_MODULATE); // allow sky colors change
+	//R_SetTexEnv(GL_MODULATE); // allow sky colors change
 	R_SetColor4(skycolor[0], skycolor[1], skycolor[2], 1);
 
 	if (skyrotate)
@@ -612,7 +612,7 @@ void R_DrawSkyBox (void)
 	}
 	glPopMatrix ();
 
-	R_SetTexEnv(GL_REPLACE);
+	//R_SetTexEnv(GL_REPLACE);
 	R_SetColor4(1, 1, 1, 1);
 
 	R_UnbindProgram();

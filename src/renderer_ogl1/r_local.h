@@ -33,6 +33,7 @@ See the attached GNU General Public License v2 for more details.
 
 #define	REF_VERSION	"0.4-next"
 
+#define GETITTOCOMPILE 1
 
 // -- sin table --
 //#define RAD2DEG( a ) ( ( (a) * 180.0f ) / M_PI ) // unused

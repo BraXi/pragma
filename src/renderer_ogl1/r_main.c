@@ -155,7 +155,7 @@ void R_DrawSpriteModel (rentity_t *e)
 	R_SetColor4( 1, 1, 1, alpha );
 
     R_BindTexture(pCurrentModel->images[e->frame]->texnum);
-	R_SetTexEnv( GL_MODULATE );
+	//R_SetTexEnv( GL_MODULATE );
 
 	//R_AlphaTest(true); // IS THIS REALY CORRECT?
 
@@ -194,7 +194,7 @@ void R_DrawSpriteModel (rentity_t *e)
 	glEnd();
 
 	//R_AlphaTest(false);
-	R_SetTexEnv( GL_REPLACE );
+	//R_SetTexEnv( GL_REPLACE );
 
 	R_Blend(false);
 
@@ -330,7 +330,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 
 	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
 	R_Blend(true);
-	R_SetTexEnv( GL_MODULATE );
+	//R_SetTexEnv( GL_MODULATE );
 
 	VectorScale (vup, 1.5, up);
 	VectorScale (vright, 1.5, right);
@@ -374,7 +374,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 	R_Blend(false);
 	R_SetColor4( 1,1,1,1 );
 	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
-	R_SetTexEnv( GL_REPLACE );
+	//R_SetTexEnv( GL_REPLACE );
 }
 
 /*
@@ -748,7 +748,7 @@ void R_SetGL2D(void)
 	R_Blend(false);
 	//R_AlphaTest(true);
 
-	R_SetTexEnv(GL_MODULATE);
+	//R_SetTexEnv(GL_MODULATE);
 }
 
 static void GL_DrawColoredStereoLinePair( float r, float g, float b, float y )
@@ -802,7 +802,7 @@ void R_DrawFill(rect_t pos, rgba_t color);
 
 void R_RenderFrame (refdef_t *fd)
 {
-	R_SetTexEnv(GL_REPLACE);
+	//R_SetTexEnv(GL_REPLACE);
 	R_RenderView( fd );
 	R_SetGL2D ();
 
