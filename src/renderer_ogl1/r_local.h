@@ -225,12 +225,9 @@ void GL_UpdateSwapInterval( void );
 typedef struct
 {
 	int	brush_polys;
-	int alias_tris;
 
-	int alias_fasttris;
-	int alias_fastdraws;
-	int alias_lerpverts;
-	int alias_slowdraws;
+	int alias_tris;
+	int alias_drawcalls;
 
 	int	texture_binds;
 

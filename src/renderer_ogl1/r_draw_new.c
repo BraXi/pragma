@@ -258,7 +258,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	SetTexCoords(gl->sl, gl->th);
 
 	R_Blend(true);
-	glAlphaFunc(GL_GREATER, 0.05);
+//	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4f(color[0], color[1], color[2], color[3]);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
@@ -266,7 +266,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 
 	R_Blend(false);
-	glAlphaFunc(GL_GREATER, 0.666);
+//	glAlphaFunc(GL_GREATER, 0.1);
 	glColor4f(1, 1, 1, 1);
 
 }
@@ -293,7 +293,7 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	R_Blend(true);
 	glDisable(GL_TEXTURE_2D);
 
-	glAlphaFunc(GL_GREATER, 0.05);
+//	glAlphaFunc(GL_GREATER, 0.05);
 	glColor4f(color[0], color[1], color[2], color[3]);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
@@ -302,6 +302,6 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	R_Blend(false);
 	glEnable(GL_TEXTURE_2D);
 
-	glAlphaFunc(GL_GREATER, 0.666);
+//	glAlphaFunc(GL_GREATER, 0.1);
 	glColor4f(1, 1, 1, 1);
 }

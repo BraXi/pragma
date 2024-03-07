@@ -72,9 +72,10 @@ static void R_UploadMD3ToVertexBuffer(model_t* mod, lod_t lod)
 				{
 					int index = pTriangle->indexes[trivert];
 
-					R_LerpMD3Frame(0.0f, index, &pOldVert[index], &pVert[index], v, n); // 0 is not lerping at all, always "current" frame
+					R_LerpMD3Frame(1.0f, index, &pOldVert[index], &pVert[index], v, n); // 0 is not lerping at all, always "current" frame
 
 					VectorCopy(v, mod->vb[surf]->verts[numverts].xyz);
+					VectorNormalize(n);
 					VectorCopy(n, mod->vb[surf]->verts[numverts].normal);
 					mod->vb[surf]->verts[numverts].st[0] = pTexCoord[index].st[0];
 					mod->vb[surf]->verts[numverts].st[1] = pTexCoord[index].st[1];
@@ -513,23 +514,23 @@ void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVer
 	//void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer);
 
 	glEnableVertexAttribArray(0);
-	//glBindAttribLocation(pCurrentProgram->programObject, 0, "inOldVertPos");
+	glBindAttribLocation(pCurrentProgram->programObject, 0, "inOldVertPos");
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + ent->oldframe * framesize);
 
 	glEnableVertexAttribArray(1);
-	//glBindAttribLocation(pCurrentProgram->programObject, 1, "inVertPos");
+	glBindAttribLocation(pCurrentProgram->programObject, 1, "inVertPos");
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0) + ent->frame * framesize);
 
 	glEnableVertexAttribArray(2);
-	//glBindAttribLocation(pCurrentProgram->programObject, 2, "inOldNormal");
+	glBindAttribLocation(pCurrentProgram->programObject, 2, "inOldNormal");
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(12) + ent->oldframe * framesize);
 
 	glEnableVertexAttribArray(3);
-	//glBindAttribLocation(pCurrentProgram->programObject, 3, "inNormal");
+	glBindAttribLocation(pCurrentProgram->programObject, 3, "inNormal");
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(12) + ent->frame * framesize);
 
 	glEnableVertexAttribArray(4);
-	//glBindAttribLocation(pCurrentProgram->programObject, 4, "inTexCoord");
+	glBindAttribLocation(pCurrentProgram->programObject, 4, "inTexCoord");
 	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(24) + ent->frame * framesize);
 
 	// case one: we have index buffer
@@ -590,7 +591,6 @@ static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
 		if (r_speeds->value)
 		{
 			rperf.alias_tris += surfverts / 3;
-			rperf.alias_fasttris += surfverts / 3;
 		}
 
 		anythingToDraw = true;
@@ -602,7 +602,7 @@ static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
 	}
 
 	if (r_speeds->value && anythingToDraw)
-		rperf.alias_fastdraws++;
+		rperf.alias_drawcalls++;
 }
 
 
@@ -620,13 +620,7 @@ static int lerpVertsCount[MD3_MAX_SURFACES];
 void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 {
 	md3Header_t		* pModel = NULL;
-	md3Surface_t	* pSurface = NULL;
-	md3St_t			* pTexCoord = NULL;
-	md3Triangle_t	* pTriangle = NULL;
-	md3XyzNormal_t	* pVert, * pOldVert;
-	vec3_t			v, n; //vert and normal after lerp
-	int				surf, tri, trivert;
-
+	vec3_t			v;
 
 	if (lod < 0 || lod >= NUM_LODS)
 		ri.Error(ERR_DROP, "R_DrawMD3Model: '%s' wrong LOD num %i\n", ent->model->name, lod);
@@ -649,7 +643,6 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	
 	glColor4f(1, 1, 1, ent->alpha);
 
-
 	if (ent->model->vb[0])
 	{
 		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); // FIXME: doesn't account for FOV
@@ -658,71 +651,9 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 		//if (ent->frame == ent->oldframe || dist >= r_nolerpdist->value || animlerp == 1.0f)
 		{
 			R_FastDrawMD3Model(ent, pModel, animlerp);
-				return;
+			return;
 		}
 	}
-
-	//
-	// lerp vertices on cpu
-	//
-	pSurface = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
-	for (surf = 0; surf < pModel->numSurfaces; surf++)
-	{
-		lerpVertsCount[surf] = 0;
-
-		if ((ent->hiddenPartsBits & (1 << surf)))
-		{
-			pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
-			continue; // surface is hidden
-		}
-
-		pTexCoord = (md3St_t*)((byte*)pSurface + pSurface->ofsSt);
-		pTriangle = (md3Triangle_t*)((byte*)pSurface + pSurface->ofsTriangles);
-
-		pOldVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (ent->oldframe * pSurface->numVerts * 4);
-		pVert = (short*)((byte*)pSurface + pSurface->ofsXyzNormals) + (ent->frame * pSurface->numVerts * 4);
-
-		for (tri = 0; tri < pSurface->numTriangles; tri++, pTriangle++)
-		{
-			for (trivert = 0; trivert < 3; trivert++)
-			{
-				int index = pTriangle->indexes[trivert];
-
-				R_LerpMD3Frame(animlerp, index, &pOldVert[index], &pVert[index], v, n); // 1 is not lerping at all, always "current" frame
-				VectorCopy(v, lerpVerts[surf][lerpVertsCount[surf]].xyz);
-				VectorCopy(n, lerpVerts[surf][lerpVertsCount[surf]].normal);
-				lerpVerts[surf][lerpVertsCount[surf]].st[0] = pTexCoord[index].st[0];
-				lerpVerts[surf][lerpVertsCount[surf]].st[1] = pTexCoord[index].st[1];		
-				lerpVertsCount[surf]++;
-			}
-		}
-
-		if (r_speeds->value)
-		{
-			rperf.alias_tris += lerpVertsCount[surf] / 3;
-			rperf.alias_lerpverts += lerpVertsCount[surf];
-		}
-
-		R_UpdateVertexBuffer(&lerpVertsBuf[surf], lerpVerts[surf], lerpVertsCount[surf], (V_UV | V_NORMAL));
-		
-		R_BindTexture(ent->model->images[surf]->texnum);
-		R_DrawVertexBuffer(&lerpVertsBuf[surf], 0, 0);
-
-		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
-	}
-
-	if (r_speeds->value)
-	{
-		for (surf = 0; surf < pModel->numSurfaces; surf++)
-		{
-			if (lerpVertsCount[surf] > 0)
-			{
-				rperf.alias_slowdraws++;
-				break;
-			}
-		}
-	}
-	
 }
 
 #if 0

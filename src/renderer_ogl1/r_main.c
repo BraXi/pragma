@@ -525,10 +525,7 @@ void R_SetupFrame (void)
 
 	rperf.brush_polys = 0;
 	rperf.alias_tris = 0;
-	rperf.alias_fasttris = 0;
-	rperf.alias_lerpverts = 0;
-	rperf.alias_fastdraws = 0;
-	rperf.alias_slowdraws = 0;
+	rperf.alias_drawcalls = 0;
 
 	// clear out the portion of the screen that the NOWORLDMODEL defines
 	if ( r_newrefdef.view.flags & RDF_NOWORLDMODEL )
@@ -813,7 +810,7 @@ void R_RenderFrame (refdef_t *fd)
 
 	if (r_speeds->value > 1.0f)
 	{
-		rect_t pos = { 800-140, 15, 140, 130 };
+		rect_t pos = { 800-140, 15, 140, 100 };
 		float color[4];
 		color[3] = 0.9f;
 
@@ -834,17 +831,14 @@ void R_RenderFrame (refdef_t *fd)
 		R_DrawString(va("%i      dynamic lights", r_newrefdef.num_dlights), 795, y += 16, 0.7, 1, color);
 		R_DrawString(va("%i     render entities", r_newrefdef.num_entities), 795, y += 8, 0.7, 1, color);
 		R_DrawString(va("%i     particles count", r_newrefdef.num_particles), 795, y += 8, 0.7, 1, color);
-
-		VectorSet(color, 1, 1, 1);
-		R_DrawString(va("%i    model tris total", rperf.alias_tris), 795, y += 16, 0.7, 1, color);
 		
 		VectorSet(color, 0.2, 1, 0);
-		R_DrawString(va("%i    fast model draws", rperf.alias_fastdraws), 795, y += 12, 0.7, 1, color);
-		R_DrawString(va("%i         cached tris", rperf.alias_fasttris), 795, y += 8, 0.7, 1, color);
+		R_DrawString(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
+		R_DrawString(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
 
-		VectorSet(color, 1, 0.2, 0);
-		R_DrawString(va("%i    slow model draws", rperf.alias_slowdraws), 795, y += 12, 0.7, 1, color);
-		R_DrawString(va("%i    CPU lerped verts", rperf.alias_lerpverts), 795, y += 8, 0.7, 1, color);
+		//VectorSet(color, 1, 0.2, 0);
+		//R_DrawString(va("%i    slow model draws", rperf.alias_slowdraws), 795, y += 12, 0.7, 1, color);
+		//R_DrawString(va("%i    CPU lerped verts", rperf.alias_lerpverts), 795, y += 8, 0.7, 1, color);
 	}
 
 //	R_DrawFBO(r_newrefdef.width/2, 0, r_newrefdef.width/2, r_newrefdef.height/2, false); // depth
