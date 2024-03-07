@@ -36,6 +36,46 @@ typedef struct oglstate_s
 
 static oglstate_t glstate;
 
+void R_SetColor3(float r, float g, float b)
+{
+	if (pCurrentProgram == NULL)
+	{
+		return;
+	}
+
+	if (pCurrentProgram->locs[LOC_COLOR4] == -1)
+	{
+		return;
+	}
+
+	glstate.color[0] = r;
+	glstate.color[1] = g;
+	glstate.color[2] = b;
+	glstate.color[3] = 1.0f;
+
+	R_ProgUniformVec4(LOC_COLOR4, glstate.color);
+}
+
+void R_SetColor4(float r, float g, float b, float a)
+{
+	if (pCurrentProgram == NULL)
+	{
+		return;
+	}
+
+	if (pCurrentProgram->locs[LOC_COLOR4] == -1)
+	{
+		return;
+	}
+
+	glstate.color[0] = r;
+	glstate.color[1] = g;
+	glstate.color[2] = b;
+	glstate.color[3] = a;
+
+	R_ProgUniformVec4(LOC_COLOR4, glstate.color);
+}
+
 // toggle on or off
 #define OGL_TOGGLE_STATE_FUNC(funcName, currentState, stateVar) \
 inline void funcName(qboolean newstate) { \
@@ -80,31 +120,7 @@ OGL_STATE_FUNC(R_WriteToDepthBuffer, glstate.depthmask, glDepthMask, GLboolean)
 
 OGL_STATE_FUNC2(R_BlendFunc, glstate.blendfunc, glBlendFunc, GLenum)
 
-void R_SetColor3(float r, float g, float b)
-{
-	glstate.color[0] = r;
-	glstate.color[1] = g;
-	glstate.color[2] = b;
-	glstate.color[3] = 1.0f;
 
-	if (pCurrentProgram == NULL)
-	{
-
-	}
-}
-
-void R_SetColor4(float r, float g, float b, float a)
-{
-	glstate.color[0] = r;
-	glstate.color[1] = g;
-	glstate.color[2] = b;
-	glstate.color[3] = a;
-
-	if(pCurrentProgram == NULL)
-	{ 
-
-	}
-}
 
 inline void R_SetClearColor(float r, float g, float b, float a)
 {

@@ -138,7 +138,7 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 
-	glColor4fv(color);
+	R_SetColor4(color[0], color[1], color[2], color[3]);
 	R_BindTexture(font_current->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
@@ -213,7 +213,7 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	}
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
-	glColor3fv(color);
+	R_SetColor3(color[0], color[1], color[2]);
 	R_BindTexture(font_current->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 
@@ -259,7 +259,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 
 	R_Blend(true);
 //	glAlphaFunc(GL_GREATER, 0.05);
-	glColor4f(color[0], color[1], color[2], color[3]);
+	R_SetColor4(color[0], color[1], color[2], color[3]);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_BindTexture(gl->texnum);
@@ -267,7 +267,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 
 	R_Blend(false);
 //	glAlphaFunc(GL_GREATER, 0.1);
-	glColor4f(1, 1, 1, 1);
+	R_SetColor4(1, 1, 1, 1);
 
 }
 
@@ -294,7 +294,7 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	glDisable(GL_TEXTURE_2D);
 
 //	glAlphaFunc(GL_GREATER, 0.05);
-	glColor4f(color[0], color[1], color[2], color[3]);
+	R_SetColor4(color[0], color[1], color[2], color[3]);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
@@ -303,5 +303,5 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	glEnable(GL_TEXTURE_2D);
 
 //	glAlphaFunc(GL_GREATER, 0.1);
-	glColor4f(1, 1, 1, 1);
+	R_SetColor4(1, 1, 1, 1);
 }

@@ -483,7 +483,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 
 		R_SetTexEnv(GL_MODULATE);
 		//float inverse_intensity = -r_intensity->value;
-		//glColor4f(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
+		//R_SetColor4(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
 
 		EmitWaterPolys(fa);
 		R_SetTexEnv(GL_REPLACE);
@@ -591,11 +591,11 @@ void R_DrawAlphaSurfaces (void)
 		R_BindTexture(s->texinfo->image->texnum);
 		rperf.brush_polys++;
 		if (s->texinfo->flags & SURF_TRANS33)
-			glColor4f (intens,intens,intens,0.33);
+			R_SetColor4(intens,intens,intens,0.33);
 		else if (s->texinfo->flags & SURF_TRANS66)
-			glColor4f (intens,intens,intens,0.66);
+			R_SetColor4(intens,intens,intens,0.66);
 		else
-			glColor4f (intens,intens,intens,1);
+			R_SetColor4(intens,intens,intens,1);
 		if (s->flags & SURF_DRAWTURB)
 			EmitWaterPolys (s);
 		else
@@ -603,7 +603,7 @@ void R_DrawAlphaSurfaces (void)
 	}
 
 	R_SetTexEnv( GL_REPLACE );
-	glColor4f (1,1,1,1);
+	R_SetColor4(1,1,1,1);
 	R_Blend(false);
 
 	r_alpha_surfaces = NULL;
@@ -856,7 +856,7 @@ void R_DrawInlineBModel (void)
 	if ( pCurrentRefEnt->renderfx & RF_TRANSLUCENT )
 	{
 		R_Blend(true);
-		glColor4f (1,1,1,0.25);
+		R_SetColor4(1,1,1,0.25);
 		R_SetTexEnv( GL_MODULATE );
 	}
 
@@ -900,7 +900,7 @@ void R_DrawInlineBModel (void)
 	else
 	{
 		R_Blend(false);
-		glColor4f (1,1,1,1);
+		R_SetColor4(1,1,1,1);
 		R_SetTexEnv( GL_REPLACE );
 	}
 }
@@ -941,7 +941,7 @@ void R_DrawBrushModel (rentity_t *e)
 	if (R_CullBox (mins, maxs))
 		return;
 
-	glColor3f (1,1,1);
+	R_SetColor(1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
 	VectorSubtract (r_newrefdef.view.origin, e->origin, modelorg);
@@ -1138,7 +1138,7 @@ void R_DrawWorld (void)
 
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
 
-	glColor4f (1,1,1,1);
+	R_SetColor4(1,1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 	R_ClearSkyBox ();
 

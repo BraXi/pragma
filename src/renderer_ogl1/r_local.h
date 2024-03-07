@@ -84,6 +84,12 @@ typedef struct image_s
 //===================================================================
 
 //
+// r_state.c
+// 
+void R_SetColor3(float r, float g, float b);
+void R_SetColor4(float r, float g, float b, float a);
+
+//
 // r_fbo.c
 //
 qboolean R_InitFrameBuffer();
@@ -106,6 +112,7 @@ enum
 typedef enum
 {
 	LOC_COLORMAP,
+	LOC_COLOR4,
 	LOC_TIME,
 	LOC_SHADEVECTOR,
 	LOC_SHADECOLOR,

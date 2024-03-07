@@ -290,7 +290,7 @@ void R_BeginLinesRendering(qboolean dt)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDisable(GL_TEXTURE_2D);
 	R_CullFace(false);
-	glColor4f(1, 1, 1, 1);
+	R_SetColor4(1, 1, 1, 1);
 }
 
 /*
@@ -300,7 +300,7 @@ R_EndLinesRendering
 */
 void R_EndLinesRendering()
 {
-	glColor4f(1, 1, 1, 1);
+	R_SetColor4(1, 1, 1, 1);
 	glEnable(GL_TEXTURE_2D);
 	R_CullFace(true);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -422,7 +422,7 @@ void R_DrawDebugLines(void)
 		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
-		glColor3fv(line->color);
+		R_SetColor3(line->color[0], line->color[1], line->color[2]);
 		glLineWidth(line->thickness);
 		switch (line->type)
 		{
@@ -472,7 +472,7 @@ void R_DrawDebugLines(void)
 		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
-		glColor3fv(line->color);
+		R_SetColor3(line->color[0], line->color[1], line->color[2]);
 		glLineWidth(line->thickness);
 		switch (line->type)
 		{
@@ -514,7 +514,7 @@ void R_DrawDebugLines(void)
 	R_WriteToDepthBuffer(GL_TRUE);
 #endif
 
-	glColor3f(1,1,1);
+	R_SetColor3(1,1,1);
 	glLineWidth(1.0f);
 	glPopMatrix();
 }

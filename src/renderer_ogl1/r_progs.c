@@ -26,15 +26,22 @@ typedef struct glprogloc_s
 
 static glprogloc_t progUniLocs[NUM_LOCS] =
 {
+	/* global */
 	{ LOC_COLORMAP,			"colormap",			F_INT },
+	{ LOC_COLOR4,			"color_rgba",		F_FLOAT },
 	{ LOC_TIME,				"time",				F_FLOAT },
+
+	/* md3 models */
 	{ LOC_SHADEVECTOR,		"shade_vector",		F_VECTOR3 },
 	{ LOC_SHADECOLOR,		"shade_light",		F_VECTOR3 },
 	{ LOC_LERPFRAC,			"lerpFrac",			F_FLOAT },
+
+	/* for materials */
 	{ LOC_PARM0,			"parm0_f",			F_FLOAT },
 	{ LOC_PARM1,			"parm1_f",			F_FLOAT },
 	{ LOC_PARM2,			"parm2_f",			F_FLOAT },
 
+	/* post processing */
 	{ LOC_SCREENSIZE,		"screensize",		F_VECTOR2 },
 	{ LOC_INTENSITY,		"r_intensity",		F_FLOAT },
 	{ LOC_GAMMA,			"r_gamma",			F_FLOAT },

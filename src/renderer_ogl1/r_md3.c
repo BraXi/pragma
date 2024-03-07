@@ -607,7 +607,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	else
 		R_ProgUniform1f(LOC_PARM0, 0);
 
-	glColor4f(1, 1, 1, ent->alpha); // GET RID OF GLCOLOR
+	R_SetColor4(1, 1, 1, ent->alpha);
 
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{

@@ -189,7 +189,7 @@ void GL_SetDefaultState( void )
 	R_CullFace(false);
 	R_Blend(false);
 
-	glColor4f (1,1,1,1);
+	R_SetColor4(1,1,1,1);
 
 	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 

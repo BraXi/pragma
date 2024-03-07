@@ -198,7 +198,7 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 	rect[2] = w;
 	rect[3] = h;
 
-	glColor4f(1, 1, 1, 1);
+	R_SetColor4(1, 1, 1, 1);
 
 	R_BindProgram(GLPROG_POSTFX);
 	R_ProgUniform2f(LOC_SCREENSIZE, (float)vid.width, (float)vid.height);

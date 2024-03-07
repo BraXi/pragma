@@ -559,14 +559,14 @@ void R_DrawSkyBox (void)
 #if 0
 	R_Blend(true);
 	R_SetTexEnv( GL_MODULATE );
-	glColor4f (1,1,1,0.5);
+	R_SetColor4(1,1,1,0.5);
 	R_DepthTest(false);
 #endif
 
 	R_BindProgram(GLPROG_SKY);
 
 	R_SetTexEnv(GL_MODULATE); // allow sky colors change
-	glColor4f(skycolor[0], skycolor[1], skycolor[2], 1);
+	R_SetColor4(skycolor[0], skycolor[1], skycolor[2], 1);
 
 	if (skyrotate)
 	{	// check for no sky at all
@@ -613,14 +613,14 @@ void R_DrawSkyBox (void)
 	glPopMatrix ();
 
 	R_SetTexEnv(GL_REPLACE);
-	glColor4f(1, 1, 1, 1);
+	R_SetColor4(1, 1, 1, 1);
 
 	R_UnbindProgram();
 
 #if 0
 	R_Blend(false);
 	R_SetTexEnv(GL_REPLACE);
-	glColor4f (1,1,1,0.5);
+	R_SetColor4(1,1,1,0.5);
 	R_DepthTest(true);
 #endif
 }
