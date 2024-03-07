@@ -76,6 +76,8 @@ static void R_UploadMD3ToVertexBuffer(model_t* mod, lod_t lod)
 
 					VectorCopy(v, mod->vb[surf]->verts[numverts].xyz);
 					VectorNormalize(n);
+
+					//ri.Printf(PRINT_LOW, "%i: %f %f %f\n", numverts, n[0], n[1], n[2]);
 					VectorCopy(n, mod->vb[surf]->verts[numverts].normal);
 					mod->vb[surf]->verts[numverts].st[0] = pTexCoord[index].st[0];
 					mod->vb[surf]->verts[numverts].st[1] = pTexCoord[index].st[1];
@@ -498,6 +500,12 @@ static void SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
 	}
 }
 
+static checkerror()
+{
+	int err = glGetError();
+	if (err != GL_NO_ERROR)
+		ri.Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
+}
 /*
 ===============
 DrawVertexBuffer
@@ -553,13 +561,13 @@ void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVer
 		else
 			glDrawArrays(GL_TRIANGLES, startVert, numVerts);
 	}
-
+	checkerror();
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(3);
 	glDisableVertexAttribArray(4);
-
+	checkerror();
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -577,6 +585,7 @@ static void R_FastDrawMD3Model(rentity_t* ent, md3Header_t* pModel, float lerp)
 
 	R_ProgUniform1f(LOC_LERPFRAC, lerp);
 
+	glDisable(GL_CULL_FACE);
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{
 		surfverts = ent->model->vb[surf]->numVerts / pModel->numFrames;
