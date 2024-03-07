@@ -182,7 +182,7 @@ void GL_SetDefaultState( void )
 	R_SetCullFace(GL_FRONT);
 	glEnable(GL_TEXTURE_2D);
 
-	R_AlphaTest(true);
+	//R_AlphaTest(true);
 	glAlphaFunc(GL_GREATER, 0.1);
 
 	R_DepthTest(false);

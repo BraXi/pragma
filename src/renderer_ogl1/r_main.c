@@ -157,7 +157,7 @@ void R_DrawSpriteModel (rentity_t *e)
     R_BindTexture(pCurrentModel->images[e->frame]->texnum);
 	R_SetTexEnv( GL_MODULATE );
 
-	R_AlphaTest(true); // IS THIS REALY CORRECT?
+	//R_AlphaTest(true); // IS THIS REALY CORRECT?
 
 	glBegin(GL_TRIANGLES);
 	{
@@ -193,7 +193,7 @@ void R_DrawSpriteModel (rentity_t *e)
 	}
 	glEnd();
 
-	R_AlphaTest(false);
+	//R_AlphaTest(false);
 	R_SetTexEnv( GL_REPLACE );
 
 	R_Blend(false);
@@ -397,7 +397,7 @@ void R_ViewBlendEffect (void)
 	if (!v_blend[3])
 		return; // transparent
 
-	R_AlphaTest(false);
+	//R_AlphaTest(false);
 	R_Blend(true);
 	R_DepthTest(false);
 	glDisable (GL_TEXTURE_2D);
@@ -422,7 +422,7 @@ void R_ViewBlendEffect (void)
 	}
 	glEnd();
 
-	R_AlphaTest(true);
+	//R_AlphaTest(true);
 	R_Blend(false);
 
 	glEnable(GL_TEXTURE_2D);
@@ -610,7 +610,7 @@ void R_SetupGL (void)
 	R_CullFace(r_cull->value);
 
 	R_Blend(false);
-	R_AlphaTest(false);
+	//R_AlphaTest(false);
 	R_DepthTest(true);
 }
 
@@ -746,7 +746,7 @@ void R_SetGL2D(void)
 	R_DepthTest(false);
 	R_CullFace(false);
 	R_Blend(false);
-	R_AlphaTest(true);
+	//R_AlphaTest(true);
 
 	R_SetTexEnv(GL_MODULATE);
 }

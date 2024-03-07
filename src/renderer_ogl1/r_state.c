@@ -70,7 +70,6 @@ inline void funcName(stateValType newstateA, stateValType newstateB) { \
 		}\
 }
 
-OGL_TOGGLE_STATE_FUNC(R_AlphaTest, glstate.alphaTestEnabled, GL_ALPHA_TEST)
 OGL_TOGGLE_STATE_FUNC(R_Blend, glstate.blendEnabled, GL_BLEND)
 OGL_TOGGLE_STATE_FUNC(R_DepthTest, glstate.depthTestEnabled, GL_DEPTH_TEST)
 //OGL_TOGGLE_STATE_FUNC(R_Texturing, glstate.textureEnabled, GL_TEXTURE_2D)
@@ -81,19 +80,30 @@ OGL_STATE_FUNC(R_WriteToDepthBuffer, glstate.depthmask, glDepthMask, GLboolean)
 
 OGL_STATE_FUNC2(R_BlendFunc, glstate.blendfunc, glBlendFunc, GLenum)
 
-
-inline void R_SetColor(float r, float g, float b, float a)
+void R_SetColor3(float r, float g, float b)
 {
-//	TODO: uncomment whem models stop using R_Color for shading
-//	if (glstate.color[0] == r && glstate.color[1] == g && glstate.color[2] == b && glstate.color[3] == a)
-//		return;
+	glstate.color[0] = r;
+	glstate.color[1] = g;
+	glstate.color[2] = b;
+	glstate.color[3] = 1.0f;
 
+	if (pCurrentProgram == NULL)
+	{
+
+	}
+}
+
+void R_SetColor4(float r, float g, float b, float a)
+{
 	glstate.color[0] = r;
 	glstate.color[1] = g;
 	glstate.color[2] = b;
 	glstate.color[3] = a;
 
-	glColor4fv(glstate.color);
+	if(pCurrentProgram == NULL)
+	{ 
+
+	}
 }
 
 inline void R_SetClearColor(float r, float g, float b, float a)
@@ -114,7 +124,7 @@ void R_InitialOGLState()
 {
 	memset(&glstate, 0, sizeof(glstate_t));
 
-	glDisable(GL_ALPHA_TEST);
+//	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);

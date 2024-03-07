@@ -468,7 +468,6 @@ a better gl state tracker
 ====================================================================
 */
 
-extern inline void R_AlphaTest(qboolean enable);
 extern inline void R_Blend(qboolean enable);
 extern inline void R_DepthTest(qboolean enable);
 extern  void R_Texturing(qboolean enable);

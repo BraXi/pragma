@@ -441,7 +441,7 @@ void R_DrawDebugLines(void)
 
 #if 1
 	R_SetTexEnv(GL_MODULATE);
-	R_AlphaTest(true);
+	//R_AlphaTest(true);
 	R_DepthTest(true);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
@@ -458,7 +458,7 @@ void R_DrawDebugLines(void)
 		}
 	}
 	R_SetTexEnv(GL_REPLACE);
-	R_AlphaTest(false);
+	//R_AlphaTest(false);
 #endif
 
 #if 1
@@ -492,7 +492,7 @@ void R_DrawDebugLines(void)
 
 //	R_CullFace(false);
 	R_SetTexEnv(GL_MODULATE);
-	R_AlphaTest(true);
+	//R_AlphaTest(true);
 	R_DepthTest(false);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
@@ -509,7 +509,7 @@ void R_DrawDebugLines(void)
 		}
 	}
 	R_SetTexEnv(GL_REPLACE);
-	R_AlphaTest(false);
+	//R_AlphaTest(false);
 	R_DepthTest(true);
 	R_WriteToDepthBuffer(GL_TRUE);
 #endif

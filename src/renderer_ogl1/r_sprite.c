@@ -51,7 +51,7 @@ void R_DrawSprite(rentity_t* ent)
 	R_BindTexture(pCurrentModel->images[ent->frame]->texnum);
 	R_SetTexEnv(GL_MODULATE);
 
-	R_AlphaTest(ent->alpha == 1.0);
+	//R_AlphaTest(ent->alpha == 1.0);
 
 	glBegin(GL_TRIANGLES);
 	{
@@ -88,5 +88,5 @@ void R_DrawSprite(rentity_t* ent)
 	}
 	glEnd();
 
-	R_AlphaTest(false);
+	//R_AlphaTest(false);
 }
