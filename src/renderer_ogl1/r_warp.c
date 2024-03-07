@@ -201,6 +201,7 @@ Does a water warp on the pre-fragmented glpoly_t chain
 */
 void EmitWaterPolys (msurface_t *fa)
 {
+#ifndef GETITTOCOMPILE
 	glpoly_t	*p, *bp;
 	float		*v;
 	int			i;
@@ -242,6 +243,7 @@ void EmitWaterPolys (msurface_t *fa)
 		}
 		glEnd ();
 	}
+#endif
 }
 
 
@@ -512,6 +514,7 @@ void R_ClearSkyBox (void)
 
 void MakeSkyVec (float s, float t, int axis)
 {
+#ifndef GETITTOCOMPILE
 	vec3_t		v, b;
 	int			j, k;
 
@@ -544,6 +547,7 @@ void MakeSkyVec (float s, float t, int axis)
 //	t = 1.0 - t;	// braxi -- commented out, TGAs were upside down
 	glTexCoord2f (s, t);
 	glVertex3fv (v);
+#endif
 }
 
 /*
@@ -554,6 +558,7 @@ R_DrawSkyBox
 int	skytexorder[6] = {0,2,1,3,4,5};
 void R_DrawSkyBox (void)
 {
+#ifndef GETITTOCOMPILE
 	int		i;
 
 #if 0
@@ -623,6 +628,7 @@ void R_DrawSkyBox (void)
 	R_SetColor4(1,1,1,0.5);
 	R_DepthTest(true);
 #endif
+#endif // GETITTOCOMPILE
 }
 
 

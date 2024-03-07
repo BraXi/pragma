@@ -170,6 +170,7 @@ DrawGLPoly
 */
 void DrawGLPoly (glpoly_t *p)
 {
+#ifndef GETITTOCOMPILE
 	int		i;
 	float	*v;
 
@@ -181,6 +182,7 @@ void DrawGLPoly (glpoly_t *p)
 		glVertex3fv (v);
 	}
 	glEnd ();
+#endif
 }
 
 /*
@@ -190,6 +192,7 @@ DrawGLFlowingPoly -- version of DrawGLPoly that handles scrolling texture
 */
 void DrawGLFlowingPoly (msurface_t *fa)
 {
+#ifndef GETITTOCOMPILE
 	int		i;
 	float	*v;
 	glpoly_t *p;
@@ -209,6 +212,7 @@ void DrawGLFlowingPoly (msurface_t *fa)
 		glVertex3fv (v);
 	}
 	glEnd ();
+#endif
 }
 
 /*
@@ -224,6 +228,7 @@ void R_DrawTriangleOutlines (void)
 	if (!r_showtris->value)
 		return;
 ;
+#ifndef GETITTOCOMPILE
 	R_WriteToDepthBuffer(true);
 	R_BeginLinesRendering(r_showtris->value >= 2 ? true : false);
 	for (i = 0; i < MAX_LIGHTMAPS; i++)
@@ -249,6 +254,7 @@ void R_DrawTriangleOutlines (void)
 	}
 	R_EndLinesRendering();
 	R_WriteToDepthBuffer(true);
+#endif
 }
 
 /*
@@ -256,6 +262,7 @@ void R_DrawTriangleOutlines (void)
 */
 void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 {
+#ifndef GETITTOCOMPILE
 	if ( soffset == 0 && toffset == 0 )
 	{
 		for ( ; p != 0; p = p->chain )
@@ -290,6 +297,7 @@ void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 			glEnd ();
 		}
 	}
+#endif
 }
 
 /*
@@ -943,7 +951,7 @@ void R_DrawBrushModel (rentity_t *e)
 	if (R_CullBox (mins, maxs))
 		return;
 
-	R_SetColor(1,1,1);
+	R_SetColor3(1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
 	VectorSubtract (r_newrefdef.view.origin, e->origin, modelorg);
@@ -1550,14 +1558,17 @@ void GL_BeginBuildingLightmaps (model_t *m)
 	{
 		gl_lms.internal_format = gl_tex_alpha_format;
 	}
+#ifndef GETITTOCOMPILE
 	else if ( toupper( r_monolightmap->string[0] ) == 'I' )
 	{
 		gl_lms.internal_format = GL_INTENSITY8;
+
 	}
 	else if ( toupper( r_monolightmap->string[0] ) == 'L' ) 
 	{
 		gl_lms.internal_format = GL_LUMINANCE8;
 	}
+#endif
 	else
 	{
 		gl_lms.internal_format = gl_tex_solid_format;

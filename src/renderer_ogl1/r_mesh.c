@@ -315,10 +315,12 @@ R_DrawDebugLine
 */
 static void R_DrawDebugLine(debugprimitive_t *line)
 {
+#ifndef GETITTOCOMPILE
 	glBegin(GL_LINES);
 		glVertex3fv(line->p1);
 		glVertex3fv(line->p2);
 	glEnd();
+#endif
 }
 
 /*
@@ -328,6 +330,7 @@ R_DrawWirePoint
 */
 static void R_DrawWirePoint(vec3_t origin)
 {
+#ifndef GETITTOCOMPILE
 	int size = 8;
 	glBegin(GL_LINES);
 		glVertex3f(origin[0] - size, origin[1], origin[2]);
@@ -337,10 +340,12 @@ static void R_DrawWirePoint(vec3_t origin)
 		glVertex3f(origin[0], origin[1], origin[2] - size);
 		glVertex3f(origin[0], origin[1], origin[2] + size);
 	glEnd();
+#endif
 }
 
 static void R_DrawWireBoundingBox(vec3_t mins, vec3_t maxs)
 {
+#ifndef GETITTOCOMPILE
 	glBegin(GL_LINES);
 		glVertex3f(mins[0], mins[1], mins[2]);
 		glVertex3f(maxs[0], mins[1], mins[2]);
@@ -378,6 +383,7 @@ static void R_DrawWireBoundingBox(vec3_t mins, vec3_t maxs)
 		glVertex3f(maxs[0], maxs[1], mins[2]);
 		glVertex3f(maxs[0], maxs[1], maxs[2]);
 	glEnd();
+#endif
 }
 /*
 =============
@@ -386,6 +392,7 @@ R_DrawWireBox
 */
 static void R_DrawWireBox(vec3_t mins, vec3_t maxs)
 {
+#ifndef GETITTOCOMPILE
 	glBegin(GL_QUAD_STRIP);
 	glVertex3f(mins[0], mins[1], mins[2]);
 	glVertex3f(mins[0], mins[1], maxs[2]);
@@ -398,6 +405,7 @@ static void R_DrawWireBox(vec3_t mins, vec3_t maxs)
 	glVertex3f(mins[0], mins[1], mins[2]);
 	glVertex3f(mins[0], mins[1], maxs[2]);
 	glEnd();
+#endif
 }
 
 /*
