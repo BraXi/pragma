@@ -318,7 +318,7 @@ int R_Init(void* hinstance, void* hWnd)
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 	
 	glActiveTexture = 0;
-	glMultiTexCoord2f = 0;
+	//glMultiTexCoord2f = 0;
 
 	R_InitPrograms();
 

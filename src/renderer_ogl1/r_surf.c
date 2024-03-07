@@ -664,6 +664,7 @@ void DrawTextureChains (void)
 
 static void GL_RenderLightmappedPoly( msurface_t *surf )
 {
+#if 0 // multitexture approach
 	int		i, nv = surf->polys->numverts;
 	int		map;
 	float	*v;
@@ -820,6 +821,7 @@ dynamic:
 			}
 		}
 	}
+#endif
 }
 
 /*
@@ -879,10 +881,10 @@ void R_DrawInlineBModel (void)
 				psurf->texturechain = r_alpha_surfaces;
 				r_alpha_surfaces = psurf;
 			}
-			else if ( glMultiTexCoord2f && !( psurf->flags & SURF_DRAWTURB ) )
-			{
-				GL_RenderLightmappedPoly( psurf );
-			}
+			//else if ( glMultiTexCoord2f && !( psurf->flags & SURF_DRAWTURB ) )
+			//{
+			//	GL_RenderLightmappedPoly( psurf );
+			//}
 			else
 			{
 				R_EnableMultitexture( false );
@@ -894,7 +896,7 @@ void R_DrawInlineBModel (void)
 
 	if ( !(pCurrentRefEnt->renderfx & RF_TRANSLUCENT) )
 	{
-		if ( !glMultiTexCoord2f )
+		//if ( !glMultiTexCoord2f )
 			R_BlendLightmaps ();
 	}
 	else
@@ -1088,11 +1090,11 @@ void R_RecursiveWorldNode (mnode_t *node)
 		}
 		else
 		{
-			if ( glMultiTexCoord2f && !( surf->flags & SURF_DRAWTURB ) )
-			{
-				GL_RenderLightmappedPoly( surf );
-			}
-			else
+			//if ( glMultiTexCoord2f && !( surf->flags & SURF_DRAWTURB ) )
+			//{
+			//	GL_RenderLightmappedPoly( surf );
+			//}
+			//else
 			{
 				// the polygon is visible, so add it to the texture
 				// sorted chain
