@@ -29,7 +29,8 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	/* global */
 	{ LOC_COLORMAP,			"colormap",			F_INT },
 	{ LOC_COLOR4,			"color_rgba",		F_FLOAT },
-	{ LOC_TIME,				"time",				F_FLOAT },
+	{ LOC_SCALE,			"scale",			F_VECTOR3 },
+	{ LOC_TIME,				"time",				F_FLOAT }, // fixme: unset
 
 	/* md3 models */
 	{ LOC_SHADEVECTOR,		"shade_vector",		F_VECTOR3 },

@@ -30,24 +30,24 @@ typedef struct oglstate_s
 	qboolean	textureBind[GL_TMUS];
 	GLuint		textureMappingUnit;
 
+	float		scale[3];
 	float		color[4];
 	float		clearcolor[4];
 } oglstate_t;
 
 static oglstate_t glstate;
 
+void R_SetScale(float x, float y, float z)
+{
+	glstate.scale[0] = x;
+	glstate.scale[1] = y;
+	glstate.scale[2] = z;
+
+	R_ProgUniformVec4(LOC_SCALE, glstate.color);
+}
+
 void R_SetColor3(float r, float g, float b)
 {
-	if (pCurrentProgram == NULL)
-	{
-		return;
-	}
-
-	if (pCurrentProgram->locs[LOC_COLOR4] == -1)
-	{
-		return;
-	}
-
 	glstate.color[0] = r;
 	glstate.color[1] = g;
 	glstate.color[2] = b;
@@ -58,16 +58,6 @@ void R_SetColor3(float r, float g, float b)
 
 void R_SetColor4(float r, float g, float b, float a)
 {
-	if (pCurrentProgram == NULL)
-	{
-		return;
-	}
-
-	if (pCurrentProgram->locs[LOC_COLOR4] == -1)
-	{
-		return;
-	}
-
 	glstate.color[0] = r;
 	glstate.color[1] = g;
 	glstate.color[2] = b;
@@ -153,7 +143,8 @@ void R_InitialOGLState()
 
 	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	R_SetColor(1, 1, 1, 1);
+	R_SetScale(1, 1, 1);
+	R_SetColor4(1, 1, 1, 1);
 	R_SetClearColor(0, 0, 0, 1);
 
 	// clear and disable all textures but 0

@@ -87,6 +87,7 @@ typedef struct image_s
 //
 // r_state.c
 // 
+void R_SetScale(float x, float y, float z);
 void R_SetColor3(float r, float g, float b);
 void R_SetColor4(float r, float g, float b, float a);
 
@@ -113,7 +114,8 @@ enum
 typedef enum
 {
 	LOC_COLORMAP,
-	LOC_COLOR4,
+	LOC_COLOR4, //todo update shader when bound
+	LOC_SCALE, //todo update shader when bound
 	LOC_TIME,
 	LOC_SHADEVECTOR,
 	LOC_SHADECOLOR,

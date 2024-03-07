@@ -220,7 +220,7 @@ void R_DrawEntityModel(rentity_t* ent)
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
-		glScalef(-1, 1, 1);
+		R_SetScale(-1, 1, 1);
 		MYgluPerspective(r_newrefdef.view.fov_y, (float)r_newrefdef.width / r_newrefdef.height, 4, 4096);
 		glMatrixMode(GL_MODELVIEW);
 		R_SetCullFace(GL_BACK);
@@ -234,7 +234,7 @@ void R_DrawEntityModel(rentity_t* ent)
 		ent->angles[PITCH] = -ent->angles[PITCH];
 
 		if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
-			glScalef(ent->scale, ent->scale, ent->scale);
+			R_SetScale(ent->scale, ent->scale, ent->scale);
 
 		// render model
 		switch (ent->model->type)
@@ -254,7 +254,7 @@ void R_DrawEntityModel(rentity_t* ent)
 
 		// restore scale
 		if (ent->renderfx & RF_SCALE)
-			glScalef(1.0f, 1.0f, 1.0f);
+			R_SetScale(1.0f, 1.0f, 1.0f);
 	}
 	glPopMatrix();
 
