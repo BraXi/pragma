@@ -470,36 +470,6 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 	outNormal[2] = (n1[2] + lerp * (n2[2] - n1[2]));
 }
 
-static void SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
-{
-	if (enable)
-	{
-		glEnableClientState(GL_VERTEX_ARRAY);
-
-		if (vbo->flags & V_NORMAL)
-			glEnableClientState(GL_NORMAL_ARRAY);
-
-		if (vbo->flags & V_UV)
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		if (vbo->flags & V_COLOR)
-			glEnableClientState(GL_COLOR_ARRAY);
-	}
-	else
-	{
-		glDisableClientState(GL_VERTEX_ARRAY);
-
-		if (vbo->flags & V_NORMAL)
-			glDisableClientState(GL_NORMAL_ARRAY);
-
-		if (vbo->flags & V_UV)
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		if (vbo->flags & V_COLOR)
-			glDisableClientState(GL_COLOR_ARRAY);
-	}
-}
-
 /*
 ===============
 DrawVertexBuffer

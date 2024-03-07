@@ -18,6 +18,13 @@ extern cvar_t* r_postfx_grayscale;
 extern cvar_t* r_postfx_inverse;
 extern cvar_t* r_postfx_noise;
 
+extern vertexbuffer_t vb_gui;
+extern int guiVertCount;
+extern glvert_t guiVerts[1024];
+extern void ClearVertexBuffer();
+extern void PushVert(float x, float y, float z);
+extern void SetTexCoords(float s, float t);
+
 /*
 ===============
 R_ClearFBO
@@ -198,29 +205,33 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 	rect[2] = w;
 	rect[3] = h;
 
-	R_SetColor4(1, 1, 1, 1);
+	ClearVertexBuffer();
+	PushVert(rect[0], rect[1], 0);
+	SetTexCoords(0.0f, 1.0f);
+	PushVert(rect[0] + rect[2], rect[1], 0);
+	SetTexCoords(1.0f, 1.0f);
+	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
+	SetTexCoords(1.0f, 0.0f);
+	PushVert(rect[0], rect[1], 0);
+	SetTexCoords(0.0f, 1.0f);
+	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
+	SetTexCoords(1.0f, 0.0f);
+	PushVert(rect[0], rect[1] + rect[3], 0);
+	SetTexCoords(0.0f, 0.0f);
+
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
+
 
 	R_BindProgram(GLPROG_POSTFX);
 	R_ProgUniform2f(LOC_SCREENSIZE, (float)vid.width, (float)vid.height);
-
+	R_SetColor4(1, 1, 1, 1);
 	R_ApplyPostEffects();
 
 	if(diffuse)
-		glBindTexture(GL_TEXTURE_2D, fbo_tex_diffuse);
+		R_BindTexture(fbo_tex_diffuse);
 //	else
-//		glBindTexture(GL_TEXTURE_2D, fbo_tex_depth);
+//		R_BindTexture(fbo_tex_depth);
 
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(0.0f, 1.0f);	glVertex2f(rect[0], rect[1]);
-		glTexCoord2f(1.0f, 1.0f);	glVertex2f(rect[0] + rect[2], rect[1]);
-		glTexCoord2f(1.0f, 0.0f);	glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
-
-		glTexCoord2f(0.0f, 1.0f);	glVertex2f(rect[0], rect[1]);
-		glTexCoord2f(1.0f, 0.0f);	glVertex2f(rect[0] + rect[2], rect[1] + rect[3]);
-		glTexCoord2f(0.0f, 0.0f);	glVertex2f(rect[0], rect[1] + rect[3]);
-	}
-	glEnd();
-
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
 	R_UnbindProgram();
 }
