@@ -550,7 +550,6 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	md3Header_t		*pModel = NULL;
 	md3Surface_t	*pSurface = NULL;
 	int				surf, surfverts;
-	vec3_t			v;
 	qboolean		anythingToDraw = false;
 
 	if (lod < 0 || lod >= NUM_LODS)
