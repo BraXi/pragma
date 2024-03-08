@@ -182,14 +182,14 @@ void GL_SetDefaultState( void )
 	R_SetCullFace(GL_FRONT);
 	glEnable(GL_TEXTURE_2D);
 
-	//R_AlphaTest(true);
+	R_AlphaTest(true);
 	glAlphaFunc(GL_GREATER, 0.1);
 
 	R_DepthTest(false);
 	R_CullFace(false);
 	R_Blend(false);
 
-	R_SetColor4(1,1,1,1);
+	glColor4f (1,1,1,1);
 
 	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 
@@ -205,7 +205,7 @@ void GL_SetDefaultState( void )
 
 	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//R_SetTexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 
 	GL_UpdateSwapInterval();
 }

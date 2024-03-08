@@ -201,7 +201,6 @@ Does a water warp on the pre-fragmented glpoly_t chain
 */
 void EmitWaterPolys (msurface_t *fa)
 {
-#ifndef GETITTOCOMPILE
 	glpoly_t	*p, *bp;
 	float		*v;
 	int			i;
@@ -243,7 +242,6 @@ void EmitWaterPolys (msurface_t *fa)
 		}
 		glEnd ();
 	}
-#endif
 }
 
 
@@ -514,7 +512,6 @@ void R_ClearSkyBox (void)
 
 void MakeSkyVec (float s, float t, int axis)
 {
-#ifndef GETITTOCOMPILE
 	vec3_t		v, b;
 	int			j, k;
 
@@ -547,7 +544,6 @@ void MakeSkyVec (float s, float t, int axis)
 //	t = 1.0 - t;	// braxi -- commented out, TGAs were upside down
 	glTexCoord2f (s, t);
 	glVertex3fv (v);
-#endif
 }
 
 /*
@@ -558,20 +554,19 @@ R_DrawSkyBox
 int	skytexorder[6] = {0,2,1,3,4,5};
 void R_DrawSkyBox (void)
 {
-#ifndef GETITTOCOMPILE
 	int		i;
 
 #if 0
 	R_Blend(true);
 	R_SetTexEnv( GL_MODULATE );
-	R_SetColor4(1,1,1,0.5);
+	glColor4f (1,1,1,0.5);
 	R_DepthTest(false);
 #endif
 
 	R_BindProgram(GLPROG_SKY);
 
-	//R_SetTexEnv(GL_MODULATE); // allow sky colors change
-	R_SetColor4(skycolor[0], skycolor[1], skycolor[2], 1);
+	R_SetTexEnv(GL_MODULATE); // allow sky colors change
+	glColor4f(skycolor[0], skycolor[1], skycolor[2], 1);
 
 	if (skyrotate)
 	{	// check for no sky at all
@@ -617,18 +612,17 @@ void R_DrawSkyBox (void)
 	}
 	glPopMatrix ();
 
-	//R_SetTexEnv(GL_REPLACE);
-	R_SetColor4(1, 1, 1, 1);
+	R_SetTexEnv(GL_REPLACE);
+	glColor4f(1, 1, 1, 1);
 
 	R_UnbindProgram();
 
 #if 0
 	R_Blend(false);
 	R_SetTexEnv(GL_REPLACE);
-	R_SetColor4(1,1,1,0.5);
+	glColor4f (1,1,1,0.5);
 	R_DepthTest(true);
 #endif
-#endif // GETITTOCOMPILE
 }
 
 

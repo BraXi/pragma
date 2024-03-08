@@ -15,77 +15,101 @@ See the attached GNU General Public License v2 for more details.
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
+extern vertexbuffer_t vb_gui;
+extern int guiVertCount;
+extern glvert_t guiVerts[1024];
+extern void ClearVertexBuffer();
+extern void PushVert(float x, float y, float z);
+extern void SetTexCoords(float s, float t);
+
 /*
 ===============
-VertexBufferAttribs
+SetVBOClientState
 
-Enable or disable attributes
+Enable or disable client states for vertex buffer rendering
 ===============
 */
-static void VertexBufferAttribs(vertexbuffer_t* vbo, qboolean enable)
+static qboolean SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
 {
 	int attrib;
 
 	if (pCurrentProgram == NULL)
 	{
-		ri.Error(ERR_FATAL, "bad\n");
-		return;
+		//ri.Error(ERR_FATAL, "bad\n");
+		return false;
 	}
 
-	attrib = 0;
-	glEnableVertexAttribArray(attrib);
-	glBindAttribLocation(pCurrentProgram->programObject, attrib, "inVertPos");
-	glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0));
+	attrib = R_GetProgAttribLoc(VALOC_POS);
+
+	if (attrib == -1)
+		return false;
 
 	if (enable)
 	{
+		glEnableVertexAttribArray(attrib);
+		//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inVertPos");
+		glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0));
+
 		if (vbo->flags & V_NORMAL)
 		{
-			attrib = 1;
-			glEnableVertexAttribArray(attrib);
-			glBindAttribLocation(pCurrentProgram->programObject, attrib, "inNormal");
-			glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(12));
+			attrib = R_GetProgAttribLoc(VALOC_NORMAL);
+			if (attrib != -1)
+			{
+				glEnableVertexAttribArray(attrib);
+				//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inNormal");
+				glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(12));
+			}
 		}
 
 		if (vbo->flags & V_UV)
 		{
-			attrib = 2;
-			glEnableVertexAttribArray(attrib);
-			glBindAttribLocation(pCurrentProgram->programObject, attrib, "inTexCoord");
-			glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(24));
+			attrib = R_GetProgAttribLoc(VALOC_TEXCOORD);
+			if (attrib != -1)
+			{
+				glEnableVertexAttribArray(attrib);
+				//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inTexCoord");
+				glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(24));
+			}
 		}
 
 		if (vbo->flags & V_COLOR)
 		{
-			attrib = 3;
-			glEnableVertexAttribArray(attrib);
-			glBindAttribLocation(pCurrentProgram->programObject, attrib, "inColor");
-			glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(32));
+			attrib = R_GetProgAttribLoc(VALOC_COLOR);
+			if (attrib != -1)
+			{
+				glEnableVertexAttribArray(attrib);
+				//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inColor");
+				glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(32));
+			}
 		}
 	}
 	else
 	{
-		attrib = 0;
+		attrib = R_GetProgAttribLoc(VALOC_POS);
 		glDisableVertexAttribArray(attrib);
 
 		if (vbo->flags & V_NORMAL)
 		{
-			attrib = 1;
-			glDisableVertexAttribArray(attrib);
+			attrib = R_GetProgAttribLoc(VALOC_NORMAL);
+			if (attrib != -1)
+				glDisableVertexAttribArray(attrib);
 		}
 
 		if (vbo->flags & V_UV)
 		{
-			attrib = 2;
-			glDisableVertexAttribArray(attrib);
+			attrib = R_GetProgAttribLoc(VALOC_TEXCOORD);
+			if (attrib != -1)
+				glDisableVertexAttribArray(attrib);
 		}
 
 		if (vbo->flags & V_COLOR)
 		{
-			attrib = 3;
-			glDisableVertexAttribArray(attrib);
+			attrib = R_GetProgAttribLoc(VALOC_COLOR);
+			if (attrib != -1)
+				glDisableVertexAttribArray(attrib);
 		}
 	}
+	return true;
 }
 
 /*
@@ -194,9 +218,20 @@ R_DrawVertexBuffer
 ===============
 */
 void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts)
-{	
+{
 	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
-	VertexBufferAttribs(vbo, true);
+
+	SetVBOClientState(vbo, true);
+
+#if 0
+	glVertexPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(0));
+	if (vbo->flags & V_NORMAL)
+		glNormalPointer(GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(12));	
+	if (vbo->flags & V_UV)
+		glTexCoordPointer(2, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(24));
+	if (vbo->flags & V_COLOR)
+		glColorPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(32));
+#endif
 
 	// case one: we have index buffer
 	if (vbo->numIndices && vbo->indices != NULL && vbo->indexBuf) //if ((vbo->flags & V_INDICES) && vbo->indexBuf)
@@ -219,7 +254,7 @@ void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned in
 			glDrawArrays(GL_TRIANGLES, startVert, numVerts);
 	}
 
-	VertexBufferAttribs(vbo, false);
+	SetVBOClientState(vbo, false);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

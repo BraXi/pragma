@@ -170,7 +170,6 @@ DrawGLPoly
 */
 void DrawGLPoly (glpoly_t *p)
 {
-#ifndef GETITTOCOMPILE
 	int		i;
 	float	*v;
 
@@ -182,7 +181,6 @@ void DrawGLPoly (glpoly_t *p)
 		glVertex3fv (v);
 	}
 	glEnd ();
-#endif
 }
 
 /*
@@ -192,7 +190,6 @@ DrawGLFlowingPoly -- version of DrawGLPoly that handles scrolling texture
 */
 void DrawGLFlowingPoly (msurface_t *fa)
 {
-#ifndef GETITTOCOMPILE
 	int		i;
 	float	*v;
 	glpoly_t *p;
@@ -212,7 +209,6 @@ void DrawGLFlowingPoly (msurface_t *fa)
 		glVertex3fv (v);
 	}
 	glEnd ();
-#endif
 }
 
 /*
@@ -228,7 +224,6 @@ void R_DrawTriangleOutlines (void)
 	if (!r_showtris->value)
 		return;
 ;
-#ifndef GETITTOCOMPILE
 	R_WriteToDepthBuffer(true);
 	R_BeginLinesRendering(r_showtris->value >= 2 ? true : false);
 	for (i = 0; i < MAX_LIGHTMAPS; i++)
@@ -254,7 +249,6 @@ void R_DrawTriangleOutlines (void)
 	}
 	R_EndLinesRendering();
 	R_WriteToDepthBuffer(true);
-#endif
 }
 
 /*
@@ -262,7 +256,6 @@ void R_DrawTriangleOutlines (void)
 */
 void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 {
-#ifndef GETITTOCOMPILE
 	if ( soffset == 0 && toffset == 0 )
 	{
 		for ( ; p != 0; p = p->chain )
@@ -297,7 +290,6 @@ void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 			glEnd ();
 		}
 	}
-#endif
 }
 
 /*
@@ -489,12 +481,12 @@ void R_RenderBrushPoly (msurface_t *fa)
 	{
 		R_BindTexture(image->texnum);
 
-		//R_SetTexEnv(GL_MODULATE);
+		R_SetTexEnv(GL_MODULATE);
 		//float inverse_intensity = -r_intensity->value;
-		//R_SetColor4(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
+		//glColor4f(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
 
 		EmitWaterPolys(fa);
-		//R_SetTexEnv(GL_REPLACE);
+		R_SetTexEnv(GL_REPLACE);
 
 		return;
 	}
@@ -502,7 +494,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	{
 		R_BindTexture( image->texnum );
 
-		//R_SetTexEnv( GL_REPLACE );
+		R_SetTexEnv( GL_REPLACE );
 	}
 
 
@@ -591,7 +583,7 @@ void R_DrawAlphaSurfaces (void)
     glLoadMatrixf (r_world_matrix);
 
 	R_Blend(true);
-	//R_SetTexEnv( GL_MODULATE );
+	R_SetTexEnv( GL_MODULATE );
 
 	intens = 1;
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
@@ -599,19 +591,19 @@ void R_DrawAlphaSurfaces (void)
 		R_BindTexture(s->texinfo->image->texnum);
 		rperf.brush_polys++;
 		if (s->texinfo->flags & SURF_TRANS33)
-			R_SetColor4(intens,intens,intens,0.33);
+			glColor4f (intens,intens,intens,0.33);
 		else if (s->texinfo->flags & SURF_TRANS66)
-			R_SetColor4(intens,intens,intens,0.66);
+			glColor4f (intens,intens,intens,0.66);
 		else
-			R_SetColor4(intens,intens,intens,1);
+			glColor4f (intens,intens,intens,1);
 		if (s->flags & SURF_DRAWTURB)
 			EmitWaterPolys (s);
 		else
 			DrawGLPoly (s->polys);
 	}
 
-	//R_SetTexEnv( GL_REPLACE );
-	R_SetColor4(1,1,1,1);
+	R_SetTexEnv( GL_REPLACE );
+	glColor4f (1,1,1,1);
 	R_Blend(false);
 
 	r_alpha_surfaces = NULL;
@@ -666,13 +658,12 @@ void DrawTextureChains (void)
 	}
 //	R_EnableMultitexture( true );
 
-	//R_SetTexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 }
 
 
 static void GL_RenderLightmappedPoly( msurface_t *surf )
 {
-#if 0 // multitexture approach
 	int		i, nv = surf->polys->numverts;
 	int		map;
 	float	*v;
@@ -829,7 +820,6 @@ dynamic:
 			}
 		}
 	}
-#endif
 }
 
 /*
@@ -866,8 +856,8 @@ void R_DrawInlineBModel (void)
 	if ( pCurrentRefEnt->renderfx & RF_TRANSLUCENT )
 	{
 		R_Blend(true);
-		R_SetColor4(1,1,1,0.25);
-		//R_SetTexEnv( GL_MODULATE );
+		glColor4f (1,1,1,0.25);
+		R_SetTexEnv( GL_MODULATE );
 	}
 
 	//
@@ -889,10 +879,10 @@ void R_DrawInlineBModel (void)
 				psurf->texturechain = r_alpha_surfaces;
 				r_alpha_surfaces = psurf;
 			}
-			//else if ( glMultiTexCoord2f && !( psurf->flags & SURF_DRAWTURB ) )
-			//{
-			//	GL_RenderLightmappedPoly( psurf );
-			//}
+			else if ( glMultiTexCoord2f && !( psurf->flags & SURF_DRAWTURB ) )
+			{
+				GL_RenderLightmappedPoly( psurf );
+			}
 			else
 			{
 				R_EnableMultitexture( false );
@@ -904,14 +894,14 @@ void R_DrawInlineBModel (void)
 
 	if ( !(pCurrentRefEnt->renderfx & RF_TRANSLUCENT) )
 	{
-		//if ( !glMultiTexCoord2f )
+		if ( !glMultiTexCoord2f )
 			R_BlendLightmaps ();
 	}
 	else
 	{
 		R_Blend(false);
-		R_SetColor4(1,1,1,1);
-		//R_SetTexEnv( GL_REPLACE );
+		glColor4f (1,1,1,1);
+		R_SetTexEnv( GL_REPLACE );
 	}
 }
 
@@ -951,7 +941,7 @@ void R_DrawBrushModel (rentity_t *e)
 	if (R_CullBox (mins, maxs))
 		return;
 
-	R_SetColor3(1,1,1);
+	glColor3f (1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
 	VectorSubtract (r_newrefdef.view.origin, e->origin, modelorg);
@@ -976,9 +966,9 @@ void R_DrawBrushModel (rentity_t *e)
 
 	R_EnableMultitexture( !r_fullbright->value );
 	R_SelectTextureUnit( GL_TEXTURE0 );
-	//R_SetTexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 	R_SelectTextureUnit( GL_TEXTURE1 );
-	//R_SetTexEnv( GL_MODULATE );
+	R_SetTexEnv( GL_MODULATE );
 
 	R_DrawInlineBModel ();
 	R_EnableMultitexture( false );
@@ -1098,11 +1088,11 @@ void R_RecursiveWorldNode (mnode_t *node)
 		}
 		else
 		{
-			//if ( glMultiTexCoord2f && !( surf->flags & SURF_DRAWTURB ) )
-			//{
-			//	GL_RenderLightmappedPoly( surf );
-			//}
-			//else
+			if ( glMultiTexCoord2f && !( surf->flags & SURF_DRAWTURB ) )
+			{
+				GL_RenderLightmappedPoly( surf );
+			}
+			else
 			{
 				// the polygon is visible, so add it to the texture
 				// sorted chain
@@ -1148,7 +1138,7 @@ void R_DrawWorld (void)
 
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
 
-	R_SetColor4(1,1,1,1);
+	glColor4f (1,1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 	R_ClearSkyBox ();
 
@@ -1157,13 +1147,13 @@ void R_DrawWorld (void)
 		R_EnableMultitexture( !r_fullbright->value );
 
 		R_SelectTextureUnit( GL_TEXTURE0 );
-		//R_SetTexEnv( GL_REPLACE );
+		R_SetTexEnv( GL_REPLACE );
 		R_SelectTextureUnit( GL_TEXTURE1 );
 
-		//if ( r_lightmap->value )
-		//	R_SetTexEnv( GL_REPLACE );
-		//else 
-		//	R_SetTexEnv( GL_MODULATE );
+		if ( r_lightmap->value )
+			R_SetTexEnv( GL_REPLACE );
+		else 
+			R_SetTexEnv( GL_MODULATE );
 
 		R_RecursiveWorldNode (r_worldmodel->nodes);
 
@@ -1558,17 +1548,14 @@ void GL_BeginBuildingLightmaps (model_t *m)
 	{
 		gl_lms.internal_format = gl_tex_alpha_format;
 	}
-#ifndef GETITTOCOMPILE
 	else if ( toupper( r_monolightmap->string[0] ) == 'I' )
 	{
 		gl_lms.internal_format = GL_INTENSITY8;
-
 	}
 	else if ( toupper( r_monolightmap->string[0] ) == 'L' ) 
 	{
 		gl_lms.internal_format = GL_LUMINANCE8;
 	}
-#endif
 	else
 	{
 		gl_lms.internal_format = gl_tex_solid_format;

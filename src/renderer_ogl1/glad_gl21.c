@@ -21,12 +21,12 @@
         https://glad.dav1d.de/#profile=compatibility&language=c&specification=gl&loader=on&api=gl%3D2.1&extensions=GL_ARB_framebuffer_no_attachments&extensions=GL_ARB_framebuffer_object&extensions=GL_EXT_framebuffer_object
 */
 
-#if 0 // disable gl2.1
+#if 1
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "include/glad/glad.h"
+#include "include/glad/glad_21.h"
 
 static void* get_proc(const char *namez);
 

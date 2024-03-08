@@ -33,16 +33,16 @@ void R_EnableMultitexture( qboolean enable )
 	{
 		R_SelectTextureUnit( GL_TEXTURE1 );
 		glEnable( GL_TEXTURE_2D );
-		//R_SetTexEnv( GL_REPLACE );
+		R_SetTexEnv( GL_REPLACE );
 	}
 	else
 	{
 		R_SelectTextureUnit( GL_TEXTURE1 );
 		glDisable( GL_TEXTURE_2D );
-		//R_SetTexEnv( GL_REPLACE );
+		R_SetTexEnv( GL_REPLACE );
 	}
 	R_SelectTextureUnit( GL_TEXTURE0 );
-	//R_SetTexEnv( GL_REPLACE );
+	R_SetTexEnv( GL_REPLACE );
 }
 
 void R_SelectTextureUnit( GLenum texture )
@@ -74,7 +74,7 @@ void R_SetTexEnv(GLenum mode)
 
 	if ( mode != lastmodes[gl_state.currenttmu] )
 	{
-		//glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
+		glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
 		lastmodes[gl_state.currenttmu] = mode;
 	}
 }
@@ -698,7 +698,7 @@ qboolean R_UploadTexture32(unsigned* data, int width, int height, qboolean mipma
 
 	if (mipmap)
 	{
-		//glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST); // FIXME: this should be done once in r_init
+		glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST); // FIXME: this should be done once in r_init
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 		glGenerateMipmap(GL_TEXTURE_2D);

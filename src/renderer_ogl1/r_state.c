@@ -30,41 +30,11 @@ typedef struct oglstate_s
 	qboolean	textureBind[GL_TMUS];
 	GLuint		textureMappingUnit;
 
-	float		scale[3];
 	float		color[4];
 	float		clearcolor[4];
 } oglstate_t;
 
 static oglstate_t glstate;
-
-void R_SetScale(float x, float y, float z)
-{
-	glstate.scale[0] = x;
-	glstate.scale[1] = y;
-	glstate.scale[2] = z;
-
-	R_ProgUniformVec4(LOC_SCALE, glstate.color);
-}
-
-void R_SetColor3(float r, float g, float b)
-{
-	glstate.color[0] = r;
-	glstate.color[1] = g;
-	glstate.color[2] = b;
-	glstate.color[3] = 1.0f;
-
-	R_ProgUniformVec4(LOC_COLOR4, glstate.color);
-}
-
-void R_SetColor4(float r, float g, float b, float a)
-{
-	glstate.color[0] = r;
-	glstate.color[1] = g;
-	glstate.color[2] = b;
-	glstate.color[3] = a;
-
-	R_ProgUniformVec4(LOC_COLOR4, glstate.color);
-}
 
 // toggle on or off
 #define OGL_TOGGLE_STATE_FUNC(funcName, currentState, stateVar) \
@@ -100,6 +70,7 @@ inline void funcName(stateValType newstateA, stateValType newstateB) { \
 		}\
 }
 
+OGL_TOGGLE_STATE_FUNC(R_AlphaTest, glstate.alphaTestEnabled, GL_ALPHA_TEST)
 OGL_TOGGLE_STATE_FUNC(R_Blend, glstate.blendEnabled, GL_BLEND)
 OGL_TOGGLE_STATE_FUNC(R_DepthTest, glstate.depthTestEnabled, GL_DEPTH_TEST)
 //OGL_TOGGLE_STATE_FUNC(R_Texturing, glstate.textureEnabled, GL_TEXTURE_2D)
@@ -111,6 +82,19 @@ OGL_STATE_FUNC(R_WriteToDepthBuffer, glstate.depthmask, glDepthMask, GLboolean)
 OGL_STATE_FUNC2(R_BlendFunc, glstate.blendfunc, glBlendFunc, GLenum)
 
 
+inline void R_SetColor(float r, float g, float b, float a)
+{
+//	TODO: uncomment whem models stop using R_Color for shading
+//	if (glstate.color[0] == r && glstate.color[1] == g && glstate.color[2] == b && glstate.color[3] == a)
+//		return;
+
+	glstate.color[0] = r;
+	glstate.color[1] = g;
+	glstate.color[2] = b;
+	glstate.color[3] = a;
+
+	glColor4fv(glstate.color);
+}
 
 inline void R_SetClearColor(float r, float g, float b, float a)
 {
@@ -130,7 +114,7 @@ void R_InitialOGLState()
 {
 	memset(&glstate, 0, sizeof(glstate_t));
 
-//	glDisable(GL_ALPHA_TEST);
+	glDisable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
@@ -143,8 +127,7 @@ void R_InitialOGLState()
 
 	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	R_SetScale(1, 1, 1);
-	R_SetColor4(1, 1, 1, 1);
+	R_SetColor(1, 1, 1, 1);
 	R_SetClearColor(0, 0, 0, 1);
 
 	// clear and disable all textures but 0

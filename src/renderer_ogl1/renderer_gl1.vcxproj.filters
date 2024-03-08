@@ -28,10 +28,7 @@
     <ClInclude Include="..\qcommon\mathlib.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="include\glad\glad_gl33core.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\KHR\khrplatform_gl33core.h">
+    <ClInclude Include="include\glad\glad_21.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,7 +65,7 @@
     <ClCompile Include="r_progs.c" />
     <ClCompile Include="r_framebuffer.c" />
     <ClCompile Include="r_vertexbuffer.c" />
-    <ClCompile Include="glad_gl33core.c" />
+    <ClCompile Include="glad_gl21.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

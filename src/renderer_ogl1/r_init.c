@@ -318,7 +318,7 @@ int R_Init(void* hinstance, void* hWnd)
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 	
 	glActiveTexture = 0;
-	//glMultiTexCoord2f = 0;
+	glMultiTexCoord2f = 0;
 
 	R_InitPrograms();
 
@@ -411,7 +411,7 @@ qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, in
 
 static void	RR_SetColor(float r, float g, float b, float a)
 {
-	R_SetColor4(r,g,b,a);
+	glColor4f(r,g,b,a);
 }
 
 /*

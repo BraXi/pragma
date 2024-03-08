@@ -202,7 +202,7 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// setup lighting
 	R_SetEntityShadeLight(ent);
-	//R_SetTexEnv(GL_MODULATE);
+	R_SetTexEnv(GL_MODULATE);
 
 	// 1. transparency
 	if (ent->renderfx & RF_TRANSLUCENT)
@@ -220,7 +220,7 @@ void R_DrawEntityModel(rentity_t* ent)
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
-		R_SetScale(-1, 1, 1);
+		glScalef(-1, 1, 1);
 		MYgluPerspective(r_newrefdef.view.fov_y, (float)r_newrefdef.width / r_newrefdef.height, 4, 4096);
 		glMatrixMode(GL_MODELVIEW);
 		R_SetCullFace(GL_BACK);
@@ -234,7 +234,7 @@ void R_DrawEntityModel(rentity_t* ent)
 		ent->angles[PITCH] = -ent->angles[PITCH];
 
 		if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
-			R_SetScale(ent->scale, ent->scale, ent->scale);
+			glScalef(ent->scale, ent->scale, ent->scale);
 
 		// render model
 		switch (ent->model->type)
@@ -254,12 +254,12 @@ void R_DrawEntityModel(rentity_t* ent)
 
 		// restore scale
 		if (ent->renderfx & RF_SCALE)
-			R_SetScale(1.0f, 1.0f, 1.0f);
+			glScalef(1.0f, 1.0f, 1.0f);
 	}
 	glPopMatrix();
 
 	// restore shade model
-	//R_SetTexEnv(GL_REPLACE);
+	R_SetTexEnv(GL_REPLACE);
 
 	// restore transparency
 	if (pCurrentRefEnt->renderfx & RF_TRANSLUCENT)
@@ -290,7 +290,7 @@ void R_BeginLinesRendering(qboolean dt)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDisable(GL_TEXTURE_2D);
 	R_CullFace(false);
-	R_SetColor4(1, 1, 1, 1);
+	glColor4f(1, 1, 1, 1);
 }
 
 /*
@@ -300,7 +300,7 @@ R_EndLinesRendering
 */
 void R_EndLinesRendering()
 {
-	R_SetColor4(1, 1, 1, 1);
+	glColor4f(1, 1, 1, 1);
 	glEnable(GL_TEXTURE_2D);
 	R_CullFace(true);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -315,12 +315,10 @@ R_DrawDebugLine
 */
 static void R_DrawDebugLine(debugprimitive_t *line)
 {
-#ifndef GETITTOCOMPILE
 	glBegin(GL_LINES);
 		glVertex3fv(line->p1);
 		glVertex3fv(line->p2);
 	glEnd();
-#endif
 }
 
 /*
@@ -330,7 +328,6 @@ R_DrawWirePoint
 */
 static void R_DrawWirePoint(vec3_t origin)
 {
-#ifndef GETITTOCOMPILE
 	int size = 8;
 	glBegin(GL_LINES);
 		glVertex3f(origin[0] - size, origin[1], origin[2]);
@@ -340,12 +337,10 @@ static void R_DrawWirePoint(vec3_t origin)
 		glVertex3f(origin[0], origin[1], origin[2] - size);
 		glVertex3f(origin[0], origin[1], origin[2] + size);
 	glEnd();
-#endif
 }
 
 static void R_DrawWireBoundingBox(vec3_t mins, vec3_t maxs)
 {
-#ifndef GETITTOCOMPILE
 	glBegin(GL_LINES);
 		glVertex3f(mins[0], mins[1], mins[2]);
 		glVertex3f(maxs[0], mins[1], mins[2]);
@@ -383,7 +378,6 @@ static void R_DrawWireBoundingBox(vec3_t mins, vec3_t maxs)
 		glVertex3f(maxs[0], maxs[1], mins[2]);
 		glVertex3f(maxs[0], maxs[1], maxs[2]);
 	glEnd();
-#endif
 }
 /*
 =============
@@ -392,7 +386,6 @@ R_DrawWireBox
 */
 static void R_DrawWireBox(vec3_t mins, vec3_t maxs)
 {
-#ifndef GETITTOCOMPILE
 	glBegin(GL_QUAD_STRIP);
 	glVertex3f(mins[0], mins[1], mins[2]);
 	glVertex3f(mins[0], mins[1], maxs[2]);
@@ -405,7 +398,6 @@ static void R_DrawWireBox(vec3_t mins, vec3_t maxs)
 	glVertex3f(mins[0], mins[1], mins[2]);
 	glVertex3f(mins[0], mins[1], maxs[2]);
 	glEnd();
-#endif
 }
 
 /*
@@ -430,7 +422,7 @@ void R_DrawDebugLines(void)
 		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
-		R_SetColor3(line->color[0], line->color[1], line->color[2]);
+		glColor3fv(line->color);
 		glLineWidth(line->thickness);
 		switch (line->type)
 		{
@@ -448,8 +440,8 @@ void R_DrawDebugLines(void)
 	R_EndLinesRendering();
 
 #if 1
-	//R_SetTexEnv(GL_MODULATE);
-	//R_AlphaTest(true);
+	R_SetTexEnv(GL_MODULATE);
+	R_AlphaTest(true);
 	R_DepthTest(true);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
@@ -465,8 +457,8 @@ void R_DrawDebugLines(void)
 			break;
 		}
 	}
-	//R_SetTexEnv(GL_REPLACE);
-	//R_AlphaTest(false);
+	R_SetTexEnv(GL_REPLACE);
+	R_AlphaTest(false);
 #endif
 
 #if 1
@@ -480,7 +472,7 @@ void R_DrawDebugLines(void)
 		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
-		R_SetColor3(line->color[0], line->color[1], line->color[2]);
+		glColor3fv(line->color);
 		glLineWidth(line->thickness);
 		switch (line->type)
 		{
@@ -499,8 +491,8 @@ void R_DrawDebugLines(void)
 
 
 //	R_CullFace(false);
-	//R_SetTexEnv(GL_MODULATE);
-	//R_AlphaTest(true);
+	R_SetTexEnv(GL_MODULATE);
+	R_AlphaTest(true);
 	R_DepthTest(false);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
@@ -516,13 +508,13 @@ void R_DrawDebugLines(void)
 			break;
 		}
 	}
-	//R_SetTexEnv(GL_REPLACE);
-	//R_AlphaTest(false);
+	R_SetTexEnv(GL_REPLACE);
+	R_AlphaTest(false);
 	R_DepthTest(true);
 	R_WriteToDepthBuffer(GL_TRUE);
 #endif
 
-	R_SetColor3(1,1,1);
+	glColor3f(1,1,1);
 	glLineWidth(1.0f);
 	glPopMatrix();
 }

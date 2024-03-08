@@ -224,13 +224,13 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 
 	R_BindProgram(GLPROG_POSTFX);
 	R_ProgUniform2f(LOC_SCREENSIZE, (float)vid.width, (float)vid.height);
-	R_SetColor4(1, 1, 1, 1);
+	//R_SetColor4(1, 1, 1, 1);
 	R_ApplyPostEffects();
 
-	if(diffuse)
-		R_BindTexture(fbo_tex_diffuse);
-//	else
-//		R_BindTexture(fbo_tex_depth);
+	if (diffuse)
+		glBindTexture(GL_TEXTURE_2D, fbo_tex_diffuse);
+	//	else
+	//		R_BindTexture(fbo_tex_depth);
 
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 	R_UnbindProgram();

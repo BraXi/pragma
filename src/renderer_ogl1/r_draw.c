@@ -311,12 +311,12 @@ void Draw_FadeScreen (float *rgba)
 	R_Blend(true);
 	glDisable(GL_TEXTURE_2D);
 //	glAlphaFunc(GL_GREATER, 0.05);
-	R_SetColor4(rgba[0], rgba[1], rgba[2], rgba[3]);
+	glColor4fv(rgba);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 
-	R_SetColor4(1,1,1,1);
+	glColor4f(1,1,1,1);
 //	glAlphaFunc(GL_GREATER, 0.1);
 	glEnable (GL_TEXTURE_2D);
 	R_Blend(false);

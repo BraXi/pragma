@@ -22,10 +22,10 @@ See the attached GNU General Public License v2 for more details.
 #endif
 
 #include <stdio.h>
-#if 1
+#if 0
 #include "include/glad/glad_gl33core.h"
 #else
-#include "include/glad/glad_gl21.h"
+#include "include/glad/glad_21.h"
 #endif
 #include <math.h>
 #include "../qcommon/renderer.h"
@@ -33,7 +33,6 @@ See the attached GNU General Public License v2 for more details.
 
 #define	REF_VERSION	"0.4-next"
 
-#define GETITTOCOMPILE 1
 
 // -- sin table --
 //#define RAD2DEG( a ) ( ( (a) * 180.0f ) / M_PI ) // unused
@@ -85,13 +84,6 @@ typedef struct image_s
 //===================================================================
 
 //
-// r_state.c
-// 
-void R_SetScale(float x, float y, float z);
-void R_SetColor3(float r, float g, float b);
-void R_SetColor4(float r, float g, float b, float a);
-
-//
 // r_fbo.c
 //
 qboolean R_InitFrameBuffer();
@@ -114,8 +106,8 @@ enum
 typedef enum
 {
 	LOC_COLORMAP,
-	LOC_COLOR4, //todo update shader when bound
-	LOC_SCALE, //todo update shader when bound
+	LOC_SCALE,
+	LOC_COLOR4,
 	LOC_TIME,
 	LOC_SHADEVECTOR,
 	LOC_SHADECOLOR,
@@ -150,7 +142,7 @@ typedef struct glprog_s
 	char			name[MAX_QPATH];
 	int				index;
 	int				locs[NUM_LOCS];
-	int				valocs[NUM_LOCS];
+	int				valocs[NUM_VALOCS];
 	unsigned int	programObject; /*GLuint*/ 
 	unsigned int	vertexShader, fragmentShader; /*GLuint*/ 
 	qboolean		isValid;
@@ -181,6 +173,8 @@ void R_ProgUniformVec3(int uniform, vec3_t v);
 void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4);
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4);
 void R_ProgUniformVec4(int uniform, vec4_t v);
+int R_GetProgAttribLoc(glprogLoc_t attrib);
+qboolean R_UsingProgram();
 
 void	R_ShaderList_f(void);
 
@@ -478,6 +472,7 @@ a better gl state tracker
 ====================================================================
 */
 
+extern inline void R_AlphaTest(qboolean enable);
 extern inline void R_Blend(qboolean enable);
 extern inline void R_DepthTest(qboolean enable);
 extern  void R_Texturing(qboolean enable);

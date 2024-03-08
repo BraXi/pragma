@@ -109,7 +109,6 @@ R_DrawSpriteModel
 */
 void R_DrawSpriteModel (rentity_t *e)
 {
-#ifndef GETITTOCOMPILE
 	float alpha = 1.0F;
 	vec3_t	point;
 	sp2Frame_t	*frame;
@@ -153,12 +152,12 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	R_Blend(alpha != 1.0F);
 
-	R_SetColor4( 1, 1, 1, alpha );
+	glColor4f( 1, 1, 1, alpha );
 
     R_BindTexture(pCurrentModel->images[e->frame]->texnum);
-	//R_SetTexEnv( GL_MODULATE );
+	R_SetTexEnv( GL_MODULATE );
 
-	//R_AlphaTest(true); // IS THIS REALY CORRECT?
+	R_AlphaTest(true); // IS THIS REALY CORRECT?
 
 	glBegin(GL_TRIANGLES);
 	{
@@ -194,13 +193,12 @@ void R_DrawSpriteModel (rentity_t *e)
 	}
 	glEnd();
 
-	//R_AlphaTest(false);
-	//R_SetTexEnv( GL_REPLACE );
+	R_AlphaTest(false);
+	R_SetTexEnv( GL_REPLACE );
 
 	R_Blend(false);
 
-	R_SetColor4( 1, 1, 1, 1 );
-#endif
+	glColor4f( 1, 1, 1, 1 );
 }
 
 //==================================================================================
@@ -214,7 +212,6 @@ Draw the default model
 */
 static void R_DrawNullModel (void)
 {
-#ifndef GETITTOCOMPILE
 	vec3_t	shadelight;
 	int		i;
 
@@ -227,7 +224,7 @@ static void R_DrawNullModel (void)
 	R_RotateForEntity (pCurrentRefEnt);
 
 	glDisable (GL_TEXTURE_2D);
-	R_SetColor3(shadelight[0], shadelight[1], shadelight[2]);
+	glColor3fv (shadelight);
 
 	glBegin (GL_TRIANGLE_FAN);
 	glVertex3f (0, 0, -16);
@@ -241,10 +238,9 @@ static void R_DrawNullModel (void)
 		glVertex3f (16*cos(i*M_PI/2), 16*sin(i*M_PI/2), 0);
 	glEnd ();
 
-	R_SetColor3(1,1,1);
+	glColor3f (1,1,1);
 	glPopMatrix ();
 	glEnable (GL_TEXTURE_2D);
-#endif
 }
 
 
@@ -324,7 +320,6 @@ GL_DrawParticles
 */
 void GL_DrawParticles( int num_particles, const particle_t particles[] )
 {
-#ifndef GETITTOCOMPILE
 	const particle_t *p;
 	int				i;
 	vec3_t			up, right;
@@ -335,7 +330,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 
 	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
 	R_Blend(true);
-	//R_SetTexEnv( GL_MODULATE );
+	R_SetTexEnv( GL_MODULATE );
 
 	VectorScale (vup, 1.5, up);
 	VectorScale (vright, 1.5, right);
@@ -359,7 +354,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 
 		color[3] = p->alpha;
 
-		R_SetColor4( color[0], color[1], color[2], color[3] );
+		glColor4fv( color );
 
 		glTexCoord2f( 0.0625, 0.0625 );
 		glVertex3fv( p->origin );
@@ -377,10 +372,9 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 
 	glEnd ();
 	R_Blend(false);
-	R_SetColor4( 1,1,1,1 );
+	glColor4f( 1,1,1,1 );
 	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
-	//R_SetTexEnv( GL_REPLACE );
-#endif
+	R_SetTexEnv( GL_REPLACE );
 }
 
 /*
@@ -400,11 +394,10 @@ R_ViewBlendEffect
 */
 void R_ViewBlendEffect (void)
 {
-#ifndef GETITTOCOMPILE
 	if (!v_blend[3])
 		return; // transparent
 
-	//R_AlphaTest(false);
+	R_AlphaTest(false);
 	R_Blend(true);
 	R_DepthTest(false);
 	glDisable (GL_TEXTURE_2D);
@@ -415,7 +408,7 @@ void R_ViewBlendEffect (void)
     glRotatef (-90,  1, 0, 0);	    // put Z going up
     glRotatef (90,  0, 0, 1);	    // put Z going up
 
-	R_SetColor4(v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
+	glColor4fv (v_blend);
 
 	glBegin(GL_TRIANGLES);
 	{
@@ -429,12 +422,11 @@ void R_ViewBlendEffect (void)
 	}
 	glEnd();
 
-	//R_AlphaTest(true);
+	R_AlphaTest(true);
 	R_Blend(false);
 
 	glEnable(GL_TEXTURE_2D);
-	R_SetColor4(1,1,1,1);
-#endif
+	glColor4f(1,1,1,1);
 }
 
 //=======================================================================
@@ -618,7 +610,7 @@ void R_SetupGL (void)
 	R_CullFace(r_cull->value);
 
 	R_Blend(false);
-	//R_AlphaTest(false);
+	R_AlphaTest(false);
 	R_DepthTest(true);
 }
 
@@ -754,10 +746,50 @@ void R_SetGL2D(void)
 	R_DepthTest(false);
 	R_CullFace(false);
 	R_Blend(false);
-	//R_AlphaTest(true);
+	R_AlphaTest(true);
 
-	//R_SetTexEnv(GL_MODULATE);
+	R_SetTexEnv(GL_MODULATE);
 }
+
+static void GL_DrawColoredStereoLinePair( float r, float g, float b, float y )
+{
+	glColor3f( r, g, b );
+	glVertex2f( 0, y );
+	glVertex2f( vid.width, y );
+	glColor3f( 0, 0, 0 );
+	glVertex2f( 0, y + 1 );
+	glVertex2f( vid.width, y + 1 );
+}
+
+static void GL_DrawStereoPattern( void )
+{
+	int i;
+
+	if ( !gl_state.stereo_enabled )
+		return;
+
+	R_SetGL2D();
+
+	glDrawBuffer( GL_BACK_LEFT );
+
+	for ( i = 0; i < 20; i++ )
+	{
+		glBegin( GL_LINES );
+			GL_DrawColoredStereoLinePair( 1, 0, 0, 0 );
+			GL_DrawColoredStereoLinePair( 1, 0, 0, 2 );
+			GL_DrawColoredStereoLinePair( 1, 0, 0, 4 );
+			GL_DrawColoredStereoLinePair( 1, 0, 0, 6 );
+			GL_DrawColoredStereoLinePair( 0, 1, 0, 8 );
+			GL_DrawColoredStereoLinePair( 1, 1, 0, 10);
+			GL_DrawColoredStereoLinePair( 1, 1, 0, 12);
+			GL_DrawColoredStereoLinePair( 0, 1, 0, 14);
+		glEnd();
+		
+		GLimp_EndFrame();
+	}
+}
+
+
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -770,7 +802,7 @@ void R_DrawFill(rect_t pos, rgba_t color);
 
 void R_RenderFrame (refdef_t *fd)
 {
-	//R_SetTexEnv(GL_REPLACE);
+	R_SetTexEnv(GL_REPLACE);
 	R_RenderView( fd );
 	R_SetGL2D ();
 
@@ -913,7 +945,6 @@ void R_BeginFrame( float camera_separation )
 */
 void R_DrawBeam( rentity_t *e )
 {
-#ifndef GETITTOCOMPILE
 #define NUM_BEAM_SEGS 6
 
 	int	i;
@@ -962,7 +993,7 @@ void R_DrawBeam( rentity_t *e )
 	g *= 1/255.0F;
 	b *= 1/255.0F;
 
-	R_SetColor4( r, g, b, e->alpha );
+	glColor4f( r, g, b, e->alpha );
 
 	glBegin( GL_TRIANGLE_STRIP );
 	for ( i = 0; i < NUM_BEAM_SEGS; i++ )
@@ -977,6 +1008,5 @@ void R_DrawBeam( rentity_t *e )
 	glEnable( GL_TEXTURE_2D );
 	R_Blend(false);
 	R_WriteToDepthBuffer(GL_TRUE);
-#endif
 }
 
