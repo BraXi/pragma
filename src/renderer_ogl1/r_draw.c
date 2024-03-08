@@ -42,7 +42,7 @@ void Draw_InitLocal (void)
 {
 	// load fonts
 	font_textures[FONT_SMALL] = R_FindTexture ("gfx/fonts/q2.tga", it_gui);
-	if (font_textures[FONT_SMALL] == r_notexture)
+	if (font_textures[FONT_SMALL] == r_texture_missing)
 	{
 		ri.Error(ERR_FATAL, "failed to load default font gfx/fonts/q2.tga\n");
 		return;
@@ -52,7 +52,7 @@ void Draw_InitLocal (void)
 
 	for (unsigned int i = 0; i < NUM_FONTS; i++)
 	{
-//		if (font_textures[i] == r_notexture)
+//		if (font_textures[i] == r_texture_missing)
 //		{
 //			font_textures[i] = font_textures[FONT_SMALL]; //fixup
 //		}
@@ -283,10 +283,10 @@ void Draw_Fill (int x, int y, int w, int h)
 	PushVert(x + w, y + h, 0);
 	PushVert(x, y + h, 0);
 
-	glDisable(GL_TEXTURE_2D);
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
+
+	R_BindTexture(r_texture_white->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
-	glEnable (GL_TEXTURE_2D);
 }
 
 //=============================================================================
@@ -300,25 +300,18 @@ Draw_FadeScreen
 void Draw_FadeScreen (float *rgba)
 {
 	ClearVertexBuffer();
-
 	PushVert(0, 0, 0);
 	PushVert(vid.width, 0, 0);
 	PushVert(vid.width, vid.height, 0);
 	PushVert(0, 0, 0);
 	PushVert(vid.width, vid.height, 0);
 	PushVert(0, vid.height, 0);
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
 
 	R_Blend(true);
-	glDisable(GL_TEXTURE_2D);
-//	glAlphaFunc(GL_GREATER, 0.05);
-	glColor4fv(rgba);
-
-	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
+	R_BindTexture(r_texture_white->texnum);
+	R_ProgUniform4f(LOC_COLOR4, rgba[0], rgba[1], rgba[2], rgba[3]);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
-
-	glColor4f(1,1,1,1);
-//	glAlphaFunc(GL_GREATER, 0.1);
-	glEnable (GL_TEXTURE_2D);
 	R_Blend(false);
 
 }

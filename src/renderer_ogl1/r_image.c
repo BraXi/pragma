@@ -10,8 +10,8 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-image_t		gltextures[MAX_GLTEXTURES];
-int			numgltextures;
+image_t		r_textures[MAX_GLTEXTURES];
+int			r_textures_count;
 
 //qboolean R_UploadTexture32 (unsigned *data, int width, int height,  qboolean mipmap);
 
@@ -187,7 +187,7 @@ void R_SetTextureMode( char *string )
 	gl_filter_max = modes[i].maximize;
 
 	// change all the existing mipmap texture objects
-	for (i=0, glt=gltextures ; i<numgltextures ; i++, glt++)
+	for (i=0, glt=r_textures ; i<r_textures_count ; i++, glt++)
 	{
 		if (glt->type != it_gui && glt->type != it_sky )
 		{
@@ -260,7 +260,7 @@ void R_TextureList_f(void)
 	ri.Printf (PRINT_ALL, "------------------\n");
 	texels = 0;
 
-	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
+	for (i=0, image=r_textures ; i<r_textures_count ; i++, image++)
 	{
 		if (image->texnum <= 0)
 			continue;
@@ -294,7 +294,7 @@ void R_TextureList_f(void)
 			i, image->upload_width, image->upload_height, (image->has_alpha ? "RGBA" : "RGB"), image->name);
 	}
 	ri.Printf (PRINT_ALL, "\nTotal texel count (not counting mipmaps): %i\n", texels);
-	ri.Printf(PRINT_ALL, "Total %i out of %i textures in use\n\n", numgltextures, MAX_GLTEXTURES);
+	ri.Printf(PRINT_ALL, "Total %i out of %i textures in use\n\n", r_textures_count, MAX_GLTEXTURES);
 }
 
 /*
@@ -698,7 +698,6 @@ qboolean R_UploadTexture32(unsigned* data, int width, int height, qboolean mipma
 
 	if (mipmap)
 	{
-		glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST); // FIXME: this should be done once in r_init
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -713,33 +712,45 @@ qboolean R_UploadTexture32(unsigned* data, int width, int height, qboolean mipma
 
 /*
 ================
-R_LoadTexture
+R_AllocTexture()
 
-This is also used as an entry point for the generated "$particle" & "$default_texture"
+find a free image_t
 ================
 */
-image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_t type, int bits)
+static image_t* R_AllocTexture()
 {
-	image_t		*image;
+	image_t* image;
 	int			i;
 
-	// find a free image_t
-	for (i = 0, image = gltextures; i < numgltextures; i++, image++)
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (!image->texnum)
 			break;
 	}
 
-	if (i == numgltextures)
+	if (i == r_textures_count)
 	{
-		if (numgltextures == MAX_GLTEXTURES)
-			ri.Error (ERR_DROP, "MAX_GLTEXTURES");
-		numgltextures++;
+		if (r_textures_count == MAX_GLTEXTURES)
+			ri.Error(ERR_DROP, "MAX_GLTEXTURES");
+		r_textures_count++;
 	}
-	image = &gltextures[i];
+	return &r_textures[i];
+}
+
+/*
+================
+R_LoadTexture
+
+This is also used as an entry point for the generated code textures
+================
+*/
+image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_t type, int bits)
+{
+	image_t* image = R_AllocTexture();
 
 	if (strlen(name) >= sizeof(image->name))
-		ri.Error (ERR_DROP, "R_LoadTexture: \"%s\" is too long", name);
+		ri.Error (ERR_DROP, "R_LoadTexture: \"%s\" has too long name", name);
+
 	strcpy (image->name, name);
 
 	image->registration_sequence = registration_sequence;
@@ -750,12 +761,22 @@ image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_
 	image->height = height;
 	image->type = type;
 
-	image->texnum = TEXNUM_IMAGES + (image - gltextures);
+	image->texnum = TEXNUM_IMAGES + (image - r_textures);
 
-	R_BindTexture(image->texnum);
-	image->has_alpha = R_UploadTexture32 ((unsigned *)pixels, width, height, (image->type != it_gui && image->type != it_sky) );
-	image->upload_width = upload_width;		// after power of 2 and scales
-	image->upload_height = upload_height;
+	if (pixels == NULL)
+	{
+		image->has_alpha = bits == 32 ? true : false;
+		image->upload_width = image->width;
+		image->upload_height = image->height;
+		image->texnum = image->texnum;
+	}
+	else
+	{
+		R_BindTexture(image->texnum);
+		image->has_alpha = R_UploadTexture32((unsigned*)pixels, width, height, (image->type != it_gui && image->type != it_sky));
+		image->upload_width = upload_width;
+		image->upload_height = upload_height;
+	}
 	
 	image->sl = 0;
 	image->sh = 1;
@@ -789,7 +810,7 @@ image_t	*R_FindTexture(char *name, texType_t type)
 		return NULL;	//	ri.Error (ERR_DROP, "R_FindTexture: bad name: %s", name);
 
 	// look for it
-	for (i=0, image=gltextures ; i<numgltextures ; i++,image++)
+	for (i=0, image=r_textures ; i<r_textures_count ; i++,image++)
 	{
 		if (!strcmp(name, image->name))
 		{
@@ -808,14 +829,14 @@ image_t	*R_FindTexture(char *name, texType_t type)
 		if (!pic)
 		{
 //			ri.Printf(PRINT_LOW, "R_FindTexture: couldn't load %s\n", name);
-			return r_notexture;
+			return r_texture_missing;
 		}
 		image = R_LoadTexture (name, pic, width, height, type, 32);
 	}
 	else
 	{
 		ri.Printf(PRINT_LOW, "R_FindTexture: weird file %s\n", name);
-		return r_notexture;
+		return r_texture_missing;
 	}
 
 	if (pic)
@@ -849,18 +870,21 @@ void R_FreeUnusedTextures()
 	int		i;
 	image_t	*image;
 
-	// never free r_notexture or particle texture
-	r_notexture->registration_sequence = registration_sequence;
-	r_particletexture->registration_sequence = registration_sequence;
+	// never free code textures
+	r_texture_white->registration_sequence = registration_sequence;
+	r_texture_missing->registration_sequence = registration_sequence;
+	r_texture_particle->registration_sequence = registration_sequence;
+	r_texture_view->registration_sequence = registration_sequence;
 
-	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (image->registration_sequence == registration_sequence)
 			continue;		// used this sequence
 		if (!image->registration_sequence)
 			continue;		// free image_t slot
 		if (image->type == it_gui)
-			continue;		// don't free pics
+			continue;		// don't free gui pics
+
 		// free it
 		glDeleteTextures (1, &image->texnum);
 		memset (image, 0, sizeof(*image));
@@ -875,6 +899,7 @@ R_InitTextures
 void R_InitTextures()
 {
 	registration_sequence = 1;
+	R_InitCodeTextures();
 }
 
 /*
@@ -889,7 +914,7 @@ void R_FreeTextures()
 	int		i;
 	image_t	*image;
 
-	for (i=0, image=gltextures ; i<numgltextures ; i++, image++)
+	for (i=0, image=r_textures ; i<r_textures_count ; i++, image++)
 	{
 		if (!image->registration_sequence)
 			continue;		// free image_t slot

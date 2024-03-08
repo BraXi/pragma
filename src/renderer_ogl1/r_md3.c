@@ -269,7 +269,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 		{
 			mod->images[j] = R_FindTexture(shader->name, it_model);
 			shader->shaderIndex = mod->images[j]->texnum;
-			if (mod->images[j] == r_notexture)
+			if (mod->images[j] == r_texture_missing)
 			{
 				ri.Printf(PRINT_ALL, "Mod_LoadMD3: cannot load '%s' for model '%s'\n", shader->name, mod->name);
 			}
@@ -606,7 +606,10 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	else
 		R_ProgUniform1f(LOC_PARM0, 0);
 
-	glColor4f(1, 1, 1, ent->alpha); // GET RID OF GLCOLOR
+	if (ent->renderfx & RF_TRANSLUCENT)
+		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 0.3);
+	else
+		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{

@@ -326,19 +326,13 @@ int R_Init(void* hinstance, void* hWnd)
 	R_InitialOGLState(); //wip
 
 
-	/*
-	** draw our stereo patterns
-	*/
-#if 0
-	GL_DrawStereoPattern();
-#endif
-
 	for (int i = 0; i < FUNCTABLE_SIZE; i++)
 		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
 	R_InitTextures();
+
 	Mod_Init();
-	R_InitParticleTexture();
+
 	Draw_InitLocal();
 
 	R_InitFrameBuffer();
@@ -411,7 +405,7 @@ qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, in
 
 static void	RR_SetColor(float r, float g, float b, float a)
 {
-	glColor4f(r,g,b,a);
+	R_ProgUniform4f(LOC_COLOR4, r, g, b, a);
 }
 
 /*

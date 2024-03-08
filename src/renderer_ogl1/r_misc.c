@@ -12,12 +12,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-/*
-==================
-R_InitParticleTexture
-==================
-*/
-byte	dottexture[8][8] =
+static byte dottexture[8][8] =
 {
 	{0,0,0,0,0,0,0,0},
 	{0,0,1,1,0,0,0,0},
@@ -29,10 +24,36 @@ byte	dottexture[8][8] =
 	{0,0,0,0,0,0,0,0},
 };
 
-void R_InitParticleTexture (void)
+/*
+==================
+R_InitCodeTextures
+==================
+*/
+void R_InitCodeTextures (void)
 {
 	int		x,y;
 	byte	data[8][8][4];
+
+	//
+	// default white texture
+	//
+	for (x = 0; x < 8; x++)
+	{
+		for (y = 0; y < 8; y++)
+		{
+			data[y][x][0] = 255;
+			data[y][x][1] = 255;
+			data[y][x][2] = 255;
+			data[y][x][3] = 255;
+		}
+	}
+	r_texture_white = R_LoadTexture("$white", (byte*)data, 8, 8, it_texture, 32);
+
+	//
+	// dummy used for fbo
+	//
+	r_texture_view = R_LoadTexture("$view", NULL, vid.width, vid.height, it_texture, 32);
+
 
 	//
 	// particle texture
@@ -47,7 +68,7 @@ void R_InitParticleTexture (void)
 			data[y][x][3] = dottexture[x][y]*255;
 		}
 	}
-	r_particletexture = R_LoadTexture("$default_particle", (byte *)data, 8, 8, it_sprite, 32);
+	r_texture_particle = R_LoadTexture("$default_particle", (byte *)data, 8, 8, it_sprite, 32);
 
 	//
 	// also use this for bad textures, but without alpha
@@ -56,13 +77,13 @@ void R_InitParticleTexture (void)
 	{
 		for (y=0 ; y<8 ; y++)
 		{
-			data[y][x][0] = 0;// dottexture[x & 3][y & 3] * 255;
+			data[y][x][0] = 0;
 			data[y][x][1] = dottexture[x&3][y&3]*255;
-			data[y][x][2] = 0;// dottexture[x & 3][y & 3] * 255;
+			data[y][x][2] = 0;
 			data[y][x][3] = 255;
 		}
 	}
-	r_notexture = R_LoadTexture ("$default_texture", (byte *)data, 8, 8, it_texture, 32);
+	r_texture_missing = R_LoadTexture ("$default", (byte *)data, 8, 8, it_texture, 32);
 }
 
 

@@ -30,6 +30,7 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 {
 	int i;
 	vec3_t mins, maxs, v;
+	float scale = 1.0f;
 
 	if (!ent->model) // this shouldn't really happen at this point!
 		return false;
@@ -62,29 +63,23 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 		// technicaly this could be used for sprites, but it takes 
 		// more cycles culling than actually rendering them lol
 
-		if (ent->angles[0] || ent->angles[1] || ent->angles[2])
+		if ((ent->renderfx & RF_SCALE) && ent->scale != 1.0f && ent->scale > 0.0f)
+			scale = ent->scale;
+
+		if (ent->angles[0] || ent->angles[1] || ent->angles[2] || scale != 1.0)
 		{
 			for (i = 0; i < 3; i++)
 			{
-				mins[i] = ent->origin[i] - pCurrentModel->radius;
-				maxs[i] = ent->origin[i] + pCurrentModel->radius;
+				mins[i] = ent->origin[i] - (pCurrentModel->radius * scale);
+				maxs[i] = ent->origin[i] + (pCurrentModel->radius * scale);
 			}
 		}
 		else
 		{
-			VectorAdd(ent->origin, ent->model->mins, mins);
+			VectorAdd(ent->origin, pCurrentModel->mins, mins);
 			VectorAdd(ent->origin, pCurrentModel->maxs, maxs);
 		}
 
-		if ((ent->renderfx & RF_SCALE) && ent->scale != 1.0f && ent->scale > 0.0f)
-		{
-			// adjust bbox for scale
-			for (i = 0; i < 3; i++)
-			{
-				mins[i] = mins[i] * ent->scale;
-				maxs[i] = maxs[i] * ent->scale;
-			}
-		}
 
 		if (R_CullBox(mins, maxs))
 			return false;
@@ -160,7 +155,7 @@ void R_SetEntityShadeLight(rentity_t* ent)
 	an = ent->angles[1] / 180 * M_PI;
 	model_shadevector[0] = cos(-an);
 	model_shadevector[1] = sin(-an);
-	model_shadevector[2] = 0;
+	model_shadevector[2] = -1;
 	VectorNormalize(model_shadevector);
 }
 
@@ -197,7 +192,6 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// check if the animation is correct and set lerp
 	R_EntityAnim(ent, __FUNCTION__);
-//	lerp = 1.0 - ent->backlerp;
 	lerp = 1.0 - ent->animbacklerp;
 
 	// setup lighting
@@ -514,21 +508,9 @@ void R_DrawDebugLines(void)
 	R_DepthTest(true);
 	R_WriteToDepthBuffer(GL_TRUE);
 #endif
-
-	glColor3f(1,1,1);
 	glLineWidth(1.0f);
 	glPopMatrix();
 }
 
-
-
-void R_DrawBBox(vec3_t mins, vec3_t maxs)
-{
-	R_BeginLinesRendering(true);
-
-//	R_EmitWireBox(mins, maxs);
-
-	R_EndLinesRendering();
-}
 
 

@@ -255,12 +255,14 @@ typedef struct
 
 //====================================================
 
-extern	image_t		gltextures[MAX_GLTEXTURES];
-extern	int			numgltextures;
+extern	image_t		r_textures[MAX_GLTEXTURES];
+extern	int			r_textures_count;
 
+extern	image_t		*r_texture_white;
+extern	image_t		*r_texture_missing;
+extern	image_t		*r_texture_particle;
+extern	image_t		*r_texture_view;
 
-extern	image_t		*r_notexture;
-extern	image_t		*r_particletexture;
 extern	rentity_t	*pCurrentRefEnt;
 extern	model_t		*pCurrentModel;
 extern	int			r_visframecount;
@@ -355,7 +357,7 @@ void R_DrawWorld (void);
 void R_RenderDlights (void);
 void R_DrawWorldAlphaSurfaces();
 void R_RenderBrushPoly (msurface_t *fa);
-void R_InitParticleTexture (void);
+void R_InitCodeTextures (void);
 void Draw_InitLocal (void);
 void GL_SubdivideSurface (msurface_t *fa);
 qboolean R_CullBox (vec3_t mins, vec3_t maxs);

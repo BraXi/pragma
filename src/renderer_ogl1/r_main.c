@@ -23,8 +23,10 @@ float		gldepthmin, gldepthmax;
 glconfig_t gl_config;
 glstate_t  gl_state;
 
-image_t		*r_notexture;		// use for bad textures
-image_t		*r_particletexture;	// little dot for particles
+image_t		*r_texture_white;
+image_t		*r_texture_missing;		// use for bad textures
+image_t		*r_texture_particle;	// little dot for particles
+image_t		*r_texture_view;
 
 rentity_t	*pCurrentRefEnt;
 model_t		*pCurrentModel;
@@ -152,7 +154,7 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	R_Blend(alpha != 1.0F);
 
-	glColor4f( 1, 1, 1, alpha );
+	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, alpha);
 
     R_BindTexture(pCurrentModel->images[e->frame]->texnum);
 	R_SetTexEnv( GL_MODULATE );
@@ -195,10 +197,7 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	R_AlphaTest(false);
 	R_SetTexEnv( GL_REPLACE );
-
 	R_Blend(false);
-
-	glColor4f( 1, 1, 1, 1 );
 }
 
 //==================================================================================
@@ -326,7 +325,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 	float			scale;
 	float			color[4];
 
-    R_BindTexture(r_particletexture->texnum);
+    R_BindTexture(r_texture_particle->texnum);
 
 	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
 	R_Blend(true);
@@ -336,7 +335,7 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 	VectorScale (vright, 1.5, right);
 
 	glBegin(GL_TRIANGLES);
-	for ( p = particles, i=0 ; i < num_particles ; i++,p++)
+	for (p = particles, i = 0; i < num_particles ; i++, p++)
 	{
 		// hack a scale up to keep particles from disapearing
 		scale = ( p->origin[0] - r_origin[0] ) * vpn[0] + 
@@ -372,7 +371,6 @@ void GL_DrawParticles( int num_particles, const particle_t particles[] )
 
 	glEnd ();
 	R_Blend(false);
-	glColor4f( 1,1,1,1 );
 	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
 	R_SetTexEnv( GL_REPLACE );
 }
@@ -403,12 +401,10 @@ void R_ViewBlendEffect (void)
 	glDisable (GL_TEXTURE_2D);
 
     glLoadIdentity ();
+    glRotatef (-90,  1, 0, 0);
+    glRotatef (90,  0, 0, 1);
 
-	// FIXME: get rid of these
-    glRotatef (-90,  1, 0, 0);	    // put Z going up
-    glRotatef (90,  0, 0, 1);	    // put Z going up
-
-	glColor4fv (v_blend);
+	R_ProgUniform4f(LOC_COLOR4, v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
 
 	glBegin(GL_TRIANGLES);
 	{
@@ -426,7 +422,6 @@ void R_ViewBlendEffect (void)
 	R_Blend(false);
 
 	glEnable(GL_TEXTURE_2D);
-	glColor4f(1,1,1,1);
 }
 
 //=======================================================================
@@ -751,45 +746,39 @@ void R_SetGL2D(void)
 	R_SetTexEnv(GL_MODULATE);
 }
 
-static void GL_DrawColoredStereoLinePair( float r, float g, float b, float y )
+void R_DrawFill(rect_t pos, rgba_t color);
+static void R_DrawPerfCounters()
 {
-	glColor3f( r, g, b );
-	glVertex2f( 0, y );
-	glVertex2f( vid.width, y );
-	glColor3f( 0, 0, 0 );
-	glVertex2f( 0, y + 1 );
-	glVertex2f( vid.width, y + 1 );
-}
-
-static void GL_DrawStereoPattern( void )
-{
-	int i;
-
-	if ( !gl_state.stereo_enabled )
+	if (r_speeds->value <= 1.0f)
 		return;
 
-	R_SetGL2D();
+	rect_t pos = { 800 - 140, 15, 140, 100 };
+	float color[4];
+	color[3] = 0.3f;
 
-	glDrawBuffer( GL_BACK_LEFT );
+	glColor4f(1, 1, 1, 1);
 
-	for ( i = 0; i < 20; i++ )
-	{
-		glBegin( GL_LINES );
-			GL_DrawColoredStereoLinePair( 1, 0, 0, 0 );
-			GL_DrawColoredStereoLinePair( 1, 0, 0, 2 );
-			GL_DrawColoredStereoLinePair( 1, 0, 0, 4 );
-			GL_DrawColoredStereoLinePair( 1, 0, 0, 6 );
-			GL_DrawColoredStereoLinePair( 0, 1, 0, 8 );
-			GL_DrawColoredStereoLinePair( 1, 1, 0, 10);
-			GL_DrawColoredStereoLinePair( 1, 1, 0, 12);
-			GL_DrawColoredStereoLinePair( 0, 1, 0, 14);
-		glEnd();
-		
-		GLimp_EndFrame();
-	}
+	VectorSet(color, 0, 0, 0);
+	R_DrawFill(pos, color);
+
+	float y = 20;
+
+	color[3] = 1.0f;
+	VectorSet(color, 1, 1, 1);
+	R_DrawString(va("%i        BSP polygons", rperf.brush_polys), 795, y, 0.7, 1, color);
+	R_DrawString(va("%i    visible textures", rperf.visible_textures), 795, y += 8, 0.7, 1, color);
+	R_DrawString(va("%i  visible light maps", rperf.visible_lightmaps), 795, y += 8, 0.7, 1, color);
+	R_DrawString(va("%i    texture bindings", rperf.texture_binds), 795, y += 8, 0.7, 1, color);
+
+	VectorSet(color, 0.8, 0.8, 1);
+	R_DrawString(va("%i      dynamic lights", r_newrefdef.num_dlights), 795, y += 16, 0.7, 1, color);
+	R_DrawString(va("%i     render entities", r_newrefdef.num_entities), 795, y += 8, 0.7, 1, color);
+	R_DrawString(va("%i     particles count", r_newrefdef.num_particles), 795, y += 8, 0.7, 1, color);
+
+	VectorSet(color, 0.2, 1, 0);
+	R_DrawString(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
+	R_DrawString(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
 }
-
-
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -797,9 +786,6 @@ R_RenderFrame
 
 @@@@@@@@@@@@@@@@@@@@@
 */
-
-void R_DrawFill(rect_t pos, rgba_t color);
-
 void R_RenderFrame (refdef_t *fd)
 {
 	R_SetTexEnv(GL_REPLACE);
@@ -810,39 +796,7 @@ void R_RenderFrame (refdef_t *fd)
 	R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
 
 	R_BindProgram(GLPROG_GUI);
-
-	if (r_speeds->value > 1.0f)
-	{
-		rect_t pos = { 800-140, 15, 140, 100 };
-		float color[4];
-		color[3] = 0.9f;
-
-		VectorSet(color, 0, 0, 0);
-		
-		R_DrawFill(pos, color);
-
-		VectorSet(color, 1,1,1);
-		color[3] = 1.0f;
-		float y = 20;
-		R_DrawString(va("%i        BSP polygons", rperf.brush_polys), 795, y, 0.7, 1, color);
-		R_DrawString(va("%i    visible textures", rperf.visible_textures), 795, y += 8, 0.7, 1, color);
-		R_DrawString(va("%i  visible light maps", rperf.visible_lightmaps), 795, y += 8, 0.7, 1, color);
-		R_DrawString(va("%i    texture bindings", rperf.texture_binds), 795, y += 8, 0.7, 1, color);
-
-		VectorSet(color, 0.8, 0.8,1);
-
-		R_DrawString(va("%i      dynamic lights", r_newrefdef.num_dlights), 795, y += 16, 0.7, 1, color);
-		R_DrawString(va("%i     render entities", r_newrefdef.num_entities), 795, y += 8, 0.7, 1, color);
-		R_DrawString(va("%i     particles count", r_newrefdef.num_particles), 795, y += 8, 0.7, 1, color);
-		
-		VectorSet(color, 0.2, 1, 0);
-		R_DrawString(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
-		R_DrawString(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
-
-		//VectorSet(color, 1, 0.2, 0);
-		//R_DrawString(va("%i    slow model draws", rperf.alias_slowdraws), 795, y += 12, 0.7, 1, color);
-		//R_DrawString(va("%i    CPU lerped verts", rperf.alias_lerpverts), 795, y += 8, 0.7, 1, color);
-	}
+	R_DrawPerfCounters();
 
 //	R_DrawFBO(r_newrefdef.width/2, 0, r_newrefdef.width/2, r_newrefdef.height/2, false); // depth
 }
@@ -996,7 +950,7 @@ void R_DrawBeam( rentity_t *e )
 	g *= 1/255.0F;
 	b *= 1/255.0F;
 
-	glColor4f( r, g, b, e->alpha );
+	R_ProgUniform4f(LOC_COLOR4, r, g, b, e->alpha );
 
 	glBegin( GL_TRIANGLE_STRIP );
 	for ( i = 0; i < NUM_BEAM_SEGS; i++ )

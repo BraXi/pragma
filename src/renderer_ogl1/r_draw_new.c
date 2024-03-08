@@ -137,8 +137,7 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	}
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
-
-	glColor4fv(color);
+	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
 	R_BindTexture(font_current->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
@@ -204,7 +203,7 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	glRotatef((-r_newrefdef.view.angles[1])+90, 0.0f, 1.0f, 0.0f); //rotate to always face the camera
 	glRotatef((-r_newrefdef.view.angles[0]), 1.0f, 0.0f, 0.0f);
 
-	// draw string
+	// create vertex buffer for string
 	ClearVertexBuffer();
 	while (*string)
 	{
@@ -254,25 +253,20 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	SetTexCoords(gl->sh, gl->tl);
 	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
 	SetTexCoords(gl->sh, gl->th);
-	
 	PushVert(rect[0], rect[1], 0);
 	SetTexCoords(gl->sl, gl->tl);
 	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
 	SetTexCoords(gl->sh, gl->th);
 	PushVert(rect[0], rect[1] + rect[3], 0);
 	SetTexCoords(gl->sl, gl->th);
+	
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 
 	R_Blend(true);
-//	glAlphaFunc(GL_GREATER, 0.05);
-	glColor4f(color[0], color[1], color[2], color[3]);
-
-	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_BindTexture(gl->texnum);
+	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
-
 	R_Blend(false);
-//	glAlphaFunc(GL_GREATER, 0.1);
-	glColor4f(1, 1, 1, 1);
 
 }
 
@@ -296,17 +290,12 @@ void R_DrawFill(rect_t pos, rgba_t color)
 	PushVert(rect[0], rect[1] + rect[3], 0);
 
 	R_Blend(true);
-	glDisable(GL_TEXTURE_2D);
 
-//	glAlphaFunc(GL_GREATER, 0.05);
-	glColor4f(color[0], color[1], color[2], color[3]);
+	R_BindTexture(r_texture_white->texnum);
+	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 
 	R_Blend(false);
-	glEnable(GL_TEXTURE_2D);
-
-//	glAlphaFunc(GL_GREATER, 0.1);
-	glColor4f(1, 1, 1, 1);
 }

@@ -495,7 +495,7 @@ void Mod_LoadTexinfo (lump_t *l)
 		if (!out->image)
 		{
 			ri.Printf(PRINT_ALL, "Mod_LoadTexinfo: couldn't load '%s'\n", name);
-			out->image = r_notexture;
+			out->image = r_texture_missing;
 		}
 
 	}

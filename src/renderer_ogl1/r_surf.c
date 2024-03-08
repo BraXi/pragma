@@ -315,8 +315,7 @@ void R_BlendLightmaps (void)
 	R_WriteToDepthBuffer(GL_FALSE);
 
 	/*
-	** set the appropriate blending mode unless we're only looking at the
-	** lightmaps.
+	** set the appropriate blending mode unless we're only looking at the lightmaps.
 	*/
 	if (!r_lightmap->value)
 	{
@@ -630,7 +629,7 @@ void DrawTextureChains (void)
 
 //	R_SetTexEnv( GL_REPLACE );
 
-	for ( i = 0, image=gltextures ; i<numgltextures ; i++,image++)
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (!image->registration_sequence)
 			continue;
@@ -646,7 +645,7 @@ void DrawTextureChains (void)
 	}
 
 	R_EnableMultitexture( false );
-	for ( i = 0, image=gltextures ; i<numgltextures ; i++,image++)
+	for ( i = 0, image=r_textures ; i<r_textures_count ; i++,image++)
 	{
 		if (!image->registration_sequence)
 			continue;
@@ -947,7 +946,7 @@ void R_DrawBrushModel (rentity_t *e)
 	if (R_CullBox (mins, maxs))
 		return;
 
-	glColor3f (1,1,1);
+	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
 	VectorSubtract (r_newrefdef.view.origin, e->origin, modelorg);
