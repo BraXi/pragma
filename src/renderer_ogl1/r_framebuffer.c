@@ -228,7 +228,7 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 	R_ApplyPostEffects();
 
 	if (diffuse)
-		glBindTexture(GL_TEXTURE_2D, fbo_tex_diffuse);
+		R_BindTexture( fbo_tex_diffuse);
 	//	else
 	//		R_BindTexture(fbo_tex_depth);
 

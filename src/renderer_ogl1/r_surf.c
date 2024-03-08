@@ -565,17 +565,17 @@ dynamic:
 
 /*
 ================
-R_DrawAlphaSurfaces
+R_DrawWorldAlphaSurfaces
 
 Draw water surfaces and windows.
 The BSP tree is waled front to back, so unwinding the chain
 of alpha_surfaces will draw back to front, giving proper ordering.
 ================
 */
-void R_DrawAlphaSurfaces (void)
+void R_DrawWorldAlphaSurfaces()
 {
 	msurface_t	*s;
-	float		intens;
+	float		alpha;
 
 	//
 	// go back to the world matrix
@@ -585,25 +585,31 @@ void R_DrawAlphaSurfaces (void)
 	R_Blend(true);
 	R_SetTexEnv( GL_MODULATE );
 
-	intens = 1;
+	R_BindProgram(GLPROG_WORLD);
+
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
 		R_BindTexture(s->texinfo->image->texnum);
 		rperf.brush_polys++;
+
 		if (s->texinfo->flags & SURF_TRANS33)
-			glColor4f (intens,intens,intens,0.33);
+			alpha = 0.33f;
 		else if (s->texinfo->flags & SURF_TRANS66)
-			glColor4f (intens,intens,intens,0.66);
+			alpha = 0.66f;
 		else
-			glColor4f (intens,intens,intens,1);
+			alpha = 1.0f;
+
+		R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, alpha);
+
 		if (s->flags & SURF_DRAWTURB)
 			EmitWaterPolys (s);
 		else
 			DrawGLPoly (s->polys);
 	}
 
+	R_UnbindProgram();
+
 	R_SetTexEnv( GL_REPLACE );
-	glColor4f (1,1,1,1);
 	R_Blend(false);
 
 	r_alpha_surfaces = NULL;

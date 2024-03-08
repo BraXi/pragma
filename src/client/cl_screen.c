@@ -814,11 +814,7 @@ text to the screen.
 */
 void SCR_UpdateScreen (void)
 {
-	int numframes;
-	int i;
-	float separation[2] = { 0, 0 };
 	float color[4];
-
 
 	// if the screen is disabled (loading plaque is up, or vid mode changing)
 	// do nothing at all
@@ -837,94 +833,74 @@ void SCR_UpdateScreen (void)
 
 	re.SetColor(1, 1, 1, 1);
 
-	/*
-	** range check cl_camera_separation so we don't inadvertently fry someone's
-	** brain
-	*/
-	if ( cl_stereo_separation->value > 1.0 )
-		Cvar_SetValue( "cl_stereo_separation", 1.0 );
-	else if ( cl_stereo_separation->value < 0 )
-		Cvar_SetValue( "cl_stereo_separation", 0.0 );
+	re.BeginFrame( 0 );
 
-	if ( cl_stereo->value )
+	if (scr_draw_loading == 2)
+	{	
+		//loading plaque over black screen
+		scr_draw_loading = false;
+		VectorSet(color, 1, 1, 1);
+		color[3] = 1;
+		re.DrawString("loading", 400, 280, 2, 2, color);
+	} 
+	// if a cinematic is supposed to be running, handle menus and console specially
+	else if (cl.cinematictime > 0)
 	{
-		numframes = 2;
-		separation[0] = -cl_stereo_separation->value / 2;
-		separation[1] =  cl_stereo_separation->value / 2;
-	}		
-	else
-	{
-		separation[0] = 0;
-		separation[1] = 0;
-		numframes = 1;
-	}
-
-	for ( i = 0; i < numframes; i++ )
-	{
-		re.BeginFrame( separation[i] );
-
-		if (scr_draw_loading == 2)
-		{	
-			//loading plaque over black screen
-			scr_draw_loading = false;
-			VectorSet(color, 1, 1, 1);
-			color[3] = 1;
-			re.DrawString("loading", 400, 280, 2, 2, color);
-		} 
-		// if a cinematic is supposed to be running, handle menus and console specially
-		else if (cl.cinematictime > 0)
+		if (cls.key_dest == key_menu)
 		{
-			if (cls.key_dest == key_menu)
-			{
-				UI_Draw();
-			}
-			else if (cls.key_dest == key_console)
-			{
-				SCR_DrawConsole ();
-			}
-			else
-			{
-				SCR_DrawCinematic();
-			}
-		}
-		else 
-		{
-			// do 3D refresh drawing, and then update the screen
-			SCR_CalcVrect ();
-
-			// clear any dirty part of the background
-			SCR_TileClear ();
-
-			V_RenderView ( separation[i] );
-
-			re.SetColor(1, 1, 1, 1);
-			CG_DrawGUI();
-
-			re.SetColor(1, 1, 1, 1);
 			UI_Draw();
-
-			SCR_DrawNet ();
-			SCR_CheckDrawCenterString ();
-
-			re.SetColor(1, 1, 1, 1);
-
-			CL_DrawGraphOnScreen();
-
-			SCR_DrawPause ();
-
+		}
+		else if (cls.key_dest == key_console)
+		{
 			SCR_DrawConsole ();
-
-			DrawDownloadNotify();
-
-			SCR_DrawLoading ();
+		}
+		else
+		{
+			SCR_DrawCinematic();
 		}
 	}
+	else 
+	{
+		// do 3D refresh drawing, and then update the screen
+		SCR_CalcVrect ();
 
-#if 1
+		// clear any dirty part of the background
+		SCR_TileClear ();
+
+		V_RenderView (0);
+
+		//
+		// gui rendering at this point
+		//
+#if 0
+		re.SetColor(1, 1, 1, 1);
+		CG_DrawGUI();
+
+		re.SetColor(1, 1, 1, 1);
+		UI_Draw();
+
+		SCR_DrawNet();
+		SCR_CheckDrawCenterString();
+
+		re.SetColor(1, 1, 1, 1);
+
+		CL_DrawGraphOnScreen();
+
+		SCR_DrawPause ();
+
+		SCR_DrawConsole ();
+
+		DrawDownloadNotify();
+
+		SCR_DrawLoading ();
+#endif
+	}
+
+#if 0
 	float col[4] = { 1,0.4,0.5,1};
 	re.DrawString(va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP), 795, 590, 0.7, 1, col);
+	SCR_DrawFPS();
 #endif
 
-	SCR_DrawFPS();
 	re.EndFrame();
 }

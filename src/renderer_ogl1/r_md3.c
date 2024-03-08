@@ -470,7 +470,7 @@ static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3Xy
 	outNormal[2] = (n1[2] + lerp * (n2[2] - n1[2]));
 }
 
-static void SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
+static void VertexBufferAttributes(vertexbuffer_t* vbo, qboolean enable)
 {
 	if (enable)
 	{

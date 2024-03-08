@@ -453,6 +453,15 @@ int R_GetProgAttribLoc(glprogLoc_t attrib)
 
 /*
 =================
+R_GetProgAttribName
+=================
+*/
+char *R_GetProgAttribName(glprogLoc_t attrib)
+{
+	return progVertAtrribLocs[attrib].name;
+}
+/*
+=================
 R_UsingProgram
 
 Returns true if any program is in use
@@ -465,6 +474,22 @@ qboolean R_UsingProgram()
 		return false;
 	}
 	return true;
+}
+
+/*
+=================
+R_GetCurrentProgramName
+
+Returns the name of currently used program
+=================
+*/
+char *R_GetCurrentProgramName()
+{
+	if (!R_UsingProgram())
+	{
+		return "*none*";
+	}
+	return pCurrentProgram->name;
 }
 
 /*
@@ -533,11 +558,13 @@ void R_InitPrograms()
 	R_LoadProgram(GLPROG_WORLD, "world");
 	R_LoadProgram(GLPROG_WORLD_LIQUID, "world-liquid");
 	R_LoadProgram(GLPROG_SKY, "sky");
-	R_LoadProgram(GLPROG_ALIAS, "aliasmodel");
-	R_LoadProgram(GLPROG_SPRITE, "spritemodel");
-	R_LoadProgram(GLPROG_PARTICLES, "particles");
+	R_LoadProgram(GLPROG_ALIAS, "model_alias");
+	R_LoadProgram(GLPROG_SPRITE, "model_sprite");
+	R_LoadProgram(GLPROG_PARTICLE, "particle");
 	R_LoadProgram(GLPROG_GUI, "gui");
 	R_LoadProgram(GLPROG_POSTFX, "postfx");
+	R_LoadProgram(GLPROG_DEBUGSTRING, "debug_string");
+	R_LoadProgram(GLPROG_DEBUGLINE, "debug_line");
 }
 
 

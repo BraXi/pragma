@@ -22,32 +22,42 @@ extern void ClearVertexBuffer();
 extern void PushVert(float x, float y, float z);
 extern void SetTexCoords(float s, float t);
 
+#define VBA_DEBUG 1
+
 /*
 ===============
-SetVBOClientState
+VertexBufferAttributes
 
-Enable or disable client states for vertex buffer rendering
+Enable or disable vertex attributes
 ===============
 */
-static qboolean SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
+static qboolean VertexBufferAttributes(vertexbuffer_t* vbo, qboolean enable)
 {
 	int attrib;
 
-	if (pCurrentProgram == NULL)
+	if (!R_UsingProgram())
 	{
-		//ri.Error(ERR_FATAL, "bad\n");
+#ifdef VBA_DEBUG
+		ri.Error(ERR_FATAL, "Tried to render vertexbuffer but not using programs!\n");
+#endif
 		return false;
 	}
 
 	attrib = R_GetProgAttribLoc(VALOC_POS);
 
+#ifdef VBA_DEBUG
+	if (attrib == -1)
+	{
+		ri.Error(ERR_FATAL, "Tried to render vertexbuffer but program %s has no %s attrib\n", R_GetCurrentProgramName(), R_GetProgAttribName(VALOC_POS));
+	}
+#else
 	if (attrib == -1)
 		return false;
+#endif
 
 	if (enable)
 	{
 		glEnableVertexAttribArray(attrib);
-		//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inVertPos");
 		glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(0));
 
 		if (vbo->flags & V_NORMAL)
@@ -56,9 +66,14 @@ static qboolean SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
 			if (attrib != -1)
 			{
 				glEnableVertexAttribArray(attrib);
-				//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inNormal");
 				glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(12));
 			}
+#ifdef VBA_DEBUG
+			else
+			{
+				ri.Error(ERR_FATAL, "Vertex buffer has normals, but program %s has no %s attrib\n", R_GetCurrentProgramName(), R_GetProgAttribName(VALOC_NORMAL));
+			}
+#endif
 		}
 
 		if (vbo->flags & V_UV)
@@ -67,9 +82,14 @@ static qboolean SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
 			if (attrib != -1)
 			{
 				glEnableVertexAttribArray(attrib);
-				//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inTexCoord");
 				glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(24));
 			}
+#ifdef VBA_DEBUG
+			else
+			{
+				ri.Error(ERR_FATAL, "Vertex buffer has texcoords, but program %s has no %s attrib\n", R_GetCurrentProgramName(), R_GetProgAttribName(VALOC_TEXCOORD));
+			}
+#endif
 		}
 
 		if (vbo->flags & V_COLOR)
@@ -81,6 +101,12 @@ static qboolean SetVBOClientState(vertexbuffer_t* vbo, qboolean enable)
 				//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inColor");
 				glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(32));
 			}
+#ifdef VBA_DEBUG
+			else
+			{
+				ri.Error(ERR_FATAL, "Vertex buffer has colors, but program %s has no %s attrib\n", R_GetCurrentProgramName(), R_GetProgAttribName(VALOC_COLOR));
+			}
+#endif
 		}
 	}
 	else
@@ -221,7 +247,7 @@ void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned in
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
 
-	SetVBOClientState(vbo, true);
+	VertexBufferAttributes(vbo, true);
 
 #if 0
 	glVertexPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(0));
@@ -254,7 +280,7 @@ void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned in
 			glDrawArrays(GL_TRIANGLES, startVert, numVerts);
 	}
 
-	SetVBOClientState(vbo, false);
+	VertexBufferAttributes(vbo, false);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

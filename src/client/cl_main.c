@@ -14,9 +14,6 @@ See the attached GNU General Public License v2 for more details.
 
 cvar_t	*freelook;
 
-cvar_t	*cl_stereo_separation;
-cvar_t	*cl_stereo;
-
 cvar_t	*rcon_client_password;
 cvar_t	*rcon_address;
 
@@ -1080,9 +1077,6 @@ void CL_InitLocal (void)
 //
 // register our variables
 //
-	cl_stereo_separation = Cvar_Get( "cl_stereo_separation", "0.4", 0 );
-	cl_stereo = Cvar_Get( "cl_stereo", "0", 0 );
-
 	cl_add_blend = Cvar_Get ("cl_blend", "1", CVAR_CHEAT);
 	cl_add_lights = Cvar_Get ("cl_lights", "1", CVAR_CHEAT);
 	cl_add_particles = Cvar_Get ("cl_particles", "1", CVAR_CHEAT);

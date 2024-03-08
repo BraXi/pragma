@@ -286,11 +286,11 @@ R_BeginLinesRendering
 */
 void R_BeginLinesRendering(qboolean dt)
 {
-	R_DepthTest(dt);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDisable(GL_TEXTURE_2D);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	R_CullFace(false);
-	glColor4f(1, 1, 1, 1);
+	R_DepthTest(dt);
+	R_BindProgram(GLPROG_DEBUGLINE);
 }
 
 /*
@@ -300,11 +300,11 @@ R_EndLinesRendering
 */
 void R_EndLinesRendering()
 {
-	glColor4f(1, 1, 1, 1);
 	glEnable(GL_TEXTURE_2D);
-	R_CullFace(true);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	R_CullFace(true);
 	R_DepthTest(true);
+	R_UnbindProgram();
 }
 
 
@@ -412,6 +412,7 @@ void R_DrawDebugLines(void)
 	debugprimitive_t* line;
 
 	glPushMatrix();
+
 	R_BeginLinesRendering(true);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
@@ -422,7 +423,7 @@ void R_DrawDebugLines(void)
 		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
-		glColor3fv(line->color);
+		R_ProgUniform4f(LOC_COLOR4, line->color[0], line->color[1], line->color[2], 1.0f);
 		glLineWidth(line->thickness);
 		switch (line->type)
 		{
@@ -437,6 +438,7 @@ void R_DrawDebugLines(void)
 			break;
 		}
 	}
+	R_UnbindProgram();
 	R_EndLinesRendering();
 
 #if 1
@@ -452,7 +454,6 @@ void R_DrawDebugLines(void)
 		switch (line->type)
 		{
 		case DPRIMITIVE_TEXT:
-
 			R_DrawString3D(line->text, line->p1, line->thickness, 1, line->color);
 			break;
 		}
@@ -472,7 +473,7 @@ void R_DrawDebugLines(void)
 		if (line->type == DPRIMITIVE_TEXT)
 			continue;
 
-		glColor3fv(line->color);
+		R_ProgUniform4f(LOC_COLOR4, line->color[0], line->color[1], line->color[2], 1.0f);
 		glLineWidth(line->thickness);
 		switch (line->type)
 		{

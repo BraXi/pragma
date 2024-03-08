@@ -122,7 +122,7 @@ void R_DrawSpriteModel (rentity_t *e)
 
 	if (e->frame < 0 || e->frame >= psprite->numframes)
 	{
-		ri.Printf (PRINT_ALL, "no such sprite frame %i\n", e->frame);
+		ri.Printf (PRINT_ALL, "no such sprite frame %i in %s\n", e->frame, e->model->name);
 		e->frame = 0;
 	}
 
@@ -713,11 +713,11 @@ void R_RenderView (refdef_t *fd)
 
 //	R_RenderDlights ();
 
-	R_DrawAlphaSurfaces ();
+	R_DrawWorldAlphaSurfaces();
 
-	R_DrawParticles();
+//	R_DrawParticles();
 
-	R_ViewBlendEffect(); // braxi -- i don't like the old way of how blend is rendered, but i'll leave it for now and get back to it later
+//	R_ViewBlendEffect(); // braxi -- i don't like the old way of how blend is rendered, but i'll leave it for now and get back to it later
 
 	R_RenderToFBO(false);
 	// end rendering to fbo
@@ -804,9 +804,12 @@ void R_RenderFrame (refdef_t *fd)
 {
 	R_SetTexEnv(GL_REPLACE);
 	R_RenderView( fd );
+
 	R_SetGL2D ();
 
 	R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
+
+	R_BindProgram(GLPROG_GUI);
 
 	if (r_speeds->value > 1.0f)
 	{

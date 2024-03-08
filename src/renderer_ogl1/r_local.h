@@ -98,9 +98,11 @@ enum
 	GLPROG_SKY,
 	GLPROG_ALIAS,
 	GLPROG_SPRITE,
-	GLPROG_PARTICLES,
+	GLPROG_PARTICLE,
 	GLPROG_GUI,
 	GLPROG_POSTFX,
+	GLPROG_DEBUGSTRING,
+	GLPROG_DEBUGLINE,
 	MAX_GLPROGS
 };
 typedef enum
@@ -174,6 +176,9 @@ void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4);
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4);
 void R_ProgUniformVec4(int uniform, vec4_t v);
 int R_GetProgAttribLoc(glprogLoc_t attrib);
+char* R_GetProgAttribName(glprogLoc_t attrib);
+char* R_GetCurrentProgramName();
+
 qboolean R_UsingProgram();
 
 void	R_ShaderList_f(void);
@@ -348,7 +353,7 @@ void R_DrawSpriteModel (rentity_t *e);
 void R_DrawBeam( rentity_t *e );
 void R_DrawWorld (void);
 void R_RenderDlights (void);
-void R_DrawAlphaSurfaces (void);
+void R_DrawWorldAlphaSurfaces();
 void R_RenderBrushPoly (msurface_t *fa);
 void R_InitParticleTexture (void);
 void Draw_InitLocal (void);

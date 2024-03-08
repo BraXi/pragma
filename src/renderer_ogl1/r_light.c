@@ -24,9 +24,9 @@ DYNAMIC LIGHTS BLEND RENDERING
 =============================================================================
 */
 
-#if 0
 void R_RenderDlight (dlight_t *light)
 {
+#if 0
 	int		i, j;
 	float	a;
 	vec3_t	v;
@@ -51,8 +51,9 @@ void R_RenderDlight (dlight_t *light)
 		glVertex3fv (v);
 	}
 	glEnd ();
-}
 #endif
+}
+
 
 /*
 =============
@@ -60,9 +61,9 @@ R_RenderDlights
 =============
 */
 
-#if 0
 void R_RenderDlights (void)
 {
+#if 0
 	int		i;
 	dlight_t	*l;
 
@@ -82,8 +83,8 @@ void R_RenderDlights (void)
 	glEnable (GL_TEXTURE_2D);
 	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	R_WriteToDepthBuffer(GL_TRUE);
-}
 #endif
+}
 
 /*
 =============================================================================

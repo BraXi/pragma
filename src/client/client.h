@@ -253,9 +253,6 @@ extern client_static_t	cls;
 //
 // cvars
 //
-extern	cvar_t	*cl_stereo_separation;
-extern	cvar_t	*cl_stereo;
-
 extern	cvar_t	*cl_drawviewmodel;
 extern	cvar_t	*cl_add_blend;
 extern	cvar_t	*cl_add_lights;

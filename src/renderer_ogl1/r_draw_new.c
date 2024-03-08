@@ -189,6 +189,7 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	if (!string || !string[0] | !strlen(string))
 		return;
 
+
 	alignx = XALIGN_CENTER;
 	// align text
 	int strX = (strlen(string) * CHAR_SIZEX);
@@ -213,10 +214,14 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	}
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
-	glColor3fv(color);
+
+	R_BindProgram(GLPROG_DEBUGSTRING);
+	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], 1.0);
+
 	R_BindTexture(font_current->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 
+	R_UnbindProgram();
 	glPopMatrix();
 }
 
