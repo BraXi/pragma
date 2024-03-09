@@ -617,7 +617,7 @@ dynamic:
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 			R_SetCacheState( surf );
 
-			R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + surf->lightmaptexturenum );
+			R_MultiTextureBind(GL_TEXTURE1, gl_state.lightmap_textures + surf->lightmaptexturenum);
 
 			lmtex = surf->lightmaptexturenum;
 
@@ -1000,7 +1000,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 		}
 		else
 		{
-			if ( glMultiTexCoord2f && !( surf->flags & SURF_DRAWTURB ) )
+			if( r_singlepass->value && !( surf->flags & SURF_DRAWTURB ) )
 			{
 				GL_RenderLightmappedPoly( surf );
 			}
@@ -1053,28 +1053,34 @@ void R_DrawWorld (void)
 	R_ClearSkyBox ();
 
 
-	// draw world in a single pass
-	R_EnableMultitexture( true );
+	if (r_singlepass->value)
+	{
+		// draw world in a single pass
+		R_EnableMultitexture(true);
 
-	R_SelectTextureUnit( GL_TEXTURE0 );
-	R_SelectTextureUnit( GL_TEXTURE1 );
+		R_RecursiveWorldNode(r_worldmodel->nodes);
+		DrawTextureChains();
 
-	R_RecursiveWorldNode (r_worldmodel->nodes);
+		R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); 
+		R_EnableMultitexture(false);
+	}
+	else
+	{
+		R_EnableMultitexture(true);
 
-	//R_EnableMultitexture( false );
+		R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+		R_RecursiveWorldNode(r_worldmodel->nodes);
+		
+		DrawTextureChains();
+		R_EnableMultitexture(false);
+		R_BlendLightmaps();
+	}
 
 
-	/*
-	** theoretically nothing should happen in the next two functions
-	** if multitexture is enabled
-	*/
-	DrawTextureChains ();
-	//R_BlendLightmaps ();
 
 	R_UnbindProgram();
 	
-	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); // just in case
-	R_EnableMultitexture(false);
+
 
 	R_DrawSkyBox ();
 

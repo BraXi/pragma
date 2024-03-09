@@ -18,6 +18,7 @@ cvar_t* r_drawentities;
 cvar_t* r_drawworld;
 cvar_t* r_speeds;
 cvar_t* r_fullbright;
+cvar_t* r_singlepass;
 cvar_t* r_novis;
 cvar_t* r_nocull;
 cvar_t* r_lerpmodels;
@@ -77,6 +78,8 @@ void R_RegisterCvarsAndCommands(void)
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0);
 
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
+
+	r_singlepass = ri.Cvar_Get("r_singlepass", "1", 0);
 
 	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);
 	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT);

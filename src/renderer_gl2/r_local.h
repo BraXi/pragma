@@ -295,6 +295,7 @@ extern	cvar_t	*r_drawentities;
 extern	cvar_t	*r_drawworld;
 extern	cvar_t	*r_speeds;
 extern	cvar_t	*r_fullbright;
+extern	cvar_t	*r_singlepass;
 extern	cvar_t	*r_novis;
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_lerpmodels;

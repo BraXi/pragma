@@ -583,7 +583,7 @@ static void R_DrawPerfCounters()
 	if (r_speeds->value <= 1.0f)
 		return;
 
-	rect_t pos = { 800 - 140, 15, 140, 100 };
+	rect_t pos = { 800 - 140, 15, 140, 110 };
 	float color[4];
 
 	Vector4Set(color, 0, 0, 0, 0.35f);
@@ -605,6 +605,15 @@ static void R_DrawPerfCounters()
 	Vector4Set(color, 0.2, 1, 0, 1.0);
 	R_DrawString(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
 	R_DrawString(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
+	
+	Vector4Set(color, 1.0, 0.5, 0, 1.0);
+
+	if(r_singlepass->value)
+		R_DrawString("SINGLE PASS BSP (COL+LM)", 795, y += 14, 0.7, 1, color);
+	else
+		R_DrawString("OLD TWO PASS BSP DRAWING", 795, y += 14, 0.7, 1, color);
+		
+	
 }
 
 /*
