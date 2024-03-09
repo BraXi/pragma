@@ -746,5 +746,5 @@ typedef struct
 
 
 // ==================
-#define DEFAULT_RENDERER "ogl1"
+#define DEFAULT_RENDERER "gl2"
 // ==================

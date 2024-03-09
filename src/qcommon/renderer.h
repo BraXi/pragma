@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../qcommon/qcommon.h"
 
 #define	MAX_DLIGHTS				64		// was 32
-#define	MAX_VISIBLE_ENTITIES	512		// max visible entities, was 128 [previously MAX_ENTITIES]
+#define	MAX_VISIBLE_ENTITIES	1024	// max visible entities, was 128 [previously MAX_ENTITIES]
 #define	MAX_PARTICLES			4096
 #define	MAX_LIGHTSTYLES			256
 #define MAX_DEBUG_PRIMITIVES	4096
