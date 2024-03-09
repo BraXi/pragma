@@ -555,13 +555,6 @@ void R_DrawSkyBox (void)
 {
 	int		i;
 
-#if 0
-	R_Blend(true);
-	R_SetTexEnv( GL_MODULATE );
-	glColor4f (1,1,1,0.5);
-	R_DepthTest(false);
-#endif
-
 	if (skyrotate)
 	{	// check for no sky at all
 		for (i=0 ; i<6 ; i++)
@@ -609,13 +602,6 @@ void R_DrawSkyBox (void)
 	glPopMatrix ();
 
 	R_SetTexEnv(GL_REPLACE);
-
-#if 0
-	R_Blend(false);
-	R_SetTexEnv(GL_REPLACE);
-	glColor4f (1,1,1,0.5);
-	R_DepthTest(true);
-#endif
 }
 
 

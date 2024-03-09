@@ -98,16 +98,7 @@ inline void R_SetColor(float r, float g, float b, float a)
 
 inline void R_SetClearColor(float r, float g, float b, float a)
 {
-// not needed
-//	if (glstate.clearcolor[0] != r || glstate.clearcolor[1] != g || glstate.clearcolor[2] != b || glstate.clearcolor[3] != a)
-	{
-		glstate.clearcolor[0] = r;
-		glstate.clearcolor[1] = g;
-		glstate.clearcolor[2] = b;
-		glstate.clearcolor[3] = a;
-
-		glClearColor(r, g, b, a);
-	}
+	glClearColor(r, g, b, a);
 }
 
 void R_InitialOGLState()
