@@ -1103,14 +1103,13 @@ Mod_Free
 */
 void Mod_Free(model_t* mod)
 {
-	if (mod->extradata)
-		Hunk_Free(mod->extradata);
-
-
 	for (int i = 0; i < MD3_MAX_SURFACES; i++)
 	{
 		R_FreeVertexBuffer(mod->vb[i]);
 	}
+
+	if (mod->extradata)
+		Hunk_Free(mod->extradata);
 
 #if 0
 	if (mod->type == MOD_MD3)

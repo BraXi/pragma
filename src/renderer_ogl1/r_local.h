@@ -190,7 +190,7 @@ typedef struct
 	float	xyz[3];
 	float	normal[3];
 	float	st[2];
-	float	rgb[3]; //rgba[4];
+	float	rgba[4];
 } glvert_t;
 
 typedef enum

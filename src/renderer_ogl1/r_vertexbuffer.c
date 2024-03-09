@@ -99,7 +99,7 @@ static qboolean VertexBufferAttributes(vertexbuffer_t* vbo, qboolean enable)
 			{
 				glEnableVertexAttribArray(attrib);
 				//glBindAttribLocation(pCurrentProgram->programObject, attrib, "inColor");
-				glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(32));
+				glVertexAttribPointer(attrib, 4, GL_FLOAT, GL_FALSE, sizeof(glvert_t), BUFFER_OFFSET(32));
 			}
 #ifdef VBA_DEBUG
 			else
@@ -202,16 +202,19 @@ void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int num
 	if (vbo->vboBuf == 0)
 		glGenBuffers(1, &vbo->vboBuf);
 
-	if (vbo->verts != NULL && vbo->numVerts != numVerts)
-	{
-		ri.Error(ERR_FATAL, "R_UpdateVertexBuffer probably scrapping allocated verts\n", numVerts);
-	}
-
 	vbo->numVerts = numVerts;
 	vbo->flags = flags;
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
-	glBufferData(GL_ARRAY_BUFFER, (numVerts * sizeof(glvert_t)), &verts->xyz[0], GL_STATIC_DRAW);
+	if (vbo->verts != NULL && vbo->numVerts != numVerts && verts != NULL)
+	{
+		ri.Error(ERR_FATAL, "R_UpdateVertexBuffer probably scrapping allocated verts\n", numVerts);
+	}
+	if(verts != NULL)
+		glBufferData(GL_ARRAY_BUFFER, (numVerts * sizeof(glvert_t)), &verts->xyz[0], GL_STATIC_DRAW);
+	else
+		glBufferData(GL_ARRAY_BUFFER, (numVerts * sizeof(glvert_t)), &vbo->verts->xyz[0], GL_STATIC_DRAW);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -248,16 +251,6 @@ void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned in
 	glBindBuffer(GL_ARRAY_BUFFER, vbo->vboBuf);
 
 	VertexBufferAttributes(vbo, true);
-
-#if 0
-	glVertexPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(0));
-	if (vbo->flags & V_NORMAL)
-		glNormalPointer(GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(12));	
-	if (vbo->flags & V_UV)
-		glTexCoordPointer(2, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(24));
-	if (vbo->flags & V_COLOR)
-		glColorPointer(3, GL_FLOAT, sizeof(glvert_t), BUFFER_OFFSET(32));
-#endif
 
 	// case one: we have index buffer
 	if (vbo->numIndices && vbo->indices != NULL && vbo->indexBuf) //if ((vbo->flags & V_INDICES) && vbo->indexBuf)

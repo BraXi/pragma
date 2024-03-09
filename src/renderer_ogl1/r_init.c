@@ -64,6 +64,8 @@ float sinTable[FUNCTABLE_SIZE];
 void GL_Strings_f(void);
 
 extern vertexbuffer_t vb_gui;
+extern vertexbuffer_t vb_sky;
+extern vertexbuffer_t *vb_particles;
 /*
 ==================
 R_RegisterCvarsAndCommands
@@ -320,7 +322,9 @@ int R_Init(void* hinstance, void* hWnd)
 	glActiveTexture = 0;
 	glMultiTexCoord2f = 0;
 
+	R_InitTextures();
 	R_InitPrograms();
+	R_InitFrameBuffer();
 
 	GL_SetDefaultState();
 	R_InitialOGLState(); //wip
@@ -329,13 +333,15 @@ int R_Init(void* hinstance, void* hWnd)
 	for (int i = 0; i < FUNCTABLE_SIZE; i++)
 		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
-	R_InitTextures();
+
 
 	Mod_Init();
 
 	Draw_InitLocal();
 
-	R_InitFrameBuffer();
+
+
+	vb_particles = R_AllocVertexBuffer((V_UV | V_COLOR), (3 * MAX_PARTICLES), 0);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -350,6 +356,7 @@ R_Shutdown
 */
 void R_Shutdown(void)
 {
+	ri.RemoveCommand("shaderlist");
 	ri.RemoveCommand("modellist");
 	ri.RemoveCommand("screenshot");
 	ri.RemoveCommand("imagelist");
@@ -364,15 +371,14 @@ void R_Shutdown(void)
 
 	// remove vertex buffers
 	R_DeleteVertexBuffers(&vb_gui);
+	R_DeleteVertexBuffers(&vb_sky);
 
-	/*
-	** shut down OS specific OpenGL stuff like contexts, etc.
-	*/
+	R_FreeVertexBuffer(vb_particles);
+
+	// shut down OS specific OpenGL stuff like contexts, etc.
 	GLimp_Shutdown();
-
-	/*
-	** shutdown our QGL subsystem
-	*/
+	
+	// shutdown our QGL subsystem
 	QGL_Shutdown();
 }
 

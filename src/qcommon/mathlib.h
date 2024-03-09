@@ -47,7 +47,10 @@ extern long Q_ftol(float f);
 
 #define clamp(a,b,c)    ((a)<(b)?(a)=(b):(a)>(c)?(a)=(c):(a)) // Q2PRO
 
+#define Dot2Product(x,y)		(x[0]*y[0]+x[1]*y[1])
 #define DotProduct(x,y)			(x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
+#define Dot4Product(x,y)		(x[0]*y[0]+x[1]*y[1]+x[2]*y[2]+x[3]*y[3])
+
 #define VectorSubtract(a,b,c)	(c[0]=a[0]-b[0],c[1]=a[1]-b[1],c[2]=a[2]-b[2])
 #define VectorAdd(a,b,c)		(c[0]=a[0]+b[0],c[1]=a[1]+b[1],c[2]=a[2]+b[2])
 #define VectorCopy(a,b)			(b[0]=a[0],b[1]=a[1],b[2]=a[2])
@@ -55,8 +58,35 @@ extern long Q_ftol(float f);
 #define VectorNegate(a,b)		(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])
 #define VectorSet(v, x, y, z)	(v[0]=(x), v[1]=(y), v[2]=(z))
 
-void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up);
+#define Vector2Subtract(a,b,c)	(c[0]=a[0]-b[0],c[1]=a[1]-b[1])
+#define Vector2Add(a,b,c)		(c[0]=a[0]+b[0],c[1]=a[1]+b[1])
+#define Vector2Copy(a,b)		(b[0]=a[0],b[1]=a[1])
+#define Vector2Clear(a)			(a[0]=a[1]=0)
+#define Vector2Negate(a,b)		(b[0]=-a[0],b[1]=-a[1])
+#define Vector2Set(v, x, y)		(v[0]=(x), v[1]=(y))
+
+#define Vector4Subtract(a,b,c)	(c[0]=a[0]-b[0],c[1]=a[1]-b[1],c[2]=a[2]-b[2],c[3]=a[3]-b[3])
+#define Vector4Add(a,b,c)		(c[0]=a[0]+b[0],c[1]=a[1]+b[1],c[2]=a[2]+b[2],c[3]=a[3]+b[3])
+#define Vector4Copy(a,b)		(b[0]=a[0],b[1]=a[1],b[2]=a[2],b[3]=a[3])
+#define Vector4Clear(a)			(a[0]=a[1]=a[2]=a[3]=0)
+#define Vector4Negate(a,b)		(b[0]=-a[0],b[1]=-a[1],b[2]=-a[2],b[3]=-a[3])
+#define Vector4Set(v, x,y,z,w)	(v[0]=(x), v[1]=(y), v[2]=(z), v[3]=(w))
+
+void Vector2MA(vec2_t veca, float scale, vec2_t vecb, vec2_t vecc);
 void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
+void Vector4MA(vec4_t veca, float scale, vec4_t vecb, vec4_t vecc);
+
+void Vector2Scale(vec2_t in, vec_t scale, vec2_t out);
+void VectorScale(vec3_t in, vec_t scale, vec3_t out);
+void Vector4Scale(vec4_t in, vec_t scale, vec4_t out);
+
+int Vector2Compare(vec2_t v1, vec2_t v2);
+int VectorCompare(vec3_t v1, vec3_t v2);
+int Vector4Compare(vec4_t v1, vec4_t v2);
+
+vec_t Vector2Length(vec2_t v);
+vec_t VectorLength(vec3_t v);
+vec_t Vector4Length(vec4_t v);
 
 // just in case you do't want to use the macros
 vec_t _DotProduct(vec3_t v1, vec3_t v2);
@@ -64,15 +94,16 @@ void _VectorSubtract(vec3_t veca, vec3_t vecb, vec3_t out);
 void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out);
 void _VectorCopy(vec3_t in, vec3_t out);
 
+void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up);
+
 void ClearBounds(vec3_t mins, vec3_t maxs);
 void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs);
-int VectorCompare(vec3_t v1, vec3_t v2);
-vec_t VectorLength(vec3_t v);
+
 void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross);
 vec_t VectorNormalize(vec3_t v);		// returns vector length
 vec_t VectorNormalize2(vec3_t v, vec3_t out);
 void VectorInverse(vec3_t v);
-void VectorScale(vec3_t in, vec_t scale, vec3_t out);
+
 int Q_log2(int val);
 
 void VectorAngles(const float* forward, const float* up, float* result);

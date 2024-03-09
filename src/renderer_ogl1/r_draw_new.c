@@ -41,9 +41,9 @@ void SetNormal(float x, float y, float z)
 	VectorSet(guiVerts[guiVertCount - 1].normal, x, y, z);
 }
 
-void SetColor(float r, float g, float b)
+void SetColor(float r, float g, float b, float a)
 {
-	VectorSet(guiVerts[guiVertCount - 1].rgb, r, g, b);
+	Vector4Set(guiVerts[guiVertCount - 1].rgba, r, g, b, a);
 }
 
 

@@ -117,8 +117,7 @@ void R_DrawSpriteModel (rentity_t *e)
 	float		*up, *right;
 	sp2Header_t		*psprite;
 
-	// don't even bother culling, because it's just a single
-	// polygon without a surface cache
+	// don't even bother culling, because it's just a single polygon
 
 	psprite = (sp2Header_t *)pCurrentModel->extradata;
 
@@ -309,81 +308,66 @@ void R_DrawEntitiesOnList (void)
 }
 
 /*
-** GL_DrawParticles
-**
-*/
-/*
-=============
-GL_DrawParticles
-=============
-*/
-void GL_DrawParticles( int num_particles, const particle_t particles[] )
-{
-	const particle_t *p;
-	int				i;
-	vec3_t			up, right;
-	float			scale;
-	float			color[4];
-
-    R_BindTexture(r_texture_particle->texnum);
-
-	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
-	R_Blend(true);
-	R_SetTexEnv( GL_MODULATE );
-
-	VectorScale (vup, 1.5, up);
-	VectorScale (vright, 1.5, right);
-
-	glBegin(GL_TRIANGLES);
-	for (p = particles, i = 0; i < num_particles ; i++, p++)
-	{
-		// hack a scale up to keep particles from disapearing
-		scale = ( p->origin[0] - r_origin[0] ) * vpn[0] + 
-			    ( p->origin[1] - r_origin[1] ) * vpn[1] +
-			    ( p->origin[2] - r_origin[2] ) * vpn[2];
-
-		if (scale < 20)
-			scale = 1;
-		else
-			scale = 1 + scale * 0.004;
-
-		VectorCopy(p->color, color);
-		//VectorScale(vup, p->size[0], up);
-		//VectorScale(vright, p->size[1], right);
-
-		color[3] = p->alpha;
-
-		glColor4fv( color );
-
-		glTexCoord2f( 0.0625, 0.0625 );
-		glVertex3fv( p->origin );
-
-		glTexCoord2f( 1.0625, 0.0625 );
-		glVertex3f( p->origin[0] + up[0]*scale, 
-			         p->origin[1] + up[1]*scale, 
-					 p->origin[2] + up[2]*scale);
-
-		glTexCoord2f( 0.0625, 1.0625 );
-		glVertex3f( p->origin[0] + right[0]*scale, 
-			         p->origin[1] + right[1]*scale, 
-					 p->origin[2] + right[2]*scale);
-	}
-
-	glEnd ();
-	R_Blend(false);
-	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
-	R_SetTexEnv( GL_REPLACE );
-}
-
-/*
 ===============
 R_DrawParticles
 ===============
 */
-void R_DrawParticles (void)
+vertexbuffer_t *vb_particles;
+
+void R_DrawParticles( int num_particles, const particle_t particles[] )
 {
-	GL_DrawParticles( r_newrefdef.num_particles, r_newrefdef.particles);
+	const particle_t *p;
+	int				i;
+	vec3_t			up, right;
+	int vertcnt = 0;
+
+	for (p = particles, i = 0; i < num_particles ; i++, p++)
+	{
+		if (p->size[0] > 0.0f && p->size[1] > 0.0f)
+		{
+			VectorScale(vup, p->size[0], up);
+			VectorScale(vright, p->size[1], right);
+		}
+		else
+		{
+			VectorScale(vup, 3.0f, up);
+			VectorScale(vright, 3.0f, right);
+		}
+
+		Vector4Set(vb_particles->verts[vertcnt].rgba, p->color[0], p->color[1], p->color[2], p->alpha);
+		Vector2Set(vb_particles->verts[vertcnt].st, 0.0625, 0.0625 );
+		VectorCopy( p->origin, vb_particles->verts[vertcnt].xyz);
+		vertcnt++;
+
+		Vector4Set(vb_particles->verts[vertcnt].rgba, p->color[0], p->color[1], p->color[2], p->alpha);
+		Vector2Set(vb_particles->verts[vertcnt].st, 1.0625, 0.0625 );
+		VectorSet(vb_particles->verts[vertcnt].xyz, p->origin[0] + up[0], p->origin[1] + up[1], p->origin[2] + up[2]);
+		vertcnt++;
+
+		Vector4Set(vb_particles->verts[vertcnt].rgba, p->color[0], p->color[1], p->color[2], p->alpha);
+		Vector2Set(vb_particles->verts[vertcnt].st, 0.0625, 1.0625 );
+		VectorSet(vb_particles->verts[vertcnt].xyz, p->origin[0] + right[0], p->origin[1] + right[1], p->origin[2] + right[2]);
+		vertcnt++;
+	}
+
+	R_UpdateVertexBuffer(vb_particles, NULL, vertcnt, (V_UV|V_COLOR));
+
+	R_BindProgram(GLPROG_PARTICLE);
+	R_BindTexture(r_texture_particle->texnum);
+	//R_BindTexture(r_texture_white->texnum);
+
+	R_Blend(true);
+	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
+	R_SetTexEnv(GL_MODULATE);
+
+	R_DrawVertexBuffer(vb_particles, 0, 0);
+
+	R_Blend(false);
+	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
+	R_SetTexEnv( GL_REPLACE );
+	R_UnbindProgram();
 }
+
 
 /*
 ============
@@ -710,7 +694,7 @@ void R_RenderView (refdef_t *fd)
 
 	R_DrawWorldAlphaSurfaces();
 
-//	R_DrawParticles();
+	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
 
 //	R_ViewBlendEffect(); // braxi -- i don't like the old way of how blend is rendered, but i'll leave it for now and get back to it later
 
