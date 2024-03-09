@@ -264,13 +264,11 @@ void R_DrawParticles( int num_particles, const particle_t particles[] )
 
 	R_Blend(true);
 	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
-	R_SetTexEnv(GL_MODULATE);
 
 	R_DrawVertexBuffer(vb_particles, 0, 0);
 
 	R_Blend(false);
 	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
-	R_SetTexEnv( GL_REPLACE );
 	R_UnbindProgram();
 }
 
@@ -577,8 +575,6 @@ void R_BeginOrthoProjection()
 	R_CullFace(false);
 	R_Blend(false);
 	R_AlphaTest(true);
-
-	R_SetTexEnv(GL_MODULATE);
 }
 
 void R_DrawFill(rect_t pos, rgba_t color);
@@ -625,7 +621,6 @@ void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 	//
 	if (!onlyortho)
 	{
-		R_SetTexEnv(GL_REPLACE);
 		R_RenderView(fd);
 	}
 

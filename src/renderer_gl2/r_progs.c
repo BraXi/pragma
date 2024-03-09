@@ -28,6 +28,7 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 {
 	/* global */
 	{ LOC_COLORMAP,			"colormap",			F_INT },
+	{ LOC_LIGHTMAP,			"lightmap",			F_INT },
 	{ LOC_COLOR4,			"color_rgba",		F_FLOAT },
 	{ LOC_SCALE,			"scale",			F_VECTOR3 },
 	{ LOC_TIME,				"time",				F_FLOAT }, // fixme: unset
@@ -413,6 +414,7 @@ static void R_FindUniformLocations(glprog_t* prog)
 
 	// set default values
 	R_ProgUniform1i(LOC_COLORMAP, 0);
+	R_ProgUniform1i(LOC_LIGHTMAP, 1);
 	R_UnbindProgram();
 }
 

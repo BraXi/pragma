@@ -587,7 +587,8 @@ void Mod_LoadFaces (lump_t *l)
 	if (l->filelen % sizeof(*in))
 		ri.Error (ERR_DROP, "Mod_LoadFaces: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc ( count*sizeof(*out));	
+
+	out = Hunk_Alloc( count*sizeof(*out));	
 
 	loadmodel->surfaces = out;
 	loadmodel->numsurfaces = count;
@@ -691,8 +692,8 @@ void Mod_LoadNodes (lump_t *l)
 	{
 		for (j=0 ; j<3 ; j++)
 		{
-			out->minmaxs[j] = LittleShort (in->mins[j]);
-			out->minmaxs[3+j] = LittleShort (in->maxs[j]);
+			out->mins[j] = LittleShort (in->mins[j]);
+			out->maxs[j] = LittleShort (in->maxs[j]);
 		}
 	
 		p = LittleLong(in->planenum);
@@ -740,8 +741,8 @@ void Mod_LoadLeafs (lump_t *l)
 	{
 		for (j=0 ; j<3 ; j++)
 		{
-			out->minmaxs[j] = LittleShort (in->mins[j]);
-			out->minmaxs[3+j] = LittleShort (in->maxs[j]);
+			out->mins[j] = LittleShort (in->mins[j]);
+			out->maxs[j] = LittleShort (in->maxs[j]);
 		}
 
 		p = LittleLong(in->contents);
@@ -750,12 +751,12 @@ void Mod_LoadLeafs (lump_t *l)
 		out->cluster = LittleShort(in->cluster);
 		out->area = LittleShort(in->area);
 
-		out->firstmarksurface = loadmodel->marksurfaces +
-			LittleShort(in->firstleafface);
+		out->firstmarksurface = loadmodel->marksurfaces + LittleShort(in->firstleafface);
 		out->nummarksurfaces = LittleShort(in->numleaffaces);
 		
-		// gl underwater warp
+	
 #if 1
+		// gl underwater warp
 		if (out->contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA) )
 		{
 			for (j=0 ; j<out->nummarksurfaces ; j++)

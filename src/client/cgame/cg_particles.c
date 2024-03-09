@@ -35,6 +35,7 @@ void CG_FreeParticle(cparticle_t* part)
 		//Com_Error(ERR_DROP, "CG_FreeParticle: not active\n");
 		return;
 	}
+	memset(part, 0, sizeof(cparticle_t));
 	part->inuse = false;
 	cg_numparticles--;
 }
@@ -95,15 +96,12 @@ Simulate and add to scene all active particles
 */
 void CG_SimulateAndAddParticles()
 {
-	cparticle_t* p; // , *next;
+	cparticle_t		*p;
 	float			alpha;
 	float			time, time2;
 	vec3_t			org;
 	vec3_t			color;
-//	cparticle_t* active, * tail;
 
-//	active = NULL;
-//	tail = NULL;
 
 	time = 0.000001;
 
@@ -113,8 +111,6 @@ void CG_SimulateAndAddParticles()
 		p = &cg_particles[i];
 		if (!p->inuse)
 			continue;
-
-		//next = p->next;
 
 		// PMM - added INSTANT_PARTICLE handling for heat beam
 		if (p->alphavel != INSTANT_PARTICLE)
@@ -145,7 +141,7 @@ void CG_SimulateAndAddParticles()
 		org[1] = p->org[1] + p->vel[1] * time + p->accel[1] * time2;
 		org[2] = p->org[2] + p->vel[2] * time + p->accel[2] * time2;
 
-		V_AddParticle(org, color, alpha);
+		V_AddParticle(org, color, alpha, p->size);
 		// PMM
 		if (p->alphavel == INSTANT_PARTICLE)
 		{
@@ -166,24 +162,7 @@ Grabs particle from pool, returns NULL if all particles are in use
 */
 cparticle_t* CG_ParticleFromPool()
 {
-	cparticle_t* p = NULL;
-
-#if 1
 	return CG_AllocParticle();
-#else
-	if (!pinit)
-		return p;
-
-	if (!free_particles)
-		return p; // no free particles
-
-	p = free_particles;
-	free_particles = p->next;
-	p->next = active_particles;
-	active_particles = p;
-
-	return p;
-#endif
 }
 
 /*
@@ -195,8 +174,6 @@ Returns true if there are any free particles left
 */
 qboolean CG_AreThereFreeParticles()
 {
-//	if (!free_particles)
-//		return false;
 	return true;
 }
 

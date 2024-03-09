@@ -224,8 +224,6 @@ void GL_SetDefaultState( void )
 
 	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	R_SetTexEnv( GL_REPLACE );
-
 	GL_UpdateSwapInterval();
 }
 

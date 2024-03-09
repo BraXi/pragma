@@ -96,7 +96,7 @@ void V_AddDebugPrimitive(debugprimitive_t *obj)
 V_AddParticle
 =====================
 */
-void V_AddParticle (vec3_t org, vec3_t color, float alpha)
+void V_AddParticle (vec3_t org, vec3_t color, float alpha, vec2_t size)
 {
 	particle_t	*p;
 
@@ -109,6 +109,7 @@ void V_AddParticle (vec3_t org, vec3_t color, float alpha)
 	p = &r_particles[r_numparticles++];
 	VectorCopy (org, p->origin);
 	VectorCopy(color, p->color);
+	VectorCopy(size, p->size);
 	p->alpha = alpha;
 }
 
@@ -230,25 +231,24 @@ V_TestLights
 If cl_testlights is set, create 32 lights models
 ================
 */
-void V_TestLights (void)
+static void V_TestLights()
 {
 	int			i, j;
 	float		f, r;
 	dlight_t	*dl;
 
-	r_numdlights = 32;
+	r_numdlights = MAX_DLIGHTS;
 	memset (r_dlights, 0, sizeof(r_dlights));
 
-	for (i=0 ; i<r_numdlights ; i++)
+	for (i = 0; i < r_numdlights; i++)
 	{
 		dl = &r_dlights[i];
 
 		r = 64 * ( (i%4) - 1.5 );
 		f = 64 * (i/4) + 128;
 
-		for (j=0 ; j<3 ; j++)
-			dl->origin[j] = cl.refdef.view.origin[j] + cl.v_forward[j]*f +
-			cl.v_right[j]*r;
+		for (j = 0; j < 3; j++)
+			dl->origin[j] = cl.refdef.view.origin[j] + (cl.v_forward[j] * f) + (cl.v_right[j] * r);
 		dl->color[0] = ((i%6)+1) & 1;
 		dl->color[1] = (((i%6)+1) & 2)>>1;
 		dl->color[2] = (((i%6)+1) & 4)>>2;

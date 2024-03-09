@@ -78,7 +78,7 @@ typedef struct glpoly_s
 	struct	glpoly_s	*next;
 	struct	glpoly_s	*chain;
 	int		numverts;
-	int		flags;			// for SURF_UNDERWATER (not needed anymore?)
+	int		flags;					// for SURF_UNDERWATER (not needed anymore?)
 	float	verts[4][VERTEXSIZE];	// variable sized (xyz s1t1 s2t2)
 } glpoly_t;
 
@@ -120,7 +120,8 @@ typedef struct mnode_s
 	int			contents;		// -1, to differentiate from leafs
 	int			visframe;		// node needs to be traversed if current
 	
-	float		minmaxs[6];		// for bounding box culling
+	// for bounding box culling
+	vec3_t		mins, maxs;
 
 	struct mnode_s	*parent;
 
@@ -140,7 +141,8 @@ typedef struct mleaf_s
 	int			contents;		// wil be a negative contents number
 	int			visframe;		// node needs to be traversed if current
 
-	float		minmaxs[6];		// for bounding box culling
+	// for bounding box culling
+	vec3_t		mins, maxs;		
 
 	struct mnode_s	*parent;
 

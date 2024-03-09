@@ -33,16 +33,13 @@ void R_EnableMultitexture( qboolean enable )
 	{
 		R_SelectTextureUnit( GL_TEXTURE1 );
 		glEnable( GL_TEXTURE_2D );
-		R_SetTexEnv( GL_REPLACE );
 	}
 	else
 	{
 		R_SelectTextureUnit( GL_TEXTURE1 );
 		glDisable( GL_TEXTURE_2D );
-		R_SetTexEnv( GL_REPLACE );
 	}
 	R_SelectTextureUnit( GL_TEXTURE0 );
-	R_SetTexEnv( GL_REPLACE );
 }
 
 void R_SelectTextureUnit( GLenum texture )
@@ -68,16 +65,6 @@ void R_SelectTextureUnit( GLenum texture )
 		glActiveTexture( GL_TEXTURE1 );
 }
 
-void R_SetTexEnv(GLenum mode)
-{
-	static int lastmodes[2] = { -1, -1 };
-
-	if ( mode != lastmodes[gl_state.currenttmu] )
-	{
-		glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
-		lastmodes[gl_state.currenttmu] = mode;
-	}
-}
 
 void R_BindTexture(int texnum)
 {
@@ -802,12 +789,16 @@ image_t	*R_FindTexture(char *name, texType_t type)
 
 	if (!name)
 	{
-		//	ri.Error (ERR_DROP, "R_FindTexture: NULL name");
+		ri.Error(ERR_DROP, "R_FindTexture: NULL name");
 		return NULL;
 	}
 	len = strlen(name);
-	if (len<5)
-		return NULL;	//	ri.Error (ERR_DROP, "R_FindTexture: bad name: %s", name);
+	if (len < 5)
+	{
+		ri.Error(ERR_DROP, "R_FindTexture: bad name: %s", name);
+		return NULL;
+	}
+		
 
 	// look for it
 	for (i=0, image=r_textures ; i<r_textures_count ; i++,image++)

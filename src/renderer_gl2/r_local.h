@@ -108,6 +108,7 @@ enum
 typedef enum
 {
 	LOC_COLORMAP,
+	LOC_LIGHTMAP,
 	LOC_SCALE,
 	LOC_COLOR4,
 	LOC_TIME,
@@ -404,7 +405,6 @@ struct image_s *R_RegisterSkin (char *name);
 //
 void R_EnableMultitexture(qboolean enable);
 void R_SelectTextureUnit(GLenum texture);
-void R_SetTexEnv(GLenum mode);
 void R_BindTexture(int texnum);
 void R_MultiTextureBind(GLenum target, int texnum);
 

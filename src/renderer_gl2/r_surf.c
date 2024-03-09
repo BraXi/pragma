@@ -13,9 +13,6 @@ See the attached GNU General Public License v2 for more details.
 #include <assert.h>
 #include "r_local.h"
 
-#define GL_COMBINE_EXT 	34160
-#define GL_RGB_SCALE_EXT  34163
-
 static vec3_t	modelorg;		// relative to viewpoint
 
 msurface_t	*r_alpha_surfaces;
@@ -87,81 +84,6 @@ image_t *R_TextureAnimation (mtexinfo_t *tex)
 
 	return tex->image;
 }
-
-#if 0
-/*
-=================
-WaterWarpPolyVerts
-
-Mangles the x and y coordinates in a copy of the poly
-so that any drawing routine can be water warped
-=================
-*/
-glpoly_t *WaterWarpPolyVerts (glpoly_t *p)
-{
-	int		i;
-	float	*v, *nv;
-	static byte	buffer[1024];
-	glpoly_t *out;
-
-	out = (glpoly_t *)buffer;
-
-	out->numverts = p->numverts;
-	v = p->verts[0];
-	nv = out->verts[0];
-	for (i=0 ; i<p->numverts ; i++, v+= VERTEXSIZE, nv+=VERTEXSIZE)
-	{
-		nv[0] = v[0] + 4*sin(v[1]*0.05+r_newrefdef.time)*sin(v[2]*0.05+r_newrefdef.time);
-		nv[1] = v[1] + 4*sin(v[0]*0.05+r_newrefdef.time)*sin(v[2]*0.05+r_newrefdef.time);
-
-		nv[2] = v[2];
-		nv[3] = v[3];
-		nv[4] = v[4];
-		nv[5] = v[5];
-		nv[6] = v[6];
-	}
-
-	return out;
-}
-
-/*
-================
-DrawGLWaterPoly
-
-Warp the vertex coordinates
-================
-*/
-void DrawGLWaterPoly (glpoly_t *p)
-{
-	int		i;
-	float	*v;
-
-	p = WaterWarpPolyVerts (p);
-	glBegin (GL_TRIANGLE_FAN);
-	v = p->verts[0];
-	for (i=0 ; i<p->numverts ; i++, v+= VERTEXSIZE)
-	{
-		glTexCoord2f (v[3], v[4]);
-		glVertex3fv (v);
-	}
-	glEnd ();
-}
-void DrawGLWaterPolyLightmap (glpoly_t *p)
-{
-	int		i;
-	float	*v;
-
-	p = WaterWarpPolyVerts (p);
-	glBegin (GL_TRIANGLE_FAN);
-	v = p->verts[0];
-	for (i=0 ; i<p->numverts ; i++, v+= VERTEXSIZE)
-	{
-		glTexCoord2f (v[5], v[6]);
-		glVertex3fv (v);
-	}
-	glEnd ();
-}
-#endif
 
 /*
 ================
@@ -478,22 +400,16 @@ void R_RenderBrushPoly (msurface_t *fa)
 
 	if (fa->flags & SURF_DRAWTURB)
 	{
-		R_BindTexture(image->texnum);
-
-		R_SetTexEnv(GL_MODULATE);
+		R_MultiTextureBind(GL_TEXTURE0, image->texnum);
 		//float inverse_intensity = -r_intensity->value;
 		//glColor4f(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
 
 		EmitWaterPolys(fa);
-		R_SetTexEnv(GL_REPLACE);
-
 		return;
 	}
 	else
 	{
-		R_BindTexture( image->texnum );
-
-		R_SetTexEnv( GL_REPLACE );
+		R_MultiTextureBind(GL_TEXTURE0, image->texnum);
 	}
 
 
@@ -537,7 +453,7 @@ dynamic:
 			R_BuildLightMap( fa, (void *)temp, smax*4 );
 			R_SetCacheState( fa );
 
-			R_BindTexture( gl_state.lightmap_textures + fa->lightmaptexturenum );
+			R_MultiTextureBind(GL_TEXTURE1, gl_state.lightmap_textures + fa->lightmaptexturenum );
 
 			glTexSubImage2D( GL_TEXTURE_2D, 0,
 							  fa->light_s, fa->light_t, 
@@ -582,7 +498,6 @@ void R_DrawWorldAlphaSurfaces()
     glLoadMatrixf (r_world_matrix);
 
 	R_Blend(true);
-	R_SetTexEnv( GL_MODULATE );
 
 	R_BindProgram(GLPROG_WORLD);
 
@@ -607,8 +522,6 @@ void R_DrawWorldAlphaSurfaces()
 	}
 
 	R_UnbindProgram();
-
-	R_SetTexEnv( GL_REPLACE );
 	R_Blend(false);
 
 	r_alpha_surfaces = NULL;
@@ -625,10 +538,9 @@ void DrawTextureChains (void)
 	msurface_t	*s;
 	image_t		*image;
 
+	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+
 	rperf.visible_textures = 0;
-
-//	R_SetTexEnv( GL_REPLACE );
-
 	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (!image->registration_sequence)
@@ -644,7 +556,6 @@ void DrawTextureChains (void)
 		}
 	}
 
-	R_EnableMultitexture( false );
 	for ( i = 0, image=r_textures ; i<r_textures_count ; i++,image++)
 	{
 		if (!image->registration_sequence)
@@ -661,9 +572,6 @@ void DrawTextureChains (void)
 
 		image->texturechain = NULL;
 	}
-//	R_EnableMultitexture( true );
-
-	R_SetTexEnv( GL_REPLACE );
 }
 
 
@@ -858,11 +766,12 @@ void R_DrawInlineBModel (void)
 
 	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
 
+	R_BindProgram(GLPROG_WORLD);
+
 	if ( pCurrentRefEnt->renderfx & RF_TRANSLUCENT )
 	{
 		R_Blend(true);
-		glColor4f (1,1,1,0.25);
-		R_SetTexEnv( GL_MODULATE );
+		R_ProgUniform4f(LOC_COLOR4, 1,1,1,0.25);
 	}
 
 	//
@@ -905,8 +814,7 @@ void R_DrawInlineBModel (void)
 	else
 	{
 		R_Blend(false);
-		glColor4f (1,1,1,1);
-		R_SetTexEnv( GL_REPLACE );
+		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1.0);
 	}
 }
 
@@ -971,9 +879,7 @@ void R_DrawBrushModel (rentity_t *e)
 
 	R_EnableMultitexture( !r_fullbright->value );
 	R_SelectTextureUnit( GL_TEXTURE0 );
-	R_SetTexEnv( GL_REPLACE );
 	R_SelectTextureUnit( GL_TEXTURE1 );
-	R_SetTexEnv( GL_MODULATE );
 
 	R_DrawInlineBModel ();
 	R_EnableMultitexture( false );
@@ -1008,7 +914,8 @@ void R_RecursiveWorldNode (mnode_t *node)
 
 	if (node->visframe != r_visframecount)
 		return;
-	if (R_CullBox (node->minmaxs, node->minmaxs+3))
+
+	if (R_CullBox (node->mins, node->maxs))
 		return;
 	
 // if a leaf node, draw stuff
@@ -1140,47 +1047,40 @@ void R_DrawWorld (void)
 	R_BindProgram(GLPROG_WORLD);
 
 	pCurrentRefEnt = &ent;
-
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
-
-	glColor4f (1,1,1,1);
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
+
 	R_ClearSkyBox ();
 
-	if (0) //glMultiTexCoord2f )
-	{
-		R_EnableMultitexture( !r_fullbright->value );
 
-		R_SelectTextureUnit( GL_TEXTURE0 );
-		R_SetTexEnv( GL_REPLACE );
-		R_SelectTextureUnit( GL_TEXTURE1 );
+	// draw world in a single pass
+	R_EnableMultitexture( true );
 
-		if ( r_lightmap->value )
-			R_SetTexEnv( GL_REPLACE );
-		else 
-			R_SetTexEnv( GL_MODULATE );
+	R_SelectTextureUnit( GL_TEXTURE0 );
+	R_SelectTextureUnit( GL_TEXTURE1 );
 
-		R_RecursiveWorldNode (r_worldmodel->nodes);
+	R_RecursiveWorldNode (r_worldmodel->nodes);
 
-		R_EnableMultitexture( false );
-	}
-	else
-	{
-		R_RecursiveWorldNode (r_worldmodel->nodes);
-	}
+	//R_EnableMultitexture( false );
+
 
 	/*
 	** theoretically nothing should happen in the next two functions
 	** if multitexture is enabled
 	*/
 	DrawTextureChains ();
-	R_BlendLightmaps ();
+	//R_BlendLightmaps ();
 
 	R_UnbindProgram();
 	
+	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); // just in case
+	R_EnableMultitexture(false);
+
 	R_DrawSkyBox ();
 
 	R_DrawTriangleOutlines ();
+
+
 
 
 }
@@ -1511,12 +1411,10 @@ void GL_BeginBuildingLightmaps (model_t *m)
 	** setup the base lightstyles so the lightmaps won't have to be regenerated
 	** the first time they're seen
 	*/
-	for (i=0 ; i<MAX_LIGHTSTYLES ; i++)
+	for (i = 0; i < MAX_LIGHTSTYLES ; i++)
 	{
-		lightstyles[i].rgb[0] = 1;
-		lightstyles[i].rgb[1] = 1;
-		lightstyles[i].rgb[2] = 1;
-		lightstyles[i].white = 3;
+		VectorSet(lightstyles[i].rgb, 1.0f, 1.0f, 1.0f);
+		lightstyles[i].white = 3; // braxi -- why is is this out of scale?
 	}
 	r_newrefdef.lightstyles = lightstyles;
 
@@ -1570,8 +1468,10 @@ void GL_BeginBuildingLightmaps (model_t *m)
 	** initialize the dynamic lightmap texture
 	*/
 	R_BindTexture( gl_state.lightmap_textures + 0 );
+
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 	glTexImage2D( GL_TEXTURE_2D, 
 				   0, 
 				   gl_lms.internal_format,
