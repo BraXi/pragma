@@ -432,8 +432,8 @@ static void R_FindVertexAttribLocations(glprog_t* prog)
 	for (i = 0; i < NUM_VALOCS; i++)
 	{
 		prog->valocs[progVertAtrribLocs[i].loc] = glGetAttribLocation(pCurrentProgram->programObject, progVertAtrribLocs[i].name);
-		if(prog->index == 3 && prog->valocs[progVertAtrribLocs[i].loc] == -1)
-				ri.Printf(PRINT_ALERT, "attrib %s not found in program %s\n", progVertAtrribLocs[i].name, prog->name);
+//		if(prog->index == 3 && prog->valocs[progVertAtrribLocs[i].loc] == -1)
+//				ri.Printf(PRINT_ALERT, "attrib %s not found in program %s\n", progVertAtrribLocs[i].name, prog->name);
 	}
 
 	R_UnbindProgram();
