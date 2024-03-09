@@ -204,7 +204,7 @@ void R_DrawEntityModel(rentity_t* ent)
 
 	// hack the depth range to prevent view model from poking into walls
 	if (ent->renderfx & RF_DEPTHHACK)
-		glDepthRange(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
+		glDepthRange(gldepthmin, gldepthmin + 0.3f * (gldepthmax - gldepthmin));
 
 	// if its a view model and we chose to keep it in left hand 
 	if ((ent->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))

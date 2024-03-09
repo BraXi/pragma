@@ -38,7 +38,7 @@ int			r_framecount;		// used for dlight push checking
 
 rperfcounters_t rperf;
 
-float		v_blend[4];			// final blending color
+static rgba_t	v_blend;			// final blending color
 
 extern vec3_t	model_shadevector;
 extern vec3_t	model_shadelight;
@@ -54,6 +54,7 @@ vec3_t	r_origin;
 float	r_world_matrix[16];
 float	r_base_world_matrix[16];
 
+vertexbuffer_t* vb_particles;
 //
 // screen size info
 //
@@ -310,8 +311,6 @@ void R_DrawEntitiesOnList (void)
 R_DrawParticles
 ===============
 */
-vertexbuffer_t *vb_particles;
-
 void R_DrawParticles( int num_particles, const particle_t particles[] )
 {
 	const particle_t *p;
@@ -352,7 +351,7 @@ void R_DrawParticles( int num_particles, const particle_t particles[] )
 
 	R_BindProgram(GLPROG_PARTICLE);
 	R_BindTexture(r_texture_particle->texnum);
-	//R_BindTexture(r_texture_white->texnum);
+	//R_BindTexture(r_texture_white->texnum); // testing
 
 	R_Blend(true);
 	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
@@ -598,40 +597,16 @@ R_Clear
 */
 void R_Clear (void)
 {
-	if (r_ztrick->value)
-	{
-		static int trickframe;
-
-		if (r_clear->value)
-			glClear (GL_COLOR_BUFFER_BIT);
-
-		trickframe++;
-		if (trickframe & 1)
-		{
-			gldepthmin = 0;
-			gldepthmax = 0.49999;
-			glDepthFunc (GL_LEQUAL);
-		}
-		else
-		{
-			gldepthmin = 1;
-			gldepthmax = 0.5;
-			glDepthFunc (GL_GEQUAL);
-		}
-	}
+	if (r_clear->value)
+		glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	else
-	{
-		if (r_clear->value)
-			glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		else
-			glClear (GL_DEPTH_BUFFER_BIT);
-		gldepthmin = 0;
-		gldepthmax = 1;
-		glDepthFunc (GL_LEQUAL);
-	}
+		glClear (GL_DEPTH_BUFFER_BIT);
 
+	gldepthmin = 0;
+	gldepthmax = 1;
+
+	glDepthFunc (GL_LEQUAL);
 	glDepthRange (gldepthmin, gldepthmax);
-
 }
 
 
