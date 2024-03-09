@@ -15,12 +15,14 @@ An attempt to bring renderer to OpenGL 3.3, while making it many times faster th
 - proper multitexture support
 - lightmap updates
 - anistropic texture filtering
+- fog
 - MD5 models and skeletal animations
 - add support for improved q2bsp [lightgrids, brush normals, etc]
 - add `r_picmip` back
+-
 
 ## PARTIALY DONE:
-- use GLSL shaders for diferent gemoetries - sky, models, warps, world, gui, etc..
+- use GLSL shaders for diferent gemoetries - sky [partial], models [X], warps [partial], world [partial], gui [X], particles [X], etc..
 
 ## DONE:
 - support GLSL shaders

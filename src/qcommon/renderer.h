@@ -208,7 +208,7 @@ typedef struct
 
 	void	(*SetSky) (char *name, float rotate, vec3_t axis, vec3_t color);
 
-	void	(*RenderFrame) (refdef_t *fd);
+	void	(*RenderFrame) (refdef_t *fd, qboolean onlyortho);
 
 	void	(*DrawGetPicSize) (int *w, int *h, char *name);	// will return 0 0 if not found
 	void	(*DrawPic) (int x, int y, char *name);

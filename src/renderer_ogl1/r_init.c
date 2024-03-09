@@ -389,7 +389,7 @@ struct image_s* R_RegisterSkin(char* name);
 struct image_s* R_RegisterPic(char* name);
 
 void R_SetSky(char* name, float rotate, vec3_t axis, vec3_t color);
-void R_RenderFrame(refdef_t* fd);
+void R_RenderFrame(refdef_t* fd, qboolean onlyortho);
 
 
 void	Draw_Pic(int x, int y, char* name);

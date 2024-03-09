@@ -13,12 +13,10 @@ See the attached GNU General Public License v2 for more details.
 
 void R_Clear (void);
 
-viddef_t	vid;
-
-
 model_t		*r_worldmodel;
 
 float		gldepthmin, gldepthmax;
+
 
 glconfig_t gl_config;
 glstate_t  gl_state;
@@ -59,8 +57,15 @@ vertexbuffer_t* vb_particles;
 // screen size info
 //
 refdef_t	r_newrefdef;
+viddef_t	vid; // TODO get rid of this
 
 int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
+
+extern void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+extern void R_ClearFBO();
+extern void R_RenderToFBO(qboolean enable);
+extern void R_DrawDebugLines(void);
+extern void R_DrawEntityModel(rentity_t* ent);
 
 /*
 =================
@@ -83,7 +88,13 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 	return false;
 }
 
+/*
+=================
+R_RotateForEntity
 
+STUPID QUAKE BUG included ;)
+=================
+*/
 void R_RotateForEntity (rentity_t *e)
 {
     glTranslatef (e->origin[0],  e->origin[1],  e->origin[2]);
@@ -93,112 +104,6 @@ void R_RotateForEntity (rentity_t *e)
     glRotatef (-e->angles[2],  1, 0, 0);
 }
 
-/*
-=============================================================
-
-  SPRITE MODELS
-
-=============================================================
-*/
-
-
-/*
-=================
-R_DrawSpriteModel
-
-=================
-*/
-void R_DrawSpriteModel (rentity_t *e)
-{
-	float alpha = 1.0F;
-	vec3_t	point;
-	sp2Frame_t	*frame;
-	float		*up, *right;
-	sp2Header_t		*psprite;
-
-	// don't even bother culling, because it's just a single polygon
-
-	psprite = (sp2Header_t *)pCurrentModel->extradata;
-
-	if (e->frame < 0 || e->frame >= psprite->numframes)
-	{
-		ri.Printf (PRINT_ALL, "no such sprite frame %i in %s\n", e->frame, e->model->name);
-		e->frame = 0;
-	}
-
-	// advance frame
-	e->frame %= psprite->numframes;
-
-	frame = &psprite->frames[e->frame];
-
-#if 0
-	if (psprite->type == SPR_ORIENTED)
-	{	// bullet marks on walls
-	vec3_t		v_forward, v_right, v_up;
-
-	AngleVectors (currententity->angles, v_forward, v_right, v_up);
-		up = v_up;
-		right = v_right;
-	}
-	else
-#endif
-	{	// normal sprite
-		up = vup;
-		right = vright;
-	}
-
-	if ( e->renderfx & RF_TRANSLUCENT )
-		alpha = e->alpha;
-
-	R_Blend(alpha != 1.0F);
-
-	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, alpha);
-
-    R_BindTexture(pCurrentModel->images[e->frame]->texnum);
-	R_SetTexEnv( GL_MODULATE );
-
-	R_AlphaTest(true); // IS THIS REALY CORRECT?
-
-	glBegin(GL_TRIANGLES);
-	{
-		glTexCoord2f(0, 1);
-		VectorMA(e->origin, -frame->origin_y, up, point);
-		VectorMA(point, -frame->origin_x, right, point);
-		glVertex3fv(point);
-
-		glTexCoord2f(0, 0);
-		VectorMA(e->origin, frame->height - frame->origin_y, up, point);
-		VectorMA(point, -frame->origin_x, right, point);
-		glVertex3fv(point);
-
-		glTexCoord2f(1, 0);
-		VectorMA(e->origin, frame->height - frame->origin_y, up, point);
-		VectorMA(point, frame->width - frame->origin_x, right, point);
-		glVertex3fv(point);
-
-		glTexCoord2f(0, 1);
-		VectorMA(e->origin, -frame->origin_y, up, point);
-		VectorMA(point, -frame->origin_x, right, point);
-		glVertex3fv(point);
-
-		glTexCoord2f(1, 0);
-		VectorMA(e->origin, frame->height - frame->origin_y, up, point);
-		VectorMA(point, frame->width - frame->origin_x, right, point);
-		glVertex3fv(point);
-
-		glTexCoord2f(1, 1);
-		VectorMA(e->origin, -frame->origin_y, up, point);
-		VectorMA(point, frame->width - frame->origin_x, right, point);
-		glVertex3fv(point);
-	}
-	glEnd();
-
-	R_AlphaTest(false);
-	R_SetTexEnv( GL_REPLACE );
-	R_Blend(false);
-}
-
-//==================================================================================
 
 /*
 =============
@@ -241,7 +146,11 @@ static void R_DrawNullModel (void)
 }
 
 
-void R_DrawEntityModel(rentity_t* ent);
+/*
+=================
+R_DrawCurrentEntity
+=================
+*/
 static inline void R_DrawCurrentEntity()
 {
 	if (pCurrentRefEnt->renderfx & RF_BEAM)
@@ -376,6 +285,9 @@ void R_ViewBlendEffect (void)
 	if (!v_blend[3])
 		return; // transparent
 
+	if (1)
+		return; // move to shader
+
 	R_AlphaTest(false);
 	R_Blend(true);
 	R_DepthTest(false);
@@ -407,6 +319,11 @@ void R_ViewBlendEffect (void)
 
 //=======================================================================
 
+/*
+============
+SignbitsForPlane
+============
+*/
 static int SignbitsForPlane (cplane_t *out)
 {
 	int	bits, j;
@@ -422,8 +339,12 @@ static int SignbitsForPlane (cplane_t *out)
 	return bits;
 }
 
-
-void R_SetFrustum (void)
+/*
+============
+R_SetFrustum
+============
+*/
+static void R_SetFrustum()
 {
 	int		i;
 
@@ -451,7 +372,7 @@ void R_SetFrustum (void)
 R_SetupFrame
 ===============
 */
-void R_SetupFrame (void)
+static void R_SetupFrame()
 {
 	int i;
 	mleaf_t	*leaf;
@@ -515,7 +436,11 @@ void R_SetupFrame (void)
 	}
 }
 
-
+/*
+===============
+MYgluPerspective
+===============
+*/
 void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar )
 {
    GLdouble xmin, xmax, ymin, ymax;
@@ -537,7 +462,7 @@ void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble 
 R_SetupGL
 =============
 */
-void R_SetupGL (void)
+static void R_SetupGL()
 {
 	float	screenaspect;
 //	float	yfov;
@@ -560,7 +485,6 @@ void R_SetupGL (void)
 	// set up projection matrix
 	//
     screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
-//	yfov = 2*atan((float)r_newrefdef.height/r_newrefdef.width)*180/M_PI;
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity ();
     MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096);
@@ -617,10 +541,6 @@ R_RenderView
 r_newrefdef must be set before the first call
 ================
 */
-void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
-void R_ClearFBO();
-void R_RenderToFBO(qboolean enable);
-extern void R_DrawDebugLines(void);
 void R_RenderView (refdef_t *fd)
 {
 	if (r_norefresh->value)
@@ -637,8 +557,6 @@ void R_RenderView (refdef_t *fd)
 		rperf.alias_tris = 0;
 		rperf.texture_binds = 0;
 	}
-
-
 
 	R_PushDlights ();
 
@@ -685,8 +603,12 @@ void R_RenderView (refdef_t *fd)
 	}
 }
 
-
-void R_SetGL2D(void)
+/*
+================
+R_BeginOrthoProjection
+================
+*/
+void R_BeginOrthoProjection()
 {
 	// set 2D virtual screen size
 	glViewport (0,0, vid.width, vid.height);
@@ -711,28 +633,24 @@ static void R_DrawPerfCounters()
 
 	rect_t pos = { 800 - 140, 15, 140, 100 };
 	float color[4];
-	color[3] = 0.3f;
 
-	glColor4f(1, 1, 1, 1);
-
-	VectorSet(color, 0, 0, 0);
+	Vector4Set(color, 0, 0, 0, 0.35f);
 	R_DrawFill(pos, color);
 
 	float y = 20;
 
-	color[3] = 1.0f;
-	VectorSet(color, 1, 1, 1);
+	Vector4Set(color, 1, 1, 1, 1.0);
 	R_DrawString(va("%i        BSP polygons", rperf.brush_polys), 795, y, 0.7, 1, color);
 	R_DrawString(va("%i    visible textures", rperf.visible_textures), 795, y += 8, 0.7, 1, color);
 	R_DrawString(va("%i  visible light maps", rperf.visible_lightmaps), 795, y += 8, 0.7, 1, color);
 	R_DrawString(va("%i    texture bindings", rperf.texture_binds), 795, y += 8, 0.7, 1, color);
 
-	VectorSet(color, 0.8, 0.8, 1);
+	Vector4Set(color, 0.8, 0.8, 1, 1.0);
 	R_DrawString(va("%i      dynamic lights", r_newrefdef.num_dlights), 795, y += 16, 0.7, 1, color);
 	R_DrawString(va("%i     render entities", r_newrefdef.num_entities), 795, y += 8, 0.7, 1, color);
 	R_DrawString(va("%i     particles count", r_newrefdef.num_particles), 795, y += 8, 0.7, 1, color);
 
-	VectorSet(color, 0.2, 1, 0);
+	Vector4Set(color, 0.2, 1, 0, 1.0);
 	R_DrawString(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
 	R_DrawString(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
 }
@@ -743,19 +661,34 @@ R_RenderFrame
 
 @@@@@@@@@@@@@@@@@@@@@
 */
-void R_RenderFrame (refdef_t *fd)
+void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 {
-	R_SetTexEnv(GL_REPLACE);
-	R_RenderView( fd );
 
-	R_SetGL2D ();
+	//
+	// render world into framebuffer
+	//
+	if (!onlyortho)
+	{
+		R_SetTexEnv(GL_REPLACE);
+		R_RenderView(fd);
+	}
 
-	R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
+	//
+	// enter 2d mode
+	//
+	R_BeginOrthoProjection ();
 
+	if (!onlyortho)
+	{
+		// draw the frame buffer
+		R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
+	}
+
+	//
+	// begin GUI rendering
+	//
 	R_BindProgram(GLPROG_GUI);
 	R_DrawPerfCounters();
-
-//	R_DrawFBO(r_newrefdef.width/2, 0, r_newrefdef.width/2, r_newrefdef.height/2, false); // depth
 }
 
 /*
@@ -804,7 +737,7 @@ void R_BeginFrame( float camera_separation )
 	/*
 	** go into 2D mode
 	*/
-	R_SetGL2D();
+	R_BeginOrthoProjection();
 
 	/*
 	** draw buffer stuff

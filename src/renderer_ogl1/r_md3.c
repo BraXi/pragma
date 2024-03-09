@@ -607,7 +607,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 		R_ProgUniform1f(LOC_PARM0, 0);
 
 	if (ent->renderfx & RF_TRANSLUCENT)
-		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 0.3);
+		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, ent->alpha);
 	else
 		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 

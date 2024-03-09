@@ -138,7 +138,7 @@ int R_FindProgramUniform(char *name)
 
 	loc = glGetUniformLocation(pCurrentProgram->programObject, name);
 //	if(loc == -1)
-//		ri.Printf(PRINT_ALERT, "no uniform %s in prog %s\n", name, pCurrentProgram->name);
+//		ri.Printf(PRINT_ALERT, "no uniform %s in program %s\n", name, pCurrentProgram->name);
 	return loc;
 }
 

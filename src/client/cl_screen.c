@@ -594,7 +594,7 @@ void SCR_TimeRefresh_f (void)
 		for (i=0 ; i<128 ; i++)
 		{
 			cl.refdef.view.angles[1] = i/128.0*360.0;
-			re.RenderFrame (&cl.refdef);
+			re.RenderFrame (&cl.refdef, false);
 		}
 		re.EndFrame();
 	}
@@ -605,7 +605,7 @@ void SCR_TimeRefresh_f (void)
 			cl.refdef.view.angles[1] = i/128.0*360.0;
 
 			re.BeginFrame( 0 );
-			re.RenderFrame (&cl.refdef);
+			re.RenderFrame (&cl.refdef, false);
 			re.EndFrame();
 		}
 	}
@@ -831,21 +831,19 @@ void SCR_UpdateScreen (void)
 	if (!scr_initialized || !con.initialized)
 		return;				// not initialized yet
 
-	re.SetColor(1, 1, 1, 1);
-
 	re.BeginFrame( 0 );
 
-	if (scr_draw_loading == 2)
+	if (scr_draw_loading == 2) //loading plaque over black screen
 	{	
-		//loading plaque over black screen
+		re.RenderFrame(&cl.refdef, true); // only gui
 		scr_draw_loading = false;
 		VectorSet(color, 1, 1, 1);
 		color[3] = 1;
 		re.DrawString("loading", 400, 280, 2, 2, color);
 	} 
-	// if a cinematic is supposed to be running, handle menus and console specially
-	else if (cl.cinematictime > 0)
+	else if (cl.cinematictime > 0) // in cinematic, handle menus and console specially
 	{
+		re.RenderFrame(&cl.refdef, true); // only gui
 		if (cls.key_dest == key_menu)
 		{
 			UI_Draw();
@@ -867,22 +865,19 @@ void SCR_UpdateScreen (void)
 		// clear any dirty part of the background
 		SCR_TileClear ();
 
-		V_RenderView (0);
+		//
+		// render world
+		//
+		V_RenderView(0);
 
 		//
 		// gui rendering at this point
 		//
-#if 0
-		re.SetColor(1, 1, 1, 1);
 		CG_DrawGUI();
 
-		re.SetColor(1, 1, 1, 1);
 		UI_Draw();
 
-		SCR_DrawNet();
 		SCR_CheckDrawCenterString();
-
-		re.SetColor(1, 1, 1, 1);
 
 		CL_DrawGraphOnScreen();
 
@@ -893,7 +888,8 @@ void SCR_UpdateScreen (void)
 		DrawDownloadNotify();
 
 		SCR_DrawLoading ();
-#endif
+
+		SCR_DrawNet();
 	}
 
 #if 0

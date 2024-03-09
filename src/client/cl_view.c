@@ -449,15 +449,21 @@ V_RenderView
 ==================
 */
 extern void SV_AddDebugPrimitives();
-void V_RenderView( float stereo_separation )
+void V_RenderView(float stereo_separation)
 {
-	extern int entitycmpfnc( const rentity_t *, const rentity_t * );
+	extern int entitycmpfnc(const rentity_t*, const rentity_t*);
 
-	if (cls.state != ca_active)
+	if (!cl.refresh_prepped) // still loading
+	{
+		re.RenderFrame(&cl.refdef, true);
+		return;		
+	}
+
+	if (cls.state != ca_active) // not fully on server
+	{
+		re.RenderFrame(&cl.refdef, true);
 		return;
-
-	if (!cl.refresh_prepped)
-		return;			// still loading
+	}
 
 	if (cl_timedemo->value)
 	{
@@ -558,14 +564,12 @@ void V_RenderView( float stereo_separation )
         qsort( cl.refdef.entities, cl.refdef.num_entities, sizeof( cl.refdef.entities[0] ), (int (*)(const void *, const void *))entitycmpfnc );
 	}
 
-	re.RenderFrame (&cl.refdef);
+	re.RenderFrame (&cl.refdef, false);
 
 	if (cl_stats->value)
 		Com_Printf ("ents:%i dlights:%i particles:%i dbg:%i\n", r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
 	if ( log_stats->value && ( log_stats_file != 0 ) )
 		fprintf( log_stats_file, "%i,%i,%i,%i,",r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
-
-	re.SetColor(1, 1, 1, 1);
 
 	SCR_AddDirtyPoint (scr_vrect.x, scr_vrect.y);
 	SCR_AddDirtyPoint (scr_vrect.x+scr_vrect.width-1, scr_vrect.y+scr_vrect.height-1);
@@ -579,7 +583,7 @@ V_Viewpos_f
 */
 void V_Viewpos_f (void)
 {
-	Com_Printf ("(%i %i %i) : %i\n", (int)cl.refdef.view.origin[0],
+	Com_Printf ("(%i %i %i) : yaw %i\n", (int)cl.refdef.view.origin[0],
 		(int)cl.refdef.view.origin[1], (int)cl.refdef.view.origin[2], 
 		(int)cl.refdef.view.angles[YAW]);
 }

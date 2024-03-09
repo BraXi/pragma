@@ -284,7 +284,6 @@ void Draw_Fill (int x, int y, int w, int h)
 	PushVert(x, y + h, 0);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
-
 	R_BindTexture(r_texture_white->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
