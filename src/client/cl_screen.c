@@ -187,6 +187,7 @@ void SCR_CheckDrawCenterString (void)
 	if (scr_centertime_off <= 0)
 		return;
 
+	re.SetColor(1, 1, 1, 1);
 	SCR_DrawCenterString ();
 }
 
@@ -795,9 +796,9 @@ static void SCR_DrawFPS()
 	color[3] = 1;
 
 	if (fps >= 1000)
-		VectorSet(color, 0, 1, 0);
+		VectorSet(color, 0.3, 0.8, 0);
 
-	if ((int)cl_showfps->value == 1 && mapname[0])
+	if ((int)cl_showfps->value == 1 && mapname[0] && cls.state == ca_active)
 		re.DrawString(va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]), 795, 5, 0.7, 1, color);
 	else
 		re.DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 5, 0.7, 1, color);
@@ -873,8 +874,11 @@ void SCR_UpdateScreen (void)
 		//
 		// gui rendering at this point
 		//
+
+		re.SetColor(1, 1, 1, 1);
 		CG_DrawGUI();
 
+		re.SetColor(1, 1, 1, 1);
 		UI_Draw();
 
 		SCR_CheckDrawCenterString();
@@ -889,10 +893,12 @@ void SCR_UpdateScreen (void)
 
 		SCR_DrawLoading ();
 
+		//devtools
 		SCR_DrawNet();
+
 	}
 
-#if 0
+#if 1
 	float col[4] = { 1,0.4,0.5,1};
 	re.DrawString(va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP), 795, 590, 0.7, 1, col);
 	SCR_DrawFPS();

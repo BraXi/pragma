@@ -275,48 +275,6 @@ void R_DrawParticles( int num_particles, const particle_t particles[] )
 }
 
 
-/*
-============
-R_ViewBlendEffect
-============
-*/
-void R_ViewBlendEffect (void)
-{
-	if (!v_blend[3])
-		return; // transparent
-
-	if (1)
-		return; // move to shader
-
-	R_AlphaTest(false);
-	R_Blend(true);
-	R_DepthTest(false);
-	glDisable (GL_TEXTURE_2D);
-
-    glLoadIdentity ();
-    glRotatef (-90,  1, 0, 0);
-    glRotatef (90,  0, 0, 1);
-
-	R_ProgUniform4f(LOC_COLOR4, v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
-
-	glBegin(GL_TRIANGLES);
-	{
-		glVertex3f(10, 100, 100);
-		glVertex3f(10, -100, 100);
-		glVertex3f(10, -100, -100);
-
-		glVertex3f(10, 100, 100);
-		glVertex3f(10, -100, -100);
-		glVertex3f(10, 100, -100);
-	}
-	glEnd();
-
-	R_AlphaTest(true);
-	R_Blend(false);
-
-	glEnable(GL_TEXTURE_2D);
-}
-
 //=======================================================================
 
 /*
@@ -587,8 +545,6 @@ void R_RenderView (refdef_t *fd)
 
 	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
 
-//	R_ViewBlendEffect(); // braxi -- i don't like the old way of how blend is rendered, but i'll leave it for now and get back to it later
-
 	R_RenderToFBO(false);
 	// end rendering to fbo
 
@@ -680,6 +636,9 @@ void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 
 	if (!onlyortho)
 	{
+		R_BindProgram(GLPROG_POSTFX);
+		R_ProgUniform4f(LOC_COLOR4, v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
+
 		// draw the frame buffer
 		R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
 	}
