@@ -22,11 +22,11 @@ void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {
-	float	m[3][3];
-	float	im[3][3];
-	float	zrot[3][3];
-	float	tmpmat[3][3];
-	float	rot[3][3];
+	mat3x3_t	m;
+	mat3x3_t	im;
+	mat3x3_t	zrot;
+	mat3x3_t	tmpmat;
+	mat3x3_t	rot;
 	int	i;
 	vec3_t vr, vup, vf;
 
@@ -179,7 +179,7 @@ void PerpendicularVector(vec3_t dst, const vec3_t src)
 R_ConcatRotations
 ================
 */
-void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3])
+void R_ConcatRotations(mat3x3_t in1, mat3x3_t in2, mat3x3_t out)
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] +
 		in1[0][2] * in2[2][0];
@@ -985,7 +985,7 @@ void AxisClear(vec3_t axis[3])
 MatrixMultiply (Q3)
 ================
 */
-void MatrixMultiply(float in1[3][3], float in2[3][3], float out[3][3])
+void MatrixMultiply(mat3x3_t in1, mat3x3_t in2, mat3x3_t out)
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] +
 		in1[0][2] * in2[2][0];

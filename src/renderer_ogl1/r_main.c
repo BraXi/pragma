@@ -41,7 +41,7 @@ rperfcounters_t rperf;
 float		v_blend[4];			// final blending color
 
 extern vec3_t	model_shadevector;
-extern float	model_shadelight[3];
+extern vec3_t	model_shadelight;
 
 //
 // view origin
@@ -60,8 +60,6 @@ float	r_base_world_matrix[16];
 refdef_t	r_newrefdef;
 
 int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
-
-
 
 /*
 =================

@@ -333,7 +333,7 @@ extern	int		gl_alpha_format;
 extern	int		gl_tex_solid_format;
 extern	int		gl_tex_alpha_format;
 
-extern	float	r_world_matrix[16];
+extern float r_world_matrix[16];
 
 void R_LightPoint (vec3_t p, vec3_t color);
 void R_PushDlights (void);

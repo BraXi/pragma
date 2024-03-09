@@ -14,6 +14,9 @@ typedef vec_t vec4_t[4];
 typedef vec_t rect_t[4];
 typedef vec_t rgba_t[4];
 
+typedef vec_t mat3x3_t[3][3];
+//typedef vec_t mat4x4_t[4][4]; // unused
+
 typedef	int	fixed4_t;
 typedef	int	fixed8_t;
 typedef	int	fixed16_t;
@@ -111,9 +114,9 @@ void AxisToAngles(vec3_t axis[3], vec3_t outAngles);
 void AnglesToAxis(vec3_t angles, vec3_t axis[3]);
 void AxisClear(vec3_t axis[3]);
 void AxisCopy(vec3_t in[3], vec3_t out[3]);
-void MatrixMultiply(float in1[3][3], float in2[3][3], float out[3][3]);
+void MatrixMultiply(mat3x3_t in1, mat3x3_t in2, mat3x3_t out);
 
-void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3]);
+void R_ConcatRotations(mat3x3_t in1, mat3x3_t in2, mat3x3_t out);
 void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4]);
 
 void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);

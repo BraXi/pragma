@@ -14,7 +14,7 @@ See the attached GNU General Public License v2 for more details.
 
 // globals for model lighting
 vec3_t	model_shadevector;
-float	model_shadelight[3];
+vec3_t	model_shadelight;
 
 void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp); // r_md3.c
 void R_DrawSprite(rentity_t* ent); // r_sprite.c
