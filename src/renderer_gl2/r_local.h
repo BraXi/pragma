@@ -8,15 +8,6 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-#define FIX_BRUSH_LIGHTING 1 // Enable Spike's fix from QS
-
-// disable data conversion warnings
-#if 0
-#pragma warning(disable : 4244)     // MIPS
-#pragma warning(disable : 4136)     // X86
-#pragma warning(disable : 4051)     // ALPHA
-#endif
-
 #ifdef _WIN32
 	#include <windows.h>
 #endif
@@ -370,11 +361,7 @@ void R_AddSkySurface (msurface_t *fa);
 void R_ClearSkyBox (void);
 void R_DrawSkyBox (void);
 
-#ifdef FIX_BRUSH_LIGHTING
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
-#else
-void R_MarkLights(dlight_t* light, int bit, mnode_t* node);
-#endif
 
 #if 0
 short LittleShort (short l);

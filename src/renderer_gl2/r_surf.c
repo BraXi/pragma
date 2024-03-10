@@ -757,21 +757,15 @@ void R_DrawInlineBModel (void)
 	float		dot;
 	msurface_t	*psurf;
 	dlight_t	*light;
-
-#ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
 	vec3_t		lightorg;
-#endif
 
 	// calculate dynamic lighting for bmodel
 	light = r_newrefdef.dlights;
 	for (k = 0; k < r_newrefdef.num_dlights; k++, light++)
 	{
-#ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
+		 // Spike's fix from QS
 		VectorSubtract(light->origin, pCurrentRefEnt->origin, lightorg);
 		R_MarkLights(light, lightorg, (1 << k), (pCurrentModel->nodes + pCurrentModel->firstnode));
-#else
-		R_MarkLights(light, (1<<k), (currentmodel->nodes + currentmodel->firstnode));
-#endif
 	}
 
 	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
