@@ -497,13 +497,16 @@ void R_DrawWorldAlphaSurfaces()
 	//
     glLoadMatrixf (r_world_matrix);
 
-	R_Blend(true);
+	R_EnableMultitexture(true);
 
 	R_BindProgram(GLPROG_WORLD);
 
+	R_Blend(true);
+	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); // no lightmap
+
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
-		R_BindTexture(s->texinfo->image->texnum);
+		R_MultiTextureBind(GL_TEXTURE0, s->texinfo->image->texnum);
 		rperf.brush_polys++;
 
 		if (s->texinfo->flags & SURF_TRANS33)
@@ -525,6 +528,8 @@ void R_DrawWorldAlphaSurfaces()
 	R_Blend(false);
 
 	r_alpha_surfaces = NULL;
+
+	R_EnableMultitexture(false);
 }
 
 /*
@@ -539,6 +544,7 @@ void DrawTextureChains (void)
 	image_t		*image;
 
 	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 
 	rperf.visible_textures = 0;
 	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
@@ -547,6 +553,7 @@ void DrawTextureChains (void)
 			continue;
 		if (!image->texturechain)
 			continue;
+
 		rperf.visible_textures++;
 
 		for ( s = image->texturechain; s ; s=s->texturechain)
@@ -679,8 +686,8 @@ dynamic:
 
 			lightMapTexId = surf->lightmaptexturenum;
 
-			R_MultiTextureBind(GL_TEXTURE1, gl_state.lightmap_textures + surf->lightmaptexturenum);
-			glTexSubImage2D( GL_TEXTURE_2D, 0, surf->light_s, surf->light_t, smax, tmax,  GL_LIGHTMAP_FORMAT,  GL_UNSIGNED_BYTE, temp );
+			R_MultiTextureBind(GL_TEXTURE1, gl_state.lightmap_textures + lightMapTexId);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, surf->light_s, surf->light_t, smax, tmax,  GL_LIGHTMAP_FORMAT,  GL_UNSIGNED_BYTE, temp);
 		}
 		else
 		{
@@ -690,9 +697,8 @@ dynamic:
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 
 			lightMapTexId = 0;
-
-			R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + 0 );
-			glTexSubImage2D( GL_TEXTURE_2D, 0, surf->light_s, surf->light_t, smax, tmax, GL_LIGHTMAP_FORMAT, GL_UNSIGNED_BYTE, temp );
+			R_MultiTextureBind(GL_TEXTURE1, gl_state.lightmap_textures + lightMapTexId);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, surf->light_s, surf->light_t, smax, tmax, GL_LIGHTMAP_FORMAT, GL_UNSIGNED_BYTE, temp );
 		}
 
 		rperf.brush_polys++;
@@ -785,7 +791,7 @@ void R_DrawInlineBModel (void)
 				psurf->texturechain = r_alpha_surfaces;
 				r_alpha_surfaces = psurf;
 			}
-			else if ( glMultiTexCoord2f && !( psurf->flags & SURF_DRAWTURB ) )
+			else if ( r_singlepass->value && !( psurf->flags & SURF_DRAWTURB ) )
 			{
 				GL_RenderLightmappedPoly( psurf );
 			}
