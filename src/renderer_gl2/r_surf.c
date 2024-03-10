@@ -1071,10 +1071,13 @@ void R_DrawWorld (void)
 	if (r_singlepass->value)
 	{
 		// draw world in a single pass
+
 		R_EnableMultitexture(true);
 		R_RecursiveWorldNode(r_worldmodel->nodes);
-		DrawTextureChains();
-		R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); 
+
+		//DrawTextureChains();
+		//R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+
 		R_EnableMultitexture(false);
 	}
 	else
