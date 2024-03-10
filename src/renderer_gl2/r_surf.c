@@ -498,12 +498,10 @@ void R_DrawWorldAlphaSurfaces()
     glLoadMatrixf (r_world_matrix);
 
 	R_EnableMultitexture(true);
+	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); // no lightmap
+	R_Blend(true);
 
 	R_BindProgram(GLPROG_WORLD);
-
-	R_Blend(true);
-	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); // no lightmap
-
 	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
 	{
 		R_MultiTextureBind(GL_TEXTURE0, s->texinfo->image->texnum);
@@ -525,11 +523,11 @@ void R_DrawWorldAlphaSurfaces()
 	}
 
 	R_UnbindProgram();
+
+	R_EnableMultitexture(false);
 	R_Blend(false);
 
 	r_alpha_surfaces = NULL;
-
-	R_EnableMultitexture(false);
 }
 
 /*
@@ -616,10 +614,10 @@ inline static void DrawLightMappedFlowingSurf(msurface_t* surf)
 
 /*
 ================
-DrawLightMappedSurf
+DrawLightMappedGenericSurf
 ================
 */
-inline static void DrawLightMappedSurf(msurface_t* surf)
+inline static void DrawLightMappedGenericSurf(msurface_t* surf)
 {
 	int			i, numVerts;
 	float		*v;
@@ -643,12 +641,46 @@ inline static void DrawLightMappedSurf(msurface_t* surf)
 	glEnd();
 }
 
+/*
+================
+DrawLightMappedSurf
+================
+*/
+inline static void DrawLightMappedSurf(msurface_t* surf, int colorMapTexId, int lightMapTexId)
+{
+	// not ideal, but not the worst
+	if (r_lightmap->value && r_fullbright->value)
+	{
+		R_MultiTextureBind(GL_TEXTURE0, colorMapTexId);
+		R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+	}
+	else
+	{
+		R_MultiTextureBind(GL_TEXTURE0, (r_lightmap->value > 0.0f) ? r_texture_white->texnum : colorMapTexId);
+		R_MultiTextureBind(GL_TEXTURE1, (r_fullbright->value > 0.0f) ? r_texture_white->texnum : lightMapTexId);
+	}
 
-static void GL_RenderLightmappedPoly( msurface_t *surf )
+	if (surf->texinfo->flags & SURF_FLOWING)
+	{
+		DrawLightMappedFlowingSurf(surf);
+	}
+	else
+	{
+		DrawLightMappedGenericSurf(surf);
+	}
+}
+
+/*
+================
+R_LightMappedWorldSurf
+================
+*/
+static void R_LightMappedWorldSurf( msurface_t *surf )
 {
 	int		nv = surf->polys->numverts;
 	int		map;
-	image_t *image = R_TextureAnimation( surf->texinfo );
+	image_t	*image = R_TextureAnimation(surf->texinfo);
+
 	qboolean is_dynamic = false;
 	unsigned lightMapTexId = surf->lightmaptexturenum;
 
@@ -702,34 +734,12 @@ dynamic:
 		}
 
 		rperf.brush_polys++;
-
-		R_MultiTextureBind( GL_TEXTURE0, image->texnum );
-		R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + lightMapTexId );
-
-		if (surf->texinfo->flags & SURF_FLOWING)
-		{
-			DrawLightMappedFlowingSurf(surf);
-		}
-		else
-		{
-			DrawLightMappedSurf(surf);
-		}
+		DrawLightMappedSurf(surf, image->texnum, gl_state.lightmap_textures+lightMapTexId);
 	}
 	else
 	{
 		rperf.brush_polys++;
-
-		R_MultiTextureBind( GL_TEXTURE0, image->texnum );
-		R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + lightMapTexId );
-
-		if (surf->texinfo->flags & SURF_FLOWING)
-		{
-			DrawLightMappedFlowingSurf(surf);
-		}
-		else
-		{
-			DrawLightMappedSurf(surf);
-		}
+		DrawLightMappedSurf(surf, image->texnum, gl_state.lightmap_textures + lightMapTexId);
 	}
 }
 
@@ -738,6 +748,8 @@ dynamic:
 R_DrawInlineBModel
 =================
 */
+
+extern void EmitWaterPolys2(msurface_t* fa);
 void R_DrawInlineBModel (void)
 {
 	int			i, k;
@@ -769,7 +781,7 @@ void R_DrawInlineBModel (void)
 	if ( pCurrentRefEnt->renderfx & RF_TRANSLUCENT )
 	{
 		R_Blend(true);
-		R_ProgUniform4f(LOC_COLOR4, 1,1,1,0.25);
+		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, pCurrentRefEnt->alpha);
 	}
 
 	//
@@ -791,22 +803,36 @@ void R_DrawInlineBModel (void)
 				psurf->texturechain = r_alpha_surfaces;
 				r_alpha_surfaces = psurf;
 			}
-			else if ( r_singlepass->value && !( psurf->flags & SURF_DRAWTURB ) )
+
+			if (r_singlepass->value)
 			{
-				GL_RenderLightmappedPoly( psurf );
+				if ((psurf->flags & SURF_DRAWTURB))
+				{
+					image_t *image = R_TextureAnimation(psurf->texinfo);
+					if (!image)
+						image = r_texture_missing;
+
+					R_MultiTextureBind(GL_TEXTURE0, image->texnum);
+					R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+					EmitWaterPolys2(psurf);
+				}
+				else if (!(psurf->flags & SURF_DRAWTURB))
+				{
+					R_LightMappedWorldSurf(psurf);
+				}
 			}
 			else
 			{
-				R_EnableMultitexture( false );
+				//R_EnableMultitexture( false );
 				R_RenderBrushPoly( psurf );
-				R_EnableMultitexture( true );
+				//R_EnableMultitexture( true );
 			}
 		}
 	}
 
 	if ( !(pCurrentRefEnt->renderfx & RF_TRANSLUCENT) )
 	{
-		if ( !glMultiTexCoord2f )
+		if (!r_singlepass->value || !glMultiTexCoord2f )
 			R_BlendLightmaps ();
 	}
 	else
@@ -853,6 +879,7 @@ void R_DrawBrushModel (rentity_t *e)
 		return;
 
 	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
+
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
 	VectorSubtract (r_newrefdef.view.origin, e->origin, modelorg);
@@ -875,10 +902,7 @@ void R_DrawBrushModel (rentity_t *e)
 	e->angles[0] = -e->angles[0];	// stupid quake bug
 	e->angles[2] = -e->angles[2];	// stupid quake bug
 
-	R_EnableMultitexture( !r_fullbright->value );
-	R_SelectTextureUnit( GL_TEXTURE0 );
-	R_SelectTextureUnit( GL_TEXTURE1 );
-
+	R_EnableMultitexture( true );
 	R_DrawInlineBModel ();
 	R_EnableMultitexture( false );
 
@@ -898,6 +922,7 @@ void R_DrawBrushModel (rentity_t *e)
 R_RecursiveWorldNode
 ================
 */
+void EmitWaterPolys2(msurface_t* fa);
 void R_RecursiveWorldNode (mnode_t *node)
 {
 	int			c, side, sidebit;
@@ -1000,14 +1025,26 @@ void R_RecursiveWorldNode (mnode_t *node)
 		}
 		else
 		{
-			if( r_singlepass->value && !( surf->flags & SURF_DRAWTURB ) )
+			if( r_singlepass->value )
 			{
-				GL_RenderLightmappedPoly( surf );
+				if((surf->flags & SURF_DRAWTURB))
+				{
+					image = R_TextureAnimation(surf->texinfo);
+					if (!image)
+						image = r_texture_missing;
+
+					R_MultiTextureBind(GL_TEXTURE0, image->texnum);
+					R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+					EmitWaterPolys2(surf);
+				}
+				else if (!(surf->flags & SURF_DRAWTURB))
+				{
+					R_LightMappedWorldSurf(surf);
+				}
 			}
 			else
 			{
-				// the polygon is visible, so add it to the texture
-				// sorted chain
+				// the polygon is visible, so add it to the texture sorted chain
 				// FIXME: this is a hack for animation
 				image = R_TextureAnimation (surf->texinfo);
 				surf->texturechain = image->texturechain;
@@ -1045,42 +1082,35 @@ void R_DrawWorld (void)
 	ent.frame = (int)(r_newrefdef.time*2);
 
 	R_BindProgram(GLPROG_WORLD);
+	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 
 	pCurrentRefEnt = &ent;
+
 	gl_state.currenttextures[0] = gl_state.currenttextures[1] = -1;
 	memset (gl_lms.lightmap_surfaces, 0, sizeof(gl_lms.lightmap_surfaces));
 
 	R_ClearSkyBox ();
 
-
 	if (r_singlepass->value)
 	{
 		// draw world in a single pass
 		R_EnableMultitexture(true);
-
 		R_RecursiveWorldNode(r_worldmodel->nodes);
-		DrawTextureChains();
-
+	//	DrawTextureChains();
 		R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); 
 		R_EnableMultitexture(false);
 	}
 	else
 	{
 		R_EnableMultitexture(true);
-
 		R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
-		R_RecursiveWorldNode(r_worldmodel->nodes);
-		
+		R_RecursiveWorldNode(r_worldmodel->nodes);	
 		DrawTextureChains();
 		R_EnableMultitexture(false);
 		R_BlendLightmaps();
 	}
 
-
-
 	R_UnbindProgram();
-	
-
 
 	R_DrawSkyBox ();
 

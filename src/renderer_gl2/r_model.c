@@ -618,18 +618,17 @@ void Mod_LoadFaces (lump_t *l)
 
 		CalcSurfaceExtents (out);
 				
-	// lighting info
-
-		for (i=0 ; i<MAXLIGHTMAPS ; i++)
+		// lighting info
+		for (i = 0; i< MAXLIGHTMAPS; i++)
 			out->styles[i] = in->styles[i];
+
 		i = LittleLong(in->lightofs);
 		if (i == -1)
 			out->samples = NULL;
 		else
 			out->samples = loadmodel->lightdata + i;
 		
-	// set the drawing flags
-		
+		// set the drawing flags
 		if (out->texinfo->flags & SURF_WARP)
 		{
 			out->flags |= SURF_DRAWTURB;

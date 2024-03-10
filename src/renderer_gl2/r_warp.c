@@ -216,6 +216,7 @@ void EmitWaterPolys (msurface_t *fa)
 		scroll = -64 * ( (r_newrefdef.time*0.5) - (int)(r_newrefdef.time*0.5) );
 	else
 		scroll = 0;
+
 	for (bp=fa->polys ; bp ; bp=bp->next)
 	{
 		p = bp;
@@ -240,6 +241,51 @@ void EmitWaterPolys (msurface_t *fa)
 	}
 }
 
+/*
+=============
+EmitWaterPolys2
+
+Does a water warp on the pre-fragmented glpoly_t chain
+=============
+*/
+void EmitWaterPolys2(msurface_t* fa)
+{
+	glpoly_t* p, * bp;
+	float* v;
+	int			i;
+	float		s, t, os, ot;
+	float		scroll;
+	float		rdt = r_newrefdef.time;
+
+	if (fa->texinfo->flags & SURF_FLOWING)
+		scroll = -64 * ((r_newrefdef.time * 0.5) - (int)(r_newrefdef.time * 0.5));
+	else
+		scroll = 0;
+
+	for (bp = fa->polys; bp; bp = bp->next)
+	{
+		p = bp;
+
+		glBegin(GL_TRIANGLE_FAN);
+		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
+		{
+			os = v[3];
+			ot = v[4];
+
+			s = os + r_turbsin[(int)((ot * 0.125 + r_newrefdef.time) * TURBSCALE) & 255];
+			s += scroll;
+			s *= (1.0 / 64);
+
+			t = ot + r_turbsin[(int)((os * 0.125 + rdt) * TURBSCALE) & 255];
+			t *= (1.0 / 64);
+
+			glMultiTexCoord2f(GL_TEXTURE0, s, t); //glTexCoord2f(s, t);
+//			glMultiTexCoord2f(GL_TEXTURE1, v[5], v[6]); // in case we have proper lightmaps on it	
+			glVertex3fv(v);
+		}
+		glEnd();
+	}
+}
 
 //===================================================================
 

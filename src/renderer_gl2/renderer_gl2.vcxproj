@@ -170,6 +170,7 @@
     <ClCompile Include="r_framebuffer.c" />
     <ClCompile Include="r_progs.c" />
     <ClCompile Include="r_vertexbuffer.c" />
+    <ClCompile Include="r_world.c" />
     <ClCompile Include="win_opengl.c" />
     <ClCompile Include="win_qgl.c" />
     <ClCompile Include="r_draw.c" />
