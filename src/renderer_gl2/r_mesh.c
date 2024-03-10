@@ -48,15 +48,13 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 		// don't cull viwmodels unless its centered
 		return r_lefthand->value == 2 ? false : true;
 	}
-	else if(pCurrentModel->cullDist > 0)
+	else if(pCurrentModel->cullDist > 0.0f)
 	{
 		// cull objects based on distance TODO: account for scale or na?
 		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); // FIXME: doesn't account for FOV
 		if (VectorLength(v) > pCurrentModel->cullDist)
 			return false;
 	}
-
-
 
 	if (ent->model->type == MOD_MD3) 
 	{
@@ -92,7 +90,7 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 =================
 R_SetEntityShadeLight
 
-get lighting information for centity
+get lighting information for entity
 =================
 */
 void R_SetEntityShadeLight(rentity_t* ent)
@@ -104,13 +102,11 @@ void R_SetEntityShadeLight(rentity_t* ent)
 
 	if ((ent->renderfx & RF_COLOR))
 	{
-		for (i = 0; i < 3; i++)
-			model_shadelight[i] = ent->renderColor[i];
+		VectorCopy(ent->renderColor, model_shadelight);
 	}
 	else if (pCurrentRefEnt->renderfx & RF_FULLBRIGHT || r_fullbright->value)
 	{
-		for (i = 0; i < 3; i++)
-			model_shadelight[i] = 1.0;
+		VectorSet(model_shadelight, 1.0f, 1.0f, 1.0f);
 	}
 	else 
 	{
@@ -133,9 +129,7 @@ void R_SetEntityShadeLight(rentity_t* ent)
 
 		if (i == 3)
 		{
-			model_shadelight[0] = 0.1;
-			model_shadelight[1] = 0.1;
-			model_shadelight[2] = 0.1;
+			VectorSet(model_shadelight, 0.1f, 0.1f, 0.1f);
 		}
 	}
 
@@ -233,12 +227,12 @@ void R_DrawEntityModel(rentity_t* ent)
 		switch (ent->model->type)
 		{
 		case MOD_MD3:
-			lod = LOD_HIGH;
+			lod = LOD_HIGH; // fixme: allow lods
 			R_DrawMD3Model(ent, lod, lerp);
 			break;
 
 		case MOD_SPRITE:
-			R_UnbindProgram();
+			R_UnbindProgram(); //fixme render sprites
 			R_DrawSprite(ent);
 			break;
 		default:

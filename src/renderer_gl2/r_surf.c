@@ -912,7 +912,6 @@ void R_DrawBrushModel (rentity_t *e)
 R_RecursiveWorldNode
 ================
 */
-void EmitWaterPolys2(msurface_t* fa);
 void R_RecursiveWorldNode (mnode_t *node)
 {
 	int			c, side, sidebit;
@@ -1095,10 +1094,6 @@ void R_DrawWorld (void)
 	R_DrawSkyBox ();
 
 	R_DrawTriangleOutlines ();
-
-
-
-
 }
 
 
@@ -1106,8 +1101,7 @@ void R_DrawWorld (void)
 ===============
 R_MarkLeaves
 
-Mark the leaves and nodes that are in the PVS for the current
-cluster
+Mark the leaves and nodes that are in the PVS for the current cluster
 ===============
 */
 void R_MarkLeaves (void)

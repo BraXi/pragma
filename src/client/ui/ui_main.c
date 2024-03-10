@@ -255,12 +255,11 @@ void UI_Draw()
 	}
 	else
 	{
-		if (Com_ServerState() == 0 && cls.state != ca_active)
-			fadeColor[3] = 1;
-		else
-			fadeColor[3] = 0.3;
-
-		re.DrawFadeScreen(fadeColor);
+		//if (Com_ServerState() == 0 && cls.state != ca_active)
+		//	fadeColor[3] = 1;
+		//else
+		//	fadeColor[3] = 0.3;
+		//re.DrawFadeScreen(fadeColor);
 	}
 
 	int i, j;
@@ -494,7 +493,7 @@ void UI_DrawString(int x, int y, UI_AlignX alignx, char* string)
 	// draw string
 	while (*string)
 	{
-		re.DrawChar(ofs_x + x, y, *string);
+		re.DrawSingleChar(ofs_x + x, y, *string);
 		x += CHAR_SIZEX;
 		string++;
 	}

@@ -163,7 +163,7 @@ void SCR_DrawCenterString (void)
 		SCR_AddDirtyPoint (x, y);
 		for (j=0 ; j<l ; j++, x+=8)
 		{
-			re.DrawChar (x, y, start[j]);	
+			re.DrawSingleChar (x, y, start[j]);	
 			if (!remaining--)
 				return;
 		}
@@ -344,7 +344,7 @@ void SCR_DrawNet (void)
 	if (cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged < CMD_BACKUP-1)
 		return;
 
-	re.DrawPic (scr_vrect.x+64, scr_vrect.y, "code/net");
+	re.DrawImage(scr_vrect.x+64, scr_vrect.y, "code/net");
 }
 
 /*
@@ -753,7 +753,7 @@ void DrawDownloadNotify()
 	w = viddef.width / 2;
 	h = (viddef.height / 2) - 100;
 
-	re.DrawStretchPic(0, 0, viddef.width, viddef.height, "backtile");
+	re.DrawStretchImage(0, 0, viddef.width, viddef.height, "backtile");
 
 	UI_DrawString(w, h, XALIGN_CENTER, va("Connecting to: %s", cls.servername));
 

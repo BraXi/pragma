@@ -67,7 +67,7 @@ void R_AdjustToVirtualScreenSize(float* x, float* y)
 	if (y) *y *= yscale;
 }
 
-void R_DrawSingleChar(float x, float y, float w, float h, int num)
+static void AddCharToString(float x, float y, float w, float h, int num)
 {
 	int				row, col;
 	float			frow, fcol, size;
@@ -131,7 +131,7 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	ClearVertexBuffer();
 	while (*string)
 	{
-		R_DrawSingleChar(ofs_x + x, y, CHAR_SIZEX, CHAR_SIZEY, *string);
+		AddCharToString(ofs_x + x, y, CHAR_SIZEX, CHAR_SIZEY, *string);
 		x += CHAR_SIZEX;
 		string++;
 	}
@@ -270,7 +270,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 
 }
 
-void R_DrawFill(rect_t pos, rgba_t color)
+void R_NewDrawFill(rect_t pos, rgba_t color)
 {
 	rect_t rect;
 	rect[0] = pos[0];

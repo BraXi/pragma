@@ -120,27 +120,12 @@ typedef struct
 	float		white;			// highest of rgb
 } lightstyle_t;
 
-#if 0
-typedef struct rdViewFX_s
-{
-	float	blend[4];		// rgba 0-1 full screen blend
-	float	blur;			// 0 no blur
-	float	contrast;
-	float	grayscale;		// 0-1 full grayscale
-	float	inverse;		// 1 inverse
-	float	noise;			
-	float	intensity;		// 2 default
-	float	gamma;
-} rdViewFX_t;
-#endif
-
 typedef struct rdCamParams_s
 {
 	float	origin[3];
 	float	angles[3];
 	float	fov_x, fov_y;
 	int		flags;			// RDF_UNDERWATER, etc
-
 	rdViewFX_t fx;
 }rdCamParams_t;
 
@@ -186,10 +171,19 @@ typedef struct
 	// called before the library is unloaded
 	void	(*Shutdown) (void);
 
+	//
+	// video mode and refresh state management entry points
+	//
+	void	(*BeginFrame)(float camera_separation);
+	void	(*EndFrame) (void);
+	void	(*RenderFrame) (refdef_t* fd, qboolean onlyortho);
+
+	// when window focus changes
+	void	(*AppActivate)(qboolean activate);
+
 	// All data that will be used in a level should be
 	// registered before rendering any frames to prevent disk hits,
-	// but they can still be registered at a later time
-	// if necessary.
+	// but they can still be registered at a later time if necessary.
 	//
 	// EndRegistration will free any remaining data that wasn't registered.
 	// Any model_s or skin_s pointers from before the BeginRegistration
@@ -208,19 +202,13 @@ typedef struct
 
 	void	(*SetSky) (char *name, float rotate, vec3_t axis, vec3_t color);
 
-	void	(*RenderFrame) (refdef_t *fd, qboolean onlyortho);
+	void	(*GetImageSize) (int *w, int *h, char *name);	// will return 0 0 if not found
+	void	(*DrawImage) (int x, int y, char *name);
+	void	(*DrawStretchImage) (int x, int y, int w, int h, char *name);
+	void	(*DrawSingleChar) (int x, int y, int c);
 
-	void	(*DrawGetPicSize) (int *w, int *h, char *name);	// will return 0 0 if not found
-	void	(*DrawPic) (int x, int y, char *name);
-	void	(*DrawStretchPic) (int x, int y, int w, int h, char *name);
-	void	(*DrawChar) (int x, int y, int c);
-	void	(*Draw_Char2)(float x, float y, float w, float h, int num, rgba_t color);
 	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
 	void	(*DrawFill) (int x, int y, int w, int h);
-	void	(*DrawFadeScreen) (float *rgba);
-
-	// Draw images for cinematic rendering (which can have a different palette)
-	void	(*DrawStretchRaw) (int x, int y, int w, int h, int cols, int rows, byte *data);
 
 	void	(*DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
 	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);
@@ -230,15 +218,6 @@ typedef struct
 
 	int		(*TagIndexForName)(struct model_s* model, const char* tagName);
 	qboolean (*LerpTag)(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex);
-
-	//
-	// video mode and refresh state management entry points
-	//
-	void	(*BeginFrame)( float camera_separation );
-	void	(*EndFrame) (void);
-
-	void	(*AppActivate)( qboolean activate );
-
 } refexport_t;
 
 //

@@ -669,7 +669,7 @@ void R_SetSky (char *name, float rotate, vec3_t axis, vec3_t color)
 	{
 		Com_sprintf (pathname, sizeof(pathname), "env/%s_%s.tga", skyname, sky_tex_prefix[i]);
 
-		sky_images[i] = R_FindTexture (pathname, it_sky);
+		sky_images[i] = R_FindTexture (pathname, it_sky, true);
 		if (!sky_images[i])
 			sky_images[i] = r_texture_missing;
 

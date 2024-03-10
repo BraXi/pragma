@@ -49,7 +49,6 @@ typedef enum
 {
 	it_model,
 	it_sprite,
-	it_tga,
 	it_texture,
 	it_gui,
 	it_sky
@@ -319,8 +318,6 @@ extern	cvar_t	*r_gamma;
 extern	cvar_t	*r_intensity;
 
 extern	int		gl_lightmap_format;
-extern	int		gl_solid_format;
-extern	int		gl_alpha_format;
 extern	int		gl_tex_solid_format;
 extern	int		gl_tex_alpha_format;
 
@@ -342,10 +339,9 @@ void	R_Shutdown( void );
 void R_RenderView (refdef_t *fd);
 void R_ScreenShot_f (void);
 void R_DrawBrushModel (rentity_t *e);
-void R_DrawSpriteModel (rentity_t *e);
 void R_DrawBeam( rentity_t *e );
 void R_DrawWorld (void);
-void R_RenderDlights (void);
+void R_RenderDlights(void);
 void R_DrawWorldAlphaSurfaces();
 void R_RenderBrushPoly (msurface_t *fa);
 void R_InitCodeTextures (void);
@@ -355,7 +351,6 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs);
 void R_RotateForEntity (rentity_t *e);
 void R_MarkLeaves (void);
 
-glpoly_t *WaterWarpPolyVerts (glpoly_t *p);
 void EmitWaterPolys (msurface_t *fa);
 void R_AddSkySurface (msurface_t *fa);
 void R_ClearSkyBox (void);
@@ -375,14 +370,12 @@ char	*va(char *format, ...);
 
 void COM_StripExtension (char *in, char *out);
 
-void	Draw_GetPicSize (int *w, int *h, char *name);
-void	Draw_Pic (int x, int y, char *name);
-void	Draw_StretchPic (int x, int y, int w, int h, char *name);
-void	Draw_Char (int x, int y, int c);
-void	Draw_TileClear (int x, int y, int w, int h, char *name);
-void	Draw_Fill (int x, int y, int w, int h);
-void	Draw_FadeScreen(float* rgba);
-void	Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data);
+void	R_GetImageSize (int *w, int *h, char *name);
+void	R_DrawImage (int x, int y, char *name);
+void	R_DrawStretchImage (int x, int y, int w, int h, char *name);
+void	R_DrawSingleChar (int x, int y, int c);
+void	R_DrawTileClear (int x, int y, int w, int h, char *name);
+void	R_DrawFill (int x, int y, int w, int h);
 
 void	R_BeginFrame( float camera_separation );
 
@@ -397,7 +390,7 @@ void R_BindTexture(int texnum);
 void R_MultiTextureBind(GLenum target, int texnum);
 
 image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_t type, int bits);
-image_t	*R_FindTexture(char *name, texType_t type);
+image_t	*R_FindTexture(char *name, texType_t type, qboolean load);
 
 void R_SetTextureMode(char *string);
 void R_TextureList_f(void);

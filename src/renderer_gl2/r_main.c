@@ -527,24 +527,17 @@ void R_RenderView (refdef_t *fd)
 
 	R_MarkLeaves ();	// done here so we know if we're in water
 
-// begin rendering to fbo
-	R_ClearFBO();
-	R_RenderToFBO(true);
 
+	R_ClearFBO(); 
+	R_RenderToFBO(true); // begin rendering to fbo
 	R_DrawWorld();
-
 	R_DrawEntitiesOnList();
-
 	R_DrawDebugLines();
-
 //	R_RenderDlights ();
-
 	R_DrawWorldAlphaSurfaces();
-
 	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
-
-	R_RenderToFBO(false);
-	// end rendering to fbo
+	R_RenderToFBO(false); // end rendering to fbo
+	
 
 	if (r_speeds->value == 1.0f)
 	{
@@ -577,7 +570,7 @@ void R_BeginOrthoProjection()
 	R_AlphaTest(true);
 }
 
-void R_DrawFill(rect_t pos, rgba_t color);
+void R_NewDrawFill(rect_t pos, rgba_t color);
 static void R_DrawPerfCounters()
 {
 	if (r_speeds->value <= 1.0f)
@@ -587,7 +580,7 @@ static void R_DrawPerfCounters()
 	float color[4];
 
 	Vector4Set(color, 0, 0, 0, 0.35f);
-	R_DrawFill(pos, color);
+	R_NewDrawFill(pos, color);
 
 	float y = 20;
 

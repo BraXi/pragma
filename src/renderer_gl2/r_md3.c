@@ -267,7 +267,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 		shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 		for (j = 0; j < surf->numShaders; j++, shader++)
 		{
-			mod->images[j] = R_FindTexture(shader->name, it_model);
+			mod->images[j] = R_FindTexture(shader->name, it_model, true);
 			shader->shaderIndex = mod->images[j]->texnum;
 			if (mod->images[j] == r_texture_missing)
 			{

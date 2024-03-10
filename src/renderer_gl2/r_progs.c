@@ -415,6 +415,7 @@ static void R_FindUniformLocations(glprog_t* prog)
 	// set default values
 	R_ProgUniform1i(LOC_COLORMAP, 0);
 	R_ProgUniform1i(LOC_LIGHTMAP, 1);
+	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
 	R_UnbindProgram();
 }
 

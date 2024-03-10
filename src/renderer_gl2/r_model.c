@@ -491,7 +491,7 @@ void Mod_LoadTexinfo (lump_t *l)
 
 		// load up texture
 		Com_sprintf(name, sizeof(name), "textures/%s.tga", in->texture);
-		out->image = R_FindTexture(name, it_texture);
+		out->image = R_FindTexture(name, it_texture, true);
 		if (!out->image)
 		{
 			ri.Printf(PRINT_ALL, "Mod_LoadTexinfo: couldn't load '%s'\n", name);
@@ -501,7 +501,8 @@ void Mod_LoadTexinfo (lump_t *l)
 	}
 
 	// count animation frames
-	for (i=0 ; i<count ; i++)
+	// todo - update for materials
+	for (i = 0; i< count; i++)
 	{
 		out = &loadmodel->texinfo[i];
 		out->numframes = 1;
@@ -977,7 +978,7 @@ void Mod_LoadSP2 (model_t *mod, void *buffer)
 		sprout->frames[i].origin_x = LittleLong (sprin->frames[i].origin_x);
 		sprout->frames[i].origin_y = LittleLong (sprin->frames[i].origin_y);
 		memcpy (sprout->frames[i].name, sprin->frames[i].name, MAX_QPATH);
-		mod->images[i] = R_FindTexture (sprout->frames[i].name, it_sprite);
+		mod->images[i] = R_FindTexture (sprout->frames[i].name, it_sprite, true);
 	}
 
 	mod->type = MOD_SPRITE;
@@ -1040,7 +1041,7 @@ struct model_s *R_RegisterModel (char *name)
 			sp2Header = (sp2Header_t *)mod->extradata;
 			mod->numframes = sp2Header->numframes;
 			for(i = 0; i< sp2Header->numframes; i++)
-				mod->images[i] = R_FindTexture (sp2Header->frames[i].name, it_sprite);
+				mod->images[i] = R_FindTexture (sp2Header->frames[i].name, it_sprite, true);
 		}
 		else if (mod->type == MOD_MD3)
 		{
@@ -1052,7 +1053,7 @@ struct model_s *R_RegisterModel (char *name)
 				shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 				for (j = 0; j < surf->numShaders; j++, shader++)
 				{
-					mod->images[i+j] = R_FindTexture(shader->name, it_model);
+					mod->images[i+j] = R_FindTexture(shader->name, it_model, true);
 					shader->shaderIndex = mod->images[i]->texnum;
 				}
 				surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);

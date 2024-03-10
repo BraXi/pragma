@@ -395,15 +395,14 @@ void R_SetSky(char* name, float rotate, vec3_t axis, vec3_t color);
 void R_RenderFrame(refdef_t* fd, qboolean onlyortho);
 
 
-void	Draw_Pic(int x, int y, char* name);
-void	Draw_Char(int x, int y, int c);
-void	Draw_TileClear(int x, int y, int w, int h, char* name);
-void	Draw_Fill(int x, int y, int w, int h);
-void	Draw_FadeScreen(float* rgba);
+void	R_DrawImage(int x, int y, char* name);
+void	R_DrawSingleChar(int x, int y, int c);
+void	R_DrawTileClear(int x, int y, int w, int h, char* name);
+void	R_DrawFill(int x, int y, int w, int h);
 
 void	R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
 void	R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
-void	R_DrawFill(rect_t rect, rgba_t color);
+void	R_NewDrawFill(rect_t rect, rgba_t color);
 
 int R_TagIndexForName(struct model_s* model, const char* tagName);
 qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex);
@@ -427,6 +426,15 @@ refexport_t GetRefAPI(refimport_t rimp)
 
 	re.api_version = API_VERSION;
 
+	re.Init = R_Init;
+	re.Shutdown = R_Shutdown;
+
+	re.BeginFrame = R_BeginFrame;
+	re.EndFrame = GLimp_EndFrame;
+	re.RenderFrame = R_RenderFrame;
+
+	re.AppActivate = GLimp_AppActivate;
+
 	re.BeginRegistration = R_BeginRegistration;
 	re.EndRegistration = R_EndRegistration;
 
@@ -436,16 +444,12 @@ refexport_t GetRefAPI(refimport_t rimp)
 
 	re.SetSky = R_SetSky;
 
-	re.RenderFrame = R_RenderFrame;
-
-	re.DrawGetPicSize = Draw_GetPicSize;
-	re.DrawPic = Draw_Pic;
-	re.DrawStretchPic = Draw_StretchPic;
-	re.DrawChar = Draw_Char;
-	re.DrawTileClear = Draw_TileClear;
-	re.DrawFill = Draw_Fill;
-	re.DrawFadeScreen = Draw_FadeScreen;
-	re.DrawStretchRaw = Draw_StretchRaw;
+	re.GetImageSize = R_GetImageSize;
+	re.DrawImage = R_DrawImage;
+	re.DrawStretchImage = R_DrawStretchImage;
+	re.DrawSingleChar = R_DrawSingleChar;
+	re.DrawTileClear = R_DrawTileClear;
+	re.DrawFill = R_DrawFill;
 	re.SetColor = RR_SetColor;
 
 	re.TagIndexForName = R_TagIndexForName;
@@ -454,15 +458,8 @@ refexport_t GetRefAPI(refimport_t rimp)
 	// braxi -- newer replacements
 	re.DrawString = R_DrawString;
 	re.DrawStretchedImage = R_DrawStretchedImage;
-	re.NewDrawFill = R_DrawFill;
+	re.NewDrawFill = R_NewDrawFill;
 
-	re.Init = R_Init;
-	re.Shutdown = R_Shutdown;
-
-	re.BeginFrame = R_BeginFrame;
-	re.EndFrame = GLimp_EndFrame;
-
-	re.AppActivate = GLimp_AppActivate;
 
 	Swap_Init();
 

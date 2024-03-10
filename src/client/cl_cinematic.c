@@ -117,7 +117,7 @@ qboolean SCR_DrawCinematic (void)
 	if (!cin.pic)
 		return true;
 
-	re.DrawStretchRaw(0, 0, viddef.width, viddef.height, cin.width, cin.height, cin.pic);
+//	re.DrawStretchRaw(0, 0, viddef.width, viddef.height, cin.width, cin.height, cin.pic);
 	return true;
 }
 
