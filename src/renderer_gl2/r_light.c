@@ -457,8 +457,7 @@ void R_SetCacheState( msurface_t *surf )
 {
 	int maps;
 
-	for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
-		 maps++)
+	for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
 	{
 		surf->cached_light[maps] = r_newrefdef.lightstyles[surf->styles[maps]].white;
 	}

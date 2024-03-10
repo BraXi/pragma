@@ -574,16 +574,76 @@ void DrawTextureChains (void)
 	}
 }
 
+/*
+================
+DrawLightMappedFlowingSurf
+================
+*/
+inline static void DrawLightMappedFlowingSurf(msurface_t* surf)
+{
+	int			i, numVerts;
+	float		*v, scroll;
+	glpoly_t	*poly;
+
+	numVerts = surf->polys->numverts;
+	poly = surf->polys;
+
+	scroll = -64 * ((r_newrefdef.time / 40.0) - (int)(r_newrefdef.time / 40.0));
+	if (scroll == 0.0)
+		scroll = -64.0;
+
+	glBegin(GL_POLYGON);
+	while (poly != NULL)
+	{
+		v = poly->verts[0];
+		for (i = 0; i < numVerts /*poly->numverts*/; i++, v += VERTEXSIZE)
+		{
+			glMultiTexCoord2f(GL_TEXTURE0, (v[3] + scroll), v[4]);
+			glMultiTexCoord2f(GL_TEXTURE1, v[5], v[6]);
+			glVertex3fv(v);
+		}
+		poly = poly->chain;
+	}
+	glEnd();
+}
+
+/*
+================
+DrawLightMappedSurf
+================
+*/
+inline static void DrawLightMappedSurf(msurface_t* surf)
+{
+	int			i, numVerts;
+	float		*v;
+	glpoly_t	*poly;
+
+	numVerts = surf->polys->numverts;
+	poly = surf->polys;
+
+	glBegin(GL_POLYGON);
+	while(poly != NULL)
+	{
+		v = poly->verts[0];
+		for (i = 0; i < numVerts /*poly->numverts*/; i++, v += VERTEXSIZE)
+		{
+			glMultiTexCoord2f(GL_TEXTURE0, v[3], v[4]);
+			glMultiTexCoord2f(GL_TEXTURE1, v[5], v[6]);
+			glVertex3fv(v);
+		}
+		poly = poly->chain;
+	}
+	glEnd();
+}
+
 
 static void GL_RenderLightmappedPoly( msurface_t *surf )
 {
-	int		i, nv = surf->polys->numverts;
+	int		nv = surf->polys->numverts;
 	int		map;
-	float	*v;
 	image_t *image = R_TextureAnimation( surf->texinfo );
 	qboolean is_dynamic = false;
-	unsigned lmtex = surf->lightmaptexturenum;
-	glpoly_t *p;
+	unsigned lightMapTexId = surf->lightmaptexturenum;
 
 	for ( map = 0; map < MAXLIGHTMAPS && surf->styles[map] != 255; map++ )
 	{
@@ -617,16 +677,10 @@ dynamic:
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 			R_SetCacheState( surf );
 
+			lightMapTexId = surf->lightmaptexturenum;
+
 			R_MultiTextureBind(GL_TEXTURE1, gl_state.lightmap_textures + surf->lightmaptexturenum);
-
-			lmtex = surf->lightmaptexturenum;
-
-			glTexSubImage2D( GL_TEXTURE_2D, 0,
-							  surf->light_s, surf->light_t, 
-							  smax, tmax, 
-							  GL_LIGHTMAP_FORMAT, 
-							  GL_UNSIGNED_BYTE, temp );
-
+			glTexSubImage2D( GL_TEXTURE_2D, 0, surf->light_s, surf->light_t, smax, tmax,  GL_LIGHTMAP_FORMAT,  GL_UNSIGNED_BYTE, temp );
 		}
 		else
 		{
@@ -635,58 +689,24 @@ dynamic:
 
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 
+			lightMapTexId = 0;
+
 			R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + 0 );
-
-			lmtex = 0;
-
-			glTexSubImage2D( GL_TEXTURE_2D, 0,
-							  surf->light_s, surf->light_t, 
-							  smax, tmax, 
-							  GL_LIGHTMAP_FORMAT, 
-							  GL_UNSIGNED_BYTE, temp );
-
+			glTexSubImage2D( GL_TEXTURE_2D, 0, surf->light_s, surf->light_t, smax, tmax, GL_LIGHTMAP_FORMAT, GL_UNSIGNED_BYTE, temp );
 		}
 
 		rperf.brush_polys++;
 
 		R_MultiTextureBind( GL_TEXTURE0, image->texnum );
-		R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + lmtex );
+		R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + lightMapTexId );
 
 		if (surf->texinfo->flags & SURF_FLOWING)
 		{
-			float scroll;
-		
-			scroll = -64 * ( (r_newrefdef.time / 40.0) - (int)(r_newrefdef.time / 40.0) );
-			if(scroll == 0.0)
-				scroll = -64.0;
-
-			for ( p = surf->polys; p; p = p->chain )
-			{
-				v = p->verts[0];
-				glBegin (GL_POLYGON);
-				for (i=0 ; i< nv; i++, v+= VERTEXSIZE)
-				{
-					glMultiTexCoord2f( GL_TEXTURE0, (v[3]+scroll), v[4]);
-					glMultiTexCoord2f( GL_TEXTURE1, v[5], v[6]);
-					glVertex3fv (v);
-				}
-				glEnd ();
-			}
+			DrawLightMappedFlowingSurf(surf);
 		}
 		else
 		{
-			for ( p = surf->polys; p; p = p->chain )
-			{
-				v = p->verts[0];
-				glBegin (GL_POLYGON);
-				for (i=0 ; i< nv; i++, v+= VERTEXSIZE)
-				{
-					glMultiTexCoord2f( GL_TEXTURE0, v[3], v[4]);
-					glMultiTexCoord2f( GL_TEXTURE1, v[5], v[6]);
-					glVertex3fv (v);
-				}
-				glEnd ();
-			}
+			DrawLightMappedSurf(surf);
 		}
 	}
 	else
@@ -694,43 +714,15 @@ dynamic:
 		rperf.brush_polys++;
 
 		R_MultiTextureBind( GL_TEXTURE0, image->texnum );
-		R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + lmtex );
+		R_MultiTextureBind( GL_TEXTURE1, gl_state.lightmap_textures + lightMapTexId );
 
 		if (surf->texinfo->flags & SURF_FLOWING)
 		{
-			float scroll;
-		
-			scroll = -64 * ( (r_newrefdef.time / 40.0) - (int)(r_newrefdef.time / 40.0) );
-			if(scroll == 0.0)
-				scroll = -64.0;
-
-			for ( p = surf->polys; p; p = p->chain )
-			{
-				v = p->verts[0];
-				glBegin (GL_POLYGON);
-				for (i=0 ; i< nv; i++, v+= VERTEXSIZE)
-				{
-					glMultiTexCoord2f( GL_TEXTURE0, (v[3]+scroll), v[4]);
-					glMultiTexCoord2f( GL_TEXTURE1, v[5], v[6]);
-					glVertex3fv (v);
-				}
-				glEnd ();
-			}
+			DrawLightMappedFlowingSurf(surf);
 		}
 		else
 		{
-			for ( p = surf->polys; p; p = p->chain )
-			{
-				v = p->verts[0];
-				glBegin (GL_POLYGON);
-				for (i=0 ; i< nv; i++, v+= VERTEXSIZE)
-				{
-					glMultiTexCoord2f( GL_TEXTURE0, v[3], v[4]);
-					glMultiTexCoord2f( GL_TEXTURE1, v[5], v[6]);
-					glVertex3fv (v);
-				}
-				glEnd ();
-			}
+			DrawLightMappedSurf(surf);
 		}
 	}
 }
@@ -990,11 +982,13 @@ void R_RecursiveWorldNode (mnode_t *node)
 			continue;		// wrong side
 
 		if (surf->texinfo->flags & SURF_SKY)
-		{	// just adds to visible sky bounds
+		{	
+			// just adds to visible sky bounds
 			R_AddSkySurface (surf);
 		}
 		else if (surf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66))
-		{	// add to the translucent chain
+		{	
+			// add to the translucent chain
 			surf->texturechain = r_alpha_surfaces;
 			r_alpha_surfaces = surf;
 		}
