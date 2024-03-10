@@ -401,9 +401,6 @@ void R_RenderBrushPoly (msurface_t *fa)
 	if (fa->flags & SURF_DRAWTURB)
 	{
 		R_MultiTextureBind(GL_TEXTURE0, image->texnum);
-		//float inverse_intensity = -r_intensity->value;
-		//glColor4f(inverse_intensity, inverse_intensity, inverse_intensity, 1.0f);
-
 		EmitWaterPolys(fa);
 		return;
 	}
@@ -684,6 +681,19 @@ static void R_LightMappedWorldSurf( msurface_t *surf )
 	qboolean is_dynamic = false;
 	unsigned lightMapTexId = surf->lightmaptexturenum;
 
+
+	if ((surf->flags & SURF_DRAWTURB))
+	{
+		if (!image)
+			image = r_texture_missing;
+
+		R_MultiTextureBind(GL_TEXTURE0, image->texnum);
+		R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+		EmitWaterPolys(surf);
+		return;
+	}
+
+	// check if the lightmap has changed
 	for ( map = 0; map < MAXLIGHTMAPS && surf->styles[map] != 255; map++ )
 	{
 		if ( r_newrefdef.lightstyles[surf->styles[map]].white != surf->cached_light[map] )
@@ -749,7 +759,6 @@ R_DrawInlineBModel
 =================
 */
 
-extern void EmitWaterPolys2(msurface_t* fa);
 void R_DrawInlineBModel (void)
 {
 	int			i, k;
@@ -800,20 +809,7 @@ void R_DrawInlineBModel (void)
 
 			if (r_singlepass->value)
 			{
-				if ((psurf->flags & SURF_DRAWTURB))
-				{
-					image_t *image = R_TextureAnimation(psurf->texinfo);
-					if (!image)
-						image = r_texture_missing;
-
-					R_MultiTextureBind(GL_TEXTURE0, image->texnum);
-					R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
-					EmitWaterPolys2(psurf);
-				}
-				else if (!(psurf->flags & SURF_DRAWTURB))
-				{
-					R_LightMappedWorldSurf(psurf);
-				}
+				R_LightMappedWorldSurf(psurf);
 			}
 			else
 			{
@@ -1021,20 +1017,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 		{
 			if( r_singlepass->value )
 			{
-				if((surf->flags & SURF_DRAWTURB))
-				{
-					image = R_TextureAnimation(surf->texinfo);
-					if (!image)
-						image = r_texture_missing;
-
-					R_MultiTextureBind(GL_TEXTURE0, image->texnum);
-					R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
-					EmitWaterPolys2(surf);
-				}
-				else if (!(surf->flags & SURF_DRAWTURB))
-				{
-					R_LightMappedWorldSurf(surf);
-				}
+				R_LightMappedWorldSurf(surf);
 			}
 			else
 			{
@@ -1090,7 +1073,7 @@ void R_DrawWorld (void)
 		// draw world in a single pass
 		R_EnableMultitexture(true);
 		R_RecursiveWorldNode(r_worldmodel->nodes);
-	//	DrawTextureChains();
+		DrawTextureChains();
 		R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum); 
 		R_EnableMultitexture(false);
 	}
