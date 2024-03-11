@@ -336,7 +336,7 @@ int R_Init(void* hinstance, void* hWnd)
 
 	Mod_Init();
 
-	Draw_InitLocal();
+	R_LoadFonts();
 
 
 

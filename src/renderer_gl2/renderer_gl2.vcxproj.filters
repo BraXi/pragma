@@ -42,7 +42,6 @@
     <ClCompile Include="r_misc.c" />
     <ClCompile Include="r_surf.c" />
     <ClCompile Include="r_warp.c" />
-    <ClCompile Include="r_draw_new.c" />
     <ClCompile Include="r_init.c" />
     <ClCompile Include="r_md3.c" />
     <ClCompile Include="r_sprite.c" />

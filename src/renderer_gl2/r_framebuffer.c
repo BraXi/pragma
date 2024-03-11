@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-unsigned int fbo, depth_rb, fbo_tex_diffuse;
+static unsigned int fbo, depth_rb, fbo_tex_diffuse;
 
 extern cvar_t* r_postfx_blur;
 extern cvar_t* r_postfx_contrast;

@@ -487,6 +487,7 @@ image_t	*R_FindTexture(char *name, texType_t type, qboolean load)
 		ri.Error(ERR_DROP, "R_FindTexture: NULL name");
 		return NULL;
 	}
+
 	len = strlen(name);
 	if (len < 5)
 	{
@@ -494,7 +495,6 @@ image_t	*R_FindTexture(char *name, texType_t type, qboolean load)
 		return NULL;
 	}
 		
-
 	// look for it
 	for (i=0, image=r_textures ; i<r_textures_count ; i++,image++)
 	{

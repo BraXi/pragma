@@ -29,7 +29,7 @@ static byte dottexture[8][8] =
 R_InitCodeTextures
 ==================
 */
-void R_InitCodeTextures (void)
+void R_InitCodeTextures()
 {
 	int		x,y;
 	byte	data[8][8][4];

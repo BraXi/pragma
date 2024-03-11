@@ -186,7 +186,6 @@
     <ClCompile Include="r_state.c" />
     <ClCompile Include="r_surf.c" />
     <ClCompile Include="r_warp.c" />
-    <ClCompile Include="r_draw_new.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
