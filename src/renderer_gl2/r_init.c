@@ -400,7 +400,7 @@ void	R_DrawSingleChar(int x, int y, int c);
 void	R_DrawTileClear(int x, int y, int w, int h, char* name);
 void	R_DrawFill(int x, int y, int w, int h);
 
-void	R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+void	R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
 void	R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
 void	R_NewDrawFill(rect_t rect, rgba_t color);
 
@@ -456,7 +456,7 @@ refexport_t GetRefAPI(refimport_t rimp)
 	re.LerpTag = R_LerpTag;
 
 	// braxi -- newer replacements
-	re.DrawString = R_DrawString;
+	re._DrawString = R_DrawStringOld;
 	re.DrawStretchedImage = R_DrawStretchedImage;
 	re.NewDrawFill = R_NewDrawFill;
 

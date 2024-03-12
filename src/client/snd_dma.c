@@ -430,7 +430,7 @@ void S_SpatializeOrigin (vec3_t origin, float master_vol, float dist_mult, int *
     vec_t		lscale, rscale, scale;
     vec3_t		source_vec;
 
-	if (cls.state != ca_active)
+	if (cls.state != CS_ACTIVE)
 	{
 		*left_vol = *right_vol = 255;
 		return;
@@ -797,7 +797,7 @@ void S_AddLoopSounds (void)
 	if (cl_paused->value)
 		return;
 
-	if (cls.state != ca_active)
+	if (cls.state != CS_ACTIVE)
 		return;
 
 	if (!cl.sound_prepped)

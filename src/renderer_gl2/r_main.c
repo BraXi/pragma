@@ -61,7 +61,7 @@ viddef_t	vid; // TODO get rid of this
 
 int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
-extern void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+extern void R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
 extern void R_ClearFBO();
 extern void R_RenderToFBO(qboolean enable);
 extern void R_DrawDebugLines(void);
@@ -585,26 +585,26 @@ static void R_DrawPerfCounters()
 	float y = 20;
 
 	Vector4Set(color, 1, 1, 1, 1.0);
-	R_DrawString(va("%i        BSP polygons", rperf.brush_polys), 795, y, 0.7, 1, color);
-	R_DrawString(va("%i    visible textures", rperf.visible_textures), 795, y += 8, 0.7, 1, color);
-	R_DrawString(va("%i  visible light maps", rperf.visible_lightmaps), 795, y += 8, 0.7, 1, color);
-	R_DrawString(va("%i    texture bindings", rperf.texture_binds), 795, y += 8, 0.7, 1, color);
+	R_DrawStringOld(va("%i        BSP polygons", rperf.brush_polys), 795, y, 0.7, 1, color);
+	R_DrawStringOld(va("%i    visible textures", rperf.visible_textures), 795, y += 8, 0.7, 1, color);
+	R_DrawStringOld(va("%i  visible light maps", rperf.visible_lightmaps), 795, y += 8, 0.7, 1, color);
+	R_DrawStringOld(va("%i    texture bindings", rperf.texture_binds), 795, y += 8, 0.7, 1, color);
 
 	Vector4Set(color, 0.8, 0.8, 1, 1.0);
-	R_DrawString(va("%i      dynamic lights", r_newrefdef.num_dlights), 795, y += 16, 0.7, 1, color);
-	R_DrawString(va("%i     render entities", r_newrefdef.num_entities), 795, y += 8, 0.7, 1, color);
-	R_DrawString(va("%i     particles count", r_newrefdef.num_particles), 795, y += 8, 0.7, 1, color);
+	R_DrawStringOld(va("%i      dynamic lights", r_newrefdef.num_dlights), 795, y += 16, 0.7, 1, color);
+	R_DrawStringOld(va("%i     render entities", r_newrefdef.num_entities), 795, y += 8, 0.7, 1, color);
+	R_DrawStringOld(va("%i     particles count", r_newrefdef.num_particles), 795, y += 8, 0.7, 1, color);
 
 	Vector4Set(color, 0.2, 1, 0, 1.0);
-	R_DrawString(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
-	R_DrawString(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
+	R_DrawStringOld(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
+	R_DrawStringOld(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
 	
 	Vector4Set(color, 1.0, 0.5, 0, 1.0);
 
 	if(r_singlepass->value)
-		R_DrawString("SINGLE PASS BSP (COL+LM)", 795, y += 14, 0.7, 1, color);
+		R_DrawStringOld("SINGLE PASS BSP (COL+LM)", 795, y += 14, 0.7, 1, color);
 	else
-		R_DrawString("OLD TWO PASS BSP DRAWING", 795, y += 14, 0.7, 1, color);
+		R_DrawStringOld("OLD TWO PASS BSP DRAWING", 795, y += 14, 0.7, 1, color);
 		
 	
 }

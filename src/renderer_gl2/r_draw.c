@@ -118,7 +118,7 @@ R_LoadFonts
 */
 void R_LoadFonts()
 {
-	fonts[0] = R_LoadFont("default", true);
+	fonts[0] = R_LoadFont("default", false);
 	font_current = fonts[0];
 }
 
@@ -364,6 +364,11 @@ void R_AdjustToVirtualScreenSize(float* x, float* y)
 	if (y) *y *= yscale;
 }
 
+/*
+===============
+AddCharToString
+===============
+*/
 static void AddCharToString(float x, float y, float w, float h, int num)
 {
 	int				row, col;
@@ -403,7 +408,13 @@ static void AddCharToString(float x, float y, float w, float h, int num)
 	SetTexCoords(fcol, frow + size);
 }
 
+/*
+===============
+R_DrawStringOld
 
+DEPRECATED
+===============
+*/
 void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color)
 {
 	float CHAR_SIZEX = 8 * fontSize;
@@ -439,7 +450,56 @@ void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rg
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
-void R_DrawSingleChar3D(float x, float y, float z, float fontSize, int num)
+
+/*
+===============
+R_DrawStringOld
+
+DEPRECATED
+===============
+*/
+void R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx, rgba_t color)
+{
+	float CHAR_SIZEX = 8 * fontSize;
+	float CHAR_SIZEY = 8 * fontSize;
+	int ofs_x = 0;
+
+	if (!string)
+		return;
+
+	R_AdjustToVirtualScreenSize(&x, &y); // pos
+	R_AdjustToVirtualScreenSize(&CHAR_SIZEX, &CHAR_SIZEY); // pos
+
+	CHAR_SIZEX = CHAR_SIZEY = (int)CHAR_SIZEX; // hack so text isnt blurry
+
+	// align text
+	int strX = (strlen(string) * CHAR_SIZEX);
+	if (alignx == XALIGN_CENTER)
+		ofs_x -= (strX / 2);
+	else if (alignx == XALIGN_RIGHT)
+		ofs_x -= ((strlen(string) * CHAR_SIZEX));
+
+	ClearVertexBuffer();
+	while (*string)
+	{
+		AddCharToString(ofs_x + x, y, CHAR_SIZEX, CHAR_SIZEY, *string);
+		x += CHAR_SIZEX;
+		string++;
+	}
+
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
+	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
+	R_BindTexture(font_current->image->texnum);
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
+}
+
+
+/*
+===============
+AddCharTo3DString
+===============
+*/
+void AddCharTo3DString(float x, float y, float z, float fontSize, int num)
 {
 	int row, col;
 	float frow, fcol, size;
@@ -475,6 +535,12 @@ void R_DrawSingleChar3D(float x, float y, float z, float fontSize, int num)
 	SetTexCoords(fcol, frow + size);
 }
 
+/*
+===============
+R_DrawString3D
+Draw text in 3D space always oriented towards camera
+===============
+*/
 void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t color)
 {
 	// this does support more than the code uses, leaving for future use
@@ -504,7 +570,7 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	ClearVertexBuffer();
 	while (*string)
 	{
-		R_DrawSingleChar3D(ofs_x, pos[1], pos[2], CHAR_SIZEX, *string);
+		AddCharTo3DString(ofs_x, pos[1], pos[2], CHAR_SIZEX, *string);
 		ofs_x += CHAR_SIZEX;
 		string++;
 	}
@@ -521,6 +587,13 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	glPopMatrix();
 }
 
+
+/*
+===============
+R_DrawStretchedImage
+DEPRECATED
+===============
+*/
 void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 {
 	image_t* gl;
@@ -567,6 +640,12 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 
 }
 
+/*
+===============
+R_NewDrawFill
+DEPRECATED
+===============
+*/
 void R_NewDrawFill(rect_t pos, rgba_t color)
 {
 	rect_t rect;

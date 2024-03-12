@@ -103,7 +103,7 @@ void CL_ParseServerData (void)
 // wipe the client_state_t struct, shutdown cgame
 //
 	CL_ClearState ();
-	cls.state = ca_connected;
+	cls.state = CS_CONNECTED;
 
 // parse protocol version number
 	i = MSG_ReadLong (&net_message);
@@ -392,7 +392,7 @@ void CL_ParseServerMessage (void)
 				fclose (cls.download);
 				cls.download = NULL;
 			}
-			cls.state = ca_connecting;
+			cls.state = CS_CONNECTING;
 			cls.connect_time = -99999;	// CL_CheckForResend() will fire immediately
 			break;
 
@@ -1154,9 +1154,9 @@ void CL_ParseFrame(void)
 	if (cl.frame.valid)
 	{
 		// getting a valid frame message ends the connection process
-		if (cls.state != ca_active)
+		if (cls.state != CS_ACTIVE)
 		{
-			cls.state = ca_active;
+			cls.state = CS_ACTIVE;
 			cl.force_refdef = true;
 
 #if PROTOCOL_FLOAT_COORDS == 1
@@ -1194,7 +1194,7 @@ Returns true if server allows for cheating
 */
 qboolean CL_CheatsAllowed()
 {
-	if (cls.state == ca_disconnected)
+	if (cls.state == CS_DISCONNECTED)
 		return true;
 
 	if (cl.configstrings[CS_CHEATS_ENABLED][0] && atoi(cl.configstrings[CS_CHEATS_ENABLED]) > 0)

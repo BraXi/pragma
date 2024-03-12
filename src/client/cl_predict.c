@@ -151,7 +151,7 @@ void CL_PredictMovement (void)
 
 	vec3_t inmove, inangles;
 
-	if (cls.state != ca_active)
+	if (cls.state != CS_ACTIVE)
 		return;
 
 	if (cl_paused->value)

@@ -79,7 +79,7 @@ Returns true if game views should be displayed and client is fully connected to 
 */
 qboolean Con_IsClientActive()
 {
-	return cls.state == ca_active;
+	return cls.state == CS_ACTIVE;
 }
 
 /*
@@ -158,7 +158,7 @@ void CL_Record_f (void)
 		return;
 	}
 
-	if (cls.state != ca_active)
+	if (cls.state != CS_ACTIVE)
 	{
 		Com_Printf ("You must be in a level to record.\n");
 		return;
@@ -265,7 +265,7 @@ void Cmd_ForwardToServer (void)
 	char	*cmd;
 
 	cmd = Cmd_Argv(0);
-	if (cls.state <= ca_connected || *cmd == '-' || *cmd == '+')
+	if (cls.state <= CS_CONNECTED || *cmd == '-' || *cmd == '+')
 	{
 		Com_Printf ("Unknown command \"%s\"\n", cmd);
 		return;
@@ -287,7 +287,7 @@ CL_ForwardToServer_f
 */
 void CL_ForwardToServer_f (void)
 {
-	if (cls.state != ca_connected && cls.state != ca_active)
+	if (cls.state != CS_CONNECTED && cls.state != CS_ACTIVE)
 	{
 		Com_Printf ("Can't \"%s\", not connected\n", Cmd_Argv(0));
 		return;
@@ -339,9 +339,9 @@ Called after an ERR_DROP was thrown
 */
 void CL_Drop (void)
 {
-	if (cls.state == ca_uninitialized)
+	if (cls.state == CS_UNINITIALIZED)
 		return;
-	if (cls.state == ca_disconnected)
+	if (cls.state == CS_DISCONNECTED)
 		return;
 
 	CL_Disconnect ();
@@ -392,9 +392,9 @@ void CL_CheckForResend (void)
 
 	// if the local server is running and we aren't
 	// then connect
-	if (cls.state == ca_disconnected && Com_ServerState() )
+	if (cls.state == CS_DISCONNECTED && Com_ServerState() )
 	{
-		cls.state = ca_connecting;
+		cls.state = CS_CONNECTING;
 		strncpy (cls.servername, "localhost", sizeof(cls.servername)-1);
 		// we don't need a challenge on the localhost
 		CL_SendConnectPacket ();
@@ -403,7 +403,7 @@ void CL_CheckForResend (void)
 	}
 
 	// resend if we haven't gotten a reply yet
-	if (cls.state != ca_connecting)
+	if (cls.state != CS_CONNECTING)
 		return;
 
 	if (cls.realtime - cls.connect_time < 3000)
@@ -412,7 +412,7 @@ void CL_CheckForResend (void)
 	if (!NET_StringToAdr (cls.servername, &adr))
 	{
 		Com_Printf ("Bad serverAddress address\n");
-		cls.state = ca_disconnected;
+		cls.state = CS_DISCONNECTED;
 		return;
 	}
 	if (adr.port == 0)
@@ -462,7 +462,7 @@ void CL_Connect_f (void)
 	else
 		strncpy(cls.servername, serverAddress, sizeof(cls.servername) - 1);
 
-	cls.state = ca_connecting;
+	cls.state = CS_CONNECTING;
 	cls.connect_time = -99999;	// CL_CheckForResend() will fire immediately
 }
 
@@ -507,7 +507,7 @@ void CL_Rcon_f (void)
 		strcat (message, " ");
 	}
 
-	if (cls.state >= ca_connected)
+	if (cls.state >= CS_CONNECTED)
 		to = cls.netchan.remote_address;
 	else
 	{
@@ -559,7 +559,7 @@ void CL_Disconnect (void)
 {
 	char	final[32];
 
-	if (cls.state == ca_disconnected)
+	if (cls.state == CS_DISCONNECTED)
 		return;
 
 	if (cl_timedemo && cl_timedemo->value)
@@ -602,7 +602,7 @@ void CL_Disconnect (void)
 		cls.download = NULL;
 	}
 
-	cls.state = ca_disconnected;
+	cls.state = CS_DISCONNECTED;
 }
 
 void CL_Disconnect_f (void)
@@ -681,7 +681,7 @@ void CL_Changing_f (void)
 		return;
 
 	SCR_BeginLoadingPlaque ();
-	cls.state = ca_connected;	// not active anymore, but not disconnected
+	cls.state = CS_CONNECTED;	// not active anymore, but not disconnected
 	Com_Printf ("\nChanging map...\n");
 }
 
@@ -701,22 +701,22 @@ void CL_Reconnect_f (void)
 		return;
 
 	S_StopAllSounds ();
-	if (cls.state == ca_connected) {
+	if (cls.state == CS_CONNECTED) {
 		Com_Printf ("reconnecting...\n");
-		cls.state = ca_connected;
+		cls.state = CS_CONNECTED;
 		MSG_WriteChar (&cls.netchan.message, clc_stringcmd);
 		MSG_WriteString (&cls.netchan.message, "new");		
 		return;
 	}
 
 	if (*cls.servername) {
-		if (cls.state >= ca_connected) {
+		if (cls.state >= CS_CONNECTED) {
 			CL_Disconnect();
 			cls.connect_time = cls.realtime - 1500;
 		} else
 			cls.connect_time = -99999; // fire immediately
 
-		cls.state = ca_connecting;
+		cls.state = CS_CONNECTING;
 		Com_Printf ("reconnecting...\n");
 	}
 }
@@ -852,7 +852,7 @@ void CL_ConnectionlessPacket (void)
 	// server connection
 	if (!strcmp(c, "client_connect"))
 	{
-		if (cls.state == ca_connected)
+		if (cls.state == CS_CONNECTED)
 		{
 			Com_Printf ("Duplicate connect received. Ignored.\n");
 			return;
@@ -860,7 +860,7 @@ void CL_ConnectionlessPacket (void)
 		Netchan_Setup (NS_CLIENT, &cls.netchan, net_from, cls.quakePort);
 		MSG_WriteChar (&cls.netchan.message, clc_stringcmd);
 		MSG_WriteString (&cls.netchan.message, "new");	
-		cls.state = ca_connected;
+		cls.state = CS_CONNECTED;
 		return;
 	}
 
@@ -939,7 +939,7 @@ void CL_ReadPackets (void)
 			continue;
 		}
 
-		if (cls.state == ca_disconnected || cls.state == ca_connecting)
+		if (cls.state == CS_DISCONNECTED || cls.state == CS_CONNECTING)
 			continue;	// dump it if not connected
 
 		if (net_message.cursize < 8)
@@ -964,7 +964,7 @@ void CL_ReadPackets (void)
 	//
 	// check timeout
 	//
-	if (cls.state >= ca_connected
+	if (cls.state >= CS_CONNECTED
 	 && cls.realtime - cls.netchan.last_received > cl_timeout->value*1000)
 	{
 		if (++cl.timeoutcount > 5)	// timeoutcount saves debugger
@@ -1066,7 +1066,7 @@ CL_InitLocal
 */
 void CL_InitLocal (void)
 {
-	cls.state = ca_disconnected;
+	cls.state = CS_DISCONNECTED;
 	cls.realtime = Sys_Milliseconds ();
 
 	CL_InitInput ();
@@ -1200,7 +1200,7 @@ void CL_WriteConfiguration (void)
 	FILE	*f;
 	char	path[MAX_QPATH];
 
-	if (cls.state == ca_uninitialized)
+	if (cls.state == CS_UNINITIALIZED)
 		return;
 
 	Com_sprintf (path, sizeof(path),"%s/config.cfg",FS_Gamedir());
@@ -1350,7 +1350,7 @@ void CL_Frame (int msec)
 
 	if (!cl_timedemo->value)
 	{
-		if (cls.state == ca_connected && extratime < 100)
+		if (cls.state == CS_CONNECTED && extratime < 100)
 			return;			// don't flood packets out while connecting
 		if (extratime < 1000/cl_maxfps->value)
 			return;			// framerate is too high
@@ -1391,7 +1391,7 @@ void CL_Frame (int msec)
 
 	// allow rendering DLL change
 	VID_CheckChanges ();
-	if (!cl.refresh_prepped && cls.state == ca_active)
+	if (!cl.refresh_prepped && cls.state == CS_ACTIVE)
 		CL_PrepRefresh ();
 
 	// update the screen
@@ -1411,7 +1411,7 @@ void CL_Frame (int msec)
 
 	if ( log_stats->value )
 	{
-		if ( cls.state == ca_active )
+		if ( cls.state == CS_ACTIVE )
 		{
 			if ( !lasttimecalled )
 			{

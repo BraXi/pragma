@@ -601,7 +601,7 @@ Emits all entities, particles, and lights to the refresh
 */
 void CL_AddEntities()
 {
-	if (cls.state != ca_active)
+	if (cls.state != CS_ACTIVE)
 		return;
 
 	if (cl.time > cl.frame.servertime)

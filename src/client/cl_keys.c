@@ -282,7 +282,7 @@ void Key_Console (int key)
 		history_line = edit_line;
 		key_lines[edit_line][0] = ']';
 		key_linepos = 1;
-		if (cls.state == ca_disconnected)
+		if (cls.state == CS_DISCONNECTED)
 			SCR_UpdateScreen ();	// force an update, because the command
 									// may take some time
 		return;
@@ -852,7 +852,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 //
 	if ( (cls.key_dest == key_menu && menubound[key])
 	|| (cls.key_dest == key_console && !consolekeys[key])
-	|| (cls.key_dest == key_game && ( cls.state == ca_active || !consolekeys[key] ) ) )
+	|| (cls.key_dest == key_game && ( cls.state == CS_ACTIVE || !consolekeys[key] ) ) )
 	{
 		kb = keybindings[key];
 		if (kb)

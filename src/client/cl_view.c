@@ -459,7 +459,7 @@ void V_RenderView(float stereo_separation)
 		return;		
 	}
 
-	if (cls.state != ca_active) // not fully on server
+	if (cls.state != CS_ACTIVE) // not fully on server
 	{
 		re.RenderFrame(&cl.refdef, true);
 		return;

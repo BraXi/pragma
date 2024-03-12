@@ -70,9 +70,9 @@ void Con_ToggleConsole_f (void)
 
 	if (cls.key_dest == key_console)
 	{
-		if(UI_NumOpenedGuis() > 0 && cls.state < 4 /*cs_active*/)
+		if(UI_NumOpenedGuis() > 0 && cls.state < CS_ACTIVE)
 			cls.key_dest = key_menu;
-		else if (cls.state >= 4 /*cs_active*/ && UI_NumOpenedGuis() == 0)
+		else if (cls.state >= CS_ACTIVE && UI_NumOpenedGuis() == 0)
 			cls.key_dest = key_game;
 		else
 			cls.key_dest = key_console;
@@ -96,7 +96,7 @@ void Con_ToggleChat_f (void)
 
 	if (cls.key_dest == key_console)
 	{
-		if (cls.state == ca_active)
+		if (cls.state == CS_ACTIVE)
 		{
 			UI_CloseAllGuis();
 			cls.key_dest = key_game;
@@ -449,7 +449,7 @@ void Con_DrawInput (void)
 	if (cls.key_dest == key_menu)
 		return;
 
-	if (cls.key_dest != key_console && cls.state == ca_active)
+	if (cls.key_dest != key_console && cls.state == CS_ACTIVE)
 		return;		// don't draw anything (always draw if not active)
 
 	text = key_lines[edit_line];
@@ -492,7 +492,7 @@ void Con_DrawNotify (void)
 	char	*s;
 	int		skip;
 
-	if (cls.state != ca_active)
+	if (cls.state != CS_ACTIVE)
 		return;
 
 	v = viddef.height - ((viddef.height / 5));
@@ -581,7 +581,7 @@ void Con_DrawConsole (float frac)
 	Com_sprintf (version, sizeof(version), "%s (%s)", PRAGMA_VERSION, PRAGMA_TIMESTAMP);
 
 	for (x=0 ; x<strlen(version) ; x++)
-		re.DrawSingleChar (viddef.width-220+x*8, lines-12, 128/*green*/ + version[x]);
+		re.DrawSingleChar (viddef.width-220+x*8, lines-12, version[x]);
 
 // draw the text
 	con.vislines = lines;

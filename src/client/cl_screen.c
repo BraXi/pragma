@@ -361,7 +361,7 @@ void SCR_DrawPause (void)
 		return;
 
 	static rgba_t col_white = { 1.0f, 1.0f, 1.0f, 1.0f };
-	re.DrawString("[Game Paused]", 400, 10, 1.0, XALIGN_CENTER, col_white);
+	re._DrawString("[Game Paused]", 400, 10, 1.0, XALIGN_CENTER, col_white);
 }
 
 /*
@@ -390,7 +390,7 @@ void SCR_DrawLoading (void)
 
 	VectorSet(color, 1, 1, 1);
 	color[3] = 1;
-	re.DrawString("loading", 400, 280, 2, 2, color);
+	re._DrawString("loading", 400, 280, 2, 2, color);
 }
 
 //=============================================================================
@@ -433,7 +433,7 @@ static void SCR_DrawLoadingScreen()
 
 	// weeeewwwy temporarry
 	rgba_t c = { 1,1,1,1 };
-	re.DrawString("Entering Game", 400, 170, 3, 2, c); //240
+	re._DrawString("Entering Game", 400, 170, 3, 2, c); //240
 
 	// line
 	float rect[4] = { 220, 205, 360, 5 };
@@ -441,24 +441,24 @@ static void SCR_DrawLoadingScreen()
 	re.NewDrawFill(rect, c2);
 
 	// server address
-	re.DrawString(cls.servername, 400, 225, 1.8, 2, c);
+	re._DrawString(cls.servername, 400, 225, 1.8, 2, c);
 
 	// display mod name when game is not BASEDIRNAME
 	char* mod = Cvar_VariableString("gamedir");
 	if (Q_stricmp(mod, BASEDIRNAME))
-		re.DrawString(va("Mod: %s", mod), 400, 300, 2, 2, c);
+		re._DrawString(va("Mod: %s", mod), 400, 300, 2, 2, c);
 
 	// map name
 	char* mapname = "";
 	if (cl.configstrings[CS_MODELS + 1][0])
 		mapname = cl.configstrings[CS_MODELS + 1];
-	re.DrawString(va("Loading %s...", mapname), 400, 330, 2, 2, c);
+	re._DrawString(va("Loading %s...", mapname), 400, 330, 2, 2, c);
 
 	// cheats
 	if (CL_CheatsAllowed())
 	{
 		VectorSet(c, 0.8, 0.2, 0);
-		re.DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
+		re._DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
 	}
 }
 
@@ -473,14 +473,14 @@ void SCR_DrawConsole (void)
 
 	re.SetColor(1, 1, 1, 1);
 	
-//	if (cls.state == ca_disconnected || cls.state == ca_connecting)
+//	if (cls.state == CS_DISCONNECTED || cls.state == CS_CONNECTING)
 //	{	// forced full screen console
 //		Con_DrawConsole (1.0);
 //		return;
 //	}
 
 #if 1
-	if (  cls.state >= ca_connecting && cls.state != ca_active) // || !cl.refresh_prepped)
+	if (  cls.state >= CS_CONNECTING && cls.state != CS_ACTIVE) // || !cl.refresh_prepped)
 	{	
 		// connected, but can't render
 
@@ -522,7 +522,7 @@ void SCR_BeginLoadingPlaque(void)
 //	if (developer->value)
 //		return; //not needed, printing to remote console
 
-	if (cls.state == ca_disconnected)
+	if (cls.state == CS_DISCONNECTED)
 		return;	
 
 	// close console
@@ -584,7 +584,7 @@ void SCR_TimeRefresh_f (void)
 	int		start, stop;
 	float	time;
 
-	if ( cls.state != ca_active )
+	if ( cls.state != CS_ACTIVE )
 		return;
 
 	start = Sys_Milliseconds ();
@@ -798,10 +798,10 @@ static void SCR_DrawFPS()
 	if (fps >= 1000)
 		VectorSet(color, 0.3, 0.8, 0);
 
-	if ((int)cl_showfps->value == 1 && mapname[0] && cls.state == ca_active)
-		re.DrawString(va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]), 795, 5, 0.7, 1, color);
+	if ((int)cl_showfps->value == 1 && mapname[0] && cls.state == CS_ACTIVE)
+		re._DrawString(va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]), 795, 5, 0.7, 1, color);
 	else
-		re.DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 5, 0.7, 1, color);
+		re._DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 5, 0.7, 1, color);
 
 }
 
@@ -840,7 +840,7 @@ void SCR_UpdateScreen (void)
 		scr_draw_loading = false;
 		VectorSet(color, 1, 1, 1);
 		color[3] = 1;
-		re.DrawString("loading", 400, 280, 2, 2, color);
+		re._DrawString("loading", 400, 280, 2, 2, color);
 	} 
 	else if (cl.cinematictime > 0) // in cinematic, handle menus and console specially
 	{
@@ -900,7 +900,7 @@ void SCR_UpdateScreen (void)
 
 #if 1
 	float col[4] = { 1,0.4,0.5,1};
-	re.DrawString(va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP), 795, 590, 0.7, 1, col);
+	re._DrawString(va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP), 795, 590, 0.7, 1, col);
 	SCR_DrawFPS();
 #endif
 

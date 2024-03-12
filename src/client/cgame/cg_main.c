@@ -195,7 +195,7 @@ This calls progs function CG_DrawGUI and allows rendering via builtins
 */
 void CG_DrawGUI()
 {
-	if (CG_IsActive() == false || cls.state != ca_active)
+	if (CG_IsActive() == false || cls.state != CS_ACTIVE)
 		return;
 
 	cg_allow_drawcalls = true;
@@ -214,7 +214,7 @@ qboolean CG_CanDrawCall()
 {
 	if(!cl.refresh_prepped)
 		return false; // ref not ready
-//	if (cls.state != ca_active)
+//	if (cls.state != CS_ACTIVE)
 //		return false; // not actively in game
 	if (!cg_allow_drawcalls)
 		return false; // no drawing outside of draw phase

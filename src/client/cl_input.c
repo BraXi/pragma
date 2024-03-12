@@ -477,10 +477,10 @@ void CL_SendCmd (void)
 
 	memset(&buf, 0, sizeof(buf));
 
-	if (cls.state == ca_disconnected || cls.state == ca_connecting)
+	if (cls.state == CS_DISCONNECTED || cls.state == CS_CONNECTING)
 		return;
 
-	if (cls.state == ca_connected)
+	if (cls.state == CS_CONNECTED)
 	{
 		if (cls.netchan.message.cursize	|| curtime - cls.netchan.last_sent > 1000)
 			Netchan_Transmit (&cls.netchan, 0, buf.data);	

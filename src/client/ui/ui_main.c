@@ -255,7 +255,7 @@ void UI_Draw()
 	}
 	else
 	{
-		//if (Com_ServerState() == 0 && cls.state != ca_active)
+		//if (Com_ServerState() == 0 && cls.state != CS_ACTIVE)
 		//	fadeColor[3] = 1;
 		//else
 		//	fadeColor[3] = 0.3;

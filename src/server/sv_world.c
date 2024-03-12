@@ -119,6 +119,7 @@ SV_RunWorldFrame
 Advances the world by 0.1 seconds
 ================
 */
+extern void SV_CheckGround(gentity_t* ent);
 void SV_RunWorldFrame(void)
 {
 	int		i;
@@ -159,19 +160,30 @@ void SV_RunWorldFrame(void)
 		gentity_t* groundentity = (ent->v.groundentity_num == ENTITYNUM_NULL) ? NULL : ENT_FOR_NUM((int)ent->v.groundentity_num);
 //		groundentity = ent->groundentity;
 
+		
+#if 1
+		
+		// braxi -- fixme
+		// looks like players have wrong: groundentity->linkcount != (int)ent->v.groundentity_linkcount
+		// there's a problem to fix, qc has no access to ->linkcount variable, thus making most of .groundentity_linkcount invaild
+		// 
 		// if the ground entity moved, make sure we are still on it
 		if(groundentity != NULL) 
 		{
 			if ((groundentity->linkcount != (int)ent->v.groundentity_linkcount))
 			{
 				ent->v.groundentity_num = ENTITYNUM_NULL;
-				if (!((int)ent->v.flags & (FL_SWIM | FL_FLY)) && (int)ent->v.svflags & SVF_MONSTER)
-				{
-					M_CheckGround(ent);
-				}
+
+				if (ent->v.solid != SOLID_NOT && !((int)ent->v.flags & (FL_SWIM | FL_FLY)))
+					SV_CheckGround(ent); // temporary fix
+
+				//if(!((int)ent->v.flags & (FL_SWIM | FL_FLY)) && (int)ent->v.svflags & SVF_MONSTER)
+				//{
+				//	M_CheckGround(ent);
+				//}
 			}
 		}
-
+#endif
 		if (i > 0 && i <= svs.max_clients)
 		{
 			Scr_ClientBeginServerFrame(ent);

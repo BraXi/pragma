@@ -492,6 +492,10 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			continue;		// not linked in anywhere
 
 		// if the entity is standing on the pusher, it will definitely be moved
+		//if (check->client)
+		//{
+		//	Com_Printf("%s gnd %i pusher %i\n", check->client->pers.netname, check->v.groundentity_num, NUM_FOR_ENT(pusher));
+		//}
 		if ((int)check->v.groundentity_num != NUM_FOR_ENT(pusher))
 		{
 			// see if the ent needs to be tested

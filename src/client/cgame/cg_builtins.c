@@ -261,7 +261,7 @@ static void PFCG_drawstring(void)
 
 	char* string = Scr_VarString(4);
 
-	re.DrawString(string, xy_align[0], xy_align[1], fontSize, xy_align[2], color);
+	re._DrawString(string, xy_align[0], xy_align[1], fontSize, xy_align[2], color);
 }
 
 /*

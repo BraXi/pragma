@@ -44,7 +44,7 @@ static void PFGUI_drawstring(void)
 	Scr_GetParmVector2(2, &color[0], &color[1], &color[2]);
 	color[3] = Scr_GetParmFloat(3);
 	char* string = Scr_VarString(4);
-	re.DrawString(string, xy_align[0], xy_align[1], fontSize, xy_align[2], color);
+	re._DrawString(string, xy_align[0], xy_align[1], fontSize, xy_align[2], color);
 }
 
 /*

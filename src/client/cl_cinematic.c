@@ -140,7 +140,7 @@ void SCR_PlayCinematic (char *arg)
 		cl.cinematicframe = -1;
 		cl.cinematictime = 1;
 		SCR_EndLoadingPlaque ();
-		cls.state = ca_active;
+		cls.state = CS_ACTIVE;
 
 		if (!cin.pic)
 		{

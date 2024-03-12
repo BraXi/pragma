@@ -210,7 +210,7 @@ typedef struct
 	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
 	void	(*DrawFill) (int x, int y, int w, int h);
 
-	void	(*DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+	void	(*_DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color); //deprecated
 	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);
 	void	(*NewDrawFill) (rect_t rect, rgba_t color);
 
