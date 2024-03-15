@@ -214,7 +214,11 @@ qboolean UI_LoadGui(char* guiname)
 	return true;
 }
 
-
+/*
+===============
+UI_ParseGuiList
+===============
+*/
 int UI_ParseGuiList(char* data)
 {
 	char *token;
@@ -248,8 +252,8 @@ UI_LoadGuisFromFile
 void UI_LoadGuisFromFile(char* name)
 {
 	int		len;
-	char* data = NULL;
-	char filename[MAX_OSPATH];
+	char	*data = NULL;
+	char	filename[MAX_OSPATH];
 	int		numGuis;
 
 	Com_sprintf(filename, sizeof(filename), "guis/%s.txt", name);

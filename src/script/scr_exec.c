@@ -795,6 +795,20 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 }
 
+//static int	type_size[8] = { 1,sizeof(scr_string_t) / 4,1,3,1,1,sizeof(scr_func_t) / 4,sizeof(void*) / 4 }; // funily enough this lived not updated in pragma for nearly 5 months
+static int type_size[9] =
+{
+	/*vanilla QC*/
+	1,							// ev_void
+	sizeof(scr_string_t) / 4,	// ev_string
+	1,							// ev_float
+	3,							// ev_vector
+	1,							// ev_entity
+	1,							// ev_field
+	sizeof(scr_func_t) / 4,		// ev_function
+	sizeof(void*) / 4,			// ev_pointer
+	1							// FTEQC: ev_integer
+};
 
 /*
 =============
@@ -803,7 +817,6 @@ Scr_PrintEntityFields
 For debugging
 =============
 */
-static int	type_size[8] = { 1,sizeof(scr_string_t) / 4,1,3,1,1,sizeof(scr_func_t) / 4,sizeof(void*) / 4 };
 char* Scr_ValueString(etype_t type, eval_t* val);
 void Scr_PrintEntityFields(vm_entity_t* ent)
 {

@@ -223,6 +223,87 @@ static void PFGUI_DrawText(void)
 
 	re.NewDrawString(xya[0], xya[1], xya[2], fontId, scale, color, text);
 }
+
+/*
+=================
+PFGUI_addaction
+
+addaction( string cmdname, void() function )
+register action command, all such commands are removed when dropped from server and during map changes
+addaction( "hide", action_hideitem );
+=================
+*/
+static void PFGUI_addaction(void)
+{
+	char* name = Scr_GetParmString(0);
+	UI_AddAction(name, NULL, Scr_GetParmInt(1));
+}
+
+
+/*
+=================
+PFGUI_execaction
+
+execaction( string cmdname, ... )
+execute action string on self
+
+execaction( "hide self; show popup\n" );
+=================
+*/
+static void PFGUI_execaction(void)
+{
+	//char* action = Scr_GetParmString(0);
+	char* action = Scr_VarString(0);
+	UI_ExecuteAction(action);
+}
+
+/*
+=================
+PFGUI_getitemcount
+
+float getitemcount()
+returns ui elements counts
+
+float numelements = getitemcount();
+=================
+*/
+static void PFGUI_getitemcount(void)
+{
+	Scr_ReturnFloat(current_gui->numItems);
+}
+
+/*
+=================
+PFGUI_getitem
+
+entity getitem(float index)
+returns ui element entity, works similar to sv's getent
+
+entity elem = getitem(0);
+=================
+*/
+static void PFGUI_getitem(void)
+{
+	ui_item_t* item;
+	int index;
+
+	index = (int)Scr_GetParmFloat(0);
+
+	if (index < 0 || index >= current_gui->numItems)
+	{
+		Scr_RunError("getitem(): index %i is out of range [0-%i]\n", index, current_gui->numItems);
+		return;
+	}
+
+	item = current_gui->items[index];
+	if (!item->inuse)
+	{
+		Scr_RunError("getitem(): ui_item index %i is not in use -- this should never happen!\n", index);
+		Scr_ReturnEntity(current_gui->items[0]);
+		return;
+	}
+	Scr_ReturnEntity(item);
+}
 #endif /*not DEDICATED_ONLY*/
 
 
@@ -251,6 +332,7 @@ void UI_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_getclientname, PF_GUI, "getclientname", "string(int idx)");
 
 	Scr_DefineBuiltin(PFCG_localsound, PF_GUI, "localsound", "void(string s, float v)");
+
 	Scr_DefineBuiltin(PFCG_getbindkey, PF_GUI, "getbindkey", "string(string bind)");
 
 	Scr_DefineBuiltin(PFGUI_GetCursorPos, PF_GUI, "getcursorpos", "vector()");
@@ -266,6 +348,12 @@ void UI_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFGUI_GetFontHeight, PF_GUI, "getfontheight", "float(float fid)");
 	Scr_DefineBuiltin(PFGUI_GetTextWidth, PF_GUI, "gettextwidth", "float(float fid, string str)");
 	Scr_DefineBuiltin(PFGUI_DrawText, PF_GUI, "drawtext", "void(vector xya, float fid, float sc, vector rgb, float a, string s1, ...)");
+
+	Scr_DefineBuiltin(PFGUI_addaction, PF_GUI, "addaction", "void(string cn, void() f)");
+	Scr_DefineBuiltin(PFGUI_execaction, PF_GUI, "execaction", "void(string cn, ...)");
+
+	Scr_DefineBuiltin(PFGUI_getitemcount, PF_GUI, "getitemcount", "float()");
+	Scr_DefineBuiltin(PFGUI_getitem, PF_GUI, "getitem", "entity(float idx)");
 #endif
 }
 
@@ -296,5 +384,11 @@ void UI_StubScriptBuiltins()
 	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "getfontheight", "float(float fid)");
 	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "gettextwidth", "float(float fid, string str)");
 	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "drawtext", "void(vector xya, float fid, float sc, vector rgb, float a, string s1, ...)");
+
+	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "addaction", "void(string cn, void() f)");
+	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "execaction", "void(string cn, ...)");
+
+	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "getitemcount", "float()");
+	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "getitem", "entity(float idx)");
 }
 #endif
