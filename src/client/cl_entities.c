@@ -406,9 +406,9 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	// set up position
 	for (i = 0; i < 3; i++)
 	{
-		viewmodel.origin[i] = cl.refdef.vieworg[i] + ops->viewmodel_offset[i]
+		viewmodel.origin[i] = cl.refdef.view.origin[i] + ops->viewmodel_offset[i]
 			+ cl.lerpfrac * (ps->viewmodel_offset[i] - ops->viewmodel_offset[i]);
-		viewmodel.angles[i] = cl.refdef.viewangles[i] + LerpAngle (ops->viewmodel_angles[i],
+		viewmodel.angles[i] = cl.refdef.view.angles[i] + LerpAngle (ops->viewmodel_angles[i],
 			ps->viewmodel_angles[i], cl.lerpfrac);
 	}
 
@@ -469,7 +469,6 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	V_AddEntity(&flash);
 }
 
-
 /*
 ===============
 CL_CalcViewValues
@@ -477,27 +476,31 @@ CL_CalcViewValues
 Sets cl.refdef view values
 ===============
 */
-void CL_CalcViewValues (void)
+void CL_CalcViewValues()
 {
 	int			i;
 	float		lerp, backlerp;
 	clentity_t	*ent;
 	frame_t		*oldframe;
 	player_state_t	*ps, *ops;
+	unsigned	delta;
 
+
+	//
 	// find the previous frame to interpolate from
+	//
 	ps = &cl.frame.playerstate;
 	i = (cl.frame.serverframe - 1) & UPDATE_MASK;
 	oldframe = &cl.frames[i];
 	if (oldframe->serverframe != cl.frame.serverframe-1 || !oldframe->valid)
-		oldframe = &cl.frame;		// previous frame was dropped or involid
+		oldframe = &cl.frame; // previous frame was dropped or involid
 	ops = &oldframe->playerstate;
 
 	// see if the player entity was teleported this frame
 #if PROTOCOL_FLOAT_COORDS == 1
-	if (fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256
-		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256
-		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256)
+	if (fabs((double)(ops->pmove.origin[0] - ps->pmove.origin[0])) > 256.0
+		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256.0
+		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256.0)
 		ops = ps;		// don't interpolate
 #else
 	if (fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256 * 8
@@ -510,15 +513,18 @@ void CL_CalcViewValues (void)
 	ent = &cl_entities[cl.playernum+1];
 	lerp = cl.lerpfrac;
 
+	//
 	// calculate the origin
+	//
 	if ((cl_predict->value) && !(cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
-	{	// use predicted values
-		unsigned	delta;
+	{	
+		// use predicted values
+		
 
 		backlerp = 1.0 - lerp;
-		for (i=0 ; i<3 ; i++)
+		for(i = 0; i < 3; i++)
 		{
-			cl.refdef.vieworg[i] = cl.predicted_origin[i] + ops->viewoffset[i] 
+			cl.refdef.view.origin[i] = cl.predicted_origin[i] + ops->viewoffset[i] 
 				+ cl.lerpfrac * (ps->viewoffset[i] - ops->viewoffset[i])
 				- backlerp * cl.prediction_error[i];
 		}
@@ -526,44 +532,63 @@ void CL_CalcViewValues (void)
 		// smooth out stair climbing
 		delta = cls.realtime - cl.predicted_step_time;
 		if (delta < SV_FRAMETIME_MSEC)
-			cl.refdef.vieworg[2] -= cl.predicted_step * (float)(SV_FRAMETIME_MSEC - delta) * 0.01f;
+			cl.refdef.view.origin[2] -= cl.predicted_step * (float)(SV_FRAMETIME_MSEC - delta) * 0.01f;
 	}
 	else
 	{	// just use interpolated values
 #if PROTOCOL_FLOAT_COORDS == 1
-		for (i = 0; i < 3; i++)
-			cl.refdef.vieworg[i] = ops->pmove.origin[i] + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] + ps->viewoffset[i] - (ops->pmove.origin[i] + ops->viewoffset[i]));
+		for(i = 0; i < 3; i++)
+			cl.refdef.view.origin[i] = ops->pmove.origin[i] + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] + ps->viewoffset[i] - (ops->pmove.origin[i] + ops->viewoffset[i]));
 #else
-		for (i = 0; i < 3; i++)
-			cl.refdef.vieworg[i] = ops->pmove.origin[i] * 0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] * 0.125 + ps->viewoffset[i] - (ops->pmove.origin[i] * 0.125 + ops->viewoffset[i]));
+		for(i = 0; i < 3; i++)
+			cl.refdef.vieworigin[i] = ops->pmove.origin[i] * 0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] * 0.125 + ps->viewoffset[i] - (ops->pmove.origin[i] * 0.125 + ops->viewoffset[i]));
 #endif
 	}
 
+
+	//
+	// calculate the view angles
+	//
+ 
 	// if not running a demo or on a locked frame, add the local angle movement
 	if ( cl.frame.playerstate.pmove.pm_type < PM_DEAD )
-	{	// use predicted values
-		for (i=0 ; i<3 ; i++)
-			cl.refdef.viewangles[i] = cl.predicted_angles[i];
+	{		
+		for(i = 0; i < 3; i++) // use predicted values
+			cl.refdef.view.angles[i] = cl.predicted_angles[i];
 	}
 	else
-	{	// just use interpolated values
-		for (i=0 ; i<3 ; i++)
-			cl.refdef.viewangles[i] = LerpAngle (ops->viewangles[i], ps->viewangles[i], lerp);
+	{	
+		for(i = 0; i < 3; i++) // just use interpolated values
+			cl.refdef.view.angles[i] = LerpAngle(ops->viewangles[i], ps->viewangles[i], lerp);
 	}
 
-	for (i=0 ; i<3 ; i++)
-		cl.refdef.viewangles[i] += LerpAngle (ops->kick_angles[i], ps->kick_angles[i], lerp);
 
-	AngleVectors (cl.refdef.viewangles, cl.v_forward, cl.v_right, cl.v_up);
+	for(i = 0; i < 3; i++)
+		cl.refdef.view.angles[i] += LerpAngle(ops->kick_angles[i], ps->kick_angles[i], lerp);
+
+	AngleVectors(cl.refdef.view.angles, cl.v_forward, cl.v_right, cl.v_up);
 
 	// interpolate field of view
-	cl.refdef.fov_x = ops->fov + lerp * (ps->fov - ops->fov);
+	cl.refdef.view.fov_x = ops->fov + lerp * (ps->fov - ops->fov);
 
-	// don't interpolate blend color
-	for (i=0 ; i<4 ; i++)
-		cl.refdef.blend[i] = ps->blend[i];
+	//
+	// calculate view effects
+	//
+	for (i = 0; i < 4; i++)
+	{
+		cl.refdef.view.fx.blend[i] = ops->fx.blend[i] + lerp * (ps->fx.blend[i] - ops->fx.blend[i]);
+	}
+	
+	cl.refdef.view.fx.blur = ops->fx.blur + lerp * (ps->fx.blur - ops->fx.blur);
+	cl.refdef.view.fx.contrast = ops->fx.contrast + lerp * (ps->fx.contrast - ops->fx.contrast);
+	cl.refdef.view.fx.grayscale = ops->fx.grayscale + lerp * (ps->fx.grayscale - ops->fx.grayscale);
+	cl.refdef.view.fx.inverse = ps->fx.inverse;
+	cl.refdef.view.fx.intensity = ops->fx.intensity + lerp * (ps->fx.intensity - ops->fx.intensity);
+	cl.refdef.view.fx.noise = ops->fx.noise + lerp * (ps->fx.noise - ops->fx.noise);
 
-	// add the weapon
+	//
+	// add view model
+	//
 	CL_AddViewWeapon (ps, ops);
 }
 
@@ -576,7 +601,7 @@ Emits all entities, particles, and lights to the refresh
 */
 void CL_AddEntities()
 {
-	if (cls.state != ca_active)
+	if (cls.state != CS_ACTIVE)
 		return;
 
 	if (cl.time > cl.frame.servertime)
@@ -603,7 +628,7 @@ void CL_AddEntities()
 		cl.lerpfrac = 1.0;
 
 	// calculate view first so the heat beam has the right values for the vieworg, and can lock the beam to the gun
-	CL_CalcViewValues ();
+	CL_CalcViewValues();
 
 	CL_AddPacketEntities (&cl.frame);
 	CG_AddEntities();

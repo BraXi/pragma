@@ -100,7 +100,7 @@ void SCR_CenterPrint (char *str)
 	}
 
 	// echo it to the console
-	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
+	Com_Printf("\n====================\n");
 
 	s = str;
 	do	
@@ -129,7 +129,7 @@ void SCR_CenterPrint (char *str)
 			break;
 		s++;		// skip the \n
 	} while (1);
-	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
+	Com_Printf("\n====================\n");
 	Con_ClearNotify ();
 }
 
@@ -163,7 +163,7 @@ void SCR_DrawCenterString (void)
 		SCR_AddDirtyPoint (x, y);
 		for (j=0 ; j<l ; j++, x+=8)
 		{
-			re.DrawChar (x, y, start[j]);	
+			re.DrawSingleChar (x, y, start[j], 8);	
 			if (!remaining--)
 				return;
 		}
@@ -187,6 +187,7 @@ void SCR_CheckDrawCenterString (void)
 	if (scr_centertime_off <= 0)
 		return;
 
+	re.SetColor(1, 1, 1, 1);
 	SCR_DrawCenterString ();
 }
 
@@ -343,7 +344,7 @@ void SCR_DrawNet (void)
 	if (cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged < CMD_BACKUP-1)
 		return;
 
-	re.DrawPic (scr_vrect.x+64, scr_vrect.y, "code/net");
+	re.DrawImage(scr_vrect.x+64, scr_vrect.y, "code/net");
 }
 
 /*
@@ -360,7 +361,7 @@ void SCR_DrawPause (void)
 		return;
 
 	static rgba_t col_white = { 1.0f, 1.0f, 1.0f, 1.0f };
-	re.DrawString("[Game Paused]", 400, 10, 1.0, XALIGN_CENTER, col_white);
+	re._DrawString("[Game Paused]", 400, 10, 1.0, XALIGN_CENTER, col_white);
 }
 
 /*
@@ -389,7 +390,7 @@ void SCR_DrawLoading (void)
 
 	VectorSet(color, 1, 1, 1);
 	color[3] = 1;
-	re.DrawString("loading", 400, 280, 2, 2, color);
+	re._DrawString("loading", 400, 280, 2, 2, color);
 }
 
 //=============================================================================
@@ -432,7 +433,7 @@ static void SCR_DrawLoadingScreen()
 
 	// weeeewwwy temporarry
 	rgba_t c = { 1,1,1,1 };
-	re.DrawString("Entering Game", 400, 170, 3, 2, c); //240
+	re._DrawString("Entering Game", 400, 170, 3, 2, c); //240
 
 	// line
 	float rect[4] = { 220, 205, 360, 5 };
@@ -440,24 +441,24 @@ static void SCR_DrawLoadingScreen()
 	re.NewDrawFill(rect, c2);
 
 	// server address
-	re.DrawString(cls.servername, 400, 225, 1.8, 2, c);
+	re._DrawString(cls.servername, 400, 225, 1.8, 2, c);
 
 	// display mod name when game is not BASEDIRNAME
 	char* mod = Cvar_VariableString("gamedir");
 	if (Q_stricmp(mod, BASEDIRNAME))
-		re.DrawString(va("Mod: %s", mod), 400, 300, 2, 2, c);
+		re._DrawString(va("Mod: %s", mod), 400, 300, 2, 2, c);
 
 	// map name
 	char* mapname = "";
 	if (cl.configstrings[CS_MODELS + 1][0])
 		mapname = cl.configstrings[CS_MODELS + 1];
-	re.DrawString(va("Loading %s...", mapname), 400, 330, 2, 2, c);
+	re._DrawString(va("Loading %s...", mapname), 400, 330, 2, 2, c);
 
 	// cheats
 	if (CL_CheatsAllowed())
 	{
 		VectorSet(c, 0.8, 0.2, 0);
-		re.DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
+		re._DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
 	}
 }
 
@@ -472,14 +473,14 @@ void SCR_DrawConsole (void)
 
 	re.SetColor(1, 1, 1, 1);
 	
-//	if (cls.state == ca_disconnected || cls.state == ca_connecting)
+//	if (cls.state == CS_DISCONNECTED || cls.state == CS_CONNECTING)
 //	{	// forced full screen console
 //		Con_DrawConsole (1.0);
 //		return;
 //	}
 
 #if 1
-	if (  cls.state >= ca_connecting && cls.state != ca_active) // || !cl.refresh_prepped)
+	if (  cls.state >= CS_CONNECTING && cls.state != CS_ACTIVE) // || !cl.refresh_prepped)
 	{	
 		// connected, but can't render
 
@@ -521,7 +522,7 @@ void SCR_BeginLoadingPlaque(void)
 //	if (developer->value)
 //		return; //not needed, printing to remote console
 
-	if (cls.state == ca_disconnected)
+	if (cls.state == CS_DISCONNECTED)
 		return;	
 
 	// close console
@@ -583,7 +584,7 @@ void SCR_TimeRefresh_f (void)
 	int		start, stop;
 	float	time;
 
-	if ( cls.state != ca_active )
+	if ( cls.state != CS_ACTIVE )
 		return;
 
 	start = Sys_Milliseconds ();
@@ -593,8 +594,8 @@ void SCR_TimeRefresh_f (void)
 		re.BeginFrame( 0 );
 		for (i=0 ; i<128 ; i++)
 		{
-			cl.refdef.viewangles[1] = i/128.0*360.0;
-			re.RenderFrame (&cl.refdef);
+			cl.refdef.view.angles[1] = i/128.0*360.0;
+			re.RenderFrame (&cl.refdef, false);
 		}
 		re.EndFrame();
 	}
@@ -602,10 +603,10 @@ void SCR_TimeRefresh_f (void)
 	{
 		for (i=0 ; i<128 ; i++)
 		{
-			cl.refdef.viewangles[1] = i/128.0*360.0;
+			cl.refdef.view.angles[1] = i/128.0*360.0;
 
 			re.BeginFrame( 0 );
-			re.RenderFrame (&cl.refdef);
+			re.RenderFrame (&cl.refdef, false);
 			re.EndFrame();
 		}
 	}
@@ -752,7 +753,7 @@ void DrawDownloadNotify()
 	w = viddef.width / 2;
 	h = (viddef.height / 2) - 100;
 
-	re.DrawStretchPic(0, 0, viddef.width, viddef.height, "backtile");
+	re.DrawStretchImage(0, 0, viddef.width, viddef.height, "backtile");
 
 	UI_DrawString(w, h, XALIGN_CENTER, va("Connecting to: %s", cls.servername));
 
@@ -795,12 +796,12 @@ static void SCR_DrawFPS()
 	color[3] = 1;
 
 	if (fps >= 1000)
-		VectorSet(color, 0, 1, 0);
+		VectorSet(color, 0.3, 0.8, 0);
 
-	if ((int)cl_showfps->value == 1 && mapname[0])
-		re.DrawString(va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]), 795, 10, 0.8, 1, color);
+	if ((int)cl_showfps->value == 1 && mapname[0] && cls.state == CS_ACTIVE)
+		re.NewDrawString(viddef.width - 5, 4, 2, 0, 0.25f, color, va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]));
 	else
-		re.DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 10, 0.8, 1, color);
+		re.NewDrawString(viddef.width - 5, 4, 2, 0, 0.25f, color, va("%i FPS (%i ms)", fps, frame_time));
 
 }
 
@@ -814,11 +815,7 @@ text to the screen.
 */
 void SCR_UpdateScreen (void)
 {
-	int numframes;
-	int i;
-	float separation[2] = { 0, 0 };
 	float color[4];
-
 
 	// if the screen is disabled (loading plaque is up, or vid mode changing)
 	// do nothing at all
@@ -835,90 +832,77 @@ void SCR_UpdateScreen (void)
 	if (!scr_initialized || !con.initialized)
 		return;				// not initialized yet
 
-	re.SetColor(1, 1, 1, 1);
+	re.BeginFrame( 0 );
 
-	/*
-	** range check cl_camera_separation so we don't inadvertently fry someone's
-	** brain
-	*/
-	if ( cl_stereo_separation->value > 1.0 )
-		Cvar_SetValue( "cl_stereo_separation", 1.0 );
-	else if ( cl_stereo_separation->value < 0 )
-		Cvar_SetValue( "cl_stereo_separation", 0.0 );
-
-	if ( cl_stereo->value )
+	if (scr_draw_loading == 2) //loading plaque over black screen
+	{	
+		re.RenderFrame(&cl.refdef, true); // only gui
+		scr_draw_loading = false;
+		VectorSet(color, 1, 1, 1);
+		color[3] = 1;
+		re._DrawString("loading", 400, 280, 2, 2, color);
+	} 
+	else if (cl.cinematictime > 0) // in cinematic, handle menus and console specially
 	{
-		numframes = 2;
-		separation[0] = -cl_stereo_separation->value / 2;
-		separation[1] =  cl_stereo_separation->value / 2;
-	}		
-	else
-	{
-		separation[0] = 0;
-		separation[1] = 0;
-		numframes = 1;
-	}
-
-	for ( i = 0; i < numframes; i++ )
-	{
-		re.BeginFrame( separation[i] );
-
-		if (scr_draw_loading == 2)
-		{	
-			//loading plaque over black screen
-			scr_draw_loading = false;
-			VectorSet(color, 1, 1, 1);
-			color[3] = 1;
-			re.DrawString("loading", 400, 280, 2, 2, color);
-		} 
-		// if a cinematic is supposed to be running, handle menus and console specially
-		else if (cl.cinematictime > 0)
+		re.RenderFrame(&cl.refdef, true); // only gui
+		if (cls.key_dest == key_menu)
 		{
-			if (cls.key_dest == key_menu)
-			{
-				UI_Draw();
-			}
-			else if (cls.key_dest == key_console)
-			{
-				SCR_DrawConsole ();
-			}
-			else
-			{
-				SCR_DrawCinematic();
-			}
-		}
-		else 
-		{
-			// do 3D refresh drawing, and then update the screen
-			SCR_CalcVrect ();
-
-			// clear any dirty part of the background
-			SCR_TileClear ();
-
-			V_RenderView ( separation[i] );
-
-			re.SetColor(1, 1, 1, 1);
-			CG_DrawGUI();
-
-			re.SetColor(1, 1, 1, 1);
 			UI_Draw();
-
-			SCR_DrawNet ();
-			SCR_CheckDrawCenterString ();
-
-			re.SetColor(1, 1, 1, 1);
-
-			CL_DrawGraphOnScreen();
-
-			SCR_DrawPause ();
-
+		}
+		else if (cls.key_dest == key_console)
+		{
 			SCR_DrawConsole ();
-
-			DrawDownloadNotify();
-
-			SCR_DrawLoading ();
+		}
+		else
+		{
+			SCR_DrawCinematic();
 		}
 	}
+	else 
+	{
+		// do 3D refresh drawing, and then update the screen
+		SCR_CalcVrect ();
+
+		// clear any dirty part of the background
+		SCR_TileClear ();
+
+		//
+		// render world
+		//
+		V_RenderView(0);
+
+		//
+		// gui rendering at this point
+		//
+
+		re.SetColor(1, 1, 1, 1);
+		CG_DrawGUI();
+
+		re.SetColor(1, 1, 1, 1);
+		UI_Draw();
+
+		SCR_CheckDrawCenterString();
+
+		CL_DrawGraphOnScreen();
+
+		SCR_DrawPause ();
+
+		SCR_DrawConsole ();
+
+		DrawDownloadNotify();
+
+		SCR_DrawLoading ();
+
+		//devtools
+		SCR_DrawNet();
+
+	}
+
+#if 1
+	float col[4] = { 0.1,0.0,0.45,0.8};
+	re.NewDrawString(viddef.width - 5 , viddef.height - (re.GetFontHeight(0)*0.25), 2, 0, 0.25f, col, va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP));
 	SCR_DrawFPS();
+#endif
+
 	re.EndFrame();
 }

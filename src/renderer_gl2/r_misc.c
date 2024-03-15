@@ -12,12 +12,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-/*
-==================
-R_InitParticleTexture
-==================
-*/
-byte	dottexture[8][8] =
+static byte dottexture[8][8] =
 {
 	{0,0,0,0,0,0,0,0},
 	{0,0,1,1,0,0,0,0},
@@ -29,10 +24,36 @@ byte	dottexture[8][8] =
 	{0,0,0,0,0,0,0,0},
 };
 
-void R_InitParticleTexture (void)
+/*
+==================
+R_InitCodeTextures
+==================
+*/
+void R_InitCodeTextures()
 {
 	int		x,y;
 	byte	data[8][8][4];
+
+	//
+	// default white texture
+	//
+	for (x = 0; x < 8; x++)
+	{
+		for (y = 0; y < 8; y++)
+		{
+			data[y][x][0] = 255;
+			data[y][x][1] = 255;
+			data[y][x][2] = 255;
+			data[y][x][3] = 255;
+		}
+	}
+	r_texture_white = R_LoadTexture("$white", (byte*)data, 8, 8, it_texture, 32);
+
+	//
+	// dummy used for fbo
+	//
+	r_texture_view = R_LoadTexture("$view", NULL, vid.width, vid.height, it_texture, 32);
+
 
 	//
 	// particle texture
@@ -47,7 +68,7 @@ void R_InitParticleTexture (void)
 			data[y][x][3] = dottexture[x][y]*255;
 		}
 	}
-	r_particletexture = GL_LoadPic ("***particle***", (byte *)data, 8, 8, it_sprite, 32);
+	r_texture_particle = R_LoadTexture("$default_particle", (byte *)data, 8, 8, it_sprite, 32);
 
 	//
 	// also use this for bad textures, but without alpha
@@ -56,13 +77,13 @@ void R_InitParticleTexture (void)
 	{
 		for (y=0 ; y<8 ; y++)
 		{
-			data[y][x][0] = 0;// dottexture[x & 3][y & 3] * 255;
+			data[y][x][0] = 0;
 			data[y][x][1] = dottexture[x&3][y&3]*255;
-			data[y][x][2] = 0;// dottexture[x & 3][y & 3] * 255;
+			data[y][x][2] = 0;
 			data[y][x][3] = 255;
 		}
 	}
-	r_notexture = GL_LoadPic ("***r_notexture***", (byte *)data, 8, 8, it_texture, 32);
+	r_texture_missing = R_LoadTexture ("$default", (byte *)data, 8, 8, it_texture, 32);
 }
 
 
@@ -85,10 +106,10 @@ typedef struct _TargaHeader {
 
 /* 
 ================== 
-GL_ScreenShot_f
+R_ScreenShot_f
 ================== 
 */  
-void GL_ScreenShot_f (void) 
+void R_ScreenShot_f (void) 
 {
 	byte		*buffer;
 	char		picname[80]; 
@@ -99,7 +120,7 @@ void GL_ScreenShot_f (void)
 	buffer = malloc(vid.width * vid.height * 3 + 18);
 	if (!buffer)
 	{
-		ri.Printf(PRINT_ALL, "GL_ScreenShot_f: failed to allocate pixels\n");
+		ri.Printf(PRINT_ALL, "R_ScreenShot_f: failed to allocate pixels\n");
 		return;
 	}
 
@@ -124,7 +145,7 @@ void GL_ScreenShot_f (void)
 	} 
 	if (i==1000) 
 	{
-		ri.Printf (PRINT_ALL, "GL_ScreenShot_f: Couldn't create a file\n"); 
+		ri.Printf (PRINT_ALL, "R_ScreenShot_f: Couldn't create a file\n"); 
 		free(buffer);
 		return;
  	}
@@ -138,8 +159,8 @@ void GL_ScreenShot_f (void)
 	buffer[15] = vid.height>>8;
 	buffer[16] = 24;	// pixel size
 
-	qglPixelStorei(GL_PACK_ALIGNMENT, 1); //fix from yquake2
-	qglReadPixels (0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer+18 ); 
+	glPixelStorei(GL_PACK_ALIGNMENT, 1); //fix from yquake2
+	glReadPixels (0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer+18 ); 
 
 	// swap rgb to bgr
 	c = 18+vid.width*vid.height*3;
@@ -175,49 +196,34 @@ void GL_Strings_f( void )
 */
 void GL_SetDefaultState( void )
 {
-	qglClearColor (1,0, 0.5 , 0.5);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	R_UnbindProgram();
+
+	glClearColor (1,0, 0.5 , 0.5);
 	R_SetCullFace(GL_FRONT);
-	qglEnable(GL_TEXTURE_2D);
+	glEnable(GL_TEXTURE_2D);
 
 	R_AlphaTest(true);
-	qglAlphaFunc(GL_GREATER, 0.666);
+	glAlphaFunc(GL_GREATER, 0.1);
 
 	R_DepthTest(false);
 	R_CullFace(false);
 	R_Blend(false);
 
-	qglColor4f (1,1,1,1);
+	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 
-	qglPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-	qglShadeModel (GL_FLAT);
+	R_SetTextureMode( r_texturemode->string );
+	R_SetTextureAlphaMode( r_texturealphamode->string );
+	R_TextureSolidMode( r_texturesolidmode->string );
 
-	GL_TextureMode( r_texturemode->string );
-	GL_TextureAlphaMode( r_texturealphamode->string );
-	GL_TextureSolidMode( r_texturesolidmode->string );
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
-
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	GL_TexEnv( GL_REPLACE );
-
-	if ( qglPointParameterfEXT )
-	{
-		float attenuations[3];
-
-		attenuations[0] = r_particle_att_a->value;
-		attenuations[1] = r_particle_att_b->value;
-		attenuations[2] = r_particle_att_c->value;
-
-		qglEnable( GL_POINT_SMOOTH );
-		qglPointParameterfEXT( GL_POINT_SIZE_MIN_EXT, r_particle_min_size->value );
-		qglPointParameterfEXT( GL_POINT_SIZE_MAX_EXT, r_particle_max_size->value );
-		qglPointParameterfvEXT( GL_DISTANCE_ATTENUATION_EXT, attenuations );
-	}
 	GL_UpdateSwapInterval();
 }
 

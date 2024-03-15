@@ -13,30 +13,19 @@ See the attached GNU General Public License v2 for more details.
 
 refimport_t	ri;
 
-
 cvar_t* r_norefresh;
 cvar_t* r_drawentities;
 cvar_t* r_drawworld;
 cvar_t* r_speeds;
 cvar_t* r_fullbright;
+cvar_t* r_singlepass;
 cvar_t* r_novis;
 cvar_t* r_nocull;
 cvar_t* r_lerpmodels;
 cvar_t* r_lefthand;
 
-cvar_t* r_overbrightbits;
-
-cvar_t* r_particle_min_size;
-cvar_t* r_particle_max_size;
-cvar_t* r_particle_size;
-cvar_t* r_particle_att_a;
-cvar_t* r_particle_att_b;
-cvar_t* r_particle_att_c;
-
 cvar_t* gl_ext_swapinterval;
-cvar_t* gl_ext_pointparameters;
 
-cvar_t* r_log;
 cvar_t* r_bitdepth;
 cvar_t* r_drawbuffer;
 cvar_t* gl_driver;
@@ -46,11 +35,8 @@ cvar_t* r_dynamic;
 cvar_t* r_monolightmap;
 cvar_t* r_modulate;
 cvar_t* r_nobind;
-cvar_t* r_round_down;
 cvar_t* r_picmip;
-cvar_t* r_skymip;
 cvar_t* r_showtris;
-cvar_t* r_ztrick;
 cvar_t* r_finish;
 cvar_t* r_clear;
 cvar_t* r_cull;
@@ -62,13 +48,23 @@ cvar_t* r_texturesolidmode;
 cvar_t* r_lockpvs;
 
 cvar_t* r_fullscreen;
+cvar_t* r_intensity;
 cvar_t* r_gamma;
 cvar_t* r_renderer;
+
+cvar_t* r_postfx_blur;
+cvar_t* r_postfx_contrast;
+cvar_t* r_postfx_grayscale;
+cvar_t* r_postfx_inverse;
+cvar_t* r_postfx_noise;
 
 float sinTable[FUNCTABLE_SIZE];
 
 void GL_Strings_f(void);
 
+extern vertexbuffer_t vb_gui;
+extern vertexbuffer_t vb_sky;
+extern vertexbuffer_t *vb_particles;
 /*
 ==================
 R_RegisterCvarsAndCommands
@@ -83,35 +79,26 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
 
+	r_singlepass = ri.Cvar_Get("r_singlepass", "1", 0);
+
 	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);
 	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT);
 
+	r_speeds = ri.Cvar_Get("r_speeds", "0", 0);
 	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT);
 	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT);
+	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT);
 
 	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT);
 
-	r_speeds = ri.Cvar_Get("r_speeds", "0", 0);
-
-	r_particle_min_size = ri.Cvar_Get("r_particle_min_size", "2", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_max_size = ri.Cvar_Get("r_particle_max_size", "40", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_size = ri.Cvar_Get("r_particle_size", "40", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_att_a = ri.Cvar_Get("r_particle_att_a", "0.01", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_att_b = ri.Cvar_Get("r_particle_att_b", "0.0", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_particle_att_c = ri.Cvar_Get("r_particle_att_c", "0.01", CVAR_ARCHIVE | CVAR_CHEAT);
-
-	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_ARCHIVE | CVAR_CHEAT);
-	r_log = ri.Cvar_Get("r_log", "0", 0);
+	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_CHEAT);
 	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0);
 	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
 	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT);
 	r_dynamic = ri.Cvar_Get("r_dynamic", "1", CVAR_CHEAT);
 	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT);
-	r_round_down = ri.Cvar_Get("r_round_down", "0", 0);
 	r_picmip = ri.Cvar_Get("r_picmip", "0", 0);
-	r_skymip = ri.Cvar_Get("r_skymip", "0", 0);
 	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT);
-	r_ztrick = ri.Cvar_Get("r_ztrick", "0", 0);
 	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE);
 	r_clear = ri.Cvar_Get("r_clear", "0", 0);
 	r_cull = ri.Cvar_Get("r_cull", "1", CVAR_CHEAT);
@@ -120,27 +107,31 @@ void R_RegisterCvarsAndCommands(void)
 	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
 	r_texturesolidmode = ri.Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE);
-	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT);
+
 
 	gl_ext_swapinterval = ri.Cvar_Get("gl_ext_swapinterval", "1", CVAR_ARCHIVE);
-	gl_ext_pointparameters = ri.Cvar_Get("gl_ext_pointparameters", "1", CVAR_ARCHIVE);
 
 	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT);
 	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
 
-	// --- begin yquake2 ---
-	r_overbrightbits = ri.Cvar_Get("r_overbrightbits", "1", CVAR_ARCHIVE | CVAR_CHEAT);
-	// --- end yquake2 ---
-
 	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", CVAR_CHEAT);
 
 	r_fullscreen = ri.Cvar_Get("r_fullscreen", "0", CVAR_ARCHIVE);
-	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE);
 
 	r_renderer = ri.Cvar_Get("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE);
 
-	ri.AddCommand("imagelist", GL_ImageList_f);
-	ri.AddCommand("screenshot", GL_ScreenShot_f);
+	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE);
+
+	r_intensity = ri.Cvar_Get("r_intensity", "1.5", CVAR_CHEAT);
+	r_postfx_blur = ri.Cvar_Get("r_fx_blur", "0", CVAR_CHEAT);
+	r_postfx_contrast = ri.Cvar_Get("r_fx_contrast", "0", CVAR_CHEAT);
+	r_postfx_grayscale = ri.Cvar_Get("r_fx_grayscale", "0", CVAR_CHEAT);
+	r_postfx_inverse = ri.Cvar_Get("r_fx_inverse", "0", CVAR_CHEAT);
+	r_postfx_noise = ri.Cvar_Get("r_fx_noise", "0", CVAR_CHEAT);
+
+	ri.AddCommand("shaderlist", R_ShaderList_f);
+	ri.AddCommand("imagelist", R_TextureList_f);
+	ri.AddCommand("screenshot", R_ScreenShot_f);
 	ri.AddCommand("modellist", Mod_Modellist_f);
 	ri.AddCommand("gl_strings", GL_Strings_f);
 }
@@ -201,6 +192,47 @@ qboolean R_SetMode(void)
 	return true;
 }
 
+static void R_OpenGLConfig()
+{
+	static char renderer_buffer[1000];
+	static char vendor_buffer[1000];
+
+	gl_config.vendor_string = glGetString(GL_VENDOR);
+	gl_config.renderer_string = glGetString(GL_RENDERER);
+	gl_config.version_string = glGetString(GL_VERSION);
+	gl_config.extensions_string = glGetString(GL_EXTENSIONS);
+
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &gl_config.max_vertex_attribs);
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &gl_config.max_tmu);
+	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &gl_config.max_frag_uniforms);
+	glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &gl_config.max_vert_uniforms);
+
+	ri.Printf(PRINT_ALL, "\n---------- OpenGL Info ---------\n", gl_config.vendor_string);
+	ri.Printf(PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string);
+	ri.Printf(PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string);
+	ri.Printf(PRINT_ALL, "GL_VERSION: %s\n\n", gl_config.version_string);
+	//ri.Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n\n", gl_config.extensions_string);
+	ri.Printf(PRINT_ALL, "MAX_VERTEX_ATTRIBS: %i\n", gl_config.max_vertex_attribs);
+	ri.Printf(PRINT_ALL, "MAX_TEXTURE_IMAGE_UNITS: %i\n", gl_config.max_tmu);
+	ri.Printf(PRINT_ALL, "MAX_FRAGMENT_UNIFORM_COMPONENTS: %i\n", gl_config.max_frag_uniforms);
+	ri.Printf(PRINT_ALL, "MAX_VERTEX_UNIFORM_COMPONENTS: %i\n", gl_config.max_vert_uniforms);
+	ri.Printf(PRINT_ALL, "---------------------------------\n", gl_config.vendor_string);
+
+	strcpy(renderer_buffer, gl_config.renderer_string); 
+	_strlwr(renderer_buffer);
+
+	strcpy(vendor_buffer, gl_config.vendor_string);
+	_strlwr(vendor_buffer);
+
+	if (strstr(renderer_buffer, "nvidia"))
+		gl_config.renderer = GL_RENDERER_NVIDIA;
+	else if (strstr(renderer_buffer, "amd"))
+		gl_config.renderer = GL_RENDERER_AMD;
+	else if (strstr(renderer_buffer, "intel"))
+		gl_config.renderer = GL_RENDERER_INTEL;
+	else
+		gl_config.renderer = GL_RENDERER_OTHER;
+}
 
 /*
 ===============
@@ -209,8 +241,6 @@ R_Init
 */
 int R_Init(void* hinstance, void* hWnd)
 {
-	char renderer_buffer[1000];
-	char vendor_buffer[1000];
 	int		err;
 	int		j;
 	extern float r_turbsin[256];
@@ -250,33 +280,17 @@ int R_Init(void* hinstance, void* hWnd)
 		return -1;
 	}
 
-	/*
-	** get our various GL strings
-	*/
-	gl_config.vendor_string = qglGetString(GL_VENDOR);
-	ri.Printf(PRINT_ALL, "GL_VENDOR: %s\n", gl_config.vendor_string);
-	gl_config.renderer_string = qglGetString(GL_RENDERER);
-	ri.Printf(PRINT_ALL, "GL_RENDERER: %s\n", gl_config.renderer_string);
-	gl_config.version_string = qglGetString(GL_VERSION);
-	ri.Printf(PRINT_ALL, "GL_VERSION: %s\n", gl_config.version_string);
-	gl_config.extensions_string = qglGetString(GL_EXTENSIONS);
-	ri.Printf(PRINT_ALL, "GL_EXTENSIONS: %s\n", gl_config.extensions_string);
-
-	strcpy(renderer_buffer, gl_config.renderer_string);
-	_strlwr(renderer_buffer);
-
-	strcpy(vendor_buffer, gl_config.vendor_string);
-	_strlwr(vendor_buffer);
+	// load opengl
+	if (!gladLoadGL())
+	{
+		QGL_Shutdown();
+		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not resolve opengl bindings\n");
+		return -1;
+	}
 
 
-	if (strstr(renderer_buffer, "nvidia"))
-		gl_config.renderer = GL_RENDERER_NVIDIA;
-	else if (strstr(renderer_buffer, "amd"))
-		gl_config.renderer = GL_RENDERER_AMD;
-	else if (strstr(renderer_buffer, "intel"))
-		gl_config.renderer = GL_RENDERER_INTEL;
-	else
-		gl_config.renderer = GL_RENDERER_OTHER;
+	// get our various GL strings and consts
+	R_OpenGLConfig();
 
 
 	if (toupper(r_monolightmap->string[1]) != 'F')
@@ -291,17 +305,6 @@ int R_Init(void* hinstance, void* hWnd)
 	** grab extensions
 	*/
 #ifdef WIN32
-	if (strstr(gl_config.extensions_string, "GL_EXT_compiled_vertex_array"))
-	{
-//		ri.Printf(PRINT_ALL, "...enabling GL_EXT_compiled_vertex_array\n");
-		qglLockArraysEXT = (void*)qwglGetProcAddress("glLockArraysEXT");
-		qglUnlockArraysEXT = (void*)qwglGetProcAddress("glUnlockArraysEXT");
-	}
-	else
-	{
-		ri.Printf(PRINT_ALL, "...GL_EXT_compiled_vertex_array not found\n");
-	}
-
 	if (strstr(gl_config.extensions_string, "WGL_EXT_swap_control"))
 	{
 		qwglSwapIntervalEXT = (BOOL(WINAPI*)(int)) qwglGetProcAddress("wglSwapIntervalEXT");
@@ -312,58 +315,34 @@ int R_Init(void* hinstance, void* hWnd)
 		ri.Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
 	}
 
-	if (strstr(gl_config.extensions_string, "GL_EXT_point_parameters"))
-	{
-		if (gl_ext_pointparameters->value)
-		{
-			qglPointParameterfEXT = (void (APIENTRY*)(GLenum, GLfloat)) qwglGetProcAddress("glPointParameterfEXT");
-			qglPointParameterfvEXT = (void (APIENTRY*)(GLenum, const GLfloat*)) qwglGetProcAddress("glPointParameterfvEXT");
-			ri.Printf(PRINT_ALL, "...using GL_EXT_point_parameters\n");
-		}
-		else
-		{
-			ri.Printf(PRINT_ALL, "...ignoring GL_EXT_point_parameters\n");
-		}
-	}
-	else
-	{
-		ri.Printf(PRINT_ALL, "...GL_EXT_point_parameters not found\n");
-	}
-
-
-	// GL_ARB_multitexture is mandatory
-	if (strstr(gl_config.extensions_string, "GL_ARB_multitexture"))
-	{
-		qglActiveTextureARB = (void*)qwglGetProcAddress("glActiveTextureARB");
-		qglMultiTexCoord2fARB = (void*)qwglGetProcAddress("glMultiTexCoord2fARB");
-	}
-	else
-	{
-		ri.Error(ERR_FATAL, "GL_ARB_multitexture not found\n");
-	}
 #endif
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
-	qglActiveTextureARB = 0;
-	qglMultiTexCoord2fARB = 0;
+	
+//	glActiveTexture = 0;
+//	glMultiTexCoord2f = 0;
+
+	R_InitTextures();
+	R_InitPrograms();
+	R_InitFrameBuffer();
+
 	GL_SetDefaultState();
 	R_InitialOGLState(); //wip
 
-	/*
-	** draw our stereo patterns
-	*/
-#if 0
-	GL_DrawStereoPattern();
-#endif
 
 	for (int i = 0; i < FUNCTABLE_SIZE; i++)
 		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
-	GL_InitImages();
-	Mod_Init();
-	R_InitParticleTexture();
-	Draw_InitLocal();
 
-	err = qglGetError();
+
+	Mod_Init();
+
+	R_LoadFonts();
+
+
+
+	vb_particles = R_AllocVertexBuffer((V_UV | V_COLOR), (3 * MAX_PARTICLES), 0);
+
+	err = glGetError();
 	if (err != GL_NO_ERROR)
 		ri.Printf(PRINT_ALL, "glGetError() = 0x%x\n", err);
 	return 1;
@@ -376,23 +355,29 @@ R_Shutdown
 */
 void R_Shutdown(void)
 {
+	ri.RemoveCommand("shaderlist");
 	ri.RemoveCommand("modellist");
 	ri.RemoveCommand("screenshot");
 	ri.RemoveCommand("imagelist");
 	ri.RemoveCommand("gl_strings");
 
+	R_FreeFrameBuffer();
+	R_FreePrograms();
+
 	Mod_FreeAll();
 
-	GL_ShutdownImages();
+	R_FreeTextures();
 
-	/*
-	** shut down OS specific OpenGL stuff like contexts, etc.
-	*/
+	// remove vertex buffers
+	R_DeleteVertexBuffers(&vb_gui);
+	R_DeleteVertexBuffers(&vb_sky);
+
+	R_FreeVertexBuffer(vb_particles);
+
+	// shut down OS specific OpenGL stuff like contexts, etc.
 	GLimp_Shutdown();
-
-	/*
-	** shutdown our QGL subsystem
-	*/
+	
+	// shutdown our QGL subsystem
 	QGL_Shutdown();
 }
 
@@ -407,25 +392,30 @@ struct image_s* R_RegisterSkin(char* name);
 struct image_s* R_RegisterPic(char* name);
 
 void R_SetSky(char* name, float rotate, vec3_t axis, vec3_t color);
-void R_RenderFrame(refdef_t* fd);
+void R_RenderFrame(refdef_t* fd, qboolean onlyortho);
 
 
-void	Draw_Pic(int x, int y, char* name);
-void	Draw_Char(int x, int y, int c);
-void	Draw_TileClear(int x, int y, int w, int h, char* name);
-void	Draw_Fill(int x, int y, int w, int h);
-void	Draw_FadeScreen(float* rgba);
+void	R_DrawImage(int x, int y, char* name);
+void	R_DrawSingleChar(int x, int y, int c, int charSize);
+void	R_DrawTileClear(int x, int y, int w, int h, char* name);
+void	R_DrawFill(int x, int y, int w, int h);
 
-void	R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+void	R_DrawString(float x, float y, int alignx, int charSize, int fontId, vec4_t color, const char* str);
+void	R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
 void	R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
-void	R_DrawFill(rect_t rect, rgba_t color);
+void	R_NewDrawFill(rect_t rect, rgba_t color);
+
+int R_FindFont(char* name);
+int R_GetFontHeight(int fontId);
+int R_GetTextWidth(int fontId, char* text);
+void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
 
 int R_TagIndexForName(struct model_s* model, const char* tagName);
 qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex);
 
 static void	RR_SetColor(float r, float g, float b, float a)
 {
-	qglColor4f(r,g,b,a);
+	R_ProgUniform4f(LOC_COLOR4, r, g, b, a);
 }
 
 /*
@@ -442,6 +432,15 @@ refexport_t GetRefAPI(refimport_t rimp)
 
 	re.api_version = API_VERSION;
 
+	re.Init = R_Init;
+	re.Shutdown = R_Shutdown;
+
+	re.BeginFrame = R_BeginFrame;
+	re.EndFrame = GLimp_EndFrame;
+	re.RenderFrame = R_RenderFrame;
+
+	re.AppActivate = GLimp_AppActivate;
+
 	re.BeginRegistration = R_BeginRegistration;
 	re.EndRegistration = R_EndRegistration;
 
@@ -451,33 +450,28 @@ refexport_t GetRefAPI(refimport_t rimp)
 
 	re.SetSky = R_SetSky;
 
-	re.RenderFrame = R_RenderFrame;
-
-	re.DrawGetPicSize = Draw_GetPicSize;
-	re.DrawPic = Draw_Pic;
-	re.DrawStretchPic = Draw_StretchPic;
-	re.DrawChar = Draw_Char;
-	re.DrawTileClear = Draw_TileClear;
-	re.DrawFill = Draw_Fill;
-	re.DrawFadeScreen = Draw_FadeScreen;
-	re.DrawStretchRaw = Draw_StretchRaw;
+	re.GetImageSize = R_GetImageSize;
+	re.DrawImage = R_DrawImage;
+	re.DrawStretchImage = R_DrawStretchImage;
+	re.DrawSingleChar = R_DrawSingleChar;
+	re.DrawTileClear = R_DrawTileClear;
+	re.DrawFill = R_DrawFill;
 	re.SetColor = RR_SetColor;
+
+	re.FindFont = R_FindFont;
+	re.GetFontHeight = R_GetFontHeight;
+	re.GetTextWidth = R_GetTextWidth;
+	re.NewDrawString = R_DrawText;
 
 	re.TagIndexForName = R_TagIndexForName;
 	re.LerpTag = R_LerpTag;
 
 	// braxi -- newer replacements
 	re.DrawString = R_DrawString;
+	re._DrawString = R_DrawStringOld;
 	re.DrawStretchedImage = R_DrawStretchedImage;
-	re.NewDrawFill = R_DrawFill;
+	re.NewDrawFill = R_NewDrawFill;
 
-	re.Init = R_Init;
-	re.Shutdown = R_Shutdown;
-
-	re.BeginFrame = R_BeginFrame;
-	re.EndFrame = GLimp_EndFrame;
-
-	re.AppActivate = GLimp_AppActivate;
 
 	Swap_Init();
 

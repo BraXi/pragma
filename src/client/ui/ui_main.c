@@ -25,9 +25,10 @@ uistate_t ui;
 GuiDef_t* current_gui;
 ui_item_t* current_item;
 
-cvar_t* ui_enable;
 cvar_t* ui_maxitems;
 cvar_t* ui_maxguis;
+
+
 
 /*
 ===============
@@ -255,12 +256,11 @@ void UI_Draw()
 	}
 	else
 	{
-		if (Com_ServerState() == 0 && cls.state != ca_active)
-			fadeColor[3] = 1;
-		else
-			fadeColor[3] = 0.3;
-
-		re.DrawFadeScreen(fadeColor);
+		//if (Com_ServerState() == 0 && cls.state != CS_ACTIVE)
+		//	fadeColor[3] = 1;
+		//else
+		//	fadeColor[3] = 0.3;
+		//re.DrawFadeScreen(fadeColor);
 	}
 
 	int i, j;
@@ -358,6 +358,8 @@ static void Cmd_ListGuis_f(void)
 	{
 		if (gui == NULL)
 			continue;
+		if (!gui->name[0])
+			continue;
 
 		Com_Printf("GuiDef `%s`: %i itemsDefs, %s %s\n", gui->name, gui->numItems, (gui->active == true ? "active" : ""), (gui->openTime != -1 ? "open" : ""));
 	}
@@ -429,15 +431,13 @@ void UI_Init()
 	Com_Printf("------- GUI Initialization -------\n");
 	memset(&ui, 0, sizeof(uistate_t));
 
-	// unused yet
-	ui_enable = Cvar_Get("ui_enable", "1", CVAR_NOSET);
 	ui_maxitems = Cvar_Get("ui_maxitems", "4096", CVAR_NOSET);
 	ui_maxguis = Cvar_Get("ui_maxguis", "32", CVAR_NOSET);
 
-	if (ui_maxitems->value <= 1024)
+	if (ui_maxitems->value < 1024)
 		Cvar_ForceSet("ui_maxitems", "1024");
 
-	if (ui_maxguis->value <= 8)
+	if (ui_maxguis->value < 8)
 		Cvar_ForceSet("ui_maxguis", "8");
 
 	Cmd_AddCommand("ui_load", Cmd_LoadGui_f);
@@ -445,6 +445,8 @@ void UI_Init()
 	Cmd_AddCommand("ui_close", Cmd_CloseGui_f);
 	Cmd_AddCommand("ui_closeall", Cmd_CloseAllGuis_f);
 	Cmd_AddCommand("ui_list", Cmd_ListGuis_f);
+
+	UI_InitActions();
 
 	// load gui kernel
 	UI_LoadProgs();
@@ -465,6 +467,8 @@ UI_Shutdown
 */
 void UI_Shutdown()
 {
+	UI_RemoveActions();
+
 	Scr_FreeScriptVM(VM_GUI);
 	Z_FreeTags(TAG_GUI);
 
@@ -494,7 +498,7 @@ void UI_DrawString(int x, int y, UI_AlignX alignx, char* string)
 	// draw string
 	while (*string)
 	{
-		re.DrawChar(ofs_x + x, y, *string);
+		re.DrawSingleChar(ofs_x + x, y, *string, 8);
 		x += CHAR_SIZEX;
 		string++;
 	}

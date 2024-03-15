@@ -30,7 +30,7 @@ void CG_PartFX_Flame(clentity_t* ent, vec3_t origin)
 	cparticle_t* p;
 
 #if 1
-	count = 14 + (rand() & 5);
+	count = 10 + (rand() & 5);
 
 	for (n = 0; n < count; n++)
 	{
@@ -41,13 +41,14 @@ void CG_PartFX_Flame(clentity_t* ent, vec3_t origin)
 		VectorClear(p->accel);
 		p->time = cl.time;
 
-		p->alpha = 1.0;
+		p->alpha = 0.7;
 		p->alphavel = -1.0 / (1 + frand() * 0.2);
+		Vector2Set(p->size, 12, 10);
 		VectorSet(p->color, 0.937255, 0.498039, 0.000000); // p->color = 226 + (rand() % 4);
 		for (j = 0; j < 3; j++)
 		{
 			if (j == 2)
-				p->org[j] = origin[j] + crand() * 4;
+				p->org[j] = origin[j] + crand() * 2;
 			else
 				p->org[j] = origin[j] + crand() * 9;
 			p->vel[j] = crand() * 5;
@@ -56,8 +57,8 @@ void CG_PartFX_Flame(clentity_t* ent, vec3_t origin)
 		p->accel[2] = -5; // -PARTICLE_GRAVITY;
 	}
 #endif
-	count = 6 + (rand() & 0x7);
 
+	count = 6 + (rand() & 0x7);
 	for (n = 0; n < count; n++)
 	{
 		p = CG_ParticleFromPool();
@@ -70,11 +71,12 @@ void CG_PartFX_Flame(clentity_t* ent, vec3_t origin)
 
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (1 + frand() * 0.5);
+		Vector2Set(p->size, 11, 11);
 		VectorSet(p->color, 0.184314, 0.184314, 0.184314); //p->color = 0 + (rand() % 4);
 		for (j = 0; j < 3; j++)
 		{
 			if (j == 2)
-				p->org[j] = origin[j] + crand() * 4;
+				p->org[j] = origin[j] + (rand() & 10);
 			else
 				p->org[j] = origin[j] + crand() * 8;
 		}
@@ -134,20 +136,37 @@ void CG_PartFX_Explosion(vec3_t org)
 	int			i, j;
 	cparticle_t	*p;
 
-	for (i= 0; i < 256; i++)
+	for (i= 0; i < 128; i++)
 	{
 		p = CG_ParticleFromPool();
 		if (p == NULL)
 			return; // no free particles
 
+
 		p->time = cl.time;
 		VectorSet(p->color, 1.000000, 0.670588, 0.027451);
+
+#if 0
+		if (i == 0)
+		{
+			VectorCopy(org, p->org);
+			Vector2Set(p->size, 96, 96);
+
+			p->accel[0] = p->accel[1] = 0;
+			p->accel[2] = -PARTICLE_GRAVITY;
+			p->alpha = 1.0;
+			p->alphavel = -0.8 / (0.5 + frand() * 0.3);
+			continue;
+		}
+#endif
 
 		for (j=0 ; j<3 ; j++)
 		{
 			p->org[j] = org[j] + ((rand()%32)-16);
 			p->vel[j] = (rand()%384)-192;
 		}
+
+		Vector2Set(p->size, 3, 3);
 
 		p->accel[0] = p->accel[1] = 0;
 		p->accel[2] = -PARTICLE_GRAVITY;

@@ -45,7 +45,7 @@ void SV_ModelList_f(void)
 	Com_Printf("\nserver models:\n");
 	Com_Printf("==============\n");
 
-	for (i = 1, mod = &sv.models[MODELINDEX_WORLD]; i < sv.num_models; i++, mod++)
+	for (i = MODELINDEX_WORLD, mod = &sv.models[MODELINDEX_WORLD]; i < sv.num_models; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;

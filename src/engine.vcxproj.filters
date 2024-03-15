@@ -220,6 +220,9 @@
     <ClCompile Include="qcommon\bg_modeldef.c">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="client\ui\ui_action.c">
+      <Filter>client\ui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">

@@ -45,6 +45,7 @@ typedef struct GuiDef_s
 	scr_func_t		Callback_Active;
 	scr_func_t		Callback_OnOpen;
 	scr_func_t		Callback_OnClose;
+	scr_func_t		Callback_OnKey;
 } GuiDef_t;
 
 typedef struct uistate_s
@@ -77,3 +78,11 @@ extern ui_item_t* UI_CreateItemDef(GuiDef_t* menu);
 //
 extern qboolean UI_LoadGui(char* guiname);
 extern void UI_LoadGuisFromFile(char* name);
+
+//
+// ui_actions.c
+//
+void UI_AddAction(char* cmd_name, xcommand_t function, scr_func_t progfunc);
+void UI_RemoveActions();
+void UI_ExecuteAction(char* actionstring);
+void UI_InitActions();

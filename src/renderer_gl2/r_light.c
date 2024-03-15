@@ -24,9 +24,9 @@ DYNAMIC LIGHTS BLEND RENDERING
 =============================================================================
 */
 
-#if 0
 void R_RenderDlight (dlight_t *light)
 {
+#if 0
 	int		i, j;
 	float	a;
 	vec3_t	v;
@@ -36,23 +36,24 @@ void R_RenderDlight (dlight_t *light)
 
 	VectorSubtract (light->origin, r_origin, v);
 
-	qglBegin (GL_TRIANGLE_FAN);
-	qglColor3f (light->color[0]*0.2, light->color[1]*0.2, light->color[2]*0.2);
+	glBegin (GL_TRIANGLE_FAN);
+	glColor3f (light->color[0]*0.2, light->color[1]*0.2, light->color[2]*0.2);
 	for (i=0 ; i<3 ; i++)
 		v[i] = light->origin[i] - vpn[i]*rad;
-	qglVertex3fv (v);
-	qglColor3f (0,0,0);
+	glVertex3fv (v);
+	glColor3f (0,0,0);
 	for (i=16 ; i>=0 ; i--)
 	{
 		a = i/16.0 * M_PI*2;
 		for (j=0 ; j<3 ; j++)
 			v[j] = light->origin[j] + vright[j]*cos(a)*rad
 				+ vup[j]*sin(a)*rad;
-		qglVertex3fv (v);
+		glVertex3fv (v);
 	}
-	qglEnd ();
-}
+	glEnd ();
 #endif
+}
+
 
 /*
 =============
@@ -60,17 +61,16 @@ R_RenderDlights
 =============
 */
 
-#if 0
 void R_RenderDlights (void)
 {
+#if 0
 	int		i;
 	dlight_t	*l;
 
 	r_dlightframecount = r_framecount + 1;	// because the count hasn't
 											//  advanced yet for this frame
 	R_WriteToDepthBuffer(GL_FALSE);
-	qglDisable (GL_TEXTURE_2D);
-	qglShadeModel (GL_SMOOTH);
+	glDisable (GL_TEXTURE_2D);
 	R_Blend(true);
 	R_BlendFunc(GL_ONE, GL_ONE);
 
@@ -78,13 +78,13 @@ void R_RenderDlights (void)
 	for (i=0 ; i<r_newrefdef.num_dlights ; i++, l++)
 		R_RenderDlight (l);
 
-	qglColor3f (1,1,1);
+	glColor3f (1,1,1);
 	R_Blend(false);
-	qglEnable (GL_TEXTURE_2D);
+	glEnable (GL_TEXTURE_2D);
 	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	R_WriteToDepthBuffer(GL_TRUE);
-}
 #endif
+}
 
 /*
 =============================================================================
@@ -100,11 +100,7 @@ R_MarkLights
 =============
 */
 
-#ifdef FIX_BRUSH_LIGHTING
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
-#else
-void R_MarkLights (dlight_t *light, int bit, mnode_t *node)
-#endif
 {
 	cplane_t	*splitplane;
 	float		dist;
@@ -116,28 +112,16 @@ void R_MarkLights (dlight_t *light, int bit, mnode_t *node)
 
 	splitplane = node->plane;
 
-#ifdef FIX_BRUSH_LIGHTING
 	dist = DotProduct(lightorg, splitplane->normal) - splitplane->dist;
-#else
-	dist = DotProduct (light->origin, splitplane->normal) - splitplane->dist;
-#endif
 	
 	if (dist > light->intensity-DLIGHT_CUTOFF)
 	{
-#ifdef FIX_BRUSH_LIGHTING
 		R_MarkLights(light, lightorg, bit, node->children[0]);
-#else
-		R_MarkLights (light, bit, node->children[0]);
-#endif	
 		return;
 	}
 	if (dist < -light->intensity+DLIGHT_CUTOFF)
 	{
-#ifdef FIX_BRUSH_LIGHTING
-		R_MarkLights(light, lightorg, bit, node->children[1]);
-#else
-		R_MarkLights (light, bit, node->children[1]);
-#endif	
+		R_MarkLights(light, lightorg, bit, node->children[1]);	
 		return;
 	}
 		
@@ -152,14 +136,8 @@ void R_MarkLights (dlight_t *light, int bit, mnode_t *node)
 		}
 		surf->dlightbits |= bit;
 	}
-
-#ifdef FIX_BRUSH_LIGHTING
 	R_MarkLights(light, lightorg, bit, node->children[0]);
 	R_MarkLights(light, lightorg, bit, node->children[1]);
-#else
-	R_MarkLights(light, bit, node->children[0]);
-	R_MarkLights(light, bit, node->children[1]);
-#endif
 }
 
 
@@ -374,10 +352,7 @@ void R_AddDynamicLights (msurface_t *surf)
 	dlight_t	*dl;
 	float		*pfBL;
 	float		fsacc, ftacc;
-
-#ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
-	vec3_t lightofs; //Spike: light surfaces based upon where they are now instead of their default position.
-#endif
+	vec3_t		lightofs; //Spike: light surfaces based upon where they are now instead of their default position.
 
 	smax = (surf->extents[0]>>4)+1;
 	tmax = (surf->extents[1]>>4)+1;
@@ -391,12 +366,9 @@ void R_AddDynamicLights (msurface_t *surf)
 		dl = &r_newrefdef.dlights[lightNum];
 		frad = dl->intensity;
 
-#ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
+		// Spike's fix from QS
 		VectorSubtract(dl->origin, pCurrentRefEnt->origin, lightofs);
 		fdist = DotProduct(lightofs, surf->plane->normal) - surf->plane->dist;
-#else
-		fdist = DotProduct (dl->origin, surf->plane->normal) - surf->plane->dist;
-#endif
 
 		frad -= fabs(fdist); // frad is now the highest intensity on the plane
 			
@@ -407,13 +379,8 @@ void R_AddDynamicLights (msurface_t *surf)
 
 		for( i = 0 ; i < 3 ; i++)
 		{
-#ifdef FIX_BRUSH_LIGHTING // Spike's fix from QS
-			impact[i] = lightofs[i] -
-				surf->plane->normal[i] * fdist;
-#else
-			impact[i] = dl->origin[i] - 
-				surf->plane->normal[i]*fdist;
-#endif
+			// Spike's fix from QS
+			impact[i] = lightofs[i] - surf->plane->normal[i] * fdist;
 		}
 
 		local[0] = DotProduct (impact, tex->vecs[0]) + tex->vecs[0][3] - surf->texturemins[0];
@@ -457,8 +424,7 @@ void R_SetCacheState( msurface_t *surf )
 {
 	int maps;
 
-	for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
-		 maps++)
+	for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
 	{
 		surf->cached_light[maps] = r_newrefdef.lightstyles[surf->styles[maps]].white;
 	}

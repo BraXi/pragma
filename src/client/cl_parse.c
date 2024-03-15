@@ -103,7 +103,7 @@ void CL_ParseServerData (void)
 // wipe the client_state_t struct, shutdown cgame
 //
 	CL_ClearState ();
-	cls.state = ca_connected;
+	cls.state = CS_CONNECTED;
 
 // parse protocol version number
 	i = MSG_ReadLong (&net_message);
@@ -392,7 +392,7 @@ void CL_ParseServerMessage (void)
 				fclose (cls.download);
 				cls.download = NULL;
 			}
-			cls.state = ca_connecting;
+			cls.state = CS_CONNECTING;
 			cls.connect_time = -99999;	// CL_CheckForResend() will fire immediately
 			break;
 
@@ -400,11 +400,9 @@ void CL_ParseServerMessage (void)
 			i = MSG_ReadByte (&net_message);
 			if (i == PRINT_CHAT)
 			{
-				S_StartLocalSound ("misc/talk.wav");
-				con.ormask = 128;
+				S_StartLocalSound ("misc/chat.wav");
 			}
 			Com_Printf ("%s", MSG_ReadString (&net_message));
-			con.ormask = 0;
 			break;
 			
 		case SVC_CENTERPRINT:
@@ -1014,12 +1012,47 @@ void CL_ParsePlayerstate(frame_t* oldframe, frame_t* newframe)
 			state->viewmodel_angles[i] = MSG_ReadChar(&net_message) * 0.25;
 	}
 
-	if (flags & PS_BLEND)
+	if (flags & PS_EFFECTS)
 	{
-		for (i = 0; i < 4; i++)
-			state->blend[i] = MSG_ReadByte(&net_message) / 255.0;
-	}
+		int fxflags = MSG_ReadByte(&net_message);
 
+		if (fxflags & PS_FX_BLEND)
+		{
+			for (i = 0; i < 4; i++)
+				state->fx.blend[i] = MSG_ReadByte(&net_message) / 255.0f;
+		}
+
+		if (fxflags & PS_FX_BLUR)
+		{
+			state->fx.blur = MSG_ReadByte(&net_message) * (1.0f / 32.0f);
+		}
+
+		if (fxflags & PS_FX_CONTRAST)
+		{
+			state->fx.contrast = MSG_ReadByte(&net_message) * (1.0f / 32.0f);
+		}
+
+		if (fxflags & PS_FX_GRAYSCALE)
+		{
+			state->fx.grayscale = MSG_ReadByte(&net_message) / 255.0;
+		}
+
+		state->fx.inverse = (fxflags & PS_FX_INVERSE);
+//		if (fxflags & PS_FX_INVERSE) // implicit from fxflags
+//		{
+//			MSG_WriteByte(msg, ps->fx.inverse * 255);
+//		}
+
+		if (fxflags & PS_FX_NOISE)
+		{
+			state->fx.noise = MSG_ReadByte(&net_message) / 255.0;
+		}
+
+		if (fxflags & PS_FX_INTENSITY)
+		{
+			state->fx.intensity = MSG_ReadByte(&net_message) * (1.0f / 32.0f);
+		}
+	}
 	if (flags & PS_FOV)
 		state->fov = MSG_ReadByte(&net_message);
 
@@ -1119,9 +1152,9 @@ void CL_ParseFrame(void)
 	if (cl.frame.valid)
 	{
 		// getting a valid frame message ends the connection process
-		if (cls.state != ca_active)
+		if (cls.state != CS_ACTIVE)
 		{
-			cls.state = ca_active;
+			cls.state = CS_ACTIVE;
 			cl.force_refdef = true;
 
 #if PROTOCOL_FLOAT_COORDS == 1
@@ -1159,7 +1192,7 @@ Returns true if server allows for cheating
 */
 qboolean CL_CheatsAllowed()
 {
-	if (cls.state == ca_disconnected)
+	if (cls.state == CS_DISCONNECTED)
 		return true;
 
 	if (cl.configstrings[CS_CHEATS_ENABLED][0] && atoi(cl.configstrings[CS_CHEATS_ENABLED]) > 0)

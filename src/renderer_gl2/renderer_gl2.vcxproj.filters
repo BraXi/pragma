@@ -28,6 +28,9 @@
     <ClInclude Include="..\qcommon\mathlib.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="include\glad\glad_21.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="r_draw.c" />
@@ -39,7 +42,6 @@
     <ClCompile Include="r_misc.c" />
     <ClCompile Include="r_surf.c" />
     <ClCompile Include="r_warp.c" />
-    <ClCompile Include="r_draw_new.c" />
     <ClCompile Include="r_init.c" />
     <ClCompile Include="r_md3.c" />
     <ClCompile Include="r_sprite.c" />
@@ -59,6 +61,12 @@
     <ClCompile Include="..\qcommon\mathlib.c">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="r_progs.c" />
+    <ClCompile Include="r_framebuffer.c" />
+    <ClCompile Include="r_vertexbuffer.c" />
+    <ClCompile Include="glad_gl21.c" />
+    <ClCompile Include="r_world.c" />
+    <ClCompile Include="r_text.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

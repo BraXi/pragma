@@ -34,11 +34,11 @@ void SV_InitEntity(gentity_t* ent)
 
 	ent->v.classname = Scr_SetString("no_class");
 	ent->v.gravity = 1.0;
-	ent->v.groundentity_num = -1;
+	ent->v.groundentity_num = ENTITYNUM_NULL;
 
 	ent->v.renderScale = 1.0f;
 
-	ent->v.nodeIndex = -1;
+	ent->v.nodeIndex = ENTITYNUM_NULL;
 
 	ent->teamchain = ent->teammaster = NULL;
 	ent->bEntityStateForClientChanged = false;

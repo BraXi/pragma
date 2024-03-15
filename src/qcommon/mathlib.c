@@ -22,11 +22,11 @@ void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {
-	float	m[3][3];
-	float	im[3][3];
-	float	zrot[3][3];
-	float	tmpmat[3][3];
-	float	rot[3][3];
+	mat3x3_t	m;
+	mat3x3_t	im;
+	mat3x3_t	zrot;
+	mat3x3_t	tmpmat;
+	mat3x3_t	rot;
 	int	i;
 	vec3_t vr, vup, vf;
 
@@ -179,7 +179,7 @@ void PerpendicularVector(vec3_t dst, const vec3_t src)
 R_ConcatRotations
 ================
 */
-void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3])
+void R_ConcatRotations(mat3x3_t in1, mat3x3_t in2, mat3x3_t out)
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] +
 		in1[0][2] * in2[2][0];
@@ -650,6 +650,13 @@ void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs)
 	}
 }
 
+int Vector2Compare(vec2_t v1, vec2_t v2)
+{
+	if (v1[0] != v2[0] || v1[1] != v2[1])
+		return 0;
+
+	return 1;
+}
 
 int VectorCompare(vec3_t v1, vec3_t v2)
 {
@@ -659,6 +666,13 @@ int VectorCompare(vec3_t v1, vec3_t v2)
 	return 1;
 }
 
+int Vector4Compare(vec4_t v1, vec4_t v2)
+{
+	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2] || v1[3] != v2[3])
+		return 0;
+
+	return 1;
+}
 
 vec_t VectorNormalize(vec3_t v)
 {
@@ -674,9 +688,7 @@ vec_t VectorNormalize(vec3_t v)
 		v[1] *= ilength;
 		v[2] *= ilength;
 	}
-
 	return length;
-
 }
 
 vec_t VectorNormalize2(vec3_t v, vec3_t out)
@@ -698,6 +710,12 @@ vec_t VectorNormalize2(vec3_t v, vec3_t out)
 
 }
 
+void Vector2MA(vec2_t veca, float scale, vec2_t vecb, vec2_t vecc)
+{
+	vecc[0] = veca[0] + scale * vecb[0];
+	vecc[1] = veca[1] + scale * vecb[1];
+}
+
 void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
 {
 	vecc[0] = veca[0] + scale * vecb[0];
@@ -705,6 +723,13 @@ void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
 	vecc[2] = veca[2] + scale * vecb[2];
 }
 
+void Vector4MA(vec4_t veca, float scale, vec4_t vecb, vec4_t vecc)
+{
+	vecc[0] = veca[0] + scale * vecb[0];
+	vecc[1] = veca[1] + scale * vecb[1];
+	vecc[2] = veca[2] + scale * vecb[2];
+	vecc[3] = veca[3] + scale * vecb[3];
+}
 
 vec_t _DotProduct(vec3_t v1, vec3_t v2)
 {
@@ -739,7 +764,20 @@ void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross)
 	cross[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-double sqrt(double x);
+//double sqrt(double x);
+
+vec_t Vector2Length(vec2_t v)
+{
+	int		i;
+	float	length;
+
+	length = 0;
+	for (i = 0; i < 2; i++)
+		length += v[i] * v[i];
+	length = sqrt(length);
+
+	return length;
+}
 
 vec_t VectorLength(vec3_t v)
 {
@@ -749,7 +787,20 @@ vec_t VectorLength(vec3_t v)
 	length = 0;
 	for (i = 0; i < 3; i++)
 		length += v[i] * v[i];
-	length = sqrt(length);		// FIXME
+	length = sqrt(length);
+
+	return length;
+}
+
+vec_t Vector4Length(vec4_t v)
+{
+	int		i;
+	float	length;
+
+	length = 0;
+	for (i = 0; i < 4; i++)
+		length += v[i] * v[i];
+	length = sqrt(length);
 
 	return length;
 }
@@ -761,6 +812,12 @@ void VectorInverse(vec3_t v)
 	v[2] = -v[2];
 }
 
+void Vector2Scale(vec2_t in, vec_t scale, vec2_t out)
+{
+	out[0] = in[0] * scale;
+	out[1] = in[1] * scale;
+}
+
 void VectorScale(vec3_t in, vec_t scale, vec3_t out)
 {
 	out[0] = in[0] * scale;
@@ -768,6 +825,13 @@ void VectorScale(vec3_t in, vec_t scale, vec3_t out)
 	out[2] = in[2] * scale;
 }
 
+void Vector4Scale(vec4_t in, vec_t scale, vec4_t out)
+{
+	out[0] = in[0] * scale;
+	out[1] = in[1] * scale;
+	out[2] = in[2] * scale;
+	out[3] = in[3] * scale;
+}
 
 int Q_log2(int val)
 {
@@ -921,7 +985,7 @@ void AxisClear(vec3_t axis[3])
 MatrixMultiply (Q3)
 ================
 */
-void MatrixMultiply(float in1[3][3], float in2[3][3], float out[3][3])
+void MatrixMultiply(mat3x3_t in1, mat3x3_t in2, mat3x3_t out)
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] +
 		in1[0][2] * in2[2][0];

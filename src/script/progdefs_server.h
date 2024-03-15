@@ -90,19 +90,20 @@ typedef struct sv_entvars_s
 	float		loopsound;		// index to sound from precache_sound() that will constantly loop
 	float		loopsound_att;	// sound attenuation, one of ATT_
 
-	int			event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
+	float		event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 	// ----------------------------------------------------
 
 	scr_string_t	classname;	// for spawn functions 
 	scr_string_t	model;		// setmodel() sets this
 
 	// physics
+	int				linkcount;	// increased each time linkentity() is invoked
 	float			solid;		// SOLID_NOT etc
 	float			movetype;	// MOVETYPE_NONE etc
 	float			gravity;	// [0-1.0]
 	int				clipmask;	
-	float			groundentity_num; // -1 = in air, 0 world, etc..
-	float			groundentity_linkcount;
+	int				groundentity_num; // -1 = in air, 0 world, etc..
+	int				groundentity_linkcount;
 	vec3_t			size;		// DON'T CHANGE! set by linkentity()
 	scr_entity_t	owner;		// will not collide with owner
 
