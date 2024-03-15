@@ -173,7 +173,7 @@ void R_SetTextureMode( char *string )
 	// change all the existing mipmap texture objects
 	for (i=0, glt=r_textures ; i<r_textures_count ; i++, glt++)
 	{
-		if (glt->type != it_gui && glt->type != it_sky )
+		if ( glt->type != it_gui && glt->type != it_sky )
 		{
 			R_BindTexture (glt->texnum);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -262,6 +262,9 @@ void R_TextureList_f(void)
 			break;
 		case it_gui:
 			ri.Printf (PRINT_ALL, "GUI ");
+			break;
+		case it_font:
+			ri.Printf(PRINT_ALL, "FONT ");
 			break;
 		case it_sky:
 			ri.Printf(PRINT_ALL, "SKY ");
@@ -455,7 +458,7 @@ image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_
 	else
 	{
 		R_BindTexture(image->texnum);
-		image->has_alpha = R_UploadTexture32((unsigned*)pixels, width, height, (image->type != it_gui && image->type != it_sky));
+		image->has_alpha = R_UploadTexture32((unsigned*)pixels, width, height, (image->type != it_font && image->type != it_gui && image->type != it_sky));
 		image->upload_width = upload_width;
 		image->upload_height = upload_height;
 	}
@@ -575,6 +578,12 @@ void R_FreeUnusedTextures()
 			continue;		// free image_t slot
 		if (image->type == it_gui)
 			continue;		// don't free gui pics
+
+		if (image->type == it_font)
+		{
+			image->registration_sequence = registration_sequence;
+			continue;		// don't free fonts
+		}
 
 		// free it
 		glDeleteTextures (1, &image->texnum);

@@ -48,9 +48,11 @@ extern	viddef_t	vid;
 typedef enum 
 {
 	it_model,
+	//it_font,
 	it_sprite,
 	it_texture,
 	it_gui,
+	it_font,
 	it_sky
 } texType_t;
 
@@ -373,7 +375,7 @@ void COM_StripExtension (char *in, char *out);
 void	R_GetImageSize (int *w, int *h, char *name);
 void	R_DrawImage (int x, int y, char *name);
 void	R_DrawStretchImage (int x, int y, int w, int h, char *name);
-void	R_DrawSingleChar (int x, int y, int c);
+void	R_DrawSingleChar (int x, int y, int c, int charSize);
 void	R_DrawTileClear (int x, int y, int w, int h, char *name);
 void	R_DrawFill (int x, int y, int w, int h);
 

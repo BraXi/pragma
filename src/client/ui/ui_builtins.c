@@ -163,8 +163,75 @@ static void PFGUI_GetCursorPos(void)
 static void PFGUI_SetCursorPos(void)
 {
 }
+
+/*
+=================
+PFGUI_FindFont
+
+float fontId = findfont(string fontname)
+=================
+*/
+static void PFGUI_FindFont(void)
+{
+	char* arg = Scr_GetParmString(0);
+	Scr_ReturnFloat(re.FindFont(arg));
+}
+
+/*
+=================
+PFGUI_GetFontHeight
+
+float charheight = getfontheight(float fontId)
+=================
+*/
+static void PFGUI_GetFontHeight(void)
+{
+	int arg = (int)Scr_GetParmFloat(0);
+	Scr_ReturnFloat(re.GetFontHeight(arg));
+}
+
+/*
+=================
+PFGUI_GetTextWidth
+
+float width = gettextwidth(float fontId, string text)
+=================
+*/
+static void PFGUI_GetTextWidth(void)
+{
+	int font = Scr_GetParmFloat(0);
+	char *str = Scr_GetParmString(1);
+	Scr_ReturnFloat(re.GetTextWidth(font, str));
+}
+
+/*
+=================
+PFGUI_DrawText
+
+void drawtext(vector xy_align, float fontid, flaot scale, vector rgb, float alpha, string text)
+=================
+*/
+static void PFGUI_DrawText(void)
+{
+	float color[4];
+	float *xya = Scr_GetParmVector(0);
+	int fontId = (int)Scr_GetParmFloat(1);
+	float scale = Scr_GetParmFloat(2);
+	Scr_GetParmVector2(3, &color[0], &color[1], &color[2]);
+	color[3] = Scr_GetParmFloat(4);
+	char* text = Scr_VarString(5); //Scr_GetParmString(5);
+
+	re.NewDrawString(xya[0], xya[1], xya[2], fontId, scale, color, text);
+}
 #endif /*not DEDICATED_ONLY*/
 
+
+/*
+int R_FindFont(char* name);
+int R_GetFontHeight(int fontId);
+int R_GetTextWidth(int fontId, char* text);
+void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+*/
 
 /*
 =================
@@ -189,11 +256,16 @@ void UI_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFGUI_GetCursorPos, PF_GUI, "getcursorpos", "vector()");
 	Scr_DefineBuiltin(PFGUI_SetCursorPos, PF_GUI, "setcursorpos", "void(float x, float y)");
 
-	Scr_DefineBuiltin(PFGUI_drawstring, PF_GUI, "drawstring", "void(vector xya, float fs, vector c, float a, string s1, ...)");
-	Scr_DefineBuiltin(PFGUI_drawimage, PF_GUI, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string img)");
-	Scr_DefineBuiltin(PFGUI_drawfill, PF_GUI, "drawfill", "void(float x, float y, float w, float h, vector c, float a)");
+	Scr_DefineBuiltin(PFGUI_drawstring, PF_GUI, "drawstring", "void(vector xya, float fs, vector c, float a, string s1, ...)"); // deprecated
+	Scr_DefineBuiltin(PFGUI_drawimage, PF_GUI, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string img)");  // deprecated
+	Scr_DefineBuiltin(PFGUI_drawfill, PF_GUI, "drawfill", "void(float x, float y, float w, float h, vector c, float a)");  // deprecated
 
 	Scr_DefineBuiltin(PFGUI_getserverinfo, PF_GUI, "getserverinfo", "string(float si, float it)");
+
+	Scr_DefineBuiltin(PFGUI_FindFont, PF_GUI, "findfont", "float(string str)");
+	Scr_DefineBuiltin(PFGUI_GetFontHeight, PF_GUI, "getfontheight", "float(float fid)");
+	Scr_DefineBuiltin(PFGUI_GetTextWidth, PF_GUI, "gettextwidth", "float(float fid, string str)");
+	Scr_DefineBuiltin(PFGUI_DrawText, PF_GUI, "drawtext", "void(vector xya, float fid, float sc, vector rgb, float a, string s1, ...)");
 #endif
 }
 
@@ -219,5 +291,10 @@ void UI_StubScriptBuiltins()
 	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "drawfill", "void(float x, float y, float w, float h, vector c, float a)");
 
 	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "getserverinfo", "string(float si, float it)");
+
+	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "findfont", "float(string str)");
+	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "getfontheight", "float(float fid)");
+	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "gettextwidth", "float(float fid, string str)");
+	Scr_DefineBuiltin(PFGUI_none, PF_GUI, "drawtext", "void(vector xya, float fid, float sc, vector rgb, float a, string s1, ...)");
 }
 #endif

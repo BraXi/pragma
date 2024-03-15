@@ -747,6 +747,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 	if (down)
 	{
 		key_repeats[key]++;
+#if 1
 		if (key != K_BACKSPACE 
 			&& key != K_PAUSE 
 			&& key != K_PGUP 
@@ -755,7 +756,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 			&& key != K_KP_PGDN
 			&& key_repeats[key] > 1)
 			return;	// ignore most autorepeats
-		
+#endif		
 #if 0	// braxi -- no unknown bind spam
 		if (key >= 200 && !keybindings[key]) 
 			Com_Printf ("%s is unbound, hit F4 to set.\n", Key_KeynumToString (key) );

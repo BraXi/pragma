@@ -100,7 +100,7 @@ void SCR_CenterPrint (char *str)
 	}
 
 	// echo it to the console
-	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
+	Com_Printf("\n====================\n");
 
 	s = str;
 	do	
@@ -129,7 +129,7 @@ void SCR_CenterPrint (char *str)
 			break;
 		s++;		// skip the \n
 	} while (1);
-	Com_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
+	Com_Printf("\n====================\n");
 	Con_ClearNotify ();
 }
 
@@ -163,7 +163,7 @@ void SCR_DrawCenterString (void)
 		SCR_AddDirtyPoint (x, y);
 		for (j=0 ; j<l ; j++, x+=8)
 		{
-			re.DrawSingleChar (x, y, start[j]);	
+			re.DrawSingleChar (x, y, start[j], 8);	
 			if (!remaining--)
 				return;
 		}
@@ -799,9 +799,9 @@ static void SCR_DrawFPS()
 		VectorSet(color, 0.3, 0.8, 0);
 
 	if ((int)cl_showfps->value == 1 && mapname[0] && cls.state == CS_ACTIVE)
-		re._DrawString(va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]), 795, 5, 0.7, 1, color);
+		re.NewDrawString(viddef.width - 5, 4, 2, 0, 0.25f, color, va("%i FPS (%i ms) on %s", fps, frame_time, cl.configstrings[CS_MODELS + 1]));
 	else
-		re._DrawString(va("%i FPS (%i ms)", fps, frame_time), 795, 5, 0.7, 1, color);
+		re.NewDrawString(viddef.width - 5, 4, 2, 0, 0.25f, color, va("%i FPS (%i ms)", fps, frame_time));
 
 }
 
@@ -899,8 +899,8 @@ void SCR_UpdateScreen (void)
 	}
 
 #if 1
-	float col[4] = { 1,0.4,0.5,1};
-	re._DrawString(va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP), 795, 590, 0.7, 1, col);
+	float col[4] = { 0.1,0.0,0.45,0.8};
+	re.NewDrawString(viddef.width - 5 , viddef.height - (re.GetFontHeight(0)*0.25), 2, 0, 0.25f, col, va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP));
 	SCR_DrawFPS();
 #endif
 

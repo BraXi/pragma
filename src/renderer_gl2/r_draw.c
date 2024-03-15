@@ -14,7 +14,6 @@ See the attached GNU General Public License v2 for more details.
 
 typedef enum
 {
-	XALIGN_NONE = 0,
 	XALIGN_LEFT = 0,
 	XALIGN_RIGHT = 1,
 	XALIGN_CENTER = 2
@@ -22,7 +21,7 @@ typedef enum
 
 vertexbuffer_t vb_gui;
 int guiVertCount;
-glvert_t guiVerts[1024];
+glvert_t guiVerts[2048];
 
 
 void ClearVertexBuffer()
@@ -116,10 +115,13 @@ rfont_t *R_LoadFont( const char *name, qboolean filtered )
 R_LoadFonts
 ===============
 */
+extern qboolean R_LoadFontBFF(char* name);
 void R_LoadFonts()
 {
-	fonts[0] = R_LoadFont("default", false);
+	fonts[0] = R_LoadFont("default", true);
 	font_current = fonts[0];
+
+	R_LoadFontBFF("arial");
 }
 
 
@@ -133,7 +135,7 @@ It can be clipped to the top of the screen to allow the console to be
 smoothly scrolled off.
 ================
 */
-void R_DrawSingleChar(int x, int y, int num)
+void R_DrawSingleChar(int x, int y, int num, int charSize)
 {
 	int				row, col;
 	float			frow, fcol, size;
@@ -143,11 +145,11 @@ void R_DrawSingleChar(int x, int y, int num)
 	if ( (num&127) == 32 )
 		return;		// space
 
-	if (y <= -8)
+	if (y <= -charSize)
 		return;			// totally off screen
 
 	row = num>>4;
-	col = num&15;
+	col = num>>4;
 
 	frow = row*0.0625;
 	fcol = col*0.0625;
@@ -156,15 +158,15 @@ void R_DrawSingleChar(int x, int y, int num)
 	ClearVertexBuffer();
 	PushVert(x, y, 0);
 	SetTexCoords(fcol, frow);
-	PushVert(x + 8, y, 0);
+	PushVert(x + charSize, y, 0);
 	SetTexCoords(fcol + size, frow);
-	PushVert(x + 8, y + 8, 0);
+	PushVert(x + charSize, y + charSize, 0);
 	SetTexCoords(fcol + size, frow + size);
 	PushVert(x, y, 0);
 	SetTexCoords(fcol, frow);
-	PushVert(x + 8, y + 8, 0);
+	PushVert(x + charSize, y + charSize, 0);
 	SetTexCoords(fcol + size, frow + size);
-	PushVert(x, y + 8, 0);
+	PushVert(x, y + charSize, 0);
 	SetTexCoords(fcol, frow + size);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
@@ -347,9 +349,15 @@ void R_DrawFill(int x, int y, int w, int h)
 	PushVert(x + w, y + h, 0);
 	PushVert(x, y + h, 0);
 
-	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
+	R_Blend(true);
+
 	R_BindTexture(r_texture_white->texnum);
+//	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
+
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
+
+	R_Blend(false);
 }
 
 void R_AdjustToVirtualScreenSize(float* x, float* y)
@@ -415,41 +423,75 @@ R_DrawStringOld
 DEPRECATED
 ===============
 */
-void R_DrawString(char* string, float x, float y, float fontSize, int alignx, rgba_t color)
+void R_DrawString(float x, float y, int alignx, int charSize, int fontId, vec4_t color, const char* str)
 {
-	float CHAR_SIZEX = 8 * fontSize;
-	float CHAR_SIZEY = 8 * fontSize;
 	int ofs_x = 0;
 
-	if (!string)
+	if (!str)
 		return;
 
-	R_AdjustToVirtualScreenSize(&x, &y); // pos
-	R_AdjustToVirtualScreenSize(&CHAR_SIZEX, &CHAR_SIZEY); // pos
-
-	CHAR_SIZEX = CHAR_SIZEY = (int)CHAR_SIZEX; // hack so text isnt blurry
-
 	// align text
-	int strX = (strlen(string) * CHAR_SIZEX);
+	int strX = (strlen(str) * charSize);
 	if (alignx == XALIGN_CENTER)
 		ofs_x -= (strX / 2);
 	else if (alignx == XALIGN_RIGHT)
-		ofs_x -= ((strlen(string) * CHAR_SIZEX));
+		ofs_x -= ((strlen(str) * charSize));
 
 	ClearVertexBuffer();
-	while (*string)
+	while (*str)
 	{
-		AddCharToString(ofs_x + x, y, CHAR_SIZEX, CHAR_SIZEY, *string);
-		x += CHAR_SIZEX;
-		string++;
+		AddCharToString(ofs_x + x, y, charSize, charSize, *str);
+		x += charSize;
+		str++;
 	}
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
-	R_BindTexture(font_current->image->texnum);
+	R_BindTexture(fonts[fontId]->image->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
+
+
+
+static void AddCharToStringOld(float x, float y, float w, float h, int num)
+{
+	int				row, col;
+	float			frow, fcol, size;
+
+	num &= 255;
+
+	if ((num & 127) == 32)
+		return;		// space
+
+	if (y <= -8)
+		return;			// totally off screen
+
+	row = num >> 4;
+	col = num & 15;
+
+	frow = row * 0.0625;
+	fcol = col * 0.0625;
+	size = 0.0625;
+
+	PushVert(x, y, 0);
+	SetTexCoords(fcol, frow);
+
+	PushVert(x + w, y, 0);
+	SetTexCoords(fcol + size, frow);
+
+	PushVert(x + w, y + h, 0);
+	SetTexCoords(fcol + size, frow + size);
+
+	PushVert(x, y, 0);
+	SetTexCoords(fcol, frow);
+
+	PushVert(x + w, y + h, 0);
+	SetTexCoords(fcol + size, frow + size);
+
+	PushVert(x, y + h, 0);
+	SetTexCoords(fcol, frow + size);
+}
 
 /*
 ===============
@@ -482,7 +524,7 @@ void R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx,
 	ClearVertexBuffer();
 	while (*string)
 	{
-		AddCharToString(ofs_x + x, y, CHAR_SIZEX, CHAR_SIZEY, *string);
+		AddCharToStringOld(ofs_x + x, y, CHAR_SIZEX, CHAR_SIZEY, *string);
 		x += CHAR_SIZEX;
 		string++;
 	}
@@ -612,8 +654,8 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	rect[2] = pos[2];
 	rect[3] = pos[3];
 
-	R_AdjustToVirtualScreenSize(&rect[0], &rect[1]); // pos
-	R_AdjustToVirtualScreenSize(&rect[2], &rect[3]); // w/h
+//	R_AdjustToVirtualScreenSize(&rect[0], &rect[1]); // pos
+//	R_AdjustToVirtualScreenSize(&rect[2], &rect[3]); // w/h
 
 	ClearVertexBuffer();
 
@@ -637,7 +679,6 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 	R_Blend(false);
-
 }
 
 /*
@@ -654,8 +695,8 @@ void R_NewDrawFill(rect_t pos, rgba_t color)
 	rect[2] = pos[2];
 	rect[3] = pos[3];
 
-	R_AdjustToVirtualScreenSize(&rect[0], &rect[1]); // pos
-	R_AdjustToVirtualScreenSize(&rect[2], &rect[3]); // w/h
+//	R_AdjustToVirtualScreenSize(&rect[0], &rect[1]); // pos
+//	R_AdjustToVirtualScreenSize(&rect[2], &rect[3]); // w/h
 
 	ClearVertexBuffer();
 	PushVert(rect[0], rect[1], 0);

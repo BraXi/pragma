@@ -97,12 +97,13 @@ typedef struct sv_entvars_s
 	scr_string_t	model;		// setmodel() sets this
 
 	// physics
+	int				linkcount;	// increased each time linkentity() is invoked
 	float			solid;		// SOLID_NOT etc
 	float			movetype;	// MOVETYPE_NONE etc
 	float			gravity;	// [0-1.0]
 	int				clipmask;	
-	float			groundentity_num; // -1 = in air, 0 world, etc..
-	float			groundentity_linkcount;
+	int				groundentity_num; // -1 = in air, 0 world, etc..
+	int				groundentity_linkcount;
 	vec3_t			size;		// DON'T CHANGE! set by linkentity()
 	scr_entity_t	owner;		// will not collide with owner
 

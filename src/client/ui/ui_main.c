@@ -357,6 +357,8 @@ static void Cmd_ListGuis_f(void)
 	{
 		if (gui == NULL)
 			continue;
+		if (!gui->name[0])
+			continue;
 
 		Com_Printf("GuiDef `%s`: %i itemsDefs, %s %s\n", gui->name, gui->numItems, (gui->active == true ? "active" : ""), (gui->openTime != -1 ? "open" : ""));
 	}
@@ -493,7 +495,7 @@ void UI_DrawString(int x, int y, UI_AlignX alignx, char* string)
 	// draw string
 	while (*string)
 	{
-		re.DrawSingleChar(ofs_x + x, y, *string);
+		re.DrawSingleChar(ofs_x + x, y, *string, 8);
 		x += CHAR_SIZEX;
 		string++;
 	}

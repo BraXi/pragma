@@ -17,7 +17,7 @@ See the attached GNU General Public License v2 for more details.
 
 extern vertexbuffer_t vb_gui;
 extern int guiVertCount;
-extern glvert_t guiVerts[1024];
+extern glvert_t guiVerts[2048];
 extern void ClearVertexBuffer();
 extern void PushVert(float x, float y, float z);
 extern void SetTexCoords(float s, float t);

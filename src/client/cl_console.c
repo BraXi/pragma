@@ -15,33 +15,34 @@ See the attached GNU General Public License v2 for more details.
 console_t	con;
 
 cvar_t		*con_notifytime;
-
+float con_fontscale = 0.25;
+float con_charheight = 8;
 
 #define		MAXCMDLINE	256
 extern	char	key_lines[32][MAXCMDLINE];
 extern	int		edit_line;
 extern	int		key_linepos;
 		
+//static int con_charsize = 8;
+static int con_font = 0;
+
+static vec4_t col_white = { 1.0f, 1.0f, 1.0f, 1.0f };
+static vec4_t col_white2 = { 0.8f, 0.8f, 0.8f, 1.0f };
+static vec4_t col_red = { 1.0f, 1.0f, 1.0f, 1.0f };
+static vec4_t col_green = { 0.0f, 1.0f, 0.0f, 1.0f };
+static vec4_t col_blue = { 0.0f, 0.0f, 1.0f, 1.0f };
+static vec4_t col_yellow = { 1.0f, 1.0f, 0.0f, 1.0f };
+static vec4_t col_orange = { 1.0f, 0.59f, 0.0f, 1.0f };
+
+// re.DrawString(float x, float y, int alignx, int charSize, int fontId, vec4_t color, const char* str);
 
 void DrawString (int x, int y, char *s)
 {
-	while (*s)
-	{
-		re.DrawSingleChar (x, y, *s);
-		x+=8;
-		s++;
-	}
+	//re.DrawString(x, y, 0, con_charsize->value, con_font, col_white, s);
+
+	re.NewDrawString(x, y, con_font, 0, con_fontscale, col_white, s);
 }
 
-void DrawAltString (int x, int y, char *s)
-{
-	while (*s)
-	{
-		re.DrawSingleChar (x, y, *s ^ 0x80);
-		x+=8;
-		s++;
-	}
-}
 
 
 void Key_ClearTyping (void)
@@ -232,11 +233,15 @@ void Con_CheckResize (void)
 {
 	int		i, j, width, oldwidth, oldtotallines, numlines, numchars;
 	char	tbuf[CON_TEXTSIZE];
-
-	width = (viddef.width >> 3) - 2;
+	
+	//width = (viddef.width >> 3) - 2;
+	width = viddef.width/con_charheight;
 
 	if (width == con.linewidth)
 		return;
+
+	if(re.GetFontHeight)
+		con_charheight = re.GetFontHeight(con_font) * con_fontscale;
 
 	if (width < 1)			// video hasn't been initialized yet
 	{
@@ -248,7 +253,7 @@ void Con_CheckResize (void)
 	else
 	{
 		oldwidth = con.linewidth;
-		con.linewidth = width;
+		con.linewidth = width; //viddef.width/con_charsize->value
 		oldtotallines = con.totallines;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
 		numlines = oldtotallines;
@@ -289,15 +294,6 @@ Con_Init
 */
 void Con_Init (void)
 {
-	con.linewidth = -1;
-
-	Con_CheckResize ();
-	
-	Com_Printf ("Console initialized.\n");
-
-//
-// register our commands
-//
 	con_notifytime = Cvar_Get ("con_notifytime", "4", 0);
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
@@ -306,6 +302,12 @@ void Con_Init (void)
 	Cmd_AddCommand ("messagemode2", Con_MessageMode2_f);
 	Cmd_AddCommand ("clear", Con_Clear_f);
 	Cmd_AddCommand ("condump", Con_Dump_f);
+
+
+	con.linewidth = -1;
+	Con_CheckResize();
+
+	Com_Printf("Console initialized.\n");
 	con.initialized = true;
 }
 
@@ -432,6 +434,59 @@ DRAWING
 ==============================================================================
 */
 
+static void Con_ShowSuggestions(char* text)
+{
+	cvar_t* cvars[48];
+	int		found = 0;
+	int		i, x, y = 10, w = 0;
+
+	if (key_linepos < 2)
+		return;
+
+
+	cvar_t* var;
+	for (var = cvar_vars; var; var = var->next)
+	{
+		if (Q_strncasecmp(text, var->name, key_linepos - 1))
+			continue;
+
+		cvars[found] = var;
+		found++;
+	
+		i = re.GetTextWidth(con_font, va("%s %s", var->name, var->string)) * con_fontscale;
+		//i = (strlen(var->name) + strlen(var->string)+1) * con_charsize->value;
+		if (i > w)
+			w = i;
+
+		if (found == 48)
+			break;
+	}
+
+	if (found)
+	{
+		//re.DrawString(10, con.vislines + y, 0, con_charsize->value, con_font, col_orange, va("Listing %i matching cvars:", found));
+		x = 12;
+		y = con.vislines + con_charheight;
+
+		//re.SetColor(0, 0, 0, 0.4);
+		//re.DrawFill(x, y, w, con_charheight * found);
+
+		for (i = 0; i < found; i++)
+		{
+			if(i%2)
+				re.NewDrawString(x, y, 0, con_font, con_fontscale, col_yellow, va("%s %s", cvars[i]->name, cvars[i]->string));
+			else
+				re.NewDrawString(x, y, 0, con_font, con_fontscale, col_orange, va("%s %s", cvars[i]->name, cvars[i]->string));
+			y += con_charheight;
+
+			if (y >= viddef.height - con_charheight*2)
+			{
+				x += w + 12;
+				y = con.vislines + con_charheight;
+			}
+		}
+	}
+}
 
 /*
 ================
@@ -454,24 +509,24 @@ void Con_DrawInput (void)
 
 	text = key_lines[edit_line];
 	
-// add the cursor frame
-	text[key_linepos] = 10+((int)(cls.realtime>>8)&1);
+	// add the cursor frame
+	if (((int)(cls.realtime >> 8) & 1))
+		text[key_linepos] = '_';
 	
-// fill out remainder with spaces
+	// fill out remainder with spaces
 	for (i=key_linepos+1 ; i< con.linewidth ; i++)
 		text[i] = ' ';
 		
-//	prestep if horizontally scrolling
+	//	prestep if horizontally scrolling
 	if (key_linepos >= con.linewidth)
 		text += 1 + key_linepos - con.linewidth;
 		
-// draw it
+	// draw it
 	y = con.vislines-16;
+	re.NewDrawString(10, y, 0, con_font, con_fontscale, col_orange, text); // input line
+	Con_ShowSuggestions(text + 1);
 
-	for (i=0 ; i<con.linewidth ; i++)
-		re.DrawSingleChar ( (i+1)<<3, con.vislines - 22, text[i]);
-
-// remove cursor
+	// remove cursor
 	key_lines[edit_line][key_linepos] = 0;
 }
 
@@ -491,6 +546,8 @@ void Con_DrawNotify (void)
 	int		time;
 	char	*s;
 	int		skip;
+	static char str[MAXCMDLINE];
+	memset(str, 0, sizeof(str));
 
 	if (cls.state != CS_ACTIVE)
 		return;
@@ -508,10 +565,10 @@ void Con_DrawNotify (void)
 			continue;
 		text = con.text + (i % con.totallines)*con.linewidth;
 		
-		for (x = 0 ; x < con.linewidth ; x++)
-			re.DrawSingleChar (((x+1)<<3), v, text[x]);
-
-		v += 8;
+		for (x = 0; x < con.linewidth; x++)
+			str[x] = text[x];
+		re.NewDrawString(10, v, 0, con_font, con_fontscale, col_white, str);
+		v += con_charheight;
 	}
 
 
@@ -519,26 +576,25 @@ void Con_DrawNotify (void)
 	{
 		if (chat_team)
 		{
-			DrawString (8, v, "Say_Team:");
+			DrawString (10, v, "Say Team:");
 			skip = 11;
 		}
 		else
 		{
-			DrawString (8, v, "Say:");
+			DrawString (10, v, "Say:");
 			skip = 5;
 		}
 
 		s = chat_buffer;
 		if (chat_bufferlen > (viddef.width>>3)-(skip+1))
 			s += chat_bufferlen - ((viddef.width>>3)-(skip+1));
+
 		x = 0;
-		while(s[x])
-		{
-			re.DrawSingleChar ( (x+skip)<<3, v, s[x]);
-			x++;
-		}
-		re.DrawSingleChar ( (x+skip)<<3, v, 10+((cls.realtime>>8)&1));
-		v += 8;
+		if(((cls.realtime >> 8) & 1))
+			re.NewDrawString((x + skip) << 3, v, 0, con_font, con_fontscale, col_white, va("%s_",s));
+		else
+			re.NewDrawString((x + skip) << 3, v, 0, con_font, con_fontscale, col_white, s);
+		v += con_charheight;
 	}
 	
 	if (v)
@@ -563,7 +619,20 @@ void Con_DrawConsole (float frac)
 	int				row;
 	int				lines;
 	char			version[64];
+	char tb[256];
 
+#if 0
+	if (con_charsize->modified)
+	{
+		if (con_charsize->value > 32.0f)
+			Cvar_ForceSet("con_charsize", "32");
+		else if (con_charsize->value < 8.0f)
+			Cvar_ForceSet("con_charsize", "8");
+		con_charsize->modified = false;
+	}
+#endif
+
+	Con_CheckResize();
 	lines = viddef.height * frac;
 	if (lines <= 0)
 		return;
@@ -571,48 +640,51 @@ void Con_DrawConsole (float frac)
 	if (lines > viddef.height)
 		lines = viddef.height;
 
-	re.SetColor(1, 1, 1, 1);
 
 	// draw the background
-	re.DrawStretchImage(0, -viddef.height+lines, viddef.width, viddef.height, "console_bg");
+	re.SetColor(0,0,0,0.8);
+	re.DrawFill(0, -viddef.height + lines, viddef.width, viddef.height);
+	re.SetColor(1, 1, 1, 1);
+
+
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
 
-	Com_sprintf (version, sizeof(version), "%s (%s)", PRAGMA_VERSION, PRAGMA_TIMESTAMP);
+	Com_sprintf (version, sizeof(version), "PRAGMA %s (%s)", PRAGMA_VERSION, PRAGMA_TIMESTAMP);
+	re.NewDrawString(viddef.width - 5 , lines - 14, 2, con_font, con_fontscale, col_orange, version);
 
-	for (x=0 ; x<strlen(version) ; x++)
-		re.DrawSingleChar (viddef.width-220+x*8, lines-12, version[x]);
-
-// draw the text
+	// draw the text
 	con.vislines = lines;
 	
 	rows = (lines-22)>>3;		// rows of text to draw
 
 	y = lines - 30;
 
-// draw from the bottom up
+	// draw from the bottom up
 	if (con.display != con.current)
 	{
-	// draw arrows to show the buffer is backscrolled
+		// draw arrows to show the buffer is backscrolled
 		for (x=0 ; x<con.linewidth ; x+=4)
-			re.DrawSingleChar ( (x+1)<<3, y, '^');
-	
-		y -= 8;
+			re.NewDrawString((x + 1) * 16, y, 0, con_font, con_fontscale, col_white, "^");
+		y -= con_charheight;
 		rows--;
 	}
 	
 	row = con.display;
-	for (i=0 ; i<rows ; i++, y-=8, row--)
+	for (i=0 ; i<rows ; i++, y -= con_charheight, row--)
 	{
 		if (row < 0)
 			break;
 		if (con.current - row >= con.totallines)
 			break;		// past scrollback wrap point
 			
-		text = con.text + (row % con.totallines)*con.linewidth;
+		text = con.text + (row % con.totallines) * con.linewidth;
 
-		for (x=0 ; x<con.linewidth ; x++)
-			re.DrawSingleChar ( (x+1)<<3, y, text[x]);
+		memset(tb, 0, sizeof(tb));
+		for (x = 0; x < con.linewidth; x++)
+			tb[x] = text[x];
+
+		re.NewDrawString(10, y, 0, con_font, con_fontscale, col_white2, tb);
 	}
 
 

@@ -576,15 +576,48 @@ static void R_DrawPerfCounters()
 	if (r_speeds->value <= 1.0f)
 		return;
 
-	rect_t pos = { 800 - 140, 15, 140, 110 };
+	rect_t pos = { 800 - 110, 15, 110, 170 };
 	float color[4];
 
 	Vector4Set(color, 0, 0, 0, 0.35f);
 	R_NewDrawFill(pos, color);
 
-	float y = 20;
+	float x, y, h;
+
+#if 1
+	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+	extern int R_GetFontHeight(int fontId);
+
+	float fontscale = 0.25;
+	x = vid.width - 10;
+	y = 32;
+	h = R_GetFontHeight(0) * fontscale;
 
 	Vector4Set(color, 1, 1, 1, 1.0);
+	R_DrawText(x, y, 2, 0, fontscale, color, va("%i BSP polygons", rperf.brush_polys));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i visible textures", rperf.visible_textures));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i visible light maps", rperf.visible_lightmaps));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture bindings", rperf.texture_binds));
+
+	Vector4Set(color, 0.8, 0.8, 1, 1.0);
+	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("%i dynamic lights", r_newrefdef.num_dlights));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i render entities", r_newrefdef.num_entities));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i particles count", r_newrefdef.num_particles));
+
+	Vector4Set(color, 0.2, 1, 0, 1.0);
+	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("%i rendered models", rperf.alias_drawcalls));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i model tris total", rperf.alias_tris));
+
+	Vector4Set(color, 1.0, 0.5, 0, 1.0);
+
+	if (r_singlepass->value)
+		R_DrawText(x, y += h * 2, 2, 0, fontscale, color, "SINGLE PASS BSP (COL+LM)");
+	else
+		R_DrawText(x, y += h * 2, 2, 0, fontscale, color, "OLD TWO PASS BSP DRAWING");
+#else
+	y = 20;
+	Vector4Set(color, 1, 1, 1, 1.0);
+
 	R_DrawStringOld(va("%i        BSP polygons", rperf.brush_polys), 795, y, 0.7, 1, color);
 	R_DrawStringOld(va("%i    visible textures", rperf.visible_textures), 795, y += 8, 0.7, 1, color);
 	R_DrawStringOld(va("%i  visible light maps", rperf.visible_lightmaps), 795, y += 8, 0.7, 1, color);
@@ -605,7 +638,7 @@ static void R_DrawPerfCounters()
 		R_DrawStringOld("SINGLE PASS BSP (COL+LM)", 795, y += 14, 0.7, 1, color);
 	else
 		R_DrawStringOld("OLD TWO PASS BSP DRAWING", 795, y += 14, 0.7, 1, color);
-		
+#endif	
 	
 }
 
@@ -640,11 +673,15 @@ void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 		R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
 	}
 
-	//
+	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+
 	// begin GUI rendering
 	//
+	vec4_t c = { 1,1,0,1 };
 	R_BindProgram(GLPROG_GUI);
+	R_DrawText(vid.width / 2, 200 + 64 * 1, 1, 0, 1.0, c, "01234567890\n!@#$%^&\n*()_+[{]}\|-=;:',<.>?");
 	R_DrawPerfCounters();
+
 }
 
 /*

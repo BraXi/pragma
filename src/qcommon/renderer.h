@@ -205,10 +205,17 @@ typedef struct
 	void	(*GetImageSize) (int *w, int *h, char *name);	// will return 0 0 if not found
 	void	(*DrawImage) (int x, int y, char *name);
 	void	(*DrawStretchImage) (int x, int y, int w, int h, char *name);
-	void	(*DrawSingleChar) (int x, int y, int c);
+	void	(*DrawSingleChar) (int x, int y, int c, int charSize);
 
 	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
 	void	(*DrawFill) (int x, int y, int w, int h);
+
+	int		(*FindFont)(char* name);
+	int		(*GetFontHeight)(int fontId);
+	int		(*GetTextWidth)(int fontId, char* text);
+	void	(*NewDrawString)(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+
+	void	(*DrawString)(float x, float y, int alignx, int charSize, int fontId, vec4_t color, const char* str);
 
 	void	(*_DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color); //deprecated
 	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);

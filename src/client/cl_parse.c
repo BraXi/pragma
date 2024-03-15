@@ -400,11 +400,9 @@ void CL_ParseServerMessage (void)
 			i = MSG_ReadByte (&net_message);
 			if (i == PRINT_CHAT)
 			{
-				S_StartLocalSound ("misc/talk.wav");
-				con.ormask = 128;
+				S_StartLocalSound ("misc/chat.wav");
 			}
 			Com_Printf ("%s", MSG_ReadString (&net_message));
-			con.ormask = 0;
 			break;
 			
 		case SVC_CENTERPRINT:

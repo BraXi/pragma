@@ -121,7 +121,7 @@ void SV_CheckGround(gentity_t* ent)
 	{
 		VectorCopy(trace.endpos, ent->v.origin);
 		ent->v.groundentity_num = trace.entitynum;
-		ent->v.groundentity_linkcount = trace.ent->linkcount;
+		ent->v.groundentity_linkcount = trace.ent->v.linkcount;
 		ent->v.velocity[2] = 0;
 	}
 }
@@ -271,7 +271,7 @@ int SV_FlyMove(gentity_t* ent, float time, int mask)
 			if (hit->v.solid == SOLID_BSP)
 			{
 				ent->v.groundentity_num = NUM_FOR_ENT(hit);
-				ent->v.groundentity_linkcount = hit->linkcount;
+				ent->v.groundentity_linkcount = hit->v.linkcount;
 			}
 		}
 		if (!trace.plane.normal[2])
@@ -468,7 +468,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 	VectorCopy(pusher->v.angles, pushed_p->angles);
 	if (pusher->client)
 	{
-		pushed_p->deltayaw = pusher->client->ps.pmove.delta_angles[YAW];
+		pushed_p->deltayaw = SHORT2ANGLE(pusher->client->ps.pmove.delta_angles[YAW]);
 	}
 	pushed_p++;
 
@@ -492,10 +492,6 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			continue;		// not linked in anywhere
 
 		// if the entity is standing on the pusher, it will definitely be moved
-		//if (check->client)
-		//{
-		//	Com_Printf("%s gnd %i pusher %i\n", check->client->pers.netname, check->v.groundentity_num, NUM_FOR_ENT(pusher));
-		//}
 		if ((int)check->v.groundentity_num != NUM_FOR_ENT(pusher))
 		{
 			// see if the ent needs to be tested
@@ -526,8 +522,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			if (check->client)
 			{	
 				// FIXME PRAGMA: does not rotate player at all
-				check->client->ps.pmove.delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
-				check->v.pm_delta_angles[YAW] += ANGLE2SHORT(amove[YAW]);
+				check->v.pm_delta_angles[YAW] = ANGLE2SHORT(amove[YAW]);
 			}
 			else
 			{
@@ -547,6 +542,8 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			if (check->v.groundentity_num != NUM_FOR_ENT(pusher))
 				check->v.groundentity_num = ENTITYNUM_NULL;
 
+			//if (check->client)
+			//	Com_Printf("%s gnd %i pusher %i\n", check->client->pers.netname, check->v.groundentity_num, NUM_FOR_ENT(pusher));
 			block = SV_TestEntityPosition(check);
 			if (!block)
 			{	// pushed ok
@@ -772,7 +769,7 @@ void SV_Physics_Toss(gentity_t* ent)
 			if (ent->v.velocity[2] < 60 || ent->v.movetype != MOVETYPE_BOUNCE)
 			{
 				ent->v.groundentity_num = trace.entitynum;
-				ent->v.groundentity_linkcount = trace.ent->linkcount;
+				ent->v.groundentity_linkcount = trace.ent->v.linkcount;
 				VectorCopy(vec3_origin, ent->v.velocity);
 				VectorCopy(vec3_origin, ent->v.avelocity);
 			}
