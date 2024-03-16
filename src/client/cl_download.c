@@ -215,7 +215,7 @@ void CL_RequestNextDownload(void)
 	unsigned	cgprogs_checksum;
 	char* mapFileName;
 
-	if (cls.state != ca_connected)
+	if (cls.state != CS_CONNECTED)
 		return;
 
 #if 0

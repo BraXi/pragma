@@ -250,7 +250,7 @@ void() Player_SetViewBlend =
 	vieworg = self.origin + getviewoffset(self);	
 	contents = pointcontents(vieworg); 
 
-#if 0 /*this is for waterwarp effect, not used in opengl renderer currently*/
+#if 1 /*this is for waterwarp effect, not used in opengl renderer currently*/
 	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
 		self.rdflags |= RDF_UNDERWATER;
 	else
@@ -259,18 +259,14 @@ void() Player_SetViewBlend =
 	
 	
 	// set blending based on contents of where our view is
-	if (contents & (/*CONTENTS_SOLID|*/CONTENTS_LAVA))
-		setviewblend(self, '1.0 0.3 0.0', 0.6);
+	if (contents & (CONTENTS_SOLID|CONTENTS_LAVA))
+		setviewblend(self, '1.0 0.3 0.0', 0.7);
 	else if (contents & CONTENTS_SLIME)
-		setviewblend(self, '0.0 0.1 0.05', 0.6);
+		setviewblend(self, '0.0 0.1 0.05', 0.7);
 	else if (contents & CONTENTS_WATER)
 		setviewblend(self, '0.5 0.3 0.2', 0.4);
 	else
 		setviewblend(self, vec_null, 0);
-	
-	// monsters have a little tinted vision
-	if(self.model == "models/mutant.md3")
-		setviewblend(self, '0.7 0.2 0.0', 0.35);	
 };
 
 

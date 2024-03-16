@@ -96,7 +96,7 @@ void V_AddDebugPrimitive(debugprimitive_t *obj)
 V_AddParticle
 =====================
 */
-void V_AddParticle (vec3_t org, vec3_t color, float alpha)
+void V_AddParticle (vec3_t org, vec3_t color, float alpha, vec2_t size)
 {
 	particle_t	*p;
 
@@ -109,6 +109,7 @@ void V_AddParticle (vec3_t org, vec3_t color, float alpha)
 	p = &r_particles[r_numparticles++];
 	VectorCopy (org, p->origin);
 	VectorCopy(color, p->color);
+	VectorCopy(size, p->size);
 	p->alpha = alpha;
 }
 
@@ -182,7 +183,7 @@ void V_TestParticles (void)
 		p = &r_particles[i];
 
 		for (j = 0; j < 3; j++)
-			p->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*d + cl.v_right[j]*r + cl.v_up[j]*u;
+			p->origin[j] = cl.refdef.view.origin[j] + cl.v_forward[j]*d + cl.v_right[j]*r + cl.v_up[j]*u;
 
 		VectorSet(p->color, 0.382353, 0.882353, 0.482353);
 		p->alpha = cl_testparticles->value;
@@ -230,25 +231,24 @@ V_TestLights
 If cl_testlights is set, create 32 lights models
 ================
 */
-void V_TestLights (void)
+static void V_TestLights()
 {
 	int			i, j;
 	float		f, r;
 	dlight_t	*dl;
 
-	r_numdlights = 32;
+	r_numdlights = MAX_DLIGHTS;
 	memset (r_dlights, 0, sizeof(r_dlights));
 
-	for (i=0 ; i<r_numdlights ; i++)
+	for (i = 0; i < r_numdlights; i++)
 	{
 		dl = &r_dlights[i];
 
 		r = 64 * ( (i%4) - 1.5 );
 		f = 64 * (i/4) + 128;
 
-		for (j=0 ; j<3 ; j++)
-			dl->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*f +
-			cl.v_right[j]*r;
+		for (j = 0; j < 3; j++)
+			dl->origin[j] = cl.refdef.view.origin[j] + (cl.v_forward[j] * f) + (cl.v_right[j] * r);
 		dl->color[0] = ((i%6)+1) & 1;
 		dl->color[1] = (((i%6)+1) & 2)>>1;
 		dl->color[2] = (((i%6)+1) & 4)>>2;
@@ -449,15 +449,21 @@ V_RenderView
 ==================
 */
 extern void SV_AddDebugPrimitives();
-void V_RenderView( float stereo_separation )
+void V_RenderView(float stereo_separation)
 {
-	extern int entitycmpfnc( const rentity_t *, const rentity_t * );
+	extern int entitycmpfnc(const rentity_t*, const rentity_t*);
 
-	if (cls.state != ca_active)
+	if (!cl.refresh_prepped) // still loading
+	{
+		re.RenderFrame(&cl.refdef, true);
+		return;		
+	}
+
+	if (cls.state != CS_ACTIVE) // not fully on server
+	{
+		re.RenderFrame(&cl.refdef, true);
 		return;
-
-	if (!cl.refresh_prepped)
-		return;			// still loading
+	}
 
 	if (cl_timedemo->value)
 	{
@@ -493,10 +499,10 @@ void V_RenderView( float stereo_separation )
 
 		if (cl_testblend->value)
 		{
-			cl.refdef.blend[0] = 1;
-			cl.refdef.blend[1] = 0.5;
-			cl.refdef.blend[2] = 0.25;
-			cl.refdef.blend[3] = 0.5;
+			cl.refdef.view.fx.blend[0] = 1;
+			cl.refdef.view.fx.blend[1] = 0.5;
+			cl.refdef.view.fx.blend[2] = 0.25;
+			cl.refdef.view.fx.blend[3] = 0.5;
 		}
 
 
@@ -506,21 +512,21 @@ void V_RenderView( float stereo_separation )
 			vec3_t tmp;
 
 			VectorScale( cl.v_right, stereo_separation, tmp );
-			VectorAdd( cl.refdef.vieworg, tmp, cl.refdef.vieworg );
+			VectorAdd( cl.refdef.view.origin, tmp, cl.refdef.view.origin );
 		}
 
 		// never let it sit exactly on a node line, because a water plane can
 		// dissapear when viewed with the eye exactly on it.
 		// the server protocol only specifies to 1/8 pixel, so add 1/16 in each axis
-		cl.refdef.vieworg[0] += 1.0/16;
-		cl.refdef.vieworg[1] += 1.0/16;
-		cl.refdef.vieworg[2] += 1.0/16;
+		cl.refdef.view.origin[0] += 1.0/16;
+		cl.refdef.view.origin[1] += 1.0/16;
+		cl.refdef.view.origin[2] += 1.0/16;
 
 		cl.refdef.x = scr_vrect.x;
 		cl.refdef.y = scr_vrect.y;
 		cl.refdef.width = scr_vrect.width;
 		cl.refdef.height = scr_vrect.height;
-		cl.refdef.fov_y = CalcFov (cl.refdef.fov_x, cl.refdef.width, cl.refdef.height);
+		cl.refdef.view.fov_y = CalcFov (cl.refdef.view.fov_x, cl.refdef.width, cl.refdef.height);
 		cl.refdef.time = cl.time*0.001;
 
 		cl.refdef.areabits = cl.frame.areabits;
@@ -535,7 +541,7 @@ void V_RenderView( float stereo_separation )
 			r_numdlights = 0;
 
 		if (!cl_add_blend->value)
-			VectorClear (cl.refdef.blend);
+			VectorClear (cl.refdef.view.fx.blend);
 
 
 		cl.refdef.num_entities = r_numentities;
@@ -552,20 +558,18 @@ void V_RenderView( float stereo_separation )
 
 		cl.refdef.lightstyles = r_lightstyles;
 
-		cl.refdef.rdflags = cl.frame.playerstate.rdflags;
+		cl.refdef.view.flags = cl.frame.playerstate.rdflags;
 
 		// sort entities for better cache locality
         qsort( cl.refdef.entities, cl.refdef.num_entities, sizeof( cl.refdef.entities[0] ), (int (*)(const void *, const void *))entitycmpfnc );
 	}
 
-	re.RenderFrame (&cl.refdef);
+	re.RenderFrame (&cl.refdef, false);
 
 	if (cl_stats->value)
 		Com_Printf ("ents:%i dlights:%i particles:%i dbg:%i\n", r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
 	if ( log_stats->value && ( log_stats_file != 0 ) )
 		fprintf( log_stats_file, "%i,%i,%i,%i,",r_numentities, r_numdlights, r_numparticles, r_numdebugprimitives);
-
-	re.SetColor(1, 1, 1, 1);
 
 	SCR_AddDirtyPoint (scr_vrect.x, scr_vrect.y);
 	SCR_AddDirtyPoint (scr_vrect.x+scr_vrect.width-1, scr_vrect.y+scr_vrect.height-1);
@@ -579,9 +583,9 @@ V_Viewpos_f
 */
 void V_Viewpos_f (void)
 {
-	Com_Printf ("(%i %i %i) : %i\n", (int)cl.refdef.vieworg[0],
-		(int)cl.refdef.vieworg[1], (int)cl.refdef.vieworg[2], 
-		(int)cl.refdef.viewangles[YAW]);
+	Com_Printf ("(%i %i %i) : yaw %i\n", (int)cl.refdef.view.origin[0],
+		(int)cl.refdef.view.origin[1], (int)cl.refdef.view.origin[2], 
+		(int)cl.refdef.view.angles[YAW]);
 }
 
 /*

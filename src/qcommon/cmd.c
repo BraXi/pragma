@@ -487,7 +487,7 @@ static	char		*cmd_argv[MAX_STRING_TOKENS];
 static	char		*cmd_null_string = "";
 static	char		cmd_args[MAX_STRING_CHARS];
 
-static	cmd_function_t	*cmd_functions;		// possible commands to execute
+static	cmd_function_t	*cmd_functions = NULL;		// possible commands to execute
 
 /*
 ============

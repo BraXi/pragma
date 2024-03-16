@@ -48,10 +48,11 @@ See the attached GNU General Public License v2 for more details.
 #endif
 
 // version string
-#define PRAGMA_VERSION "0.26" 
+#define PRAGMA_VERSION "0.27" 
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
 // version history:
+// 0.27 - 02.03.2024 -- experimental renderer
 // 0.26 - 21.02.2024
 // 0.25 - 18.01.2024 -- linux dedicated server
 // 0.24 - 17.01.2024 -- win32 dedicated server

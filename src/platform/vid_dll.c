@@ -29,7 +29,6 @@ cvar_t *win_noalttab;
 static UINT MSH_MOUSEWHEEL;
 
 // Console variables that we need to access from this module
-cvar_t		*r_gamma;
 cvar_t		*r_renderer;			// Name of Refresh DLL loaded
 cvar_t		*r_xpos;			// X coordinate of window position
 cvar_t		*r_ypos;			// Y coordinate of window position
@@ -532,6 +531,9 @@ qboolean VID_LoadRefresh( char *name )
 		return false;
 	}
 
+	ri.MemAlloc = Z_Malloc;
+	ri.MemFree = Z_Free;
+
 	ri.AddCommand = Cmd_AddCommand;
 	ri.RemoveCommand = Cmd_RemoveCommand;
 	ri.Cmd_Argc = Cmd_Argc;
@@ -540,6 +542,7 @@ qboolean VID_LoadRefresh( char *name )
 	ri.Printf = VID_Printf;
 	ri.Error = VID_Error;
 	ri.LoadFile = FS_LoadFile;
+	ri.LoadTextFile = FS_LoadTextFile;
 	ri.FreeFile = FS_FreeFile;
 	ri.GetGameDir = FS_Gamedir;
 	ri.Cvar_Get = Cvar_Get;
@@ -656,7 +659,6 @@ void VID_Init (void)
 	r_xpos = Cvar_Get ("r_xpos", "20", CVAR_ARCHIVE);
 	r_ypos = Cvar_Get ("r_ypos", "20", CVAR_ARCHIVE);
 	r_fullscreen = Cvar_Get ("r_fullscreen", "0", CVAR_ARCHIVE);
-	r_gamma = Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE );
 	win_noalttab = Cvar_Get( "win_noalttab", "0", CVAR_ARCHIVE );
 
 	/* Add some console commands that we want to handle */

@@ -375,14 +375,14 @@ qboolean GLimp_InitGL (void)
 		PFD_SUPPORT_OPENGL |			// support OpenGL
 		PFD_DOUBLEBUFFER,				// double buffered
 		PFD_TYPE_RGBA,					// RGBA type
-		24,								// 24-bit color depth
+		32,								// 32-bit color depth
 		0, 0, 0, 0, 0, 0,				// color bits ignored
 		0,								// no alpha buffer
 		0,								// shift bit ignored
 		0,								// no accumulation buffer
 		0, 0, 0, 0, 					// accum bits ignored
 		32,								// 32-bit z-buffer	
-		0,								// no stencil buffer
+		8,								// 8 bits for the stencilbuffer
 		0,								// no auxiliary buffer
 		PFD_MAIN_PLANE,					// main layer
 		0,								// reserved
@@ -530,15 +530,15 @@ void GLimp_BeginFrame( float camera_separation )
 
 	if ( camera_separation < 0 && gl_state.stereo_enabled )
 	{
-		qglDrawBuffer( GL_BACK_LEFT );
+		glDrawBuffer( GL_BACK_LEFT );
 	}
 	else if ( camera_separation > 0 && gl_state.stereo_enabled )
 	{
-		qglDrawBuffer( GL_BACK_RIGHT );
+		glDrawBuffer( GL_BACK_RIGHT );
 	}
 	else
 	{
-		qglDrawBuffer( GL_BACK );
+		glDrawBuffer( GL_BACK );
 	}
 }
 
@@ -553,9 +553,10 @@ void GLimp_EndFrame (void)
 {
 	int		err;
 
-	err = qglGetError();
-//	ri.Printf(PRINT_HIGH, "qglGetError=%i\n", err);
-	assert( err == GL_NO_ERROR );
+	err = glGetError();
+	if(err != GL_NO_ERROR)
+		ri.Printf(PRINT_ALERT, "glGetError = %i\n", err);
+	//assert( err == GL_NO_ERROR );
 
 	if ( _stricmp( r_drawbuffer->string, "GL_BACK" ) == 0 )
 	{

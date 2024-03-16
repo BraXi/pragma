@@ -26,8 +26,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../qcommon/qcommon.h"
 
 #define	MAX_DLIGHTS				64		// was 32
-#define	MAX_VISIBLE_ENTITIES	512		// max visible entities, was 128 [previously MAX_ENTITIES]
-#define	MAX_PARTICLES			4096
+#define	MAX_VISIBLE_ENTITIES	1024	// max entities a renderer can process, was 128 [previously MAX_ENTITIES]
+#define	MAX_PARTICLES			4096	// can be much higher with the new renderer
 #define	MAX_LIGHTSTYLES			256
 #define MAX_DEBUG_PRIMITIVES	4096
 
@@ -116,21 +116,26 @@ typedef struct
 
 typedef struct
 {
-	float		rgb[3];			// 0.0 - 2.0
+	vec3_t		rgb;			// 0.0 - 2.0
 	float		white;			// highest of rgb
 } lightstyle_t;
 
+typedef struct rdCamParams_s
+{
+	float	origin[3];
+	float	angles[3];
+	float	fov_x, fov_y;
+	int		flags;			// RDF_UNDERWATER, etc
+	rdViewFX_t fx;
+}rdCamParams_t;
 
 typedef struct
 {
 	int				x, y, width, height;// in virtual screen coordinates
-	float			fov_x, fov_y;
 
-	float			vieworg[3];
-	float			viewangles[3];
-	float			blend[4];			// rgba 0-1 full screen blend
 	float			time;				// time is used to auto animate
-	int				rdflags;			// RDF_UNDERWATER, etc
+	
+	rdCamParams_t	view;
 
 	byte			*areabits;			// if not NULL, only areas with set bits will be drawn
 
@@ -150,7 +155,7 @@ typedef struct
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'5')
+#define	API_VERSION		('B'+'X'+'I'+'6')
 
 //
 // these are the functions exported by the refresh module
@@ -166,10 +171,19 @@ typedef struct
 	// called before the library is unloaded
 	void	(*Shutdown) (void);
 
+	//
+	// video mode and refresh state management entry points
+	//
+	void	(*BeginFrame)(float camera_separation);
+	void	(*EndFrame) (void);
+	void	(*RenderFrame) (refdef_t* fd, qboolean onlyortho);
+
+	// when window focus changes
+	void	(*AppActivate)(qboolean activate);
+
 	// All data that will be used in a level should be
 	// registered before rendering any frames to prevent disk hits,
-	// but they can still be registered at a later time
-	// if necessary.
+	// but they can still be registered at a later time if necessary.
 	//
 	// EndRegistration will free any remaining data that wasn't registered.
 	// Any model_s or skin_s pointers from before the BeginRegistration
@@ -188,21 +202,22 @@ typedef struct
 
 	void	(*SetSky) (char *name, float rotate, vec3_t axis, vec3_t color);
 
-	void	(*RenderFrame) (refdef_t *fd);
+	void	(*GetImageSize) (int *w, int *h, char *name);	// will return 0 0 if not found
+	void	(*DrawImage) (int x, int y, char *name);
+	void	(*DrawStretchImage) (int x, int y, int w, int h, char *name);
+	void	(*DrawSingleChar) (int x, int y, int c, int charSize);
 
-	void	(*DrawGetPicSize) (int *w, int *h, char *name);	// will return 0 0 if not found
-	void	(*DrawPic) (int x, int y, char *name);
-	void	(*DrawStretchPic) (int x, int y, int w, int h, char *name);
-	void	(*DrawChar) (int x, int y, int c);
-	void	(*Draw_Char2)(float x, float y, float w, float h, int num, rgba_t color);
 	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
 	void	(*DrawFill) (int x, int y, int w, int h);
-	void	(*DrawFadeScreen) (float *rgba);
 
-	// Draw images for cinematic rendering (which can have a different palette)
-	void	(*DrawStretchRaw) (int x, int y, int w, int h, int cols, int rows, byte *data);
+	int		(*FindFont)(char* name);
+	int		(*GetFontHeight)(int fontId);
+	int		(*GetTextWidth)(int fontId, char* text);
+	void	(*NewDrawString)(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
 
-	void	(*DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+	void	(*DrawString)(float x, float y, int alignx, int charSize, int fontId, vec4_t color, const char* str);
+
+	void	(*_DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color); //deprecated
 	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);
 	void	(*NewDrawFill) (rect_t rect, rgba_t color);
 
@@ -210,15 +225,6 @@ typedef struct
 
 	int		(*TagIndexForName)(struct model_s* model, const char* tagName);
 	qboolean (*LerpTag)(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex);
-
-	//
-	// video mode and refresh state management entry points
-	//
-	void	(*BeginFrame)( float camera_separation );
-	void	(*EndFrame) (void);
-
-	void	(*AppActivate)( qboolean activate );
-
 } refexport_t;
 
 //
@@ -228,6 +234,9 @@ typedef struct
 {
 	void	(*Printf) (int print_level, char* str, ...);
 	void	(*Error) (int err_level, char *str, ...);
+	
+	void	*(*MemAlloc)(int size);
+	void	(*MemFree)(void *ptr);
 
 	void	(*AddCommand) (char *name, void(*cmd)(void));
 	void	(*RemoveCommand) (char *name);
@@ -239,6 +248,7 @@ typedef struct
 	// or a discrete file from anywhere in the quake search path  a -1 return means the file does not exist
 	// NULL can be passed for buf to just determine existance
 	int		(*LoadFile) (char *name, void **buf);
+	int		(*LoadTextFile)(char* filename, char** buffer);
 	void	(*FreeFile) (void *buf);
 	char	*(*GetGameDir) (void);
 

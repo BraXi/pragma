@@ -117,7 +117,7 @@ qboolean SCR_DrawCinematic (void)
 	if (!cin.pic)
 		return true;
 
-	re.DrawStretchRaw(0, 0, viddef.width, viddef.height, cin.width, cin.height, cin.pic);
+//	re.DrawStretchRaw(0, 0, viddef.width, viddef.height, cin.width, cin.height, cin.pic);
 	return true;
 }
 
@@ -140,7 +140,7 @@ void SCR_PlayCinematic (char *arg)
 		cl.cinematicframe = -1;
 		cl.cinematictime = 1;
 		SCR_EndLoadingPlaque ();
-		cls.state = ca_active;
+		cls.state = CS_ACTIVE;
 
 		if (!cin.pic)
 		{

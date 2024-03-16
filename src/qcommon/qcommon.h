@@ -364,8 +364,15 @@ enum clc_ops_e
 
 //==============================================
 
-// plyer_state_t communication
+#define	PS_FX_BLEND			(1<<0)
+#define	PS_FX_BLUR			(1<<1)
+#define	PS_FX_CONTRAST		(1<<2)
+#define	PS_FX_GRAYSCALE		(1<<3)
+#define	PS_FX_INVERSE		(1<<4)
+#define	PS_FX_INTENSITY		(1<<5)
+#define	PS_FX_NOISE			(1<<6)
 
+// plyer_state_t communication
 #define	PS_M_TYPE			(1<<0)
 #define	PS_M_ORIGIN			(1<<1)
 #define	PS_M_VELOCITY		(1<<2)
@@ -377,7 +384,7 @@ enum clc_ops_e
 #define	PS_VIEWOFFSET		(1<<7)
 #define	PS_VIEWANGLES		(1<<8)
 #define	PS_KICKANGLES		(1<<9)
-#define	PS_BLEND			(1<<10)
+#define	PS_EFFECTS			(1<<10)
 #define	PS_FOV				(1<<11)
 #define	PS_VIEWMODEL_INDEX	(1<<12)
 #define	PS_VIEWMODEL_PARAMS	(1<<13)

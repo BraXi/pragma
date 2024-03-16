@@ -24,6 +24,10 @@ msurface_t	*warpface;
 #define	SUBDIVIDE_SIZE	64
 //#define	SUBDIVIDE_SIZE	1024
 
+vertexbuffer_t vb_sky;
+static glvert_t skyverts[6];
+static int numSkyVerts;
+
 void BoundPoly (int numverts, float *verts, vec3_t mins, vec3_t maxs)
 {
 	int		i, j;
@@ -212,41 +216,80 @@ void EmitWaterPolys (msurface_t *fa)
 		scroll = -64 * ( (r_newrefdef.time*0.5) - (int)(r_newrefdef.time*0.5) );
 	else
 		scroll = 0;
+
 	for (bp=fa->polys ; bp ; bp=bp->next)
 	{
 		p = bp;
 
-		qglBegin (GL_TRIANGLE_FAN);
+		glBegin (GL_TRIANGLE_FAN);
 		for (i=0,v=p->verts[0] ; i<p->numverts ; i++, v+=VERTEXSIZE)
 		{
 			os = v[3];
 			ot = v[4];
 
-#if !id386
 			s = os + r_turbsin[(int)((ot*0.125+r_newrefdef.time) * TURBSCALE) & 255];
-#else
-			s = os + r_turbsin[Q_ftol( ((ot*0.125+rdt) * TURBSCALE) ) & 255];
-#endif
 			s += scroll;
 			s *= (1.0/64);
 
-#if !id386
 			t = ot + r_turbsin[(int)((os*0.125+rdt) * TURBSCALE) & 255];
-#else
-			t = ot + r_turbsin[Q_ftol( ((os*0.125+rdt) * TURBSCALE) ) & 255];
-#endif
 			t *= (1.0/64);
 
-			qglTexCoord2f (s, t);
-			qglVertex3fv (v);
+			glTexCoord2f (s, t);
+			glVertex3fv (v);
 		}
-		qglEnd ();
+		glEnd ();
 	}
 }
 
+/*
+=============
+EmitWaterPolys2
+
+Does a water warp on the pre-fragmented glpoly_t chain
+=============
+*/
+void EmitWaterPolys2(msurface_t* fa)
+{
+	glpoly_t* p, * bp;
+	float* v;
+	int			i;
+	float		s, t, os, ot;
+	float		scroll;
+	float		rdt = r_newrefdef.time;
+
+	if (fa->texinfo->flags & SURF_FLOWING)
+		scroll = -64 * ((r_newrefdef.time * 0.5) - (int)(r_newrefdef.time * 0.5));
+	else
+		scroll = 0;
+
+	for (bp = fa->polys; bp; bp = bp->next)
+	{
+		p = bp;
+
+		glBegin(GL_TRIANGLE_FAN);
+		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
+		{
+			os = v[3];
+			ot = v[4];
+
+			s = os + r_turbsin[(int)((ot * 0.125 + r_newrefdef.time) * TURBSCALE) & 255];
+			s += scroll;
+			s *= (1.0 / 64);
+
+			t = ot + r_turbsin[(int)((os * 0.125 + rdt) * TURBSCALE) & 255];
+			t *= (1.0 / 64);
+
+			glMultiTexCoord2f(GL_TEXTURE0, s, t); //glTexCoord2f(s, t);
+//			glMultiTexCoord2f(GL_TEXTURE1, v[5], v[6]); // in case we have proper lightmaps on it	
+			glVertex3fv(v);
+		}
+		glEnd();
+	}
+}
 
 //===================================================================
 
+static char* sky_tex_prefix[6] = { "rt", "bk", "lf", "ft", "up", "dn" }; // environment map names
 
 vec3_t	skyclip[6] = {
 	{1,1,0},
@@ -304,13 +347,13 @@ void DrawSkyPolygon (int nump, vec3_t vecs)
 	c_sky++;
 
 #if 0
-	qglBegin (GL_POLYGON);
+	glBegin (GL_POLYGON);
 	for (i=0 ; i<nump ; i++, vecs+=3)
 	{
 		VectorAdd(vecs, r_origin, v);
-		qglVertex3fv (v);
+		glVertex3fv (v);
 	}
-	qglEnd();
+	glEnd();
 	return;
 #endif
 
@@ -515,9 +558,9 @@ void MakeSkyVec (float s, float t, int axis)
 	vec3_t		v, b;
 	int			j, k;
 
-	b[0] = s*5300;
-	b[1] = t*5300;
-	b[2] = 5300;
+	b[0] = s*2048;
+	b[1] = t*2048;
+	b[2] = 2048;
 
 	for (j=0 ; j<3 ; j++)
 	{
@@ -542,8 +585,10 @@ void MakeSkyVec (float s, float t, int axis)
 		t = sky_max;
 
 //	t = 1.0 - t;	// braxi -- commented out, TGAs were upside down
-	qglTexCoord2f (s, t);
-	qglVertex3fv (v);
+	VectorCopy(v, skyverts[numSkyVerts].xyz);
+	skyverts[numSkyVerts].st[0] = s;
+	skyverts[numSkyVerts].st[1] = t;
+	numSkyVerts++;
 }
 
 /*
@@ -551,20 +596,10 @@ void MakeSkyVec (float s, float t, int axis)
 R_DrawSkyBox
 ==============
 */
-int	skytexorder[6] = {0,2,1,3,4,5};
+static int skytexorder[6] = {0,2,1,3,4,5};
 void R_DrawSkyBox (void)
 {
 	int		i;
-
-#if 0
-	R_Blend(true);
-	GL_TexEnv( GL_MODULATE );
-	qglColor4f (1,1,1,0.5);
-	R_DepthTest(false);
-#endif
-
-	GL_TexEnv(GL_MODULATE); // allow sky colors change
-	qglColor4f(skycolor[0], skycolor[1], skycolor[2], 1);
 
 	if (skyrotate)
 	{	// check for no sky at all
@@ -576,14 +611,15 @@ void R_DrawSkyBox (void)
 			return;		// nothing visible
 	}
 
-	qglPushMatrix ();
-	qglTranslatef (r_origin[0], r_origin[1], r_origin[2]);
-	qglRotatef (r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
+	glPushMatrix ();
+	glTranslatef (r_origin[0], r_origin[1], r_origin[2]);
+	glRotatef (r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
 
-	for (i=0 ; i<6 ; i++)
+	for (i = 0; i < 6; i++)
 	{
 		if (skyrotate)
-		{	// hack, forces full sky to draw when rotating
+		{
+			// Hack to force full sky to draw when rotating
 			skymins[0][i] = -1;
 			skymins[1][i] = -1;
 			skymaxs[0][i] = 1;
@@ -592,27 +628,23 @@ void R_DrawSkyBox (void)
 
 		if (skymins[0][i] >= skymaxs[0][i] || skymins[1][i] >= skymaxs[1][i])
 			continue;
+	
+		numSkyVerts = 0;
+		MakeSkyVec(skymins[0][i], skymins[1][i], i);
+		MakeSkyVec(skymins[0][i], skymaxs[1][i], i);
+		MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
+		MakeSkyVec(skymins[0][i], skymins[1][i], i);
+		MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
+		MakeSkyVec(skymaxs[0][i], skymins[1][i], i);
+		R_UpdateVertexBuffer(&vb_sky, skyverts, numSkyVerts, V_UV);
 
-		GL_Bind (sky_images[skytexorder[i]]->texnum);
-
-		qglBegin (GL_QUADS);
-		MakeSkyVec (skymins[0][i], skymins[1][i], i);
-		MakeSkyVec (skymins[0][i], skymaxs[1][i], i);
-		MakeSkyVec (skymaxs[0][i], skymaxs[1][i], i);
-		MakeSkyVec (skymaxs[0][i], skymins[1][i], i);
-		qglEnd ();
+		R_BindProgram(GLPROG_SKY);
+		R_ProgUniform4f(LOC_COLOR4, skycolor[0], skycolor[1], skycolor[2], 1.0f);
+		R_BindTexture(sky_images[skytexorder[i]]->texnum);
+		R_DrawVertexBuffer(&vb_sky, 0, 0);
+		R_UnbindProgram();
 	}
-	qglPopMatrix ();
-
-	GL_TexEnv(GL_REPLACE);
-	qglColor4f(1, 1, 1, 1);
-
-#if 0
-	R_Blend(false);
-	GL_TexEnv(GL_REPLACE);
-	qglColor4f (1,1,1,0.5);
-	R_DepthTest(true);
-#endif
+	glPopMatrix ();
 }
 
 
@@ -622,8 +654,6 @@ R_SetSky
 ============
 */
 
-//#define SKY_CHOPSIZE
-static char	*suf[6] = {"rt", "bk", "lf", "ft", "up", "dn"}; // 3dstudio environment map names
 void R_SetSky (char *name, float rotate, vec3_t axis, vec3_t color)
 {
 	int		i;
@@ -637,30 +667,13 @@ void R_SetSky (char *name, float rotate, vec3_t axis, vec3_t color)
 
 	for (i=0 ; i<6 ; i++)
 	{
+		Com_sprintf (pathname, sizeof(pathname), "env/%s_%s.tga", skyname, sky_tex_prefix[i]);
 
-#ifdef SKY_CHOPSIZE
-		// chop down rotating skies for less memory
-		if (r_skymip->value || skyrotate)
-			r_picmip->value++;
-#endif
-		Com_sprintf (pathname, sizeof(pathname), "env/%s_%s.tga", skyname, suf[i]);
-
-		sky_images[i] = GL_FindImage (pathname, it_sky);
+		sky_images[i] = R_FindTexture (pathname, it_sky, true);
 		if (!sky_images[i])
-			sky_images[i] = r_notexture;
+			sky_images[i] = r_texture_missing;
 
-#ifdef SKY_CHOPSIZE
-		if (r_skymip->value || skyrotate)
-		{	// take less memory
-			r_picmip->value--;
-			sky_min = 1.0/256;
-			sky_max = 255.0/256;
-		}
-		else	
-#endif 
-		{
-			sky_min = 1.0/512;
-			sky_max = 511.0/512;
-		}
+		sky_min = 1.0/512;
+		sky_max = 511.0/512;
 	}
 }

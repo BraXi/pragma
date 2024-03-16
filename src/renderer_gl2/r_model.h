@@ -78,7 +78,7 @@ typedef struct glpoly_s
 	struct	glpoly_s	*next;
 	struct	glpoly_s	*chain;
 	int		numverts;
-	int		flags;			// for SURF_UNDERWATER (not needed anymore?)
+	int		flags;					// for SURF_UNDERWATER (not needed anymore?)
 	float	verts[4][VERTEXSIZE];	// variable sized (xyz s1t1 s2t2)
 } glpoly_t;
 
@@ -120,7 +120,8 @@ typedef struct mnode_s
 	int			contents;		// -1, to differentiate from leafs
 	int			visframe;		// node needs to be traversed if current
 	
-	float		minmaxs[6];		// for bounding box culling
+	// for bounding box culling
+	vec3_t		mins, maxs;
 
 	struct mnode_s	*parent;
 
@@ -140,7 +141,8 @@ typedef struct mleaf_s
 	int			contents;		// wil be a negative contents number
 	int			visframe;		// node needs to be traversed if current
 
-	float		minmaxs[6];		// for bounding box culling
+	// for bounding box culling
+	vec3_t		mins, maxs;		
 
 	struct mnode_s	*parent;
 
@@ -155,26 +157,15 @@ typedef struct mleaf_s
 
 //===================================================================
 
-//
-// 
-//
-
-typedef struct vert_s // for vbo
-{
-	float	xyz[3];
-	float	normal[2];
-	float	texcoord[2];
-//	float	color[4];
-} vert_t;
-
-
 typedef struct model_s
 {
 	char		name[MAX_QPATH];
+	int			index;		// index to model array
 
 	int			registration_sequence;
 
 	modtype_t	type;
+
 	int			numframes;
 	
 	int			flags;
@@ -235,15 +226,15 @@ typedef struct model_s
 //
 // for alias models and sprites
 //
-	image_t		*skins[32];
+	image_t		*images[32];
 
 	int			extradatasize;
 	void		*extradata;
 
+	int			cullDist;	// don't draw if farther than this
 
 	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MD3
-	int			nv [MD3_MAX_SURFACES];
-	vec3_t		 *normals[MD3_MAX_SURFACES];
+	vertexbuffer_t *vb[MD3_MAX_SURFACES];
 } model_t;
 
 //============================================================================

@@ -94,7 +94,7 @@ struct gentity_s
 	struct gclient_s	*client;	// NULL if not a player the server expects the first part of gclient_s to be a player_state_t but the rest of it is opaque
 
 	qboolean	inuse;
-	int			linkcount;
+//	int			linkcount;
 	link_t		area;				// linked to a division node or leaf	
 	int			num_clusters;		// if -1, use headnode instead
 	int			clusternums[MAX_ENT_CLUSTERS];

@@ -226,23 +226,26 @@ model_t *Mod_ForName (char *name, qboolean crash)
 	//
 	// find a free model slot spot
 	//
-	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++)
+	for (i = 0, mod=mod_known ; i< mod_numknown; i++, mod++)
 	{
 		if (!mod->name[0])
 			break;	// free spot
 	}
+
 	if (i == mod_numknown)
 	{
 		if (mod_numknown == MAX_MOD_KNOWN)
 			ri.Error (ERR_DROP, "Mod_ForName: hit limit of %d models", MAX_MOD_KNOWN);
 		mod_numknown++;
 	}
+
 	strcpy (mod->name, name);
-	
+	mod->index = i;
+
 	//
 	// load the file
 	//
-	modfilelen = ri.LoadFile (mod->name, &buf);
+	modfilelen = ri.LoadFile(mod->name, &buf);
 	if (!buf)
 	{
 		if (crash)
@@ -272,7 +275,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 		Mod_LoadSP2(mod, buf);
 		break;
 	
-	case BSP_IDENT: /* Quake2 .bsp */
+	case BSP_IDENT: /* Quake2 .bsp v38*/
 		loadmodel->extradata = Hunk_Begin (0x1000000);
 		Mod_LoadBSP(mod, buf);
 		break;
@@ -488,17 +491,18 @@ void Mod_LoadTexinfo (lump_t *l)
 
 		// load up texture
 		Com_sprintf(name, sizeof(name), "textures/%s.tga", in->texture);
-		out->image = GL_FindImage(name, it_texture);
+		out->image = R_FindTexture(name, it_texture, true);
 		if (!out->image)
 		{
 			ri.Printf(PRINT_ALL, "Mod_LoadTexinfo: couldn't load '%s'\n", name);
-			out->image = r_notexture;
+			out->image = r_texture_missing;
 		}
 
 	}
 
 	// count animation frames
-	for (i=0 ; i<count ; i++)
+	// todo - update for materials
+	for (i = 0; i< count; i++)
 	{
 		out = &loadmodel->texinfo[i];
 		out->numframes = 1;
@@ -584,7 +588,8 @@ void Mod_LoadFaces (lump_t *l)
 	if (l->filelen % sizeof(*in))
 		ri.Error (ERR_DROP, "Mod_LoadFaces: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc ( count*sizeof(*out));	
+
+	out = Hunk_Alloc( count*sizeof(*out));	
 
 	loadmodel->surfaces = out;
 	loadmodel->numsurfaces = count;
@@ -614,18 +619,17 @@ void Mod_LoadFaces (lump_t *l)
 
 		CalcSurfaceExtents (out);
 				
-	// lighting info
-
-		for (i=0 ; i<MAXLIGHTMAPS ; i++)
+		// lighting info
+		for (i = 0; i< MAXLIGHTMAPS; i++)
 			out->styles[i] = in->styles[i];
+
 		i = LittleLong(in->lightofs);
 		if (i == -1)
 			out->samples = NULL;
 		else
 			out->samples = loadmodel->lightdata + i;
 		
-	// set the drawing flags
-		
+		// set the drawing flags
 		if (out->texinfo->flags & SURF_WARP)
 		{
 			out->flags |= SURF_DRAWTURB;
@@ -688,8 +692,8 @@ void Mod_LoadNodes (lump_t *l)
 	{
 		for (j=0 ; j<3 ; j++)
 		{
-			out->minmaxs[j] = LittleShort (in->mins[j]);
-			out->minmaxs[3+j] = LittleShort (in->maxs[j]);
+			out->mins[j] = LittleShort (in->mins[j]);
+			out->maxs[j] = LittleShort (in->maxs[j]);
 		}
 	
 		p = LittleLong(in->planenum);
@@ -737,8 +741,8 @@ void Mod_LoadLeafs (lump_t *l)
 	{
 		for (j=0 ; j<3 ; j++)
 		{
-			out->minmaxs[j] = LittleShort (in->mins[j]);
-			out->minmaxs[3+j] = LittleShort (in->maxs[j]);
+			out->mins[j] = LittleShort (in->mins[j]);
+			out->maxs[j] = LittleShort (in->maxs[j]);
 		}
 
 		p = LittleLong(in->contents);
@@ -747,12 +751,12 @@ void Mod_LoadLeafs (lump_t *l)
 		out->cluster = LittleShort(in->cluster);
 		out->area = LittleShort(in->area);
 
-		out->firstmarksurface = loadmodel->marksurfaces +
-			LittleShort(in->firstleafface);
+		out->firstmarksurface = loadmodel->marksurfaces + LittleShort(in->firstleafface);
 		out->nummarksurfaces = LittleShort(in->numleaffaces);
 		
-		// gl underwater warp
+	
 #if 1
+		// gl underwater warp
 		if (out->contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA) )
 		{
 			for (j=0 ; j<out->nummarksurfaces ; j++)
@@ -974,8 +978,7 @@ void Mod_LoadSP2 (model_t *mod, void *buffer)
 		sprout->frames[i].origin_x = LittleLong (sprin->frames[i].origin_x);
 		sprout->frames[i].origin_y = LittleLong (sprin->frames[i].origin_y);
 		memcpy (sprout->frames[i].name, sprin->frames[i].name, MAX_QPATH);
-		mod->skins[i] = GL_FindImage (sprout->frames[i].name,
-			it_sprite);
+		mod->images[i] = R_FindTexture (sprout->frames[i].name, it_sprite, true);
 	}
 
 	mod->type = MOD_SPRITE;
@@ -1027,7 +1030,7 @@ struct model_s *R_RegisterModel (char *name)
 	md3Surface_t* surf;
 	md3Shader_t* shader;
 
-	mod = Mod_ForName (name, false);
+	mod = Mod_ForName(name, false);
 	if (mod)
 	{
 		mod->registration_sequence = registration_sequence;
@@ -1038,7 +1041,7 @@ struct model_s *R_RegisterModel (char *name)
 			sp2Header = (sp2Header_t *)mod->extradata;
 			mod->numframes = sp2Header->numframes;
 			for(i = 0; i< sp2Header->numframes; i++)
-				mod->skins[i] = GL_FindImage (sp2Header->frames[i].name, it_sprite);
+				mod->images[i] = R_FindTexture (sp2Header->frames[i].name, it_sprite, true);
 		}
 		else if (mod->type == MOD_MD3)
 		{
@@ -1050,8 +1053,8 @@ struct model_s *R_RegisterModel (char *name)
 				shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 				for (j = 0; j < surf->numShaders; j++, shader++)
 				{
-					mod->skins[i+j] = GL_FindImage(shader->name, it_model);
-					shader->shaderIndex = mod->skins[i]->texnum;
+					mod->images[i+j] = R_FindTexture(shader->name, it_model, true);
+					shader->shaderIndex = mod->images[i]->texnum;
 				}
 				surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 			}
@@ -1087,7 +1090,7 @@ void R_EndRegistration (void)
 		}
 	}
 
-	GL_FreeUnusedImages ();
+	R_FreeUnusedTextures ();
 }
 
 
@@ -1101,6 +1104,11 @@ Mod_Free
 */
 void Mod_Free(model_t* mod)
 {
+	for (int i = 0; i < MD3_MAX_SURFACES; i++)
+	{
+		R_FreeVertexBuffer(mod->vb[i]);
+	}
+
 	if (mod->extradata)
 		Hunk_Free(mod->extradata);
 
