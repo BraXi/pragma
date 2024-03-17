@@ -1166,7 +1166,7 @@ void R_MarkLeaves (void)
 	}
 
 #if 0
-	for (i=0 ; i<r_worldmodel->vis->numclusters ; i++)
+	for (i=0 ; i<r_worldmodel->vis->cm_world.numClusters ; i++)
 	{
 		if (vis[i>>3] & (1<<(i&7)))
 		{

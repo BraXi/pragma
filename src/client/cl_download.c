@@ -190,14 +190,14 @@ static void CL_DownloadMapTextures(float allowDownload, char* fileDir, char* fil
 	if (precache_check == TEXTURE_CNT + 1)
 	{
 		// from qcommon/cmodel.c
-		extern int			numtexinfo;
-		extern mapsurface_t	map_surfaces[];
+		extern int			cm_world.numSurfaceInfos;
+		extern mapsurface_t	cm_world.surfaceInfos[];
 
 		if (allowDownload)
 		{
-			while (precache_tex < numtexinfo)
+			while (precache_tex < cm_world.numSurfaceInfos)
 			{
-				sprintf(fn, "%s/%s.%s", fileDir, map_surfaces[precache_tex++].rname, fileExt);
+				sprintf(fn, "%s/%s.%s", fileDir, cm_world.surfaceInfos[precache_tex++].rname, fileExt);
 				if (!CL_CheckOrDownloadFile(fn))
 					return; // started a download
 			}

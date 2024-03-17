@@ -336,7 +336,9 @@ void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color,
 			CurX -= w;
 	}
 
+	R_Blend(true);
 	R_DrawTextInternal(CurX, CurY, f, scale, color, alignX, text, strLen);
+	R_Blend(false);
 }
 
 

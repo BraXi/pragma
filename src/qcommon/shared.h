@@ -376,7 +376,7 @@ typedef struct cmodel_s
 
 typedef struct csurface_s
 {
-	char		name[16];
+	char		name[32]; // braxi -- was 16, probably mistakenly
 	int			flags;
 	int			value;
 } csurface_t;

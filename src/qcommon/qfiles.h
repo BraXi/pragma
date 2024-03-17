@@ -184,6 +184,9 @@ typedef struct
 	sp2Frame_t	frames[1];			// variable sized
 } sp2Header_t;
 
+// key / value pair sizes
+#define	MAX_KEY		32
+#define	MAX_VALUE	1024
 
 /*
 ==============================================================================
@@ -193,9 +196,11 @@ typedef struct
 ==============================================================================
 */
 
-#define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I') // little-endian "IBSP"
+//
+// REGULAR QUAKE2 BSP FORMAT
+//
+#define BSP_IDENT		(('P'<<24)+('S'<<16)+('B'<<8)+'I') // little-endian "IBSP"
 #define BSP_VERSION	38
-
 
 // upper design bounds
 // leaffaces, leafbrushes, planes, and verts are still bounded by 16 bit short limits
@@ -205,8 +210,8 @@ typedef struct
 #define	MAX_MAP_ENTSTRING	0x40000
 #define	MAX_MAP_TEXINFO		8192
 
-#define	MAX_MAP_AREAS		256
-#define	MAX_MAP_AREAPORTALS	1024
+#define	MAX_MAP_AREAS		256		// the same in qbism
+#define	MAX_MAP_AREAPORTALS	1024	// the same in qbism
 #define	MAX_MAP_PLANES		65536
 #define	MAX_MAP_NODES		65536
 #define	MAX_MAP_BRUSHSIDES	65536
@@ -221,10 +226,30 @@ typedef struct
 #define	MAX_MAP_LIGHTING	0x200000
 #define	MAX_MAP_VISIBILITY	0x100000
 
-// key / value pair sizes
 
-#define	MAX_KEY		32
-#define	MAX_VALUE	1024
+//
+// QBISM EXTENDED QUKE2 BSP FORMAT
+//
+#define QBISM_IDENT				 ('Q' | ('B' << 8) | ('S' << 16) | ('P' << 24))
+
+#define MAX_MAP_MODELS_QBSP      131072
+#define MAX_MAP_BRUSHES_QBSP     1048576
+#define MAX_MAP_ENTITIES_QBSP    131072
+#define MAX_MAP_ENTSTRING_QBSP   13631488
+#define MAX_MAP_TEXINFO_QBSP     1048576
+#define MAX_MAP_PLANES_QBSP      1048576
+#define MAX_MAP_NODES_QBSP       1048576
+#define MAX_MAP_LEAFS_QBSP       1048576
+#define MAX_MAP_VERTS_QBSP       4194304
+#define MAX_MAP_FACES_QBSP       1048576
+#define MAX_MAP_LEAFFACES_QBSP   1048576
+#define MAX_MAP_LEAFBRUSHES_QBSP 1048576
+#define MAX_MAP_EDGES_QBSP       1048576
+#define MAX_MAP_BRUSHSIDES_QBSP  4194304
+#define MAX_MAP_PORTALS_QBSP     1048576
+#define MAX_MAP_SURFEDGES_QBSP   4194304
+#define MAX_MAP_LIGHTING_QBSP    54525952
+#define MAX_MAP_VISIBILITY_QBSP  0x8000000
 
 //=============================================================================
 
@@ -348,6 +373,13 @@ typedef struct
 #define	SURF_HINT		0x100	// make a primary bsp splitter
 #define	SURF_SKIP		0x200	// completely ignore, allowing non-closed brushes
 
+#define SURF_ALPHATEST	(1 << 25) //alpha test flag
+#define SURF_N64_UV		(1 << 28) //N64 UV and surface flag hack
+#define SURF_SCROLLX	(1 << 29) //slow x scroll
+#define SURF_SCROLLY	(1 << 30) //slow y scroll
+#define SURF_SCROLLFLIP	(1 << 31) //flip scroll directon
+
+
 typedef struct
 {
 	int			planenum;
@@ -357,6 +389,16 @@ typedef struct
 	unsigned short	firstface;
 	unsigned short	numfaces;	// counting both sides
 } dnode_t;
+
+typedef struct
+{
+	int			planenum;
+	int			children[2];	// negative numbers are -(leafs+1), not nodes
+	float		mins[3];		// for frustom culling
+	float		maxs[3];
+	unsigned int firstface;
+	unsigned int numfaces; // counting both sides
+} dnode_ext_t;	// QBSP
 
 
 typedef struct texinfo_s
@@ -376,6 +418,12 @@ typedef struct
 	unsigned short	v[2];		// vertex numbers
 } dedge_t;
 
+typedef struct
+{
+	unsigned int v[2]; // vertex numbers
+} dedge_ext_t; // QBSP
+
+
 #define	MAXLIGHTMAPS	4
 typedef struct
 {
@@ -390,6 +438,21 @@ typedef struct
 	byte		styles[MAXLIGHTMAPS];
 	int			lightofs;		// start of [numstyles*surfsize] samples
 } dface_t;
+
+typedef struct
+{
+	unsigned int planenum;
+	int			side;
+
+	int			firstedge; // we must support > 64k edges
+	int			numedges;
+	int			texinfo;
+
+	// lighting info
+	byte		styles[MAXLIGHTMAPS];
+	int			lightofs; // start of [numstyles*surfsize] samples
+} dface_ext_t; // QBSP
+
 
 typedef struct
 {
@@ -410,9 +473,33 @@ typedef struct
 
 typedef struct
 {
+	int				contents; // OR of all brushes (not needed?)
+
+	int				cluster;
+	int				area;
+
+	float			mins[3]; // for frustum culling
+	float			maxs[3];
+
+	unsigned int	firstleafface;
+	unsigned int	numleaffaces;
+
+	unsigned int	firstleafbrush;
+	unsigned int	numleafbrushes;
+} dleaf_ext_t; // QBSP
+
+
+typedef struct
+{
 	unsigned short	planenum;		// facing out of the leaf
-	short	texinfo;
+	short			texinfo;
 } dbrushside_t;
+
+typedef struct
+{
+	unsigned int	planenum; // facing out of the leaf
+	int				texinfo;
+} dbrushside_ext_t; // qb: qbsp
 
 typedef struct
 {

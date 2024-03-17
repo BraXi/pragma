@@ -227,8 +227,8 @@ void R_DrawStretchImage (int x, int y, int w, int h, char * name)
 {
 	image_t *image;
 
-	//image = R_RegisterPic (pic);
-	image = R_FindTexture(name, it_gui, false);
+	image = R_RegisterPic (name);
+	//image = R_FindTexture(name, it_gui, false);
 	if (!image)
 	{
 		ri.Printf(PRINT_ALL, "Image not precached: %s\n", name);
@@ -251,7 +251,9 @@ void R_DrawStretchImage (int x, int y, int w, int h, char * name)
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_BindTexture(image->texnum);
+	R_Blend(true);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
+	R_Blend(false);
 }
 
 

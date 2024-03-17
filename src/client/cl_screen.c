@@ -100,8 +100,7 @@ void SCR_CenterPrint (char *str)
 	}
 
 	// echo it to the console
-	Com_Printf("\n====================\n");
-
+	Com_Printf("====================\n");
 	s = str;
 	do	
 	{
@@ -109,6 +108,7 @@ void SCR_CenterPrint (char *str)
 		for (l=0 ; l<40 ; l++)
 			if (s[l] == '\n' || !s[l])
 				break;
+
 		for (i=0 ; i<(40-l)/2 ; i++)
 			line[i] = ' ';
 
@@ -129,66 +129,42 @@ void SCR_CenterPrint (char *str)
 			break;
 		s++;		// skip the \n
 	} while (1);
-	Com_Printf("\n====================\n");
+	Com_Printf("====================\n");
 	Con_ClearNotify ();
 }
 
 
-void SCR_DrawCenterString (void)
-{
-	char	*start;
-	int		l;
-	int		j;
-	int		x, y;
-	int		remaining;
-
-// the finale prints the characters one at a time
-	remaining = 9999;
-
-	scr_erase_center = 0;
-	start = scr_centerstring;
-
-	if (scr_center_lines <= 4)
-		y = viddef.height*0.35;
-	else
-		y = 48;
-
-	do	
-	{
-	// scan the width of the line
-		for (l=0 ; l<40 ; l++)
-			if (start[l] == '\n' || !start[l])
-				break;
-		x = (viddef.width - l*8)/2;
-		SCR_AddDirtyPoint (x, y);
-		for (j=0 ; j<l ; j++, x+=8)
-		{
-			re.DrawSingleChar (x, y, start[j], 8);	
-			if (!remaining--)
-				return;
-		}
-		SCR_AddDirtyPoint (x, y+8);
-			
-		y += 8;
-
-		while (*start && *start != '\n')
-			start++;
-
-		if (!*start)
-			break;
-		start++;		// skip the \n
-	} while (1);
-}
-
 void SCR_CheckDrawCenterString (void)
 {
+	int x, y;
+	int font = 0;
+	float scale = 0.35;
+	vec4_t color = { 0,0,0,1 };
+
 	scr_centertime_off -= cls.frametime;
 	
 	if (scr_centertime_off <= 0)
 		return;
 
-	re.SetColor(1, 1, 1, 1);
-	SCR_DrawCenterString ();
+	x = viddef.width / 2;
+	y = viddef.height / 6;
+
+	char* text = scr_centerstring;
+	while (*text && *text == '\n')
+	{
+		text++;
+	}
+
+	int width = re.GetTextWidth(font, text) * scale; // text width in pixels
+	int charheight = re.GetFontHeight(font) * scale; // text height in pixels
+
+	re.SetColor(1,1,1, 0.9);
+	re.DrawFill(x - (width / 2) - 24, y - 4, width + 48, charheight + 8);
+
+	re.NewDrawString(x, y, XALIGN_CENTER, font, scale, color, text);
+	//y += re.GetFontHeight(font) * scale;
+
+	//SCR_DrawCenterString ();
 }
 
 //=============================================================================

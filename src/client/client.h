@@ -38,10 +38,9 @@ See the attached GNU General Public License v2 for more details.
 #define CHAR_SIZEX 8
 typedef enum
 {
-	XALIGN_NONE = 0,
 	XALIGN_LEFT = 0,
-	XALIGN_RIGHT = 1,
-	XALIGN_CENTER = 2
+	XALIGN_CENTER = 1,
+	XALIGN_RIGHT = 2
 } UI_AlignX;
 
 //=============================================================================
