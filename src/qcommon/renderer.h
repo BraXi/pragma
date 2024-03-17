@@ -258,6 +258,9 @@ typedef struct
 
 	qboolean	(*Vid_GetModeInfo)( int *width, int *height, int mode );
 	void		(*Vid_NewWindow)( int width, int height );
+
+	unsigned int (*GetBSPLimit)(bspDataType type, qboolean extendedbsp);
+	unsigned int (*GetBSPElementSize)(bspDataType type, qboolean extendedbsp);
 } refimport_t;
 
 

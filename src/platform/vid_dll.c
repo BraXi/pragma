@@ -506,6 +506,30 @@ void VID_FreeReflib (void)
 	reflib_active  = false;
 }
 
+
+extern unsigned int GetBSPLimit(bspDataType type);
+extern unsigned int GetBSPElementSize(bspDataType type);
+extern qboolean bExtendedBSP;
+
+unsigned int _GetBSPLimit(bspDataType type, qboolean extendedbsp)
+{
+	unsigned int ret;
+	qboolean old = bExtendedBSP;
+	bExtendedBSP = extendedbsp;
+	ret = GetBSPLimit(type);
+	bExtendedBSP = old;
+	return ret;
+}
+
+unsigned int _GetBSPElementSize(bspDataType type, qboolean extendedbsp)
+{
+	unsigned int ret;
+	qboolean old = bExtendedBSP;
+	bExtendedBSP = extendedbsp;
+	ret = GetBSPElementSize(type);
+	bExtendedBSP = old;
+	return ret;
+}
 /*
 ==============
 VID_LoadRefresh
@@ -550,6 +574,9 @@ qboolean VID_LoadRefresh( char *name )
 	ri.Cvar_SetValue = Cvar_SetValue;
 	ri.Vid_GetModeInfo = VID_GetModeInfo;
 	ri.Vid_NewWindow = VID_NewWindow;
+
+	ri.GetBSPLimit = _GetBSPLimit;
+	ri.GetBSPElementSize = _GetBSPElementSize;
 
 	GetRefAPI = (GetRefAPI_t)GetProcAddress(reflib_library, "GetRefAPI");
 	if ( (GetRefAPI) == 0 )

@@ -55,11 +55,10 @@ typedef struct
 #define SURF_DRAWBACKGROUND	0x40
 #define SURF_UNDERWATER		0x80
 
-// !!! if this is changed, it must be changed in asm_draw.h too !!!
 typedef struct
 {
-	unsigned short	v[2];
-	unsigned int	cachededgeoffset;
+	unsigned int	v[2]; // braxi -- was unsigned short
+	unsigned int	cachededgeoffset; // braxi -- unused
 } medge_t;
 
 typedef struct mtexinfo_s
@@ -129,8 +128,8 @@ typedef struct mnode_s
 	cplane_t	*plane;
 	struct mnode_s	*children[2];	
 
-	unsigned short		firstsurface;
-	unsigned short		numsurfaces;
+	unsigned int		firstsurface; // braxi -- was unsigned short
+	unsigned int		numsurfaces; // braxi -- was unsigned short
 } mnode_t;
 
 

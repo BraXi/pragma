@@ -1007,4 +1007,22 @@ void MatrixMultiply(mat3x3_t in1, mat3x3_t in2, mat3x3_t out)
 		in1[2][2] * in2[2][2];
 }
 
+/*
+=================
+RadiusFromBounds
+=================
+*/
+float RadiusFromBounds(vec3_t mins, vec3_t maxs)
+{
+	int		i;
+	vec3_t	corner;
+
+	for (i = 0; i < 3; i++)
+	{
+		corner[i] = fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]);
+	}
+
+	return VectorLength(corner);
+}
+
 //====================================================================================

@@ -12,15 +12,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "qcommon.h"
 
-static qboolean bExtendedBSP = false;
-
-typedef enum  
-{ 
-	BSP_MODELS, BSP_BRUSHES, BSP_ENTITIES, BSP_ENTSTRING, BSP_TEXINFO,
-	BSP_AREAS, BSP_AREAPORTALS, BSP_PLANES, BSP_NODES, BSP_BRUSHSIDES, 
-	BSP_LEAFS, BSP_VERTS, BSP_FACES, BSP_LEAFFACES, BSP_LEAFBRUSHES, 
-	BSP_PORTALS, BSP_EDGES, BSP_SURFEDGES, BSP_LIGHTING, BSP_VISIBILITY, BSP_NUM_DATATYPES
-} bspDataType;
+qboolean bExtendedBSP = false;
 
 typedef struct
 {
@@ -29,27 +21,27 @@ typedef struct
 
 static bsp_limit_t bspLimits[BSP_NUM_DATATYPES] =
 {
-	// qbism limit,,			vanilla limit,			qbism size,			vanilla size
-	{ MAX_MAP_MODELS_QBSP,		MAX_MAP_MODELS,			0,				sizeof(dmodel_t) },
-	{ MAX_MAP_BRUSHES_QBSP,		MAX_MAP_BRUSHES,		0,				sizeof(dbrush_t) },
-	{ MAX_MAP_ENTITIES_QBSP,	MAX_MAP_ENTITIES,		0,				0},
-	{ MAX_MAP_ENTSTRING_QBSP,	MAX_MAP_ENTSTRING,		0,				0},
-	{ MAX_MAP_TEXINFO_QBSP,		MAX_MAP_TEXINFO,		0,				sizeof(texinfo_t)},
-	{ MAX_MAP_AREAS,			MAX_MAP_AREAS,			0,				sizeof(darea_t)}, // not extended, must increase network protocol
-	{ MAX_MAP_AREAPORTALS,		MAX_MAP_AREAPORTALS,	0,				sizeof(dareaportal_t)}, // not extended, must increase network protocol
-	{ MAX_MAP_PLANES_QBSP,		MAX_MAP_PLANES,			0,				sizeof(dplane_t)},
-	{ MAX_MAP_NODES_QBSP,		MAX_MAP_NODES,			sizeof(dnode_ext_t), sizeof(dnode_t)}, //dnode_ext_t
+	// QBISM BSP LIMIT,			VANILLA BSP LIMIT,		QBISM SIZE,			VANILLA SIZE
+	{ MAX_MAP_MODELS_QBSP,		MAX_MAP_MODELS,			0,					sizeof(dmodel_t) },
+	{ MAX_MAP_BRUSHES_QBSP,		MAX_MAP_BRUSHES,		0,					sizeof(dbrush_t) },
+	{ MAX_MAP_ENTITIES_QBSP,	MAX_MAP_ENTITIES,		0,					0},						// unused
+	{ MAX_MAP_ENTSTRING_QBSP,	MAX_MAP_ENTSTRING,		0,					0},
+	{ MAX_MAP_TEXINFO_QBSP,		MAX_MAP_TEXINFO,		0,					sizeof(texinfo_t) },	// refeered in cmod code below as surface info
+	{ MAX_MAP_AREAS,			MAX_MAP_AREAS,			0,					sizeof(darea_t) },		// not extended, must increase network protocol
+	{ MAX_MAP_AREAPORTALS,		MAX_MAP_AREAPORTALS,	0,					sizeof(dareaportal_t) },// not extended, must increase network protocol
+	{ MAX_MAP_PLANES_QBSP,		MAX_MAP_PLANES,			0,					sizeof(dplane_t)},
+	{ MAX_MAP_NODES_QBSP,		MAX_MAP_NODES,			sizeof(dnode_ext_t), sizeof(dnode_t)},		// dnode_ext_t
 	{ MAX_MAP_BRUSHSIDES_QBSP,	MAX_MAP_BRUSHSIDES,		sizeof(dbrushside_ext_t), sizeof(dbrushside_t) }, //dbrushside_ext_t
-	{ MAX_MAP_LEAFS_QBSP,		MAX_MAP_LEAFS,			sizeof(dleaf_ext_t), sizeof(dleaf_t)}, //dleaf_ext_t
-	{ MAX_MAP_VERTS_QBSP,		MAX_MAP_VERTS,			0,				sizeof(dvertex_t) },
-	{ MAX_MAP_FACES_QBSP,		MAX_MAP_FACES,			sizeof(dface_ext_t), sizeof(dface_t) }, //dface_ext_t
-	{ MAX_MAP_LEAFFACES_QBSP,	MAX_MAP_LEAFFACES,		0,0},
-	{ MAX_MAP_LEAFBRUSHES_QBSP,	MAX_MAP_LEAFBRUSHES,	sizeof(unsigned int), sizeof(unsigned short)},
-	{ MAX_MAP_PORTALS_QBSP,		MAX_MAP_PORTALS,		0,0},
-	{ MAX_MAP_EDGES_QBSP,		MAX_MAP_EDGES,			sizeof(dedge_ext_t), sizeof(dedge_t) }, //dedge_ext_t
-	{ MAX_MAP_SURFEDGES_QBSP,	MAX_MAP_SURFEDGES,		0,0},
-	{ MAX_MAP_LIGHTING_QBSP,	MAX_MAP_LIGHTING,		0,0},
-	{ MAX_MAP_VISIBILITY_QBSP,	MAX_MAP_VISIBILITY,		0,0}
+	{ MAX_MAP_LEAFS_QBSP,		MAX_MAP_LEAFS,			sizeof(dleaf_ext_t), sizeof(dleaf_t) },		// dleaf_ext_t
+	{ MAX_MAP_VERTS_QBSP,		MAX_MAP_VERTS,			0,					sizeof(dvertex_t) },
+	{ MAX_MAP_FACES_QBSP,		MAX_MAP_FACES,			sizeof(dface_ext_t), sizeof(dface_t) },		// dface_ext_t
+	{ MAX_MAP_LEAFFACES_QBSP,	MAX_MAP_LEAFFACES,		sizeof(unsigned int),sizeof(unsigned short) },
+	{ MAX_MAP_LEAFBRUSHES_QBSP,	MAX_MAP_LEAFBRUSHES,	sizeof(unsigned int), sizeof(unsigned short) },
+	{ MAX_MAP_PORTALS_QBSP,		MAX_MAP_PORTALS,		0, 0},										// unused
+	{ MAX_MAP_EDGES_QBSP,		MAX_MAP_EDGES,			sizeof(dedge_ext_t), sizeof(dedge_t) },		// dedge_ext_t
+	{ MAX_MAP_SURFEDGES_QBSP,	MAX_MAP_SURFEDGES,		0, sizeof(int)},
+	{ MAX_MAP_LIGHTING_QBSP,	MAX_MAP_LIGHTING,		0, 0},
+	{ MAX_MAP_VISIBILITY_QBSP,	MAX_MAP_VISIBILITY,		0, 0}
 };
 
 unsigned int GetBSPLimit(bspDataType type)
@@ -446,21 +438,23 @@ static void CMod_LoadPlanes (lump_t *l)
 CMod_LoadLeafBrushes
 =================
 */
-static void CMod_LoadLeafBrushes (lump_t *l)
+static void CMod_LoadLeafBrushes(lump_t* l)
 {
 	unsigned int	i, count;
-	unsigned short 	*in;
-	
-	CMod_ValidateBSPLump(l, BSP_LEAFBRUSHES, &count, 1, "leaf brushes", __FUNCTION__);
 
-	in = (void*)(cmod_base + l->fileofs);
+	CMod_ValidateBSPLump(l, BSP_LEAFBRUSHES, &count, 1, "leaf brushes", __FUNCTION__);
 	cm_world.numLeafBrushes = count;
 
-	for (i = 0; i < count; i++, in++)
+	if (bExtendedBSP)
 	{
-		if(bExtendedBSP)
-			cm_world.leafBrushes[i] = LittleLong(*in); // probably needs to be fixed
-		else
+		unsigned int* in = (void*)(cmod_base + l->fileofs);
+		for (i = 0; i < count; i++, in++)
+			cm_world.leafBrushes[i] = LittleLong(*in);
+	}
+	else
+	{
+		unsigned short* in = (void*)(cmod_base + l->fileofs);
+		for (i = 0; i < count; i++, in++)
 			cm_world.leafBrushes[i] = LittleShort(*in);
 	}
 }
@@ -487,7 +481,7 @@ static void CMod_LoadBrushSides(lump_t* l)
 		dbrushside_ext_t* in = (void*)(cmod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
-			planeNum = LittleShort(in->planenum);
+			planeNum = LittleLong(in->planenum);
 			surfInfo = LittleLong(in->texinfo);
 
 			if (surfInfo >= cm_world.numSurfaceInfos)
