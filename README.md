@@ -25,12 +25,12 @@ I'm trying to avoid including any unnecessary dependencies to the point where yo
 | Server game | SV QuakeC | Native library |
 | Client game | CL QuakeC | Hardcoded in engine |
 | GUI (menus, hud)| GUI QuakeC | Hardcoded in engine |
-| Pmove | In QC scripts | Hardcoded in engine |
-| Renderers | OpenGL 1.3 | OpenGL 1.1, Software |
+| Pmove | In CG/SG QC scripts | Hardcoded in engine |
+| Renderers | OpenGL 2.1 | OpenGL 1.1, Software |
 | Color palette | RGBA | colormap dependant (256 colors)|
 | Image formats | TGA | TGA (sky only), PCX, WAL |
 | Model formats | MD3, SP2 | MD2, SP2 |
-| Map format | Q2 BSP V.38*** | Q2 BSP V.38 |
+| Map format | Q2 BSP + QBISM BSP | Q2 BSP V.38 |
 | IPX | No, nobody uses it | Yes |
 | CDAudio | No, who still has cd drive? | Yes |
 | Cinematics | No*** | Yes (.cin format) |
@@ -43,20 +43,21 @@ I'm trying to avoid including any unnecessary dependencies to the point where yo
 Pragma so far had introduced following additions and changes to Q2 engine:
 - It's completly standalone, does not require Quake2 assets
 - completly platform independant QuakeC Virtual Machine instead of native game library
-- dedicated server binary (currently windows only)
-- Improved network protocol -- higher asset limits, full precision float coordinates, more control over entities compared to Q2
+- Improved OpenGL renderer with a noticeable perf improvment, post process effects, GLSL shaders -- complete removal of color palette, 8bit textures and ancient hardware releated code
+- Support for high resolution textures, you're not limited to 256x256px anymore
+- dedicated server binary (win32 + linux x86 are the only targets for now)
+- Improved network protocol -- higher asset limits, full precision coordinates, more control over entities compared
+- Supports Qbism extended BSP format allowing for much more detailed and bigger maps
 - server-side game, client-side game and GUI QC programs
 - MD3 models with raised limits
-- updated OpenGL renderer -- complete removal of color palette, 8bit textures and ancient hardware releated code
 - lots of bug fixes and improvments to logic where necessary
 - removed obscure "features" and ancient code, including CDAudio, IPX, qhost, conproc and more...
 - its super simple even for newbies - all you need is a text editor and FTEQCC compiler to create your first mod, any change to QC programs will be instantly loaded by reloading map
 
 
 ## Other notable planned changes:
-- support for BSPs with increased limits, lightgrids, vertexnormals and lightmapped turb (liquid) surfaces
-- linux support
-- modern renderer (Vulkan or OGL4+)
+- usage of bspx lumps lightgrids, normals and decoupledlm
+- proper linux support (pragma runs fine in Wine, for now only native linux dedicated server binary)
 - native 64bit binaries
 
 ## Directory overview:

@@ -48,7 +48,7 @@ unsigned int GetBSPLimit(bspDataType type)
 {
 	if (type >= BSP_NUM_DATATYPES || type < 0)
 	{
-		Com_Error(ERR_DROP, "%s wrong type %i", __FUNCTION__);
+		Com_Error(ERR_DROP, "%s wrong type %i", __FUNCTION__, type);
 		return 0;
 	}
 
@@ -61,7 +61,7 @@ unsigned int GetBSPElementSize(bspDataType type)
 {
 	if (type >= BSP_NUM_DATATYPES || type < 0)
 	{
-		Com_Error(ERR_DROP, "%s wrong type %i", __FUNCTION__);
+		Com_Error(ERR_DROP, "%s wrong type %i", __FUNCTION__, type);
 		return 0;
 	}
 
@@ -207,16 +207,16 @@ static __inline void CMod_ValidateBSPLump(lump_t* l, bspDataType type, unsigned 
 
 /*
 =================
-CMod_LoadSubmodels
+CMod_LoadInlineModels
 =================
 */
-static void CMod_LoadSubmodels(lump_t *l)
+static void CMod_LoadInlineModels(lump_t *l)
 {
 	dmodel_t	*in;
 	cmodel_t	*out;
 	int			i, j, count;
 
-	CMod_ValidateBSPLump(l, BSP_MODELS, &count, 1, "brush models", __FUNCTION__);
+	CMod_ValidateBSPLump(l, BSP_MODELS, &count, 1, "inline models", __FUNCTION__);
 	in = (void *)(cmod_base + l->fileofs);
 
 	cm_world.numInlineModels = count;
@@ -238,10 +238,10 @@ static void CMod_LoadSubmodels(lump_t *l)
 
 /*
 =================
-CMod_LoadSurfaces
+CMod_LoadSurfaceParams
 =================
 */
-static void CMod_LoadSurfaces(lump_t *l)
+static void CMod_LoadSurfaceParams(lump_t *l)
 {
 	texinfo_t		*in;
 	mapsurface_t	*out;
@@ -312,7 +312,7 @@ static void CMod_LoadNodes(lump_t *l)
 CMod_LoadBrushes
 =================
 */
-static void CMod_LoadBrushes (lump_t *l)
+static void CMod_LoadBrushes(lump_t *l)
 {
 	dbrush_t	*in;
 	cbrush_t	*out;
@@ -338,7 +338,7 @@ CMod_LoadLeafs
 need to save space for additional box planes
 =================
 */
-static void CMod_LoadLeafs (lump_t *l)
+static void CMod_LoadLeafs(lump_t *l)
 {
 	cleaf_t		*out;
 	int			i, count;
@@ -403,7 +403,7 @@ CMod_LoadPlanes
 need to save space for box planes
 =================
 */
-static void CMod_LoadPlanes (lump_t *l)
+static void CMod_LoadPlanes(lump_t *l)
 {
 	dplane_t *in;
 	cplane_t *out;
@@ -513,7 +513,7 @@ static void CMod_LoadBrushSides(lump_t* l)
 CMod_LoadAreas
 =================
 */
-static void CMod_LoadAreas (lump_t *l)
+static void CMod_LoadAreas(lump_t *l)
 {
 	carea_t		*out;
 	darea_t 	*in;
@@ -539,12 +539,12 @@ static void CMod_LoadAreas (lump_t *l)
 CMod_LoadAreaPortals
 =================
 */
-static void CMod_LoadAreaPortals (lump_t *l)
+static void CMod_LoadAreaPortals(lump_t *l)
 {
 	dareaportal_t	*out, *in;
 	int			i, count;
 
-	CMod_ValidateBSPLump(l, BSP_AREAS, &count, 1, "area portals", __FUNCTION__);
+	CMod_ValidateBSPLump(l, BSP_AREAPORTALS, &count, 1, "area portals", __FUNCTION__);
 
 	out = cm_world.areaPortals;
 	cm_world.numAreaPortals = count;
@@ -562,7 +562,7 @@ static void CMod_LoadAreaPortals (lump_t *l)
 CMod_LoadVisibility
 =================
 */
-static void CMod_LoadVisibility (lump_t *l)
+static void CMod_LoadVisibility(lump_t *l)
 {
 	int		i;
 
@@ -589,7 +589,7 @@ static void CMod_LoadVisibility (lump_t *l)
 CMod_LoadEntityString
 =================
 */
-static void CMod_LoadEntityString (lump_t *l)
+static void CMod_LoadEntityString(lump_t *l)
 {
 	cm_world.entityStringLength = l->filelen;
 	if (l->filelen >= GetBSPLimit(BSP_ENTSTRING))
@@ -607,7 +607,7 @@ CM_LoadMap
 Loads in the map and all submodels
 ==================
 */
-cmodel_t *CM_LoadMap (char *name, qboolean clientload, unsigned *checksum)
+cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 {
 	unsigned		*buf = NULL;
 	int				i;
@@ -644,13 +644,14 @@ cmodel_t *CM_LoadMap (char *name, qboolean clientload, unsigned *checksum)
 	cm_world.map_name[0] = 0;
 
 	cm_world.vis = (dvis_t*)cm_world.visibility;
+
 	if (!name || !name[0])
 	{
 		cm_world.numLeafs = 1;
 		cm_world.numClusters = 1;
 		cm_world.numAreas = 1;
 		*checksum = 0;
-		return &cm_world.inlineModels[0];			// cinematic servers won't have anything at all
+		return &cm_world.inlineModels[0];	// cinematic servers won't have anything at all
 	}
 
 	//
@@ -683,27 +684,27 @@ cmodel_t *CM_LoadMap (char *name, qboolean clientload, unsigned *checksum)
 	cmod_base = (byte *)buf;
 
 	// load into heap
-	CMod_LoadSurfaces (&header.lumps[LUMP_TEXINFO]);
-	CMod_LoadLeafs (&header.lumps[LUMP_LEAFS]);
-	CMod_LoadLeafBrushes (&header.lumps[LUMP_LEAFBRUSHES]);
-	CMod_LoadPlanes (&header.lumps[LUMP_PLANES]);
-	CMod_LoadBrushes (&header.lumps[LUMP_BRUSHES]);
-	CMod_LoadBrushSides (&header.lumps[LUMP_BRUSHSIDES]);
-	CMod_LoadSubmodels (&header.lumps[LUMP_MODELS]);
-	CMod_LoadNodes (&header.lumps[LUMP_NODES]);
-	CMod_LoadAreas (&header.lumps[LUMP_AREAS]);
-	CMod_LoadAreaPortals (&header.lumps[LUMP_AREAPORTALS]);
-	CMod_LoadVisibility (&header.lumps[LUMP_VISIBILITY]);
-	CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES]);
+	CMod_LoadSurfaceParams(&header.lumps[LUMP_TEXINFO]);
+	CMod_LoadLeafs(&header.lumps[LUMP_LEAFS]);
+	CMod_LoadLeafBrushes(&header.lumps[LUMP_LEAFBRUSHES]);
+	CMod_LoadPlanes(&header.lumps[LUMP_PLANES]);
+	CMod_LoadBrushes(&header.lumps[LUMP_BRUSHES]);
+	CMod_LoadBrushSides(&header.lumps[LUMP_BRUSHSIDES]);
+	CMod_LoadInlineModels(&header.lumps[LUMP_MODELS]);
+	CMod_LoadNodes(&header.lumps[LUMP_NODES]);
+	CMod_LoadAreas(&header.lumps[LUMP_AREAS]);
+	CMod_LoadAreaPortals(&header.lumps[LUMP_AREAPORTALS]);
+	CMod_LoadVisibility(&header.lumps[LUMP_VISIBILITY]);
+	CMod_LoadEntityString(&header.lumps[LUMP_ENTITIES]);
 
 	FS_FreeFile (buf);
 
-	CM_InitBoxHull ();
+	CM_InitBoxHull();
 
-	memset (cm_world.openAreaPortalsList, 0, sizeof(cm_world.openAreaPortalsList));
-	FloodAreaConnections ();
+	memset (cm_world.openAreaPortalsList, 0, sizeof(cm_world.openAreaPortalsList)); // close all portals
+	FloodAreaConnections();
 
-	strcpy (cm_world.map_name, name);
+	strncpy (cm_world.map_name, name, sizeof(cm_world.map_name)-1);
 
 	return &cm_world.inlineModels[0];
 }
