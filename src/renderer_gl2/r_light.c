@@ -455,7 +455,9 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 	smax = (surf->extents[0]>>4)+1;
 	tmax = (surf->extents[1]>>4)+1;
 	size = smax*tmax;
-	if (size > (sizeof(s_blocklights)>>4) )
+	//int bsize = sizeof(s_blocklights) >> 4; // vanilla, bug?
+	int bsize = sizeof(s_blocklights) / 12;
+	if (size > (bsize) )
 		ri.Error (ERR_DROP, "Bad s_blocklights size");
 
 // set to full bright if no light data

@@ -260,6 +260,7 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 	unsigned	*buf;
 	int			fileLen, i;
 
+	crash = false;
 	if (!name[0])
 	{
 		Com_Error(ERR_DROP, "SV_LoadModel: NULL name");

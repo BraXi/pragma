@@ -266,7 +266,7 @@ typedef struct
 	int		fileofs, filelen;
 } lump_t;
 
-// standard v38 lumps
+// standard lumps
 #define	LUMP_ENTITIES		0
 #define	LUMP_PLANES			1
 #define	LUMP_VERTEXES		2

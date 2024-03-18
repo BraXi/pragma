@@ -84,6 +84,7 @@ void R_InitCodeTextures()
 		}
 	}
 	r_texture_missing = R_LoadTexture ("$default", (byte *)data, 8, 8, it_texture, 32);
+	//r_texture_missing = R_FindTexture("textures/makkon/conc_f01_moss1", it_texture, true);
 }
 
 

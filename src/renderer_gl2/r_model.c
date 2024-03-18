@@ -283,7 +283,7 @@ model_t *Mod_ForName (char *name, qboolean crash)
 
 	case QBISM_IDENT: /* Qbism extended BSP */
 		bExtendedBSP = true;
-		loadmodel->extradata = Hunk_Begin(0x1000000);
+		loadmodel->extradata = Hunk_Begin(0x1000000*6);
 		Mod_LoadBSP(mod, buf);
 		break;
 
@@ -342,7 +342,7 @@ void Mod_LoadLighting (lump_t *l)
 		loadmodel->lightdata = NULL;
 		return;
 	}
-	loadmodel->lightdata = Hunk_Alloc ( l->filelen);	
+	loadmodel->lightdata = Hunk_Alloc(l->filelen);	
 	memcpy (loadmodel->lightdata, mod_base + l->fileofs, l->filelen);
 }
 
@@ -538,7 +538,8 @@ Fills in s->texturemins[] and s->extents[]
 */
 void CalcSurfaceExtents (msurface_t *s)
 {
-	float	mins[2], maxs[2], val;
+	float	mins[2], maxs[2];
+	long double val;
 	int		i,j, e;
 	mvertex_t	*v;
 	mtexinfo_t	*tex;
@@ -559,10 +560,11 @@ void CalcSurfaceExtents (msurface_t *s)
 		
 		for (j = 0; j < 2; j++)
 		{
-			val = v->position[0] * tex->vecs[j][0] + 
-				v->position[1] * tex->vecs[j][1] +
-				v->position[2] * tex->vecs[j][2] +
-				tex->vecs[j][3];
+			val = (long double)v->position[0] * (long double)tex->vecs[j][0] +
+				(long double)v->position[1] * (long double)tex->vecs[j][1] +
+				(long double)v->position[2] * (long double)tex->vecs[j][2] +
+				(long double)tex->vecs[j][3];
+
 			if (val < mins[j])
 				mins[j] = val;
 			if (val > maxs[j])
@@ -946,7 +948,7 @@ void Mod_LoadSurfedges (lump_t *l)
 	if (l->filelen % sizeof(*in))
 		ri.Error (ERR_DROP, "Mod_LoadSurfedges: funny lump size in %s",loadmodel->name);
 	count = l->filelen / sizeof(*in);
-	if (count < 1 || count >= MAX_MAP_SURFEDGES)
+	if (count < 1 || count >= MAX_MAP_SURFEDGES_QBSP) //FIXME
 		ri.Error (ERR_DROP, "Mod_LoadSurfedges: bad surfedges count in %s: %i",
 		loadmodel->name, count);
 

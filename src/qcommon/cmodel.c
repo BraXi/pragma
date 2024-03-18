@@ -121,36 +121,36 @@ typedef struct
 	char		map_name[MAX_QPATH];
 
 	int			numBrushSides;
-	cbrushside_t brushsides[MAX_MAP_BRUSHSIDES];
+	cbrushside_t brushsides[MAX_MAP_BRUSHSIDES_QBSP];
 
 	int			numSurfaceInfos; //texinfos
-	mapsurface_t surfaceInfos[MAX_MAP_TEXINFO];
+	mapsurface_t surfaceInfos[MAX_MAP_TEXINFO_QBSP];
 
 	int			numPlanes;
-	cplane_t	planes[MAX_MAP_PLANES + 6];		// extra for box hull
+	cplane_t	planes[MAX_MAP_PLANES_QBSP + 6];		// extra for box hull
 
 	int			numNodes;
-	cnode_t		nodes[MAX_MAP_NODES + 6];		// extra for box hull
+	cnode_t		nodes[MAX_MAP_NODES_QBSP + 6];		// extra for box hull
 
 	int			numLeafs;
-	cleaf_t		leafs[MAX_MAP_LEAFS];
+	cleaf_t		leafs[MAX_MAP_LEAFS_QBSP];
 
 
 	int			numLeafBrushes;
-	unsigned int	leafBrushes[MAX_MAP_LEAFBRUSHES]; // braxi -- was unsigned short
+	unsigned int	leafBrushes[MAX_MAP_LEAFBRUSHES_QBSP]; // braxi -- was unsigned short
 
 	int			numInlineModels; //numcmodels
-	cmodel_t	inlineModels[MAX_MAP_MODELS];
+	cmodel_t	inlineModels[MAX_MAP_MODELS_QBSP];
 
 	int			numBrushes;
-	cbrush_t	brushes[MAX_MAP_BRUSHES];
+	cbrush_t	brushes[MAX_MAP_BRUSHES_QBSP];
 
 	int			visibilitySize;
-	byte		visibility[MAX_MAP_VISIBILITY];
+	byte		visibility[MAX_MAP_VISIBILITY_QBSP];
 	dvis_t* vis;
 
 	int			entityStringLength;
-	char		entity_string[MAX_MAP_ENTSTRING];
+	char		entity_string[MAX_MAP_ENTSTRING_QBSP];
 
 	int			numAreas;
 	carea_t		areas[MAX_MAP_AREAS];
@@ -165,6 +165,8 @@ typedef struct
 } cm_world_t;
 
 cm_world_t cm_world;
+
+
 // performance counters
 int		c_pointcontents;
 int		c_traces, c_brush_traces;

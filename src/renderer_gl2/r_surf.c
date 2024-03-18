@@ -22,9 +22,8 @@ msurface_t	*r_alpha_surfaces;
 
 #define LIGHTMAP_BYTES 4
 
-#define	BLOCK_WIDTH		128
-#define	BLOCK_HEIGHT	128
-
+#define	BLOCK_WIDTH		256
+#define	BLOCK_HEIGHT	256
 #define	MAX_LIGHTMAPS	128
 
 #define GL_LIGHTMAP_FORMAT GL_RGBA
@@ -339,8 +338,12 @@ void R_BlendLightmaps (void)
 					if (drawsurf->polys)
 					{
 						DrawGLPolyChain(drawsurf->polys,
-							(drawsurf->light_s - drawsurf->dlight_s) * (1.0 / 128.0),
-							(drawsurf->light_t - drawsurf->dlight_t) * (1.0 / 128.0));
+							(drawsurf->light_s - drawsurf->dlight_s) * (1.0 / BLOCK_WIDTH),
+							(drawsurf->light_t - drawsurf->dlight_t) * (1.0 / BLOCK_HEIGHT)); //LMCHANGE
+
+						//DrawGLPolyChain(drawsurf->polys,
+						//	(drawsurf->light_s - drawsurf->dlight_s)* (1.0 / 128.0),
+						//	(drawsurf->light_t - drawsurf->dlight_t)* (1.0 / 128.0));
 					}
 				}
 
@@ -371,7 +374,8 @@ void R_BlendLightmaps (void)
 		for ( surf = newdrawsurf; surf != 0; surf = surf->lightmapchain )
 		{
 			if ( surf->polys )
-				DrawGLPolyChain( surf->polys, ( surf->light_s - surf->dlight_s ) * ( 1.0 / 128.0 ), ( surf->light_t - surf->dlight_t ) * ( 1.0 / 128.0 ) );
+				DrawGLPolyChain( surf->polys, ( surf->light_s - surf->dlight_s ) * ( 1.0 / BLOCK_WIDTH ), ( surf->light_t - surf->dlight_t ) * ( 1.0 / BLOCK_HEIGHT ) ); //LMCHANGE
+			//DrawGLPolyChain(surf->polys, (surf->light_s - surf->dlight_s) * (1.0 / 128.0), (surf->light_t - surf->dlight_t) * (1.0 / 128.0));
 		}
 	}
 
@@ -715,7 +719,8 @@ dynamic:
 
 	if ( is_dynamic )
 	{
-		unsigned	temp[128*128];
+		//unsigned	temp[128*128]; 
+		unsigned	temp[BLOCK_WIDTH * BLOCK_HEIGHT]; //LMCHANGE
 		int			smax, tmax;
 
 		if ( ( surf->styles[map] >= 32 || surf->styles[map] == 0 ) && ( surf->dlightframe != r_framecount ) )
@@ -1166,7 +1171,7 @@ void R_MarkLeaves (void)
 	}
 
 #if 0
-	for (i=0 ; i<r_worldmodel->vis->cm_world.numClusters ; i++)
+	for (i=0 ; i<r_worldmodel->vis->XX_numclusters ; i++)
 	{
 		if (vis[i>>3] & (1<<(i&7)))
 		{
@@ -1408,7 +1413,8 @@ void GL_BeginBuildingLightmaps (model_t *m)
 {
 	static lightstyle_t	lightstyles[MAX_LIGHTSTYLES];
 	int				i;
-	unsigned		dummy[128*128];
+	unsigned		dummy[BLOCK_WIDTH*BLOCK_HEIGHT]; //LMCHANGE
+	//unsigned		dummy[128*128];
 
 	memset( gl_lms.allocated, 0, sizeof(gl_lms.allocated) );
 
