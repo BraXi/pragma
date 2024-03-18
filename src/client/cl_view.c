@@ -288,7 +288,7 @@ Call before entering a new level, or after changing dlls
 */
 void CL_PrepRefresh (void)
 {
-	char		mapname[32];
+	char		mapname[32]; // FIXME stack corruption with long map names "sewerjam1_doomshakalaka_full"
 	int			i;
 	char		name[MAX_QPATH];
 

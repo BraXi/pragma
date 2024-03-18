@@ -164,7 +164,7 @@ static void TempEnt_Explosion(void)
 	dlight->die = cl.time + 700;
 	VectorSet(dlight->color, 0.98f, 0.74f, 0.46f);
 
-	int r = rand() & 3;
+	//int r = rand() & 3;
 	S_StartSound(pos, 0, 0, cgMedia.sfx_explosion[0], 2, ATTN_NORM, 0);
 }
 

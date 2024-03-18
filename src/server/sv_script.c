@@ -14,6 +14,7 @@ See the attached GNU General Public License v2 for more details.
 
 void Scr_SV_OP(eval_t *a, eval_t* b, eval_t* c)
 {
+	c = c;
 	gentity_t *ed = VM_TO_ENT(sv.script_globals->self);
 	ed->v.nextthink = sv.script_globals->g_time + SV_FRAMETIME;
 	if (a->_float != ed->v.animFrame)

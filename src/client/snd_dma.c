@@ -884,7 +884,7 @@ S_RawSamples
 Cinematic streaming and voice over network
 ============
 */
-void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
+void S_RawSamples (int samples, int rate, int width, int numChannels, byte *data)
 {
 	int		i;
 	int		src, dst;
@@ -898,7 +898,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 	scale = (float)rate / dma.speed;
 
 //Com_Printf ("%i < %i < %i\n", soundtime, paintedtime, s_rawend);
-	if (channels == 2 && width == 2)
+	if (numChannels == 2 && width == 2)
 	{
 		if (scale == 1.0)
 		{	// optimized case
@@ -928,7 +928,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 			}
 		}
 	}
-	else if (channels == 1 && width == 2)
+	else if (numChannels == 1 && width == 2)
 	{
 		for (i=0 ; ; i++)
 		{
@@ -943,7 +943,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 			    LittleShort(((short *)data)[src]) << 8;
 		}
 	}
-	else if (channels == 2 && width == 1)
+	else if (numChannels == 2 && width == 1)
 	{
 		for (i=0 ; ; i++)
 		{
@@ -958,7 +958,7 @@ void S_RawSamples (int samples, int rate, int width, int channels, byte *data)
 			    ((char *)data)[src*2+1] << 16;
 		}
 	}
-	else if (channels == 1 && width == 1)
+	else if (numChannels == 1 && width == 1)
 	{
 		for (i=0 ; ; i++)
 		{

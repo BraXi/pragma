@@ -1058,6 +1058,7 @@ centerprint(world, "hello", " world!"); // center printed to everyone on the ser
 */
 void PFSV_centerprint(void)
 {
+	if (1) return;
 	gentity_t	*ent;
 	char		*msg;
 	int			entnum;

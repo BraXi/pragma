@@ -183,7 +183,7 @@ void PF_localcmd(void)
 	char* str;
 		
 	str = Scr_GetParmString(0);
-	if (!str || str == "")
+	if (!str || !strlen(str))
 	{
 		Scr_RunError("localcmd(): empty string\n");
 		return;
@@ -250,7 +250,7 @@ void PF_cvar(void)
 	cvar_t* cvar;
 
 	str = Scr_GetParmString(0);
-	if (!str || str == "")
+	if (!str || !strlen(str))
 	{
 		Scr_RunError("cvar(): without name\n");
 		return;
@@ -284,7 +284,7 @@ void PF_cvarstring(void)
 	cvar_t* cvar;
 
 	str = Scr_GetParmString(0);
-	if (!str || str == "")
+	if (!str || !strlen(str))
 	{
 		Scr_RunError("cvarstring(): without name\n");
 		return;
@@ -317,7 +317,7 @@ void PF_cvarset(void)
 	char *str, *value;
 
 	str = Scr_GetParmString(0);
-	if (!str || str == "")
+	if (!str || !strlen(str))
 	{
 		Scr_RunError("cvarset(): without name\n");
 		return;
@@ -341,7 +341,7 @@ void PF_cvarforceset(void)
 	char* str, * value;
 
 	str = Scr_GetParmString(0);
-	if (!str || str == "")
+	if (!str || !strlen(str))
 	{
 		Scr_RunError("cvarforceset(): empty name\n");
 		return;

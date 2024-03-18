@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // ~~ ANY CHANGE HERE REQUIRES RECOMPILING KERNEL AND RENDERER ~~
 //
 
+#pragma once
 #include "../qcommon/qcommon.h"
 
 #define	MAX_DLIGHTS				64		// was 32

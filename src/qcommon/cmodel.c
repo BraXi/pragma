@@ -1644,25 +1644,25 @@ static void CM_DecompressVis (byte *in, byte *out)
 	} while (out_p - out < row);
 }
 
-byte	pvsrow[MAX_MAP_LEAFS/8];
-byte	phsrow[MAX_MAP_LEAFS/8];
+static byte pvs_row[MAX_MAP_LEAFS_QBSP / 8];
+static byte phs_row[MAX_MAP_LEAFS_QBSP / 8];
 
 byte	*CM_ClusterPVS (int cluster)
 {
 	if (cluster == -1)
-		memset (pvsrow, 0, (cm_world.numClusters+7)>>3);
+		memset (pvs_row, 0, (cm_world.numClusters+7)>>3);
 	else
-		CM_DecompressVis (cm_world.visibility + cm_world.vis->bitofs[cluster][DVIS_PVS], pvsrow);
-	return pvsrow;
+		CM_DecompressVis (cm_world.visibility + cm_world.vis->bitofs[cluster][DVIS_PVS], pvs_row);
+	return pvs_row;
 }
 
 byte	*CM_ClusterPHS (int cluster)
 {
 	if (cluster == -1)
-		memset (phsrow, 0, (cm_world.numClusters+7)>>3);
+		memset (phs_row, 0, (cm_world.numClusters+7)>>3);
 	else
-		CM_DecompressVis (cm_world.visibility + cm_world.vis->bitofs[cluster][DVIS_PHS], phsrow);
-	return phsrow;
+		CM_DecompressVis (cm_world.visibility + cm_world.vis->bitofs[cluster][DVIS_PHS], phs_row);
+	return phs_row;
 }
 
 

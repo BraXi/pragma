@@ -141,7 +141,7 @@ void FS_FCloseFile (FILE *f)
 /*
 	Developer_searchpath
 */
-int	Developer_searchpath (int who)
+int	Developer_searchpath ()
 {
 	searchpath_t	*search;
 	for (search = fs_searchpaths ; search ; search = search->next)

@@ -1112,7 +1112,7 @@ Mark the leaves and nodes that are in the PVS for the current cluster
 void R_MarkLeaves (void)
 {
 	byte	*vis;
-	byte	fatvis[MAX_MAP_LEAFS/8];
+	byte	fatvis[MAX_MAP_LEAFS_QBSP/8];
 	mnode_t	*node;
 	int		i, c;
 	mleaf_t	*leaf;

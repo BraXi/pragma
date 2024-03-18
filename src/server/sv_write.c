@@ -453,8 +453,8 @@ Build a client frame structure
 =============================================================================
 */
 
-byte		fatpvs[65536/8];	// 32767 is MAX_MAP_LEAFS
-
+byte		fatpvs[(MAX_MAP_LEAFS_QBSP*2) / 8];	// this needs to be double the leafs / 8 to accomodate bigger pvs
+//byte		fatpvs[65536 / 8];	// 32767 is MAX_MAP_LEAFS, braxi -- commented out because of new bsp format
 /*
 ============
 SV_FatPVS

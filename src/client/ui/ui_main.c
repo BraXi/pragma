@@ -18,7 +18,7 @@ See the attached GNU General Public License v2 for more details.
 server_entry_t ui_servers[MAX_SERVERS];
 int ui_numServers = 0;
 
-void UI_UpdateScriptGlobals();
+static void UI_UpdateScriptGlobals();
 
 uistate_t ui;
 
@@ -92,7 +92,7 @@ UI_RemoveItemDef
 void UI_RemoveItemDef(ui_item_t *self)
 {
 	int i, j;
-	ui_item_t* item = NULL;
+//	ui_item_t* item = NULL;
 	GuiDef_t* gui;
 
 	Scr_BindVM(VM_GUI);
@@ -301,6 +301,7 @@ UI_KeyInputHandler
 */
 void UI_KeyInputHandler(int key)
 {
+	key = key;
 }
 
 static void Cmd_LoadGui_f(void)
@@ -400,7 +401,7 @@ void UI_Execute(scr_func_t progFunc)
 	// pass most recent data to guivm and execute function
 	Scr_BindVM(VM_GUI);
 	UI_UpdateScriptGlobals();
-	Scr_Execute(VM_GUI, ui.script_globals->main, __FUNCTION__);
+	Scr_Execute(VM_GUI, progFunc, __FUNCTION__);
 }
 
 /*

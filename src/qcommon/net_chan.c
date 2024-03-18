@@ -352,7 +352,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 // if the current outgoing reliable message has been acknowledged
 // clear the buffer to make way for the next
 //
-	if (reliable_ack == chan->reliable_sequence)
+	if (reliable_ack == (unsigned int)chan->reliable_sequence)
 		chan->reliable_length = 0;	// it has been received
 	
 //

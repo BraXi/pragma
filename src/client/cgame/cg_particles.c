@@ -251,7 +251,7 @@ void CG_GenericParticleEffect2(vec3_t org, vec3_t dir, vec3_t color, int count, 
 		p->accel[2] = gravity;
 		p->alpha = 0.5;
 
-		p->alphavel = -0.20; // -1.0f / (0.1f + frand() * alphavel);
+		p->alphavel = alphavel; // -1.0f / (0.1f + frand() * alphavel);
 	}
 }
 

@@ -589,9 +589,9 @@ void CL_Disconnect (void)
 	// send a disconnect message to the server
 	final[0] = clc_stringcmd;
 	strcpy ((char *)final+1, "disconnect");
-	Netchan_Transmit (&cls.netchan, strlen(final), final);
-	Netchan_Transmit (&cls.netchan, strlen(final), final);
-	Netchan_Transmit (&cls.netchan, strlen(final), final);
+	Netchan_Transmit (&cls.netchan, strlen(final), (byte*)final);
+	Netchan_Transmit (&cls.netchan, strlen(final), (byte*)final);
+	Netchan_Transmit (&cls.netchan, strlen(final), (byte*)final);
 
 	CL_ClearState ();
 
