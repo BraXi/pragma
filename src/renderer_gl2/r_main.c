@@ -345,7 +345,7 @@ static void R_SetupFrame()
 	{
 		r_oldviewcluster = r_viewcluster;
 		r_oldviewcluster2 = r_viewcluster2;
-		leaf = Mod_PointInLeaf (r_origin, r_worldmodel);
+		leaf = Mod_BSP_PointInLeaf (r_origin, r_worldmodel);
 		r_viewcluster = r_viewcluster2 = leaf->cluster;
 
 		// check above and below so crossing solid water doesn't draw wrong
@@ -355,7 +355,7 @@ static void R_SetupFrame()
 
 			VectorCopy (r_origin, temp);
 			temp[2] -= 16;
-			leaf = Mod_PointInLeaf (temp, r_worldmodel);
+			leaf = Mod_BSP_PointInLeaf (temp, r_worldmodel);
 			if ( !(leaf->contents & CONTENTS_SOLID) &&
 				(leaf->cluster != r_viewcluster2) )
 				r_viewcluster2 = leaf->cluster;
@@ -366,7 +366,7 @@ static void R_SetupFrame()
 
 			VectorCopy (r_origin, temp);
 			temp[2] += 16;
-			leaf = Mod_PointInLeaf (temp, r_worldmodel);
+			leaf = Mod_BSP_PointInLeaf (temp, r_worldmodel);
 			if ( !(leaf->contents & CONTENTS_SOLID) &&
 				(leaf->cluster != r_viewcluster2) )
 				r_viewcluster2 = leaf->cluster;

@@ -300,7 +300,7 @@ typedef struct
 	float		mins[3], maxs[3];
 	float		origin[3];		// for sounds or lights
 	int			headnode;
-	int			firstface, numfaces;	// submodels just draw faces
+	int			firstface, numfaces;	// inlineModels just draw faces
 										// without walking the bsp tree
 } dmodel_t;
 
@@ -338,21 +338,22 @@ typedef struct
 // these definitions also need to be in shared.h!
 
 // lower bits are stronger, and will eat weaker brushes completely
+#define	CONTENTS_NONE			-1
+#define	CONTENTS_EMPTY			0		// air
 #define	CONTENTS_SOLID			1		// an eye is never valid in a solid
 #define	CONTENTS_WINDOW			2		// translucent, but not watery
-#define	CONTENTS_AUX			4
-#define	CONTENTS_LAVA			8
-#define	CONTENTS_SLIME			16
-#define	CONTENTS_WATER			32
-#define	CONTENTS_MIST			64
+#define	CONTENTS_AUX			4		// drawn but not solid
+#define	CONTENTS_LAVA			8		// liquid volume
+#define	CONTENTS_SLIME			16		// liquid volume
+#define	CONTENTS_WATER			32		// liquid volume
+#define	CONTENTS_MIST			64		// drawn but not solid
 #define	LAST_VISIBLE_CONTENTS	64
 
 // remaining contents are non-visible, and don't eat brushes
+#define	CONTENTS_AREAPORTAL		0x8000	// func_areaportal
 
-#define	CONTENTS_AREAPORTAL		0x8000
-
-#define	CONTENTS_PLAYERCLIP		0x10000
-#define	CONTENTS_MONSTERCLIP	0x20000
+#define	CONTENTS_PLAYERCLIP		0x10000 // everything but players can pass through
+#define	CONTENTS_MONSTERCLIP	0x20000 // everything but actors can pass through
 
 // currents can be added to any other contents, and may be mixed
 #define	CONTENTS_CURRENT_0		0x40000
@@ -365,27 +366,28 @@ typedef struct
 #define	CONTENTS_ORIGIN			0x1000000	// removed before bsping an entity
 
 #define	CONTENTS_MONSTER		0x2000000	// should never be on a brush, only in game
-#define	CONTENTS_DEADMONSTER	0x4000000
+#define	CONTENTS_DEADMONSTER	0x4000000	// can walk through but shots are blocked
 #define	CONTENTS_DETAIL			0x8000000	// brushes to be added after vis leafs
 #define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
-#define	CONTENTS_LADDER			0x20000000
+#define	CONTENTS_LADDER			0x20000000	// player can climb it
 
 #define	SURF_LIGHT		0x1		// value will hold the light strength
 #define	SURF_SLICK		0x2		// effects game physics
 #define	SURF_SKY		0x4		// don't draw, but add to skybox
 #define	SURF_WARP		0x8		// turbulent water warp
-#define	SURF_TRANS33	0x10
-#define	SURF_TRANS66	0x20
-#define	SURF_FLOWING	0x40	// scroll towards angle
+#define	SURF_TRANS33	0x10	// 33% alpha
+#define	SURF_TRANS66	0x20	// 66% alpha
+#define	SURF_FLOWING	0x40	// scroll towards S coord
 #define	SURF_NODRAW		0x80	// don't bother referencing the texture
 #define	SURF_HINT		0x100	// make a primary bsp splitter
 #define	SURF_SKIP		0x200	// completely ignore, allowing non-closed brushes
 
-#define SURF_ALPHATEST	(1 << 25) //alpha test flag
-#define SURF_N64_UV		(1 << 28) //N64 UV and surface flag hack
-#define SURF_SCROLLX	(1 << 29) //slow x scroll
-#define SURF_SCROLLY	(1 << 30) //slow y scroll
-#define SURF_SCROLLFLIP	(1 << 31) //flip scroll directon
+// ericw_tools additional contents
+#define SURF_ALPHATEST	(1 << 25) // alpha test flag
+#define SURF_N64_UV		(1 << 28) // N64 UV and surface flag hack
+#define SURF_SCROLLX	(1 << 29) // slow x scroll
+#define SURF_SCROLLY	(1 << 30) // slow y scroll
+#define SURF_SCROLLFLIP	(1 << 31) // flip scroll directon
 
 
 typedef struct

@@ -132,7 +132,6 @@ void R_RegisterCvarsAndCommands(void)
 	ri.AddCommand("shaderlist", R_ShaderList_f);
 	ri.AddCommand("imagelist", R_TextureList_f);
 	ri.AddCommand("screenshot", R_ScreenShot_f);
-	ri.AddCommand("modellist", Mod_Modellist_f);
 	ri.AddCommand("gl_strings", GL_Strings_f);
 }
 
@@ -332,7 +331,7 @@ int R_Init(void* hinstance, void* hWnd)
 	for (int i = 0; i < FUNCTABLE_SIZE; i++)
 		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
-	Mod_Init();
+	R_InitModels();
 	R_LoadFonts();
 
 	vb_particles = R_AllocVertexBuffer((V_UV | V_COLOR), (3 * MAX_PARTICLES), 0);
@@ -359,7 +358,7 @@ void R_Shutdown(void)
 	R_FreeFrameBuffer();
 	R_FreePrograms();
 
-	Mod_FreeAll();
+	R_FreeAllModels();
 
 	R_FreeTextures();
 
@@ -379,8 +378,8 @@ void R_Shutdown(void)
 
 //===================================================================
 
-void R_BeginRegistration(char* map);
-void R_EndRegistration(void);
+void R_BeginRegistration(const char* map);
+void R_EndRegistration();
 
 struct model_s* R_RegisterModel(char* name);
 struct image_s* R_RegisterSkin(char* name);

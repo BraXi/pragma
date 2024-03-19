@@ -606,7 +606,7 @@ static void CMod_LoadEntityString(lump_t *l)
 ==================
 CM_LoadMap
 
-Loads in the map and all submodels
+Loads in the map and all inlineModels
 ==================
 */
 cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)

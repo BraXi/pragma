@@ -194,8 +194,8 @@ typedef struct
 	// are flood filled to eliminate mip map edge errors, and pics have
 	// an implicit "pics/" prepended to the name. (a pic name that starts with a
 	// slash will not use the "pics/" prefix or the ".pcx" postfix)
-	void	(*BeginRegistration) (char *map);
-	void	(*EndRegistration) (void);
+	void	(*BeginRegistration)(const char *map);
+	void	(*EndRegistration)();
 
 	struct model_s *(*RegisterModel) (char *name);
 	struct image_s *(*RegisterSkin) (char *name);

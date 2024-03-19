@@ -32,22 +32,24 @@ static int		hunkcount; // TODO 64BIT ..
 static byte		*membase;
 static int		hunkmaxsize;
 static int		cursize;
+static char		*allocname;
 
-void *Hunk_Begin (int maxsize)
+void *Hunk_Begin (int maxsize, char *name)
 {
 	// reserve a huge chunk of memory, but don't commit any yet
 	cursize = 0;
 	hunkmaxsize = maxsize;
+	allocname = name;
 
 #ifdef VIRTUAL_ALLOC
 	membase = VirtualAlloc (NULL, maxsize, MEM_RESERVE, PAGE_NOACCESS);
 	if (!membase)
-		Sys_Error("Hunk_Begin: VirtualAlloc reserve failed");
+		Sys_Error("Hunk_Begin: VirtualAlloc reserve failed %ikb for %s", maxsize / 1024, allocname);
 #else
 	membase = malloc (maxsize);
 	if (!membase)
 	{
-		Sys_Error("Hunk_Begin: malloc reserve failed");
+		Sys_Error("Hunk_Begin: failed to reserve %ikb mem for %s", maxsize/1024, allocname);
 		return NULL; //msvc..
 	}
 	memset (membase, 0, maxsize);
@@ -74,16 +76,15 @@ void *Hunk_Alloc (int size)
 #endif
 	cursize += size;
 	if (cursize > hunkmaxsize)
-		Sys_Error ("Hunk_Alloc overflow");
+		Sys_Error ("Hunk_Alloc overflow for %s (tried to alloc more than %ikb)", allocname, hunkmaxsize / 1024);
 
 	return (void *)(membase+cursize-size);
 }
 
 int Hunk_End (void)
 {
-
 	// free the remaining unused virtual memory
-#if 0
+#ifdef VIRTUAL_ALLOC //if 0
 	void	*buf;
 
 	// write protect it
@@ -93,7 +94,7 @@ int Hunk_End (void)
 #endif
 
 	hunkcount++;
-//Com_Printf ("hunkcount: %i\n", hunkcount);
+	//Com_Printf ("hunkcount: %i\n", hunkcount);
 	return cursize;
 }
 

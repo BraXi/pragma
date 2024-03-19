@@ -227,7 +227,7 @@ int		Sys_Milliseconds (void);
 void	Sys_Mkdir (char *path);
 
 // large block stack allocation routines
-void	*Hunk_Begin (int maxsize);
+void	*Hunk_Begin (int maxsize, char *name);
 void	*Hunk_Alloc (int size);
 void	Hunk_Free (void *buf);
 int		Hunk_End (void);

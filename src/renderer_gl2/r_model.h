@@ -159,7 +159,7 @@ typedef struct mleaf_s
 typedef struct model_s
 {
 	char		name[MAX_QPATH];
-	int			index;		// index to model array
+	int			index;		// our index to model array
 
 	int			registration_sequence;
 
@@ -185,10 +185,10 @@ typedef struct model_s
 // brush model
 //
 	int			firstmodelsurface, nummodelsurfaces;
-	int			lightmap;		// only for submodels
+	int			lightmap;		// only for inlineModels
 
-	int			numsubmodels;
-	mmodel_t	*submodels;
+	int			numInlineModels;
+	mmodel_t	*inlineModels;
 
 	int			numplanes;
 	cplane_t	*planes;
@@ -238,17 +238,19 @@ typedef struct model_s
 
 //============================================================================
 
-void	Mod_Init (void);
-model_t *Mod_ForName (char *name, qboolean crash);
-mleaf_t* Mod_PointInLeaf(vec3_t p, model_t* model); // mleaf_t* Mod_PointInLeaf(float* p, model_t* model);
-byte	*Mod_ClusterPVS (int cluster, model_t *model);
+void	R_InitModels();
+void	R_FreeAllModels();
+void	R_FreeModel(model_t* mod);
 
-void	Mod_Modellist_f (void);
+model_t *R_ModelForName (char *name, qboolean crash);
+mleaf_t* Mod_BSP_PointInLeaf(vec3_t p, model_t* model); // mleaf_t* Mod_BSP_PointInLeaf(float* p, model_t* model);
+byte	*Mod_BSP_ClusterPVS (int cluster, model_t *model);
 
-void	*Hunk_Begin (int maxsize);
+void	Cmd_modellist_f (void);
+
+void	*Hunk_Begin (int maxsize, char *name);
 void	*Hunk_Alloc (int size);
 int		Hunk_End (void);
 void	Hunk_Free (void *base);
 
-void	Mod_FreeAll (void);
-void	Mod_Free (model_t *mod);
+

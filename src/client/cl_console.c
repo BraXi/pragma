@@ -354,7 +354,7 @@ void Con_Print (char *txt)
 		mask = 0;
 
 
-	while ( (c = *txt) != NULL )
+	while ( (c = *txt) )
 	{
 	// count word length
 		for (l=0 ; l< con.linewidth ; l++)

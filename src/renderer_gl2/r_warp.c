@@ -11,7 +11,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-extern	model_t	*loadmodel;
+extern	model_t	*pLoadModel;
 
 char	skyname[MAX_QPATH];
 float	skyrotate;
@@ -172,12 +172,12 @@ void GL_SubdivideSurface (msurface_t *fa)
 	numverts = 0;
 	for (i=0 ; i<fa->numedges ; i++)
 	{
-		lindex = loadmodel->surfedges[fa->firstedge + i];
+		lindex = pLoadModel->surfedges[fa->firstedge + i];
 
 		if (lindex > 0)
-			vec = loadmodel->vertexes[loadmodel->edges[lindex].v[0]].position;
+			vec = pLoadModel->vertexes[pLoadModel->edges[lindex].v[0]].position;
 		else
-			vec = loadmodel->vertexes[loadmodel->edges[-lindex].v[1]].position;
+			vec = pLoadModel->vertexes[pLoadModel->edges[-lindex].v[1]].position;
 		VectorCopy (vec, verts[numverts]);
 		numverts++;
 	}

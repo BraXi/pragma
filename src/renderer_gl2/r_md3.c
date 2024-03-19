@@ -17,9 +17,9 @@ QUAKE3 MD3 MODELS
 #include "r_local.h"
 
 static void R_LerpMD3Frame(float lerp, int index, md3XyzNormal_t* oldVert, md3XyzNormal_t* vert, vec3_t outVert, vec3_t outNormal);
-extern model_t* Mod_ForNum(int index);
+extern model_t* R_ModelForNum(int index);
 
-extern int modfilelen; // for in Mod_LoadMD3
+extern int modelFileLength; // for in Mod_LoadMD3
 
 extern float	sinTable[FUNCTABLE_SIZE];
 extern vec3_t	model_shadevector;
@@ -102,7 +102,7 @@ static void MD3_ModelBounds(int handle, vec3_t mins, vec3_t maxs)
 	md3Header_t* header;
 	md3Frame_t* frame;
 
-	model = Mod_ForNum(handle);
+	model = R_ModelForNum(handle);
 	if (!model->md3[LOD_HIGH])
 	{
 		VectorClear(mins);
@@ -129,7 +129,7 @@ static float MD3_ModelRadius(int handle)
 	md3Header_t* header;
 	md3Frame_t* frame;
 
-	model = Mod_ForNum(handle);
+	model = R_ModelForNum(handle);
 	if (!model->md3[LOD_HIGH])
 	{
 		return 32.0f; // default
@@ -174,7 +174,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 	}
 
 	size = LittleLong(pinmodel->ofsEnd);
-	if(modfilelen != size)
+	if(modelFileLength != size)
 	{
 		ri.Error(ERR_DROP, "MOD_LoadMD3: '%s' has weird size (probably broken)\n", mod->name);
 		return;
