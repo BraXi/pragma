@@ -811,6 +811,8 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 				ri.Error(ERR_DROP, "%s: bad texture info number", __FUNCTION__);
 			out->texinfo = pLoadModel->texinfo + ti;
 
+			out->lmshift = DEFAULT_LMSHIFT;
+
 			BSP_CalcSurfaceExtents(out);
 
 			// lighting info
@@ -1257,8 +1259,11 @@ static void Mod_BSP_FindExtLumps()
 	{
 		bspx = (void*)(mod_base + offset);
 
-		if(bspx->ident[0] != 'B' || bspx->ident[1] != 'S' || bspx->ident[2] != 'P' || bspx->ident[3] != 'X')
-			ri.Error(ERR_DROP, "Error reading BSPX ident\n");
+		if (bspx->ident[0] != 'B' || bspx->ident[1] != 'S' || bspx->ident[2] != 'P' || bspx->ident[3] != 'X')
+		{
+			ri.Printf(PRINT_ALL, "Error reading BSPX ident\n");
+			return;
+		}
 		offset += sizeof(bspx_header_t);
 		if (offset >= modelFileLength)
 			return;

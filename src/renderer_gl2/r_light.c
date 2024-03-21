@@ -243,8 +243,8 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 		if (!surf->samples)
 			return 0;
 
-		ds >>= 4;
-		dt >>= 4;
+		ds >>= surf->lmshift;
+		dt >>= surf->lmshift;
 
 		lightmap = surf->samples;
 		VectorCopy (vec3_origin, pointcolor);
@@ -252,7 +252,7 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 		{
 			vec3_t scale;
 
-			lightmap += 3*(dt * ((surf->extents[0]>>4)+1) + ds);
+			lightmap += 3 * (dt * ((surf->extents[0] >> surf->lmshift) + 1) + ds);
 
 			for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
 					maps++)
@@ -263,8 +263,9 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 				pointcolor[0] += lightmap[0] * scale[0] * (1.0/255);
 				pointcolor[1] += lightmap[1] * scale[1] * (1.0/255);
 				pointcolor[2] += lightmap[2] * scale[2] * (1.0/255);
-				lightmap += 3*((surf->extents[0]>>4)+1) *
-						((surf->extents[1]>>4)+1);
+
+				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) *
+					((surf->extents[1] >> surf->lmshift) + 1);
 			}
 		}
 		
@@ -298,7 +299,8 @@ void R_LightPoint (vec3_t p, vec3_t color)
 	
 	end[0] = p[0];
 	end[1] = p[1];
-	end[2] = p[2] - 2048;
+	end[2] = p[2] - 4096;
+
 	
 	r = RecursiveLightPoint (r_worldmodel->nodes, p, end);
 	
@@ -354,8 +356,9 @@ void R_AddDynamicLights (msurface_t *surf)
 	float		fsacc, ftacc;
 	vec3_t		lightofs; //Spike: light surfaces based upon where they are now instead of their default position.
 
-	smax = (surf->extents[0]>>4)+1;
-	tmax = (surf->extents[1]>>4)+1;
+	smax = (surf->extents[0] >> surf->lmshift) + 1;
+	tmax = (surf->extents[1] >> surf->lmshift) + 1;
+
 	tex = surf->texinfo;
 
 	for (lightNum = 0; lightNum < r_newrefdef.num_dlights; lightNum++)
@@ -387,13 +390,14 @@ void R_AddDynamicLights (msurface_t *surf)
 		local[1] = DotProduct (impact, tex->vecs[1]) + tex->vecs[1][3] - surf->texturemins[1];
 
 		pfBL = s_blocklights;
-		for (t = 0, ftacc = 0 ; t<tmax ; t++, ftacc += 16)
+
+		for (t = 0, ftacc = 0; t < tmax; t++, ftacc += (1 << surf->lmshift))
 		{
 			td = local[1] - ftacc;
 			if ( td < 0 )
 				td = -td;
 
-			for ( s=0, fsacc = 0 ; s<smax ; s++, fsacc += 16, pfBL += 3)
+			for (s = 0, fsacc = 0; s < smax; s++, fsacc += (1 << surf->lmshift), pfBL += 3)
 			{
 				sd = Q_ftol( local[0] - fsacc );
 
@@ -407,9 +411,11 @@ void R_AddDynamicLights (msurface_t *surf)
 
 				if ( fdist < fminlight )
 				{
-					pfBL[0] += ( frad - fdist ) * dl->color[0];
-					pfBL[1] += ( frad - fdist ) * dl->color[1];
-					pfBL[2] += ( frad - fdist ) * dl->color[2];
+					float diff = frad - fdist; // shamefuly inspired by yquake2
+
+					pfBL[0] += diff * dl->color[0];
+					pfBL[1] += diff * dl->color[1];
+					pfBL[2] += diff * dl->color[2];
 				}
 			}
 		}
@@ -452,10 +458,11 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 	if ( surf->texinfo->flags & (SURF_SKY|SURF_TRANS33|SURF_TRANS66|SURF_WARP) )
 		ri.Error (ERR_DROP, "R_BuildLightMap called for non-lit surface");
 
-	smax = (surf->extents[0]>>4)+1;
-	tmax = (surf->extents[1]>>4)+1;
+	smax = (surf->extents[0] >> surf->lmshift) + 1;
+	tmax = (surf->extents[1] >> surf->lmshift) + 1;
+
 	size = smax*tmax;
-	//int bsize = sizeof(s_blocklights) >> 4; // vanilla, bug?
+	//int bsize = sizeof(s_blocklights) >> 4; // "probably vanilla bug" -- paril.
 	int bsize = sizeof(s_blocklights) / 12;
 	if (size > (bsize) )
 		ri.Error (ERR_DROP, "Bad s_blocklights size");

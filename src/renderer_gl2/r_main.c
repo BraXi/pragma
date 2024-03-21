@@ -829,7 +829,7 @@ void R_DrawBeam( rentity_t *e )
 //	g = ( d_8to24table[e->skinnum & 0xFF] >> 8 ) & 0xFF;
 //	b = ( d_8to24table[e->skinnum & 0xFF] >> 16 ) & 0xFF;
 
-	r = g = b = 0; // FIXME!
+	r = g = b = 1.0f; // FIXME!
 	r *= 1/255.0F;
 	g *= 1/255.0F;
 	b *= 1/255.0F;

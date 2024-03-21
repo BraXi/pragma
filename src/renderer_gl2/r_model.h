@@ -23,6 +23,7 @@ BRUSH MODELS
 ==============================================================================
 */
 
+#define	DEFAULT_LMSHIFT	4
 
 //
 // in memory representation
@@ -110,6 +111,8 @@ typedef struct msurface_s
 	unsigned short	lm_width;
 	unsigned short	lm_height;
 
+	short		lmshift;
+
 	// lighting info
 	int			dlightframe;
 	int			dlightbits;
@@ -117,7 +120,7 @@ typedef struct msurface_s
 	int			lightmaptexturenum;
 	byte		styles[MAXLIGHTMAPS];
 	float		cached_light[MAXLIGHTMAPS];	// values currently used in lightmap
-	byte		*samples;		// [numstyles*surfsize]
+	byte		*samples;		// ptr to lightmap data [numstyles*surfsize]
 } msurface_t;
 
 typedef struct mnode_s

@@ -315,8 +315,10 @@ void R_BlendLightmaps (void)
 			int		smax, tmax;
 			byte	*base;
 
-			smax = (surf->extents[0]>>4)+1;
-			tmax = (surf->extents[1]>>4)+1;
+			smax = (surf->extents[0] >> surf->lmshift) + 1;
+			tmax = (surf->extents[1] >> surf->lmshift) + 1;
+			//smax = (surf->extents[0]>>4)+1;
+			//tmax = (surf->extents[1]>>4)+1;
 
 			if ( LM_AllocBlock( smax, tmax, &surf->dlight_s, &surf->dlight_t ) )
 			{
@@ -447,9 +449,9 @@ dynamic:
 		{
 			unsigned	temp[34*34];
 			int			smax, tmax;
-
-			smax = (fa->extents[0]>>4)+1;
-			tmax = (fa->extents[1]>>4)+1;
+			
+			smax = (fa->extents[0] >> fa->lmshift) + 1;
+			tmax = (fa->extents[1] >> fa->lmshift) + 1;
 
 			R_BuildLightMap( fa, (void *)temp, smax*4 );
 			R_SetCacheState( fa );
@@ -725,8 +727,10 @@ dynamic:
 
 		if ( ( surf->styles[map] >= 32 || surf->styles[map] == 0 ) && ( surf->dlightframe != r_framecount ) )
 		{
-			smax = (surf->extents[0]>>4)+1;
-			tmax = (surf->extents[1]>>4)+1;
+			smax = (surf->extents[0] >> surf->lmshift) + 1;
+			tmax = (surf->extents[1] >> surf->lmshift) + 1;
+			//smax = (surf->extents[0]>>4)+1;
+			//tmax = (surf->extents[1]>>4)+1;
 
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 			R_SetCacheState( surf );
@@ -738,8 +742,10 @@ dynamic:
 		}
 		else
 		{
-			smax = (surf->extents[0]>>4)+1;
-			tmax = (surf->extents[1]>>4)+1;
+			smax = (surf->extents[0] >> surf->lmshift) + 1;
+			tmax = (surf->extents[1] >> surf->lmshift) + 1;
+			//smax = (surf->extents[0]>>4)+1;
+			//tmax = (surf->extents[1]>>4)+1;
 
 			R_BuildLightMap( surf, (void *)temp, smax*4 );
 
@@ -1347,17 +1353,17 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 		//
 		// lightmap texture coordinates
 		//
-		s = DotProduct (vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
+		s = DotProduct(vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
 		s -= fa->texturemins[0];
-		s += fa->light_s*16;
-		s += 8;
-		s /= BLOCK_WIDTH*16; //fa->texinfo->texture->width;
+		s += fa->light_s * (1 << fa->lmshift);
+		s += (1 << fa->lmshift) * 0.5;
+		s /= BLOCK_WIDTH * (1 << fa->lmshift);
 
-		t = DotProduct (vec, fa->texinfo->vecs[1]) + fa->texinfo->vecs[1][3];
+		t = DotProduct(vec, fa->texinfo->vecs[1]) + fa->texinfo->vecs[1][3];
 		t -= fa->texturemins[1];
-		t += fa->light_t*16;
-		t += 8;
-		t /= BLOCK_HEIGHT*16; //fa->texinfo->texture->height;
+		t += fa->light_t * (1 << fa->lmshift);
+		t += (1 << fa->lmshift) * 0.5;
+		t /= BLOCK_HEIGHT * (1 << fa->lmshift);
 
 		poly->verts[i][5] = s;
 		poly->verts[i][6] = t;
@@ -1380,8 +1386,8 @@ void GL_CreateSurfaceLightmap (msurface_t *surf)
 	if (surf->flags & (SURF_DRAWSKY|SURF_DRAWTURB))
 		return;
 
-	smax = (surf->extents[0]>>4)+1;
-	tmax = (surf->extents[1]>>4)+1;
+	smax = (surf->extents[0] >> surf->lmshift) + 1;
+	tmax = (surf->extents[1] >> surf->lmshift) + 1;
 
 	if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
 	{
