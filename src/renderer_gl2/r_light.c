@@ -220,7 +220,7 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 	lightplane = plane;
 
 	surf = r_worldmodel->surfaces + node->firstsurface;
-	for (i=0 ; i<node->numsurfaces ; i++, surf++)
+	for (i = 0; i < node->numsurfaces; i++, surf++)
 	{
 		if (surf->flags & (SURF_DRAWTURB|SURF_DRAWSKY)) 
 			continue;	// no lightmaps

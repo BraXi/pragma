@@ -509,11 +509,14 @@ static void Mod_BSP_LoadLightMaps(lump_t *l)
 	int count;
 	if (!l->filelen)
 	{
+		pLoadModel->lightdatasize = -1;
 		pLoadModel->lightdata = NULL;
 		return;
 	}
+
 	CMod_ValidateBSPLump(l, BSP_LIGHTING, &count, 0, "lightmaps", __FUNCTION__);
 
+	pLoadModel->lightdatasize = l->filelen;
 	pLoadModel->lightdata = Hunk_Alloc(l->filelen);	
 	memcpy (pLoadModel->lightdata, mod_base + l->fileofs, l->filelen);
 }
@@ -1130,25 +1133,21 @@ Mod_BSP_LoadPlanes
 */
 static void Mod_BSP_LoadPlanes(lump_t *l)
 {
-	int			i, j;
+	dplane_t	*in;
 	cplane_t	*out;
-	dplane_t 	*in;
-	int			count;
-	int			bits;
-	
-	in = (void *)(mod_base + l->fileofs);
-	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "Mod_BSP_LoadPlanes: funny lump size in %s",pLoadModel->name);
-	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc ( count*2*sizeof(*out));	
+	int			i, j, count, bits;
+
+	CMod_ValidateBSPLump(l, BSP_PLANES, &count, 1, "planes", __FUNCTION__);
+	in = (void*)(mod_base + l->fileofs);
+	out = Hunk_Alloc(count * 2 * sizeof(*out));
 	
 	pLoadModel->planes = out;
 	pLoadModel->numplanes = count;
 
-	for ( i=0 ; i<count ; i++, in++, out++)
+	for ( i = 0; i < count; i++, in++, out++)
 	{
 		bits = 0;
-		for (j=0 ; j<3 ; j++)
+		for (j = 0; j < 3; j++)
 		{
 			out->normal[j] = LittleFloat (in->normal[j]);
 			if (out->normal[j] < 0)
@@ -1161,6 +1160,126 @@ static void Mod_BSP_LoadPlanes(lump_t *l)
 	}
 }
 
+
+/*
+=================
+Mod_BSP_EXT_DecoupledLM
+=================
+*/
+static void Mod_BSP_EXT_DecoupledLM(bspx_lump_t* l)
+{
+	bspx_decoupledlm_t	*in;
+	msurface_t			*out;
+	unsigned int		i, j, count, offset;
+
+	if (l->filelen % sizeof(bspx_decoupledlm_t))
+	{
+		ri.Error(ERR_DROP, "%s: funny lump size in %s", pLoadModel->name, __FUNCTION__);
+		return;
+	}
+
+	count = l->filelen / sizeof(bspx_decoupledlm_t);
+	if (pLoadModel->numsurfaces > count)
+	{
+		ri.Error(ERR_DROP, "%s: lump too short %s", __FUNCTION__, pLoadModel->name );
+		return;
+	}
+
+//	if(l->fileofs+l->filelen >= modelFileLength)
+//	{
+//		ri.Error(ERR_DROP, "%s: lump too long %s", __FUNCTION__, pLoadModel->name);
+//		return;
+//	}
+
+	in = (void*)(mod_base + l->fileofs);
+	out = pLoadModel->surfaces;
+
+	for (i = 0; i < pLoadModel->numsurfaces; i++, in++, out++)
+	{
+		out->lm_width = LittleShort(in->width);
+		out->lm_height = LittleShort(in->height);
+
+		offset = LittleLong(in->offset);
+		if (offset < pLoadModel->lightdatasize)
+			out->samples = pLoadModel->lightdata + offset;
+
+		for (j = 0; j < 3; j++) 
+			out->lm_axis[0][j] = LittleFloat(in->axis0[j]);
+
+		out->lm_offset[0] = LittleFloat(in->offset_s);
+
+		for (j = 0; j < 3; j++)
+			out->lm_axis[1][j] = LittleFloat(in->axis1[j]);
+
+		out->lm_offset[1] = LittleFloat(in->offset_t);
+	}
+	pLoadModel->decoupled_lm = true;
+
+	ri.Printf(PRINT_ALERT, "DECOUPLED_LM\n");
+}
+
+
+/*
+=================
+Mod_BSP_FindExtLumps
+
+Pares the bsp for BSPX lumps
+=================
+*/
+static void Mod_BSP_FindExtLumps()
+{
+	dheader_t* header;
+	bspx_header_t* bspx;
+	int offset, lastlump, i;
+
+	header = (dheader_t*)mod_base;
+
+#if 0
+	static char* lumpNames[HEADER_LUMPS] =
+	{
+	"ENTITIES", "PLANES", "VERTEXES", "VISIBILITY", "NODES","TEXINFO","FACES","LIGHTING","LEAFS","LEAFFACES","LEAFBRUSHES","EDGES","SURFEDGES","MODELS","BRUSHES","BRUSHSIDES","POP","AREAS","AREAPORTALS"
+	};
+#endif
+
+	// find the last lump in file, LUMP_ENTITIES is probably last but be sure...
+	offset = 0;
+	for (i = 0; i < HEADER_LUMPS; i++)
+	{
+		if (header->lumps[i].fileofs > offset)
+		{
+			lastlump = i;
+			offset = header->lumps[i].fileofs;
+		}
+	}
+	
+	offset = header->lumps[lastlump].fileofs + header->lumps[lastlump].filelen + 1;
+	if (offset + sizeof(bspx_header_t) < modelFileLength)
+	{
+		bspx = (void*)(mod_base + offset);
+
+		if(bspx->ident[0] != 'B' || bspx->ident[1] != 'S' || bspx->ident[2] != 'P' || bspx->ident[3] != 'X')
+			ri.Error(ERR_DROP, "Error reading BSPX ident\n");
+		offset += sizeof(bspx_header_t);
+		if (offset >= modelFileLength)
+			return;
+
+		for (i = 0; i < bspx->numlumps; i++)
+		{
+			bspx_lump_t* lump = (void*)(mod_base + offset);
+
+			if (!strcmp(lump->name, "DECOUPLED_LM"))
+				Mod_BSP_EXT_DecoupledLM(lump);
+
+			offset += sizeof(bspx_lump_t);
+			if (offset >= modelFileLength)
+			{
+				ri.Error(ERR_DROP, "Error reading bspx lumps\n");
+			}
+		}
+	}
+}
+
+
 /*
 =================
 Mod_LoadBSP
@@ -1172,8 +1291,6 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	dheader_t	*header;
 	mmodel_t 	*bm;
 	
-	pLoadModel->type = MOD_BRUSH;
-
 	if (pLoadModel != r_models)
 		ri.Error (ERR_DROP, "Mod_LoadBSP: Loaded BSP after the world");
 
@@ -1185,10 +1302,11 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 
 	// swap all the lumps
 	mod_base = (byte *)header;
-
 	for (i = 0; i < sizeof(dheader_t)/4 ; i++)
 		((int *)header)[i] = LittleLong(((int *)header)[i]);
 
+	mod->type = MOD_BRUSH;
+	mod->numframes = 2;		// regular and alternate animation
 	pCurrentModel = pLoadModel;
 
 	// load into heap
@@ -1204,8 +1322,10 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	Mod_BSP_LoadLeafs (&header->lumps[LUMP_LEAFS]);
 	Mod_BSP_LoadNodes (&header->lumps[LUMP_NODES]);
 	Mod_BSP_LoadInlineModels (&header->lumps[LUMP_MODELS]);
-	mod->numframes = 2;		// regular and alternate animation
-	
+
+
+	Mod_BSP_FindExtLumps();
+
 	//
 	// set up the inline models
 	//

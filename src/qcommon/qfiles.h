@@ -261,6 +261,35 @@ typedef enum
 
 //=============================================================================
 
+// BSPX extensions to BSP
+
+typedef struct
+{
+	unsigned short	width;
+	unsigned short	height;
+	unsigned int	offset;		// start of numstyles (from face struct) * (lmwidth * lmheight) samples
+	float			axis0[3];	// this is a world -> lightmap space transformation matrix
+	float			offset_s;
+	float			axis1[3];
+	float			offset_t;
+} bspx_decoupledlm_t;
+
+typedef struct
+{
+	char	name[24];	// up to 23 chars, zero-padded
+	int		fileofs;	// from file start
+	int		filelen;
+} bspx_lump_t;
+
+typedef struct
+{
+	char ident[4];	// "BSPX"
+//	int ident;		// BSPX_IDENT
+	int numlumps;	// bspx_lump_t[numlumps]
+} bspx_header_t;
+
+//=============================================================================
+
 typedef struct
 {
 	int		fileofs, filelen;
