@@ -45,12 +45,12 @@ typedef struct
 static gllightmapstate_t gl_lms;
 
 
-static void		LM_InitBlock( void );
-static void		LM_UploadBlock( qboolean dynamic );
-static qboolean	LM_AllocBlock (int w, int h, int *x, int *y);
+static void		R_LightMap_InitBlock( void );
+static void		R_LightMap_UploadBlock( qboolean dynamic );
+static qboolean	R_LightMap_AllocBlock (int w, int h, int *x, int *y);
 
-extern void R_SetCacheState( msurface_t *surf );
-extern void R_BuildLightMap (msurface_t *surf, byte *dest, int stride);
+extern void R_LightMap_SetCacheStateForSurf( msurface_t *surf );
+extern void R_LightMap_Build (msurface_t *surf, byte *dest, int stride);
 
 /*
 =============================================================
@@ -301,7 +301,7 @@ void R_BlendLightmaps (void)
 	*/
 	if ( r_dynamic->value )
 	{
-		LM_InitBlock();
+		R_LightMap_InitBlock();
 
 		R_BindTexture( gl_state.lightmap_textures+0 );
 
@@ -320,19 +320,19 @@ void R_BlendLightmaps (void)
 			//smax = (surf->extents[0]>>4)+1;
 			//tmax = (surf->extents[1]>>4)+1;
 
-			if ( LM_AllocBlock( smax, tmax, &surf->dlight_s, &surf->dlight_t ) )
+			if ( R_LightMap_AllocBlock( smax, tmax, &surf->dlight_s, &surf->dlight_t ) )
 			{
 				base = gl_lms.lightmap_buffer;
 				base += ( surf->dlight_t * BLOCK_WIDTH + surf->dlight_s ) * LIGHTMAP_BYTES;
 
-				R_BuildLightMap (surf, base, BLOCK_WIDTH*LIGHTMAP_BYTES);
+				R_LightMap_Build (surf, base, BLOCK_WIDTH*LIGHTMAP_BYTES);
 			}
 			else
 			{
 				msurface_t *drawsurf;
 
 				// upload what we have so far
-				LM_UploadBlock( true );
+				R_LightMap_UploadBlock( true );
 
 				// draw all surfaces that use this lightmap
 				for ( drawsurf = newdrawsurf; drawsurf != surf; drawsurf = drawsurf->lightmapchain )
@@ -352,18 +352,18 @@ void R_BlendLightmaps (void)
 				newdrawsurf = drawsurf;
 
 				// clear the block
-				LM_InitBlock();
+				R_LightMap_InitBlock();
 
 				// try uploading the block now
-				if ( !LM_AllocBlock( smax, tmax, &surf->dlight_s, &surf->dlight_t ) )
+				if ( !R_LightMap_AllocBlock( smax, tmax, &surf->dlight_s, &surf->dlight_t ) )
 				{
-					ri.Error( ERR_FATAL, "Consecutive calls to LM_AllocBlock(%d,%d) failed (dynamic)\n", smax, tmax );
+					ri.Error( ERR_FATAL, "Consecutive calls to R_LightMap_AllocBlock(%d,%d) failed (dynamic)\n", smax, tmax );
 				}
 
 				base = gl_lms.lightmap_buffer;
 				base += ( surf->dlight_t * BLOCK_WIDTH + surf->dlight_s ) * LIGHTMAP_BYTES;
 
-				R_BuildLightMap (surf, base, BLOCK_WIDTH*LIGHTMAP_BYTES);
+				R_LightMap_Build (surf, base, BLOCK_WIDTH*LIGHTMAP_BYTES);
 			}
 		}
 
@@ -371,7 +371,7 @@ void R_BlendLightmaps (void)
 		** draw remainder of dynamic lightmaps that haven't been uploaded yet
 		*/
 		if ( newdrawsurf )
-			LM_UploadBlock( true );
+			R_LightMap_UploadBlock( true );
 
 		for ( surf = newdrawsurf; surf != 0; surf = surf->lightmapchain )
 		{
@@ -453,8 +453,8 @@ dynamic:
 			smax = (fa->extents[0] >> fa->lmshift) + 1;
 			tmax = (fa->extents[1] >> fa->lmshift) + 1;
 
-			R_BuildLightMap( fa, (void *)temp, smax*4 );
-			R_SetCacheState( fa );
+			R_LightMap_Build( fa, (void *)temp, smax*4 );
+			R_LightMap_SetCacheStateForSurf( fa );
 
 			R_MultiTextureBind(GL_TEXTURE1, gl_state.lightmap_textures + fa->lightmaptexturenum );
 
@@ -538,46 +538,47 @@ void R_DrawWorldAlphaSurfaces()
 DrawTextureChains
 ================
 */
+static void R_LightMappedWorldSurf(msurface_t* surf);
 void DrawTextureChains (void)
 {
 	int		i;
 	msurface_t	*s;
 	image_t		*image;
 
-	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
-	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
+//	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
+//	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 
 	rperf.visible_textures = 0;
 	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
-		if (!image->registration_sequence)
-			continue;
-		if (!image->texturechain)
+		if (!image->registration_sequence || !image->texturechain)
 			continue;
 
 		rperf.visible_textures++;
 
-		for ( s = image->texturechain; s ; s=s->texturechain)
+		for ( s = image->texturechain; s; s = s->texturechain)
 		{
-			if ( !( s->flags & SURF_DRAWTURB ) )
-				R_RenderBrushPoly (s);
+			if (!(s->flags & SURF_DRAWTURB))
+				R_LightMappedWorldSurf(s);
+				//R_RenderBrushPoly(s); // lightmapped
 		}
 	}
 
-	for ( i = 0, image=r_textures ; i<r_textures_count ; i++,image++)
+	for ( i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (!image->registration_sequence)
 			continue;
+
 		s = image->texturechain;
 		if (!s)
 			continue;
 
-		for ( ; s ; s=s->texturechain)
+		for ( ; s ; s = s->texturechain)
 		{
 			if ( s->flags & SURF_DRAWTURB )
-				R_RenderBrushPoly (s);
+				R_LightMappedWorldSurf(s);
+				//R_RenderBrushPoly(s); // unlit and fullbright
 		}
-
 		image->texturechain = NULL;
 	}
 }
@@ -732,8 +733,8 @@ dynamic:
 			//smax = (surf->extents[0]>>4)+1;
 			//tmax = (surf->extents[1]>>4)+1;
 
-			R_BuildLightMap( surf, (void *)temp, smax*4 );
-			R_SetCacheState( surf );
+			R_LightMap_Build( surf, (void *)temp, smax*4 );
+			R_LightMap_SetCacheStateForSurf( surf );
 
 			lightMapTexId = surf->lightmaptexturenum;
 
@@ -747,7 +748,7 @@ dynamic:
 			//smax = (surf->extents[0]>>4)+1;
 			//tmax = (surf->extents[1]>>4)+1;
 
-			R_BuildLightMap( surf, (void *)temp, smax*4 );
+			R_LightMap_Build( surf, (void *)temp, smax*4 );
 
 			lightMapTexId = 0;
 			R_MultiTextureBind(GL_TEXTURE1, gl_state.lightmap_textures + lightMapTexId);
@@ -1025,11 +1026,11 @@ void R_RecursiveWorldNode (mnode_t *node)
 		}
 		else
 		{
-			if( r_singlepass->value )
-			{
-				R_LightMappedWorldSurf(surf);
-			}
-			else
+			//if( r_singlepass->value )
+			//{
+			//	R_LightMappedWorldSurf(surf);
+			//}
+			//else
 			{
 				// the polygon is visible, so add it to the texture sorted chain
 				// FIXME: this is a hack for animation
@@ -1085,7 +1086,7 @@ void R_DrawWorld (void)
 		R_EnableMultitexture(true);
 		R_RecursiveWorldNode(r_worldmodel->nodes);
 
-		//DrawTextureChains();
+		DrawTextureChains();
 		//R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
 
 		R_EnableMultitexture(false);
@@ -1113,9 +1114,10 @@ void R_DrawWorld (void)
 R_MarkLeaves
 
 Mark the leaves and nodes that are in the PVS for the current cluster
+Note: a camera may be in two PVS areas hence there ate two clusters
 ===============
 */
-void R_MarkLeaves (void)
+void R_MarkLeaves(void)
 {
 	byte	*vis;
 	byte	fatvis[MAX_MAP_LEAFS_QBSP/8];
@@ -1127,8 +1129,7 @@ void R_MarkLeaves (void)
 	if (r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->value && r_viewcluster != -1)
 		return;
 
-	// development aid to let you run around and see exactly where
-	// the pvs ends
+	// development aid to let you run around and see exactly where the pvs ends
 	if (r_lockpvs->value)
 		return;
 
@@ -1204,12 +1205,23 @@ void R_MarkLeaves (void)
 =============================================================================
 */
 
-static void LM_InitBlock( void )
+
+/*
+================
+R_LightMap_InitBlock
+================
+*/
+static void R_LightMap_InitBlock( void )
 {
 	memset( gl_lms.allocated, 0, sizeof( gl_lms.allocated ) );
 }
 
-static void LM_UploadBlock( qboolean dynamic )
+/*
+================
+R_LightMap_UploadBlock
+================
+*/
+static void R_LightMap_UploadBlock( qboolean dynamic )
 {
 	int texture;
 	int height = 0;
@@ -1256,12 +1268,18 @@ static void LM_UploadBlock( qboolean dynamic )
 					   GL_UNSIGNED_BYTE, 
 					   gl_lms.lightmap_buffer );
 		if ( ++gl_lms.current_lightmap_texture == MAX_LIGHTMAPS )
-			ri.Error( ERR_DROP, "LM_UploadBlock() - MAX_LIGHTMAPS exceeded\n" );
+			ri.Error( ERR_DROP, "R_LightMap_UploadBlock() - MAX_LIGHTMAPS exceeded\n" );
 	}
 }
 
-// returns a texture number and the position inside it
-static qboolean LM_AllocBlock (int w, int h, int *x, int *y)
+/*
+================
+R_LightMap_AllocBlock
+
+returns a texture number and the position inside it
+================
+*/
+static qboolean R_LightMap_AllocBlock(int w, int h, int *x, int *y)
 {
 	int		i, j;
 	int		best, best2;
@@ -1297,10 +1315,12 @@ static qboolean LM_AllocBlock (int w, int h, int *x, int *y)
 
 /*
 ================
-GL_BuildPolygonFromSurface
+R_BuildPolygonFromSurface
+
+Does also calculate proper lightmap coordinates for poly
 ================
 */
-void GL_BuildPolygonFromSurface(msurface_t *fa)
+void R_BuildPolygonFromSurface(msurface_t *fa)
 {
 	int			i, lindex, lnumverts;
 	medge_t		*pedges, *r_pedge;
@@ -1310,7 +1330,7 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 	glpoly_t	*poly;
 	vec3_t		total;
 
-// reconstruct the polygon
+	// reconstruct the polygon
 	pedges = pCurrentModel->edges;
 	lnumverts = fa->numedges;
 	vertpage = 0;
@@ -1325,7 +1345,7 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 	fa->polys = poly;
 	poly->numverts = lnumverts;
 
-	for (i=0 ; i<lnumverts ; i++)
+	for (i = 0; i < lnumverts; i++)
 	{
 		lindex = pCurrentModel->surfedges[fa->firstedge + i];
 
@@ -1385,10 +1405,10 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 
 /*
 ========================
-GL_CreateSurfaceLightmap
+R_CreateLightMapForSurface
 ========================
 */
-void GL_CreateSurfaceLightmap (msurface_t *surf)
+void R_CreateLightMapForSurface(msurface_t *surf)
 {
 	int		smax, tmax;
 	byte	*base;
@@ -1399,13 +1419,13 @@ void GL_CreateSurfaceLightmap (msurface_t *surf)
 	smax = (surf->extents[0] >> surf->lmshift) + 1;
 	tmax = (surf->extents[1] >> surf->lmshift) + 1;
 
-	if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
+	if ( !R_LightMap_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
 	{
-		LM_UploadBlock( false );
-		LM_InitBlock();
-		if ( !LM_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
+		R_LightMap_UploadBlock( false );
+		R_LightMap_InitBlock();
+		if ( !R_LightMap_AllocBlock( smax, tmax, &surf->light_s, &surf->light_t ) )
 		{
-			ri.Error( ERR_FATAL, "Consecutive calls to LM_AllocBlock(%d,%d) failed\n", smax, tmax );
+			ri.Error( ERR_FATAL, "Consecutive calls to R_LightMap_AllocBlock(%d,%d) failed\n", smax, tmax );
 		}
 	}
 
@@ -1414,47 +1434,47 @@ void GL_CreateSurfaceLightmap (msurface_t *surf)
 	base = gl_lms.lightmap_buffer;
 	base += (surf->light_t * BLOCK_WIDTH + surf->light_s) * LIGHTMAP_BYTES;
 
-	R_SetCacheState( surf );
-	R_BuildLightMap (surf, base, BLOCK_WIDTH*LIGHTMAP_BYTES);
+	R_LightMap_SetCacheStateForSurf( surf );
+	R_LightMap_Build(surf, base, BLOCK_WIDTH*LIGHTMAP_BYTES);
 }
 
 
 /*
 ==================
-GL_BeginBuildingLightmaps
+R_LightMap_BeginBuilding
 
+
+Note: This does set current texture mapping unit to 1, we keep all lightmaps at unit 1
 ==================
 */
-void GL_BeginBuildingLightmaps (model_t *m)
+void R_LightMap_BeginBuilding(model_t *m)
 {
 	static lightstyle_t	lightstyles[MAX_LIGHTSTYLES];
 	int				i;
 	unsigned		dummy[BLOCK_WIDTH*BLOCK_HEIGHT]; //LMCHANGE
-	//unsigned		dummy[128*128];
 
 	memset( gl_lms.allocated, 0, sizeof(gl_lms.allocated) );
 
-	r_framecount = 1;		// no dlightcache
+	r_framecount = 1; // no dlightcache
 
 	R_EnableMultitexture( true );
 	R_SelectTextureUnit( GL_TEXTURE1 );
 
-	/*
-	** setup the base lightstyles so the lightmaps won't have to be regenerated
-	** the first time they're seen
-	*/
+	//
+	// setup the base lightstyles so the lightmaps won't have to be regenerated
+	// the first time they're seen
+	//
 	for (i = 0; i < MAX_LIGHTSTYLES ; i++)
 	{
 		VectorSet(lightstyles[i].rgb, 1.0f, 1.0f, 1.0f);
-		lightstyles[i].white = 3; // braxi -- why is is this out of scale?
+		lightstyles[i].white = 3; // braxi -- why is is this out of scale? shouldn't it be 2 at max (aka lightstyle string "Z")?
 	}
 	r_newrefdef.lightstyles = lightstyles;
 
 	if (!gl_state.lightmap_textures)
 	{
-		gl_state.lightmap_textures	= TEXNUM_LIGHTMAPS;
-//		gl_state.lightmap_textures	= gl_state.texture_extension_number;
-//		gl_state.texture_extension_number = gl_state.lightmap_textures + MAX_LIGHTMAPS;
+		// this is the first texnum for lightmap being created
+		gl_state.lightmap_textures = TEXNUM_LIGHTMAPS; 
 	}
 
 	gl_lms.current_lightmap_texture = 1;
@@ -1496,9 +1516,9 @@ void GL_BeginBuildingLightmaps (model_t *m)
 		gl_lms.internal_format = gl_tex_solid_format;
 	}
 
-	/*
-	** initialize the dynamic lightmap texture
-	*/
+	//
+	// initialize the dynamic lightmap texture
+	//
 	R_BindTexture( gl_state.lightmap_textures + 0 );
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1516,12 +1536,12 @@ void GL_BeginBuildingLightmaps (model_t *m)
 
 /*
 =======================
-GL_EndBuildingLightmaps
+R_LightMap_EndBuilding
 =======================
 */
-void GL_EndBuildingLightmaps (void)
+void R_LightMap_EndBuilding()
 {
-	LM_UploadBlock( false );
+	R_LightMap_UploadBlock( false );
 	R_EnableMultitexture( false );
 }
 

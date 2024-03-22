@@ -460,10 +460,10 @@ static void R_AddDynamicLights(msurface_t *surf)
 
 /*
 ===============
-R_SetCacheState
+R_LightMap_SetCacheStateForSurf
 ===============
 */
-void R_SetCacheState( msurface_t *surf )
+void R_LightMap_SetCacheStateForSurf( msurface_t *surf )
 {
 	int maps;
 
@@ -475,12 +475,12 @@ void R_SetCacheState( msurface_t *surf )
 
 /*
 ===============
-R_BuildLightMap
+R_LightMap_Build
 
 Combine and scale multiple lightmaps into the floating format in blocklights
 ===============
 */
-void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
+void R_LightMap_Build (msurface_t *surf, byte *dest, int stride)
 {
 	int			smax, tmax;
 	int			r, g, b, a, max;
@@ -493,7 +493,7 @@ void R_BuildLightMap (msurface_t *surf, byte *dest, int stride)
 	int monolightmap;
 
 	if ( surf->texinfo->flags & (SURF_SKY|SURF_TRANS33|SURF_TRANS66|SURF_WARP) )
-		ri.Error (ERR_DROP, "R_BuildLightMap called for non-lit surface");
+		ri.Error (ERR_DROP, "R_LightMap_Build called for non-lit surface");
 
 	smax = (surf->extents[0] >> surf->lmshift) + 1;
 	tmax = (surf->extents[1] >> surf->lmshift) + 1;

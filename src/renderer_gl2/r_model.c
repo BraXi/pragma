@@ -771,10 +771,10 @@ static void BSP_CalcSurfaceExtents(msurface_t *s)
 }
 
 
-void GL_BuildPolygonFromSurface(msurface_t *fa);
-void GL_CreateSurfaceLightmap (msurface_t *surf);
-void GL_EndBuildingLightmaps(void);
-void GL_BeginBuildingLightmaps(model_t *m);
+void R_BuildPolygonFromSurface(msurface_t *fa);
+void R_CreateLightMapForSurface (msurface_t *surf);
+void R_LightMap_EndBuilding();
+void R_LightMap_BeginBuilding(model_t *m);
 
 static qboolean Mod_BSP_EXT_LoadDecoupledLM();
 
@@ -820,7 +820,7 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 	pLoadModel->surfaces = out;
 	pLoadModel->numsurfaces = count;
 
-	GL_BeginBuildingLightmaps (pLoadModel);
+	R_LightMap_BeginBuilding (pLoadModel);
 
 	Mod_BSP_EXT_LoadDecoupledLM();
 
@@ -862,10 +862,10 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 
 			// create lightmaps and polygons
 			if (!(out->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP)))
-				GL_CreateSurfaceLightmap(out);
+				R_CreateLightMapForSurface(out);
 
 			if (!(out->texinfo->flags & SURF_WARP))
-				GL_BuildPolygonFromSurface(out);
+				R_BuildPolygonFromSurface(out);
 		}
 
 	}
@@ -908,15 +908,15 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 
 			// create lightmaps and polygons
 			if (!(out->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP)))
-				GL_CreateSurfaceLightmap(out);
+				R_CreateLightMapForSurface(out);
 
 			if (!(out->texinfo->flags & SURF_WARP))
-				GL_BuildPolygonFromSurface(out);
+				R_BuildPolygonFromSurface(out);
 		}
 	}
 
 
-	GL_EndBuildingLightmaps ();
+	R_LightMap_EndBuilding ();
 }
 
 
