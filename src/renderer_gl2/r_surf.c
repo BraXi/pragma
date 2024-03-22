@@ -17,8 +17,8 @@ static vec3_t	modelorg;		// relative to viewpoint
 
 msurface_t	*r_alpha_surfaces;
 
-#define DYNAMIC_LIGHT_WIDTH  128
-#define DYNAMIC_LIGHT_HEIGHT 128
+#define DYNAMIC_LIGHT_WIDTH  256
+#define DYNAMIC_LIGHT_HEIGHT 256
 
 #define LIGHTMAP_BYTES 4
 
@@ -447,7 +447,7 @@ dynamic:
 	{
 		if ( ( fa->styles[maps] >= 32 || fa->styles[maps] == 0 ) && ( fa->dlightframe != r_framecount ) )
 		{
-			unsigned	temp[34*34];
+			unsigned	temp[256*256]; //BLOCKLIGHT_DIMS
 			int			smax, tmax;
 			
 			smax = (fa->extents[0] >> fa->lmshift) + 1;
@@ -1339,6 +1339,7 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 			r_pedge = &pedges[-lindex];
 			vec = pCurrentModel->vertexes[r_pedge->v[1]].position;
 		}
+
 		s = DotProduct (vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
 		s /= fa->texinfo->image->width;
 
@@ -1353,13 +1354,22 @@ void GL_BuildPolygonFromSurface(msurface_t *fa)
 		//
 		// lightmap texture coordinates
 		//
+#if DECOUPLED_LM
+		s = DotProduct(vec, fa->lmvecs[0]) + fa->lmvecs[0][3];
+#else
 		s = DotProduct(vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
+#endif
 		s -= fa->texturemins[0];
 		s += fa->light_s * (1 << fa->lmshift);
 		s += (1 << fa->lmshift) * 0.5;
 		s /= BLOCK_WIDTH * (1 << fa->lmshift);
 
+#if DECOUPLED_LM
+		t = DotProduct(vec, fa->lmvecs[1]) + fa->lmvecs[1][3];
+#else
 		t = DotProduct(vec, fa->texinfo->vecs[1]) + fa->texinfo->vecs[1][3];
+#endif
+		
 		t -= fa->texturemins[1];
 		t += fa->light_t * (1 << fa->lmshift);
 		t += (1 << fa->lmshift) * 0.5;

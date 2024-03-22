@@ -262,16 +262,13 @@ typedef enum
 //=============================================================================
 
 // BSPX extensions to BSP
-
+#define BSPX_IDENT		(('X'<<24)+('P'<<16)+('S'<<8)+'B') // little-endian "BSPX"
 typedef struct
 {
 	unsigned short	width;
 	unsigned short	height;
-	unsigned int	offset;		// start of numstyles (from face struct) * (lmwidth * lmheight) samples
-	float			axis0[3];	// this is a world -> lightmap space transformation matrix
-	float			offset_s;
-	float			axis1[3];
-	float			offset_t;
+	int		lightofs;
+	float	vecs[2][4];
 } bspx_decoupledlm_t;
 
 typedef struct
@@ -283,8 +280,8 @@ typedef struct
 
 typedef struct
 {
-	char ident[4];	// "BSPX"
-//	int ident;		// BSPX_IDENT
+//	char ident[4];	// "BSPX"
+	int ident;		// BSPX_IDENT
 	int numlumps;	// bspx_lump_t[numlumps]
 } bspx_header_t;
 

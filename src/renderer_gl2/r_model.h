@@ -105,17 +105,15 @@ typedef struct msurface_s
 	mtexinfo_t	*texinfo;
 	
 	// DECOUPLED_LM
-	vec3_t		lm_axis[2];
-	vec2_t		lm_offset;
-	vec2_t		m_scale;
 	unsigned short	lm_width;
 	unsigned short	lm_height;
-
+	float		lmvecs[2][4];
+	float		lmvlen[2];
 	short		lmshift;
 
 	// lighting info
-	int			dlightframe;
-	int			dlightbits;
+	int				dlightframe;
+	unsigned int	dlightbits;
 
 	int			lightmaptexturenum;
 	byte		styles[MAXLIGHTMAPS];
@@ -232,8 +230,6 @@ typedef struct model_s
 
 	byte		*lightdata;
 	int			lightdatasize;
-
-	qboolean	decoupled_lm;
 
 //
 // for alias models and sprites

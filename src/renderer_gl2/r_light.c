@@ -202,10 +202,10 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 	if ( (back < 0) == side)
 		return RecursiveLightPoint (node->children[side], start, end);
 	
-	frac = front / (front-back);
-	mid[0] = start[0] + (end[0] - start[0])*frac;
-	mid[1] = start[1] + (end[1] - start[1])*frac;
-	mid[2] = start[2] + (end[2] - start[2])*frac;
+	frac = front / (front - back);
+	mid[0] = start[0] + (end[0] - start[0]) * frac;
+	mid[1] = start[1] + (end[1] - start[1]) * frac;
+	mid[2] = start[2] + (end[2] - start[2]) * frac;
 	
 // go down front side	
 	r = RecursiveLightPoint (node->children[side], start, mid);
@@ -213,7 +213,7 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 		return r;		// hit something
 		
 	if ( (back < 0) == side )
-		return -1;		// didn't hit anuthing
+		return -1;		// didn't hit anything
 		
 // check for impact on this node
 	VectorCopy (mid, lightspot);
@@ -226,13 +226,23 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 			continue;	// no lightmaps
 
 		tex = surf->texinfo;
-		
+		lightmap = surf->samples;
+
+#ifdef DECOUPLED_LM
+		s = DotProduct(mid, surf->lmvecs[0]) + surf->lmvecs[0][3];
+		t = DotProduct(mid, surf->lmvecs[1]) + surf->lmvecs[1][3];
+#else
 		s = DotProduct (mid, tex->vecs[0]) + tex->vecs[0][3];
 		t = DotProduct (mid, tex->vecs[1]) + tex->vecs[1][3];;
+#endif
 
-		if (s < surf->texturemins[0] ||
-		t < surf->texturemins[1])
+		if (s < surf->texturemins[0] || t < surf->texturemins[1])
 			continue;
+
+//#ifdef DECOUPLED_LM
+//		if (s >= surf->lm_width || t >= surf->lm_height)
+//			continue;
+//#endif
 		
 		ds = s - surf->texturemins[0];
 		dt = t - surf->texturemins[1];
@@ -245,8 +255,7 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 
 		ds >>= surf->lmshift;
 		dt >>= surf->lmshift;
-
-		lightmap = surf->samples;
+		
 		VectorCopy (vec3_origin, pointcolor);
 		if (lightmap)
 		{
@@ -267,6 +276,10 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) *
 					((surf->extents[1] >> surf->lmshift) + 1);
 			}
+		}
+		else
+		{
+			lightmap = lightmap; //breakpoint
 		}
 		
 		return 1;
@@ -299,7 +312,7 @@ void R_LightPoint (vec3_t p, vec3_t color)
 	
 	end[0] = p[0];
 	end[1] = p[1];
-	end[2] = p[2] - 4096;
+	end[2] = p[2] - 2048;
 
 	
 	r = RecursiveLightPoint (r_worldmodel->nodes, p, end);
@@ -335,7 +348,14 @@ void R_LightPoint (vec3_t p, vec3_t color)
 
 //===================================================================
 
-static float s_blocklights[34*34*3];
+
+#ifdef DECOUPLED_LM
+#define BLOCKLIGHT_DIMS (256*256)
+#else
+#define BLOCKLIGHT_DIMS (34*34)
+#endif
+
+static float s_blocklights[BLOCKLIGHT_DIMS * 3];
 /*
 ===============
 R_AddDynamicLights
@@ -386,16 +406,26 @@ void R_AddDynamicLights (msurface_t *surf)
 			impact[i] = lightofs[i] - surf->plane->normal[i] * fdist;
 		}
 
+#ifdef DECOUPLED_LM
+		local[0] = DotProduct(impact, surf->lmvecs[0]) + surf->lmvecs[0][3] - surf->texturemins[0];
+		local[1] = DotProduct(impact, surf->lmvecs[1]) + surf->lmvecs[1][3] - surf->texturemins[1];
+#else
 		local[0] = DotProduct (impact, tex->vecs[0]) + tex->vecs[0][3] - surf->texturemins[0];
 		local[1] = DotProduct (impact, tex->vecs[1]) + tex->vecs[1][3] - surf->texturemins[1];
+#endif
 
 		pfBL = s_blocklights;
 
 		for (t = 0, ftacc = 0; t < tmax; t++, ftacc += (1 << surf->lmshift))
 		{
 			td = local[1] - ftacc;
+
 			if ( td < 0 )
 				td = -td;
+
+#ifdef DECOUPLED_LM
+			td *= surf->lmvlen[1];
+#endif
 
 			for (s = 0, fsacc = 0; s < smax; s++, fsacc += (1 << surf->lmshift), pfBL += 3)
 			{
@@ -403,6 +433,10 @@ void R_AddDynamicLights (msurface_t *surf)
 
 				if ( sd < 0 )
 					sd = -sd;
+
+#ifdef DECOUPLED_LM
+				sd *= surf->lmvlen[0];
+#endif
 
 				if (sd > td)
 					fdist = sd + (td>>1);
