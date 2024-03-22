@@ -170,52 +170,55 @@ LIGHT SAMPLING
 =============================================================================
 */
 
-vec3_t			pointcolor;
-cplane_t		*lightplane;		// used as shadow plane
-vec3_t			lightspot;
+static vec3_t		pointcolor;
+static cplane_t		*lightplane;	// used as shadow plane
+static vec3_t		lightspot;
 
-int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
+static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 {
 	float		front, back, frac;
-	int			side;
+	int			side, maps, r, i;
 	cplane_t	*plane;
 	vec3_t		mid;
 	msurface_t	*surf;
 	int			s, t, ds, dt;
-	int			i;
 	mtexinfo_t	*tex;
 	byte		*lightmap;
-	int			maps;
-	int			r;
 
 	if (node->contents != -1)
-		return -1;		// didn't hit anything
+		return -1; // didn't hit anything
 	
-// calculate mid point
-
-// FIXME: optimize for axial
+	//
+	// calculate mid point
+	//
+	
+	// FIXME: optimize for axial
 	plane = node->plane;
 	front = DotProduct (start, plane->normal) - plane->dist;
 	back = DotProduct (end, plane->normal) - plane->dist;
 	side = front < 0;
 	
 	if ( (back < 0) == side)
-		return RecursiveLightPoint (node->children[side], start, end);
+		return R_RecursiveLightPoint (node->children[side], start, end);
 	
 	frac = front / (front - back);
 	mid[0] = start[0] + (end[0] - start[0]) * frac;
 	mid[1] = start[1] + (end[1] - start[1]) * frac;
 	mid[2] = start[2] + (end[2] - start[2]) * frac;
 	
-// go down front side	
-	r = RecursiveLightPoint (node->children[side], start, mid);
+	//
+	// go down front side	
+	//
+	r = R_RecursiveLightPoint (node->children[side], start, mid);
 	if (r >= 0)
-		return r;		// hit something
+		return r; // hit something
 		
 	if ( (back < 0) == side )
-		return -1;		// didn't hit anything
+		return -1; // didn't hit anything
 		
-// check for impact on this node
+	//
+	// check for impact on this node
+	//
 	VectorCopy (mid, lightspot);
 	lightplane = plane;
 
@@ -241,7 +244,7 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 
 //#ifdef DECOUPLED_LM
 //		if (s >= surf->lm_width || t >= surf->lm_height)
-//			continue;
+//			continue; // this code will bust maps with no decoupledlm (in case you compile engine without standard bsp support)
 //#endif
 		
 		ds = s - surf->texturemins[0];
@@ -276,25 +279,22 @@ int RecursiveLightPoint (mnode_t *node, vec3_t start, vec3_t end)
 				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) *
 					((surf->extents[1] >> surf->lmshift) + 1);
 			}
-		}
-		else
-		{
-			lightmap = lightmap; //breakpoint
-		}
-		
+		}	
 		return 1;
 	}
 
 // go down back side
-	return RecursiveLightPoint (node->children[!side], mid, end);
+	return R_RecursiveLightPoint (node->children[!side], mid, end);
 }
 
 /*
 ===============
 R_LightPoint
+
+Returns the lightmap pixel color under p plus and probes for dynamic lights around p
 ===============
 */
-void R_LightPoint (vec3_t p, vec3_t color)
+void R_LightPoint(vec3_t p, vec3_t color)
 {
 	vec3_t		end;
 	float		r;
@@ -304,7 +304,7 @@ void R_LightPoint (vec3_t p, vec3_t color)
 	vec3_t		dist;
 	float		add;
 	
-	if (!r_worldmodel->lightdata)
+	if (!r_worldmodel->lightdata || r_worldmodel->lightdatasize <= 0)
 	{
 		color[0] = color[1] = color[2] = 1.0;
 		return;
@@ -312,26 +312,24 @@ void R_LightPoint (vec3_t p, vec3_t color)
 	
 	end[0] = p[0];
 	end[1] = p[1];
-	end[2] = p[2] - 2048;
+	end[2] = p[2] - 2048; // go this far down
 
+	//
+	// find lightmap pixel color underneath p
+	//
+	r = R_RecursiveLightPoint (r_worldmodel->nodes, p, end);
 	
-	r = RecursiveLightPoint (r_worldmodel->nodes, p, end);
-	
-	if (r == -1)
-	{
+	if (r == -1) // nothing was found
 		VectorCopy (vec3_origin, color);
-	}
 	else
-	{
 		VectorCopy (pointcolor, color);
-	}
 
 	//
 	// add dynamic lights
 	//
 	light = 0;
 	dl = r_newrefdef.dlights;
-	for (lnum=0 ; lnum<r_newrefdef.num_dlights ; lnum++, dl++)
+	for (lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
 	{
 		VectorSubtract (pCurrentRefEnt->origin, dl->origin, dist); // distance
 		add = dl->intensity - VectorLength(dist);
@@ -342,6 +340,7 @@ void R_LightPoint (vec3_t p, vec3_t color)
 		}
 	}
 
+	// scale the light color with r_modulate cvar
 	VectorScale (color, r_modulate->value, color);
 }
 
@@ -359,9 +358,11 @@ static float s_blocklights[BLOCKLIGHT_DIMS * 3];
 /*
 ===============
 R_AddDynamicLights
+
+FIXME: The higher lightmap resolution is the more edgy dlights are
 ===============
 */
-void R_AddDynamicLights (msurface_t *surf)
+static void R_AddDynamicLights(msurface_t *surf)
 {
 	int			lightNum;
 	int			sd, td;
@@ -383,7 +384,7 @@ void R_AddDynamicLights (msurface_t *surf)
 
 	for (lightNum = 0; lightNum < r_newrefdef.num_dlights; lightNum++)
 	{
-		if ( !(surf->dlightbits & (1<<lightNum) ) )
+		if ( !(surf->dlightbits & (1<<lightNum) ) ) // generaly unsafe waiting for explosion heh
 			continue;		// not lit by this light
 
 		dl = &r_newrefdef.dlights[lightNum];
@@ -458,7 +459,9 @@ void R_AddDynamicLights (msurface_t *surf)
 
 
 /*
-** R_SetCacheState
+===============
+R_SetCacheState
+===============
 */
 void R_SetCacheState( msurface_t *surf )
 {

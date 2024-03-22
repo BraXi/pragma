@@ -25,7 +25,7 @@ static byte mod_novis[MAX_MAP_LEAFS_QBSP/8];
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
 #define RD_MAX_SP2_HUNKSIZE		0x10000 // 64KB
 #define RD_MAX_BSP_HUNKSIZE		0x1000000 // 16 MB
-#define RD_MAX_QBSP_HUNKSIZE	(RD_MAX_BSP_HUNKSIZE*6) // 96 MB
+#define RD_MAX_QBSP_HUNKSIZE	(RD_MAX_BSP_HUNKSIZE*6) // 96 MB -- we let much bigger qbism bsps
 
 #define	RD_MAX_MODELS	1024
 static model_t	r_models[RD_MAX_MODELS];
@@ -794,7 +794,7 @@ static void Mod_BSP_FaceLighting(msurface_t* out, byte* styles, int lightofs)
 		BSP_CalcSurfaceExtents(out);
 		
 		i = lightofs;
-		if (i == -1 || pLoadModel->lightdata == NULL)
+		if (i == -1 || pLoadModel->lightdata == NULL) // GPL version of qrad3 and tools based on it set lightofs to 0 instead of -1 when no lightmap is generated, but 0 may be a vaild lightmap
 			out->samples = NULL;
 		else
 			out->samples = pLoadModel->lightdata + i;
