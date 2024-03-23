@@ -11,141 +11,27 @@ See the attached GNU General Public License v2 for more details.
 // r_lightmap.c - code loosely from yamagi's gl3 renderer
 #include "r_local.h"
 
+#define	LM_BLOCK_WIDTH	256
+#define	LM_BLOCK_HEIGHT	256
+#define	MAX_LIGHTMAPS	128
+#define	TEXNUM_LIGHTMAPS	1024
 #define LM_BYTES 4
 
-#define	LM_BLOCK_WIDTH		256
-#define	LM_BLOCK_HEIGHT		256
-#define	LM_MAX_LIGHTMAPS	128
-
-#define GL_LIGHTMAP_FORMAT GL_RGBA
+#define LIGHTMAP_GL_FORMAT GL_RGBA
 
 typedef struct
 {
-	int current_lightmap_texture; // index into gl3state.lightmap_textureIDs[]
+	int	current_lightmap_texture;
 
-	int allocated[LM_BLOCK_WIDTH];
+	int			allocated[LM_BLOCK_WIDTH];
 
 	// the lightmap texture data needs to be kept in main memory so texsubimage can update properly
-	byte lightmap_buffers[MAX_LIGHTMAPS_PER_SURFACE][4 * LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
-} newlightmapstate_t;
+	byte		lightmap_buffers[4][LM_BYTES * LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
+} gllightmapstate_t;
+
+static gllightmapstate_t gl_lms;
 
 
-void _SelectTmu(int tmu) {} // stub
-void _BindLightMap(int tmu) {} // stub
-
-#define TEXNUM_LIGHTMAPS 1024
-
-newlightmapstate_t lm_state;
-
-/*
-===============
-NewLM_SurfHasLightMap
-===============
-*/
-qboolean NewLM_SurfaceHasLightMap(msurface_t *surf)
-{
-	if (surf->flags & (SURF_DRAWSKY | SURF_DRAWTURB))
-	{
-		return false;
-	}
-	return true;
-}
-
-
-/*
-===============
-NewLM_InitBlock
-===============
-*/
-void NewLM_InitBlock()
-{
-	memset(lm_state.allocated, 0, sizeof(lm_state.allocated));
-}
-
-/*
-===============
-NewLM_UploadBlock
-===============
-*/
-void NewLM_UploadBlock()
-{
-	int map;
-
-	// NOTE: we don't use the dynamic lightmap anymore - all lightmaps are loaded at level load
-	//       and not changed after that. they're blended dynamically depending on light styles
-	//       though, and dynamic lights are (will be) applied in shader, hopefully per fragment.
-
-	_BindLightMap(lm_state.current_lightmap_texture);
-
-	// upload all 4 lightmaps
-	for (map = 0; map < MAX_LIGHTMAPS_PER_SURFACE; ++map)
-	{
-		_SelectTmu(GL_TEXTURE1 + map); // this relies on GL_TEXTURE2 being GL_TEXTURE1+1 etc
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_LIGHTMAP_FORMAT, LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, 0, GL_LIGHTMAP_FORMAT, GL_UNSIGNED_BYTE, lm_state.lightmap_buffers[map]);
-	}
-
-	if (++lm_state.current_lightmap_texture == LM_MAX_LIGHTMAPS)
-	{
-		ri.Error(ERR_DROP, "%s: LM_MAX_LIGHTMAPS exceeded\n", __func__);
-	}
-}
-
-
-/*
-===============
-NewLM_AllocBlock
-returns a texture number and the position inside it
-===============
-*/
-qboolean NewLM_AllocBlock(int w, int h, int* x, int* y)
-{
-	int i, best;
-
-	best = LM_BLOCK_HEIGHT;
-
-	for (i = 0; i < LM_BLOCK_WIDTH - w; i++)
-	{
-		int		j, best2;
-
-		best2 = 0;
-
-		for (j = 0; j < w; j++)
-		{
-			if (lm_state.allocated[i + j] >= best)
-			{
-				break;
-			}
-
-			if (lm_state.allocated[i + j] > best2)
-			{
-				best2 = lm_state.allocated[i + j];
-			}
-		}
-
-		if (j == w)
-		{
-			/* this is a valid spot */
-			*x = i;
-			*y = best = best2;
-		}
-	}
-
-	if (best + h > LM_BLOCK_HEIGHT)
-	{
-		return false;
-	}
-
-	for (i = 0; i < w; i++)
-	{
-		lm_state.allocated[*x + i] = best + h;
-	}
-
-	return true;
-}
 
 /*
 ===============
@@ -254,27 +140,62 @@ void NewLM_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 
 
 /*
+=============================================================================
+
+  LIGHTMAP ALLOCATION
+
+=============================================================================
+*/
+
+
+/*
+================
+R_LightMap_InitBlock
+================
+*/
+static void R_LightMap_InitBlock(void)
+{
+	memset(gl_lms.allocated, 0, sizeof(gl_lms.allocated));
+}
+
+/*
+================
+R_LightMap_UploadBlock
+================
+*/
+static void R_LightMap_UploadBlock()
+{
+	R_BindTexture(gl_state.lightmap_textures + gl_lms.current_lightmap_texture);
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, LIGHTMAP_GL_FORMAT, LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, 0, LIGHTMAP_GL_FORMAT, GL_UNSIGNED_BYTE, gl_lms.lightmap_buffers[0]);
+
+	if (++gl_lms.current_lightmap_texture == MAX_LIGHTMAPS)
+		ri.Error(ERR_DROP, "R_LightMap_UploadBlock() - MAX_LIGHTMAPS exceeded\n");
+}
+
+
+/*
 ===============
-NewLM_BuildPolygonFromSurface
+R_LightMap_BuildLightMaps
 
 Combine and scale multiple lightmaps into the floating format in blocklights
+
+Credits to yamagiquake2
 ===============
 */
 
-void NewLM_BuildLightMap(msurface_t* surf, int offsetInLMbuf, int stride)
+void R_LightMap_BuildLightMaps(msurface_t* surf, int stride, int offsetInLMbuf)
 {
 	int smax, tmax;
 	int r, g, b, a, max;
 	int i, j, size, map, nummaps;
 	byte* lightmap;
 
-	static const MAX_LM_SIZE = (LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT * 3);
-
-
 	if (surf->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP))
-	{
-		ri.Error(ERR_DROP, "%s called for non-lit surface", __func__);
-	}
+		ri.Error(ERR_DROP, "%s called for non-lit surface", __FUNCTION__);
 
 	smax = (surf->extents[0] >> surf->lmshift) + 1;
 	tmax = (surf->extents[1] >> surf->lmshift) + 1;
@@ -282,25 +203,24 @@ void NewLM_BuildLightMap(msurface_t* surf, int offsetInLMbuf, int stride)
 
 	stride -= (smax << 2);
 
-	if (size > MAX_LM_SIZE)
+	if (size > LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT * 3)
 	{
-		ri.Error(ERR_DROP, "%s: Bad lightmap size (%i", __func__, MAX_LM_SIZE);
+		ri.Error(ERR_DROP, "Bad lightmap size");
 	}
 
 	// count number of lightmaps surf actually has
-	for (nummaps = 0; nummaps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[nummaps] != 255; )
+	for (nummaps = 0; nummaps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[nummaps] != 255;)
 	{
-		nummaps++;
+		nummaps ++;
 	}
 
 	if (!surf->samples)
 	{
 		// no lightmap samples? set at least one lightmap to fullbright, rest to 0 as normal
 
-		if (nummaps == 0)
-			nummaps = 1; // make sure at least one lightmap is set to fullbright
+		if (nummaps == 0)  nummaps = 1; // make sure at least one lightmap is set to fullbright
 
-		for (map = 0; map < MAX_LIGHTMAPS_PER_SURFACE; map++)
+		for (map = 0; map < MAX_LIGHTMAPS_PER_SURFACE; ++map)
 		{
 			// we always create 4 (MAX_LIGHTMAPS_PER_SURFACE) lightmaps.
 			// if surf has less (nummaps < 4), the remaining ones are zeroed out.
@@ -308,10 +228,8 @@ void NewLM_BuildLightMap(msurface_t* surf, int offsetInLMbuf, int stride)
 			// and the shader can use the same texture coordinates for all of them
 
 			int c = (map < nummaps) ? 255 : 0;
+			byte* dest = gl_lms.lightmap_buffers[map] + offsetInLMbuf;
 
-			byte* dest = lm_state.lightmap_buffers[map] + offsetInLMbuf;
-
-			// build full white [rgba 1,1,1,1] lightmap
 			for (i = 0; i < tmax; i++, dest += stride)
 			{
 				memset(dest, c, 4 * smax);
@@ -322,9 +240,7 @@ void NewLM_BuildLightMap(msurface_t* surf, int offsetInLMbuf, int stride)
 		return;
 	}
 
-	//
-	// add all the lightmaps
-	//
+	/* add all the lightmaps */
 
 	// Note: dynamic lights aren't handled here anymore, they're handled in the shader
 
@@ -336,7 +252,7 @@ void NewLM_BuildLightMap(msurface_t* surf, int offsetInLMbuf, int stride)
 
 	for (map = 0; map < nummaps; ++map)
 	{
-		byte* dest = lm_state.lightmap_buffers[map] + offsetInLMbuf;
+		byte* dest = gl_lms.lightmap_buffers[map] + offsetInLMbuf;
 		int idxInLightmap = 0;
 		for (i = 0; i < tmax; i++, dest += stride)
 		{
@@ -346,17 +262,15 @@ void NewLM_BuildLightMap(msurface_t* surf, int offsetInLMbuf, int stride)
 				g = lightmap[idxInLightmap * 3 + 1];
 				b = lightmap[idxInLightmap * 3 + 2];
 
-				// determine the brightest of the three color components 
-				if (r > g)
-					max = r;
-				else
-					max = g;
+				/* determine the brightest of the three color components */
+				if (r > g)  max = r;
+				else  max = g;
 
-				if (b > max)
-					max = b;
+				if (b > max)  max = b;
 
-				// alpha is ONLY used for the mono lightmap case. For this reason we set it 
-				// to the brightest of the color components so that things don't get too dim.
+				/* alpha is ONLY used for the mono lightmap case. For this
+				   reason we set it to the brightest of the color components
+				   so that things don't get too dim. */
 				a = max;
 
 				dest[0] = r;
@@ -365,18 +279,18 @@ void NewLM_BuildLightMap(msurface_t* surf, int offsetInLMbuf, int stride)
 				dest[3] = a;
 
 				dest += 4;
-				idxInLightmap ++;
+				++idxInLightmap;
 			}
 		}
 
-		lightmap += size * 3; // skip to the next lightmap
+		lightmap += size * 3; /* skip to next lightmap */
 	}
 
-	for (; map < MAX_LIGHTMAPS_PER_SURFACE; map++)
+	for (; map < MAX_LIGHTMAPS_PER_SURFACE; ++map)
 	{
 		// like above, fill up remaining lightmaps with 0
 
-		byte* dest = lm_state.lightmap_buffers[map] + offsetInLMbuf;
+		byte* dest = gl_lms.lightmap_buffers[map] + offsetInLMbuf;
 
 		for (i = 0; i < tmax; i++, dest += stride)
 		{
@@ -385,34 +299,123 @@ void NewLM_BuildLightMap(msurface_t* surf, int offsetInLMbuf, int stride)
 		}
 	}
 }
+/*
+================
+R_LightMap_AllocBlock
+
+returns a texture number and the position inside it
+================
+*/
+static qboolean R_LightMap_AllocBlock(int w, int h, int* x, int* y)
+{
+	int		i, j;
+	int		best, best2;
+
+	best = LM_BLOCK_HEIGHT;
+
+	for (i = 0; i < LM_BLOCK_WIDTH - w; i++)
+	{
+		best2 = 0;
+
+		for (j = 0; j < w; j++)
+		{
+			if (gl_lms.allocated[i + j] >= best)
+				break;
+			if (gl_lms.allocated[i + j] > best2)
+				best2 = gl_lms.allocated[i + j];
+		}
+		if (j == w)
+		{	// this is a valid spot
+			*x = i;
+			*y = best = best2;
+		}
+	}
+
+	if (best + h > LM_BLOCK_HEIGHT)
+		return false;
+
+	for (i = 0; i < w; i++)
+		gl_lms.allocated[*x + i] = best + h;
+
+	return true;
+}
+
 
 /*
-===============
-NewLM_CreateSurfaceLightmap
-===============
+========================
+R_CreateLightMapForSurface
+========================
 */
-void NewLM_CreateSurfaceLightmap(msurface_t* surf)
+void R_CreateLightMapForSurface(msurface_t* surf)
 {
-	int smax, tmax;
+	int		smax, tmax;
+	int		offset, stride;
 
-	if (NewLM_SurfaceHasLightMap(surf) == false)
+	if (surf->flags & (SURF_DRAWSKY | SURF_DRAWTURB))
 		return;
 
 	smax = (surf->extents[0] >> surf->lmshift) + 1;
 	tmax = (surf->extents[1] >> surf->lmshift) + 1;
 
-	if (!NewLM_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
+	if (!R_LightMap_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
 	{
-		NewLM_UploadBlock();
-		NewLM_InitBlock();
+		R_LightMap_UploadBlock();
+		R_LightMap_InitBlock();
 
-		if (!NewLM_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
+		if (!R_LightMap_AllocBlock(smax, tmax, &surf->light_s, &surf->light_t))
 		{
-			ri.Error(ERR_FATAL, "%s: Consecutive calls to LM_AllocBlock(%d,%d) failed\n", __func__, smax, tmax);
+			ri.Error(ERR_FATAL, "Consecutive calls to %s(%d,%d) failed\n", __FUNCTION__, smax, tmax);
 		}
 	}
 
-	surf->lightmaptexturenum = lm_state.current_lightmap_texture;
+	surf->lightMapTextureNum = gl_lms.current_lightmap_texture;
 
-	NewLM_BuildLightMap(surf, (surf->light_t * LM_BLOCK_WIDTH + surf->light_s) * LM_BYTES, (LM_BLOCK_WIDTH * LM_BYTES));
+	stride = LM_BLOCK_WIDTH * LM_BYTES;
+	offset = (surf->light_t * LM_BLOCK_WIDTH + surf->light_s) * LM_BYTES;
+
+	R_LightMap_BuildLightMaps(surf, stride, offset);
+}
+
+
+/*
+==================
+R_LightMap_BeginBuilding
+==================
+*/
+void R_LightMap_BeginBuilding(model_t* m)
+{
+	static lightstyle_t	lightstyles[MAX_LIGHTSTYLES];
+	int				i;
+
+	memset(gl_lms.allocated, 0, sizeof(gl_lms.allocated));
+
+	r_framecount = 1; // no dlightcache
+
+	//R_SelectTextureUnit(1);
+
+	//
+	// setup the base lightstyles so the lightmaps won't 
+	// have to be regenerated the first time they're seen
+	//
+	for (i = 0; i < MAX_LIGHTSTYLES; i++)
+	{
+		VectorSet(lightstyles[i].rgb, 1.0f, 1.0f, 1.0f);
+		lightstyles[i].white = 3; // braxi -- why is is this out of scale? shouldn't it be 2 at max (aka lightstyle string "Z")?
+	}
+	r_newrefdef.lightstyles = lightstyles;
+
+	if (!gl_state.lightmap_textures)
+		gl_state.lightmap_textures = TEXNUM_LIGHTMAPS; // this is the first texnum for lightmap being created
+
+	gl_lms.current_lightmap_texture = 0;
+}
+
+/*
+=======================
+R_LightMap_EndBuilding
+=======================
+*/
+void R_LightMap_EndBuilding()
+{
+	R_LightMap_UploadBlock();
 }

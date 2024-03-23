@@ -48,7 +48,7 @@ void R_DrawSprite(rentity_t* ent)
 
 	glColor4f(1, 1, 1, pCurrentRefEnt->alpha);
 
-	R_BindTexture(pCurrentModel->images[ent->frame]->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, pCurrentModel->images[ent->frame]->texnum);
 	R_AlphaTest(ent->alpha == 1.0);
 
 	glBegin(GL_TRIANGLES);

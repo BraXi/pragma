@@ -231,6 +231,10 @@ static void R_OpenGLConfig()
 		gl_config.renderer = GL_RENDERER_INTEL;
 	else
 		gl_config.renderer = GL_RENDERER_OTHER;
+
+
+	if (gl_config.max_tmu < MIN_TEXTURE_MAPPING_UNITS)
+		ri.Error(ERR_FATAL, "Your graphics card doesn't support 4 texture mapping units");
 }
 
 /*
@@ -319,6 +323,7 @@ int R_Init(void* hinstance, void* hWnd)
 	
 //	glActiveTexture = 0;
 //	glMultiTexCoord2f = 0;
+	R_EnableMultiTexture();
 
 	R_InitTextures();
 	R_InitPrograms();

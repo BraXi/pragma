@@ -259,7 +259,7 @@ void R_DrawParticles( int num_particles, const particle_t particles[] )
 	R_UpdateVertexBuffer(vb_particles, NULL, vertcnt, (V_UV|V_COLOR));
 
 	R_BindProgram(GLPROG_PARTICLE);
-	R_BindTexture(r_texture_particle->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, r_texture_particle->texnum);
 	//R_BindTexture(r_texture_white->texnum); // testing
 
 	R_Blend(true);
@@ -538,7 +538,7 @@ void R_RenderView (refdef_t *fd)
 	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
 	R_RenderToFBO(false); // end rendering to fbo
 	
-
+	R_SelectTextureUnit(0);
 	if (r_speeds->value == 1.0f)
 	{
 		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i vislmaps, %i texbinds\n",

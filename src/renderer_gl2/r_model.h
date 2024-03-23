@@ -85,7 +85,7 @@ typedef struct glpoly_s
 	struct	glpoly_s	*chain;
 	int		numverts;
 	int		flags;					// for SURF_UNDERWATER (not needed anymore?)
-	polyvert_t	verts[4];
+	polyvert_t	verts[4]; // variable sized
 } poly_t;
 
 typedef struct msurface_s
@@ -95,18 +95,16 @@ typedef struct msurface_s
 	cplane_t	*plane;
 	int			flags;
 
-	int			firstedge;	// look up in model->surfedges[], negative numbers
-	int			numedges;	// are backwards edges
+	int			firstedge;	// look up in model->surfedges[], negative numbers are backwards edges
+	int			numedges;
 	
 	short		texturemins[2];
 	short		extents[2];
 
 	int			light_s, light_t;	// gl lightmap coordinates
-	int			dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
 
-	poly_t	*polys;				// multiple if warped
-	struct	msurface_s	*texturechain;
-	struct  msurface_s	*lightmapchain;
+	poly_t		*polys;				// multiple if warped
+	struct msurface_s	*texturechain;
 
 	mtexinfo_t	*texinfo;
 	
@@ -121,9 +119,9 @@ typedef struct msurface_s
 	int				dlightframe;
 	unsigned int	dlightbits;
 
-	int			lightmaptexturenum;
+	int			lightMapTextureNum;
 	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
-	float		cached_light[MAX_LIGHTMAPS_PER_SURFACE];	// values currently used in lightmap
+//	float		cached_light[MAX_LIGHTMAPS_PER_SURFACE];	// values currently used in lightmap
 	byte		*samples;		// ptr to lightmap data [numstyles*surfsize]
 } msurface_t;
 

@@ -629,7 +629,7 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 
 		anythingToDraw = true;
 
-		R_BindTexture(ent->model->images[surf]->texnum);
+		R_MultiTextureBind(TMU_DIFFUSE, ent->model->images[surf]->texnum);
 		DrawVertexBuffer(ent, ent->model->vb[surf], 0, surfverts);
 
 		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);

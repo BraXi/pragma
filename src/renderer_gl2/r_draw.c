@@ -91,7 +91,7 @@ rfont_t *R_LoadFont( const char *name, qboolean filtered )
 	strcpy(f->name, name);
 	f->filtered = filtered;
 
-	R_BindTexture(f->image->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, f->image->texnum);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -105,7 +105,7 @@ rfont_t *R_LoadFont( const char *name, qboolean filtered )
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
-	R_BindTexture(0);
+	R_MultiTextureBind(TMU_DIFFUSE, 0);
 	return f;
 
 }
@@ -170,7 +170,7 @@ void R_DrawSingleChar(int x, int y, int num, int charSize)
 	SetTexCoords(fcol, frow + size);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
-	R_BindTexture(font_current->image->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, font_current->image->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
@@ -250,7 +250,7 @@ void R_DrawStretchImage (int x, int y, int w, int h, char * name)
 	SetTexCoords(image->sl, image->th);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
-	R_BindTexture(image->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, image->texnum);
 	R_Blend(true);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 	R_Blend(false);
@@ -291,7 +291,7 @@ void R_DrawImage(int x, int y, char *name)
 	SetTexCoords(image->sl, image->th);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
-	R_BindTexture(image->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, image->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
@@ -329,7 +329,7 @@ void R_DrawTileClear (int x, int y, int w, int h, char *name)
 	SetTexCoords(x / 64.0f, (y + h) / 64.0f);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
-	R_BindTexture(image->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, image->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
@@ -353,7 +353,7 @@ void R_DrawFill(int x, int y, int w, int h)
 
 	R_Blend(true);
 
-	R_BindTexture(r_texture_white->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, r_texture_white->texnum);
 //	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);
@@ -449,7 +449,7 @@ void R_DrawString(float x, float y, int alignx, int charSize, int fontId, vec4_t
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
-	R_BindTexture(fonts[fontId]->image->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, fonts[fontId]->image->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
@@ -533,7 +533,7 @@ void R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx,
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
-	R_BindTexture(font_current->image->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, font_current->image->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 
@@ -624,7 +624,7 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	R_BindProgram(GLPROG_DEBUGSTRING);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], 1.0);
 
-	R_BindTexture(font_current->image->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, font_current->image->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 
 	R_UnbindProgram();
@@ -677,7 +677,7 @@ void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 
 	R_Blend(true);
-	R_BindTexture(gl->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, gl->texnum);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 	R_Blend(false);
@@ -710,7 +710,7 @@ void R_NewDrawFill(rect_t pos, rgba_t color)
 
 	R_Blend(true);
 
-	R_BindTexture(r_texture_white->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, r_texture_white->texnum);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, 0);

@@ -34,6 +34,16 @@ See the attached GNU General Public License v2 for more details.
 #define FUNCTABLE_MASK		(FUNCTABLE_SIZE-1)
 // -- sin table --
 
+#define MIN_TEXTURE_MAPPING_UNITS 4
+
+enum
+{
+	TMU_DIFFUSE,
+	TMU_LIGHTMAP_0,
+	TMU_LIGHTMAP_1,
+	TMU_LIGHTMAP_2,
+	TMU_LIGHTMAP_3
+};
 
 #define	PITCH	0	// up / down
 #define	YAW		1	// left / right
@@ -70,7 +80,6 @@ typedef struct image_s
 	qboolean		has_alpha;
 } image_t;
 
-#define	TEXNUM_LIGHTMAPS	1024
 #define	TEXNUM_IMAGES		1153
 #define	MAX_GLTEXTURES		1024
 
@@ -387,10 +396,11 @@ struct image_s *R_RegisterSkin (char *name);
 //
 // r_image.c
 //
-void R_EnableMultitexture(qboolean enable);
-void R_SelectTextureUnit(GLenum texture);
+void R_EnableMultiTexture();
+void R_DisableMultiTexture();
+void R_SelectTextureUnit(unsigned int textureMappingUnit);
 void R_BindTexture(int texnum);
-void R_MultiTextureBind(GLenum target, int texnum);
+void R_MultiTextureBind(unsigned int tmu, int texnum);
 
 image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_t type, int bits);
 image_t	*R_FindTexture(char *name, texType_t type, qboolean load);
@@ -436,20 +446,17 @@ typedef struct
 
 typedef struct
 {
-//	float inverse_intensity;
 	qboolean fullscreen;
-
 	int     prev_mode;			// previous r_mode->value
 
 	int lightmap_textures;		// TEXNUM_LIGHTMAPS + NUM_LIGHTMAPS
 
-	int	currenttextures[2];		// currently bound textures [TEX0, TEX1]
-	int currenttmu;				// GL_TEXTURE0 or GL_TEXTURE1
+	int current_lightmap;		// currently bound lightmap textureset
+	int	current_texture[5];		// currently bound textures [TEX0-TEX4]
+	int current_tmu;			// GL_TEXTURE0 to GL_TEXTURE4
 
 	float camera_separation;
 	qboolean stereo_enabled;
-
-
 } glstate_t;
 
 extern glconfig_t  gl_config;

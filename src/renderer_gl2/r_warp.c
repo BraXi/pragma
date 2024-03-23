@@ -678,7 +678,7 @@ void R_DrawSkyBox (void)
 
 		R_BindProgram(GLPROG_SKY);
 		R_ProgUniform4f(LOC_COLOR4, skycolor[0], skycolor[1], skycolor[2], 1.0f);
-		R_BindTexture(sky_images[skytexorder[i]]->texnum);
+		R_MultiTextureBind(TMU_DIFFUSE, sky_images[skytexorder[i]]->texnum);
 		R_DrawVertexBuffer(&vb_sky, 0, 0);
 		R_UnbindProgram();
 	}
