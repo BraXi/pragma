@@ -266,7 +266,7 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 
 			lightmap += 3 * (dt * ((surf->extents[0] >> surf->lmshift) + 1) + ds);
 
-			for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
+			for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255 ;
 					maps++)
 			{
 				for (i=0 ; i<3 ; i++)
@@ -467,7 +467,7 @@ void R_LightMap_SetCacheStateForSurf( msurface_t *surf )
 {
 	int maps;
 
-	for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
+	for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255; maps++)
 	{
 		surf->cached_light[maps] = r_newrefdef.lightstyles[surf->styles[maps]].white;
 	}
@@ -511,7 +511,7 @@ void R_LightMap_Build (msurface_t *surf, byte *dest, int stride)
 
 		for (i=0 ; i<size*3 ; i++)
 			s_blocklights[i] = 255;
-		for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
+		for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255 ;
 			 maps++)
 		{
 			style = &r_newrefdef.lightstyles[surf->styles[maps]];
@@ -520,7 +520,7 @@ void R_LightMap_Build (msurface_t *surf, byte *dest, int stride)
 	}
 
 	// count the # of maps
-	for ( nummaps = 0 ; nummaps < MAXLIGHTMAPS && surf->styles[nummaps] != 255 ;
+	for ( nummaps = 0 ; nummaps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[nummaps] != 255 ;
 		 nummaps++)
 		;
 
@@ -531,7 +531,7 @@ void R_LightMap_Build (msurface_t *surf, byte *dest, int stride)
 	{
 		int maps;
 
-		for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
+		for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255 ;
 			 maps++)
 		{
 			bl = s_blocklights;
@@ -568,7 +568,7 @@ void R_LightMap_Build (msurface_t *surf, byte *dest, int stride)
 
 		memset( s_blocklights, 0, sizeof( s_blocklights[0] ) * size * 3 );
 
-		for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
+		for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255 ;
 			 maps++)
 		{
 			bl = s_blocklights;

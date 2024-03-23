@@ -58,8 +58,7 @@ typedef struct
 
 typedef struct
 {
-	unsigned int	v[2]; // braxi -- was unsigned short
-	unsigned int	cachededgeoffset; // braxi -- unused
+	unsigned int	v[2];
 } medge_t;
 
 typedef struct mtexinfo_s
@@ -71,7 +70,14 @@ typedef struct mtexinfo_s
 	image_t		*image;
 } mtexinfo_t;
 
-#define	VERTEXSIZE	7
+typedef struct polyvert_s
+{
+	vec3_t	pos;
+	float	texCoord[2];
+	float	lmTexCoord[2];  // lightmap texture coordinate (sometimes unused)
+	vec3_t	normal;
+	int		lightFlags;		// bit i set means: dynlight i affects surface
+} polyvert_t;
 
 typedef struct glpoly_s
 {
@@ -79,8 +85,8 @@ typedef struct glpoly_s
 	struct	glpoly_s	*chain;
 	int		numverts;
 	int		flags;					// for SURF_UNDERWATER (not needed anymore?)
-	float	verts[4][VERTEXSIZE];	// variable sized (xyz s1t1 s2t2)
-} glpoly_t;
+	polyvert_t	verts[4];
+} poly_t;
 
 typedef struct msurface_s
 {
@@ -98,7 +104,7 @@ typedef struct msurface_s
 	int			light_s, light_t;	// gl lightmap coordinates
 	int			dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
 
-	glpoly_t	*polys;				// multiple if warped
+	poly_t	*polys;				// multiple if warped
 	struct	msurface_s	*texturechain;
 	struct  msurface_s	*lightmapchain;
 
@@ -116,8 +122,8 @@ typedef struct msurface_s
 	unsigned int	dlightbits;
 
 	int			lightmaptexturenum;
-	byte		styles[MAXLIGHTMAPS];
-	float		cached_light[MAXLIGHTMAPS];	// values currently used in lightmap
+	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
+	float		cached_light[MAX_LIGHTMAPS_PER_SURFACE];	// values currently used in lightmap
 	byte		*samples;		// ptr to lightmap data [numstyles*surfsize]
 } msurface_t;
 
@@ -226,7 +232,7 @@ typedef struct model_s
 	int			nummarksurfaces;
 	msurface_t	**marksurfaces;
 
-	dvis_t		*vis;
+	dbsp_vis_t		*vis;
 
 	byte		*lightdata;
 	int			lightdatasize;

@@ -18,9 +18,9 @@ int		modelFileLength;	// length of loaded model file
 static qboolean bExtendedBSP = false; // this is true when qbism bsp is detected
 static int bspx_lumps_count = 0;
 static int bspx_lumps_offset = 0;
-//static bspx_lump_t bspx_lumps;
 
 static byte mod_novis[MAX_MAP_LEAFS_QBSP/8];
+static byte *mod_base = NULL;
 
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
 #define RD_MAX_SP2_HUNKSIZE		0x10000 // 64KB
@@ -134,8 +134,6 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	//
 	// fill it in
 	//
-
-
 	// call the apropriate loader
 	switch (LittleLong(*(unsigned*)buf))
 	{
@@ -473,8 +471,6 @@ byte *Mod_BSP_ClusterPVS(int cluster, model_t *model)
 ===============================================================================
 */
 
-static byte *mod_base;
-
 /*
 =================
 CMod_ValidateBSPLump
@@ -562,7 +558,7 @@ Mod_BSP_LoadVerts
 */
 static void Mod_BSP_LoadVerts(lump_t *l)
 {
-	dvertex_t	*in;
+	dbsp_vertex_t	*in;
 	mvertex_t	*out;
 	int			i, count;
 
@@ -590,7 +586,7 @@ Mod_BSP_LoadInlineModels
 */
 static void Mod_BSP_LoadInlineModels(lump_t *l)
 {
-	dmodel_t	*in;
+	dbsp_model_t	*in;
 	mmodel_t	*out;
 	int			i, j, count;
 
@@ -637,7 +633,7 @@ static void Mod_BSP_LoadEdges(lump_t *l)
 
 	if (bExtendedBSP)
 	{
-		dedge_ext_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_edge_ext_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			out->v[0] = (unsigned int)LittleLong(in->v[0]);
@@ -646,7 +642,7 @@ static void Mod_BSP_LoadEdges(lump_t *l)
 	}
 	else
 	{
-		dedge_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_edge_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			out->v[0] = (unsigned short)LittleShort(in->v[0]);
@@ -662,7 +658,7 @@ Mod_BSP_LoadTexinfo
 */
 static void Mod_BSP_LoadTexinfo(lump_t *l)
 {
-	texinfo_t *in;
+	dbsp_texinfo_t *in;
 	mtexinfo_t *out, *step;
 	int 	i, j, count;
 	char	name[MAX_QPATH];
@@ -771,7 +767,7 @@ static void BSP_CalcSurfaceExtents(msurface_t *s)
 }
 
 
-void R_BuildPolygonFromSurface(msurface_t *fa);
+void NewLM_BuildPolygonFromSurface(model_t* mod, msurface_t* surf);
 void R_CreateLightMapForSurface (msurface_t *surf);
 void R_LightMap_EndBuilding();
 void R_LightMap_BeginBuilding(model_t *m);
@@ -782,7 +778,7 @@ static void Mod_BSP_FaceLighting(msurface_t* out, byte* styles, int lightofs)
 {
 	int i;
 
-	for (i = 0; i < MAXLIGHTMAPS; i++)
+	for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
 		out->styles[i] = styles[i];
 
 	if (out->samples == NULL) // NO decoupledlm
@@ -826,7 +822,7 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 
 	if (bExtendedBSP)
 	{
-		dface_ext_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_face_ext_t* in = (void*)(mod_base + l->fileofs);
 		for (surfnum = 0; surfnum < count; surfnum++, in++, out++)
 		{
 			out->firstedge = LittleLong(in->firstedge);
@@ -865,13 +861,16 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 				R_CreateLightMapForSurface(out);
 
 			if (!(out->texinfo->flags & SURF_WARP))
-				R_BuildPolygonFromSurface(out);
+			{
+				NewLM_BuildPolygonFromSurface(pCurrentModel, out);
+				//R_BuildPolygonFromSurface(out);
+			}
 		}
 
 	}
 	else
 	{
-		dface_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_face_t* in = (void*)(mod_base + l->fileofs);
 		for (surfnum = 0; surfnum < count; surfnum++, in++, out++)
 		{
 			out->firstedge = LittleLong(in->firstedge);
@@ -911,7 +910,10 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 				R_CreateLightMapForSurface(out);
 
 			if (!(out->texinfo->flags & SURF_WARP))
-				R_BuildPolygonFromSurface(out);
+			{
+				NewLM_BuildPolygonFromSurface(pCurrentModel, out);
+				//R_BuildPolygonFromSurface(out);
+			}
 		}
 	}
 
@@ -951,7 +953,7 @@ static void Mod_BSP_LoadNodes(lump_t *l)
 
 	if (bExtendedBSP)
 	{
-		dnode_ext_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_node_ext_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			for (j = 0; j < 3; j++)
@@ -979,7 +981,7 @@ static void Mod_BSP_LoadNodes(lump_t *l)
 	}
 	else
 	{
-		dnode_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_node_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			for (j = 0; j < 3; j++)
@@ -1018,7 +1020,7 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 {
 	mleaf_t 	*out;
 	int			i, j, count;
-//	glpoly_t	*poly;
+//	poly_t	*poly;
 
 	CMod_ValidateBSPLump(l, BSP_LEAFS, &count, 1, "leafs", __FUNCTION__);
 	
@@ -1029,7 +1031,7 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 
 	if (bExtendedBSP)
 	{
-		dleaf_ext_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_leaf_ext_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			for (j = 0; j < 3; j++)
@@ -1048,7 +1050,7 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 	}
 	else
 	{
-		dleaf_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_leaf_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			for (j = 0; j < 3; j++)
@@ -1149,7 +1151,7 @@ Mod_BSP_LoadPlanes
 */
 static void Mod_BSP_LoadPlanes(lump_t *l)
 {
-	dplane_t	*in;
+	dbsp_plane_t	*in;
 	cplane_t	*out;
 	int			i, j, count, bits;
 
@@ -1298,11 +1300,11 @@ Parses the bsp for BSPX lumps
 */
 static void Mod_BSP_FindExtLumps()
 {
-	dheader_t* header;
+	dbsp_header_t* header;
 	bspx_header_t* bspx;
 	int offset, lastlump, i;
 
-	header = (dheader_t*)mod_base;
+	header = (dbsp_header_t*)mod_base;
 
 	bspx_lumps_count = 0;
 	bspx_lumps_offset = 0;
@@ -1352,13 +1354,13 @@ Mod_LoadBSP
 void Mod_LoadBSP(model_t *mod, void *buffer)
 {
 	int			i;
-	dheader_t	*header;
+	dbsp_header_t	*header;
 	mmodel_t 	*bm;
 	
 	if (pLoadModel != r_models)
 		ri.Error (ERR_DROP, "Mod_LoadBSP: Loaded BSP after the world");
 
-	header = (dheader_t *)buffer;
+	header = (dbsp_header_t *)buffer;
 
 	i = LittleLong (header->version);
 	if (i != BSP_VERSION)
@@ -1366,7 +1368,7 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 
 	// swap all the lumps
 	mod_base = (byte *)header;
-	for (i = 0; i < sizeof(dheader_t)/4 ; i++)
+	for (i = 0; i < sizeof(dbsp_header_t)/4 ; i++)
 		((int *)header)[i] = LittleLong(((int *)header)[i]);
 
 	mod->type = MOD_BRUSH;

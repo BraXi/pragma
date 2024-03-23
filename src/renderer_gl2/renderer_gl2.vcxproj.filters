@@ -67,6 +67,7 @@
     <ClCompile Include="glad_gl21.c" />
     <ClCompile Include="r_world.c" />
     <ClCompile Include="r_text.c" />
+    <ClCompile Include="r_lightmap.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

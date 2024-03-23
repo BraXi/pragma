@@ -28,123 +28,161 @@ vertexbuffer_t vb_sky;
 static glvert_t skyverts[6];
 static int numSkyVerts;
 
-void BoundPoly (int numverts, float *verts, vec3_t mins, vec3_t maxs)
+static void BoundPoly(int numverts, float* verts, vec3_t mins, vec3_t maxs)
 {
-	int		i, j;
-	float	*v;
+	int i, j;
+	float* v;
 
 	mins[0] = mins[1] = mins[2] = 9999;
 	maxs[0] = maxs[1] = maxs[2] = -9999;
 	v = verts;
-	for (i=0 ; i<numverts ; i++)
-		for (j=0 ; j<3 ; j++, v++)
+
+	for (i = 0; i < numverts; i++)
+	{
+		for (j = 0; j < 3; j++, v++)
 		{
 			if (*v < mins[j])
+			{
 				mins[j] = *v;
+			}
+
 			if (*v > maxs[j])
+			{
 				maxs[j] = *v;
+			}
 		}
+	}
 }
 
 void SubdividePolygon (int numverts, float *verts)
 {
-	int		i, j, k;
-	vec3_t	mins, maxs;
-	float	m;
-	float	*v;
-	vec3_t	front[64], back[64];
-	int		f, b;
-	float	dist[64];
-	float	frac;
-	glpoly_t	*poly;
-	float	s, t;
-	vec3_t	total;
-	float	total_s, total_t;
+	int i, j, k;
+	vec3_t mins, maxs;
+	float* v;
+	vec3_t front[64], back[64];
+	int f, b;
+	float dist[64];
+	float frac;
+	poly_t* poly;
+	vec3_t total;
+	float total_s, total_t;
+	vec3_t normal;
+
+	VectorCopy(warpface->plane->normal, normal);
 
 	if (numverts > 60)
-		ri.Error (ERR_DROP, "numverts = %i", numverts);
-
-	BoundPoly (numverts, verts, mins, maxs);
-
-	for (i=0 ; i<3 ; i++)
 	{
-		m = (mins[i] + maxs[i]) * 0.5;
-		m = SUBDIVIDE_SIZE * floor (m/SUBDIVIDE_SIZE + 0.5);
-		if (maxs[i] - m < 8)
-			continue;
-		if (m - mins[i] < 8)
-			continue;
+		ri.Error(ERR_DROP, "%s: numverts = %i", __func__, numverts);
+	}
 
-		// cut it
+	BoundPoly(numverts, verts, mins, maxs);
+
+	for (i = 0; i < 3; i++)
+	{
+		float m;
+
+		m = (mins[i] + maxs[i]) * 0.5;
+		m = SUBDIVIDE_SIZE * floor(m / SUBDIVIDE_SIZE + 0.5);
+
+		if (maxs[i] - m < 8)
+		{
+			continue;
+		}
+
+		if (m - mins[i] < 8)
+		{
+			continue;
+		}
+
+		// cut it 
 		v = verts + i;
-		for (j=0 ; j<numverts ; j++, v+= 3)
+
+		for (j = 0; j < numverts; j++, v += 3)
+		{
 			dist[j] = *v - m;
+		}
 
 		// wrap cases
 		dist[j] = dist[0];
-		v-=i;
-		VectorCopy (verts, v);
+		v -= i;
+		VectorCopy(verts, v);
 
 		f = b = 0;
 		v = verts;
-		for (j=0 ; j<numverts ; j++, v+= 3)
+
+		for (j = 0; j < numverts; j++, v += 3)
 		{
 			if (dist[j] >= 0)
 			{
-				VectorCopy (v, front[f]);
+				VectorCopy(v, front[f]);
 				f++;
 			}
+
 			if (dist[j] <= 0)
 			{
-				VectorCopy (v, back[b]);
+				VectorCopy(v, back[b]);
 				b++;
 			}
-			if (dist[j] == 0 || dist[j+1] == 0)
+
+			if ((dist[j] == 0) || (dist[j + 1] == 0))
+			{
 				continue;
-			if ( (dist[j] > 0) != (dist[j+1] > 0) )
+			}
+
+			if ((dist[j] > 0) != (dist[j + 1] > 0))
 			{
 				// clip point
-				frac = dist[j] / (dist[j] - dist[j+1]);
-				for (k=0 ; k<3 ; k++)
-					front[f][k] = back[b][k] = v[k] + frac*(v[3+k] - v[k]);
+				frac = dist[j] / (dist[j] - dist[j + 1]);
+
+				for (k = 0; k < 3; k++)
+				{
+					front[f][k] = back[b][k] = v[k] + frac * (v[3 + k] - v[k]);
+				}
+
 				f++;
 				b++;
 			}
 		}
 
-		SubdividePolygon (f, front[0]);
-		SubdividePolygon (b, back[0]);
+		SubdividePolygon(f, front[0]);
+		SubdividePolygon(b, back[0]);
 		return;
 	}
 
 	// add a point in the center to help keep warp valid
-	poly = Hunk_Alloc (sizeof(glpoly_t) + ((numverts-4)+2) * VERTEXSIZE*sizeof(float));
+	poly = Hunk_Alloc(sizeof(poly_t) + ((numverts - 4) + 2) * sizeof(polyvert_t));
 	poly->next = warpface->polys;
 	warpface->polys = poly;
-	poly->numverts = numverts+2;
-	VectorClear (total);
+	poly->numverts = numverts + 2;
+	VectorClear(total);
 	total_s = 0;
 	total_t = 0;
-	for (i=0 ; i<numverts ; i++, verts+= 3)
+
+	for (i = 0; i < numverts; i++, verts += 3)
 	{
-		VectorCopy (verts, poly->verts[i+1]);
-		s = DotProduct (verts, warpface->texinfo->vecs[0]);
-		t = DotProduct (verts, warpface->texinfo->vecs[1]);
+		float s, t;
+
+		VectorCopy(verts, poly->verts[i + 1].pos);
+		s = DotProduct(verts, warpface->texinfo->vecs[0]);
+		t = DotProduct(verts, warpface->texinfo->vecs[1]);
 
 		total_s += s;
 		total_t += t;
-		VectorAdd (total, verts, total);
+		VectorAdd(total, verts, total);
 
-		poly->verts[i+1][3] = s;
-		poly->verts[i+1][4] = t;
+		poly->verts[i + 1].texCoord[0] = s;
+		poly->verts[i + 1].texCoord[1] = t;
+		VectorCopy(normal, poly->verts[i + 1].normal);
+		poly->verts[i + 1].lightFlags = 0;
 	}
 
-	VectorScale (total, (1.0/numverts), poly->verts[0]);
-	poly->verts[0][3] = total_s/numverts;
-	poly->verts[0][4] = total_t/numverts;
+	VectorScale(total, (1.0 / numverts), poly->verts[0].pos);
+	poly->verts[0].texCoord[0] = total_s / numverts;
+	poly->verts[0].texCoord[1] = total_t / numverts;
+	VectorCopy(normal, poly->verts[0].normal);
 
 	// copy first vertex to last
-	memcpy (poly->verts[i+1], poly->verts[1], sizeof(poly->verts[0]));
+	memcpy(&poly->verts[i + 1], &poly->verts[1], sizeof(polyvert_t));
 }
 
 /*
@@ -200,13 +238,13 @@ float	r_turbsin[] =
 =============
 EmitWaterPolys
 
-Does a water warp on the pre-fragmented glpoly_t chain
+Does a water warp on the pre-fragmented poly_t chain
 =============
 */
 void EmitWaterPolys (msurface_t *fa)
 {
-	glpoly_t	*p, *bp;
-	float		*v;
+	poly_t	*p, *bp;
+	polyvert_t		*v;
 	int			i;
 	float		s, t, os, ot;
 	float		scroll;
@@ -222,10 +260,10 @@ void EmitWaterPolys (msurface_t *fa)
 		p = bp;
 
 		glBegin (GL_TRIANGLE_FAN);
-		for (i=0,v=p->verts[0] ; i<p->numverts ; i++, v+=VERTEXSIZE)
+		for (i = 0, v = &p->verts[0]; i <p->numverts; i++, v++)
 		{
-			os = v[3];
-			ot = v[4];
+			os = v->texCoord[0];
+			ot = v->texCoord[1];
 
 			s = os + r_turbsin[(int)((ot*0.125+r_newrefdef.time) * TURBSCALE) & 255];
 			s += scroll;
@@ -235,7 +273,7 @@ void EmitWaterPolys (msurface_t *fa)
 			t *= (1.0/64);
 
 			glTexCoord2f (s, t);
-			glVertex3fv (v);
+			glVertex3fv (v->pos);
 		}
 		glEnd ();
 	}
@@ -245,13 +283,13 @@ void EmitWaterPolys (msurface_t *fa)
 =============
 EmitWaterPolys2
 
-Does a water warp on the pre-fragmented glpoly_t chain
+Does a water warp on the pre-fragmented poly_t chain
 =============
 */
 void EmitWaterPolys2(msurface_t* fa)
 {
-	glpoly_t* p, * bp;
-	float* v;
+	poly_t* p, * bp;
+	polyvert_t		* v;
 	int			i;
 	float		s, t, os, ot;
 	float		scroll;
@@ -267,10 +305,10 @@ void EmitWaterPolys2(msurface_t* fa)
 		p = bp;
 
 		glBegin(GL_TRIANGLE_FAN);
-		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
+		for (i = 0, v = &p->verts[0]; i < p->numverts; i++, v++)
 		{
-			os = v[3];
-			ot = v[4];
+			os = v->texCoord[0];
+			ot = v->texCoord[1];
 
 			s = os + r_turbsin[(int)((ot * 0.125 + r_newrefdef.time) * TURBSCALE) & 255];
 			s += scroll;
@@ -522,14 +560,14 @@ void R_AddSkySurface (msurface_t *fa)
 {
 	int			i;
 	vec3_t		verts[MAX_CLIP_VERTS];
-	glpoly_t	*p;
+	poly_t	*p;
 
 	// calculate vertex values for sky box
-	for (p=fa->polys ; p ; p=p->next)
+	for (p = fa->polys; p; p = p->next)
 	{
-		for (i=0 ; i<p->numverts ; i++)
+		for (i = 0; i<p->numverts ; i++)
 		{
-			VectorSubtract (p->verts[i], r_origin, verts[i]);
+			VectorSubtract (p->verts[i].pos, r_origin, verts[i]);
 		}
 		ClipSkyPolygon (p->numverts, verts[0], 0);
 	}

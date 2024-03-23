@@ -22,23 +22,23 @@ typedef struct
 static bsp_limit_t bspLimits[BSP_NUM_DATATYPES] =
 {
 	// QBISM BSP LIMIT,			VANILLA BSP LIMIT,		QBISM SIZE,			VANILLA SIZE
-	{ MAX_MAP_MODELS_QBSP,		MAX_MAP_MODELS,			0,					sizeof(dmodel_t) },
+	{ MAX_MAP_MODELS_QBSP,		MAX_MAP_MODELS,			0,					sizeof(dbsp_model_t) },
 	{ MAX_MAP_BRUSHES_QBSP,		MAX_MAP_BRUSHES,		0,					sizeof(dbrush_t) },
 	{ MAX_MAP_ENTITIES_QBSP,	MAX_MAP_ENTITIES,		0,					0},						// unused
 	{ MAX_MAP_ENTSTRING_QBSP,	MAX_MAP_ENTSTRING,		0,					0},
-	{ MAX_MAP_TEXINFO_QBSP,		MAX_MAP_TEXINFO,		0,					sizeof(texinfo_t) },	// refeered in cmod code below as surface info
-	{ MAX_MAP_AREAS,			MAX_MAP_AREAS,			0,					sizeof(darea_t) },		// not extended, must increase network protocol
-	{ MAX_MAP_AREAPORTALS,		MAX_MAP_AREAPORTALS,	0,					sizeof(dareaportal_t) },// not extended, must increase network protocol
-	{ MAX_MAP_PLANES_QBSP,		MAX_MAP_PLANES,			0,					sizeof(dplane_t)},
-	{ MAX_MAP_NODES_QBSP,		MAX_MAP_NODES,			sizeof(dnode_ext_t), sizeof(dnode_t)},		// dnode_ext_t
-	{ MAX_MAP_BRUSHSIDES_QBSP,	MAX_MAP_BRUSHSIDES,		sizeof(dbrushside_ext_t), sizeof(dbrushside_t) }, //dbrushside_ext_t
-	{ MAX_MAP_LEAFS_QBSP,		MAX_MAP_LEAFS,			sizeof(dleaf_ext_t), sizeof(dleaf_t) },		// dleaf_ext_t
-	{ MAX_MAP_VERTS_QBSP,		MAX_MAP_VERTS,			0,					sizeof(dvertex_t) },
-	{ MAX_MAP_FACES_QBSP,		MAX_MAP_FACES,			sizeof(dface_ext_t), sizeof(dface_t) },		// dface_ext_t
+	{ MAX_MAP_TEXINFO_QBSP,		MAX_MAP_TEXINFO,		0,					sizeof(dbsp_texinfo_t) },	// refeered in cmod code below as surface info
+	{ MAX_MAP_AREAS,			MAX_MAP_AREAS,			0,					sizeof(dbsp_area_t) },		// not extended, must increase network protocol
+	{ MAX_MAP_AREAPORTALS,		MAX_MAP_AREAPORTALS,	0,					sizeof(dbsp_areaportal_t) },// not extended, must increase network protocol
+	{ MAX_MAP_PLANES_QBSP,		MAX_MAP_PLANES,			0,					sizeof(dbsp_plane_t)},
+	{ MAX_MAP_NODES_QBSP,		MAX_MAP_NODES,			sizeof(dbsp_node_ext_t), sizeof(dbsp_node_t)},		// dbsp_node_ext_t
+	{ MAX_MAP_BRUSHSIDES_QBSP,	MAX_MAP_BRUSHSIDES,		sizeof(dbsp_brushside_ext_t), sizeof(dbsp_brushside_t) }, //dbsp_brushside_ext_t
+	{ MAX_MAP_LEAFS_QBSP,		MAX_MAP_LEAFS,			sizeof(dbsp_leaf_ext_t), sizeof(dbsp_leaf_t) },		// dbsp_leaf_ext_t
+	{ MAX_MAP_VERTS_QBSP,		MAX_MAP_VERTS,			0,					sizeof(dbsp_vertex_t) },
+	{ MAX_MAP_FACES_QBSP,		MAX_MAP_FACES,			sizeof(dbsp_face_ext_t), sizeof(dbsp_face_t) },		// dbsp_face_ext_t
 	{ MAX_MAP_LEAFFACES_QBSP,	MAX_MAP_LEAFFACES,		sizeof(unsigned int),sizeof(unsigned short) },
 	{ MAX_MAP_LEAFBRUSHES_QBSP,	MAX_MAP_LEAFBRUSHES,	sizeof(unsigned int), sizeof(unsigned short) },
 	{ MAX_MAP_PORTALS_QBSP,		MAX_MAP_PORTALS,		0, 0},										// unused
-	{ MAX_MAP_EDGES_QBSP,		MAX_MAP_EDGES,			sizeof(dedge_ext_t), sizeof(dedge_t) },		// dedge_ext_t
+	{ MAX_MAP_EDGES_QBSP,		MAX_MAP_EDGES,			sizeof(dbsp_edge_ext_t), sizeof(dbsp_edge_t) },		// dbsp_edge_ext_t
 	{ MAX_MAP_SURFEDGES_QBSP,	MAX_MAP_SURFEDGES,		0, sizeof(int)},
 	{ MAX_MAP_LIGHTING_QBSP,	MAX_MAP_LIGHTING,		0, 0},
 	{ MAX_MAP_VISIBILITY_QBSP,	MAX_MAP_VISIBILITY,		0, 0}
@@ -147,7 +147,7 @@ typedef struct
 
 	int			visibilitySize;
 	byte		visibility[MAX_MAP_VISIBILITY_QBSP];
-	dvis_t* vis;
+	dbsp_vis_t* vis;
 
 	int			entityStringLength;
 	char		entity_string[MAX_MAP_ENTSTRING_QBSP];
@@ -156,7 +156,7 @@ typedef struct
 	carea_t		areas[MAX_MAP_AREAS];
 
 	int			numAreaPortals;
-	dareaportal_t areaPortals[MAX_MAP_AREAPORTALS];
+	dbsp_areaportal_t areaPortals[MAX_MAP_AREAPORTALS];
 
 	int			numClusters;
 
@@ -214,7 +214,7 @@ CMod_LoadInlineModels
 */
 static void CMod_LoadInlineModels(lump_t *l)
 {
-	dmodel_t	*in;
+	dbsp_model_t	*in;
 	cmodel_t	*out;
 	int			i, j, count;
 
@@ -245,7 +245,7 @@ CMod_LoadSurfaceParams
 */
 static void CMod_LoadSurfaceParams(lump_t *l)
 {
-	texinfo_t		*in;
+	dbsp_texinfo_t		*in;
 	mapsurface_t	*out;
 	int				i, count;
 
@@ -283,7 +283,7 @@ static void CMod_LoadNodes(lump_t *l)
 
 	if (bExtendedBSP) // qbism bsp
 	{
-		dnode_ext_t* in = (void*)(cmod_base + l->fileofs);
+		dbsp_node_ext_t* in = (void*)(cmod_base + l->fileofs);
 		for (i = 0; i < count; i++, out++, in++)
 		{
 			out->plane = cm_world.planes + LittleLong(in->planenum);
@@ -296,7 +296,7 @@ static void CMod_LoadNodes(lump_t *l)
 	}
 	else
 	{
-		dnode_t* in = (void*)(cmod_base + l->fileofs);
+		dbsp_node_t* in = (void*)(cmod_base + l->fileofs);
 		for (i = 0; i < count; i++, out++, in++)
 		{
 			out->plane = cm_world.planes + LittleLong(in->planenum);
@@ -353,7 +353,7 @@ static void CMod_LoadLeafs(lump_t *l)
 
 	if (bExtendedBSP) // qbism bsp
 	{
-		dleaf_ext_t* in = (void*)(cmod_base + l->fileofs);
+		dbsp_leaf_ext_t* in = (void*)(cmod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			out->contents = LittleLong(in->contents);
@@ -368,7 +368,7 @@ static void CMod_LoadLeafs(lump_t *l)
 	}
 	else
 	{
-		dleaf_t* in = (void*)(cmod_base + l->fileofs);
+		dbsp_leaf_t* in = (void*)(cmod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			out->contents = LittleLong(in->contents);
@@ -407,7 +407,7 @@ need to save space for box planes
 */
 static void CMod_LoadPlanes(lump_t *l)
 {
-	dplane_t *in;
+	dbsp_plane_t *in;
 	cplane_t *out;
 	int		i, j;
 	int		count, bits;
@@ -480,7 +480,7 @@ static void CMod_LoadBrushSides(lump_t* l)
 
 	if (bExtendedBSP) // Qbism BSP
 	{
-		dbrushside_ext_t* in = (void*)(cmod_base + l->fileofs);
+		dbsp_brushside_ext_t* in = (void*)(cmod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			planeNum = LittleLong(in->planenum);
@@ -495,7 +495,7 @@ static void CMod_LoadBrushSides(lump_t* l)
 	}
 	else // Vanilla Q2 BSP
 	{
-		dbrushside_t* in = (void*)(cmod_base + l->fileofs);
+		dbsp_brushside_t* in = (void*)(cmod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			planeNum = LittleShort(in->planenum);
@@ -518,7 +518,7 @@ CMod_LoadAreas
 static void CMod_LoadAreas(lump_t *l)
 {
 	carea_t		*out;
-	darea_t 	*in;
+	dbsp_area_t 	*in;
 	int			i, count;
 
 	CMod_ValidateBSPLump(l, BSP_AREAS, &count, 1, "areas", __FUNCTION__);
@@ -543,7 +543,7 @@ CMod_LoadAreaPortals
 */
 static void CMod_LoadAreaPortals(lump_t *l)
 {
-	dareaportal_t	*out, *in;
+	dbsp_areaportal_t	*out, *in;
 	int			i, count;
 
 	CMod_ValidateBSPLump(l, BSP_AREAPORTALS, &count, 1, "area portals", __FUNCTION__);
@@ -582,7 +582,7 @@ static void CMod_LoadVisibility(lump_t *l)
 		cm_world.vis->bitofs[i][1] = LittleLong (cm_world.vis->bitofs[i][1]);
 	}
 
-	cm_world.vis = (dvis_t*)cm_world.visibility;
+	cm_world.vis = (dbsp_vis_t*)cm_world.visibility;
 }
 
 
@@ -613,7 +613,7 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 {
 	unsigned		*buf = NULL;
 	int				i;
-	dheader_t		header;
+	dbsp_header_t		header;
 	int				length;
 	static unsigned	last_checksum;
 
@@ -645,7 +645,7 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	cm_world.entity_string[0] = 0;
 	cm_world.map_name[0] = 0;
 
-	cm_world.vis = (dvis_t*)cm_world.visibility;
+	cm_world.vis = (dbsp_vis_t*)cm_world.visibility;
 
 	if (!name || !name[0])
 	{
@@ -666,8 +666,8 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	last_checksum = LittleLong (Com_BlockChecksum (buf, length));
 	*checksum = last_checksum;
 
-	header = *(dheader_t *)buf;
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++)
+	header = *(dbsp_header_t *)buf;
+	for (i=0 ; i<sizeof(dbsp_header_t)/4 ; i++)
 		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
 
 	bExtendedBSP = false;
@@ -1677,7 +1677,7 @@ AREAPORTALS
 static void FloodArea_r (carea_t *area, int floodnum)
 {
 	int		i;
-	dareaportal_t	*p;
+	dbsp_areaportal_t	*p;
 
 	if (area->floodvalid == cm_world.floodValid)
 	{

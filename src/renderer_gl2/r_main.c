@@ -576,15 +576,15 @@ static void R_DrawPerfCounters()
 	if (r_speeds->value <= 1.0f)
 		return;
 
-	rect_t pos = { 800 - 110, 15, 110, 170 };
 	float color[4];
 
 	Vector4Set(color, 0, 0, 0, 0.35f);
-	R_NewDrawFill(pos, color);
+	
+	R_ProgUniform4f(LOC_COLOR4, 0, 0, 0, 0.5);
+	R_DrawFill(vid.width-175, 25, 175, 205);
 
 	float x, y, h;
 
-#if 1
 	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
 	extern int R_GetFontHeight(int fontId);
 
@@ -607,39 +607,6 @@ static void R_DrawPerfCounters()
 	Vector4Set(color, 0.2, 1, 0, 1.0);
 	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("%i rendered models", rperf.alias_drawcalls));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i model tris total", rperf.alias_tris));
-
-	Vector4Set(color, 1.0, 0.5, 0, 1.0);
-
-	if (r_singlepass->value)
-		R_DrawText(x, y += h * 2, 2, 0, fontscale, color, "SINGLE PASS BSP (COL+LM)");
-	else
-		R_DrawText(x, y += h * 2, 2, 0, fontscale, color, "OLD TWO PASS BSP DRAWING");
-#else
-	y = 20;
-	Vector4Set(color, 1, 1, 1, 1.0);
-
-	R_DrawStringOld(va("%i        BSP polygons", rperf.brush_polys), 795, y, 0.7, 1, color);
-	R_DrawStringOld(va("%i    visible textures", rperf.visible_textures), 795, y += 8, 0.7, 1, color);
-	R_DrawStringOld(va("%i  visible light maps", rperf.visible_lightmaps), 795, y += 8, 0.7, 1, color);
-	R_DrawStringOld(va("%i    texture bindings", rperf.texture_binds), 795, y += 8, 0.7, 1, color);
-
-	Vector4Set(color, 0.8, 0.8, 1, 1.0);
-	R_DrawStringOld(va("%i      dynamic lights", r_newrefdef.num_dlights), 795, y += 16, 0.7, 1, color);
-	R_DrawStringOld(va("%i     render entities", r_newrefdef.num_entities), 795, y += 8, 0.7, 1, color);
-	R_DrawStringOld(va("%i     particles count", r_newrefdef.num_particles), 795, y += 8, 0.7, 1, color);
-
-	Vector4Set(color, 0.2, 1, 0, 1.0);
-	R_DrawStringOld(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
-	R_DrawStringOld(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
-	
-	Vector4Set(color, 1.0, 0.5, 0, 1.0);
-
-	if(r_singlepass->value)
-		R_DrawStringOld("SINGLE PASS BSP (COL+LM)", 795, y += 14, 0.7, 1, color);
-	else
-		R_DrawStringOld("OLD TWO PASS BSP DRAWING", 795, y += 14, 0.7, 1, color);
-#endif	
-	
 }
 
 /*
