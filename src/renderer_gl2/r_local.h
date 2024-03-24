@@ -39,10 +39,7 @@ See the attached GNU General Public License v2 for more details.
 enum
 {
 	TMU_DIFFUSE,
-	TMU_LIGHTMAP_0,
-	TMU_LIGHTMAP_1,
-	TMU_LIGHTMAP_2,
-	TMU_LIGHTMAP_3
+	TMU_LIGHTMAP,
 };
 
 #define	PITCH	0	// up / down
@@ -245,9 +242,8 @@ typedef struct
 	int alias_tris;
 	int alias_drawcalls;
 
-	int	texture_binds;
+	int	texture_binds[MIN_TEXTURE_MAPPING_UNITS];
 
-	int	visible_lightmaps;
 	int	visible_textures;
 
 } rperfcounters_t;

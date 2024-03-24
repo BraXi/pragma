@@ -511,7 +511,9 @@ void R_RenderView (refdef_t *fd)
 	{
 		rperf.brush_polys = 0;
 		rperf.alias_tris = 0;
-		rperf.texture_binds = 0;
+
+		for(int i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
+			rperf.texture_binds[i] = 0;
 	}
 
 	R_PushDlights ();
@@ -541,12 +543,12 @@ void R_RenderView (refdef_t *fd)
 	R_SelectTextureUnit(0);
 	if (r_speeds->value == 1.0f)
 	{
-		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i vislmaps, %i texbinds\n",
+		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i texbinds, %i lmbinds,\n",
 			rperf.brush_polys,
 			rperf.alias_tris,
 			rperf.visible_textures, 
-			rperf.visible_lightmaps,
-			rperf.texture_binds); 
+			rperf.texture_binds[TMU_DIFFUSE],
+			rperf.texture_binds[TMU_LIGHTMAP]);
 	}
 }
 
@@ -594,10 +596,10 @@ static void R_DrawPerfCounters()
 	h = R_GetFontHeight(0) * fontscale;
 
 	Vector4Set(color, 1, 1, 1, 1.0);
-	R_DrawText(x, y, 2, 0, fontscale, color, va("%i BSP polygons", rperf.brush_polys));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i visible textures", rperf.visible_textures));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i visible light maps", rperf.visible_lightmaps));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture bindings", rperf.texture_binds));
+	R_DrawText(x, y, 2, 0, fontscale, color, va("%i brush polygons", rperf.brush_polys));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.visible_textures));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i lightmap binds", rperf.texture_binds[TMU_LIGHTMAP]));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture binds", rperf.texture_binds[TMU_DIFFUSE]));
 
 	Vector4Set(color, 0.8, 0.8, 1, 1.0);
 	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("%i dynamic lights", r_newrefdef.num_dlights));

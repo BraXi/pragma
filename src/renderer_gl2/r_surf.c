@@ -15,8 +15,9 @@ See the attached GNU General Public License v2 for more details.
 
 static vec3_t	modelorg;		// relative to viewpoint
 
-msurface_t	*r_alpha_surfaces;
+msurface_t		*r_alpha_surfaces;
 
+extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
 
 /*
 =============================================================
@@ -139,7 +140,7 @@ void R_RenderBrushPoly (msurface_t *fa)
 	image = R_TextureAnimation (fa->texinfo);
 
 	R_MultiTextureBind(TMU_DIFFUSE, image->texnum);
-	R_MultiTextureBind(TMU_LIGHTMAP_0, r_texture_white->texnum);
+	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
 
 	if (fa->flags & SURF_DRAWTURB)
 	{
@@ -173,7 +174,7 @@ void R_DrawWorldAlphaSurfaces()
 	//
     glLoadMatrixf (r_world_matrix);
 
-	R_MultiTextureBind(TMU_LIGHTMAP_0, r_texture_white->texnum); // no lightmap
+	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum); // no lightmap
 	R_Blend(true);
 
 	R_BindProgram(GLPROG_WORLD);
@@ -216,9 +217,6 @@ void DrawTextureChains (void)
 	msurface_t	*s;
 	image_t		*image;
 
-//	R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
-//	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
-
 	rperf.visible_textures = 0;
 	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
@@ -231,7 +229,6 @@ void DrawTextureChains (void)
 		{
 			if (!(s->flags & SURF_DRAWTURB))
 				R_LightMappedWorldSurf(s);
-				//R_RenderBrushPoly(s); // lightmapped
 		}
 	}
 
@@ -247,8 +244,7 @@ void DrawTextureChains (void)
 		for ( ; s ; s = s->texturechain)
 		{
 			if ( s->flags & SURF_DRAWTURB )
-				R_LightMappedWorldSurf(s);
-				//R_RenderBrushPoly(s); // unlit and fullbright
+				R_LightMappedWorldSurf(s);  // unlit and fullbright
 		}
 		image->texturechain = NULL;
 	}
@@ -329,12 +325,12 @@ inline static void DrawLightMappedSurf(msurface_t* surf, int colorMapTexId, int 
 	if (r_lightmap->value && r_fullbright->value)
 	{
 		R_MultiTextureBind(TMU_DIFFUSE, colorMapTexId);
-		R_MultiTextureBind(TMU_LIGHTMAP_0, r_texture_white->texnum);
+		R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
 	}
 	else
 	{
 		R_MultiTextureBind(TMU_DIFFUSE, (r_lightmap->value > 0.0f) ? r_texture_white->texnum : colorMapTexId);
-		R_MultiTextureBind(TMU_LIGHTMAP_0, (r_fullbright->value > 0.0f) ? r_texture_white->texnum : lightMapTexId);
+		R_MultiTextureBind(TMU_LIGHTMAP, (r_fullbright->value > 0.0f) ? r_texture_white->texnum : lightMapTexId);
 	}
 
 	if (surf->texinfo->flags & SURF_FLOWING)
@@ -363,7 +359,7 @@ static void R_LightMappedWorldSurf( msurface_t *surf )
 	if ((surf->flags & SURF_DRAWTURB))
 	{
 		R_MultiTextureBind(TMU_DIFFUSE, image->texnum);
-		R_MultiTextureBind(TMU_LIGHTMAP_0, r_texture_white->texnum);
+		R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
 		EmitWaterPolys(surf);
 		return;
 	}
@@ -459,7 +455,6 @@ void R_DrawBrushModel (rentity_t *e)
 		return;
 
 	pCurrentRefEnt = e;
-	gl_state.current_texture[0] = gl_state.current_texture[1] = -1;
 
 	if (e->angles[0] || e->angles[1] || e->angles[2])
 	{
@@ -507,6 +502,89 @@ void R_DrawBrushModel (rentity_t *e)
 
 	glPopMatrix ();
 }
+
+
+/*
+===============
+R_BuildPolygonFromSurface
+
+Does also calculate proper lightmap coordinates for poly
+===============
+*/
+void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
+{
+	int i, lnumverts;
+	medge_t* pedges, * r_pedge;
+	float* vec;
+	poly_t* poly;
+	vec3_t total;
+	vec3_t normal;
+
+	// reconstruct the polygon
+	pedges = mod->edges;
+	lnumverts = surf->numedges;
+
+	VectorClear(total);
+
+	/* draw texture */
+	poly = Hunk_Alloc(sizeof(poly_t) + (lnumverts - 4) * sizeof(polyvert_t));
+	poly->next = surf->polys;
+	poly->flags = surf->flags;
+	surf->polys = poly;
+	poly->numverts = lnumverts;
+
+	VectorCopy(surf->plane->normal, normal);
+
+	if (surf->flags & SURF_PLANEBACK)
+	{
+		// if for some reason the normal sticks to the back of 
+		// the plane, invert it so it's usable for the shader
+		for (i = 0; i < 3; ++i)
+			normal[i] = -normal[i];
+	}
+
+	for (i = 0; i < lnumverts; i++)
+	{
+		polyvert_t* vert;
+		float s, t;
+		int lindex;
+
+		vert = &poly->verts[i];
+
+		lindex = mod->surfedges[surf->firstedge + i];
+
+		if (lindex > 0)
+		{
+			r_pedge = &pedges[lindex];
+			vec = mod->vertexes[r_pedge->v[0]].position;
+		}
+		else
+		{
+			r_pedge = &pedges[-lindex];
+			vec = mod->vertexes[r_pedge->v[1]].position;
+		}
+
+		//
+		// diffuse texture coordinates
+		//
+		s = DotProduct(vec, surf->texinfo->vecs[0]) + surf->texinfo->vecs[0][3];
+		s /= surf->texinfo->image->width;
+
+		t = DotProduct(vec, surf->texinfo->vecs[1]) + surf->texinfo->vecs[1][3];
+		t /= surf->texinfo->image->height;
+
+		VectorAdd(total, vec, total);
+		VectorCopy(vec, vert->pos);
+		Vector2Set(vert->texCoord, s, t);
+
+		VectorCopy(normal, vert->normal);
+
+		R_LightMap_TexCoordsForSurf(surf, vert, vec);
+
+		vert->lightFlags = 0;
+	}
+}
+
 
 /*
 =============================================================
@@ -666,34 +744,22 @@ void R_DrawWorld (void)
 	memset (&ent, 0, sizeof(ent));
 	ent.frame = (int)(r_newrefdef.time*2);
 
-	R_BindProgram(GLPROG_WORLD);
-	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
+
 
 	pCurrentRefEnt = &ent;
 
-	gl_state.current_texture[0] = gl_state.current_texture[1] = -1;
-
 	R_ClearSkyBox ();
 
-	if (r_singlepass->value)
-	{
-		// draw world in a single pass
-		R_RecursiveWorldNode(r_worldmodel->nodes);
+	R_RecursiveWorldNode(r_worldmodel->nodes);
 
-		DrawTextureChains();
-		//R_MultiTextureBind(GL_TEXTURE1, r_texture_white->texnum);
-	}
-	else
+	R_BindProgram(GLPROG_WORLD);
 	{
-		R_MultiTextureBind(TMU_LIGHTMAP_0, r_texture_white->texnum);
-		R_RecursiveWorldNode(r_worldmodel->nodes);	
+		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 		DrawTextureChains();
 	}
-
 	R_UnbindProgram();
 
 	R_DrawSkyBox ();
-
 	R_DrawTriangleOutlines ();
 }
 

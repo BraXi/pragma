@@ -11,133 +11,58 @@ See the attached GNU General Public License v2 for more details.
 // r_lightmap.c - code loosely from yamagi's gl3 renderer
 #include "r_local.h"
 
-#define	LM_BLOCK_WIDTH	256
-#define	LM_BLOCK_HEIGHT	256
-#define	MAX_LIGHTMAPS	128
+
+#define	LM_BLOCK_WIDTH		256
+#define	LM_BLOCK_HEIGHT		256
+#define	MAX_LIGHTMAPS		128		// maximum lightmap textures
 #define	TEXNUM_LIGHTMAPS	1024
 #define LM_BYTES 4
-
-#define LIGHTMAP_GL_FORMAT GL_RGBA
+#define LIGHTMAP_GL_FORMAT	GL_RGBA // texture format for lightmap
 
 typedef struct
 {
-	int	current_lightmap_texture;
-
-	int			allocated[LM_BLOCK_WIDTH];
+	int		current_lightmap_texture;
+	int		allocated[LM_BLOCK_WIDTH];
 
 	// the lightmap texture data needs to be kept in main memory so texsubimage can update properly
-	byte		lightmap_buffers[MAX_LIGHTMAPS_PER_SURFACE][LM_BYTES * LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
+	byte	lightmap_buffers[MAX_LIGHTMAPS_PER_SURFACE][LM_BYTES * LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
 } gllightmapstate_t;
 
 static gllightmapstate_t gl_lms;
 
 
 #define DoubleDotProduct(x,y) (long double)((long double)x[0]*(long double)y[0]+(long double)x[1]*(long double)y[1]+(long double)x[2]*(long double)y[2])
-/*
-===============
-NewLM_BuildPolygonFromSurface
 
-Does also calculate proper lightmap coordinates for poly
-===============
-*/
-void NewLM_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
+void R_LightMap_TexCoordsForSurf( msurface_t* surf, polyvert_t *vert, vec3_t pos )
 {
-	int i, lnumverts;
-	medge_t* pedges, * r_pedge;
-	float* vec;
-	poly_t* poly;
-	vec3_t total;
-	vec3_t normal;
+	float s, t;
 
-	// reconstruct the polygon
-	pedges = mod->edges;
-	lnumverts = surf->numedges;
-
-	VectorClear(total);
-
-	/* draw texture */
-	poly = Hunk_Alloc(sizeof(poly_t) + (lnumverts - 4) * sizeof(polyvert_t));
-	poly->next = surf->polys;
-	poly->flags = surf->flags;
-	surf->polys = poly;
-	poly->numverts = lnumverts;
-
-	VectorCopy(surf->plane->normal, normal);
-
-	if (surf->flags & SURF_PLANEBACK)
-	{
-		// if for some reason the normal sticks to the back of 
-		// the plane, invert it so it's usable for the shader
-		for (i = 0; i < 3; ++i)  
-			normal[i] = -normal[i];
-	}
-
-	for (i = 0; i < lnumverts; i++)
-	{
-		polyvert_t* vert;
-		float s, t;
-		int lindex;
-
-		vert = &poly->verts[i];
-
-		lindex = mod->surfedges[surf->firstedge + i];
-
-		if (lindex > 0)
-		{
-			r_pedge = &pedges[lindex];
-			vec = mod->vertexes[r_pedge->v[0]].position;
-		}
-		else
-		{
-			r_pedge = &pedges[-lindex];
-			vec = mod->vertexes[r_pedge->v[1]].position;
-		}
-
-		//
-		// diffuse texture coordinates
-		//
-		s = DotProduct(vec, surf->texinfo->vecs[0]) + surf->texinfo->vecs[0][3];
-		s /= surf->texinfo->image->width;
-
-		t = DotProduct(vec, surf->texinfo->vecs[1]) + surf->texinfo->vecs[1][3];
-		t /= surf->texinfo->image->height;
-
-		VectorAdd(total, vec, total);
-		VectorCopy(vec, vert->pos);
-		Vector2Set(vert->texCoord, s, t);
-
-		//
-		// lightmap texture coordinates
-		//
+	//
+	// lightmap texture coordinates
+	//
 #if DECOUPLED_LM
-		s = DoubleDotProduct(vec, surf->lmvecs[0]) + (long double)surf->lmvecs[0][3];
+	s = DoubleDotProduct(pos, surf->lmvecs[0]) + (long double)surf->lmvecs[0][3];
 #else
-		s = DotProduct(vec, surf->texinfo->vecs[0]) + surf->texinfo->vecs[0][3];
+	s = DotProduct(pos, surf->texinfo->vecs[0]) + surf->texinfo->vecs[0][3];
 #endif
-		s -= surf->texturemins[0];
-		s += surf->light_s * (1 << surf->lmshift);
-		s += (1 << surf->lmshift) * 0.5;
-		s /= LM_BLOCK_WIDTH * (1 << surf->lmshift);
+	s -= surf->texturemins[0];
+	s += surf->light_s * (1 << surf->lmshift);
+	s += (1 << surf->lmshift) * 0.5;
+	s /= LM_BLOCK_WIDTH * (1 << surf->lmshift);
 
 #if DECOUPLED_LM
-		t = DoubleDotProduct(vec, surf->lmvecs[1]) + (long double)surf->lmvecs[1][3];
+	t = DoubleDotProduct(pos, surf->lmvecs[1]) + (long double)surf->lmvecs[1][3];
 #else
-		t = DotProduct(vec, surf->texinfo->vecs[1]) + surf->texinfo->vecs[1][3];
+	t = DotProduct(vertpos, surf->texinfo->vecs[1]) + surf->texinfo->vecs[1][3];
 #endif
 
-		t -= surf->texturemins[1];
-		t += surf->light_t * (1 << surf->lmshift);
-		t += (1 << surf->lmshift) * 0.5;
-		t /= LM_BLOCK_HEIGHT * (1 << surf->lmshift);
+	t -= surf->texturemins[1];
+	t += surf->light_t * (1 << surf->lmshift);
+	t += (1 << surf->lmshift) * 0.5;
+	t /= LM_BLOCK_HEIGHT * (1 << surf->lmshift);
 
-		Vector2Set(vert->lmTexCoord, s, t);
-		VectorCopy(normal, vert->normal);
-
-		vert->lightFlags = 0;
-	}
+	Vector2Set(vert->lmTexCoord, s, t);
 }
-
-
 
 /*
 =============================================================================
@@ -349,10 +274,10 @@ static qboolean R_LightMap_AllocBlock(int w, int h, int* x, int* y)
 
 /*
 ========================
-R_CreateLightMapForSurface
+R_LightMap_CreateForSurface
 ========================
 */
-void R_CreateLightMapForSurface(msurface_t* surf)
+void R_LightMap_CreateForSurface(msurface_t* surf)
 {
 	int		smax, tmax;
 	int		offset, stride;
@@ -397,7 +322,7 @@ void R_LightMap_BeginBuilding(model_t* m)
 
 	r_framecount = 1; // no dlightcache
 
-	//R_SelectTextureUnit(1);
+	R_SelectTextureUnit(TMU_LIGHTMAP);
 
 	//
 	// setup the base lightstyles so the lightmaps won't 
@@ -424,4 +349,5 @@ R_LightMap_EndBuilding
 void R_LightMap_EndBuilding()
 {
 	R_LightMap_UploadBlock();
+	R_SelectTextureUnit(TMU_DIFFUSE);
 }

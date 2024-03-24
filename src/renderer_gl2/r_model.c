@@ -12,6 +12,8 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
+int		registration_sequence; // increased with each level load
+
 model_t	*pLoadModel;		// ptr to model which is being loaded
 int		modelFileLength;	// length of loaded model file
 
@@ -36,7 +38,14 @@ extern void Mod_LoadSP2(model_t* mod, void* buffer);
 extern void Mod_LoadBSP(model_t* mod, void* buffer);
 extern void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod);
 
-int registration_sequence; // increased with each level load
+
+void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf);
+
+void R_LightMap_CreateForSurface(msurface_t* surf);
+void R_LightMap_EndBuilding();
+void R_LightMap_BeginBuilding(model_t* mod);
+
+static qboolean Mod_BSP_EXT_LoadDecoupledLM();
 
 /*
 =================
@@ -767,13 +776,6 @@ static void BSP_CalcSurfaceExtents(msurface_t *s)
 }
 
 
-void NewLM_BuildPolygonFromSurface(model_t* mod, msurface_t* surf);
-void R_CreateLightMapForSurface (msurface_t *surf);
-void R_LightMap_EndBuilding();
-void R_LightMap_BeginBuilding(model_t *m);
-
-static qboolean Mod_BSP_EXT_LoadDecoupledLM();
-
 static void Mod_BSP_FaceLighting(msurface_t* out, byte* styles, int lightofs)
 {
 	int i;
@@ -858,12 +860,11 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 
 			// create lightmaps and polygons
 			if (!(out->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP)))
-				R_CreateLightMapForSurface(out);
+				R_LightMap_CreateForSurface(out);
 
 			if (!(out->texinfo->flags & SURF_WARP))
 			{
-				NewLM_BuildPolygonFromSurface(pCurrentModel, out);
-				//R_BuildPolygonFromSurface(out);
+				R_BuildPolygonFromSurface(pCurrentModel, out);
 			}
 		}
 
@@ -907,12 +908,11 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 
 			// create lightmaps and polygons
 			if (!(out->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP)))
-				R_CreateLightMapForSurface(out);
+				R_LightMap_CreateForSurface(out);
 
 			if (!(out->texinfo->flags & SURF_WARP))
 			{
-				NewLM_BuildPolygonFromSurface(pCurrentModel, out);
-				//R_BuildPolygonFromSurface(out);
+				R_BuildPolygonFromSurface(pCurrentModel, out);
 			}
 		}
 	}

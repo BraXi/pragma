@@ -23,10 +23,12 @@ static void R_LoadTGA(char* name, byte** pic, int* width, int* height);
 
 static mte = false;
 
+
 void R_EnableMultiTexture()
 {
 	for (int i = MIN_TEXTURE_MAPPING_UNITS; i != -1; i--)
 	{
+		gl_state.current_texture[i] = -1;
 		R_SelectTextureUnit(i);
 		glEnable(GL_TEXTURE_2D);
 	}
@@ -34,12 +36,13 @@ void R_EnableMultiTexture()
 
 void R_DisableMultiTexture()
 {
+	// disable everything but diffuse
 	for (int i = MIN_TEXTURE_MAPPING_UNITS; i != 0; i--)
 	{
 		R_SelectTextureUnit(i);
 		glDisable(GL_TEXTURE_2D);
 	}
-	R_SelectTextureUnit(0);
+	R_SelectTextureUnit(TMU_DIFFUSE);
 }
 
 
@@ -55,15 +58,15 @@ void R_SelectTextureUnit( unsigned int tmu )
 
 void R_BindTexture(int texnum)
 {
-	extern	image_t	*font_current;
-
-	if (r_nobind->value && font_current && texnum == font_current->texnum) // performance evaluation option
-		texnum = font_current->texnum;
+	if (r_nobind->value)
+	{
+		return;
+	}
 
 	if ( gl_state.current_texture[gl_state.current_tmu] == texnum)
 		return;
 
-	rperf.texture_binds++;
+	rperf.texture_binds[gl_state.current_tmu]++;
 
 	gl_state.current_texture[gl_state.current_tmu] = texnum;
 	glBindTexture(GL_TEXTURE_2D, texnum);
