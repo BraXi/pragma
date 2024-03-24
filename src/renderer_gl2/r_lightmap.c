@@ -24,6 +24,8 @@ typedef struct
 	int		current_lightmap_texture;
 	int		allocated[LM_BLOCK_WIDTH];
 
+	vec4_t	lm_colors[MAX_LIGHTMAPS_PER_SURFACE];
+
 	// the lightmap texture data needs to be kept in main memory so texsubimage can update properly
 	byte	lightmap_buffers[MAX_LIGHTMAPS_PER_SURFACE][LM_BYTES * LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
 } gllightmapstate_t;
@@ -350,4 +352,50 @@ void R_LightMap_EndBuilding()
 {
 	R_LightMap_UploadBlock();
 	R_SelectTextureUnit(TMU_DIFFUSE);
+}
+
+
+
+/*
+=======================
+R_LightMap_EndBuilding
+=======================
+*/
+void R_LightMap_UpdateLightStylesForSurf(msurface_t *surf)
+{
+	vec4_t lm_colors[MAX_LIGHTMAPS_PER_SURFACE];
+	qboolean hasChanged;
+	int i;
+
+	if (!r_dynamic->value)
+	{
+		for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
+			Vector4Set(lm_colors[i], 1.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else
+	{
+		// add light styles
+		for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[i] != (MAX_LIGHTSTYLES - 1); i++)
+		{
+			lm_colors[i][0] = r_newrefdef.lightstyles[surf->styles[i]].rgb[0];
+			lm_colors[i][1] = r_newrefdef.lightstyles[surf->styles[i]].rgb[1];
+			lm_colors[i][2] = r_newrefdef.lightstyles[surf->styles[i]].rgb[2];
+			lm_colors[i][3] = 1.0f;
+		}
+	}
+
+	hasChanged = false;
+	for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
+	{
+		if (!Vector4Compare(lm_colors[i], gl_lms.lm_colors[i]))
+		{
+			Vector4Copy(lm_colors[i], gl_lms.lm_colors[i]);
+			hasChanged = true;
+		}
+	}
+
+	if (hasChanged)
+	{
+		R_ProgUniform4fv(LOC_LIGHTSTYLES, MAX_LIGHTMAPS_PER_SURFACE, gl_lms.lm_colors[0]);
+	}
 }

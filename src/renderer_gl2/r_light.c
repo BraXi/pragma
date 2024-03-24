@@ -266,15 +266,23 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 
 			lightmap += 3 * (dt * ((surf->extents[0] >> surf->lmshift) + 1) + ds);
 
-			for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255 ;
-					maps++)
+			for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255 ; maps++)
 			{
-				for (i=0 ; i<3 ; i++)
-					scale[i] = r_modulate->value*r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+				if (r_dynamic->value)
+				{
+					for (i = 0; i < 3; i++)
+						scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
 
-				pointcolor[0] += lightmap[0] * scale[0] * (1.0/255);
-				pointcolor[1] += lightmap[1] * scale[1] * (1.0/255);
-				pointcolor[2] += lightmap[2] * scale[2] * (1.0/255);
+					pointcolor[0] += lightmap[0] * scale[0] * (1.0 / 255);
+					pointcolor[1] += lightmap[1] * scale[1] * (1.0 / 255);
+					pointcolor[2] += lightmap[2] * scale[2] * (1.0 / 255);
+				}
+				else
+				{
+					pointcolor[0] += lightmap[0] * r_modulate->value * (1.0 / 255);
+					pointcolor[1] += lightmap[1] * r_modulate->value * (1.0 / 255);
+					pointcolor[2] += lightmap[2] * r_modulate->value * (1.0 / 255);
+				}
 
 				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) *
 					((surf->extents[1] >> surf->lmshift) + 1);
@@ -327,16 +335,19 @@ void R_LightPoint(vec3_t p, vec3_t color)
 	//
 	// add dynamic lights
 	//
-	light = 0;
-	dl = r_newrefdef.dlights;
-	for (lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
+	if (r_dynamic->value)
 	{
-		VectorSubtract (pCurrentRefEnt->origin, dl->origin, dist); // distance
-		add = dl->intensity - VectorLength(dist);
-		add *= (1.0/256);
-		if (add > 0)
+		light = 0;
+		dl = r_newrefdef.dlights;
+		for (lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
 		{
-			VectorMA (color, add, dl->color, color);
+			VectorSubtract(pCurrentRefEnt->origin, dl->origin, dist); // distance
+			add = dl->intensity - VectorLength(dist);
+			add *= (1.0 / 256);
+			if (add > 0)
+			{
+				VectorMA(color, add, dl->color, color);
+			}
 		}
 	}
 

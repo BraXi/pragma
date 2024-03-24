@@ -343,6 +343,7 @@ inline static void DrawLightMappedSurf(msurface_t* surf, int colorMapTexId, int 
 	}
 }
 
+extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf);
 /*
 ================
 R_LightMappedWorldSurf
@@ -355,6 +356,9 @@ static void R_LightMappedWorldSurf( msurface_t *surf )
 	image = R_TextureAnimation(surf->texinfo);
 	if (!image)
 		image = r_texture_missing;
+
+
+	R_LightMap_UpdateLightStylesForSurf(surf);
 
 	if ((surf->flags & SURF_DRAWTURB))
 	{
