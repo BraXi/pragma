@@ -26,13 +26,13 @@ typedef struct
 	int			allocated[LM_BLOCK_WIDTH];
 
 	// the lightmap texture data needs to be kept in main memory so texsubimage can update properly
-	byte		lightmap_buffers[4][LM_BYTES * LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
+	byte		lightmap_buffers[MAX_LIGHTMAPS_PER_SURFACE][LM_BYTES * LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
 } gllightmapstate_t;
 
 static gllightmapstate_t gl_lms;
 
 
-
+#define DoubleDotProduct(x,y) (long double)((long double)x[0]*(long double)y[0]+(long double)x[1]*(long double)y[1]+(long double)x[2]*(long double)y[2])
 /*
 ===============
 NewLM_BuildPolygonFromSurface
@@ -110,7 +110,7 @@ void NewLM_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 		// lightmap texture coordinates
 		//
 #if DECOUPLED_LM
-		s = DotProduct(vec, surf->lmvecs[0]) + surf->lmvecs[0][3];
+		s = DoubleDotProduct(vec, surf->lmvecs[0]) + (long double)surf->lmvecs[0][3];
 #else
 		s = DotProduct(vec, surf->texinfo->vecs[0]) + surf->texinfo->vecs[0][3];
 #endif
@@ -120,7 +120,7 @@ void NewLM_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 		s /= LM_BLOCK_WIDTH * (1 << surf->lmshift);
 
 #if DECOUPLED_LM
-		t = DotProduct(vec, surf->lmvecs[1]) + surf->lmvecs[1][3];
+		t = DoubleDotProduct(vec, surf->lmvecs[1]) + (long double)surf->lmvecs[1][3];
 #else
 		t = DotProduct(vec, surf->texinfo->vecs[1]) + surf->texinfo->vecs[1][3];
 #endif
@@ -161,6 +161,8 @@ static void R_LightMap_InitBlock(void)
 /*
 ================
 R_LightMap_UploadBlock
+
+Pack 4 light maps into one and upload to GPU
 ================
 */
 static void R_LightMap_UploadBlock()
@@ -170,10 +172,14 @@ static void R_LightMap_UploadBlock()
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, LIGHTMAP_GL_FORMAT, LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, 0, LIGHTMAP_GL_FORMAT, GL_UNSIGNED_BYTE, gl_lms.lightmap_buffers[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, LIGHTMAP_GL_FORMAT, LM_BLOCK_WIDTH*2, LM_BLOCK_HEIGHT*2, 0, LIGHTMAP_GL_FORMAT, GL_UNSIGNED_BYTE, 0);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, LIGHTMAP_GL_FORMAT, GL_UNSIGNED_BYTE, gl_lms.lightmap_buffers[0]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, LM_BLOCK_WIDTH, 0, LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, LIGHTMAP_GL_FORMAT, GL_UNSIGNED_BYTE, gl_lms.lightmap_buffers[1]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, LM_BLOCK_HEIGHT, LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, LIGHTMAP_GL_FORMAT, GL_UNSIGNED_BYTE, gl_lms.lightmap_buffers[2]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, LM_BLOCK_WIDTH, LM_BLOCK_HEIGHT, LIGHTMAP_GL_FORMAT, GL_UNSIGNED_BYTE, gl_lms.lightmap_buffers[3]);
 
 	if (++gl_lms.current_lightmap_texture == MAX_LIGHTMAPS)
-		ri.Error(ERR_DROP, "R_LightMap_UploadBlock() - MAX_LIGHTMAPS exceeded\n");
+		ri.Error(ERR_DROP, "%s - MAX_LIGHTMAPS exceeded\n", __FUNCTION__);
 }
 
 
