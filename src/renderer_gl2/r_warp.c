@@ -236,12 +236,12 @@ float	r_turbsin[] =
 
 /*
 =============
-EmitWaterPolys
+R_World_DrawUnlitWaterSurf
 
 Does a water warp on the pre-fragmented poly_t chain
 =============
 */
-void EmitWaterPolys (msurface_t *fa)
+void R_World_DrawUnlitWaterSurf (msurface_t *surf)
 {
 	poly_t	*p, *bp;
 	polyvert_t		*v;
@@ -250,12 +250,12 @@ void EmitWaterPolys (msurface_t *fa)
 	float		scroll;
 	float		rdt = r_newrefdef.time;
 
-	if (fa->texinfo->flags & SURF_FLOWING)
+	if (surf->texinfo->flags & SURF_FLOWING)
 		scroll = -64 * ( (r_newrefdef.time*0.5) - (int)(r_newrefdef.time*0.5) );
 	else
 		scroll = 0;
 
-	for (bp=fa->polys ; bp ; bp=bp->next)
+	for (bp=surf->polys ; bp ; bp=bp->next)
 	{
 		p = bp;
 

@@ -53,17 +53,18 @@ image_t *R_TextureAnimation (mtexinfo_t *tex)
 
 /*
 ================
-DrawGLPoly
+R_World_DrawUnlitGeom
 ================
 */
-void DrawGLPoly (poly_t *p)
+void R_World_DrawUnlitGeom (msurface_t* surf)
 {
 	int		i;
 	polyvert_t	*v;
 
+	v = &surf->polys->verts[0];
+
 	glBegin (GL_POLYGON);
-	v = &p->verts[0];
-	for (i = 0; i < p->numverts; i++, v++)
+	for (i = 0; i < surf->polys->numverts; i++, v++)
 	{
 		glTexCoord2f (v->texCoord[0], v->texCoord[1]);
 		glVertex3fv (v->pos);
@@ -73,10 +74,10 @@ void DrawGLPoly (poly_t *p)
 
 /*
 ================
-DrawGLFlowingPoly -- version of DrawGLPoly that handles scrolling texture
+R_World_DrawUnlitFlowingGeom -- version of R_World_DrawUnlitGeom that handles scrolling texture
 ================
 */
-void DrawGLFlowingPoly (msurface_t *fa)
+void R_World_DrawUnlitFlowingGeom (msurface_t *fa)
 {
 	int		i;
 	polyvert_t *v;
@@ -131,42 +132,43 @@ void DrawGLPolyChain( poly_t *p, float soffset, float toffset )
 R_RenderBrushPoly
 ================
 */
-void R_RenderBrushPoly (msurface_t *fa)
+void R_RenderUnlitBrushPoly(msurface_t *surf)
 {
 	image_t		*image;
 
 	rperf.brush_polys++;
 
-	image = R_TextureAnimation (fa->texinfo);
+	image = R_TextureAnimation (surf->texinfo);
 
 	R_MultiTextureBind(TMU_DIFFUSE, image->texnum);
 	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
 
-	if (fa->flags & SURF_DRAWTURB)
+	if (surf->flags & SURF_DRAWTURB)
 	{
-		EmitWaterPolys(fa);
+		R_World_DrawUnlitWaterSurf(surf);
 		return;
 	}
 
-	if(fa->texinfo->flags & SURF_FLOWING)
-		DrawGLFlowingPoly (fa);
+	if(surf->texinfo->flags & SURF_FLOWING)
+		R_World_DrawUnlitFlowingGeom(surf);
 	else
-		DrawGLPoly (fa->polys);
+		R_World_DrawUnlitGeom(surf);
 }
 
 
 /*
 ================
-R_DrawWorldAlphaSurfaces
+R_World_DrawAlphaSurfaces
 
 Draw water surfaces and windows.
 The BSP tree is waled front to back, so unwinding the chain
 of alpha_surfaces will draw back to front, giving proper ordering.
 ================
 */
-void R_DrawWorldAlphaSurfaces()
+extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf); // this defaults all lightstyles
+void R_World_DrawAlphaSurfaces()
 {
-	msurface_t	*s;
+	msurface_t	*surf;
 	float		alpha;
 
 	//
@@ -174,44 +176,45 @@ void R_DrawWorldAlphaSurfaces()
 	//
     glLoadMatrixf (r_world_matrix);
 
-	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum); // no lightmap
-	R_Blend(true);
-
 	R_BindProgram(GLPROG_WORLD);
-	for (s=r_alpha_surfaces ; s ; s=s->texturechain)
+	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum); // no lightmap
+
+	R_LightMap_UpdateLightStylesForSurf(NULL); // hack for trans
+
+	R_Blend(true);
+	for (surf=r_alpha_surfaces ; surf ; surf=surf->texturechain)
 	{
-		R_MultiTextureBind(TMU_DIFFUSE, s->texinfo->image->texnum);
+		R_MultiTextureBind(TMU_DIFFUSE, surf->texinfo->image->texnum);
 		rperf.brush_polys++;
 
-		if (s->texinfo->flags & SURF_TRANS33)
+		if (surf->texinfo->flags & SURF_TRANS33)
 			alpha = 0.33f;
-		else if (s->texinfo->flags & SURF_TRANS66)
+		else if (surf->texinfo->flags & SURF_TRANS66)
 			alpha = 0.66f;
 		else
 			alpha = 1.0f;
 
 		R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, alpha);
 
-		if (s->flags & SURF_DRAWTURB)
-			EmitWaterPolys (s);
+		if (surf->flags & SURF_DRAWTURB)
+			R_World_DrawUnlitWaterSurf(surf);
 		else
-			DrawGLPoly (s->polys);
+			R_World_DrawUnlitGeom(surf);
 	}
-
+	R_Blend(false);
 	R_UnbindProgram();
 
-	R_Blend(false);
 
 	r_alpha_surfaces = NULL;
 }
 
 /*
 ================
-DrawTextureChains
+R_DrawWorld_TextureChains
 ================
 */
-static void R_LightMappedWorldSurf(msurface_t* surf);
-void DrawTextureChains (void)
+static void R_DrawWorldSurface(msurface_t* surf);
+void R_DrawWorld_TextureChains (void)
 {
 	int		i;
 	msurface_t	*s;
@@ -228,7 +231,7 @@ void DrawTextureChains (void)
 		for ( s = image->texturechain; s; s = s->texturechain)
 		{
 			if (!(s->flags & SURF_DRAWTURB))
-				R_LightMappedWorldSurf(s);
+				R_DrawWorldSurface(s);
 		}
 	}
 
@@ -244,7 +247,7 @@ void DrawTextureChains (void)
 		for ( ; s ; s = s->texturechain)
 		{
 			if ( s->flags & SURF_DRAWTURB )
-				R_LightMappedWorldSurf(s);  // unlit and fullbright
+				R_DrawWorldSurface(s);  // unlit and fullbright
 		}
 		image->texturechain = NULL;
 	}
@@ -252,10 +255,10 @@ void DrawTextureChains (void)
 
 /*
 ================
-DrawLightMappedFlowingSurf
+R_World_DrawFlowingSurfLM
 ================
 */
-inline static void DrawLightMappedFlowingSurf(msurface_t* surf)
+inline static void R_World_DrawFlowingSurfLM(msurface_t* surf)
 {
 	int			i, numVerts;
 	polyvert_t		*v;
@@ -287,10 +290,10 @@ inline static void DrawLightMappedFlowingSurf(msurface_t* surf)
 
 /*
 ================
-DrawLightMappedGenericSurf
+R_World_DrawGenericSurfLM
 ================
 */
-inline static void DrawLightMappedGenericSurf(msurface_t* surf)
+inline static void R_World_DrawGenericSurfLM(msurface_t* surf)
 {
 	int			i, numVerts;
 	polyvert_t		*v;
@@ -314,62 +317,54 @@ inline static void DrawLightMappedGenericSurf(msurface_t* surf)
 	glEnd();
 }
 
-/*
-================
-DrawLightMappedSurf
-================
-*/
-inline static void DrawLightMappedSurf(msurface_t* surf, int colorMapTexId, int lightMapTexId)
-{
-	// not ideal, but not the worst
-	if (r_lightmap->value && r_fullbright->value)
-	{
-		R_MultiTextureBind(TMU_DIFFUSE, colorMapTexId);
-		R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
-	}
-	else
-	{
-		R_MultiTextureBind(TMU_DIFFUSE, (r_lightmap->value > 0.0f) ? r_texture_white->texnum : colorMapTexId);
-		R_MultiTextureBind(TMU_LIGHTMAP, (r_fullbright->value > 0.0f) ? r_texture_white->texnum : lightMapTexId);
-	}
-
-	if (surf->texinfo->flags & SURF_FLOWING)
-	{
-		DrawLightMappedFlowingSurf(surf);
-	}
-	else
-	{
-		DrawLightMappedGenericSurf(surf);
-	}
-}
-
 extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf);
 /*
 ================
-R_LightMappedWorldSurf
+R_DrawWorldSurface
 ================
 */
-static void R_LightMappedWorldSurf( msurface_t *surf )
+static void R_DrawWorldSurface( msurface_t *surf )
 {
 	image_t* image;
+	int tex_diffuse, tex_lightmap;
 	
 	image = R_TextureAnimation(surf->texinfo);
 	if (!image)
 		image = r_texture_missing;
 
 
-	R_LightMap_UpdateLightStylesForSurf(surf);
-
 	if ((surf->flags & SURF_DRAWTURB))
 	{
+		R_LightMap_UpdateLightStylesForSurf(NULL); // disable lightstyles
 		R_MultiTextureBind(TMU_DIFFUSE, image->texnum);
 		R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
-		EmitWaterPolys(surf);
+		R_World_DrawUnlitWaterSurf(surf);
 		return;
 	}
 
+	// not ideal, but not the worst
+	if (r_lightmap->value && r_fullbright->value)
+	{
+		tex_diffuse = image->texnum;
+		tex_lightmap = r_texture_white->texnum;
+	}
+	else
+	{
+		tex_diffuse = r_lightmap->value ? r_texture_white->texnum : image->texnum;
+		tex_lightmap = r_fullbright->value ? r_texture_white->texnum : (gl_state.lightmap_textures + surf->lightMapTextureNum);
+	}
+
+	R_LightMap_UpdateLightStylesForSurf(r_fullbright->value ? NULL : surf);
+
+	R_MultiTextureBind(TMU_DIFFUSE, tex_diffuse);
+	R_MultiTextureBind(TMU_LIGHTMAP, tex_lightmap);
+
+	if (surf->texinfo->flags & SURF_FLOWING)
+		R_World_DrawFlowingSurfLM(surf);
+	else
+		R_World_DrawGenericSurfLM(surf);
+
 	rperf.brush_polys++;
-	DrawLightMappedSurf(surf, image->texnum, gl_state.lightmap_textures + surf->lightMapTextureNum);
 }
 
 /*
@@ -391,7 +386,7 @@ void R_DrawInlineBModel (void)
 	light = r_newrefdef.dlights;
 	for (k = 0; k < r_newrefdef.num_dlights; k++, light++)
 	{
-		 // Spike's fix from QS
+		 // Spike'surf fix from QS
 		VectorSubtract(light->origin, pCurrentRefEnt->origin, lightorg);
 		R_MarkLights(light, lightorg, (1 << k), (pCurrentModel->nodes + pCurrentModel->firstnode));
 	}
@@ -426,14 +421,7 @@ void R_DrawInlineBModel (void)
 				r_alpha_surfaces = psurf;
 			}
 
-			if (r_singlepass->value)
-			{
-				R_LightMappedWorldSurf(psurf);
-			}
-			else
-			{
-				R_RenderBrushPoly( psurf );
-			}
+			R_DrawWorldSurface(psurf);
 		}
 	}
 
@@ -542,7 +530,7 @@ void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 	if (surf->flags & SURF_PLANEBACK)
 	{
 		// if for some reason the normal sticks to the back of 
-		// the plane, invert it so it's usable for the shader
+		// the plane, invert it so it'surf usable for the shader
 		for (i = 0; i < 3; ++i)
 			normal[i] = -normal[i];
 	}
@@ -699,24 +687,21 @@ void R_RecursiveWorldNode (mnode_t *node)
 		}
 		else if (surf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66))
 		{	
-			// add to the translucent chain
+			//
+			// add surface to the translucent chain
+			//
 			surf->texturechain = r_alpha_surfaces;
 			r_alpha_surfaces = surf;
 		}
 		else
 		{
-			//if( r_singlepass->value )
-			//{
-			//	R_LightMappedWorldSurf(surf);
-			//}
-			//else
-			{
-				// the polygon is visible, so add it to the texture sorted chain
-				// FIXME: this is a hack for animation
-				image = R_TextureAnimation (surf->texinfo);
-				surf->texturechain = image->texturechain;
-				image->texturechain = surf;
-			}
+			//
+			// add surface to the texture chain
+			//
+			// FIXME: this is a hack for animation
+			image = R_TextureAnimation (surf->texinfo);
+			surf->texturechain = image->texturechain;
+			image->texturechain = surf;
 		}
 	}
 
@@ -748,8 +733,6 @@ void R_DrawWorld (void)
 	memset (&ent, 0, sizeof(ent));
 	ent.frame = (int)(r_newrefdef.time*2);
 
-
-
 	pCurrentRefEnt = &ent;
 
 	R_ClearSkyBox ();
@@ -759,7 +742,7 @@ void R_DrawWorld (void)
 	R_BindProgram(GLPROG_WORLD);
 	{
 		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
-		DrawTextureChains();
+		R_DrawWorld_TextureChains();
 	}
 	R_UnbindProgram();
 

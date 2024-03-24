@@ -536,7 +536,7 @@ void R_RenderView (refdef_t *fd)
 	R_DrawEntitiesOnList();
 	R_DrawDebugLines();
 //	R_RenderDlights ();
-	R_DrawWorldAlphaSurfaces();
+	R_World_DrawAlphaSurfaces();
 	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
 	R_RenderToFBO(false); // end rendering to fbo
 	

@@ -359,6 +359,8 @@ void R_LightMap_EndBuilding()
 /*
 =======================
 R_LightMap_EndBuilding
+
+Update lightstyles for surface, pass NULL to disable lightstyles
 =======================
 */
 void R_LightMap_UpdateLightStylesForSurf(msurface_t *surf)
@@ -366,6 +368,14 @@ void R_LightMap_UpdateLightStylesForSurf(msurface_t *surf)
 	vec4_t lm_colors[MAX_LIGHTMAPS_PER_SURFACE];
 	qboolean hasChanged;
 	int i;
+
+	if (surf == NULL)
+	{
+		Vector4Set(lm_colors[0], 1.0f, 1.0f, 1.0f, 1.0f);
+		for (i = 1; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
+			Vector4Clear(lm_colors[i]);
+		goto change;
+	}
 
 	if (!r_dynamic->value)
 	{
@@ -384,6 +394,7 @@ void R_LightMap_UpdateLightStylesForSurf(msurface_t *surf)
 		}
 	}
 
+change:
 	hasChanged = false;
 	for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
 	{
