@@ -527,7 +527,7 @@ void R_RenderView (refdef_t *fd)
 
 	R_SetupGL ();
 
-	R_MarkLeaves ();	// done here so we know if we're in water
+	R_World_MarkLeaves ();	// done here so we know if we're in water
 
 
 	R_ClearFBO(); 

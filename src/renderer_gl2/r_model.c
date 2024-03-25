@@ -855,7 +855,7 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 					out->extents[i] = 16384;
 					out->texturemins[i] = -8192;
 				}
-				GL_SubdivideSurface(out);	// cut up polygon for warps
+				R_SubdivideSurface(out);	// cut up polygon for warps
 			}
 
 			// create lightmaps and polygons
@@ -903,7 +903,7 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 					out->extents[i] = 16384;
 					out->texturemins[i] = -8192;
 				}
-				GL_SubdivideSurface(out);	// cut up polygon for warps
+				R_SubdivideSurface(out);	// cut up polygon for warps
 			}
 
 			// create lightmaps and polygons

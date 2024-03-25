@@ -18,6 +18,11 @@ static vec3_t	modelorg;		// relative to viewpoint
 msurface_t		*r_alpha_surfaces;
 
 extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
+extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf);
+
+static void R_World_DrawSurface(msurface_t* surf);
+
+static byte fatvis[MAX_MAP_LEAFS_QBSP / 8]; // markleaves
 
 /*
 =============================================================
@@ -29,12 +34,12 @@ extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3
 
 /*
 ===============
-R_TextureAnimation
+R_World_TextureAnimation
 
 Returns the proper texture for a given time and base texture
 ===============
 */
-image_t *R_TextureAnimation (mtexinfo_t *tex)
+static image_t *R_World_TextureAnimation(mtexinfo_t *tex)
 {
 	int		c;
 
@@ -54,16 +59,18 @@ image_t *R_TextureAnimation (mtexinfo_t *tex)
 /*
 ================
 R_World_DrawUnlitGeom
+
+draws unlit geometry
 ================
 */
-void R_World_DrawUnlitGeom (msurface_t* surf)
+void R_World_DrawUnlitGeom(msurface_t* surf)
 {
 	int		i;
 	polyvert_t	*v;
 
 	v = &surf->polys->verts[0];
 
-	glBegin (GL_POLYGON);
+	glBegin (GL_TRIANGLE_FAN);
 	for (i = 0; i < surf->polys->numverts; i++, v++)
 	{
 		glTexCoord2f (v->texCoord[0], v->texCoord[1]);
@@ -72,87 +79,10 @@ void R_World_DrawUnlitGeom (msurface_t* surf)
 	glEnd ();
 }
 
-/*
-================
-R_World_DrawUnlitFlowingGeom -- version of R_World_DrawUnlitGeom that handles scrolling texture
-================
-*/
-void R_World_DrawUnlitFlowingGeom (msurface_t *fa)
-{
-	int		i;
-	polyvert_t *v;
-	poly_t *p;
-	float	scroll;
-
-	p = fa->polys;
-
-	scroll = -64 * ( (r_newrefdef.time / 40.0) - (int)(r_newrefdef.time / 40.0) );
-	if(scroll == 0.0)
-		scroll = -64.0;
-
-	glBegin (GL_POLYGON);
-	v = &p->verts[0];
-
-	for (i = 0; i < p->numverts; i++, v++)
-	{
-		glTexCoord2f ((v->texCoord[0] + scroll), v->texCoord[1]);
-		glVertex3fv (v->pos);
-	}
-	glEnd ();
-}
-
 
 void R_DrawTriangleOutlines (void)
 {
-
-}
-
-/*
-** DrawGLPolyChain
-*/
-void DrawGLPolyChain( poly_t *p, float soffset, float toffset )
-{
-	polyvert_t* v;
-	int j;
-	for (; p != 0; p = p->chain)
-	{
-		glBegin(GL_POLYGON);
-		v = &p->verts[0];
-		for (j = 0; j < p->numverts; j++, v++)
-		{
-			glTexCoord2f(v->lmTexCoord[0] - soffset, v->lmTexCoord[1] - toffset);
-			glVertex3fv(v->pos);
-		}
-		glEnd();
-	}
-}
-
-/*
-================
-R_RenderBrushPoly
-================
-*/
-void R_RenderUnlitBrushPoly(msurface_t *surf)
-{
-	image_t		*image;
-
-	rperf.brush_polys++;
-
-	image = R_TextureAnimation (surf->texinfo);
-
-	R_MultiTextureBind(TMU_DIFFUSE, image->texnum);
-	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
-
-	if (surf->flags & SURF_DRAWTURB)
-	{
-		R_World_DrawUnlitWaterSurf(surf);
-		return;
-	}
-
-	if(surf->texinfo->flags & SURF_FLOWING)
-		R_World_DrawUnlitFlowingGeom(surf);
-	else
-		R_World_DrawUnlitGeom(surf);
+	// implement!
 }
 
 
@@ -165,7 +95,6 @@ The BSP tree is waled front to back, so unwinding the chain
 of alpha_surfaces will draw back to front, giving proper ordering.
 ================
 */
-extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf); // this defaults all lightstyles
 void R_World_DrawAlphaSurfaces()
 {
 	msurface_t	*surf;
@@ -211,16 +140,19 @@ void R_World_DrawAlphaSurfaces()
 /*
 ================
 R_DrawWorld_TextureChains
+
+Draws world geometry sorted by diffuse map textures
 ================
 */
-static void R_DrawWorldSurface(msurface_t* surf);
-void R_DrawWorld_TextureChains (void)
+static void R_DrawWorld_TextureChains()
 {
 	int		i;
 	msurface_t	*s;
 	image_t		*image;
 
 	rperf.visible_textures = 0;
+
+	// lightmapped surfaces
 	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (!image->registration_sequence || !image->texturechain)
@@ -231,10 +163,11 @@ void R_DrawWorld_TextureChains (void)
 		for ( s = image->texturechain; s; s = s->texturechain)
 		{
 			if (!(s->flags & SURF_DRAWTURB))
-				R_DrawWorldSurface(s);
+				R_World_DrawSurface(s);
 		}
 	}
 
+	// unlit and/or fullbright surfaces
 	for ( i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (!image->registration_sequence)
@@ -244,10 +177,10 @@ void R_DrawWorld_TextureChains (void)
 		if (!s)
 			continue;
 
-		for ( ; s ; s = s->texturechain)
-		{
+		for ( ; s; s = s->texturechain)
+		{	
 			if ( s->flags & SURF_DRAWTURB )
-				R_DrawWorldSurface(s);  // unlit and fullbright
+				R_World_DrawSurface(s);  
 		}
 		image->texturechain = NULL;
 	}
@@ -272,7 +205,7 @@ inline static void R_World_DrawFlowingSurfLM(msurface_t* surf)
 	if (scroll == 0.0)
 		scroll = -64.0;
 
-	glBegin(GL_POLYGON);
+	glBegin(GL_TRIANGLE_FAN);
 
 	while (poly != NULL)
 	{
@@ -302,7 +235,7 @@ inline static void R_World_DrawGenericSurfLM(msurface_t* surf)
 	numVerts = surf->polys->numverts;
 	poly = surf->polys;
 
-	glBegin(GL_POLYGON);
+	glBegin(GL_TRIANGLE_FAN);
 	while(poly != NULL)
 	{
 		v = &poly->verts[0];
@@ -317,18 +250,18 @@ inline static void R_World_DrawGenericSurfLM(msurface_t* surf)
 	glEnd();
 }
 
-extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf);
+
 /*
 ================
-R_DrawWorldSurface
+R_World_DrawSurface
 ================
 */
-static void R_DrawWorldSurface( msurface_t *surf )
+static void R_World_DrawSurface( msurface_t *surf )
 {
 	image_t* image;
 	int tex_diffuse, tex_lightmap;
 	
-	image = R_TextureAnimation(surf->texinfo);
+	image = R_World_TextureAnimation(surf->texinfo);
 	if (!image)
 		image = r_texture_missing;
 
@@ -342,9 +275,9 @@ static void R_DrawWorldSurface( msurface_t *surf )
 		return;
 	}
 
-	// not ideal, but not the worst
 	if (r_lightmap->value && r_fullbright->value)
 	{
+		// never let the world to be rendered completly white
 		tex_diffuse = image->texnum;
 		tex_lightmap = r_texture_white->texnum;
 	}
@@ -354,7 +287,7 @@ static void R_DrawWorldSurface( msurface_t *surf )
 		tex_lightmap = r_fullbright->value ? r_texture_white->texnum : (gl_state.lightmap_textures + surf->lightMapTextureNum);
 	}
 
-	R_LightMap_UpdateLightStylesForSurf(r_fullbright->value ? NULL : surf);
+	R_LightMap_UpdateLightStylesForSurf(r_fullbright->value ? NULL : surf); // disable lightstyles when fullbright
 
 	R_MultiTextureBind(TMU_DIFFUSE, tex_diffuse);
 	R_MultiTextureBind(TMU_LIGHTMAP, tex_lightmap);
@@ -421,7 +354,7 @@ void R_DrawInlineBModel (void)
 				r_alpha_surfaces = psurf;
 			}
 
-			R_DrawWorldSurface(psurf);
+			R_World_DrawSurface(psurf);
 		}
 	}
 
@@ -588,10 +521,13 @@ void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 
 /*
 ================
-R_RecursiveWorldNode
+R_World_RecursiveNode
+
+Builts two chains for solid and transparent geometry which we later use 
+to draw world, discards nodes which are not in PVS or frustum
 ================
 */
-void R_RecursiveWorldNode (mnode_t *node)
+void R_World_RecursiveNode(mnode_t *node)
 {
 	int			c, side, sidebit;
 	cplane_t	*plane;
@@ -609,7 +545,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 	if (R_CullBox (node->mins, node->maxs))
 		return;
 	
-// if a leaf node, draw stuff
+	// if a leaf node, draw stuff
 	if (node->contents != -1)
 	{
 		pleaf = (mleaf_t *)node;
@@ -618,7 +554,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 		if (r_newrefdef.areabits)
 		{
 			if (! (r_newrefdef.areabits[pleaf->area>>3] & (1<<(pleaf->area&7)) ) )
-				return;		// not visible
+				return;	// not visible
 		}
 
 		mark = pleaf->firstmarksurface;
@@ -636,9 +572,11 @@ void R_RecursiveWorldNode (mnode_t *node)
 		return;
 	}
 
-// node is just a decision point, so go down the apropriate sides
-
-// find which side of the node we are on
+	//
+	// node is just a decision point, so go down the apropriate sides
+	//
+	
+	// find which side of the node we are on
 	plane = node->plane;
 
 	switch (plane->type)
@@ -669,7 +607,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 	}
 
 // recurse down the children, front side first
-	R_RecursiveWorldNode (node->children[side]);
+	R_World_RecursiveNode (node->children[side]);
 
 	// draw stuff
 	for ( c = node->numsurfaces, surf = r_worldmodel->surfaces + node->firstsurface; c ; c--, surf++)
@@ -682,7 +620,9 @@ void R_RecursiveWorldNode (mnode_t *node)
 
 		if (surf->texinfo->flags & SURF_SKY)
 		{	
-			// just adds to visible sky bounds
+			//
+			// add to visible sky bounds
+			//
 			R_AddSkySurface (surf);
 		}
 		else if (surf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66))
@@ -699,14 +639,14 @@ void R_RecursiveWorldNode (mnode_t *node)
 			// add surface to the texture chain
 			//
 			// FIXME: this is a hack for animation
-			image = R_TextureAnimation (surf->texinfo);
+			image = R_World_TextureAnimation (surf->texinfo);
 			surf->texturechain = image->texturechain;
 			image->texturechain = surf;
 		}
 	}
 
 	// recurse down the back side
-	R_RecursiveWorldNode (node->children[!side]);
+	R_World_RecursiveNode (node->children[!side]);
 }
 
 
@@ -715,7 +655,7 @@ void R_RecursiveWorldNode (mnode_t *node)
 R_DrawWorld
 =============
 */
-void R_DrawWorld (void)
+void R_DrawWorld()
 {
 	rentity_t	ent;
 
@@ -737,32 +677,33 @@ void R_DrawWorld (void)
 
 	R_ClearSkyBox ();
 
-	R_RecursiveWorldNode(r_worldmodel->nodes);
+	// build texture chains
+	R_World_RecursiveNode(r_worldmodel->nodes);
 
 	R_BindProgram(GLPROG_WORLD);
 	{
 		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
-		R_DrawWorld_TextureChains();
+		R_DrawWorld_TextureChains(); // draw opaque surfaces now, we draw translucent surfs later
 	}
 	R_UnbindProgram();
 
 	R_DrawSkyBox ();
+
 	R_DrawTriangleOutlines ();
 }
 
 
 /*
 ===============
-R_MarkLeaves
+R_World_MarkLeaves
 
 Mark the leaves and nodes that are in the PVS for the current cluster
 Note: a camera may be in two PVS areas hence there ate two clusters
 ===============
 */
-void R_MarkLeaves(void)
+void R_World_MarkLeaves()
 {
 	byte	*vis;
-	byte	fatvis[MAX_MAP_LEAFS_QBSP/8];
 	mnode_t	*node;
 	int		i, c;
 	mleaf_t	*leaf;

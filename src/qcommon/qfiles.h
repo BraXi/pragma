@@ -460,7 +460,7 @@ typedef struct
 } dbsp_edge_ext_t; // QBISM BSP
 
 
-#define	MAX_LIGHTMAPS_PER_SURFACE	4
+#define	MAX_LIGHTMAPS_PER_SURFACE	4 // this is also max lightstyles for surf
 typedef struct
 {
 	unsigned short	planenum;

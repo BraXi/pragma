@@ -28,7 +28,15 @@ vertexbuffer_t vb_sky;
 static glvert_t skyverts[6];
 static int numSkyVerts;
 
-static void BoundPoly(int numverts, float* verts, vec3_t mins, vec3_t maxs)
+
+/*
+=================
+R_BoundPoly
+
+calculate bounding box for polygon
+=================
+*/
+static void R_BoundPoly(int numverts, float* verts, vec3_t mins, vec3_t maxs)
 {
 	int i, j;
 	float* v;
@@ -54,7 +62,12 @@ static void BoundPoly(int numverts, float* verts, vec3_t mins, vec3_t maxs)
 	}
 }
 
-void SubdividePolygon (int numverts, float *verts)
+/*
+=================
+R_SubdividePolygon
+=================
+*/
+static void R_SubdividePolygon(int numverts, float *verts)
 {
 	int i, j, k;
 	vec3_t mins, maxs;
@@ -75,7 +88,7 @@ void SubdividePolygon (int numverts, float *verts)
 		ri.Error(ERR_DROP, "%s: numverts = %i", __func__, numverts);
 	}
 
-	BoundPoly(numverts, verts, mins, maxs);
+	R_BoundPoly(numverts, verts, mins, maxs);
 
 	for (i = 0; i < 3; i++)
 	{
@@ -144,8 +157,8 @@ void SubdividePolygon (int numverts, float *verts)
 			}
 		}
 
-		SubdividePolygon(f, front[0]);
-		SubdividePolygon(b, back[0]);
+		R_SubdividePolygon(f, front[0]);
+		R_SubdividePolygon(b, back[0]);
 		return;
 	}
 
@@ -170,15 +183,15 @@ void SubdividePolygon (int numverts, float *verts)
 		total_t += t;
 		VectorAdd(total, verts, total);
 
-		poly->verts[i + 1].texCoord[0] = s;
-		poly->verts[i + 1].texCoord[1] = t;
+		Vector2Set(poly->verts[i + 1].texCoord, s, t);
 		VectorCopy(normal, poly->verts[i + 1].normal);
+
 		poly->verts[i + 1].lightFlags = 0;
 	}
 
 	VectorScale(total, (1.0 / numverts), poly->verts[0].pos);
-	poly->verts[0].texCoord[0] = total_s / numverts;
-	poly->verts[0].texCoord[1] = total_t / numverts;
+
+	Vector2Set(poly->verts[0].texCoord, total_s / numverts, total_t / numverts);
 	VectorCopy(normal, poly->verts[0].normal);
 
 	// copy first vertex to last
@@ -187,14 +200,13 @@ void SubdividePolygon (int numverts, float *verts)
 
 /*
 ================
-GL_SubdivideSurface
+R_SubdivideSurface
 
-Breaks a polygon up along axial 64 unit
-boundaries so that turbulent and sky warps
-can be done reasonably.
+Breaks a polygon up along axial 64 unit boundaries so 
+that turbulent and sky warps can be done reasonably.
 ================
 */
-void GL_SubdivideSurface (msurface_t *fa)
+void R_SubdivideSurface(msurface_t *fa)
 {
 	vec3_t		verts[64];
 	int			numverts;
@@ -220,7 +232,7 @@ void GL_SubdivideSurface (msurface_t *fa)
 		numverts++;
 	}
 
-	SubdividePolygon (numverts, verts[0]);
+	R_SubdividePolygon (numverts, verts[0]);
 }
 
 //=========================================================
@@ -238,7 +250,7 @@ float	r_turbsin[] =
 =============
 R_World_DrawUnlitWaterSurf
 
-Does a water warp on the pre-fragmented poly_t chain
+Does a water warp on the pre-fragmented glpoly_t chain, also handles unlit flowing geometry
 =============
 */
 void R_World_DrawUnlitWaterSurf (msurface_t *surf)
@@ -279,57 +291,12 @@ void R_World_DrawUnlitWaterSurf (msurface_t *surf)
 	}
 }
 
-/*
-=============
-EmitWaterPolys2
-
-Does a water warp on the pre-fragmented poly_t chain
-=============
-*/
-void EmitWaterPolys2(msurface_t* fa)
-{
-	poly_t* p, * bp;
-	polyvert_t		* v;
-	int			i;
-	float		s, t, os, ot;
-	float		scroll;
-	float		rdt = r_newrefdef.time;
-
-	if (fa->texinfo->flags & SURF_FLOWING)
-		scroll = -64 * ((r_newrefdef.time * 0.5) - (int)(r_newrefdef.time * 0.5));
-	else
-		scroll = 0;
-
-	for (bp = fa->polys; bp; bp = bp->next)
-	{
-		p = bp;
-
-		glBegin(GL_TRIANGLE_FAN);
-		for (i = 0, v = &p->verts[0]; i < p->numverts; i++, v++)
-		{
-			os = v->texCoord[0];
-			ot = v->texCoord[1];
-
-			s = os + r_turbsin[(int)((ot * 0.125 + r_newrefdef.time) * TURBSCALE) & 255];
-			s += scroll;
-			s *= (1.0 / 64);
-
-			t = ot + r_turbsin[(int)((os * 0.125 + rdt) * TURBSCALE) & 255];
-			t *= (1.0 / 64);
-
-			glMultiTexCoord2f(GL_TEXTURE0, s, t); //glTexCoord2f(s, t);
-//			glMultiTexCoord2f(GL_TEXTURE1, v[5], v[6]); // in case we have proper lightmaps on it	
-			glVertex3fv(v);
-		}
-		glEnd();
-	}
-}
-
 //===================================================================
 
 static char* sky_tex_prefix[6] = { "rt", "bk", "lf", "ft", "up", "dn" }; // environment map names
 
-vec3_t	skyclip[6] = {
+static vec3_t skyclip[6] = 
+{
 	{1,1,0},
 	{1,-1,0},
 	{0,-1,1},
@@ -337,10 +304,11 @@ vec3_t	skyclip[6] = {
 	{1,0,1},
 	{-1,0,1} 
 };
-int	c_sky;
+
+static int c_sky;
 
 // 1 = s, 2 = t, 3 = 2048
-int	st_to_vec[6][3] =
+static int st_to_vec[6][3] =
 {
 	{3,-1,2},
 	{-3,1,2},
@@ -356,7 +324,7 @@ int	st_to_vec[6][3] =
 };
 
 // s = [0]/[2], t = [1]/[2]
-int	vec_to_st[6][3] =
+static int vec_to_st[6][3] =
 {
 	{-2,3,1},
 	{2,3,-1},
@@ -371,10 +339,15 @@ int	vec_to_st[6][3] =
 //	{1,2,-3}
 };
 
-float	skymins[2][6], skymaxs[2][6];
-float	sky_min, sky_max;
+static float	skymins[2][6], skymaxs[2][6];
+static float	sky_min, sky_max;
 
-void DrawSkyPolygon (int nump, vec3_t vecs)
+/*
+=============
+R_DrawSkyPolygon
+=============
+*/
+static void R_DrawSkyPolygon (int nump, vec3_t vecs)
 {
 	int		i,j;
 	vec3_t	v, av;
@@ -385,7 +358,7 @@ void DrawSkyPolygon (int nump, vec3_t vecs)
 	c_sky++;
 
 #if 0
-	glBegin (GL_POLYGON);
+	glBegin (GL_TRIANGLE_FAN);
 	for (i=0 ; i<nump ; i++, vecs+=3)
 	{
 		VectorAdd(vecs, r_origin, v);
@@ -460,7 +433,13 @@ void DrawSkyPolygon (int nump, vec3_t vecs)
 
 #define	ON_EPSILON		0.1			// point on plane side epsilon
 #define	MAX_CLIP_VERTS	64
-void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
+
+/*
+=============
+R_ClipSkyPolygon
+=============
+*/
+static void R_ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 {
 	float	*norm;
 	float	*v;
@@ -473,10 +452,10 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 	int		i, j;
 
 	if (nump > MAX_CLIP_VERTS-2)
-		ri.Error (ERR_DROP, "ClipSkyPolygon: MAX_CLIP_VERTS");
+		ri.Error (ERR_DROP, "R_ClipSkyPolygon: MAX_CLIP_VERTS");
 	if (stage == 6)
 	{	// fully clipped, so draw it
-		DrawSkyPolygon (nump, vecs);
+		R_DrawSkyPolygon (nump, vecs);
 		return;
 	}
 
@@ -502,7 +481,7 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 
 	if (!front || !back)
 	{	// not clipped
-		ClipSkyPolygon (nump, vecs, stage+1);
+		R_ClipSkyPolygon (nump, vecs, stage+1);
 		return;
 	}
 
@@ -547,8 +526,8 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 	}
 
 	// continue
-	ClipSkyPolygon (newc[0], newv[0][0], stage+1);
-	ClipSkyPolygon (newc[1], newv[1][0], stage+1);
+	R_ClipSkyPolygon (newc[0], newv[0][0], stage+1);
+	R_ClipSkyPolygon (newc[1], newv[1][0], stage+1);
 }
 
 /*
@@ -556,7 +535,7 @@ void ClipSkyPolygon (int nump, vec3_t vecs, int stage)
 R_AddSkySurface
 =================
 */
-void R_AddSkySurface (msurface_t *fa)
+void R_AddSkySurface(msurface_t *fa)
 {
 	int			i;
 	vec3_t		verts[MAX_CLIP_VERTS];
@@ -569,7 +548,7 @@ void R_AddSkySurface (msurface_t *fa)
 		{
 			VectorSubtract (p->verts[i].pos, r_origin, verts[i]);
 		}
-		ClipSkyPolygon (p->numverts, verts[0], 0);
+		R_ClipSkyPolygon (p->numverts, verts[0], 0);
 	}
 }
 
@@ -579,7 +558,7 @@ void R_AddSkySurface (msurface_t *fa)
 R_ClearSkyBox
 ==============
 */
-void R_ClearSkyBox (void)
+void R_ClearSkyBox()
 {
 	int		i;
 
@@ -591,7 +570,12 @@ void R_ClearSkyBox (void)
 }
 
 
-void MakeSkyVec (float s, float t, int axis)
+/*
+=============
+R_MakeSkyVec
+=============
+*/
+static void R_MakeSkyVec(float s, float t, int axis)
 {
 	vec3_t		v, b;
 	int			j, k;
@@ -629,15 +613,17 @@ void MakeSkyVec (float s, float t, int axis)
 	numSkyVerts++;
 }
 
+
 /*
 ==============
 R_DrawSkyBox
 ==============
 */
-static int skytexorder[6] = {0,2,1,3,4,5};
-void R_DrawSkyBox (void)
+void R_DrawSkyBox ()
 {
 	int		i;
+
+	static const int skytexorder[6] = { 0,2,1,3,4,5 };
 
 	if (skyrotate)
 	{	// check for no sky at all
@@ -668,12 +654,12 @@ void R_DrawSkyBox (void)
 			continue;
 	
 		numSkyVerts = 0;
-		MakeSkyVec(skymins[0][i], skymins[1][i], i);
-		MakeSkyVec(skymins[0][i], skymaxs[1][i], i);
-		MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
-		MakeSkyVec(skymins[0][i], skymins[1][i], i);
-		MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
-		MakeSkyVec(skymaxs[0][i], skymins[1][i], i);
+		R_MakeSkyVec(skymins[0][i], skymins[1][i], i);
+		R_MakeSkyVec(skymins[0][i], skymaxs[1][i], i);
+		R_MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
+		R_MakeSkyVec(skymins[0][i], skymins[1][i], i);
+		R_MakeSkyVec(skymaxs[0][i], skymaxs[1][i], i);
+		R_MakeSkyVec(skymaxs[0][i], skymins[1][i], i);
 		R_UpdateVertexBuffer(&vb_sky, skyverts, numSkyVerts, V_UV);
 
 		R_BindProgram(GLPROG_SKY);
@@ -691,8 +677,7 @@ void R_DrawSkyBox (void)
 R_SetSky
 ============
 */
-
-void R_SetSky (char *name, float rotate, vec3_t axis, vec3_t color)
+void R_SetSky(char *name, float rotate, vec3_t axis, vec3_t color)
 {
 	int		i;
 	char	pathname[MAX_QPATH];

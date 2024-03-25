@@ -349,20 +349,21 @@ void R_RenderView (refdef_t *fd);
 void R_ScreenShot_f (void);
 void R_DrawBrushModel (rentity_t *e);
 void R_DrawBeam( rentity_t *e );
-void R_DrawWorld (void);
+void R_DrawWorld();
 void R_RenderDlights(void);
 void R_World_DrawAlphaSurfaces();
 void R_InitCodeTextures();
 void R_LoadFonts();
-void GL_SubdivideSurface (msurface_t *fa);
+void R_SubdivideSurface (msurface_t *fa);
 qboolean R_CullBox (vec3_t mins, vec3_t maxs);
 void R_RotateForEntity (rentity_t *e);
-void R_MarkLeaves (void);
+void R_World_MarkLeaves();
 
 void R_World_DrawUnlitWaterSurf (msurface_t *fa);
+
 void R_AddSkySurface (msurface_t *fa);
-void R_ClearSkyBox (void);
-void R_DrawSkyBox (void);
+void R_ClearSkyBox();
+void R_DrawSkyBox();
 
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
 
