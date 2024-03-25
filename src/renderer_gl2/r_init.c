@@ -31,7 +31,6 @@ cvar_t* gl_driver;
 cvar_t* r_lightmap;
 cvar_t* r_mode;
 cvar_t* r_dynamic;
-cvar_t* r_monolightmap;
 cvar_t* r_modulate;
 cvar_t* r_nobind;
 cvar_t* r_picmip;
@@ -99,7 +98,6 @@ void R_RegisterCvarsAndCommands(void)
 	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE);
 	r_clear = ri.Cvar_Get("r_clear", "0", 0);
 	r_cull = ri.Cvar_Get("r_cull", "1", CVAR_CHEAT);
-	r_monolightmap = ri.Cvar_Get("r_monolightmap", "0", CVAR_CHEAT);
 	gl_driver = ri.Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE);
 	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
@@ -291,13 +289,6 @@ int R_Init(void* hinstance, void* hWnd)
 
 	// get our various GL strings and consts
 	R_OpenGLConfig();
-
-
-	if (toupper(r_monolightmap->string[1]) != 'F')
-	{
-		ri.Cvar_Set("r_monolightmap", "0");
-
-	}
 
 	ri.Cvar_Set("scr_drawall", "1");
 

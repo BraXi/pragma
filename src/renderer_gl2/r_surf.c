@@ -14,15 +14,14 @@ See the attached GNU General Public License v2 for more details.
 #include "r_local.h"
 
 static vec3_t	modelorg;		// relative to viewpoint
-
-msurface_t		*r_alpha_surfaces;
+static msurface_t	*r_alpha_surfaces = NULL;
+static byte fatvis[MAX_MAP_LEAFS_QBSP / 8]; // markleaves
 
 extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
 extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf);
-
 static void R_World_DrawSurface(msurface_t* surf);
-
-static byte fatvis[MAX_MAP_LEAFS_QBSP / 8]; // markleaves
+extern void R_BeginLinesRendering(qboolean dt);
+extern void R_EndLinesRendering();
 
 /*
 =============================================================
@@ -78,9 +77,6 @@ void R_World_DrawUnlitGeom(msurface_t* surf)
 	}
 	glEnd ();
 }
-
-extern void R_BeginLinesRendering(qboolean dt);
-extern void R_EndLinesRendering();
 
 static void R_DrawTriangleOutlines()
 {
@@ -161,7 +157,6 @@ static void R_DrawTriangleOutlines()
 			}
 		}
 	}
-//	r_alpha_surfaces = NULL;
 
 	R_UnbindProgram();
 

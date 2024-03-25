@@ -305,7 +305,6 @@ extern	cvar_t	*r_bitdepth;
 extern	cvar_t	*r_mode;
 extern	cvar_t	*r_lightmap;
 extern	cvar_t	*r_dynamic;
-extern  cvar_t  *r_monolightmap;
 extern	cvar_t	*r_nobind;
 extern	cvar_t	*r_picmip;
 extern	cvar_t	*r_showtris;
