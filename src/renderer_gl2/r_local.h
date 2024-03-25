@@ -318,7 +318,6 @@ extern	cvar_t	*r_swapinterval;
 extern	cvar_t	*r_texturemode;
 extern	cvar_t	*r_texturealphamode;
 extern	cvar_t	*r_texturesolidmode;
-extern  cvar_t  *r_saturatelighting;
 extern  cvar_t  *r_lockpvs;
 
 extern	cvar_t	*r_fullscreen;

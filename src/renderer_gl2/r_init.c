@@ -38,7 +38,6 @@ cvar_t* r_showtris;
 cvar_t* r_finish;
 cvar_t* r_clear;
 cvar_t* r_cull;
-cvar_t* r_saturatelighting;
 cvar_t* r_swapinterval;
 cvar_t* r_texturemode;
 cvar_t* r_texturealphamode;
@@ -92,24 +91,24 @@ void R_RegisterCvarsAndCommands(void)
 	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
 	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT);
 	r_dynamic = ri.Cvar_Get("r_dynamic", "1", CVAR_CHEAT);
-	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT);
 	r_picmip = ri.Cvar_Get("r_picmip", "0", 0);
-	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT);
+	
+	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT);
+	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT);	
 	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE);
 	r_clear = ri.Cvar_Get("r_clear", "0", 0);
 	r_cull = ri.Cvar_Get("r_cull", "1", CVAR_CHEAT);
+	
 	gl_driver = ri.Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE);
+	
 	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
 	r_texturesolidmode = ri.Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE);
-
 
 	gl_ext_swapinterval = ri.Cvar_Get("gl_ext_swapinterval", "1", CVAR_ARCHIVE);
 
 	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT);
 	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
-
-	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", CVAR_CHEAT);
 
 	r_fullscreen = ri.Cvar_Get("r_fullscreen", "0", CVAR_ARCHIVE);
 
