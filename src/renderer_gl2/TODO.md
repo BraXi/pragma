@@ -1,15 +1,13 @@
 # RENDERER
-An attempt to bring renderer to OpenGL 2.1, while making it many times faster than GL1.4 renderer was
-Once the renderer is core GL 2.1 compatible it can be easily upgraded to GL 3.* if needed
+An attempt to bring renderer to OpenGL 2.1, while making it many times faster than GL1.4 renderer
+
 
 ## TODO:
-- do _NOT_ update lightmaps! It's tanking performance with dlights and lightstyles due to texture uploads, Instead do what YamagiQ2 GL3 renderer does
-- move lighting (styles, dlights) to GPU and add per pixel lighting (releated to upper) -- dlights are ugly with higher res lightmaps
+- add per pixel lighting
 - anistropic texture filtering
 - entities should be lit by lightgrid instead of lightmap pixel underneath them (which is awful for objects in air) -- add support for `LIGHTGRID_OCTREE`
 - setup projection without immediate calls
 - get rid of IM translation/rotation -- calculate matrices and pass them to shaders
-- get rid of `GL_POLYGON` draws convert them to `GL_TRIANGLE_STRIP` ?
 - convert remaining code that does immediate rendering (glBegin/glEnd) to vertex buffers
 - render brushmodels and entirity of world with vertexbuffers
 - local entities rendering and culling based on PVS ?
@@ -26,6 +24,9 @@ Once the renderer is core GL 2.1 compatible it can be easily upgraded to GL 3.* 
 - multitexture support -- currently only two TMUs, we need more forl ighting changes
 
 ## DONE:
+- move lightstyles to GPU
+- upload all lightmaps to GPU and not waste cpu clocks for updates (aitest.bsp ~120fps with old code vs ~370fps now on my machine)
+- render `GL_POLYGON` as `GL_TRIANGLE_STRIP`
 - all UI rendering is now done with vertexbuffers (bringing up console no longer tanks FPS)
 - support `QBISM` extended BSP format allowing for greatly more advanced maps
 - world loading code is aware of `BSPX` lumps
