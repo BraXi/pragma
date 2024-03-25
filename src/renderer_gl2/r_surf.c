@@ -139,12 +139,30 @@ static void R_DrawTriangleOutlines()
 					glEnd();
 				}
 			}
-
-			R_World_DrawSurface(surf);
 		}
-
 		image->texturechain = NULL;
 	}
+
+	// draw transparent
+	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 0.0f, 1.0f);
+	for (surf = r_alpha_surfaces; surf; surf = surf->texturechain)
+	{
+		p = surf->polys;
+		for (; p; p = p->chain)
+		{
+			for (j = 2; j < p->numverts; j++)
+			{
+				glBegin(GL_LINE_STRIP);
+				glVertex3fv(p->verts[0].pos);
+				glVertex3fv(p->verts[j - 1].pos);
+				glVertex3fv(p->verts[j].pos);
+				glVertex3fv(p->verts[0].pos);
+				glEnd();
+			}
+		}
+	}
+//	r_alpha_surfaces = NULL;
+
 	R_UnbindProgram();
 
 	if (r_showtris->value > 1)
@@ -170,7 +188,7 @@ of alpha_surfaces will draw back to front, giving proper ordering.
 void R_World_DrawAlphaSurfaces()
 {
 	msurface_t	*surf;
-	float		alpha;
+	float		oldalpha = -1.0f, alpha;
 
 	//
 	// go back to the world matrix
@@ -195,7 +213,11 @@ void R_World_DrawAlphaSurfaces()
 		else
 			alpha = 1.0f;
 
-		R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, alpha);
+		if (alpha != oldalpha)
+		{
+			R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, alpha);
+			oldalpha = alpha;
+		}
 
 		if (surf->flags & SURF_DRAWTURB)
 			R_World_DrawUnlitWaterSurf(surf);
@@ -204,7 +226,6 @@ void R_World_DrawAlphaSurfaces()
 	}
 	R_Blend(false);
 	R_UnbindProgram();
-
 
 	r_alpha_surfaces = NULL;
 }
