@@ -79,10 +79,82 @@ void R_World_DrawUnlitGeom(msurface_t* surf)
 	glEnd ();
 }
 
+extern void R_BeginLinesRendering(qboolean dt);
+extern void R_EndLinesRendering();
 
-void R_DrawTriangleOutlines (void)
+static void R_DrawTriangleOutlines()
 {
-	// implement!
+	int		i, j;
+	msurface_t* surf;
+	poly_t* p;
+	image_t* image;
+
+	if (!r_showtris->value)
+		return;
+
+	R_WriteToDepthBuffer(false);
+	R_BeginLinesRendering(r_showtris->value >= 2 ? true : false);
+
+	if (r_showtris->value > 1)
+	{
+		glEnable(GL_POLYGON_OFFSET_LINE);
+		glPolygonOffset(-1, -1);
+		glLineWidth(2);
+	}
+
+	R_BindProgram(GLPROG_DEBUGLINE);
+	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
+	{
+		if (!image->registration_sequence)
+			continue;
+
+		surf = image->texturechain;
+		if (!surf)
+			continue;
+
+		for (; surf; surf = surf->texturechain)
+		{
+			if (r_showtris->value > 2)
+			{
+				if (surf->flags & SURF_DRAWTURB)
+					R_ProgUniform4f(LOC_COLOR4, 0.0f, 0.2f, 1.0f, 1.0f);
+				else if (surf->flags & SURF_UNDERWATER)
+					R_ProgUniform4f(LOC_COLOR4, 0.0f, 1.0f, 0.0f, 1.0f);
+				else
+					R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
+			}
+
+			p = surf->polys;
+			for (; p; p = p->chain)
+			{
+				for (j = 2; j < p->numverts; j++)
+				{
+					glBegin(GL_LINE_STRIP);
+					glVertex3fv(p->verts[0].pos);
+					glVertex3fv(p->verts[j - 1].pos);
+					glVertex3fv(p->verts[j].pos);
+					glVertex3fv(p->verts[0].pos);
+					glEnd();
+				}
+			}
+
+			R_World_DrawSurface(surf);
+		}
+
+		image->texturechain = NULL;
+	}
+	R_UnbindProgram();
+
+	if (r_showtris->value > 1)
+	{
+		glDisable(GL_POLYGON_OFFSET_LINE);
+		glPolygonOffset(0.0f, 0.0f);
+	}
+
+	R_EndLinesRendering();
+	R_WriteToDepthBuffer(true);
 }
 
 
@@ -182,7 +254,9 @@ static void R_DrawWorld_TextureChains()
 			if ( s->flags & SURF_DRAWTURB )
 				R_World_DrawSurface(s);  
 		}
-		image->texturechain = NULL;
+
+		if(!r_showtris->value)
+			image->texturechain = NULL;
 	}
 }
 

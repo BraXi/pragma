@@ -50,10 +50,13 @@ typedef struct
 #define	SIDE_ON		2
 
 
+// braxi -- added unused SURF_ flags for completness
 #define	SURF_PLANEBACK		2
 #define	SURF_DRAWSKY		4
+//#define SURF_DRAWSPRITE	8 // was never used ?
 #define SURF_DRAWTURB		0x10
-#define SURF_DRAWBACKGROUND	0x40
+//#define SURF_DRAWTILED	0x20
+//#define SURF_DRAWBACKGROUND	0x40 // used in soft renderer
 #define SURF_UNDERWATER		0x80
 
 typedef struct
