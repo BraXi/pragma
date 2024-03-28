@@ -330,7 +330,6 @@ R_SetupFrame
 */
 static void R_SetupFrame()
 {
-	int i;
 	mleaf_t	*leaf;
 
 	r_framecount++;
@@ -373,9 +372,9 @@ static void R_SetupFrame()
 		}
 	}
 
-	for (i=0 ; i<4 ; i++)
-		v_blend[i] = r_newrefdef.view.fx.blend[i];
+	Vector4Copy(r_newrefdef.view.fx.blend, v_blend);
 
+	rperf.brush_drawcalls = 0;
 	rperf.brush_polys = 0;
 	rperf.alias_tris = 0;
 	rperf.alias_drawcalls = 0;
@@ -443,7 +442,7 @@ static void R_SetupGL()
     screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity ();
-    MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096);
+    MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 99999);
 
 	R_SetCullFace(GL_FRONT);
 
@@ -600,6 +599,7 @@ static void R_DrawPerfCounters()
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.visible_textures));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i lightmap binds", rperf.texture_binds[TMU_LIGHTMAP]));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture binds", rperf.texture_binds[TMU_DIFFUSE]));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i brush drawcalls", rperf.brush_drawcalls));
 
 	Vector4Set(color, 0.8, 0.8, 1, 1.0);
 	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("%i dynamic lights", r_newrefdef.num_dlights));

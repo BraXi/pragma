@@ -134,9 +134,12 @@ typedef enum
 	VALOC_POS,
 	VALOC_NORMAL,
 	VALOC_TEXCOORD,
+	VALOC_LMCOORD,
 	VALOC_COLOR,
 	VALOC_OLD_POS,
 	VALOC_OLD_NORMAL,
+	VALOC_LIGHTFLAGS,
+	VALOC_STYLES,
 	NUM_VALOCS
 } glprogLoc_t;
 
@@ -176,6 +179,7 @@ void R_ProgUniformVec3(int uniform, vec3_t v);
 void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4);
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4);
 void R_ProgUniformVec4(int uniform, vec4_t v);
+void R_ProgUniform3fv(int uniform, int count, float* val);
 void R_ProgUniform4fv(int uniform, int count, float* val);
 int R_GetProgAttribLoc(glprogLoc_t attrib);
 char* R_GetProgAttribName(glprogLoc_t attrib);
@@ -239,6 +243,8 @@ void GL_UpdateSwapInterval( void );
 
 typedef struct
 {
+	int	brush_drawcalls;
+	int	brush_tris;
 	int	brush_polys;
 
 	int alias_tris;

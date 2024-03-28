@@ -61,7 +61,10 @@ static glprogloc_t progVertAtrribLocs[NUM_VALOCS] =
 {
 	{ VALOC_POS,			"inVertPos",		F_VECTOR3 },
 	{ VALOC_NORMAL,			"inNormal",			F_VECTOR3 },
-	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR3 },
+	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR2 },
+	{ VALOC_LMCOORD,		"inLMCoord",		F_VECTOR2 },
+	{ VALOC_LIGHTFLAGS,		"inLightFlags",		F_INT },
+	{ VALOC_STYLES,			"inStyles",			F_VECTOR4 },
 	{ VALOC_COLOR,			"inVertCol",		F_VECTOR3 },
 
 	/*md3 rendering only*/
@@ -269,6 +272,16 @@ void R_ProgUniformVec4(int uniform, vec4_t v)
 	glUniform4f(pCurrentProgram->locs[uniform], v[0], v[1], v[2], v[3]);
 }
 
+/*
+=================
+R_ProgUniform3fv
+=================
+*/
+void R_ProgUniform3fv(int uniform, int count, float* val)
+{
+	CheckProgUni(uniform);
+	glUniform3fv(pCurrentProgram->locs[uniform], count, (const GLfloat*)val);
+}
 
 /*
 =================
@@ -448,7 +461,7 @@ static void R_FindVertexAttribLocations(glprog_t* prog)
 	for (i = 0; i < NUM_VALOCS; i++)
 	{
 		prog->valocs[progVertAtrribLocs[i].loc] = glGetAttribLocation(pCurrentProgram->programObject, progVertAtrribLocs[i].name);
-//		if(prog->index == 3 && prog->valocs[progVertAtrribLocs[i].loc] == -1)
+//		if(prog->index == 0 && prog->valocs[progVertAtrribLocs[i].loc] == -1)
 //				ri.Printf(PRINT_ALERT, "attrib %s not found in program %s\n", progVertAtrribLocs[i].name, prog->name);
 	}
 

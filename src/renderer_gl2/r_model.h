@@ -100,6 +100,9 @@ typedef struct msurface_s
 
 	int			firstedge;	// look up in model->surfedges[], negative numbers are backwards edges
 	int			numedges;
+
+	int			firstvert;
+	int			numverts;
 	
 	short		texturemins[2];
 	short		extents[2];

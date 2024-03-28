@@ -204,6 +204,8 @@ static __inline void CMod_ValidateBSPLump(lump_t* l, bspDataType type, unsigned 
 
 	if (*count >= GetBSPLimit(type))
 		Com_Error(ERR_DROP, "Map has too many %s", what);
+
+//	int a = sizeof(cm_world_t);
 }
 
 

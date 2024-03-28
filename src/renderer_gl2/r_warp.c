@@ -234,63 +234,6 @@ void R_SubdivideSurface(msurface_t *fa)
 
 	R_SubdividePolygon (numverts, verts[0]);
 }
-
-//=========================================================
-
-
-
-// speed up sin calculations - Ed
-float	r_turbsin[] =
-{
-	#include "warpsin.h"
-};
-#define TURBSCALE (256.0 / (2 * M_PI))
-
-/*
-=============
-R_World_DrawUnlitWaterSurf
-
-Does a water warp on the pre-fragmented glpoly_t chain, also handles unlit flowing geometry
-=============
-*/
-void R_World_DrawUnlitWaterSurf (msurface_t *surf)
-{
-	poly_t	*p, *bp;
-	polyvert_t		*v;
-	int			i;
-	float		s, t, os, ot;
-	float		scroll;
-	float		rdt = r_newrefdef.time;
-
-	if (surf->texinfo->flags & SURF_FLOWING)
-		scroll = -64 * ( (r_newrefdef.time*0.5) - (int)(r_newrefdef.time*0.5) );
-	else
-		scroll = 0;
-
-	for (bp=surf->polys ; bp ; bp=bp->next)
-	{
-		p = bp;
-
-		glBegin (GL_TRIANGLE_FAN);
-		for (i = 0, v = &p->verts[0]; i <p->numverts; i++, v++)
-		{
-			os = v->texCoord[0];
-			ot = v->texCoord[1];
-
-			s = os + r_turbsin[(int)((ot*0.125+r_newrefdef.time) * TURBSCALE) & 255];
-			s += scroll;
-			s *= (1.0/64);
-
-			t = ot + r_turbsin[(int)((os*0.125+rdt) * TURBSCALE) & 255];
-			t *= (1.0/64);
-
-			glTexCoord2f (s, t);
-			glVertex3fv (v->pos);
-		}
-		glEnd ();
-	}
-}
-
 //===================================================================
 
 static char* sky_tex_prefix[6] = { "rt", "bk", "lf", "ft", "up", "dn" }; // environment map names

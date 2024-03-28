@@ -17,11 +17,337 @@ static vec3_t	modelorg;		// relative to viewpoint
 static msurface_t	*r_alpha_surfaces = NULL;
 static byte fatvis[MAX_MAP_LEAFS_QBSP / 8]; // markleaves
 
-extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
-extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf);
+static image_t* R_World_TextureAnimation(mtexinfo_t* tex);
 static void R_World_DrawSurface(msurface_t* surf);
+
+extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
+extern qboolean R_LightMap_UpdateLightStylesForSurf(msurface_t* surf);
 extern void R_BeginLinesRendering(qboolean dt);
 extern void R_EndLinesRendering();
+
+extern cvar_t* r_test;
+
+extern int registration_sequence;
+static int seq;
+static qboolean world_vbo_ready = false;
+
+#define MAX_INDICES 16384
+typedef struct gfx_world_s
+{
+	int			tex_diffuse;
+	int			tex_lm;
+
+	vec3_t		styles[MAX_LIGHTMAPS_PER_SURFACE];
+	vec3_t		new_styles[MAX_LIGHTMAPS_PER_SURFACE];
+
+	unsigned int vbo;
+
+	int numIndices;
+	GLuint indicesBuf[MAX_INDICES];
+
+	polyvert_t* staticVerts;
+	int numStaticVerts;
+
+} gfx_world_t;
+
+gfx_world_t gfx_world;
+
+float	r_turbsin[] =
+{
+	#include "warpsin.h"
+};
+#define TURBSCALE (256.0 / (2 * M_PI))
+
+void R_DestroyWorldVertexBuffer()
+{
+	if (!gfx_world.vbo)
+		return;
+
+	glDeleteBuffers(1, &gfx_world.vbo);	
+
+	gfx_world.vbo = 0;
+	world_vbo_ready = false;
+}
+
+/*
+===============
+R_BuildWorldVertexBuffer
+===============
+*/
+void R_BuildWorldVertexBuffer()
+{
+	msurface_t	*surf;
+	poly_t		*poly;
+	int			i, j, v, bufsize;
+	GLint		ongpusize = 0;
+
+	if (world_vbo_ready)
+		return;
+
+	gfx_world.numStaticVerts = 0;
+	for (surf = r_worldmodel->surfaces, i = 0; i < r_worldmodel->numsurfaces; i++, surf++)
+	{
+		// count all verts to build temp buf, set vert indexes for surfs
+		surf->firstvert = gfx_world.numStaticVerts;
+		surf->numverts = 0;
+
+		poly = surf->polys;
+		while (poly != NULL) // account for warps
+		{
+			surf->numverts += poly->numverts;
+			poly = poly->chain;
+		}
+		gfx_world.numStaticVerts += surf->numverts;
+
+//		ri.Printf(PRINT_ALL, "%i verts in %i surf\n", surf->numverts, i);
+	}
+
+	bufsize = sizeof(polyvert_t) * gfx_world.numStaticVerts;
+
+	gfx_world.staticVerts = malloc(bufsize);
+	if(!gfx_world.staticVerts)
+		ri.Error(ERR_FATAL, "failed to allocate %i kb for gfx_world.staticVerts", bufsize/1024);
+
+	v = 0;
+	for (surf = r_worldmodel->surfaces, i = 0; i < r_worldmodel->numsurfaces; i++, surf++)
+	{
+		// copy verts to temp buffer
+		poly = surf->polys;
+		while (poly != NULL)
+		{
+			for (j = 0; j < poly->numverts; j++)
+			{
+				memcpy(&gfx_world.staticVerts[v], &poly->verts[j], sizeof(polyvert_t));
+				//Vector4Set(gfx_world.staticVerts[v].styles, 1, 1, 1, 1);
+				v++;
+			}
+			poly = poly->chain;
+		}
+
+	}
+
+	glGenBuffers(1, &gfx_world.vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
+	glBufferData(GL_ARRAY_BUFFER, bufsize, &gfx_world.staticVerts[0].pos[0], GL_STATIC_DRAW);
+
+	glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &ongpusize);
+	if (ongpusize != bufsize)
+	{
+		R_DestroyWorldVertexBuffer();
+		ri.Error(ERR_FATAL, "failed to allocate vertex buffer for gfx_world (probably out of VRAM)\n");
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	ri.Printf(PRINT_ALL, "World surface cache is %i kb (%i surfaces, %i verts)\n", bufsize / 1024, r_worldmodel->numsurfaces, gfx_world.numStaticVerts);
+
+	free(gfx_world.staticVerts);
+	gfx_world.staticVerts = NULL;
+
+	world_vbo_ready = true;	
+}
+
+/*
+===============
+R_World_BeginRendering
+===============
+*/
+static void R_World_BeginRendering()
+{
+	int attrib;
+
+	if (registration_sequence != seq)
+	{
+		R_DestroyWorldVertexBuffer();
+		seq = registration_sequence;
+		world_vbo_ready = false;
+	}
+
+	if (!world_vbo_ready)
+	{
+		R_BuildWorldVertexBuffer(); // once
+	}
+
+	R_BindProgram(GLPROG_WORLD);
+
+	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
+
+	attrib = R_GetProgAttribLoc(VALOC_POS);
+	if (attrib != -1)
+	{
+		glEnableVertexAttribArray(attrib);
+		glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(polyvert_t), NULL);
+	}
+
+	attrib = R_GetProgAttribLoc(VALOC_TEXCOORD);
+	if (attrib != -1)
+	{
+		glEnableVertexAttribArray(attrib);
+		glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(polyvert_t), (void*)offsetof(polyvert_t, texCoord));
+	}
+
+	attrib = R_GetProgAttribLoc(VALOC_LMCOORD);
+	if (attrib != -1)
+	{
+		glEnableVertexAttribArray(attrib);
+		glVertexAttribPointer(attrib, 2, GL_FLOAT, GL_FALSE, sizeof(polyvert_t), (void*)offsetof(polyvert_t, lmTexCoord));
+	}
+
+	attrib = R_GetProgAttribLoc(VALOC_NORMAL);
+	if (attrib != -1)
+	{
+		glEnableVertexAttribArray(attrib);
+		glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, sizeof(polyvert_t), (void*)offsetof(polyvert_t, normal));
+	}
+
+	attrib = R_GetProgAttribLoc(VALOC_LIGHTFLAGS);
+	if (attrib != -1)
+	{
+		glEnableVertexAttribArray(attrib);
+		glVertexAttribPointer(attrib, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(polyvert_t), (void*)offsetof(polyvert_t, lightFlags));
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	R_UnbindProgram();
+}
+
+/*
+=======================
+R_World_UpdateLightStylesForSurf
+
+Update lightstyles for surface, pass NULL to disable lightstyles
+=======================
+*/
+qboolean R_World_UpdateLightStylesForSurf(msurface_t* surf)
+{
+	qboolean hasChanged = false;
+	int i;
+
+	if (surf == NULL)
+	{
+		VectorSet(gfx_world.new_styles[0], 1.0f, 1.0f, 1.0f);
+		for (i = 1; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
+			VectorClear(gfx_world.new_styles[i]);
+		goto change;
+	}
+
+	if (!r_dynamic->value)
+	{
+		for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
+			VectorSet(gfx_world.new_styles[i], 1.0f, 1.0f, 1.0f);
+	}
+	else
+	{
+		// add light styles
+		for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[i] != (MAX_LIGHTSTYLES - 1); i++)
+		{
+			gfx_world.new_styles[i][0] = r_newrefdef.lightstyles[surf->styles[i]].rgb[0];
+			gfx_world.new_styles[i][1] = r_newrefdef.lightstyles[surf->styles[i]].rgb[1];
+			gfx_world.new_styles[i][2] = r_newrefdef.lightstyles[surf->styles[i]].rgb[2];
+			//lm_colors[i][3] = 1.0f;
+		}
+	}
+
+change:
+	for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
+	{
+		if (!VectorCompare(gfx_world.new_styles[i], gfx_world.styles[i]))
+		{
+			hasChanged = true;
+		}
+	}
+
+	return hasChanged;
+}
+
+
+/*
+=======================
+World_DrawAndFlushBufferedGeo
+=======================
+*/
+static void World_DrawAndFlushBufferedGeo()
+{
+	if (!gfx_world.numIndices || !world_vbo_ready)
+		return;
+
+	rperf.brush_drawcalls++;
+
+	R_MultiTextureBind(TMU_DIFFUSE, gfx_world.tex_diffuse);
+	R_MultiTextureBind(TMU_LIGHTMAP, gfx_world.tex_lm);
+
+	R_ProgUniform3fv(LOC_LIGHTSTYLES, MAX_LIGHTMAPS_PER_SURFACE, gfx_world.styles[0]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
+	glDrawElements(GL_TRIANGLES, gfx_world.numIndices, GL_UNSIGNED_INT, &gfx_world.indicesBuf[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	gfx_world.numIndices = 0;
+}
+
+/*
+=======================
+R_World_NewDrawSurface
+=======================
+*/
+static __inline void R_World_NewDrawSurface(const msurface_t* surf, qboolean lightmapped)
+{
+	image_t		*image;
+	int			tex_diffuse, tex_lightmap;
+	int			numTris, numIndices, i;
+	unsigned int* dst_indices;
+	qboolean stylechanged;
+
+	//
+	// update textures and styles
+	//
+	image = R_World_TextureAnimation(surf->texinfo);
+	if (!image)
+		image = r_texture_missing;
+
+	tex_diffuse = r_lightmap->value ? r_texture_white->texnum : image->texnum;
+	tex_lightmap = (r_fullbright->value || !lightmapped) ? r_texture_white->texnum : (gl_state.lightmap_textures + surf->lightMapTextureNum);
+
+	if (tex_diffuse == r_texture_white->texnum && tex_lightmap == r_texture_white->texnum)
+		tex_diffuse = image->texnum; // never let the world render completly white
+
+	// fullbright surfaces (water, translucent) have no styles
+	stylechanged = R_World_UpdateLightStylesForSurf((r_fullbright->value > 0.0f || !lightmapped) ? NULL : surf);
+
+	numTris = surf->numedges - 2;
+	numIndices = numTris * 3;
+
+	//
+	// draw everything we have buffered so far and begin building again 
+	// when any of the textures change or surface lightstyle changes
+	//
+	if (gfx_world.tex_diffuse != tex_diffuse || gfx_world.tex_lm != tex_lightmap || gfx_world.numIndices + numIndices >= MAX_INDICES || stylechanged)
+	{
+		World_DrawAndFlushBufferedGeo();
+	}
+
+	if (stylechanged)
+	{
+		for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
+			VectorCopy(gfx_world.new_styles[i], gfx_world.styles[i]);
+	}
+
+	dst_indices = gfx_world.indicesBuf + gfx_world.numIndices;
+	for (i = 0; i < numTris; i++)
+	{
+		dst_indices[0] = surf->firstvert;
+		dst_indices[1] = surf->firstvert + (i + 1);
+		dst_indices[2] = surf->firstvert + (i + 2);
+		dst_indices += 3;
+	}
+
+	rperf.brush_tris += numTris;
+	rperf.brush_polys ++;
+
+	gfx_world.numIndices += numIndices;
+	gfx_world.tex_diffuse = tex_diffuse;
+	gfx_world.tex_lm = tex_lightmap;
+}
 
 /*
 =============================================================
@@ -55,6 +381,60 @@ static image_t *R_World_TextureAnimation(mtexinfo_t *tex)
 	return tex->image;
 }
 
+
+/*
+=============
+R_World_DrawUnlitWaterSurf
+
+Does a water warp on the pre-fragmented glpoly_t chain, also handles unlit flowing geometry
+=============
+*/
+void R_World_DrawUnlitWaterSurf(msurface_t* surf)
+{
+#if 1
+	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
+	glDrawArrays(GL_TRIANGLE_FAN, surf->firstvert, surf->numverts);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	rperf.brush_drawcalls++;
+#else
+
+	poly_t* p, * bp;
+	polyvert_t* v;
+	int			i;
+	float		s, t, os, ot;
+	float		scroll;
+	float		rdt = r_newrefdef.time;
+
+	if (surf->texinfo->flags & SURF_FLOWING)
+		scroll = -64 * ((r_newrefdef.time * 0.5) - (int)(r_newrefdef.time * 0.5));
+	else
+		scroll = 0;
+
+	for (bp = surf->polys; bp; bp = bp->next)
+	{
+		p = bp;
+
+		glBegin(GL_TRIANGLE_FAN);
+		for (i = 0, v = &p->verts[0]; i < p->numverts; i++, v++)
+		{
+			os = v->texCoord[0];
+			ot = v->texCoord[1];
+
+			s = os + r_turbsin[(int)((ot * 0.125 + r_newrefdef.time) * TURBSCALE) & 255];
+			s += scroll;
+			s *= (1.0 / 64);
+
+			t = ot + r_turbsin[(int)((os * 0.125 + rdt) * TURBSCALE) & 255];
+			t *= (1.0 / 64);
+
+			glTexCoord2f(s, t);
+			glVertex3fv(v->pos);
+		}
+		glEnd();
+	}
+#endif
+}
+
 /*
 ================
 R_World_DrawUnlitGeom
@@ -64,8 +444,17 @@ draws unlit geometry
 */
 void R_World_DrawUnlitGeom(msurface_t* surf)
 {
+#if 1
+	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
+	glDrawArrays(GL_TRIANGLE_FAN, surf->firstvert, surf->numverts);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	rperf.brush_drawcalls++;
+#else
 	int		i;
 	polyvert_t	*v;
+
+	R_World_NewDrawSurface(surf, false);
+	return;
 
 	v = &surf->polys->verts[0];
 
@@ -76,6 +465,7 @@ void R_World_DrawUnlitGeom(msurface_t* surf)
 		glVertex3fv (v->pos);
 	}
 	glEnd ();
+#endif
 }
 
 static void R_DrawTriangleOutlines()
@@ -185,18 +575,18 @@ void R_World_DrawAlphaSurfaces()
 	msurface_t	*surf;
 	float		oldalpha = -1.0f, alpha;
 
-	//
 	// go back to the world matrix
-	//
     glLoadMatrixf (r_world_matrix);
 
 	R_BindProgram(GLPROG_WORLD);
-	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum); // no lightmap
 
-	R_LightMap_UpdateLightStylesForSurf(NULL); // hack for trans
+	// transparent surfaces have no lightmap and no lightstyles
+	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
+	R_LightMap_UpdateLightStylesForSurf(NULL); 
 
 	R_Blend(true);
-	for (surf=r_alpha_surfaces ; surf ; surf=surf->texturechain)
+
+	for (surf = r_alpha_surfaces; surf ; surf=surf->texturechain)
 	{
 		R_MultiTextureBind(TMU_DIFFUSE, surf->texinfo->image->texnum);
 		rperf.brush_polys++;
@@ -224,6 +614,69 @@ void R_World_DrawAlphaSurfaces()
 
 	r_alpha_surfaces = NULL;
 }
+/*
+================
+R_DrawWorld_New
+================
+*/
+static void R_DrawWorld_New()
+{
+	int		i;
+	msurface_t* surf;
+	image_t* image;
+
+
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
+	{
+		if (!image->registration_sequence || !image->texturechain)
+			continue;
+
+		for (surf = image->texturechain; surf; surf = surf->texturechain)
+		{
+			R_World_UpdateLightStylesForSurf(surf);
+		}
+	}
+	
+	rperf.visible_textures = 0;
+	// lightmapped surfaces
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
+	{
+		if (!image->registration_sequence || !image->texturechain)
+			continue;
+
+		rperf.visible_textures++;
+
+		for (surf = image->texturechain; surf; surf = surf->texturechain)
+		{
+			if (!(surf->flags & SURF_DRAWTURB))
+				R_World_NewDrawSurface(surf, true);
+		}
+	}
+	World_DrawAndFlushBufferedGeo();
+	
+	// unlit and/or fullbright surfaces
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
+	{
+		if (!image->registration_sequence)
+			continue;
+
+		surf = image->texturechain;
+		if (!surf)
+			continue;
+
+		for (; surf; surf = surf->texturechain)
+		{
+			if (surf->flags & SURF_DRAWTURB)
+				R_World_NewDrawSurface(surf, false);
+		}
+
+		if (!r_showtris->value)
+			image->texturechain = NULL;
+	}
+
+	World_DrawAndFlushBufferedGeo();
+}
+
 
 /*
 ================
@@ -283,10 +736,17 @@ R_World_DrawFlowingSurfLM
 */
 inline static void R_World_DrawFlowingSurfLM(msurface_t* surf)
 {
+#if 1
+	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
+	glDrawArrays(GL_TRIANGLE_FAN, surf->firstvert, surf->numverts);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	rperf.brush_drawcalls++;
+#else
+
 	int			i, numVerts;
-	polyvert_t		*v;
+	polyvert_t* v;
 	float		scroll;
-	poly_t	*poly;
+	poly_t* poly;
 
 	numVerts = surf->polys->numverts;
 	poly = surf->polys;
@@ -309,6 +769,7 @@ inline static void R_World_DrawFlowingSurfLM(msurface_t* surf)
 		poly = poly->chain;
 	}
 	glEnd();
+#endif
 }
 
 /*
@@ -318,9 +779,17 @@ R_World_DrawGenericSurfLM
 */
 inline static void R_World_DrawGenericSurfLM(msurface_t* surf)
 {
+#if 1
+	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
+	glDrawArrays(GL_TRIANGLE_FAN, surf->firstvert, surf->numverts);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	rperf.brush_drawcalls++;
+
+#else
+
 	int			i, numVerts;
-	polyvert_t		*v;
-	poly_t	*poly;
+	polyvert_t* v;
+	poly_t* poly;
 
 	numVerts = surf->polys->numverts;
 	poly = surf->polys;
@@ -338,6 +807,7 @@ inline static void R_World_DrawGenericSurfLM(msurface_t* surf)
 		poly = poly->chain;
 	}
 	glEnd();
+#endif
 }
 
 
@@ -767,15 +1237,27 @@ void R_DrawWorld()
 
 	R_ClearSkyBox ();
 
+	//if (r_test->value)
+	{
+		R_World_BeginRendering();
+		gfx_world.numIndices = 0;
+	}
+
 	// build texture chains
 	R_World_RecursiveNode(r_worldmodel->nodes);
 
 	R_BindProgram(GLPROG_WORLD);
 	{
 		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
-		R_DrawWorld_TextureChains(); // draw opaque surfaces now, we draw translucent surfs later
+
+		if (r_test->value)
+			R_DrawWorld_New();
+		else
+			R_DrawWorld_TextureChains(); // draw opaque surfaces now, we draw translucent surfs later
 	}
 	R_UnbindProgram();
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	R_DrawSkyBox ();
 
