@@ -29,7 +29,7 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	/* global */
 	{ LOC_COLORMAP,			"colormap",			F_INT },
 	{ LOC_LIGHTMAP,			"lightmap",			F_INT },
-	{ LOC_LIGHTSTYLES,		"lightstyles",		F_VECTOR4 }, //F_VECTOR4*4
+	{ LOC_LIGHTSTYLES,		"lightstyles",		F_VECTOR3 }, //F_VECTOR3*4
 	{ LOC_COLOR4,			"color_rgba",		F_FLOAT },
 	{ LOC_SCALE,			"scale",			F_VECTOR3 },
 	{ LOC_TIME,				"time",				F_FLOAT }, // fixme: unset
@@ -269,6 +269,16 @@ void R_ProgUniformVec4(int uniform, vec4_t v)
 	glUniform4f(pCurrentProgram->locs[uniform], v[0], v[1], v[2], v[3]);
 }
 
+/*
+=================
+R_ProgUniform3fv
+=================
+*/
+void R_ProgUniform3fv(int uniform, int count, float* val)
+{
+	CheckProgUni(uniform);
+	glUniform3fv(pCurrentProgram->locs[uniform], count, (const GLfloat*)val);
+}
 
 /*
 =================
