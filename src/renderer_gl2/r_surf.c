@@ -13,8 +13,8 @@ See the attached GNU General Public License v2 for more details.
 #include <assert.h>
 #include "r_local.h"
 
-static vec3_t	modelorg;		// relative to viewpoint
-static msurface_t	*r_alpha_surfaces = NULL;
+vec3_t		modelorg;		// relative to viewpoint
+msurface_t	*r_alpha_surfaces = NULL;
 static byte fatvis[MAX_MAP_LEAFS_QBSP / 8]; // markleaves
 
 extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
@@ -22,6 +22,13 @@ extern void R_LightMap_UpdateLightStylesForSurf(msurface_t* surf);
 static void R_World_DrawSurface(msurface_t* surf);
 extern void R_BeginLinesRendering(qboolean dt);
 extern void R_EndLinesRendering();
+
+extern cvar_t* r_fastworld;
+
+extern void R_DrawInlineBModel_NEW();
+extern void R_DrawWorld_TextureChains_NEW();
+extern void R_World_DrawAlphaSurfaces_NEW();
+extern void R_DrawWorld_NEW();
 
 /*
 =============================================================
@@ -38,7 +45,7 @@ R_World_TextureAnimation
 Returns the proper texture for a given time and base texture
 ===============
 */
-static image_t *R_World_TextureAnimation(mtexinfo_t *tex)
+image_t *R_World_TextureAnimation(mtexinfo_t *tex)
 {
 	int		c;
 
@@ -185,6 +192,12 @@ void R_World_DrawAlphaSurfaces()
 	msurface_t	*surf;
 	float		oldalpha = -1.0f, alpha;
 
+	if (r_fastworld->value)
+	{
+		R_World_DrawAlphaSurfaces_NEW();
+		return;
+	}
+
 	//
 	// go back to the world matrix
 	//
@@ -237,6 +250,13 @@ static void R_DrawWorld_TextureChains()
 	int		i;
 	msurface_t	*s;
 	image_t		*image;
+
+
+	if (r_fastworld->value)
+	{
+		R_DrawWorld_TextureChains_NEW();
+		return;
+	}
 
 	rperf.visible_textures = 0;
 
@@ -417,6 +437,7 @@ void R_DrawInlineBModel (void)
 	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
 
 	R_BindProgram(GLPROG_WORLD);
+	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 
 	if ( pCurrentRefEnt->renderfx & RF_TRANSLUCENT )
 	{
@@ -490,7 +511,6 @@ void R_DrawBrushModel (rentity_t *e)
 	if (R_CullBox (mins, maxs))
 		return;
 
-	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 
 	VectorSubtract (r_newrefdef.view.origin, e->origin, modelorg);
 	if (rotated)
@@ -512,8 +532,15 @@ void R_DrawBrushModel (rentity_t *e)
 	e->angles[0] = -e->angles[0];	// stupid quake bug
 	e->angles[2] = -e->angles[2];	// stupid quake bug
 
-	R_DrawInlineBModel ();
-	R_SelectTextureUnit(0);
+	if (r_fastworld->value)
+	{
+		R_DrawInlineBModel_NEW();
+	}
+	else
+	{
+		R_DrawInlineBModel();
+		R_SelectTextureUnit(0);
+	}
 
 	glPopMatrix ();
 }
@@ -770,12 +797,19 @@ void R_DrawWorld()
 	// build texture chains
 	R_World_RecursiveNode(r_worldmodel->nodes);
 
-	R_BindProgram(GLPROG_WORLD);
+	if (r_fastworld->value)
 	{
-		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
-		R_DrawWorld_TextureChains(); // draw opaque surfaces now, we draw translucent surfs later
+		R_DrawWorld_NEW();
 	}
-	R_UnbindProgram();
+	else
+	{
+		R_BindProgram(GLPROG_WORLD);
+		{
+			R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
+			R_DrawWorld_TextureChains(); // draw opaque surfaces now, we draw translucent surfs later
+		}
+		R_UnbindProgram();
+	}
 
 	R_DrawSkyBox ();
 

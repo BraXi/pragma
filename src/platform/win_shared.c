@@ -87,8 +87,7 @@ int Hunk_End (void)
 #ifdef VIRTUAL_ALLOC //if 0
 	void	*buf;
 
-	// write protect it
-	buf = VirtualAlloc (membase, cursize, MEM_COMMIT, PAGE_READONLY);
+	buf = VirtualAlloc (membase, cursize, MEM_COMMIT, PAGE_READWRITE);
 	if (!buf)
 		Sys_Error ("VirtualAlloc commit failed");
 #endif

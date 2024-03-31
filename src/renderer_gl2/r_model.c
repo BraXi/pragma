@@ -254,7 +254,7 @@ Loads a model and associated textures
 struct model_s* R_RegisterModel(char* name)
 {
 	model_t* mod;
-	int		i, j;
+	int		i, j, nt = 0;
 	sp2Header_t* sp2Header;
 	md3Header_t* md3Header;
 
@@ -276,6 +276,7 @@ struct model_s* R_RegisterModel(char* name)
 		}
 		else if (mod->type == MOD_MD3)
 		{
+			nt = 0;
 			md3Header = mod->md3[LOD_HIGH];
 			mod->numframes = md3Header->numFrames;
 			surf = (md3Surface_t*)((byte*)md3Header + md3Header->ofsSurfaces);
@@ -284,8 +285,11 @@ struct model_s* R_RegisterModel(char* name)
 				shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 				for (j = 0; j < surf->numShaders; j++, shader++)
 				{
-					mod->images[i + j] = R_FindTexture(shader->name, it_model, true);
-					shader->shaderIndex = mod->images[i]->texnum;
+					mod->images[nt] = R_FindTexture(shader->name, it_model, true);
+					if (mod->images[nt] == NULL)
+						mod->images[nt] = r_texture_missing;
+					shader->shaderIndex = mod->images[nt]->texnum;
+					nt++;
 				}
 				surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 			}

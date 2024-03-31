@@ -14,6 +14,7 @@ See the attached GNU General Public License v2 for more details.
 refimport_t	ri;
 
 cvar_t* r_norefresh;
+cvar_t* r_fastworld;
 cvar_t* r_drawentities;
 cvar_t* r_drawworld;
 cvar_t* r_speeds;
@@ -73,6 +74,8 @@ void R_RegisterCvarsAndCommands(void)
 {
 	r_lefthand = ri.Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0);
+
+	r_fastworld = ri.Cvar_Get("r_fastworld", "0", 0);
 
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
 
