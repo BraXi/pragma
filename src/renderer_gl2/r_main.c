@@ -256,7 +256,7 @@ void R_DrawParticles( int num_particles, const particle_t particles[] )
 		vertcnt++;
 	}
 
-	R_UpdateVertexBuffer(vb_particles, NULL, vertcnt, (V_UV|V_COLOR));
+	R_UpdateVertexBuffer(vb_particles, NULL, vertcnt, (V_UV|V_COLOR|V_NOFREE));
 
 	R_BindProgram(GLPROG_PARTICLE);
 	R_MultiTextureBind(TMU_DIFFUSE, r_texture_particle->texnum);

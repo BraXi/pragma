@@ -329,7 +329,7 @@ int R_Init(void* hinstance, void* hWnd)
 	R_InitModels();
 	R_LoadFonts();
 
-	vb_particles = R_AllocVertexBuffer((V_UV | V_COLOR), (3 * MAX_PARTICLES), 0);
+	vb_particles = R_AllocVertexBuffer((V_UV | V_COLOR | V_NOFREE), (3 * MAX_PARTICLES), 0);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)

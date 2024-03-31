@@ -201,7 +201,8 @@ typedef enum
 	V_UV = 1,
 	V_NORMAL = 2,
 	V_COLOR = 4,
-	V_INDICES = 8
+	V_INDICES = 8,
+	V_NOFREE = 16
 } vboFlags_t;
 
 typedef struct

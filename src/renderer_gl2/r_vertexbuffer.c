@@ -215,6 +215,11 @@ void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int num
 	else
 		glBufferData(GL_ARRAY_BUFFER, (numVerts * sizeof(glvert_t)), &vbo->verts->xyz[0], GL_STATIC_DRAW);
 
+	if (!(vbo->flags & V_NOFREE) && vbo->verts)
+	{
+		ri.MemFree(vbo->verts);
+		vbo->verts = NULL;
+	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

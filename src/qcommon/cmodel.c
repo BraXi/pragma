@@ -80,6 +80,7 @@ typedef struct
 {
 	cplane_t	*plane;
 	mapsurface_t	*surface;
+	byte d;
 } cbrushside_t;
 
 typedef struct
@@ -113,6 +114,8 @@ static int			checkcount;
 static mapsurface_t	nullsurface;
 static int			emptyleaf, solidleaf;
 
+static cmodel_t		nullmodel;
+
 static cvar_t		*map_noareas;
 
 
@@ -121,36 +124,35 @@ typedef struct
 	char		map_name[MAX_QPATH];
 
 	int			numBrushSides;
-	cbrushside_t brushsides[MAX_MAP_BRUSHSIDES_QBSP];
+	cbrushside_t* brushsides;	//[MAX_MAP_BRUSHSIDES_QBSP]
 
-	int			numSurfaceInfos; //texinfos
-	mapsurface_t surfaceInfos[MAX_MAP_TEXINFO_QBSP];
+	int			numSurfaceInfos; // texinfos
+	mapsurface_t* surfaceInfos;	//[MAX_MAP_TEXINFO_QBSP]
 
 	int			numPlanes;
-	cplane_t	planes[MAX_MAP_PLANES_QBSP + 6];		// extra for box hull
+	cplane_t	*planes;		//[MAX_MAP_PLANES_QBSP + 12] extra for box hull
 
 	int			numNodes;
-	cnode_t		nodes[MAX_MAP_NODES_QBSP + 6];		// extra for box hull
+	cnode_t		*nodes;			//[MAX_MAP_NODES_QBSP + 6] extra for box hull
 
 	int			numLeafs;
-	cleaf_t		leafs[MAX_MAP_LEAFS_QBSP];
-
+	cleaf_t		*leafs;			//[MAX_MAP_LEAFS_QBSP]
 
 	int			numLeafBrushes;
-	unsigned int	leafBrushes[MAX_MAP_LEAFBRUSHES_QBSP]; // braxi -- was unsigned short
+	unsigned int* leafBrushes;	//[MAX_MAP_LEAFBRUSHES_QBSP]
 
-	int			numInlineModels; //numcmodels
-	cmodel_t	inlineModels[MAX_MAP_MODELS_QBSP];
+	int			numInlineModels;
+	cmodel_t	*inlineModels;	//[MAX_MAP_MODELS_QBSP]
 
 	int			numBrushes;
-	cbrush_t	brushes[MAX_MAP_BRUSHES_QBSP];
+	cbrush_t	*brushes;		// [MAX_MAP_BRUSHES_QBSP]
 
 	int			visibilitySize;
-	byte		visibility[MAX_MAP_VISIBILITY_QBSP];
+	byte		*visibility;	// [MAX_MAP_VISIBILITY_QBSP]
 	dbsp_vis_t* vis;
 
 	int			entityStringLength;
-	char		entity_string[MAX_MAP_ENTSTRING_QBSP];
+	char		* entity_string; // [MAX_MAP_ENTSTRING_QBSP]
 
 	int			numAreas;
 	carea_t		areas[MAX_MAP_AREAS];
@@ -161,7 +163,10 @@ typedef struct
 	int			numClusters;
 
 	int			floodValid;
-	qboolean		openAreaPortalsList[MAX_MAP_AREAPORTALS];
+	qboolean	openAreaPortalsList[MAX_MAP_AREAPORTALS];
+
+	unsigned int extradata_size;
+	void		*extradata;
 } cm_world_t;
 
 cm_world_t cm_world;
@@ -221,6 +226,8 @@ static void CMod_LoadInlineModels(lump_t *l)
 	CMod_ValidateBSPLump(l, BSP_MODELS, &count, 1, "inline models", __FUNCTION__);
 	in = (void *)(cmod_base + l->fileofs);
 
+	out = Hunk_Alloc(count * sizeof(*out));
+	cm_world.inlineModels = out;
 	cm_world.numInlineModels = count;
 
 	for (i = 0; i < count; i++, in++, out++)
@@ -252,8 +259,9 @@ static void CMod_LoadSurfaceParams(lump_t *l)
 	CMod_ValidateBSPLump(l, BSP_TEXINFO, &count, 1, "surface infos", __FUNCTION__);
 	in = (void*)(cmod_base + l->fileofs);
 
+	out = Hunk_Alloc(count * sizeof(*out));
+	cm_world.surfaceInfos = out;
 	cm_world.numSurfaceInfos = count;
-	out = cm_world.surfaceInfos;
 
 	for (i = 0; i < count; i++, in++, out++)
 	{
@@ -278,7 +286,8 @@ static void CMod_LoadNodes(lump_t *l)
 
 	CMod_ValidateBSPLump(l, BSP_NODES, &count, 1, "nodes", __FUNCTION__);
 
-	out = cm_world.nodes;
+	out = Hunk_Alloc((count + 6) * sizeof(*out)); // extra for box hull
+	cm_world.nodes = out;
 	cm_world.numNodes = count;
 
 	if (bExtendedBSP) // qbism bsp
@@ -322,7 +331,8 @@ static void CMod_LoadBrushes(lump_t *l)
 	
 	CMod_ValidateBSPLump(l, BSP_BRUSHES, &count, 1, "brushes", __FUNCTION__);
 	
-	out = cm_world.brushes;
+	out = Hunk_Alloc((count + 1) * sizeof(*out)); // extra for box hull
+	cm_world.brushes = out;
 	cm_world.numBrushes = count;
 
 	in = (void*)(cmod_base + l->fileofs);
@@ -347,7 +357,8 @@ static void CMod_LoadLeafs(lump_t *l)
 	
 	CMod_ValidateBSPLump(l, BSP_LEAFS, &count, 1, "leafs", __FUNCTION__);
 	
-	out = cm_world.leafs;
+	out = Hunk_Alloc(count * sizeof(*out));
+	cm_world.leafs = out;
 	cm_world.numLeafs = count;
 	cm_world.numClusters = 0;
 
@@ -402,7 +413,8 @@ static void CMod_LoadLeafs(lump_t *l)
 /*
 =================
 CMod_LoadPlanes
-need to save space for box planes
+
+allocates 12 more for box hull
 =================
 */
 static void CMod_LoadPlanes(lump_t *l)
@@ -415,7 +427,8 @@ static void CMod_LoadPlanes(lump_t *l)
 	CMod_ValidateBSPLump(l, BSP_PLANES, &count, 1, "planes", __FUNCTION__);
 
 	in = (void *)(cmod_base + l->fileofs);
-	out = cm_world.planes;	
+	out = Hunk_Alloc((count+12) * sizeof(cplane_t)); // ha. ha. ha.
+	cm_world.planes = out;	
 	cm_world.numPlanes = count;
 
 	for (i = 0; i < count; i++, in++, out++)
@@ -442,9 +455,11 @@ CMod_LoadLeafBrushes
 */
 static void CMod_LoadLeafBrushes(lump_t* l)
 {
-	unsigned int	i, count;
+	unsigned int i, count;
 
 	CMod_ValidateBSPLump(l, BSP_LEAFBRUSHES, &count, 1, "leaf brushes", __FUNCTION__);
+
+	cm_world.leafBrushes = Hunk_Alloc((count+1) * sizeof(*cm_world.leafBrushes));
 	cm_world.numLeafBrushes = count;
 
 	if (bExtendedBSP)
@@ -475,12 +490,13 @@ static void CMod_LoadBrushSides(lump_t* l)
 
 	CMod_ValidateBSPLump(l, BSP_BRUSHSIDES, &count, 1, "brush sides", __FUNCTION__);
 
-	out = cm_world.brushsides;
+	cm_world.brushsides = Hunk_Alloc((count+12) * sizeof(cbrushside_t)); // extra for box hull
 	cm_world.numBrushSides = count;
 
 	if (bExtendedBSP) // Qbism BSP
 	{
 		dbsp_brushside_ext_t* in = (void*)(cmod_base + l->fileofs);
+		out = &cm_world.brushsides[0];
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			planeNum = LittleLong(in->planenum);
@@ -489,6 +505,9 @@ static void CMod_LoadBrushSides(lump_t* l)
 			if (surfInfo >= cm_world.numSurfaceInfos)
 				Com_Error(ERR_DROP, "Bad brushside surface info");
 
+			if(planeNum >= cm_world.numPlanes)
+				Com_Error(ERR_DROP, "Bad brushside plane");
+
 			out->plane = &cm_world.planes[planeNum];
 			out->surface = &cm_world.surfaceInfos[surfInfo];
 		}
@@ -496,6 +515,7 @@ static void CMod_LoadBrushSides(lump_t* l)
 	else // Vanilla Q2 BSP
 	{
 		dbsp_brushside_t* in = (void*)(cmod_base + l->fileofs);
+		out = &cm_world.brushsides[0];
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			planeNum = LittleShort(in->planenum);
@@ -508,6 +528,7 @@ static void CMod_LoadBrushSides(lump_t* l)
 			out->surface = &cm_world.surfaceInfos[surfInfo];
 		}
 	}
+//	out = out;
 }
 
 /*
@@ -571,7 +592,10 @@ static void CMod_LoadVisibility(lump_t *l)
 	if (l->filelen >= GetBSPLimit(BSP_VISIBILITY))
 		Com_Error (ERR_DROP, "CMod_LoadVisibility: Map has too large visibility info");
 
+	cm_world.visibility = Hunk_Alloc(l->filelen);
 	cm_world.visibilitySize = l->filelen;
+
+	cm_world.vis = (dbsp_vis_t*)cm_world.visibility;
 
 	memcpy (cm_world.visibility, cmod_base + l->fileofs, l->filelen);
 
@@ -581,8 +605,6 @@ static void CMod_LoadVisibility(lump_t *l)
 		cm_world.vis->bitofs[i][0] = LittleLong (cm_world.vis->bitofs[i][0]);
 		cm_world.vis->bitofs[i][1] = LittleLong (cm_world.vis->bitofs[i][1]);
 	}
-
-	cm_world.vis = (dbsp_vis_t*)cm_world.visibility;
 }
 
 
@@ -593,9 +615,11 @@ CMod_LoadEntityString
 */
 static void CMod_LoadEntityString(lump_t *l)
 {
-	cm_world.entityStringLength = l->filelen;
 	if (l->filelen >= GetBSPLimit(BSP_ENTSTRING))
 		Com_Error (ERR_DROP, "CMod_LoadEntityString: Map has too large entity string");
+
+	cm_world.entity_string = Hunk_Alloc(l->filelen + 1);
+	cm_world.entityStringLength = l->filelen;
 
 	memcpy (cm_world.entity_string, cmod_base + l->fileofs, l->filelen);
 }
@@ -628,24 +652,26 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 			memset (cm_world.openAreaPortalsList, 0, sizeof(cm_world.openAreaPortalsList));
 			FloodAreaConnections ();
 		}
+		if (cm_world.inlineModels == NULL)
+		{
+			// panic here?
+		}
 		return &cm_world.inlineModels[0];		// still have the right version
+	}
+
+
+	//
+	// free old stuff
+	//
+	if (cm_world.extradata != NULL)
+	{
+		Hunk_Free(cm_world.extradata);
+		memset(&cm_world, 0, sizeof(cm_world));
 	}
 
 	cm_world.numLeafs = 1;	// allow leaf funcs to be called without a map FIXME
 	cm_world.numAreas = 1;	// fixme!!
 	cm_world.numClusters = 1; // fixme!!
-
-	// free old stuff
-	cm_world.numPlanes = 0;
-	cm_world.numNodes = 0;
-	cm_world.numLeafs = 0;
-	cm_world.numInlineModels = 0;
-	cm_world.visibilitySize = 0;
-	cm_world.entityStringLength = 0;
-	cm_world.entity_string[0] = 0;
-	cm_world.map_name[0] = 0;
-
-	cm_world.vis = (dbsp_vis_t*)cm_world.visibility;
 
 	if (!name || !name[0])
 	{
@@ -653,7 +679,7 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 		cm_world.numClusters = 1;
 		cm_world.numAreas = 1;
 		*checksum = 0;
-		return &cm_world.inlineModels[0];	// cinematic servers won't have anything at all
+		return &nullmodel; //&cm_world.inlineModels[0];	// cinematic servers won't have anything at all
 	}
 
 	//
@@ -685,7 +711,8 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 
 	cmod_base = (byte *)buf;
 
-	// load into heap
+	// load into hunk
+	cm_world.extradata = Hunk_Begin(1024 * 1024 * 8, "collision model");
 	CMod_LoadSurfaceParams(&header.lumps[LUMP_TEXINFO]);
 	CMod_LoadLeafs(&header.lumps[LUMP_LEAFS]);
 	CMod_LoadLeafBrushes(&header.lumps[LUMP_LEAFBRUSHES]);
@@ -698,6 +725,7 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	CMod_LoadAreaPortals(&header.lumps[LUMP_AREAPORTALS]);
 	CMod_LoadVisibility(&header.lumps[LUMP_VISIBILITY]);
 	CMod_LoadEntityString(&header.lumps[LUMP_ENTITIES]);
+	cm_world.extradata_size = Hunk_End();
 
 	FS_FreeFile (buf);
 
@@ -810,17 +838,20 @@ static void CM_InitBoxHull (void)
 
 	cm_world.leafBrushes[cm_world.numLeafBrushes] = cm_world.numBrushes;
 
-	for (i=0 ; i<6 ; i++)
+	for (i = 0; i < 6; i++)
 	{
 		side = i&1;
 
 		// brush sides
 		s = &cm_world.brushsides[cm_world.numBrushSides+i];
-		s->plane = 	cm_world.planes + (cm_world.numPlanes+i*2+side);
+		s->plane =	cm_world.planes + (cm_world.numPlanes+i+side);
+		//s->plane = cm_world.planes + (cm_world.numPlanes+i*2+side); // what the fuck was that
+
 		s->surface = &nullsurface;
 
 		// nodes
 		c = &cm_world.nodes[box_headnode+i];
+		//c->plane = cm_world.planes + (cm_world.numPlanes + i);
 		c->plane = cm_world.planes + (cm_world.numPlanes+i*2);
 		c->children[side] = -1 - emptyleaf;
 		if (i != 5)
@@ -1090,7 +1121,7 @@ static void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2, t
 	startout = false;
 	leadside = NULL;
 
-	for (i=0 ; i<brush->numsides ; i++)
+	for (i = 0; i < brush->numsides ; i++)
 	{
 		side = &cm_world.brushsides[brush->firstbrushside+i];
 		plane = side->plane;
@@ -1103,7 +1134,7 @@ static void CM_ClipBoxToBrush (vec3_t mins, vec3_t maxs, vec3_t p1, vec3_t p2, t
 			// push the plane out apropriately for mins/maxs
 
 			// FIXME: use signbits into 8 way lookup for each mins/maxs
-			for (j=0 ; j<3 ; j++)
+			for (j = 0; j < 3; j++)
 			{
 				if (plane->normal[j] < 0)
 					ofs[j] = maxs[j];
@@ -1714,7 +1745,7 @@ void	FloodAreaConnections (void)
 	floodnum = 0;
 
 	// area 0 is not used
-	for (i=1 ; i<cm_world.numAreas ; i++)
+	for (i = 1; i < cm_world.numAreas; i++)
 	{
 		area = &cm_world.areas[i];
 		if (area->floodvalid == cm_world.floodValid)
