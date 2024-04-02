@@ -80,7 +80,8 @@ void R_World_DrawUnlitGeom(msurface_t* surf)
 	for (i = 0; i < surf->polys->numverts; i++, v++)
 	{
 		glTexCoord2f (v->texCoord[0], v->texCoord[1]);
-		glVertex3fv (v->pos);
+		glNormal3fv(v->normal);
+		glVertex3fv(v->pos);
 	}
 	glEnd ();
 }
@@ -324,6 +325,7 @@ inline static void R_World_DrawFlowingSurfLM(msurface_t* surf)
 		{
 			glMultiTexCoord2f(GL_TEXTURE0, (v->texCoord[0] + scroll), v->texCoord[1]);
 			glMultiTexCoord2f(GL_TEXTURE1, v->lmTexCoord[0], v->lmTexCoord[1]);
+			glNormal3fv(v->normal);
 			glVertex3fv(v->pos);
 		}
 		poly = poly->chain;
@@ -353,9 +355,10 @@ inline static void R_World_DrawGenericSurfLM(msurface_t* surf)
 		{
 			glMultiTexCoord2f(GL_TEXTURE0, v->texCoord[0], v->texCoord[1]);
 			glMultiTexCoord2f(GL_TEXTURE1, v->lmTexCoord[0], v->lmTexCoord[1]);
+			glNormal3fv(v->normal);
 			glVertex3fv(v->pos);
 		}
-		poly = poly->chain;
+		poly = poly->next;
 	}
 	glEnd();
 }
