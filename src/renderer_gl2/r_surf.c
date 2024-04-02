@@ -415,8 +415,7 @@ static void R_World_DrawSurface( msurface_t *surf )
 R_DrawInlineBModel
 =================
 */
-
-void R_DrawInlineBModel (void)
+static void R_DrawInlineBModel (void)
 {
 	int			i, k;
 	cplane_t	*pplane;
@@ -448,14 +447,14 @@ void R_DrawInlineBModel (void)
 	//
 	// draw texture
 	//
-	for (i=0 ; i<pCurrentModel->nummodelsurfaces ; i++, psurf++)
+	for (i = 0; i < pCurrentModel->nummodelsurfaces; i++, psurf++)
 	{
 	// find which side of the node we are on
 		pplane = psurf->plane;
 
 		dot = DotProduct (modelorg, pplane->normal) - pplane->dist;
 
-	// draw the polygon
+		// draw the polygon
 		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
 			if (psurf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66) )

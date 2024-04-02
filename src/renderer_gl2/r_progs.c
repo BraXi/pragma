@@ -61,7 +61,8 @@ static glprogloc_t progVertAtrribLocs[NUM_VALOCS] =
 {
 	{ VALOC_POS,			"inVertPos",		F_VECTOR3 },
 	{ VALOC_NORMAL,			"inNormal",			F_VECTOR3 },
-	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR3 },
+	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR2 },
+	{ VALOC_LMTEXCOORD,		"inLightMapCoord",	F_VECTOR2 },
 	{ VALOC_COLOR,			"inVertCol",		F_VECTOR3 },
 
 	/*md3 rendering only*/
@@ -302,7 +303,7 @@ void R_FreeProgram(glprog_t* prog)
 		R_UnbindProgram();
 
 	if (prog->vertexShader)
-			glDeleteShader(prog->vertexShader);
+		glDeleteShader(prog->vertexShader);
 	if (prog->fragmentShader)
 		glDeleteShader(prog->fragmentShader);
 	if (prog->programObject)
@@ -436,8 +437,8 @@ static void R_FindUniformLocations(glprog_t* prog)
 		prog->locs[progUniLocs[i].loc] = R_FindProgramUniform(progUniLocs[i].name);
 
 	// set default values
-	R_ProgUniform1i(LOC_COLORMAP, 0);
-	R_ProgUniform1i(LOC_LIGHTMAP, 1);
+	R_ProgUniform1i(LOC_COLORMAP, TMU_DIFFUSE);
+	R_ProgUniform1i(LOC_LIGHTMAP, TMU_LIGHTMAP);
 	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
 	R_UnbindProgram();
 }
