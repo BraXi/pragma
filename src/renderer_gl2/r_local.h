@@ -93,6 +93,7 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse);
 enum
 {
 	GLPROG_WORLD,
+	GLPROG_WORLD_NEW,
 	GLPROG_WORLD_LIQUID,
 	GLPROG_SKY,
 	GLPROG_ALIAS,
