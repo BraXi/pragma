@@ -844,8 +844,7 @@ static void CM_InitBoxHull (void)
 
 		// brush sides
 		s = &cm_world.brushsides[cm_world.numBrushSides+i];
-		s->plane =	cm_world.planes + (cm_world.numPlanes+i+side);
-		//s->plane = cm_world.planes + (cm_world.numPlanes+i*2+side); // what the fuck was that
+		s->plane = cm_world.planes + (cm_world.numPlanes+i*2+side);
 
 		s->surface = &nullsurface;
 

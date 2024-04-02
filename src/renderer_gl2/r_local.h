@@ -202,7 +202,7 @@ typedef enum
 	V_NORMAL = 2,
 	V_COLOR = 4,
 	V_INDICES = 8,
-	V_NOFREE = 16
+	V_NOFREE = 16	// don't free verts allocated by R_AllocVertexBuffer after upload to gpu
 } vboFlags_t;
 
 typedef struct
