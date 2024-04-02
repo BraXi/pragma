@@ -492,7 +492,6 @@ static void CMod_LoadLeafBrushes(lump_t* l)
 /*
 =================
 CMod_LoadBrushSides
-need to save space for box planes
 =================
 */
 static void CMod_LoadBrushSides(lump_t* l)
@@ -642,7 +641,7 @@ static void CMod_LoadEntityString(lump_t *l)
 ==================
 CM_LoadMap
 
-Loads in the map and all inlineModels
+Loads in the map and all inline models
 ==================
 */
 cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
