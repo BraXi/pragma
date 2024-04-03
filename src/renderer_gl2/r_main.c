@@ -437,7 +437,7 @@ static void R_SetupGL()
     screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
 	glMatrixMode(GL_PROJECTION);
     glLoadIdentity ();
-    MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 99999);
+    MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096);
 
 	R_SetCullFace(GL_FRONT);
 
@@ -607,7 +607,6 @@ static void R_DrawPerfCounters()
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.brush_textures));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i lightmap binds", rperf.texture_binds[TMU_LIGHTMAP]));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture binds", rperf.texture_binds[TMU_DIFFUSE]));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i brush drawcalls", rperf.brush_drawcalls));
 
 	Vector4Set(color, 0.8, 0.8, 1, 1.0);
 	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("%i dynamic lights", r_newrefdef.num_dlights));

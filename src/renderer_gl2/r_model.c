@@ -27,7 +27,8 @@ static byte *mod_base = NULL;
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
 #define RD_MAX_SP2_HUNKSIZE		0x10000 // 64KB
 #define RD_MAX_BSP_HUNKSIZE		0x1000000 // 16 MB
-#define RD_MAX_QBSP_HUNKSIZE	(RD_MAX_BSP_HUNKSIZE*6) // 96 MB -- we let much bigger qbism bsps
+#define RD_MAX_QBSP_HUNKSIZE	(RD_MAX_BSP_HUNKSIZE*8) // 96 MB -- we let much bigger qbism bsps 
+														// even more for bench2
 
 #define	RD_MAX_MODELS	1024
 static model_t	r_models[RD_MAX_MODELS];

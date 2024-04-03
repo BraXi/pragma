@@ -13,7 +13,7 @@ See the attached GNU General Public License v2 for more details.
 #include "qcommon.h"
 
 qboolean bExtendedBSP = false;
-#define CM_HUNK_SIZE	(1024 * 1024 * 8) // 8mb should be sufficient?
+#define CM_HUNK_SIZE	(1024 * 1024 * 16) // 16mb should be sufficient?
 
 typedef struct
 {
@@ -223,8 +223,6 @@ static __inline void CMod_ValidateBSPLump(lump_t* l, bspDataType type, unsigned 
 
 	if (*count >= GetBSPLimit(type))
 		Com_Error(ERR_DROP, "Map has too many %s", what);
-
-//	int a = sizeof(cm_world_t);
 }
 
 

@@ -382,9 +382,9 @@ void R_DrawText(int x, int y, int fontId, float scale, int alignX, char* text)
 	//R_DrawTextInternal(CurX, CurY, fontId, scale, alignX, text);
 
 #ifdef FONT_TEXPTR
-	R_BindTexture(f->tex->tex_diffuse);
+	R_BindTexture(f->tex->texnum);
 #else
-	R_BindTexture(f->tex_diffuse);
+	R_BindTexture(f->texnum);
 #endif
 
 	glBegin(GL_TRIANGLES);
