@@ -75,7 +75,7 @@ void R_RegisterCvarsAndCommands(void)
 	r_lefthand = ri.Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0);
 
-	r_fastworld = ri.Cvar_Get("r_fastworld", "0", 0);
+	r_fastworld = ri.Cvar_Get("r_fastworld", "1", 0);
 
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
 
