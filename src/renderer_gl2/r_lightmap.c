@@ -30,7 +30,7 @@ typedef struct
 	byte	lightmap_buffers[MAX_LIGHTMAPS_PER_SURFACE][LM_BYTES * LM_BLOCK_WIDTH * LM_BLOCK_HEIGHT];
 } gllightmapstate_t;
 
-static gllightmapstate_t gl_lms;
+gllightmapstate_t gl_lms;
 
 
 #define DoubleDotProduct(x,y) (long double)((long double)x[0]*(long double)y[0]+(long double)x[1]*(long double)y[1]+(long double)x[2]*(long double)y[2])
@@ -358,12 +358,12 @@ void R_LightMap_EndBuilding()
 
 /*
 =======================
-R_LightMap_EndBuilding
+R_LightMap_UpdateLightStylesForSurf
 
 Update lightstyles for surface, pass NULL to disable lightstyles
 =======================
 */
-void R_LightMap_UpdateLightStylesForSurf(msurface_t *surf)
+qboolean R_LightMap_UpdateLightStylesForSurf(msurface_t *surf)
 {
 	vec3_t lm_colors[MAX_LIGHTMAPS_PER_SURFACE];
 	qboolean hasChanged;
@@ -408,4 +408,6 @@ change:
 	{
 		R_ProgUniform3fv(LOC_LIGHTSTYLES, MAX_LIGHTMAPS_PER_SURFACE, gl_lms.lm_colors[0]);
 	}
+
+	return hasChanged;
 }

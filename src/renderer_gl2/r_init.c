@@ -13,6 +13,8 @@ See the attached GNU General Public License v2 for more details.
 
 refimport_t	ri;
 
+cvar_t* r_test;
+
 cvar_t* r_norefresh;
 cvar_t* r_fastworld;
 cvar_t* r_drawentities;

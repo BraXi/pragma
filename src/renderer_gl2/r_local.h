@@ -147,6 +147,8 @@ typedef enum
 	VALOC_COLOR,
 	VALOC_OLD_POS,
 	VALOC_OLD_NORMAL,
+	VALOC_LIGHTFLAGS,
+	VALOC_STYLES,
 	NUM_VALOCS
 } glprogLoc_t;
 
@@ -251,6 +253,8 @@ void GL_UpdateSwapInterval( void );
 
 typedef struct
 {
+	int	brush_drawcalls;
+	int	brush_tris;
 	int	brush_polys;
 	int brush_tris;
 	int brush_drawcalls;
