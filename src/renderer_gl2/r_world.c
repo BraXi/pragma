@@ -13,6 +13,14 @@ See the attached GNU General Public License v2 for more details.
 #include <assert.h>
 #include "r_local.h"
 
+/*
+TODO: 
+- warps should warp ;)
+- warps have weird uv
+- transparency
+- scrolling (flowing)
+*/
+
 extern cvar_t		*r_fastworld;
 
 extern vec3_t		modelorg;		// relative to viewpoint
@@ -24,7 +32,7 @@ extern int registration_sequence; // experimental nature heh
 #define MAX_INDICES 16384 // build indices untill this
 
 // gfx world stores the current state for batching drawcalls, if any 
-// of them change we draw what we have and begin building indices again
+// of them change we draw what we have so far and begin building indices again
 typedef struct gfx_world_s
 {
 	int			tex_diffuse;
@@ -32,6 +40,8 @@ typedef struct gfx_world_s
 
 	vec3_t		styles[MAX_LIGHTMAPS_PER_SURFACE];
 	vec3_t		new_styles[MAX_LIGHTMAPS_PER_SURFACE];
+
+	vec4_t		color;
 
 	qboolean	isWarp;
 
@@ -42,7 +52,7 @@ typedef struct gfx_world_s
 	GLuint		indicesBuf[MAX_INDICES];
 
 	qboolean	isRenderingWorld;
-	int			registration_sequence;
+	int			registration_sequence; // hackery
 } gfx_world_t;
 
 static gfx_world_t gfx_world = { 0 };
@@ -205,6 +215,7 @@ static void R_World_BeginRendering()
 		glVertexAttribPointer(attrib, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(polyvert_t), (void*)offsetof(polyvert_t, lightFlags));
 	}
 
+	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
 	gfx_world.isRenderingWorld = true;
 }
 
@@ -227,6 +238,8 @@ static void R_World_EndRendering()
 /*
 =======================
 R_World_DrawAndFlushBufferedGeo
+
+This should be also called at the end of rendering to make sure we drawn everything
 =======================
 */
 static void R_World_DrawAndFlushBufferedGeo()
@@ -241,9 +254,9 @@ static void R_World_DrawAndFlushBufferedGeo()
 
 	R_ProgUniform3fv(LOC_LIGHTSTYLES, MAX_LIGHTMAPS_PER_SURFACE, gfx_world.styles[0]);
 
-	//	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
+//	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
 	glDrawElements(GL_TRIANGLES, gfx_world.numIndices, GL_UNSIGNED_INT, &gfx_world.indicesBuf[0]);
-	//	glBindBuffer(GL_ARRAY_BUFFER, 0);
+//	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	gfx_world.numIndices = 0;
 }
@@ -300,7 +313,7 @@ static qboolean R_World_UpdateLightStylesForSurf(msurface_t* surf)
 		goto change;
 	}
 
-	if (!r_dynamic->value) // r_dynamic off disables lightstyles
+	if (!r_dynamic->value) // r_dynamic 0 disables lightstyles and dlights
 	{
 		for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
 			VectorSet(gfx_world.new_styles[i], 1.0f, 1.0f, 1.0f);
@@ -332,18 +345,21 @@ change:
 /*
 =======================
 R_World_NewDrawSurface
+
+haaack so the warps appear on screen
 =======================
 */
 static __inline void R_World_DrawWarpSurf(msurface_t* surf)
 {
 	int		tex_diffuse, tex_lightmap;
 
-	R_World_UpdateLightStylesForSurf(NULL);
 	R_World_GrabSurfaceTextures(surf, &tex_diffuse, &tex_lightmap);
-
 	R_MultiTextureBind(TMU_DIFFUSE, tex_diffuse);
 	R_MultiTextureBind(TMU_LIGHTMAP, tex_lightmap);
 
+	R_ProgUniform4f(LOC_COLOR4, 1,1,1,1);
+
+	R_World_UpdateLightStylesForSurf(NULL); // disable lightstyles
 	R_ProgUniform3fv(LOC_LIGHTSTYLES, MAX_LIGHTMAPS_PER_SURFACE, gfx_world.new_styles[0]);
 
 	glDrawArrays(GL_TRIANGLE_FAN, surf->firstvert, surf->numverts);
@@ -353,9 +369,11 @@ static __inline void R_World_DrawWarpSurf(msurface_t* surf)
 /*
 =======================
 R_World_NewDrawSurface
+
+This is totally incorrect for warps
 =======================
 */
-static __inline void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
+static void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
 {
 	int			tex_diffuse, tex_lightmap;
 	int			numTris, numIndices, i;
@@ -365,7 +383,7 @@ static __inline void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapp
 	if ((surf->flags & SURF_DRAWTURB))
 	{
 		R_World_DrawAndFlushBufferedGeo();
-		R_World_DrawWarpSurf(surf);
+		R_World_DrawWarpSurf(surf); // hackery
 		return;
 	}
 
@@ -402,7 +420,6 @@ static __inline void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapp
 		dst_indices += 3;
 	}
 
-
 	rperf.brush_tris += numTris;
 	rperf.brush_polys++;
 
@@ -411,14 +428,96 @@ static __inline void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapp
 	gfx_world.tex_lm = tex_lightmap;
 }
 
+/*
+=================
+R_World_LightInlineModel
+
+calculate dynamic lighting for brushmodel, adopts Spike's fix from QuakeSpasm
+note: assumes pCurrentRefEnt & pCurrentModel are properly set
+=================
+*/
+void R_World_LightInlineModel()
+{
+	dlight_t	*light;
+	vec3_t		lightorg;
+	int			i;
+
+//	if (!pCurrentModel || pCurrentModel->type != MOD_BRUSH)
+//		return; // this can never happen
+
+	light = r_newrefdef.dlights;
+	for (i = 0; i < r_newrefdef.num_dlights; i++, light++)
+	{
+		VectorSubtract(light->origin, pCurrentRefEnt->origin, lightorg);
+		R_MarkLights(light, lightorg, (1 << i), (pCurrentModel->nodes + pCurrentModel->firstnode));
+	}
+}
 
 /*
 =================
-R_NEW_DrawInlineBModel
+R_DrawInlineBModel_NEW
+
+This is a copy of R_DrawInlineBModel adapted for batching
 =================
 */
 void R_DrawInlineBModel_NEW()
 {
+	int			i;
+	cplane_t	*pplane;
+	msurface_t* psurf;
+	vec3_t		color;
+	float		dot, alpha = 1.0f;
+
+	// setup RF_COLOR and RF_TRANSLUCENT
+	if (pCurrentRefEnt->renderfx & RF_COLOR)
+		VectorCopy(pCurrentRefEnt->renderColor, color);
+	else
+		VectorSet(color, 1.0f, 1.0f, 1.0f);
+
+	if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT) && pCurrentRefEnt->alpha != 1.0f)
+	{
+		if (pCurrentRefEnt->alpha <= 0.0f)
+			return; // completly gone
+
+		R_Blend(true);
+		alpha = pCurrentRefEnt->alpha;
+	}
+
+	// light bmodel
+	R_World_LightInlineModel();
+
+	//
+	// draw brushmodel
+	//
+	R_World_BeginRendering();
+	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], alpha);
+
+	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
+	for (i = 0; i < pCurrentModel->nummodelsurfaces; i++, psurf++)
+	{
+		// find which side of the node we are on
+		pplane = psurf->plane;
+		dot = DotProduct(modelorg, pplane->normal) - pplane->dist;
+
+		// draw the polygon
+		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
+		{
+			if (psurf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66))
+			{
+				// add to the translucent chain
+				psurf->texturechain = r_alpha_surfaces;
+				r_alpha_surfaces = psurf;
+			}
+			else
+				R_World_NewDrawSurface(psurf, true);
+		}
+	}
+	R_World_DrawAndFlushBufferedGeo();
+
+	if (alpha != 1.0f)
+		R_Blend(false);
+
+	R_World_EndRendering();
 }
 
 

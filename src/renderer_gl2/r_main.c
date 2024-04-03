@@ -582,7 +582,7 @@ static void R_DrawPerfCounters()
 	Vector4Set(color, 0, 0, 0, 0.35f);
 	
 	R_ProgUniform4f(LOC_COLOR4, 0, 0, 0, 0.5);
-	R_DrawFill(vid.width-175, 25, 175, 205);
+	R_DrawFill(vid.width-175, 25, 175, 220);
 
 	float x, y, h;
 
@@ -608,14 +608,12 @@ static void R_DrawPerfCounters()
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i lightmap binds", rperf.texture_binds[TMU_LIGHTMAP]));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture binds", rperf.texture_binds[TMU_DIFFUSE]));
 
-
-
 	Vector4Set(color, 0.8, 0.8, 1, 1.0);
 	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("%i dynamic lights", r_newrefdef.num_dlights));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i render entities", r_newrefdef.num_entities));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i particles count", r_newrefdef.num_particles));
 
-	Vector4Set(color, 0.2, 1, 0, 1.0);
+	Vector4Set(color, 1, 1, 1, 1.0);
 	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("%i rendered models", rperf.alias_drawcalls));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i model tris total", rperf.alias_tris));
 }

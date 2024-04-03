@@ -25,9 +25,10 @@ extern void R_EndLinesRendering();
 
 extern cvar_t* r_fastworld;
 
-extern void R_DrawInlineBModel_NEW();
-extern void R_World_DrawAlphaSurfaces_NEW();
-extern void R_DrawWorld_NEW();
+void R_DrawInlineBModel_NEW();
+void R_World_DrawAlphaSurfaces_NEW();
+void R_DrawWorld_NEW();
+void R_World_LightInlineModel();
 
 /*
 =============================================================
@@ -417,25 +418,14 @@ R_DrawInlineBModel
 */
 static void R_DrawInlineBModel (void)
 {
-	int			i, k;
-	cplane_t	*pplane;
+	int			i;
+	cplane_t* pplane;
 	float		dot;
-	msurface_t	*psurf;
-	dlight_t	*light;
-	vec3_t		lightorg;
-
+	msurface_t* psurf;
 	vec3_t		color;
 	float		alpha = 1.0f;
 
-	// calculate dynamic lighting for bmodel
-	light = r_newrefdef.dlights;
-	for (k = 0; k < r_newrefdef.num_dlights; k++, light++)
-	{
-		 // Spike'surf fix from QS
-		VectorSubtract(light->origin, pCurrentRefEnt->origin, lightorg);
-		R_MarkLights(light, lightorg, (1 << k), (pCurrentModel->nodes + pCurrentModel->firstnode));
-	}
-
+	// setup RF_COLOR and RF_TRANSLUCENT
 	if (pCurrentRefEnt->renderfx & RF_COLOR)
 		VectorCopy(pCurrentRefEnt->renderColor, color);
 	else
@@ -443,9 +433,14 @@ static void R_DrawInlineBModel (void)
 
 	if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT) && pCurrentRefEnt->alpha != 1.0f)
 	{
+		if (pCurrentRefEnt->alpha <= 0.0f)
+			return; // completly gone
+
 		R_Blend(true);
 		alpha = pCurrentRefEnt->alpha;
 	}
+
+	R_World_LightInlineModel();
 
 	R_BindProgram(GLPROG_WORLD);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], alpha);
@@ -459,22 +454,23 @@ static void R_DrawInlineBModel (void)
 		// find which side of the node we are on
 		pplane = psurf->plane;
 
-		dot = DotProduct (modelorg, pplane->normal) - pplane->dist;
+		dot = DotProduct(modelorg, pplane->normal) - pplane->dist;
 
 		// draw the polygon
 		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
-			if (psurf->texinfo->flags & (SURF_TRANS33|SURF_TRANS66) )
-			{	
+			if (psurf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66) || alpha < 1.0f)
+			{
 				// add to the translucent chain
 				psurf->texturechain = r_alpha_surfaces;
 				r_alpha_surfaces = psurf;
 			}
+			else
+				R_World_DrawSurface(psurf);
 
 			//if(pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
 			//	R_World_DrawSurfaceFullBright(psurf);
-			//else
-			R_World_DrawSurface(psurf);
+
 		}
 	}
 
@@ -483,7 +479,6 @@ static void R_DrawInlineBModel (void)
 
 	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
 }
-
 /*
 =================
 R_DrawBrushModel
@@ -790,15 +785,15 @@ void R_DrawWorld()
 	if ( r_newrefdef.view.flags & RDF_NOWORLDMODEL )
 		return;
 
-	pCurrentModel = r_worldmodel;
-
-	VectorCopy (r_newrefdef.view.origin, modelorg);
-
-	// auto cycle the world frame for texture animation
 	memset (&ent, 0, sizeof(ent));
 	ent.frame = (int)(r_newrefdef.time*2);
+	VectorSet(ent.renderColor, 1.0f, 1.0f, 1.0f);
+	ent.alpha = 1.0f;
 
 	pCurrentRefEnt = &ent;
+	pCurrentModel = r_worldmodel;
+
+	VectorCopy(r_newrefdef.view.origin, modelorg);
 
 	R_ClearSkyBox ();
 
