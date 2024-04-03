@@ -116,6 +116,8 @@ typedef enum
 	LOC_SHADEVECTOR,
 	LOC_SHADECOLOR,
 	LOC_LERPFRAC,
+	LOC_WARPSTRENGTH,
+	LOC_FLOWSTRENGTH,
 
 	LOC_PARM0,
 	LOC_PARM1,
@@ -144,6 +146,7 @@ typedef enum
 	VALOC_TEXCOORD,
 	VALOC_LMTEXCOORD, // BSP ONLY
 	VALOC_LIGHTFLAGS, // BSP ONLY
+	VALOC_ALPHA,		// BSP ONLY?
 	VALOC_COLOR,
 	VALOC_OLD_POS,
 	VALOC_OLD_NORMAL,
@@ -310,6 +313,7 @@ extern	cvar_t	*r_fullbright;
 extern	cvar_t	*r_novis;
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_lerpmodels;
+extern	cvar_t	*r_fastworld;
 
 extern cvar_t	*gl_ext_swapinterval;
 
@@ -489,6 +493,44 @@ extern inline void R_BlendFunc(GLenum newstateA, GLenum newstateB);
 extern inline void R_SetClearColor(float r, float g, float b, float a);
 
 extern void R_InitialOGLState();
+
+/*
+====================================================================
+Live profiling (currently windows only)
+====================================================================
+*/
+
+#define NUM_TIMESAMPLES 16
+typedef enum
+{
+	STAGE_START,
+	STAGE_SETUP,
+	STAGE_DRAWWORLD,
+	STAGE_ENTITIES,
+	STAGE_DEBUG,
+	STAGE_ALPHASURFS,
+	STAGE_PARTICLES,
+	STAGE_TOTAL,
+	NUM_PROFILES
+} profiletype_e;
+
+#ifdef _WIN32
+extern LARGE_INTEGER qpc_freq;
+extern LARGE_INTEGER qpc_samples[NUM_PROFILES];
+#endif
+
+extern double lastsamples[NUM_PROFILES][NUM_TIMESAMPLES];
+
+//Starts profiling. Will record the time it was called at.
+void R_StartProfiling();
+//Called at the end of a stage, compares the stage's time to the previous,
+//unless that stage is STAGE_TOTAL, at which it compares to the time at the call of R_StartProfiling.
+void R_ProfileAtStage(profiletype_e stage);
+//Finishes profiling by converting all the relevant numbers into milliseconds and incrementing the sample number.
+void R_FinishProfiling();
+
+//Draws the profiling report to screen.
+void R_DrawProfilingReport();
 
 /*
 ====================================================================

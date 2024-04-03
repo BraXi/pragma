@@ -243,3 +243,97 @@ void GL_UpdateSwapInterval( void )
 		}
 	}
 }
+
+//just sorta sticking the profiling here
+#ifdef _WIN32
+LARGE_INTEGER qpc_freq; //Initialized in R_Init
+LARGE_INTEGER qpc_samples[NUM_PROFILES];
+#endif
+
+double lastsamples[NUM_PROFILES][NUM_TIMESAMPLES]; //in MS
+static int currentsample; //0 - (NUM_TIMESAMPLES-1)
+
+const char* stagenames[NUM_PROFILES] =
+{
+	"start",
+	"setup",
+	"world",
+	"entities",
+	"debug",
+	"alpha surfaces",
+	"particles",
+	"total"
+};
+
+void R_StartProfiling()
+{
+#ifdef WIN32
+	QueryPerformanceCounter(&qpc_samples[0]);
+#endif
+}
+
+void R_ProfileAtStage(profiletype_e stage)
+{
+#ifdef WIN32
+		QueryPerformanceCounter(&qpc_samples[stage]);
+#endif
+}
+
+void R_FinishProfiling()
+{
+	int i;
+#ifdef WIN32
+	//Make all readings relative to the previous reading
+	for (i = STAGE_TOTAL - 1; i > STAGE_START; i--)
+	{
+		qpc_samples[i].QuadPart -= qpc_samples[i-1].QuadPart;
+	}
+	//Total is all time
+	qpc_samples[STAGE_TOTAL].QuadPart -= qpc_samples[0].QuadPart;
+
+	for (i = 1; i < NUM_PROFILES; i++)
+	{
+		//Convert the time readings into MS doubles. 
+		//Overflow shouldn't be likely due to the subtraction of the initial reading, meaning that the QPC readings should be very small.
+		lastsamples[i][currentsample] = (double)qpc_samples[i].QuadPart * 1000 / qpc_freq.QuadPart;
+	}
+#endif
+	currentsample = (currentsample + 1) % NUM_TIMESAMPLES;
+}
+
+static double R_AvgSample(int stage)
+{
+	double avg = 0;
+	for (int i = 0; i < NUM_TIMESAMPLES; i++)
+	{
+		avg += lastsamples[stage][i];
+	}
+
+	return avg / NUM_TIMESAMPLES;
+}
+
+void R_DrawProfilingReport()
+{
+	float color[4];
+
+	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+	extern int R_GetFontHeight(int fontId);
+
+	float fontscale = 0.25;
+	float x, y, h;
+	x = vid.width - 10;
+	y = 32 + 230;
+	h = R_GetFontHeight(0) * fontscale;
+
+	Vector4Set(color, 0, 0, 0, 0.35f);
+
+	R_ProgUniform4f(LOC_COLOR4, 0, 0, 0, 0.5);
+	R_DrawFill(vid.width - 175, 25 + 230, 175, (NUM_PROFILES - 1) * h + 16);
+
+	Vector4Set(color, 1, 1, 1, 1.0);
+	for (int i = 1; i < NUM_PROFILES; i++)
+	{
+		R_DrawText(x, y, 2, 0, fontscale, color, va("%s: %.3f ms", stagenames[i], R_AvgSample(i)));
+		y += h;
+	}
+}

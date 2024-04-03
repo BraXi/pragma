@@ -588,6 +588,12 @@ void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 			normal[i] = -normal[i];
 	}
 
+	float alpha = 1.0f;
+	if (surf->texinfo->flags & SURF_TRANS66)
+		alpha = 0.66f;
+	else if (surf->texinfo->flags & SURF_TRANS33)
+		alpha = 0.33;
+
 	for (i = 0; i < lnumverts; i++)
 	{
 		polyvert_t* vert;
@@ -623,6 +629,7 @@ void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 		Vector2Set(vert->texCoord, s, t);
 
 		VectorCopy(normal, vert->normal);
+		vert->alpha = alpha;
 
 		R_LightMap_TexCoordsForSurf(surf, vert, vec);
 

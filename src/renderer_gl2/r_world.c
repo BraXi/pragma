@@ -21,8 +21,6 @@ TODO:
 - scrolling (flowing)
 */
 
-extern cvar_t		*r_fastworld;
-
 extern vec3_t		modelorg;		// relative to viewpoint
 extern msurface_t	*r_alpha_surfaces;
 extern image_t		*R_World_TextureAnimation(mtexinfo_t* tex);
@@ -42,8 +40,9 @@ typedef struct gfx_world_s
 	vec3_t		new_styles[MAX_LIGHTMAPS_PER_SURFACE];
 
 	vec4_t		color;
-
-	qboolean	isWarp;
+	 
+	unsigned int uniformflags; //Flags that require a uniform change. 
+							   //Currently SURF_DRAWTURB, SURF_FLOWING, SURF_SCROLLX, SURF_SCROLLY, SURF_SCROLLFLIP, and probably sky
 
 	GLuint		vbo;
 	int			totalVertCount;
@@ -215,7 +214,19 @@ static void R_World_BeginRendering()
 		glVertexAttribPointer(attrib, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(polyvert_t), (void*)offsetof(polyvert_t, lightFlags));
 	}
 
+	attrib = R_GetProgAttribLoc(VALOC_ALPHA);
+	if (attrib != -1)
+	{
+		glEnableVertexAttribArray(attrib);
+		glVertexAttribPointer(attrib, 1, GL_FLOAT, GL_FALSE, sizeof(polyvert_t), (void*)offsetof(polyvert_t, alpha));
+	}
+
 	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
+	R_ProgUniform1f(LOC_TIME, r_newrefdef.time);
+	R_ProgUniform1f(LOC_WARPSTRENGTH, 0.f);
+	R_ProgUniform2f(LOC_FLOWSTRENGTH, 0.f, 0.f);
+
+	gfx_world.uniformflags = 0; //Always force a uniform update if needed
 	gfx_world.isRenderingWorld = true;
 }
 
@@ -369,8 +380,6 @@ static __inline void R_World_DrawWarpSurf(msurface_t* surf)
 /*
 =======================
 R_World_NewDrawSurface
-
-This is totally incorrect for warps
 =======================
 */
 static void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
@@ -380,13 +389,6 @@ static void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
 	unsigned int* dst_indices;
 	qboolean	stylechanged;
 
-	if ((surf->flags & SURF_DRAWTURB))
-	{
-		R_World_DrawAndFlushBufferedGeo();
-		R_World_DrawWarpSurf(surf); // hackery
-		return;
-	}
-
 	R_World_GrabSurfaceTextures(surf, &tex_diffuse, &tex_lightmap);
 
 	// fullbright surfaces (water, translucent) have no styles
@@ -395,13 +397,36 @@ static void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
 	numTris = surf->numedges - 2;
 	numIndices = numTris * 3;
 
+	//These flags are ones that are relevant to uniforms.
+	unsigned int uniformflags = surf->texinfo->flags & (SURF_WARP | SURF_FLOWING | SURF_SCROLLX | SURF_SCROLLY | SURF_SCROLLFLIP);
+
 	//
 	// draw everything we have buffered so far and begin building again 
 	// when any of the textures change or surface lightstyles change
 	//
-	if (gfx_world.tex_diffuse != tex_diffuse || gfx_world.tex_lm != tex_lightmap || gfx_world.numIndices + numIndices >= MAX_INDICES || stylechanged )
+	if (gfx_world.tex_diffuse != tex_diffuse || gfx_world.tex_lm != tex_lightmap || gfx_world.uniformflags != uniformflags || gfx_world.numIndices + numIndices >= MAX_INDICES  || stylechanged )
 	{
 		R_World_DrawAndFlushBufferedGeo();
+		//Only when starting a new batch should uniforms be updated, since they will persist across all of the batch's draws
+		
+		if (surf->texinfo->flags & SURF_WARP)
+			R_ProgUniform1f(LOC_WARPSTRENGTH, 1.f);
+		else
+			R_ProgUniform1f(LOC_WARPSTRENGTH, 0.f);
+		
+		float scrollx = 0, scrolly = 0;
+		if (surf->texinfo->flags & SURF_FLOWING)
+			scrollx = -64;
+		else if (surf->texinfo->flags & SURF_SCROLLX)
+			scrollx = -32;
+		if (surf->texinfo->flags & SURF_SCROLLY)
+			scrolly = -32;
+		if (surf->texinfo->flags & SURF_SCROLLFLIP)
+		{
+			scrollx = -scrollx; scrolly = -scrolly;
+		}
+
+		R_ProgUniform2f(LOC_FLOWSTRENGTH, scrollx, scrolly);
 	}
 
 	if (stylechanged)
@@ -426,6 +451,7 @@ static void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
 	gfx_world.numIndices += numIndices;
 	gfx_world.tex_diffuse = tex_diffuse;
 	gfx_world.tex_lm = tex_lightmap;
+	gfx_world.uniformflags = uniformflags;
 }
 
 /*
@@ -537,7 +563,7 @@ static void R_DrawWorld_TextureChains_NEW()
 	R_World_BeginRendering();
 
 	//
-	// lightmapped surfaces
+	// surfaces that aren't transparent or warped.
 	//
 	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
@@ -558,8 +584,11 @@ static void R_DrawWorld_TextureChains_NEW()
 	R_World_DrawAndFlushBufferedGeo();
 
 	//
-	// unlit and/or fullbright surfaces
+	// non-transparent warp surfaces. 
+	// [ISB] To avoid a context change by changing shaders, and the overhead of updating uniforms,
+	// the world shader always performs warps but the strength is zeroed to cancel it out. 
 	//
+	R_ProgUniform1f(LOC_WARPSTRENGTH, 1.f);
 	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (!image->registration_sequence)
@@ -582,6 +611,7 @@ static void R_DrawWorld_TextureChains_NEW()
 			image->texturechain = NULL;
 	}
 	R_World_DrawAndFlushBufferedGeo();
+	R_ProgUniform1f(LOC_WARPSTRENGTH, 0.f);
 	R_World_EndRendering();
 }
 
@@ -602,16 +632,8 @@ void R_World_DrawAlphaSurfaces_NEW()
 
 	for (surf = r_alpha_surfaces; surf; surf = surf->texturechain)
 	{
-		if (surf->flags & SURF_DRAWTURB)
-		{
-			// draw unlit water surf chain
-			R_World_NewDrawSurface(surf, false);
-		}
-		else
-		{
-			// draw unlit surf
-			R_World_NewDrawSurface(surf, false);
-		}
+		//All surfaces can go through the same pipe now.
+		R_World_NewDrawSurface(surf, false);
 	}
 	R_World_DrawAndFlushBufferedGeo();
 

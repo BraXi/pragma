@@ -308,6 +308,8 @@ int R_Init(void* hinstance, void* hWnd)
 		ri.Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
 	}
 
+	QueryPerformanceFrequency(&qpc_freq);
+
 #endif
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 	
