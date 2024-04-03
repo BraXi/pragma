@@ -515,6 +515,7 @@ void R_RenderView (refdef_t *fd)
 			rperf.texture_binds[i] = 0;
 	//}
 
+	R_StartProfiling();
 	R_PushDlights ();
 
 	if (r_finish->value)
@@ -531,12 +532,18 @@ void R_RenderView (refdef_t *fd)
 
 	R_ClearFBO(); 
 	R_RenderToFBO(true); // begin rendering to fbo
+	R_ProfileAtStage(STAGE_SETUP);
 	R_DrawWorld();
+	R_ProfileAtStage(STAGE_DRAWWORLD);
 	R_DrawEntitiesOnList();
+	R_ProfileAtStage(STAGE_ENTITIES);
 	R_DrawDebugLines();
+	R_ProfileAtStage(STAGE_DEBUG);
 //	R_RenderDlights ();
 	R_World_DrawAlphaSurfaces();
+	R_ProfileAtStage(STAGE_ALPHASURFS);
 	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
+	R_ProfileAtStage(STAGE_PARTICLES);
 	R_RenderToFBO(false); // end rendering to fbo
 	
 	R_SelectTextureUnit(0);
@@ -549,6 +556,9 @@ void R_RenderView (refdef_t *fd)
 			rperf.texture_binds[TMU_DIFFUSE],
 			rperf.texture_binds[TMU_LIGHTMAP]);
 	}
+
+	R_ProfileAtStage(STAGE_TOTAL);
+	R_FinishProfiling();
 }
 
 /*
@@ -616,6 +626,8 @@ static void R_DrawPerfCounters()
 	Vector4Set(color, 1, 1, 1, 1.0);
 	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("%i rendered models", rperf.alias_drawcalls));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i model tris total", rperf.alias_tris));
+
+	R_DrawProfilingReport();
 }
 
 /*

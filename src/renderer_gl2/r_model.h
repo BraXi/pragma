@@ -76,6 +76,7 @@ typedef struct mtexinfo_s
 typedef struct polyvert_s
 {
 	vec3_t	pos;
+	float	alpha;
 	float	texCoord[2];
 	float	lmTexCoord[2];  // lightmap texture coordinate (sometimes unused)
 	vec3_t	normal;

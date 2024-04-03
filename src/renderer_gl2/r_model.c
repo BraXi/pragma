@@ -855,22 +855,21 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 			if (out->texinfo->flags & SURF_WARP)
 			{
 				out->flags |= SURF_DRAWTURB;
+				/* [ISB] always do the normal polygon builder, subdivision is unneeded for shader warp. 
 				for (i = 0; i < 2; i++)
 				{
 					out->extents[i] = 16384;
 					out->texturemins[i] = -8192;
 				}
-				R_SubdivideSurface(out);	// cut up polygon for warps
+				R_SubdivideSurface(out);	// cut up polygon for warps*/
 			}
 
 			// create lightmaps and polygons
 			if (!(out->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP)))
 				R_LightMap_CreateForSurface(out);
 
-			if (!(out->texinfo->flags & SURF_WARP))
-			{
+			//if (!(out->texinfo->flags & SURF_WARP))
 				R_BuildPolygonFromSurface(pCurrentModel, out);
-			}
 		}
 
 	}
