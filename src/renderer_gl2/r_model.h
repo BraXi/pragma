@@ -100,6 +100,9 @@ typedef struct msurface_s
 
 	int			firstedge;	// look up in model->surfedges[], negative numbers are backwards edges
 	int			numedges;
+
+	int			firstvert;	// exp rendering
+	int			numverts;	// exp rendering
 	
 	short		texturemins[2];
 	short		extents[2];
@@ -199,6 +202,7 @@ typedef struct model_s
 //
 // brush model
 //
+
 	int			firstmodelsurface, nummodelsurfaces;
 	int			lightmap;		// only for inlineModels
 

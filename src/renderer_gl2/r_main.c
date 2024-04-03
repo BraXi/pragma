@@ -117,8 +117,8 @@ static void R_DrawNullModel (void)
 	vec3_t	shadelight;
 	int		i;
 
-	if ( pCurrentRefEnt->renderfx & RF_FULLBRIGHT )
-		model_shadelight[0] = model_shadelight[1] = model_shadelight[2] = 1.0F;
+	if (pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
+		VectorSet(model_shadelight, 1.0f, 1.0f, 1.0f);
 	else
 		R_LightPoint (pCurrentRefEnt->origin, shadelight);
 
@@ -374,10 +374,6 @@ static void R_SetupFrame()
 
 	Vector4Copy(r_newrefdef.view.fx.blend, v_blend);
 
-	rperf.brush_polys = 0;
-	rperf.alias_tris = 0;
-	rperf.alias_drawcalls = 0;
-
 	// clear out the portion of the screen that the NOWORLDMODEL defines
 	if ( r_newrefdef.view.flags & RDF_NOWORLDMODEL )
 	{
@@ -505,14 +501,19 @@ void R_RenderView (refdef_t *fd)
 	if (!r_worldmodel && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 		ri.Error (ERR_DROP, "R_RenderView: NULL worldmodel");
 
-	if (r_speeds->value)
-	{
+	//if (r_speeds->value)
+	//{
+		// clear performance counters
 		rperf.brush_polys = 0;
+		rperf.brush_tris = 0;
+		rperf.brush_drawcalls = 0;
+
 		rperf.alias_tris = 0;
+		rperf.alias_drawcalls = 0;
 
 		for(int i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
 			rperf.texture_binds[i] = 0;
-	}
+	//}
 
 	R_PushDlights ();
 
@@ -544,7 +545,7 @@ void R_RenderView (refdef_t *fd)
 		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i texbinds, %i lmbinds,\n",
 			rperf.brush_polys,
 			rperf.alias_tris,
-			rperf.visible_textures, 
+			rperf.brush_textures,
 			rperf.texture_binds[TMU_DIFFUSE],
 			rperf.texture_binds[TMU_LIGHTMAP]);
 	}
@@ -595,9 +596,19 @@ static void R_DrawPerfCounters()
 
 	Vector4Set(color, 1, 1, 1, 1.0);
 	R_DrawText(x, y, 2, 0, fontscale, color, va("%i brush polygons", rperf.brush_polys));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.visible_textures));
+
+	if (rperf.brush_tris > 0)
+	{
+		R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i brush triangles", rperf.brush_tris));
+	}
+
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i brush drawcalls", rperf.brush_drawcalls));
+
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.brush_textures));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i lightmap binds", rperf.texture_binds[TMU_LIGHTMAP]));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture binds", rperf.texture_binds[TMU_DIFFUSE]));
+
+
 
 	Vector4Set(color, 0.8, 0.8, 1, 1.0);
 	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("%i dynamic lights", r_newrefdef.num_dlights));

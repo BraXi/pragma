@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma once
 #include "../qcommon/qcommon.h"
 
-#define	MAX_DLIGHTS				64		// was 32
+#define	MAX_DLIGHTS				32		// was 32
 #define	MAX_VISIBLE_ENTITIES	1024	// max entities a renderer can process, was 128 [previously MAX_ENTITIES]
 #define	MAX_PARTICLES			4096	// can be much higher with the new renderer
 #define	MAX_LIGHTSTYLES			256

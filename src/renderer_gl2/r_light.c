@@ -127,7 +127,7 @@ void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
 		
 // mark the polygons
 	surf = r_worldmodel->surfaces + node->firstsurface;
-	for (i=0 ; i<node->numsurfaces ; i++, surf++)
+	for (i = 0; i < node->numsurfaces ; i++, surf++)
 	{
 		if (surf->dlightframe != r_dlightframecount)
 		{
@@ -140,7 +140,7 @@ void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
 	R_MarkLights(light, lightorg, bit, node->children[1]);
 }
 
-
+void R_DynamicLightsToProg();
 /*
 =============
 R_PushDlights
@@ -151,14 +151,15 @@ void R_PushDlights (void)
 	int			i;
 	dlight_t	*l;
 
-	r_dlightframecount = r_framecount + 1;	// because the count hasn't
-											//  advanced yet for this frame
+	r_dlightframecount = r_framecount + 1;	// because the count hasn't advanced yet for this frame
+	
 	l = r_newrefdef.dlights;
 	for (i = 0; i < r_newrefdef.num_dlights; i++, l++)
 	{
-//		R_MarkLights(l, 1 << i, r_worldmodel->nodes);
 		R_MarkLights(l, l->origin, 1 << i, r_worldmodel->nodes);
 	}
+
+	R_DynamicLightsToProg();
 }
 
 
@@ -284,8 +285,7 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 					pointcolor[2] += lightmap[2] * r_modulate->value * (1.0 / 255);
 				}
 
-				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) *
-					((surf->extents[1] >> surf->lmshift) + 1);
+				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) * ((surf->extents[1] >> surf->lmshift) + 1);
 			}
 		}	
 		return 1;
@@ -314,7 +314,7 @@ void R_LightPoint(vec3_t p, vec3_t color)
 	
 	if (!r_worldmodel->lightdata || r_worldmodel->lightdatasize <= 0)
 	{
-		color[0] = color[1] = color[2] = 1.0;
+		VectorSet(color, 1.0f, 1.0f, 1.0f); // fullbright
 		return;
 	}
 	

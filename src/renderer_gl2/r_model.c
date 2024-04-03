@@ -1024,7 +1024,6 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 {
 	mleaf_t 	*out;
 	int			i, j, count;
-	poly_t	*poly;
 
 	CMod_ValidateBSPLump(l, BSP_LEAFS, &count, 1, "leafs", __FUNCTION__);
 	
@@ -1051,7 +1050,9 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 			out->firstmarksurface = pLoadModel->marksurfaces + (unsigned int)LittleLong(in->firstleafface);
 			out->nummarksurfaces = (unsigned int)LittleLong(in->numleaffaces);
 
+#if 0
 			// for (currently not used) underwater warp
+			poly_t* poly;
 			if (out->contents & (CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA))
 			{
 				for (j = 0; j < out->nummarksurfaces; j++)
@@ -1061,6 +1062,7 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 						poly->flags |= SURF_UNDERWATER;
 				}
 			}
+#endif
 		}
 	}
 	else
@@ -1080,21 +1082,22 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 
 			out->firstmarksurface = pLoadModel->marksurfaces + LittleShort(in->firstleafface);
 			out->nummarksurfaces = LittleShort(in->numleaffaces);
+
+#if 0
+			// for (currently not used) underwater warp
+			poly_t* poly;
+			if (out->contents & (CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA))
+			{
+				for (j = 0; j < out->nummarksurfaces; j++)
+				{
+					out->firstmarksurface[j]->flags |= SURF_UNDERWATER;
+					for (poly = out->firstmarksurface[j]->polys; poly; poly = poly->next)
+						poly->flags |= SURF_UNDERWATER;
+				}
+			}
+#endif
 		}
 	}
-		
-#if 0
-		// for (currently not used) underwater warp
-		if ( out->contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA) )
-		{
-			for (j = 0; j < out->nummarksurfaces; j++)
-			{
-				out->firstmarksurface[j]->flags |= SURF_UNDERWATER;
-				for (poly = out->firstmarksurface[j]->polys; poly; poly = poly->next)
-					poly->flags |= SURF_UNDERWATER;
-			}
-		}
-#endif	
 }
 
 /*

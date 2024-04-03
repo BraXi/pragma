@@ -54,6 +54,10 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_INVERSE,			"fx_inverse",		F_FLOAT },
 	{ LOC_NOISE,			"fx_noise",			F_FLOAT },
 
+	/* dynamic lights */
+	{ LOC_DLIGHT_COUNT,		"dlights",			F_INT },
+	{ LOC_DLIGHT_COLORS,	"dlight_colors",	F_VECTOR3 },
+	{ LOC_DLIGHT_POS_AND_RAD, "dlight_pos_and_rad",	F_VECTOR4 },
 };
 
 /* vertex attributes */
@@ -62,12 +66,13 @@ static glprogloc_t progVertAtrribLocs[NUM_VALOCS] =
 	{ VALOC_POS,			"inVertPos",		F_VECTOR3 },
 	{ VALOC_NORMAL,			"inNormal",			F_VECTOR3 },
 	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR2 },
-	{ VALOC_LMTEXCOORD,		"inLightMapCoord",	F_VECTOR2 },
+	{ VALOC_LMTEXCOORD,		"inLightMapCoord",	F_VECTOR2 }, // BSP ONLY
+	{ VALOC_LIGHTFLAGS,		"inLightFlags",		F_INT }, // BSP ONLY
 	{ VALOC_COLOR,			"inVertCol",		F_VECTOR3 },
 
 	/*md3 rendering only*/
-	{ VALOC_OLD_POS,		"inOldVertPos",		F_VECTOR3 },
-	{ VALOC_OLD_NORMAL,		"inOldNormal",		F_VECTOR3 },
+	{ VALOC_OLD_POS,		"inOldVertPos",		F_VECTOR3 }, // MD3 ONLY
+	{ VALOC_OLD_NORMAL,		"inOldNormal",		F_VECTOR3 } // MD3 ONLY
 };
 
 #define CheckProgUni(uni) \

@@ -45,7 +45,7 @@ void R_LightMap_TexCoordsForSurf( msurface_t* surf, polyvert_t *vert, vec3_t pos
 #if DECOUPLED_LM
 	s = DoubleDotProduct(pos, surf->lmvecs[0]) + (long double)surf->lmvecs[0][3];
 #else
-	s = DotProduct(pos, surf->texinfo->vecs[0]) + surf->texinfo->vecs[0][3];
+	s = DoubleDotProduct(pos, surf->texinfo->vecs[0]) + surf->texinfo->vecs[0][3];
 #endif
 	s -= surf->texturemins[0];
 	s += surf->light_s * (1 << surf->lmshift);
@@ -55,7 +55,7 @@ void R_LightMap_TexCoordsForSurf( msurface_t* surf, polyvert_t *vert, vec3_t pos
 #if DECOUPLED_LM
 	t = DoubleDotProduct(pos, surf->lmvecs[1]) + (long double)surf->lmvecs[1][3];
 #else
-	t = DotProduct(vertpos, surf->texinfo->vecs[1]) + surf->texinfo->vecs[1][3];
+	t = DoubleDotProduct(vertpos, surf->texinfo->vecs[1]) + surf->texinfo->vecs[1][3];
 #endif
 
 	t -= surf->texturemins[1];

@@ -26,7 +26,6 @@ extern void R_EndLinesRendering();
 extern cvar_t* r_fastworld;
 
 extern void R_DrawInlineBModel_NEW();
-extern void R_DrawWorld_TextureChains_NEW();
 extern void R_World_DrawAlphaSurfaces_NEW();
 extern void R_DrawWorld_NEW();
 
@@ -75,6 +74,9 @@ void R_World_DrawUnlitGeom(msurface_t* surf)
 	polyvert_t	*v;
 
 	v = &surf->polys->verts[0];
+
+	rperf.brush_drawcalls++;
+	rperf.brush_polys++;
 
 	glBegin (GL_TRIANGLE_FAN);
 	for (i = 0; i < surf->polys->numverts; i++, v++)
@@ -193,16 +195,16 @@ void R_World_DrawAlphaSurfaces()
 	msurface_t	*surf;
 	float		oldalpha = -1.0f, alpha;
 
+	//
+	// go back to the world matrix
+	//
+    glLoadMatrixf (r_world_matrix);
+
 	if (r_fastworld->value)
 	{
 		R_World_DrawAlphaSurfaces_NEW();
 		return;
 	}
-
-	//
-	// go back to the world matrix
-	//
-    glLoadMatrixf (r_world_matrix);
 
 	R_BindProgram(GLPROG_WORLD);
 	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum); // no lightmap
@@ -213,7 +215,6 @@ void R_World_DrawAlphaSurfaces()
 	for (surf=r_alpha_surfaces ; surf ; surf=surf->texturechain)
 	{
 		R_MultiTextureBind(TMU_DIFFUSE, surf->texinfo->image->texnum);
-		rperf.brush_polys++;
 
 		if (surf->texinfo->flags & SURF_TRANS33)
 			alpha = 0.33f;
@@ -252,14 +253,7 @@ static void R_DrawWorld_TextureChains()
 	msurface_t	*s;
 	image_t		*image;
 
-
-	if (r_fastworld->value)
-	{
-		R_DrawWorld_TextureChains_NEW();
-		return;
-	}
-
-	rperf.visible_textures = 0;
+	rperf.brush_textures = 0;
 
 	// lightmapped surfaces
 	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
@@ -267,7 +261,7 @@ static void R_DrawWorld_TextureChains()
 		if (!image->registration_sequence || !image->texturechain)
 			continue;
 
-		rperf.visible_textures++;
+		rperf.brush_textures++;
 
 		for ( s = image->texturechain; s; s = s->texturechain)
 		{
@@ -316,10 +310,12 @@ inline static void R_World_DrawFlowingSurfLM(msurface_t* surf)
 	if (scroll == 0.0)
 		scroll = -64.0;
 
-	glBegin(GL_TRIANGLE_FAN);
+	rperf.brush_drawcalls++;
 
+	glBegin(GL_TRIANGLE_FAN);
 	while (poly != NULL)
 	{
+		rperf.brush_polys++;
 		v = &poly->verts[0];
 		for (i = 0; i < numVerts /*poly->numverts*/; i++, v++)
 		{
@@ -347,9 +343,12 @@ inline static void R_World_DrawGenericSurfLM(msurface_t* surf)
 	numVerts = surf->polys->numverts;
 	poly = surf->polys;
 
+	rperf.brush_drawcalls++;
+
 	glBegin(GL_TRIANGLE_FAN);
 	while(poly != NULL)
 	{
+		rperf.brush_polys++;
 		v = &poly->verts[0];
 		for (i = 0; i < poly->numverts; i++, v++)
 		{
@@ -409,8 +408,6 @@ static void R_World_DrawSurface( msurface_t *surf )
 		R_World_DrawFlowingSurfLM(surf);
 	else
 		R_World_DrawGenericSurfLM(surf);
-
-	rperf.brush_polys++;
 }
 
 /*
@@ -427,6 +424,9 @@ static void R_DrawInlineBModel (void)
 	dlight_t	*light;
 	vec3_t		lightorg;
 
+	vec3_t		color;
+	float		alpha = 1.0f;
+
 	// calculate dynamic lighting for bmodel
 	light = r_newrefdef.dlights;
 	for (k = 0; k < r_newrefdef.num_dlights; k++, light++)
@@ -436,23 +436,27 @@ static void R_DrawInlineBModel (void)
 		R_MarkLights(light, lightorg, (1 << k), (pCurrentModel->nodes + pCurrentModel->firstnode));
 	}
 
-	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
+	if (pCurrentRefEnt->renderfx & RF_COLOR)
+		VectorCopy(pCurrentRefEnt->renderColor, color);
+	else
+		VectorSet(color, 1.0f, 1.0f, 1.0f);
 
-	R_BindProgram(GLPROG_WORLD);
-	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
-
-	if ( pCurrentRefEnt->renderfx & RF_TRANSLUCENT )
+	if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT) && pCurrentRefEnt->alpha != 1.0f)
 	{
 		R_Blend(true);
-		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, pCurrentRefEnt->alpha);
+		alpha = pCurrentRefEnt->alpha;
 	}
 
+	R_BindProgram(GLPROG_WORLD);
+	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], alpha);
+
 	//
-	// draw texture
+	// draw brushmodel
 	//
+	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
 	for (i = 0; i < pCurrentModel->nummodelsurfaces; i++, psurf++)
 	{
-	// find which side of the node we are on
+		// find which side of the node we are on
 		pplane = psurf->plane;
 
 		dot = DotProduct (modelorg, pplane->normal) - pplane->dist;
@@ -467,15 +471,17 @@ static void R_DrawInlineBModel (void)
 				r_alpha_surfaces = psurf;
 			}
 
+			//if(pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
+			//	R_World_DrawSurfaceFullBright(psurf);
+			//else
 			R_World_DrawSurface(psurf);
 		}
 	}
 
-	if ( (pCurrentRefEnt->renderfx & RF_TRANSLUCENT) )
-	{
+	if (alpha != 1.0f)
 		R_Blend(false);
-		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1.0);
-	}
+
+	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 /*

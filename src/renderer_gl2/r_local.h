@@ -116,9 +116,11 @@ typedef enum
 	LOC_SHADEVECTOR,
 	LOC_SHADECOLOR,
 	LOC_LERPFRAC,
+
 	LOC_PARM0,
 	LOC_PARM1,
 	LOC_PARM2,
+
 	LOC_SCREENSIZE,
 	LOC_INTENSITY,
 	LOC_GAMMA,
@@ -127,6 +129,11 @@ typedef enum
 	LOC_GRAYSCALE,
 	LOC_INVERSE,
 	LOC_NOISE,
+
+	LOC_DLIGHT_COUNT,
+	LOC_DLIGHT_COLORS,
+	LOC_DLIGHT_POS_AND_RAD,
+
 	NUM_LOCS,
 } glprogLoc_t;
 
@@ -135,7 +142,8 @@ typedef enum
 	VALOC_POS,
 	VALOC_NORMAL,
 	VALOC_TEXCOORD,
-	VALOC_LMTEXCOORD,
+	VALOC_LMTEXCOORD, // BSP ONLY
+	VALOC_LIGHTFLAGS, // BSP ONLY
 	VALOC_COLOR,
 	VALOC_OLD_POS,
 	VALOC_OLD_NORMAL,
@@ -244,14 +252,14 @@ void GL_UpdateSwapInterval( void );
 typedef struct
 {
 	int	brush_polys;
+	int brush_tris;
+	int brush_drawcalls;
+	int	brush_textures;
 
 	int alias_tris;
 	int alias_drawcalls;
 
 	int	texture_binds[MIN_TEXTURE_MAPPING_UNITS];
-
-	int	visible_textures;
-
 } rperfcounters_t;
 
 

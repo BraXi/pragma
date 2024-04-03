@@ -267,10 +267,12 @@ void R_World_DrawUnlitWaterSurf (msurface_t *surf)
 	else
 		scroll = 0;
 
+	rperf.brush_drawcalls++;
+
 	for (bp=surf->polys ; bp ; bp=bp->next)
 	{
+		rperf.brush_polys++;
 		p = bp;
-
 		glBegin (GL_TRIANGLE_FAN);
 		for (i = 0, v = &p->verts[0]; i <p->numverts; i++, v++)
 		{
@@ -284,7 +286,9 @@ void R_World_DrawUnlitWaterSurf (msurface_t *surf)
 			t = ot + r_turbsin[(int)((os*0.125+rdt) * TURBSCALE) & 255];
 			t *= (1.0/64);
 
-			glTexCoord2f (s, t);
+			//glTexCoord2f (s, t);
+			glMultiTexCoord2f(GL_TEXTURE0, s, t);
+			glMultiTexCoord2f(GL_TEXTURE1, v->lmTexCoord[0], v->lmTexCoord[1]);
 			glVertex3fv (v->pos);
 		}
 		glEnd ();
