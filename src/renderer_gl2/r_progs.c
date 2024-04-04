@@ -624,7 +624,6 @@ void R_InitPrograms()
 
 	R_LoadProgram(GLPROG_WORLD, "world");
 	R_LoadProgram(GLPROG_WORLD_NEW, "world-new");
-	R_LoadProgram(GLPROG_WORLD_LIQUID, "world-liquid");
 	R_LoadProgram(GLPROG_SKY, "sky");
 	R_LoadProgram(GLPROG_ALIAS, "model_alias");
 	R_LoadProgram(GLPROG_SPRITE, "model_sprite");
