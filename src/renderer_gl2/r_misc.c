@@ -12,6 +12,9 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
+extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+extern int R_GetFontHeight(int fontId);
+
 static byte dottexture[8][8] =
 {
 	{0,0,0,0,0,0,0,0},
@@ -314,13 +317,11 @@ static double R_AvgSample(int stage)
 
 void R_DrawProfilingReport()
 {
-	float color[4];
-
-	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
-	extern int R_GetFontHeight(int fontId);
-
+#ifdef WIN32
+	vec4_t color;
 	float fontscale = 0.25;
 	float x, y, h;
+
 	x = vid.width - 10;
 	y = 32 + 230;
 	h = R_GetFontHeight(0) * fontscale;
@@ -336,4 +337,5 @@ void R_DrawProfilingReport()
 		R_DrawText(x, y, 2, 0, fontscale, color, va("%s: %.3f ms", stagenames[i], R_AvgSample(i)));
 		y += h;
 	}
+#endif
 }
