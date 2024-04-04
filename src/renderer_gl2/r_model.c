@@ -812,7 +812,7 @@ Mod_BSP_LoadFaces
 static void Mod_BSP_LoadFaces(lump_t *l)
 {
 	msurface_t 	*out;
-	int			i, count, surfnum, side;
+	int			count, surfnum, side;
 	unsigned int	planenum;
 	int			ti;
 
