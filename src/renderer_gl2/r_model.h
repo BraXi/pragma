@@ -80,7 +80,6 @@ typedef struct polyvert_s
 	float	texCoord[2];
 	float	lmTexCoord[2];  // lightmap texture coordinate (sometimes unused)
 	vec3_t	normal;
-	int		lightFlags;		// bit i set means: dynlight i affects surface
 } polyvert_t;
 
 typedef struct glpoly_s

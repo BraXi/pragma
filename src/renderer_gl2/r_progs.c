@@ -70,7 +70,6 @@ static glprogloc_t progVertAtrribLocs[NUM_VALOCS] =
 	{ VALOC_NORMAL,			"inNormal",			F_VECTOR3 },
 	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR2 },
 	{ VALOC_LMTEXCOORD,		"inLightMapCoord",	F_VECTOR2 }, // BSP ONLY
-	{ VALOC_LIGHTFLAGS,		"inLightFlags",		F_INT }, // BSP ONLY
 	{ VALOC_ALPHA,			"inAlpha",			F_FLOAT }, // BSP ONLY
 	{ VALOC_COLOR,			"inVertCol",		F_VECTOR3 },
 

@@ -205,6 +205,11 @@ void GL_SetDefaultState( void )
 
 	glClearColor (1,0, 0.5 , 0.5);
 	R_SetCullFace(GL_FRONT);
+
+	R_MultiTextureBind(TMU_LIGHTMAP, 0);
+	glEnable(GL_TEXTURE_2D);
+
+	R_MultiTextureBind(TMU_DIFFUSE, 0);
 	glEnable(GL_TEXTURE_2D);
 
 	R_AlphaTest(true);

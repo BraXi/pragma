@@ -422,7 +422,6 @@ void R_DrawDebugLines(void)
 			break;
 		}
 	}
-	R_UnbindProgram();
 	R_EndLinesRendering();
 
 #if 1

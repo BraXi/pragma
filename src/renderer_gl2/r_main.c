@@ -67,6 +67,9 @@ extern void R_RenderToFBO(qboolean enable);
 extern void R_DrawDebugLines(void);
 extern void R_DrawEntityModel(rentity_t* ent);
 
+extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+extern int R_GetFontHeight(int fontId);
+
 /*
 =================
 R_CullBox
@@ -81,7 +84,7 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 	if (r_nocull->value)
 		return false;
 
-	for (i=0; i < 4; i++)
+	for (i = 0; i < 4; i++)
 		if ( BOX_ON_PLANE_SIDE(mins, maxs, &frustum[i]) == 2)
 			return true;
 
@@ -501,19 +504,15 @@ void R_RenderView (refdef_t *fd)
 	if (!r_worldmodel && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 		ri.Error (ERR_DROP, "R_RenderView: NULL worldmodel");
 
-	//if (r_speeds->value)
-	//{
-		// clear performance counters
-		rperf.brush_polys = 0;
-		rperf.brush_tris = 0;
-		rperf.brush_drawcalls = 0;
+	// clear performance counters
+	rperf.brush_polys = 0;
+	rperf.brush_tris = 0;
+	rperf.brush_drawcalls = 0;
+	rperf.alias_tris = 0;
+	rperf.alias_drawcalls = 0;
 
-		rperf.alias_tris = 0;
-		rperf.alias_drawcalls = 0;
-
-		for(int i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
-			rperf.texture_binds[i] = 0;
-	//}
+	for(int i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
+		rperf.texture_binds[i] = 0;
 
 	R_StartProfiling();
 	R_PushDlights ();
@@ -585,22 +584,19 @@ void R_BeginOrthoProjection()
 void R_NewDrawFill(rect_t pos, rgba_t color);
 static void R_DrawPerfCounters()
 {
+	float x, y, h;
+	vec4_t color;
+	float fontscale;
+
 	if (r_speeds->value <= 1.0f)
 		return;
-
-	float color[4];
 
 	Vector4Set(color, 0, 0, 0, 0.35f);
 	
 	R_ProgUniform4f(LOC_COLOR4, 0, 0, 0, 0.5);
 	R_DrawFill(vid.width-175, 25, 175, 220);
 
-	float x, y, h;
-
-	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
-	extern int R_GetFontHeight(int fontId);
-
-	float fontscale = 0.25;
+	fontscale = 0.25;
 	x = vid.width - 10;
 	y = 32;
 	h = R_GetFontHeight(0) * fontscale;

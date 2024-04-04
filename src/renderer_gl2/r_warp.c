@@ -185,8 +185,6 @@ static void R_SubdividePolygon(int numverts, float *verts)
 
 		Vector2Set(poly->verts[i + 1].texCoord, s, t);
 		VectorCopy(normal, poly->verts[i + 1].normal);
-
-		poly->verts[i + 1].lightFlags = 0;
 	}
 
 	VectorScale(total, (1.0 / numverts), poly->verts[0].pos);

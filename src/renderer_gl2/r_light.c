@@ -8,7 +8,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-// r_light.c
+// r_light.c - dynamic lights and light sampling from lightmap
 
 #include "r_local.h"
 
@@ -17,89 +17,30 @@ int	r_dlightframecount;
 #define	DLIGHT_CUTOFF	64
 
 /*
-=============================================================================
-
-DYNAMIC LIGHTS BLEND RENDERING
-
-=============================================================================
-*/
-
-void R_RenderDlight (dlight_t *light)
-{
-#if 0
-	int		i, j;
-	float	a;
-	vec3_t	v;
-	float	rad;
-
-	rad = light->intensity * 0.35;
-
-	VectorSubtract (light->origin, r_origin, v);
-
-	glBegin (GL_TRIANGLE_FAN);
-	glColor3f (light->color[0]*0.2, light->color[1]*0.2, light->color[2]*0.2);
-	for (i=0 ; i<3 ; i++)
-		v[i] = light->origin[i] - vpn[i]*rad;
-	glVertex3fv (v);
-	glColor3f (0,0,0);
-	for (i=16 ; i>=0 ; i--)
-	{
-		a = i/16.0 * M_PI*2;
-		for (j=0 ; j<3 ; j++)
-			v[j] = light->origin[j] + vright[j]*cos(a)*rad
-				+ vup[j]*sin(a)*rad;
-		glVertex3fv (v);
-	}
-	glEnd ();
-#endif
-}
-
-
-/*
 =============
 R_RenderDlights
 =============
 */
-
-void R_RenderDlights (void)
+void R_RenderDlights(void)
 {
 #if 0
 	int		i;
-	dlight_t	*l;
-
-	r_dlightframecount = r_framecount + 1;	// because the count hasn't
-											//  advanced yet for this frame
-	R_WriteToDepthBuffer(GL_FALSE);
-	glDisable (GL_TEXTURE_2D);
-	R_Blend(true);
-	R_BlendFunc(GL_ONE, GL_ONE);
+	dlight_t* l;
 
 	l = r_newrefdef.dlights;
-	for (i=0 ; i<r_newrefdef.num_dlights ; i++, l++)
-		R_RenderDlight (l);
-
-	glColor3f (1,1,1);
-	R_Blend(false);
-	glEnable (GL_TEXTURE_2D);
-	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	R_WriteToDepthBuffer(GL_TRUE);
+	for (i = 0; i < r_newrefdef.num_dlights; i++, l++)
+	{
+	}
 #endif
 }
 
-/*
-=============================================================================
 
-DYNAMIC LIGHTS
-
-=============================================================================
-*/
 
 /*
 =============
 R_MarkLights
 =============
 */
-
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
 {
 	cplane_t	*splitplane;
@@ -159,6 +100,64 @@ void R_PushDlights (void)
 	}
 
 	// braxi -- moved dlight shader updates to R_UpdateCommonProgUniforms()
+}
+
+/*
+=================
+R_SendDynamicLightsToCurrentProgram
+=================
+*/
+void R_SendDynamicLightsToCurrentProgram()
+{
+	dlight_t* dlight;
+	int			i, j;
+	vec4_t		dl_pos_and_rad[MAX_DLIGHTS]; // holds xyz + radius for each light
+	vec4_t		dl_dir_and_cutoff[MAX_DLIGHTS]; // holds xyz direction + spot cutoff for each light
+	vec3_t		dl_colors[MAX_DLIGHTS];
+	int			numDynLights;
+
+	if (!r_worldmodel || !R_UsingProgram())
+		return;
+
+	numDynLights = !r_dynamic->value ? 0 : r_newrefdef.num_dlights; // no dlights when r_dynamic is off
+
+	dlight = r_newrefdef.dlights;
+	for (i = 0; i < numDynLights; i++, dlight++)
+	{
+		for (j = 0; j < 3; j++)
+			dl_pos_and_rad[i][j] = dlight->origin[j];
+		dl_pos_and_rad[i][3] = dlight->intensity;
+
+		//Notes about spotlights:
+		//xyz must be normalized. (this could be done in shader if really needed)
+		//xyz should probably be valid, even if spotlights aren't being used.
+		//spot cutoff is in the range -1 (infinitely small cone) to 1 (disable spotlight entirely)
+
+#if 0 // test
+		srand(i);
+		for (j = 0; j < 3; j++)
+		{
+			dl_dir_and_cutoff[i][j] = rand() / (float)RAND_MAX * 2 - 1;
+			VectorNormalize(dl_dir_and_cutoff[j]);
+		}
+		dl_dir_and_cutoff[i][3] = -rand() / (float)RAND_MAX;
+#else		
+		//In the absence of spotlights, set these to values that disable spotlights
+		dl_dir_and_cutoff[i][0] = dl_dir_and_cutoff[i][3] = 1.f;
+		dl_dir_and_cutoff[i][1] = dl_dir_and_cutoff[i][2] = 0.f;
+#endif
+		VectorCopy(dlight->color, dl_colors[i]);
+	}
+
+	//	R_BindProgram(r_fastworld->value ? GLPROG_WORLD_NEW : GLPROG_WORLD);
+	R_ProgUniform1i(LOC_DLIGHT_COUNT, numDynLights);
+	if (numDynLights > 0)
+	{
+		R_ProgUniform3fv(LOC_DLIGHT_COLORS, numDynLights, &dl_colors[0][0]);
+		R_ProgUniform4fv(LOC_DLIGHT_POS_AND_RAD, numDynLights, &dl_pos_and_rad[0][0]);
+		R_ProgUniform4fv(LOC_DLIGHT_DIR_AND_CUTOFF, numDynLights, &dl_dir_and_cutoff[0][0]);
+	}
+	//	R_UnbindProgram();
 }
 
 
@@ -353,136 +352,3 @@ void R_LightPoint(vec3_t p, vec3_t color)
 	// scale the light color with r_modulate cvar
 	VectorScale (color, r_modulate->value, color);
 }
-
-
-//===================================================================
-
-#if 0
-
-#ifdef DECOUPLED_LM
-#define BLOCKLIGHT_DIMS (256*256)
-#else
-#define BLOCKLIGHT_DIMS (34*34)
-#endif
-
-static float s_blocklights[BLOCKLIGHT_DIMS * 3];
-/*
-===============
-R_AddDynamicLights
-
-FIXME: The higher lightmap resolution is the more edgy dlights are
-===============
-*/
-static void R_AddDynamicLights(msurface_t *surf)
-{
-	int			lightNum;
-	int			sd, td;
-	float		fdist, frad, fminlight;
-	vec3_t		impact, local;
-	int			s, t;
-	int			i;
-	int			smax, tmax;
-	mtexinfo_t	*tex;
-	dlight_t	*dl;
-	float		*pfBL;
-	float		fsacc, ftacc;
-	vec3_t		lightofs; //Spike: light surfaces based upon where they are now instead of their default position.
-
-	smax = (surf->extents[0] >> surf->lmshift) + 1;
-	tmax = (surf->extents[1] >> surf->lmshift) + 1;
-
-	tex = surf->texinfo;
-
-	for (lightNum = 0; lightNum < r_newrefdef.num_dlights; lightNum++)
-	{
-		if ( !(surf->dlightbits & (1<<lightNum) ) ) // generaly unsafe waiting for explosion heh
-			continue;		// not lit by this light
-
-		dl = &r_newrefdef.dlights[lightNum];
-		frad = dl->intensity;
-
-		// Spike's fix from QS
-		VectorSubtract(dl->origin, pCurrentRefEnt->origin, lightofs);
-		fdist = DotProduct(lightofs, surf->plane->normal) - surf->plane->dist;
-
-		frad -= fabs(fdist); // frad is now the highest intensity on the plane
-			
-		fminlight = DLIGHT_CUTOFF;	// FIXME: make configurable?
-		if (frad < fminlight)
-			continue;
-		fminlight = frad - fminlight;
-
-		for( i = 0 ; i < 3 ; i++)
-		{
-			// Spike's fix from QS
-			impact[i] = lightofs[i] - surf->plane->normal[i] * fdist;
-		}
-
-#ifdef DECOUPLED_LM
-		local[0] = DotProduct(impact, surf->lmvecs[0]) + surf->lmvecs[0][3] - surf->texturemins[0];
-		local[1] = DotProduct(impact, surf->lmvecs[1]) + surf->lmvecs[1][3] - surf->texturemins[1];
-#else
-		local[0] = DotProduct (impact, tex->vecs[0]) + tex->vecs[0][3] - surf->texturemins[0];
-		local[1] = DotProduct (impact, tex->vecs[1]) + tex->vecs[1][3] - surf->texturemins[1];
-#endif
-
-		pfBL = s_blocklights;
-
-		for (t = 0, ftacc = 0; t < tmax; t++, ftacc += (1 << surf->lmshift))
-		{
-			td = local[1] - ftacc;
-
-			if ( td < 0 )
-				td = -td;
-
-#ifdef DECOUPLED_LM
-			td *= surf->lmvlen[1];
-#endif
-
-			for (s = 0, fsacc = 0; s < smax; s++, fsacc += (1 << surf->lmshift), pfBL += 3)
-			{
-				sd = Q_ftol( local[0] - fsacc );
-
-				if ( sd < 0 )
-					sd = -sd;
-
-#ifdef DECOUPLED_LM
-				sd *= surf->lmvlen[0];
-#endif
-
-				if (sd > td)
-					fdist = sd + (td>>1);
-				else
-					fdist = td + (sd>>1);
-
-				if ( fdist < fminlight )
-				{
-					float diff = frad - fdist; // shamefuly inspired by yquake2
-
-					pfBL[0] += diff * dl->color[0];
-					pfBL[1] += diff * dl->color[1];
-					pfBL[2] += diff * dl->color[2];
-				}
-			}
-		}
-	}
-}
-
-
-
-/*
-===============
-R_LightMap_SetCacheStateForSurf
-===============
-*/
-void R_LightMap_SetCacheStateForSurf( msurface_t *surf )
-{
-	int maps;
-
-	for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255; maps++)
-	{
-		surf->cached_light[maps] = r_newrefdef.lightstyles[surf->styles[maps]].white;
-	}
-}
-#endif
-

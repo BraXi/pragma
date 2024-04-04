@@ -3,13 +3,11 @@ An attempt to bring renderer to OpenGL 2.1, while making it many times faster th
 
 
 ## TODO:
-- add per pixel lighting
 - anistropic texture filtering
 - entities should be lit by lightgrid instead of lightmap pixel underneath them (which is awful for objects in air) -- add support for `LIGHTGRID_OCTREE`
 - setup projection without immediate calls
 - get rid of IM translation/rotation -- calculate matrices and pass them to shaders
 - convert remaining code that does immediate rendering (glBegin/glEnd) to vertex buffers
-- render brushmodels and entirity of world with vertexbuffers
 - local entities rendering and culling based on PVS ?
 - alphatest is gone in newer opengl, do it in shaders, remove calls to `glAlphaTest`
 - exponential fog + make it cull objects that are completly occluded
@@ -17,13 +15,17 @@ An attempt to bring renderer to OpenGL 2.1, while making it many times faster th
 - add `r_picmip` back
 - particles can be optionaly lit
 - sky rendering code is awful
+- add beams back
 
 ## PARTIALY DONE:
+- dynamic lights -- spotlights incorectly lit bmodels and entities, need to unify world and entity dlighting
 - use GLSL shaders for diferent gemoetries - sky [partial], models [done], warps [-], world [partial], gui [done], particles [done], etc..
 - move viewblend to shader (problem: it looks worse)
 - multitexture support -- currently only two TMUs, we need more forl ighting changes
 
 ## DONE:
+- render brushmodels and entirity of world with vertexbuffers
+- add per pixel lighting
 - move lightstyles to GPU
 - upload all lightmaps to GPU and not waste cpu clocks for updates (aitest.bsp ~120fps with old code vs ~370fps now on my machine)
 - render `GL_POLYGON` as `GL_TRIANGLE_STRIP`

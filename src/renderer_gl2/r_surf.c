@@ -632,8 +632,6 @@ void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 		vert->alpha = alpha;
 
 		R_LightMap_TexCoordsForSurf(surf, vert, vec);
-
-		vert->lightFlags = 0;
 	}
 }
 
