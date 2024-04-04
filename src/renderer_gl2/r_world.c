@@ -686,6 +686,7 @@ void R_DynamicLightsToProg()
 	dlight_t* dlight;
 	int			i, j;
 	vec4_t		dl_pos_and_rad[MAX_DLIGHTS]; // holds xyz + radius for each light
+	vec4_t		dl_dir_and_cutoff[MAX_DLIGHTS]; // holds xyz direction + spot cutoff for each light
 	vec3_t		dl_colors[MAX_DLIGHTS];
 	int			numDynLights;
 
@@ -697,9 +698,23 @@ void R_DynamicLightsToProg()
 	dlight = r_newrefdef.dlights;
 	for (i = 0; i < numDynLights; i++, dlight++)
 	{
+		srand(i);
 		for (j = 0; j < 3; j++)
 			dl_pos_and_rad[i][j] = dlight->origin[j];
 		dl_pos_and_rad[i][3] = dlight->intensity;
+
+		//Notes about spotlights:
+		//xyz must be normalized. (this could be done in shader if really needed)
+		//xyz should probably be valid, even if spotlights aren't being used.
+		//spot cutoff is in the range -1 (infinitely small cone) to 1 (disable spotlight entirely)
+		/*for (j = 0; j < 3; j++)
+			dl_dir_and_cutoff[i][j] = rand() / (float)RAND_MAX * 2 - 1;
+		VectorNormalize(dl_dir_and_cutoff);
+		dl_dir_and_cutoff[i][3] = -rand() / (float)RAND_MAX;*/
+		//In the absence of spotlights, set these to values that disable spotlights
+		dl_dir_and_cutoff[i][0] = dl_dir_and_cutoff[i][3] = 1.f;
+		dl_dir_and_cutoff[i][1] = dl_dir_and_cutoff[i][2] = 0.f;
+		
 		VectorCopy(dlight->color, dl_colors[i]);
 	}
 
@@ -709,6 +724,7 @@ void R_DynamicLightsToProg()
 	{
 		R_ProgUniform3fv(LOC_DLIGHT_COLORS, numDynLights, &dl_colors[0][0]);
 		R_ProgUniform4fv(LOC_DLIGHT_POS_AND_RAD, numDynLights, &dl_pos_and_rad[0][0]);
+		R_ProgUniform4fv(LOC_DLIGHT_DIR_AND_CUTOFF, numDynLights, &dl_dir_and_cutoff[0][0]);
 	}
 	R_UnbindProgram();
 }
