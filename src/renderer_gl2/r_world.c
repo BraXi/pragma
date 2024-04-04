@@ -698,7 +698,6 @@ void R_DynamicLightsToProg()
 	dlight = r_newrefdef.dlights;
 	for (i = 0; i < numDynLights; i++, dlight++)
 	{
-		srand(i);
 		for (j = 0; j < 3; j++)
 			dl_pos_and_rad[i][j] = dlight->origin[j];
 		dl_pos_and_rad[i][3] = dlight->intensity;
@@ -707,6 +706,7 @@ void R_DynamicLightsToProg()
 		//xyz must be normalized. (this could be done in shader if really needed)
 		//xyz should probably be valid, even if spotlights aren't being used.
 		//spot cutoff is in the range -1 (infinitely small cone) to 1 (disable spotlight entirely)
+		//srand(i);
 		/*for (j = 0; j < 3; j++)
 			dl_dir_and_cutoff[i][j] = rand() / (float)RAND_MAX * 2 - 1;
 		VectorNormalize(dl_dir_and_cutoff);
