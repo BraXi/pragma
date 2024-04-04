@@ -290,6 +290,9 @@ R_DeleteVertexBuffers
 */
 void R_DeleteVertexBuffers(vertexbuffer_t* vbo)
 {
+	if (!glDeleteBuffers)
+		return; // no gl context
+
 	if (vbo->vboBuf)
 		glDeleteBuffers(1, &vbo->vboBuf);
 

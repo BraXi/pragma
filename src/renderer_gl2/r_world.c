@@ -222,7 +222,6 @@ static void R_World_BeginRendering()
 	}
 
 	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
-	R_ProgUniform1f(LOC_TIME, r_newrefdef.time);
 	R_ProgUniform1f(LOC_WARPSTRENGTH, 0.f);
 	R_ProgUniform2f(LOC_FLOWSTRENGTH, 0.f, 0.f);
 
@@ -678,10 +677,10 @@ void R_DrawWorld_NEW()
 
 /*
 =================
-R_DynamicLightsToProg
+R_SendDynamicLightsToCurrentProgram
 =================
 */
-void R_DynamicLightsToProg()
+void R_SendDynamicLightsToCurrentProgram()
 {
 	dlight_t* dlight;
 	int			i, j;
@@ -690,7 +689,7 @@ void R_DynamicLightsToProg()
 	vec3_t		dl_colors[MAX_DLIGHTS];
 	int			numDynLights;
 
-	if (!r_worldmodel)
+	if (!r_worldmodel || !R_UsingProgram())
 		return;
 
 	numDynLights = !r_dynamic->value ? 0 : r_newrefdef.num_dlights; // no dlights when r_dynamic is off
@@ -718,7 +717,7 @@ void R_DynamicLightsToProg()
 		VectorCopy(dlight->color, dl_colors[i]);
 	}
 
-	R_BindProgram(r_fastworld->value ? GLPROG_WORLD_NEW : GLPROG_WORLD);
+//	R_BindProgram(r_fastworld->value ? GLPROG_WORLD_NEW : GLPROG_WORLD);
 	R_ProgUniform1i(LOC_DLIGHT_COUNT, numDynLights);
 	if (numDynLights > 0)
 	{
@@ -726,5 +725,5 @@ void R_DynamicLightsToProg()
 		R_ProgUniform4fv(LOC_DLIGHT_POS_AND_RAD, numDynLights, &dl_pos_and_rad[0][0]);
 		R_ProgUniform4fv(LOC_DLIGHT_DIR_AND_CUTOFF, numDynLights, &dl_dir_and_cutoff[0][0]);
 	}
-	R_UnbindProgram();
+//	R_UnbindProgram();
 }

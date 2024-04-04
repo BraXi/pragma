@@ -429,6 +429,34 @@ static qboolean R_LinkProgram(glprog_t* prog)
 	return true;
 }
 
+
+/*
+=================
+R_UpdateCommonProgUniforms
+
+Called each frame to update common uniforms in all shader programs
+Currently it does update time and dlights in shaders which use these uniforms
+=================
+*/
+void R_UpdateCommonProgUniforms()
+{
+	glprog_t* prog;
+	int i;
+
+	prog = glprogs;
+	for (i = 0; i < MAX_GLPROGS; i++, prog++)
+	{
+		if (!prog->isValid)
+			continue;
+
+		R_BindProgram(prog->index);
+		R_ProgUniform1f(LOC_TIME, r_newrefdef.time);
+
+		R_SendDynamicLightsToCurrentProgram();
+	}
+	R_UnbindProgram();
+}
+
 /*
 =================
 R_FindUniformLocations
@@ -567,6 +595,9 @@ R_FreePrograms
 void R_FreePrograms()
 {
 	glprog_t* prog;
+
+	if (!glUseProgram)
+		return; // no opengl context
 
 	R_UnbindProgram();
 

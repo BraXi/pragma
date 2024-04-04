@@ -140,7 +140,6 @@ void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
 	R_MarkLights(light, lightorg, bit, node->children[1]);
 }
 
-void R_DynamicLightsToProg();
 /*
 =============
 R_PushDlights
@@ -159,7 +158,7 @@ void R_PushDlights (void)
 		R_MarkLights(l, l->origin, 1 << i, r_worldmodel->nodes);
 	}
 
-	R_DynamicLightsToProg();
+	// braxi -- moved dlight shader updates to R_UpdateCommonProgUniforms()
 }
 
 

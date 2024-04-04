@@ -604,8 +604,9 @@ void R_FreeTextures()
 		if (!image->registration_sequence)
 			continue;		// free image_t slot
 
-		// free it
-		glDeleteTextures (1, &image->texnum);
+		
+		if(glDeleteTextures) // check if gl context exists
+			glDeleteTextures (1, &image->texnum); // free it
 		memset (image, 0, sizeof(*image));
 	}
 }

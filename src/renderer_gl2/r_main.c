@@ -529,6 +529,7 @@ void R_RenderView (refdef_t *fd)
 
 	R_World_MarkLeaves ();	// done here so we know if we're in water
 
+	R_UpdateCommonProgUniforms();
 
 	R_ClearFBO(); 
 	R_RenderToFBO(true); // begin rendering to fbo

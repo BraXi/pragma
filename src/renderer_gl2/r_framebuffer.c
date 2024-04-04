@@ -144,6 +144,9 @@ R_FreeFrameBuffer
 */
 void R_FreeFrameBuffer()
 {
+	if (!glDeleteTextures)
+		return; // no gl context
+
 	glDeleteTextures(1, &fbo_tex_diffuse);
 //	glDeleteTextures(1, &fbo_tex_depth);
 

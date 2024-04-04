@@ -195,10 +195,15 @@ void R_ProgUniform4fv(int uniform, int count, float* val);
 int R_GetProgAttribLoc(glprogLoc_t attrib);
 char* R_GetProgAttribName(glprogLoc_t attrib);
 char* R_GetCurrentProgramName();
-
 qboolean R_UsingProgram();
+void R_UpdateCommonProgUniforms();
+void R_ShaderList_f(void);
 
-void	R_ShaderList_f(void);
+
+//
+// r_world.c
+//
+void R_SendDynamicLightsToCurrentProgram();
 
 //===================================================================
 
