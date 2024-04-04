@@ -920,7 +920,8 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 		}
 	}
 
-	R_LightMap_EndBuilding();
+
+	R_LightMap_EndBuilding ();
 }
 
 

@@ -60,6 +60,7 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_DLIGHT_COUNT,		"dlights",			F_INT },
 	{ LOC_DLIGHT_COLORS,	"dlight_colors",	F_VECTOR3 },
 	{ LOC_DLIGHT_POS_AND_RAD, "dlight_pos_and_rad",	F_VECTOR4 },
+	{ LOC_DLIGHT_DIR_AND_CUTOFF, "dlight_dir_and_cutoff",	F_VECTOR4 },
 };
 
 /* vertex attributes */
