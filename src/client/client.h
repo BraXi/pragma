@@ -461,7 +461,8 @@ void V_RenderView( float stereo_separation );
 void V_AddEntity (rentity_t *ent);
 void V_AddDebugPrimitive(debugprimitive_t *obj);
 void V_AddParticle (vec3_t org, vec3_t color, float alpha, vec2_t size);
-void V_AddLight (vec3_t org, float intensity, float r, float g, float b);
+void V_AddPointLight(vec3_t org, float intensity, float r, float g, float b);
+void V_AddSpotLight(vec3_t org, vec3_t dir, float intensity, float cutoff, float r, float g, float b);
 void V_AddLightStyle (int style, float r, float g, float b);
 
 //

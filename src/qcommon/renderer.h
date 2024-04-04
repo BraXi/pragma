@@ -98,12 +98,23 @@ typedef struct rentity_s
 	vec3_t		axis[3];
 } rentity_t;
 
+typedef enum
+{
+	DL_POINTLIGHT,
+	DL_SPOTLIGHT
+} dLightType_t;
 
 typedef struct
 {
-	vec3_t	origin;
-	vec3_t	color;
-	float	intensity;
+	dLightType_t	type;
+
+	vec3_t			origin;
+	vec3_t			color;
+	float			intensity;
+
+	// spot lights
+	vec3_t			dir;
+	float			cutoff;
 } dlight_t;
 
 typedef struct
@@ -193,7 +204,7 @@ typedef struct
 	// Skins and images need to be differentiated, because skins
 	// are flood filled to eliminate mip map edge errors, and pics have
 	// an implicit "pics/" prepended to the name. (a pic name that starts with a
-	// slash will not use the "pics/" prefix or the ".pcx" postfix)
+	// slash will not use the "pics/" prefix or the ".tga" postfix)
 	void	(*BeginRegistration)(const char *map);
 	void	(*EndRegistration)();
 

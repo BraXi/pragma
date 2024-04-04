@@ -19,6 +19,7 @@ typedef struct
 
 typedef struct
 {
+	dLightType_t type;
 	int		key;				// so entities can reuse same entry
 	vec3_t	color;
 	vec3_t	origin;
@@ -26,6 +27,9 @@ typedef struct
 	float	die;				// stop lighting after this time
 	float	decay;				// drop this each second
 	float	minlight;			// don't add when contributing less
+
+	vec3_t	dir;
+	float	cutoff;
 } cdlight_t;
 
 typedef struct localEntity_s
@@ -47,8 +51,8 @@ typedef struct localEntity_s
 //
 void CG_ClearDynamicLights();
 cdlight_t* CG_AllocDynamicLight(int key);
-void CL_NewDynamicLight(int key, float x, float y, float z, float radius, float time);
-
+void CL_NewDynamicPointLight(int key, float x, float y, float z, float radius, float time);
+void CL_NewDynamicSpotLight(int key, float x, float y, float z, vec3_t dir, float radius, float cutoff, float time);
 
 //
 // cg_lightstyles.c

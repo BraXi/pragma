@@ -124,9 +124,14 @@ void R_SendDynamicLightsToCurrentProgram()
 	dlight = r_newrefdef.dlights;
 	for (i = 0; i < numDynLights; i++, dlight++)
 	{
+//		if (dlight->intensity <= DLIGHT_CUTOFF)
+//			continue;
+
 		for (j = 0; j < 3; j++)
 			dl_pos_and_rad[i][j] = dlight->origin[j];
 		dl_pos_and_rad[i][3] = dlight->intensity;
+
+		VectorCopy(dlight->color, dl_colors[i]);
 
 		//Notes about spotlights:
 		//xyz must be normalized. (this could be done in shader if really needed)
@@ -135,18 +140,33 @@ void R_SendDynamicLightsToCurrentProgram()
 
 #if 0 // test
 		srand(i);
+		dlight->type = DL_SPOTLIGHT;
 		for (j = 0; j < 3; j++)
 		{
 			dl_dir_and_cutoff[i][j] = rand() / (float)RAND_MAX * 2 - 1;
-			VectorNormalize(dl_dir_and_cutoff[j]);
+			VectorNormalize(dl_dir_and_cutoff[i]);
 		}
-		dl_dir_and_cutoff[i][3] = -rand() / (float)RAND_MAX;
-#else		
-		//In the absence of spotlights, set these to values that disable spotlights
-		dl_dir_and_cutoff[i][0] = dl_dir_and_cutoff[i][3] = 1.f;
-		dl_dir_and_cutoff[i][1] = dl_dir_and_cutoff[i][2] = 0.f;
+		float coff = -rand() / (float)RAND_MAX;
+		dl_dir_and_cutoff[i][3] = -0.95;
+#else
+		if (dlight->type == DL_SPOTLIGHT)
+		{
+			for (j = 0; j < 3; j++)
+			{
+				dl_dir_and_cutoff[i][j] = dlight->dir[j];
+				//VectorNormalize(dl_dir_and_cutoff[i]);
+			}
+
+			dl_dir_and_cutoff[i][3] = dlight->cutoff;
+		}
+		else
+		{
+			//In the absence of spotlights, set these to values that disable spotlights
+			dl_dir_and_cutoff[i][0] = dl_dir_and_cutoff[i][3] = 1.f;
+			dl_dir_and_cutoff[i][1] = dl_dir_and_cutoff[i][2] = 0.f;
+		}
 #endif
-		VectorCopy(dlight->color, dl_colors[i]);
+
 	}
 
 	//	R_BindProgram(r_fastworld->value ? GLPROG_WORLD_NEW : GLPROG_WORLD);
@@ -339,6 +359,9 @@ void R_LightPoint(vec3_t p, vec3_t color)
 		dl = r_newrefdef.dlights;
 		for (lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
 		{
+			if (dl->type == DL_SPOTLIGHT)
+				continue; // FIXME,
+
 			VectorSubtract(pCurrentRefEnt->origin, dl->origin, dist); // distance
 			add = dl->intensity - VectorLength(dist);
 			add *= (1.0 / 256);

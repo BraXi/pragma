@@ -19,7 +19,7 @@ DYNAMIC LIGHT MANAGEMENT
 ==============================================================
 */
 
-cdlight_t		cl_dlights[MAX_DLIGHTS];
+static cdlight_t	cl_dlights[MAX_DLIGHTS];
 
 /*
 ================
@@ -77,21 +77,42 @@ cdlight_t* CG_AllocDynamicLight(int key)
 
 /*
 ===============
-CL_NewDynamicLight
+CL_NewDynamicPointLight
 ===============
 */
-void CL_NewDynamicLight(int key, float x, float y, float z, float radius, float time)
+void CL_NewDynamicPointLight(int key, float x, float y, float z, float radius, float time)
 {
 	cdlight_t* dl;
 
 	dl = CG_AllocDynamicLight(key);
-	dl->origin[0] = x;
-	dl->origin[1] = y;
-	dl->origin[2] = z;
+	dl->type = DL_POINTLIGHT;
+
+	VectorSet(dl->origin, x, y, z);
 	dl->radius = radius;
 	dl->die = cl.time + time;
 }
 
+/*
+===============
+CL_NewDynamicSpotLight
+
+dir must be normalized
+===============
+*/
+void CL_NewDynamicSpotLight(int key, float x, float y, float z, vec3_t dir, float radius, float cutoff, float time)
+{
+	cdlight_t* dl;
+
+	dl = CG_AllocDynamicLight(key);
+	dl->type = DL_SPOTLIGHT;
+
+	VectorSet(dl->origin, x, y, z);
+	dl->radius = radius;
+	dl->die = cl.time + time;
+
+	VectorCopy(dir, dl->dir);
+	dl->cutoff = cutoff;
+}
 
 /*
 ===============
@@ -136,6 +157,6 @@ void CG_AddDynamicLights(void)
 	{
 		if (!dl->radius)
 			continue;
-		V_AddLight(dl->origin, dl->radius, dl->color[0], dl->color[1], dl->color[2]);
+		V_AddPointLight(dl->origin, dl->radius, dl->color[0], dl->color[1], dl->color[2]);
 	}
 }

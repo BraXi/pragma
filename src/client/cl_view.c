@@ -115,28 +115,51 @@ void V_AddParticle (vec3_t org, vec3_t color, float alpha, vec2_t size)
 
 /*
 =====================
-V_AddLight
-
+V_AddPointLight
 =====================
 */
-void V_AddLight (vec3_t org, float intensity, float r, float g, float b)
+void V_AddPointLight(vec3_t org, float intensity, float r, float g, float b)
 {
 	dlight_t	*dl;
 
 	if (r_numdlights >= MAX_DLIGHTS)
 	{
-		Com_DPrintf(DP_REND, "V_AddLight: r_numdlights >= MAX_DLIGHTS\n");
+		Com_DPrintf(DP_REND, "V_AddPointLight: r_numdlights >= MAX_DLIGHTS\n");
 		return;
 	}
 
 	dl = &r_dlights[r_numdlights++];
+	dl->type = DL_POINTLIGHT;
+
 	VectorCopy (org, dl->origin);
 	dl->intensity = intensity;
-	dl->color[0] = r;
-	dl->color[1] = g;
-	dl->color[2] = b;
+	VectorSet(dl->color, r, g, b);
 }
 
+/*
+=====================
+V_AddSpotLight
+=====================
+*/
+void V_AddSpotLight(vec3_t org, vec3_t dir, float intensity, float cutoff, float r, float g, float b)
+{
+	dlight_t* dl;
+
+	if (r_numdlights >= MAX_DLIGHTS)
+	{
+		Com_DPrintf(DP_REND, "V_AddSpotLight: r_numdlights >= MAX_DLIGHTS\n");
+		return;
+	}
+
+	dl = &r_dlights[r_numdlights++];
+	dl->type = DL_SPOTLIGHT;
+
+	VectorCopy(org, dl->origin);
+	VectorCopy(dir, dl->dir);
+	dl->intensity = intensity;
+	dl->cutoff = cutoff;
+	VectorSet(dl->color, r, g, b);
+}
 
 /*
 =====================
@@ -237,12 +260,33 @@ static void V_TestLights()
 	float		f, r;
 	dlight_t	*dl;
 
+	if (!cl_testlights->value)
+		return;
+
+	if (cl_testlights->value > 1.0f)
+	{
+		//r_numdlights = 1;
+
+		dl = &r_dlights[r_numdlights++];
+		dl->type = DL_SPOTLIGHT;
+
+		for (j = 0; j < 3; j++)
+			dl->origin[j] = cl.refdef.view.origin[j] + (cl.v_forward[j] * 10);
+
+		VectorSet(dl->color, 1.0f, 1.0f, 1.0f);
+		dl->intensity = 600;
+		dl->cutoff = -0.95f;
+		VectorCopy(cl.v_forward, dl->dir);
+		return;
+	}
+
+	memset(r_dlights, 0, sizeof(r_dlights));
 	r_numdlights = MAX_DLIGHTS;
-	memset (r_dlights, 0, sizeof(r_dlights));
 
 	for (i = 0; i < r_numdlights; i++)
 	{
 		dl = &r_dlights[i];
+		dl->type = DL_POINTLIGHT;
 
 		r = 64 * ( (i%4) - 1.5 );
 		f = 64 * (i/4) + 128;
@@ -493,9 +537,8 @@ void V_RenderView(float stereo_separation)
 
 		if (cl_testentities->value)
 			V_TestEntities ();
-
-		if (cl_testlights->value)
-			V_TestLights ();
+		
+		V_TestLights ();
 
 		if (cl_testblend->value)
 		{

@@ -221,7 +221,7 @@ static inline void CL_EntityAddParticleTrails(clentity_t* clent, entity_state_t*
 	if (effects & EF_ROCKET)
 	{
 		CG_PartFX_RocketTrail(clent->lerp_origin, refent->origin, clent);
-		V_AddLight(refent->origin, 128, 1.000000, 0.670588, 0.027451);
+		V_AddPointLight(refent->origin, 128, 1.000000, 0.670588, 0.027451);
 	}
 	/* diminishing blood trail */
 	else if (effects & EF_GIB)
