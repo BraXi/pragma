@@ -49,8 +49,9 @@ vec3_t	vpn;
 vec3_t	vright;
 vec3_t	r_origin;
 
-float	r_world_matrix[16];
-float	r_base_world_matrix[16];
+mat4_t	r_projection_matrix;
+mat4_t	r_world_matrix;
+mat4_t	r_local_matrix;
 
 vertexbuffer_t* vb_particles;
 //
@@ -100,11 +101,11 @@ STUPID QUAKE BUG included ;)
 */
 void R_RotateForEntity (rentity_t *e)
 {
-    glTranslatef (e->origin[0],  e->origin[1],  e->origin[2]);
-
-    glRotatef (e->angles[1],  0, 0, 1);
-    glRotatef (-e->angles[0],  0, 1, 0);
-    glRotatef (-e->angles[2],  1, 0, 0);
+	Mat4MakeIdentity(r_local_matrix);
+	Mat4Translate(r_local_matrix, e->origin[0], e->origin[1], e->origin[2]);
+	Mat4RotateAroundZ(r_local_matrix, e->angles[1]);
+	Mat4RotateAroundY(r_local_matrix, -e->angles[0]);
+	Mat4RotateAroundX(r_local_matrix, -e->angles[2]);
 }
 
 
@@ -191,6 +192,15 @@ void R_DrawEntitiesOnList (void)
 
 	if (!r_drawentities->value)
 		return;
+
+	//Initialize some shaders that will be used multiple times to avoid repeatedly sending the same data,
+	// because OpenGL 2's uniform model is amazing.
+	R_BindProgram(GLPROG_ALIAS);
+	R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
+	R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
+	R_BindProgram(GLPROG_SPRITE);
+	R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
+	R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
 
 	// draw non-transparent first
 	for (i = 0; i < r_newrefdef.num_entities; i++)
@@ -396,18 +406,21 @@ MYgluPerspective
 */
 void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar )
 {
-   GLdouble xmin, xmax, ymin, ymax;
+	GLdouble xmin, xmax, ymin, ymax;
 
-   ymax = zNear * tan( fovy * M_PI / 360.0 );
-   ymin = -ymax;
+	ymax = zNear * tan( fovy * M_PI / 360.0 );
+	ymin = -ymax;
 
-   xmin = ymin * aspect;
-   xmax = ymax * aspect;
+	xmin = ymin * aspect;
+	xmax = ymax * aspect;
 
-   xmin += -( 2 * gl_state.camera_separation ) / zNear;
-   xmax += -( 2 * gl_state.camera_separation ) / zNear;
+	xmin += -( 2 * gl_state.camera_separation ) / zNear;
+	xmax += -( 2 * gl_state.camera_separation ) / zNear;
 
-   glFrustum( xmin, xmax, ymin, ymax, zNear, zFar );
+	mat4_t mat;
+	Mat4Perspective(mat, xmin, xmax, ymin, ymax, zNear, zFar);
+	memcpy(r_projection_matrix, mat, sizeof(mat));
+	glMultMatrixf(mat);
 }
 
 /*
@@ -447,15 +460,24 @@ static void R_SetupGL()
 	glMatrixMode(GL_MODELVIEW);
     glLoadIdentity ();
 
-    glRotatef (-90,  1, 0, 0);	    // put Z going up
-    glRotatef (90,  0, 0, 1);	    // put Z going up
-    glRotatef (-r_newrefdef.view.angles[2],  1, 0, 0);
-    glRotatef (-r_newrefdef.view.angles[0],  0, 1, 0);
-    glRotatef (-r_newrefdef.view.angles[1],  0, 0, 1);
-    glTranslatef (-r_newrefdef.view.origin[0],  -r_newrefdef.view.origin[1],  -r_newrefdef.view.origin[2]);
+	mat4_t mat;
+	Mat4MakeIdentity(mat);
 
+	Mat4RotateAroundX(mat, -90);	// put Z going up
+	Mat4RotateAroundZ(mat, 90);	// put Z going up
+	Mat4RotateAroundX(mat, -r_newrefdef.view.angles[2]);
+	Mat4RotateAroundY(mat, -r_newrefdef.view.angles[0]);
+	Mat4RotateAroundZ(mat, -r_newrefdef.view.angles[1]);
+	Mat4Translate(mat, -r_newrefdef.view.origin[0], -r_newrefdef.view.origin[1], -r_newrefdef.view.origin[2]);
 
-	glGetFloatv (GL_MODELVIEW_MATRIX, r_world_matrix);
+	glMultMatrixf(mat);
+
+	memcpy(r_world_matrix, mat, sizeof(mat));
+
+	//only send the matricies once since they'll never change during a frame.
+	R_BindProgram(GLPROG_WORLD_NEW);
+	R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
+	R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
 
 	//
 	// set drawing parms
