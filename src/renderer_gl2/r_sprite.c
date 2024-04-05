@@ -16,6 +16,19 @@ QUAKE2 SPRITES
 
 #include "r_local.h"
 
+extern vec3_t	model_shadevector;
+extern float	model_shadelight[3];
+
+static GLuint spritebufferhack;
+
+void R_InitSprites()
+{
+	int spritebuffer[] = { 0, 1, 2, 3 };
+	glGenBuffers(1, &spritebufferhack);
+	glBindBuffer(GL_ARRAY_BUFFER, spritebufferhack);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(spritebuffer), spritebuffer, GL_STATIC_DRAW);
+}
+
 void R_DrawSprite(rentity_t* ent)
 {
 	vec3_t	point;
@@ -48,10 +61,36 @@ void R_DrawSprite(rentity_t* ent)
 
 	glColor4f(1, 1, 1, pCurrentRefEnt->alpha);
 
+	R_BindProgram(GLPROG_SPRITE);
+	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
+	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
+	//recycling uniforms.. UNDONE it's not a good idea with the common update
+	//R_ProgUniform4f(LOC_DLIGHT_POS_AND_RAD, frame->origin_x, frame->origin_y, frame->width, frame->height);
+
+	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
+		R_ProgUniform1f(LOC_PARM0, 1);
+	else
+		R_ProgUniform1f(LOC_PARM0, 0);
+
+	if (ent->renderfx & RF_TRANSLUCENT)
+		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, ent->alpha);
+	else
+		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
+
 	R_MultiTextureBind(TMU_DIFFUSE, pCurrentModel->images[ent->frame]->texnum);
 	R_AlphaTest(ent->alpha == 1.0);
 
-	glBegin(GL_TRIANGLES);
+	//Needed only because OpenGL 2.x doesn't have gl_VertexID in shader. Cool.
+	glBindBuffer(GL_ARRAY_BUFFER, spritebufferhack);
+	glEnableVertexAttribArray(0);
+	glBindAttribLocation(pCurrentProgram->programObject, 0, "vertexnum");
+	glVertexAttribPointer(0, 1, GL_INT, GL_FALSE, 0, 0);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glDisableVertexAttribArray(0);
+
+	/*glBegin(GL_TRIANGLES);
 	{
 
 		glTexCoord2f(0, 1);
@@ -84,7 +123,7 @@ void R_DrawSprite(rentity_t* ent)
 		VectorMA(point, frame->width - frame->origin_x, right, point);
 		glVertex3fv(point);
 	}
-	glEnd();
+	glEnd();*/
 
 	R_AlphaTest(false);
 }

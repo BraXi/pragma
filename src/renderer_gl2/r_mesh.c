@@ -175,6 +175,8 @@ static void R_EntityAnim(rentity_t* ent, char* func)
 		ent->animbacklerp = 0.0f;
 }
 
+qboolean r_pendingflip = false;
+
 void R_DrawEntityModel(rentity_t* ent)
 {
 	float		lerp;
@@ -199,51 +201,41 @@ void R_DrawEntityModel(rentity_t* ent)
 	if (ent->renderfx & RF_DEPTHHACK)
 		glDepthRange(gldepthmin, gldepthmin + 0.3f * (gldepthmax - gldepthmin));
 
+	// move, rotate and scale
+	ent->angles[PITCH] = -ent->angles[PITCH];
+	R_RotateForEntity(ent);
+	ent->angles[PITCH] = -ent->angles[PITCH];
+
+	if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
+		Mat4Scale(r_local_matrix, ent->scale, ent->scale, ent->scale);
+
 	// if its a view model and we chose to keep it in left hand 
 	if ((ent->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
 	{
-		extern void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar);
-
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glScalef(-1, 1, 1);
-		MYgluPerspective(r_newrefdef.view.fov_y, (float)r_newrefdef.width / r_newrefdef.height, 4, 4096);
-		glMatrixMode(GL_MODELVIEW);
+		//Mat4Scale(r_local_matrix, 1, -1, 1); //I wish I could, but the muzzle flash is manually placed. Have to flip the projection matrix
+		Mat4Scale(r_projection_matrix, -1, 1, 1);
+		r_pendingflip = true;
 		R_SetCullFace(GL_BACK);
 	}
 
-	glPushMatrix();
+	// render model
+	switch (ent->model->type)
 	{
-		// move, rotate and scale
-		ent->angles[PITCH] = -ent->angles[PITCH];
-		R_RotateForEntity(ent);
-		ent->angles[PITCH] = -ent->angles[PITCH];
+	case MOD_MD3:
+		lod = LOD_HIGH; // fixme: allow lods
+		R_DrawMD3Model(ent, lod, lerp);
+		break;
 
-		if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
-			glScalef(ent->scale, ent->scale, ent->scale);
-
-		// render model
-		switch (ent->model->type)
-		{
-		case MOD_MD3:
-			lod = LOD_HIGH; // fixme: allow lods
-			R_DrawMD3Model(ent, lod, lerp);
-			break;
-
-		case MOD_SPRITE:
-			R_UnbindProgram(); //fixme render sprites
-			R_DrawSprite(ent);
-			break;
-		default:
-			ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);
-		}
-
-		// restore scale
-		if (ent->renderfx & RF_SCALE)
-			glScalef(1.0f, 1.0f, 1.0f);
+	case MOD_SPRITE:
+		R_DrawSprite(ent);
+		break;
+	default:
+		ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);
 	}
-	glPopMatrix();
+
+	// restore scale
+	//if (ent->renderfx & RF_SCALE)
+	//	glScalef(1/ent->scale, 1/ent->scale, 1/ent->scale);
 
 	// restore transparency
 	if (pCurrentRefEnt->renderfx & RF_TRANSLUCENT)
@@ -254,10 +246,9 @@ void R_DrawEntityModel(rentity_t* ent)
 		glDepthRange(gldepthmin, gldepthmax);
 
 	if ((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
-	{
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
+	{ 
+		//scale unset by whatever consumed pendingflip. 
+		r_pendingflip = false;
 		R_SetCullFace(GL_FRONT);
 	}
 }

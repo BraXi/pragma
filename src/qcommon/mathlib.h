@@ -15,7 +15,9 @@ typedef vec_t rect_t[4];
 typedef vec_t rgba_t[4];
 
 typedef vec_t mat3x3_t[3][3];
-//typedef vec_t mat4x4_t[4][4]; // unused
+//Column-major matrix, intended for OpenGL. 
+typedef vec_t mat4_t[16];
+extern mat4_t mat4_identity;
 
 typedef	int	fixed4_t;
 typedef	int	fixed8_t;
@@ -123,6 +125,20 @@ void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s* plane);
 float anglemod(float a);
 float LerpAngle(float a1, float a2, float frac);
+
+void Mat4MakeIdentity(mat4_t mat);
+void Mat4Perspective(mat4_t mat, float l, float r, float b, float t, float znear, float zfar);
+//Does left x right, results in left. 
+void Mat4Multiply(mat4_t left, mat4_t right);
+//Rotates are performed by multiplying a resultant matrix against mat.
+//All rotates in the rendering code are rotations around cardinal axes, so only these are supported ATM.
+void Mat4RotateAroundX(mat4_t mat, float angle);
+void Mat4RotateAroundY(mat4_t mat, float angle);
+void Mat4RotateAroundZ(mat4_t mat, float angle);
+//Multiplies mat by a translation matrix composed of xyz.
+void Mat4Translate(mat4_t mat, float x, float y, float z);
+//Multiplies mat by a scale matrix composed of xyz.
+void Mat4Scale(mat4_t mat, float x, float y, float z);
 
 #define BOX_ON_PLANE_SIDE(emins, emaxs, p)	\
 	(((p)->type < 3)?						\

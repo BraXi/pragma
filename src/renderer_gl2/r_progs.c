@@ -61,6 +61,12 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_DLIGHT_COLORS,	"dlight_colors",	F_VECTOR3 },
 	{ LOC_DLIGHT_POS_AND_RAD, "dlight_pos_and_rad",	F_VECTOR4 },
 	{ LOC_DLIGHT_DIR_AND_CUTOFF, "dlight_dir_and_cutoff",	F_VECTOR4 },
+
+	/* matricies */
+	//[ISB] the type is incorrect but this isn't used anywhere so fix later I guess.
+	{ LOC_PROJECTION, "projection",	F_VECTOR4 },
+	{ LOC_MODELVIEW,  "modelview",	F_VECTOR4 },
+	{ LOC_LOCALMODELVIEW, "localmodelview",	F_VECTOR4 },
 };
 
 /* vertex attributes */
@@ -298,6 +304,17 @@ void R_ProgUniform4fv(int uniform, int count, float *val)
 {
 	CheckProgUni(uniform);
 	glUniform4fv(pCurrentProgram->locs[uniform], count, (const GLfloat*)val);
+}
+
+/*
+=================
+R_ProgUniformMatrix4fv
+=================
+*/
+void R_ProgUniformMatrix4fv(int uniform, int count, float* val)
+{
+	CheckProgUni(uniform);
+	glUniformMatrix4fv(pCurrentProgram->locs[uniform], count, GL_FALSE, (const GLfloat*)val);
 }
 
 /*

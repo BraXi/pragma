@@ -218,6 +218,8 @@ static void R_World_BeginRendering()
 	R_ProgUniform1f(LOC_WARPSTRENGTH, 0.f);
 	R_ProgUniform2f(LOC_FLOWSTRENGTH, 0.f, 0.f);
 
+	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
+
 	gfx_world.uniformflags = 0; //Always force a uniform update if needed
 	gfx_world.isRenderingWorld = true;
 }

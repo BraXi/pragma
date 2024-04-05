@@ -350,28 +350,6 @@ void R_LightPoint(vec3_t p, vec3_t color)
 	else
 		VectorCopy (pointcolor, color);
 
-	//
-	// add dynamic lights
-	//
-	if (r_dynamic->value)
-	{
-		light = 0;
-		dl = r_newrefdef.dlights;
-		for (lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
-		{
-			if (dl->type == DL_SPOTLIGHT)
-				continue; // FIXME,
-
-			VectorSubtract(pCurrentRefEnt->origin, dl->origin, dist); // distance
-			add = dl->intensity - VectorLength(dist);
-			add *= (1.0 / 256);
-			if (add > 0)
-			{
-				VectorMA(color, add, dl->color, color);
-			}
-		}
-	}
-
 	// scale the light color with r_modulate cvar
 	VectorScale (color, r_modulate->value, color);
 }

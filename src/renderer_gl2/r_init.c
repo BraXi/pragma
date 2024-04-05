@@ -329,6 +329,7 @@ int R_Init(void* hinstance, void* hWnd)
 		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
 	R_InitModels();
+	R_InitSprites();
 	R_LoadFonts();
 
 	vb_particles = R_AllocVertexBuffer((V_UV | V_COLOR | V_NOFREE), (3 * MAX_PARTICLES), 0);

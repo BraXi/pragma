@@ -140,6 +140,10 @@ typedef enum
 	LOC_DLIGHT_POS_AND_RAD,
 	LOC_DLIGHT_DIR_AND_CUTOFF,
 
+	LOC_PROJECTION,
+	LOC_MODELVIEW,
+	LOC_LOCALMODELVIEW, //Used to properly light models
+
 	NUM_LOCS,
 } glprogLoc_t;
 
@@ -191,6 +195,7 @@ void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4)
 void R_ProgUniformVec4(int uniform, vec4_t v);
 void R_ProgUniform3fv(int uniform, int count, float* val);
 void R_ProgUniform4fv(int uniform, int count, float* val);
+void R_ProgUniformMatrix4fv(int uniform, int count, float* val);
 int R_GetProgAttribLoc(glprogLoc_t attrib);
 char* R_GetProgAttribName(glprogLoc_t attrib);
 char* R_GetCurrentProgramName();
@@ -313,7 +318,9 @@ extern	cvar_t	*r_intensity;
 extern	int		gl_tex_solid_format;
 extern	int		gl_tex_alpha_format;
 
-extern float r_world_matrix[16];
+extern mat4_t r_world_matrix;
+extern mat4_t r_local_matrix; //Transforms a vertex into its final position in the world
+extern mat4_t r_projection_matrix;
 
 
 //===================================================================
@@ -321,6 +328,7 @@ extern float r_world_matrix[16];
 //===================================================================
 extern model_t *r_worldmodel;
 extern int registration_sequence;
+void R_InitSprites();
 
 //===================================================================
 // r_init.c

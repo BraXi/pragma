@@ -200,6 +200,7 @@ void R_World_DrawAlphaSurfaces()
 	// go back to the world matrix
 	//
     glLoadMatrixf (r_world_matrix);
+	memcpy(r_local_matrix, mat4_identity, sizeof(mat4_t));
 
 	if (r_fastworld->value)
 	{
@@ -528,7 +529,6 @@ void R_DrawBrushModel (rentity_t *e)
 		modelorg[2] = DotProduct (temp, up);
 	}
 
-    glPushMatrix ();
 	e->angles[0] = -e->angles[0];	// stupid quake bug
 	e->angles[2] = -e->angles[2];	// stupid quake bug
 	R_RotateForEntity (e);
@@ -545,7 +545,6 @@ void R_DrawBrushModel (rentity_t *e)
 		R_SelectTextureUnit(0);
 	}
 
-	glPopMatrix ();
 }
 
 
@@ -804,6 +803,8 @@ void R_DrawWorld()
 
 	// build texture chains
 	R_World_RecursiveNode(r_worldmodel->nodes);
+	//no local transform needed for world. 
+	memcpy(r_local_matrix, mat4_identity, sizeof(mat4_t));
 
 	if (r_fastworld->value)
 	{

@@ -1,5 +1,10 @@
 #include "shared.h"
 
+//#define USE_SSE
+#ifdef USE_SSE
+#include <intrin.h>
+#endif
+
 vec3_t vec3_origin = { 0,0,0 };
 
 #define DEG2RAD( a ) ( a * M_PI ) / 180.0F
@@ -78,8 +83,6 @@ void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, f
 #ifdef _WIN32
 #pragma optimize( "", on )
 #endif
-
-
 
 void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
@@ -1023,6 +1026,156 @@ float RadiusFromBounds(vec3_t mins, vec3_t maxs)
 	}
 
 	return VectorLength(corner);
+}
+
+mat4_t mat4_identity =	{1, 0, 0, 0,
+						 0, 1, 0, 0,
+						 0, 0, 1, 0,
+						 0, 0, 0, 1 };
+
+/*
+=================
+Mat4MakeIdentity
+=================
+*/
+void Mat4MakeIdentity(mat4_t mat)
+{
+	memset(mat, 0, sizeof(mat4_t));
+	mat[0] = mat[5] = mat[10] = mat[15] = 1;
+}
+
+/*
+=================
+Mat4Perspective
+
+Unlike glFrustum, this does not multiply by another matrix, it only creates one.
+=================
+*/
+void Mat4Perspective(mat4_t mat, float l, float r, float b, float t, float znear, float zfar)
+{
+	memset(mat, 0, sizeof(mat4_t));
+	mat[0] = (2 * znear) / (r - l);
+	mat[5] = (2 * znear) / (t - b);
+	mat[8] = (r + l) / (r - l);
+	mat[9] = (t + b) / (t - b);
+	mat[10] = -((zfar + znear) / (zfar - znear));
+	mat[11] = -1;
+	mat[14] = -((2 * zfar * znear) / (zfar - znear));
+}
+
+/*
+=================
+Mat4Multiply
+=================
+*/
+void Mat4Multiply(mat4_t left, mat4_t right)
+{
+	mat4_t t;
+	memcpy(t, left, sizeof(t));
+#ifdef USE_SSE
+#else
+	left[0] = t[0] * right[0] + t[4] * right[1] + t[8]  * right[2] + t[12] * right[3]; //i1 j1
+	left[1] = t[1] * right[0] + t[5] * right[1] + t[9]  * right[2] + t[13] * right[3]; //i2 j1
+	left[2] = t[2] * right[0] + t[6] * right[1] + t[10] * right[2] + t[14] * right[3]; //i3 j1
+	left[3] = t[3] * right[0] + t[7] * right[1] + t[11] * right[2] + t[15] * right[3]; //14 j1
+
+	left[4] = t[0] * right[4] + t[4] * right[5] + t[8]  * right[6] + t[12] * right[7]; //i1 j2
+	left[5] = t[1] * right[4] + t[5] * right[5] + t[9]  * right[6] + t[13] * right[7]; //i2 j2
+	left[6] = t[2] * right[4] + t[6] * right[5] + t[10] * right[6] + t[14] * right[7]; //i3 j2
+	left[7] = t[3] * right[4] + t[7] * right[5] + t[11] * right[6] + t[15] * right[7]; //i4 j2
+
+	left[8]  = t[0] * right[8] + t[4] * right[9] + t[8]  * right[10] + t[12] * right[11]; //i1 j3
+	left[9]  = t[1] * right[8] + t[5] * right[9] + t[9]  * right[10] + t[13] * right[11]; //i2 j3
+	left[10] = t[2] * right[8] + t[6] * right[9] + t[10] * right[10] + t[14] * right[11]; //i3 j3
+	left[11] = t[3] * right[8] + t[7] * right[9] + t[11] * right[10] + t[15] * right[11]; //i4 j3
+
+	left[12] = t[0] * right[12] + t[4] * right[13] + t[8]  * right[14] + t[12] * right[15]; //i1 j4
+	left[13] = t[1] * right[12] + t[5] * right[13] + t[9]  * right[14] + t[13] * right[15]; //i2 j4
+	left[14] = t[2] * right[12] + t[6] * right[13] + t[10] * right[14] + t[14] * right[15]; //i3 j4
+	left[15] = t[3] * right[12] + t[7] * right[13] + t[11] * right[14] + t[15] * right[15]; //i4 j4
+#endif
+}
+
+/*
+=================
+Mat4RotateAroundX
+=================
+*/
+void Mat4RotateAroundX(mat4_t mat, float angle)
+{
+	mat4_t rotmat = {0};
+	angle = DEG2RAD(angle);
+	rotmat[0] = rotmat[15] = 1;
+	rotmat[5] = cos(angle);
+	rotmat[6] = sin(angle);
+	rotmat[9] = -sin(angle);
+	rotmat[10] = cos(angle);
+
+	Mat4Multiply(mat, rotmat);
+}
+
+/*
+=================
+Mat4RotateAroundY
+=================
+*/
+void Mat4RotateAroundY(mat4_t mat, float angle)
+{
+	mat4_t rotmat = { 0 };
+	angle = DEG2RAD(angle);
+	rotmat[5] = rotmat[15] = 1;
+	rotmat[0] = cos(angle);
+	rotmat[2] = -sin(angle);
+	rotmat[8] = sin(angle);
+	rotmat[10] = cos(angle);
+
+	Mat4Multiply(mat, rotmat);
+}
+
+/*
+=================
+Mat4RotateAroundZ
+=================
+*/
+void Mat4RotateAroundZ(mat4_t mat, float angle)
+{
+	mat4_t rotmat = { 0 };
+	angle = DEG2RAD(angle);
+	rotmat[10] = rotmat[15] = 1;
+	rotmat[0] = cos(angle);
+	rotmat[1] = sin(angle);
+	rotmat[4] = -sin(angle);
+	rotmat[5] = cos(angle);
+
+	Mat4Multiply(mat, rotmat);
+}
+
+/*
+=================
+Mat4Translate
+=================
+*/
+void Mat4Translate(mat4_t mat, float x, float y, float z)
+{
+	mat4_t trans = { 0 };
+	trans[0] = trans[5] = trans[10] = trans[15] = 1;
+	trans[12] = x; trans[13] = y; trans[14] = z;
+
+	Mat4Multiply(mat, trans);
+}
+
+/*
+=================
+Mat4Scale
+=================
+*/
+void Mat4Scale(mat4_t mat, float x, float y, float z)
+{
+	mat4_t scale = { 0 };
+	scale[15] = 1;
+	scale[0] = x; scale[5] = y; scale[10] = z;
+
+	Mat4Multiply(mat, scale);
 }
 
 //====================================================================================
