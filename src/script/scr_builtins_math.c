@@ -206,12 +206,16 @@ vector vectoangles(vector)
 void PF_vectoangles(void)
 {
 	float	*invec;
-	float	forward;
-	float	yaw, pitch;
 	vec3_t	out;
 
 	invec = Scr_GetParmVector(0);
 
+#ifdef FIX_SQB
+	VectorAngles_Fixed(invec, out);
+#else
+
+	float	forward;
+	float	yaw, pitch;
 	if (invec[1] == 0 && invec[0] == 0)
 	{
 		yaw = 0;
@@ -231,10 +235,12 @@ void PF_vectoangles(void)
 		if (pitch < 0)
 			pitch += 360;
 	}
-	
-	out[0] = pitch;
+
+	out[0] = -pitch; //stupid quake bug
 	out[1] = yaw;
 	out[2] = 0;
+
+#endif
 	Scr_ReturnVector(out);
 }
 

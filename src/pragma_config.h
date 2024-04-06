@@ -13,6 +13,8 @@ See the attached GNU General Public License v2 for more details.
 #ifndef PRAGMA_CONFIG_INCLUDED 
 #define PRAGMA_CONFIG_INCLUDED 1
 
+#define FIX_SQB 1 // "stupid quake bug" fix
+
 #define NEW_GUI 1 //new gui
 
 // net protocol will use floats for coordinates instead of shorts, this applies to pmove too

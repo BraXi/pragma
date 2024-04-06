@@ -15,7 +15,7 @@ void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 
 	// this rotate and negat guarantees a vector
 	// not colinear with the original
-	right[1] = -forward[0];
+	right[1] = -forward[0]; // stupid quake bug?
 	right[2] = forward[1];
 	right[0] = forward[2];
 
@@ -108,18 +108,18 @@ void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 	}
 	if (right)
 	{
-		right[0] = (-1 * sr * sp * cy + -1 * cr * -sy);
-		right[1] = (-1 * sr * sp * sy + -1 * cr * cy);
-		right[2] = -1 * sr * cp;
+		// stupid quake bug here?
+		right[0] = -sr * sp * cy + cr * sy;
+		right[1] = -sr * sp * sy - cr * cy;
+		right[2] = -sr * cp;
 	}
 	if (up)
 	{
-		up[0] = (cr * sp * cy + -sr * -sy);
-		up[1] = (cr * sp * sy + -sr * cy);
+		up[0] = cr * sp * cy + sr * sy;
+		up[1] = cr * sp * sy - sr * cy;
 		up[2] = cr * cp;
 	}
 }
-
 
 void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal)
 {
@@ -846,6 +846,45 @@ int Q_log2(int val)
 
 /*
 =================
+VectorAngles_Fixed
+
+Stupid quake bug dismissed.
+=================
+*/
+void VectorAngles_Fixed(const float* forward, float* result)
+{
+	float tmp, yaw, pitch;
+
+	if (forward[1] == 0 && forward[0] == 0)
+	{
+		yaw = 0;
+		if (forward[2] > 0)
+			pitch = 270.0f;
+		else
+			pitch = 90.0f;
+	}
+	else
+	{
+		yaw = (atan2(forward[1], forward[0]) * 180.0f / M_PI);
+
+		if (yaw < 0.0f)
+			yaw += 360.0f;
+
+		tmp = sqrt( ((double)forward[0] * (double)forward[0]) + ((double)forward[1] * (double)forward[1]));
+		pitch = (atan2(-forward[2], tmp) * 180.0f / M_PI);
+
+		if (pitch < 0.0f)
+			pitch += 360.0f;
+	}
+
+	result[0] = pitch;
+	result[1] = yaw;
+	result[2] = 0;
+}
+
+
+/*
+=================
 VectorAngles
 Code written by Spoike
 =================
@@ -933,8 +972,8 @@ void AxisToAngles(vec3_t axis[3], vec3_t outAngles)
 	pitch = pitch * 180.0 / M_PI;
 	roll = roll * 180.0 / M_PI;
 
-	outAngles[0] = 0;
-	outAngles[1] = pitch;
+	outAngles[0] = pitch;
+	outAngles[1] = yaw;
 	outAngles[2] = roll;
 }
 
@@ -943,7 +982,7 @@ void AxisToAngles(vec3_t axis[3], vec3_t outAngles)
 AnglesToAxis (Q3)
 =================
 */
-void AnglesToAxis(vec3_t angles, vec3_t axis[3])
+void AnglesToAxis(vec3_t angles, vec3_t axis[3]) 
 {
 	vec3_t	right;
 

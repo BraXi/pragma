@@ -291,8 +291,6 @@ extern	cvar_t	*cl_timedemo;
 
 typedef struct muzzleflash_s
 {
-	float forward, right, up;
-
 	float dlight_radius;
 	vec3_t dlight_color;
 
@@ -375,7 +373,7 @@ void CL_ParseFrame (void);
 
 void CG_ParseTempEntityCommand (void);
 void CL_ParseConfigString (void);
-void CL_ParseMuzzleFlash (void);
+void CG_ParseMuzzleFlashMessage (void);
 
 void CG_LightStyleFromConfigString (int i);
 

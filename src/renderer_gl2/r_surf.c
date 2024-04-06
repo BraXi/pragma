@@ -529,11 +529,15 @@ void R_DrawBrushModel (rentity_t *e)
 		modelorg[2] = DotProduct (temp, up);
 	}
 
+#ifndef FIX_SQB
 	e->angles[0] = -e->angles[0];	// stupid quake bug
 	e->angles[2] = -e->angles[2];	// stupid quake bug
+#endif
 	R_RotateForEntity (e);
+#ifndef FIX_SQB
 	e->angles[0] = -e->angles[0];	// stupid quake bug
 	e->angles[2] = -e->angles[2];	// stupid quake bug
+#endif
 
 	if (r_fastworld->value)
 	{

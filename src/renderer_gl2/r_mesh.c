@@ -202,9 +202,13 @@ void R_DrawEntityModel(rentity_t* ent)
 		glDepthRange(gldepthmin, gldepthmin + 0.3f * (gldepthmax - gldepthmin));
 
 	// move, rotate and scale
+#ifndef FIX_SQB
 	ent->angles[PITCH] = -ent->angles[PITCH]; // stupid quake bug
+#endif
 	R_RotateForEntity(ent);
+#ifndef FIX_SQB
 	ent->angles[PITCH] = -ent->angles[PITCH]; // stupid quake bug
+#endif
 
 	if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
 		Mat4Scale(r_local_matrix, ent->scale, ent->scale, ent->scale);

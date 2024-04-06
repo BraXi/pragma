@@ -59,7 +59,7 @@
     <ClCompile Include="client\cgame\cg_localents.c" />
     <ClCompile Include="client\cgame\cg_main.c" />
     <ClCompile Include="client\cgame\cg_model.c" />
-    <ClCompile Include="client\cgame\cg_muzzleflash.c" />
+    <ClCompile Include="client\cgame\cg_flash.c" />
     <ClCompile Include="client\cgame\cg_particles.c" />
     <ClCompile Include="client\cgame\cg_oldfx.c" />
     <ClCompile Include="client\cgame\cg_temp_entities.c" />

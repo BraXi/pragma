@@ -95,8 +95,6 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 /*
 =================
 R_RotateForEntity
-
-STUPID QUAKE BUG included ;)
 =================
 */
 void R_RotateForEntity (rentity_t *e)
@@ -104,8 +102,14 @@ void R_RotateForEntity (rentity_t *e)
 	Mat4MakeIdentity(r_local_matrix);
 	Mat4Translate(r_local_matrix, e->origin[0], e->origin[1], e->origin[2]);
 	Mat4RotateAroundZ(r_local_matrix, e->angles[1]);
-	Mat4RotateAroundY(r_local_matrix, -e->angles[0]);
-	Mat4RotateAroundX(r_local_matrix, -e->angles[2]);
+
+#ifdef FIX_SQB
+	Mat4RotateAroundY(r_local_matrix, e->angles[0]);
+	Mat4RotateAroundX(r_local_matrix, e->angles[2]);
+#else
+	Mat4RotateAroundY(r_local_matrix, -e->angles[0]); // stupid quake bug
+	Mat4RotateAroundX(r_local_matrix, -e->angles[2]); // stupid quake bug
+#endif
 }
 
 
