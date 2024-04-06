@@ -381,14 +381,17 @@ void CL_AddPacketEntities(frame_t* frame)
 CL_AddViewWeapon
 ==============
 */
-void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
+void CL_AddViewWeapon(player_state_t *ps, player_state_t *ops)
 {
 	rentity_t	viewmodel; 
 	int			i;
 
 	// allow the gun to be completely removed
 	if (!cl_drawviewmodel->value)
+	{
+		CG_AddViewFlashLight(NULL, ps);
 		return;
+	}
 
 	memset (&viewmodel, 0, sizeof(viewmodel));
 
@@ -398,7 +401,10 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 		viewmodel.model = cl.model_draw[ps->viewmodel_index];
 
 	if (!viewmodel.model)
+	{
+		CG_AddViewFlashLight(NULL, ps);
 		return;
+	}
 
 	// set up position
 	for (i = 0; i < 3; i++)

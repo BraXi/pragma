@@ -13,6 +13,9 @@ See the attached GNU General Public License v2 for more details.
 #include "../client.h"
 #include "cg_local.h"
 
+extern cvar_t* cl_hand;
+extern cvar_t* cl_testlights;
+
 void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parentModel, int tagIndex);
 
 static muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES] =
@@ -80,11 +83,9 @@ void CG_ParseMuzzleFlashMessage(void)
 	}
 }
 
-extern cvar_t* cl_hand;
-extern cvar_t* cl_testlights;
 /*
 ==============
-CG_AddViewMuzzleFlash
+CG_AddViewFlashLight
 
 For now we have no model for it, and ignore cl_hand
 ==============
@@ -92,24 +93,30 @@ For now we have no model for it, and ignore cl_hand
 void CG_AddViewFlashLight(rentity_t* refent, player_state_t* ps)
 {
 	rentity_t ent;
-//	vec3_t out_angles;
+	//vec3_t out_angles;
 	int tag;
 
-	if ( !refent->model || !ps->stats[STAT_HEALTH] || cl_testlights->value)
+	if (!ps->stats[STAT_HEALTH] || cl_testlights->value)
 		return;
 
-	tag = re.TagIndexForName(refent->model, "tag_flash");
-	if (tag == -1)
-		return;
+	if (refent && refent->model)
+	{
+		tag = re.TagIndexForName(refent->model, "tag_flash");
+		if (tag != -1)
+		{
+			memset(&ent, 0, sizeof(ent));
 
-	memset(&ent, 0, sizeof(ent));
+			AxisClear(ent.axis);
+			PositionRotatedEntityOnTag(&ent, refent, ps->viewmodel_index, tag);
+			//VectorAngles_Fixed(ent.axis[0], out_angles);
 
-	AxisClear(ent.axis);
-	PositionRotatedEntityOnTag(&ent, refent, ps->viewmodel_index, tag);
-//	VectorAngles_Fixed(ent.axis[0], out_angles);
-
-
-	V_AddSpotLight(ent.origin, ent.axis[0], 900, -0.95, 1.0f, 0.85f, 0.7f);
+			V_AddSpotLight(ent.origin, ent.axis[0], 900, -0.95, 1.0f, 0.85f, 0.7f);
+		}
+	}
+	else
+	{
+		V_AddSpotLight(cl.refdef.view.origin, cl.v_forward, 900, -0.95, 1.0f, 0.85f, 0.7f);
+	}
 }
 
 /*
