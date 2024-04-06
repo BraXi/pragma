@@ -317,18 +317,13 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 ===============
 R_LightPoint
 
-Returns the lightmap pixel color under p plus and probes for dynamic lights around p
+Returns the lightmap pixel color under p
 ===============
 */
 void R_LightPoint(vec3_t p, vec3_t color)
 {
 	vec3_t		end;
 	float		r;
-	int			lnum;
-	dlight_t	*dl;
-	float		light;
-	vec3_t		dist;
-	float		add;
 	
 	if (!r_worldmodel->lightdata || r_worldmodel->lightdatasize <= 0)
 	{

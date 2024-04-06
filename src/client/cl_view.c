@@ -274,8 +274,8 @@ static void V_TestLights()
 			dl->origin[j] = cl.refdef.view.origin[j] + (cl.v_forward[j] * 10);
 
 		VectorSet(dl->color, 1.0f, 1.0f, 1.0f);
-		dl->intensity = 600;
-		dl->cutoff = -0.95f;
+		dl->intensity = 800;
+		dl->cutoff = -0.96f;
 		VectorCopy(cl.v_forward, dl->dir);
 		return;
 	}
