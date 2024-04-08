@@ -84,6 +84,39 @@ static glprogloc_t progVertAtrribLocs[NUM_VALOCS] =
 	{ VALOC_OLD_NORMAL,		"inOldNormal",		F_VECTOR3 } // MD3 ONLY
 };
 
+//Program metadata.
+//This is used to class shaders based on what data needs to be updated. 
+typedef enum
+{
+	PF_ORTHO = 1	//update with ortho projection
+} progflags_t;
+
+typedef struct
+{
+	int progid;
+	const char* name;
+	int flags;
+} proginfo_t;
+
+static proginfo_t proginfo[] =
+{
+	{GLPROG_WORLD,			"world"},
+	{GLPROG_SKY,			"sky"},
+	{GLPROG_ALIAS,			"model_alias"},
+	{GLPROG_SPRITE,			"model_sprite"},
+	{GLPROG_PARTICLE,		"particle"},
+	{GLPROG_GUI,			"gui",				PF_ORTHO},
+	{GLPROG_POSTFX,			"postfx",			PF_ORTHO},
+	{GLPROG_DEBUGSTRING,	"debug_string"},
+	{GLPROG_DEBUGLINE,		"debug_line"},
+	{GLPROG_WORLD_NEW,		"world-new"}
+};
+
+#define NUM_PROGINFO sizeof(proginfo) / sizeof(proginfo[0])
+//Since there's holes in the shader list (should be fixed, 
+// proginfolookup looks up an id from 0-NUM_PROGINFO and returns a number 0-MAX_GLPROGS. 
+int proginfolookup[NUM_PROGINFO];
+
 #define CheckProgUni(uni) \
 { \
 	if (pCurrentProgram == NULL || pCurrentProgram->isValid == false || uni == -1) \
@@ -452,23 +485,38 @@ R_UpdateCommonProgUniforms
 
 Called each frame to update common uniforms in all shader programs
 Currently it does update time and dlights in shaders which use these uniforms
+
+orthoonly is true if you want to only update the uniforms for UI related shaders
+Set to false to update the world related shaders
 =================
 */
-void R_UpdateCommonProgUniforms()
+void R_UpdateCommonProgUniforms(qboolean orthoonly)
 {
 	glprog_t* prog;
+	proginfo_t* info;
 	int i;
 
-	prog = glprogs;
-	for (i = 0; i < MAX_GLPROGS; i++, prog++)
+	for (i = 0; i < NUM_PROGINFO; i++)
 	{
+		info = &proginfo[i];
+		prog = &glprogs[proginfolookup[i]];
 		if (!prog->isValid)
 			continue;
 
 		R_BindProgram(prog->index);
 		R_ProgUniform1f(LOC_TIME, r_newrefdef.time);
 
-		R_SendDynamicLightsToCurrentProgram();
+		if (info->flags & PF_ORTHO && orthoonly)
+		{
+			R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_ortho_matrix);
+		}
+		else if (!orthoonly)
+		{
+			R_SendDynamicLightsToCurrentProgram();
+			R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
+			R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
+		}
+
 	}
 	R_UnbindProgram();
 }
@@ -577,13 +625,14 @@ char *R_GetCurrentProgramName()
 R_LoadProgram
 =================
 */
-static int R_LoadProgram(int program, char *name)
+static int R_LoadProgram(int id)
 {
 	glprog_t* prog;
+	proginfo_t* info = &proginfo[id];
 	
-	prog = R_ProgramIndex(program);
+	prog = R_ProgramIndex(info->progid);
 
-	strcpy(prog->name, name);
+	strcpy(prog->name, info->name);
 
 	if (!R_CompileShader(prog, true))
 		return -1;
@@ -593,11 +642,12 @@ static int R_LoadProgram(int program, char *name)
 		return -1;
 
 	prog->isValid = true;
-	prog->index = program;
+	prog->index = info->progid;
 	numProgs++;
 
 	R_FindUniformLocations(prog);
 	R_FindVertexAttribLocations(prog);
+	proginfolookup[id] = info->progid;
 
 	return prog->index;
 }
@@ -623,6 +673,11 @@ void R_FreePrograms()
 		R_FreeProgram(prog);
 	}
 
+	for (int i = 0; i < NUM_PROGINFO; i++)
+	{
+		proginfolookup[i] = -1;
+	}
+
 	memset(glprogs, 0, sizeof(glprogs));
 	pCurrentProgram = NULL;
 	numProgs = 0;
@@ -638,16 +693,10 @@ void R_InitPrograms()
 {
 	R_FreePrograms();
 
-	R_LoadProgram(GLPROG_WORLD, "world");
-	R_LoadProgram(GLPROG_WORLD_NEW, "world-new");
-	R_LoadProgram(GLPROG_SKY, "sky");
-	R_LoadProgram(GLPROG_ALIAS, "model_alias");
-	R_LoadProgram(GLPROG_SPRITE, "model_sprite");
-	R_LoadProgram(GLPROG_PARTICLE, "particle");
-	R_LoadProgram(GLPROG_GUI, "gui");
-	R_LoadProgram(GLPROG_POSTFX, "postfx");
-	R_LoadProgram(GLPROG_DEBUGSTRING, "debug_string");
-	R_LoadProgram(GLPROG_DEBUGLINE, "debug_line");
+	for (int i = 0; i < NUM_PROGINFO; i++)
+	{
+		R_LoadProgram(i);
+	}
 }
 
 

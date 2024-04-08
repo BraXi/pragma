@@ -604,11 +604,12 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 	else if (alignx == XALIGN_RIGHT)
 		ofs_x -= ((strlen(string) * CHAR_SIZEX));
 
-	glPushMatrix();
-	glTranslatef(pos[0], pos[1], pos[2]);
-	glRotatef(-90, 1.0f, 0.0f, 0.0f);
-	glRotatef((-r_newrefdef.view.angles[1]) + 90, 0.0f, 1.0f, 0.0f); //rotate to always face the camera
-	glRotatef((-r_newrefdef.view.angles[0]), 1.0f, 0.0f, 0.0f);
+	mat4_t mat;
+	Mat4MakeIdentity(mat);
+	Mat4Translate(mat, pos[0], pos[1], pos[2]);
+	Mat4RotateAroundX(mat, -90);
+	Mat4RotateAroundY(mat, (-r_newrefdef.view.angles[1]) + 90); //rotate to always face the camera
+	Mat4RotateAroundX(mat, -r_newrefdef.view.angles[0]);
 
 	// create vertex buffer for string
 	ClearVertexBuffer();
@@ -623,12 +624,12 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 
 	R_BindProgram(GLPROG_DEBUGSTRING);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], 1.0);
+	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, mat);
 
 	R_MultiTextureBind(TMU_DIFFUSE, font_current->image->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 
 	R_UnbindProgram();
-	glPopMatrix();
 }
 
 

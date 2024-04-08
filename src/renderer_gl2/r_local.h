@@ -178,7 +178,6 @@ extern int numProgs;
 glprog_t* R_ProgramIndex(int progindex);
 void R_BindProgram(int progindex);
 void R_UnbindProgram();
-int R_LoadProgram(int program, char* name);
 void R_FreePrograms();
 void R_InitPrograms();
 
@@ -200,7 +199,7 @@ int R_GetProgAttribLoc(glprogLoc_t attrib);
 char* R_GetProgAttribName(glprogLoc_t attrib);
 char* R_GetCurrentProgramName();
 qboolean R_UsingProgram();
-void R_UpdateCommonProgUniforms();
+void R_UpdateCommonProgUniforms(qboolean orthoonly);
 void R_ShaderList_f(void);
 
 //===================================================================
@@ -321,6 +320,7 @@ extern	int		gl_tex_alpha_format;
 extern mat4_t r_world_matrix;
 extern mat4_t r_local_matrix; //Transforms a vertex into its final position in the world
 extern mat4_t r_projection_matrix;
+extern mat4_t r_ortho_matrix;
 
 
 //===================================================================

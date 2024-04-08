@@ -50,6 +50,7 @@ vec3_t	vright;
 vec3_t	r_origin;
 
 mat4_t	r_projection_matrix;
+mat4_t	r_ortho_matrix;
 mat4_t	r_world_matrix;
 mat4_t	r_local_matrix;
 
@@ -122,6 +123,7 @@ Draw the default model
 */
 static void R_DrawNullModel (void)
 {
+#if 0 //TODO need to do something here
 	vec3_t	shadelight;
 	int		i;
 
@@ -130,7 +132,6 @@ static void R_DrawNullModel (void)
 	else
 		R_LightPoint (pCurrentRefEnt->origin, shadelight);
 
-    glPushMatrix ();
 	R_RotateForEntity (pCurrentRefEnt);
 
 	glDisable (GL_TEXTURE_2D);
@@ -149,8 +150,8 @@ static void R_DrawNullModel (void)
 	glEnd ();
 
 	glColor3f (1,1,1);
-	glPopMatrix ();
 	glEnable (GL_TEXTURE_2D);
+#endif
 }
 
 
@@ -196,15 +197,6 @@ void R_DrawEntitiesOnList (void)
 
 	if (!r_drawentities->value)
 		return;
-
-	//Initialize some shaders that will be used multiple times to avoid repeatedly sending the same data,
-	// because OpenGL 2's uniform model is amazing.
-	R_BindProgram(GLPROG_ALIAS);
-	R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
-	R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
-	R_BindProgram(GLPROG_SPRITE);
-	R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
-	R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
 
 	// draw non-transparent first
 	for (i = 0; i < r_newrefdef.num_entities; i++)
@@ -424,7 +416,6 @@ void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble 
 	mat4_t mat;
 	Mat4Perspective(mat, xmin, xmax, ymin, ymax, zNear, zFar);
 	memcpy(r_projection_matrix, mat, sizeof(mat));
-	glMultMatrixf(mat);
 }
 
 /*
@@ -455,14 +446,9 @@ static void R_SetupGL()
 	// set up projection matrix
 	//
     screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
-	glMatrixMode(GL_PROJECTION);
-    glLoadIdentity ();
     MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096);
 
 	R_SetCullFace(GL_FRONT);
-
-	glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity ();
 
 	mat4_t mat;
 	Mat4MakeIdentity(mat);
@@ -474,14 +460,10 @@ static void R_SetupGL()
 	Mat4RotateAroundZ(mat, -r_newrefdef.view.angles[1]);
 	Mat4Translate(mat, -r_newrefdef.view.origin[0], -r_newrefdef.view.origin[1], -r_newrefdef.view.origin[2]);
 
-	glMultMatrixf(mat);
-
 	memcpy(r_world_matrix, mat, sizeof(mat));
 
 	//only send the matricies once since they'll never change during a frame.
 	R_BindProgram(GLPROG_WORLD_NEW);
-	R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
-	R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
 
 	//
 	// set drawing parms
@@ -554,7 +536,7 @@ void R_RenderView (refdef_t *fd)
 
 	R_World_MarkLeaves ();	// done here so we know if we're in water
 
-	R_UpdateCommonProgUniforms();
+	R_UpdateCommonProgUniforms(false);
 
 	R_ClearFBO(); 
 	R_RenderToFBO(true); // begin rendering to fbo
@@ -596,11 +578,8 @@ void R_BeginOrthoProjection()
 {
 	// set 2D virtual screen size
 	glViewport (0,0, vid.width, vid.height);
-	glMatrixMode(GL_PROJECTION);
-    glLoadIdentity ();
-	glOrtho  (0, vid.width, vid.height, 0, -99999, 99999);
-	glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity ();
+	Mat4Ortho(r_ortho_matrix, 0, vid.width, vid.height, 0, -99999, 99999);
+	R_UpdateCommonProgUniforms(true);
 	R_DepthTest(false);
 	R_CullFace(false);
 	R_Blend(false);
@@ -673,7 +652,7 @@ void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 	//
 	// enter 2d mode
 	//
-	R_BeginOrthoProjection ();
+	R_BeginOrthoProjection (); //yes this uploads the uniforms twice but sometimes beginframe isn't called or something
 
 	if (!onlyortho)
 	{

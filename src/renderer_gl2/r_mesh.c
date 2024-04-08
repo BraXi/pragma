@@ -390,8 +390,6 @@ void R_DrawDebugLines(void)
 	int		i;
 	debugprimitive_t* line;
 
-	glPushMatrix();
-
 	R_BeginLinesRendering(true);
 	for (i = 0; i < r_newrefdef.num_debugprimitives; i++)
 	{
@@ -489,7 +487,6 @@ void R_DrawDebugLines(void)
 	R_WriteToDepthBuffer(GL_TRUE);
 #endif
 	glLineWidth(1.0f);
-	glPopMatrix();
 }
 
 
