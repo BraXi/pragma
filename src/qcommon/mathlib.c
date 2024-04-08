@@ -1,6 +1,6 @@
 #include "shared.h"
 
-//#define USE_SSE
+#define USE_SSE
 #ifdef USE_SSE
 #include <intrin.h>
 #endif
@@ -1104,6 +1104,25 @@ void Mat4Perspective(mat4_t mat, float l, float r, float b, float t, float znear
 
 /*
 =================
+Mat4Ortho
+
+Unlike glOrtho, this does not multiply by another matrix, it only creates one.
+=================
+*/
+void Mat4Ortho(mat4_t mat, float l, float r, float b, float t, float znear, float zfar)
+{
+	memset(mat, 0, sizeof(mat4_t));
+	mat[0] = 2 / (r - l);
+	mat[5] = 2 / (t - b);
+	mat[10] = -2 / (zfar - znear);
+	mat[12] = -((r + l) / (r - l));
+	mat[13] = -((t + b) / (t - b));
+	mat[14] = -((zfar + znear) / (zfar - znear));
+	mat[15] = 1;
+}
+
+/*
+=================
 Mat4Multiply
 =================
 */
@@ -1112,6 +1131,32 @@ void Mat4Multiply(mat4_t left, mat4_t right)
 	mat4_t t;
 	memcpy(t, left, sizeof(t));
 #ifdef USE_SSE
+	//The same 4 columns are always used, so load them first.
+	__m128 columns[4];
+	__m128 rightvalue[4];
+	__m128 res;
+	columns[0] = _mm_loadu_ps(&t[0]);
+	columns[1] = _mm_loadu_ps(&t[4]);
+	columns[2] = _mm_loadu_ps(&t[8]);
+	columns[3] = _mm_loadu_ps(&t[12]);
+
+	//Each column will broadcast 4 values from the right matrix and multiply each column by it, 
+	// and then sum up the resultant vectors to form a result column. 
+	for (int i = 0; i < 4; i++)
+	{
+		rightvalue[0] = _mm_mul_ps(_mm_load_ps1(&right[i * 4 + 0]), columns[0]);
+		rightvalue[1] = _mm_mul_ps(_mm_load_ps1(&right[i * 4 + 1]), columns[1]);
+		rightvalue[2] = _mm_mul_ps(_mm_load_ps1(&right[i * 4 + 2]), columns[2]);
+		rightvalue[3] = _mm_mul_ps(_mm_load_ps1(&right[i * 4 + 3]), columns[3]);
+
+		//From some quick profiling this seems slightly faster than nesting all the adds. 
+		res = _mm_add_ps(rightvalue[0], rightvalue[1]);
+		res = _mm_add_ps(res, rightvalue[2]);
+		res = _mm_add_ps(res, rightvalue[3]);
+
+		_mm_storeu_ps(&left[i * 4], res);
+	}
+
 #else
 	left[0] = t[0] * right[0] + t[4] * right[1] + t[8]  * right[2] + t[12] * right[3]; //i1 j1
 	left[1] = t[1] * right[0] + t[5] * right[1] + t[9]  * right[2] + t[13] * right[3]; //i2 j1
@@ -1185,6 +1230,49 @@ void Mat4RotateAroundZ(mat4_t mat, float angle)
 	rotmat[1] = sin(angle);
 	rotmat[4] = -sin(angle);
 	rotmat[5] = cos(angle);
+
+	Mat4Multiply(mat, rotmat);
+}
+
+void Mat4Rotate(mat4_t mat, float angle, float x, float y, float z)
+{
+	mat4_t rotmat = { 0 };
+	rotmat[15] = 1;
+	angle = DEG2RAD(angle);
+	float c = cos(angle);
+	float s = sin(angle);
+	float xx = x * x;
+	float xy = x * y;
+	float xz = x * z;
+	float yy = y * y;
+	float yz = y * z;
+	float zz = z * z;
+	float xs = x * s;
+	float ys = y * s;
+	float zs = z * s;
+	float oneminusc = (1 - c);
+
+	float length = sqrt(x * x + y * y + z * z);
+	//don't do anything on a null vector. 
+	if (length == 0)
+		return; 
+
+	if (abs(length - 1) > 1e-4)
+	{
+		x /= length; y /= length; z /= length;
+	}
+
+	rotmat[0] = xx * oneminusc + c;
+	rotmat[1] = xy * oneminusc + zs;
+	rotmat[2] = xz * oneminusc - ys;
+
+	rotmat[4] = xy * oneminusc - zs;
+	rotmat[5] = yy * oneminusc + c;
+	rotmat[6] = yz * oneminusc + xs;
+
+	rotmat[8] = xz * oneminusc + ys;
+	rotmat[9] = yz * oneminusc - xs;
+	rotmat[10] = zz * oneminusc + c;
 
 	Mat4Multiply(mat, rotmat);
 }
