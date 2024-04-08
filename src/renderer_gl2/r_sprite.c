@@ -31,7 +31,7 @@ void R_InitSprites()
 
 void R_DrawSprite(rentity_t* ent)
 {
-	vec3_t	point;
+	//vec3_t	point;
 	sp2Frame_t* frame;
 	float* up, * right;
 	sp2Header_t* psprite;

@@ -4,26 +4,22 @@ An attempt to bring renderer to OpenGL 2.1, while making it many times faster th
 
 ## TODO:
 - anistropic texture filtering
-- entities should be lit by lightgrid instead of lightmap pixel underneath them (which is awful for objects in air) -- add support for `LIGHTGRID_OCTREE`
-- setup projection without immediate calls
-- get rid of IM translation/rotation -- calculate matrices and pass them to shaders
+- entities should be lit by lightgrid instead of lightmap pixel underneath them (which is awful for objects in air) -- add support for `LIGHTGRID_OCTREE` BSPX
 - convert remaining code that does immediate rendering (glBegin/glEnd) to vertex buffers
-- local entities rendering and culling based on PVS ?
-- alphatest is gone in newer opengl, do it in shaders, remove calls to `glAlphaTest`
 - exponential fog + make it cull objects that are completly occluded
 - MD5 models and skeletal animations (maybe?)
 - add `r_picmip` back
 - particles can be optionaly lit
 - sky rendering code is awful
 - add beams back
+- local entities rendering and culling based on PVS ?
 
 ## PARTIALY DONE:
-- dynamic lights -- spotlights incorectly lit bmodels and entities, need to unify world and entity dlighting
-- use GLSL shaders for diferent gemoetries - sky [partial], models [done], warps [-], world [partial], gui [done], particles [done], etc..
 - move viewblend to shader (problem: it looks worse)
-- multitexture support -- currently only two TMUs, we need more forl ighting changes
+- alphatest is gone in newer opengl, removed `glAlphaTest`, a few remaining calls left to enable/disable `GL_ALPHA_TEST`
 
 ## DONE:
+- flashlights
 - render brushmodels and entirity of world with vertexbuffers
 - add per pixel lighting
 - move lightstyles to GPU
@@ -45,3 +41,8 @@ An attempt to bring renderer to OpenGL 2.1, while making it many times faster th
 - use opengl to generate mipmaps, thus allow for better textures
 - remove calls to `glColor`, use uniforms instead
 - particles can be of any size
+- setup projection without immediate calls
+- get rid of IM translation/rotation -- calculate matrices and pass them to shaders
+- multitexture support
+- use GLSL shaders for diferent gemoetries
+- dynamic lights

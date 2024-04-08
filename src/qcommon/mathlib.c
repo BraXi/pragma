@@ -9,6 +9,11 @@ vec3_t vec3_origin = { 0,0,0 };
 
 #define DEG2RAD( a ) ( a * M_PI ) / 180.0F
 
+/*
+================
+MakeNormalVectors
+================
+*/
 void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 {
 	float		d;
@@ -25,6 +30,11 @@ void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 	CrossProduct(right, forward, up);
 }
 
+/*
+================
+RotatePointAroundVector
+================
+*/
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {
 	mat3x3_t	m;
@@ -84,6 +94,11 @@ void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, f
 #pragma optimize( "", on )
 #endif
 
+/*
+================
+AngleVectors
+================
+*/
 void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
 	float		angle;
@@ -121,6 +136,11 @@ void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 	}
 }
 
+/*
+================
+ProjectPointOnPlane
+================
+*/
 void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal)
 {
 	float d;
@@ -141,7 +161,11 @@ void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal)
 }
 
 /*
-** assumes "src" is normalized
+================
+PerpendicularVector
+
+assumes scr is normalied
+================
 */
 void PerpendicularVector(vec3_t dst, const vec3_t src)
 {
@@ -330,7 +354,6 @@ BoxOnPlaneSide
 Returns 1, 2, or 1 + 2
 ==================
 */
-#if !id386 || defined __linux__ 
 int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s* p)
 {
 	float	dist1, dist2;
@@ -397,240 +420,6 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s* p)
 
 	return sides;
 }
-#else
-#pragma warning( disable: 4035 )
-
-__declspec(naked) int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s* p)
-{
-	static int bops_initialized;
-	static int Ljmptab[8];
-
-	__asm {
-
-		push ebx
-
-		cmp bops_initialized, 1
-		je  initialized
-		mov bops_initialized, 1
-
-		mov Ljmptab[0 * 4], offset Lcase0
-		mov Ljmptab[1 * 4], offset Lcase1
-		mov Ljmptab[2 * 4], offset Lcase2
-		mov Ljmptab[3 * 4], offset Lcase3
-		mov Ljmptab[4 * 4], offset Lcase4
-		mov Ljmptab[5 * 4], offset Lcase5
-		mov Ljmptab[6 * 4], offset Lcase6
-		mov Ljmptab[7 * 4], offset Lcase7
-
-		initialized :
-
-		mov edx, ds : dword ptr[4 + 12 + esp]
-			mov ecx, ds : dword ptr[4 + 4 + esp]
-			xor eax, eax
-			mov ebx, ds : dword ptr[4 + 8 + esp]
-			mov al, ds : byte ptr[17 + edx]
-			cmp al, 8
-			jge Lerror
-			fld ds : dword ptr[0 + edx]
-			fld st(0)
-			jmp dword ptr[Ljmptab + eax * 4]
-			Lcase0 :
-			fmul ds : dword ptr[ebx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ebx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase1 :
-		fmul ds : dword ptr[ecx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ebx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase2 :
-		fmul ds : dword ptr[ebx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ecx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase3 :
-		fmul ds : dword ptr[ecx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ecx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase4 :
-		fmul ds : dword ptr[ebx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ebx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase5 :
-		fmul ds : dword ptr[ecx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ebx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase6 :
-		fmul ds : dword ptr[ebx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ecx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase7 :
-		fmul ds : dword ptr[ecx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ecx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			LSetSides :
-			faddp st(2), st(0)
-			fcomp ds : dword ptr[12 + edx]
-			xor ecx, ecx
-			fnstsw ax
-			fcomp ds : dword ptr[12 + edx]
-			and ah, 1
-			xor ah, 1
-			add cl, ah
-			fnstsw ax
-			and ah, 1
-			add ah, ah
-			add cl, ah
-			pop ebx
-			mov eax, ecx
-			ret
-			Lerror :
-		int 3
-	}
-}
-#pragma warning( default: 4035 )
-#endif
 
 void ClearBounds(vec3_t mins, vec3_t maxs)
 {
@@ -1234,6 +1023,11 @@ void Mat4RotateAroundZ(mat4_t mat, float angle)
 	Mat4Multiply(mat, rotmat);
 }
 
+/*
+=================
+Mat4Rotate
+=================
+*/
 void Mat4Rotate(mat4_t mat, float angle, float x, float y, float z)
 {
 	mat4_t rotmat = { 0 };

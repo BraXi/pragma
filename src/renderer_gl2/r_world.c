@@ -13,14 +13,6 @@ See the attached GNU General Public License v2 for more details.
 #include <assert.h>
 #include "r_local.h"
 
-/*
-TODO: 
-- warps should warp ;)
-- warps have weird uv
-- transparency
-- scrolling (flowing)
-*/
-
 extern vec3_t		modelorg;		// relative to viewpoint
 extern msurface_t	*r_alpha_surfaces;
 extern image_t		*R_World_TextureAnimation(mtexinfo_t* tex);
@@ -155,7 +147,7 @@ static void R_BuildVertexBufferForWorld()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	ri.Printf(PRINT_ALL, "World surface cache is %i kb (%i verts in %i surfaces)\n", bufsize / 1024, gfx_world.totalVertCount, r_worldmodel->numsurfaces);
+	ri.Printf(PRINT_LOW, "World surface cache is %i kb (%i verts in %i surfaces)\n", bufsize / 1024, gfx_world.totalVertCount, r_worldmodel->numsurfaces);
 }
 
 // ==============================================================================
@@ -345,31 +337,6 @@ change:
 
 	return hasChanged;
 }
-
-
-/*
-=======================
-R_World_NewDrawSurface
-
-haaack so the warps appear on screen
-=======================
-*/
-static __inline void R_World_DrawWarpSurf(msurface_t* surf)
-{
-	int		tex_diffuse, tex_lightmap;
-
-	R_World_GrabSurfaceTextures(surf, &tex_diffuse, &tex_lightmap);
-	R_MultiTextureBind(TMU_DIFFUSE, tex_diffuse);
-	R_MultiTextureBind(TMU_LIGHTMAP, tex_lightmap);
-
-	R_ProgUniform4f(LOC_COLOR4, 1,1,1,1);
-
-	R_World_UpdateLightStylesForSurf(NULL); // disable lightstyles
-	R_ProgUniform3fv(LOC_LIGHTSTYLES, MAX_LIGHTMAPS_PER_SURFACE, gfx_world.new_styles[0]);
-
-	glDrawArrays(GL_TRIANGLE_FAN, surf->firstvert, surf->numverts);
-}
-
 
 /*
 =======================

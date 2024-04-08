@@ -33,11 +33,6 @@ See the attached GNU General Public License v2 for more details.
 #include <time.h>
 
 #define C_ONLY 1
-#if (defined _M_IX86 || defined __i386__) && !defined C_ONLY && !defined __sun__
-#define id386	1
-#else
-#define id386	0
-#endif
 
 
 typedef unsigned char 		byte;
