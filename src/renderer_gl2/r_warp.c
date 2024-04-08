@@ -637,9 +637,10 @@ void R_DrawSkyBox ()
 			return;		// nothing visible
 	}
 
-	glPushMatrix ();
-	glTranslatef (r_origin[0], r_origin[1], r_origin[2]);
-	glRotatef (r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
+	mat4_t mat;
+	memcpy(mat, r_world_matrix, sizeof(mat));
+	Mat4Translate(mat, r_origin[0], r_origin[1], r_origin[2]);
+	Mat4Rotate(mat, r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
 
 	for (i = 0; i < 6; i++)
 	{
@@ -666,11 +667,11 @@ void R_DrawSkyBox ()
 
 		R_BindProgram(GLPROG_SKY);
 		R_ProgUniform4f(LOC_COLOR4, skycolor[0], skycolor[1], skycolor[2], 1.0f);
+		R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, mat);
 		R_MultiTextureBind(TMU_DIFFUSE, sky_images[skytexorder[i]]->texnum);
 		R_DrawVertexBuffer(&vb_sky, 0, 0);
 		R_UnbindProgram();
 	}
-	glPopMatrix ();
 }
 
 

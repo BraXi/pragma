@@ -129,13 +129,14 @@ float LerpAngle(float a1, float a2, float frac);
 
 void Mat4MakeIdentity(mat4_t mat);
 void Mat4Perspective(mat4_t mat, float l, float r, float b, float t, float znear, float zfar);
+void Mat4Ortho(mat4_t mat, float l, float r, float b, float t, float znear, float zfar);
 //Does left x right, results in left. 
 void Mat4Multiply(mat4_t left, mat4_t right);
 //Rotates are performed by multiplying a resultant matrix against mat.
-//All rotates in the rendering code are rotations around cardinal axes, so only these are supported ATM.
 void Mat4RotateAroundX(mat4_t mat, float angle);
 void Mat4RotateAroundY(mat4_t mat, float angle);
 void Mat4RotateAroundZ(mat4_t mat, float angle);
+void Mat4Rotate(mat4_t mat, float angle, float x, float y, float z);
 //Multiplies mat by a translation matrix composed of xyz.
 void Mat4Translate(mat4_t mat, float x, float y, float z);
 //Multiplies mat by a scale matrix composed of xyz.

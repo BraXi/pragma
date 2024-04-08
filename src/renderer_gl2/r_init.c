@@ -308,7 +308,29 @@ int R_Init(void* hinstance, void* hWnd)
 		ri.Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
 	}
 
+	srand(time(NULL));
 	QueryPerformanceFrequency(&qpc_freq);
+
+#if 0 //[ISB] SSE matrix multiplication experimental benchmark. 
+	mat4_t a, b, sourcea;
+	for (int i = 0; i < 16; i++)
+	{
+		sourcea[i] = (float)rand() / RAND_MAX;
+		b[i] = (float)rand() / RAND_MAX;
+	}
+
+	LARGE_INTEGER test, test2;
+	QueryPerformanceCounter(&test);
+	for (int run = 0; run < 100000000; run++)
+	{
+		memcpy(a, sourcea, sizeof(a));
+		Mat4Multiply(a, b);
+	}
+	QueryPerformanceCounter(&test2);
+	test2.QuadPart -= test.QuadPart;
+	double ms = (double)test2.QuadPart / qpc_freq.QuadPart * 1000;
+	ri.Printf(PRINT_ALL, "100000000 matrix multiplies in %f MS (side effect %f)\n", ms, a[rand() & 15]);
+#endif
 
 #endif
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
