@@ -499,6 +499,7 @@ typedef struct
 #define	EF_GIB				2		// leave a trail
 #define	EF_ROCKET			8		// redlight + trail
 #define	EF_GRENADE			16		// tiny smoke trail
+#define	EF_FLASHLIGHT		32		// flash light (both world and view effect)
 #define	EF_ANIM01			64		// automatically cycle between frames 0 and 1 at 2 hz
 #define	EF_ANIM23			128		// automatically cycle between frames 2 and 3 at 2 hz
 #define EF_ANIM_ALL			256		// automatically cycle through all frames at 2hz

@@ -21,7 +21,10 @@ typedef struct
 	struct sfx_s* sfx_explosion[3];
 
 	struct model_s* mod_v_muzzleflash;
+	struct model_s* mod_w_flashlight;
+	struct model_s* mod_v_flashlight;
 	struct model_s* mod_w_muzzleflash;
+
 	struct model_s* impact_small;
 } cgMedia_t;
 

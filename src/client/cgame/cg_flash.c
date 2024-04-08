@@ -85,42 +85,6 @@ void CG_ParseMuzzleFlashMessage(void)
 
 /*
 ==============
-CG_AddViewFlashLight
-
-For now we have no model for it, and ignore cl_hand
-==============
-*/
-void CG_AddViewFlashLight(rentity_t* refent, player_state_t* ps)
-{
-	rentity_t ent;
-	//vec3_t out_angles;
-	int tag;
-
-	if (!ps->stats[STAT_HEALTH] || cl_testlights->value)
-		return;
-
-	if (refent && refent->model)
-	{
-		tag = re.TagIndexForName(refent->model, "tag_flash");
-		if (tag != -1)
-		{
-			memset(&ent, 0, sizeof(ent));
-
-			AxisClear(ent.axis);
-			PositionRotatedEntityOnTag(&ent, refent, ps->viewmodel_index, tag);
-			//VectorAngles_Fixed(ent.axis[0], out_angles);
-
-			V_AddSpotLight(ent.origin, ent.axis[0], 900, -0.95, 1.0f, 0.85f, 0.7f);
-		}
-	}
-	else
-	{
-		V_AddSpotLight(cl.refdef.view.origin, cl.v_forward, 900, -0.95, 1.0f, 0.85f, 0.7f);
-	}
-}
-
-/*
-==============
 CG_AddViewMuzzleFlash
 ==============
 */
@@ -154,4 +118,108 @@ void CG_AddViewMuzzleFlash(rentity_t* refent, player_state_t* ps)
 	ent.scale = cl_muzzleflashes[cl.muzzleflash].flashscale;
 
 	V_AddEntity(&ent);
+}
+
+/*
+==============
+CG_AddViewFlashLight
+
+For now we have no model for it, and ignore cl_hand
+==============
+*/
+void CG_AddViewFlashLight(rentity_t* refent, player_state_t* ps)
+{
+	clentity_t* cent;
+	rentity_t ent;
+	//vec3_t out_angles;
+	int tag;
+
+	if (!ps->stats[STAT_HEALTH] || cl_testlights->value)
+		return;
+
+	cent = &cl_entities[cl.playernum + 1];
+	if (!(cent->current.effects & EF_FLASHLIGHT))
+		return;
+
+	if (refent && refent->model)
+	{
+		tag = re.TagIndexForName(refent->model, "tag_light");
+		if (tag == -1)
+			tag = re.TagIndexForName(refent->model, "tag_flash");
+
+		if (tag != -1)
+		{
+			memset(&ent, 0, sizeof(ent));
+
+			AxisClear(ent.axis);
+			PositionRotatedEntityOnTag(&ent, refent, ps->viewmodel_index, tag);	
+			VectorAngles_Fixed(ent.axis[0], ent.angles);
+
+			ent.model = cgMedia.mod_v_flashlight;
+			ent.renderfx = RF_FULLBRIGHT | RF_TRANSLUCENT| RF_DEPTHHACK | RF_VIEW_MODEL;
+			ent.alpha = 0.075f;
+			V_AddEntity(&ent);
+
+			V_AddSpotLight(ent.origin, ent.axis[0], 900, -0.95, 1.0f, 0.85f, 0.7f);
+		}
+	}
+	else
+	{
+		V_AddSpotLight(cl.refdef.view.origin, cl.v_forward, 900, -0.95, 1.0f, 0.85f, 0.7f);
+	}
+}
+
+
+/*
+==============
+CG_AddFlashLightToEntity
+
+If entity has model it must also have one of the following tags: tag_light, tag_head
+Otherwise entity will cast light forward from its origin
+
+This is used for dynamic alarm lights
+==============
+*/
+void CG_AddFlashLightToEntity(clentity_t *cent, rentity_t* refent)
+{
+	rentity_t ent;
+	int tag;
+	vec3_t v_fwd;
+
+	if (!(cent->current.effects & EF_FLASHLIGHT))
+		return;
+
+	if (cent->current.number == cl.playernum + 1)
+		return; // dont draw world effect for local player
+
+	if (cent->current.modelindex && refent->model)
+	{
+		tag = re.TagIndexForName(refent->model, "tag_light");
+		if (tag == -1)
+			tag = re.TagIndexForName(refent->model, "tag_head");
+
+		if (tag != -1)
+		{
+			memset(&ent, 0, sizeof(ent));
+			AxisClear(ent.axis);
+			PositionRotatedEntityOnTag(&ent, refent, cent->current.modelindex, tag);
+			VectorAngles_Fixed(ent.axis[0], ent.angles);
+
+			ent.model = cgMedia.mod_w_flashlight;
+			ent.renderfx = RF_FULLBRIGHT | RF_TRANSLUCENT;
+			ent.alpha = 0.075f;
+			V_AddEntity(&ent);
+
+			V_AddPointLight(ent.origin, 32, 1.0f, 0.85f, 0.6f); //a little more yellowish for better effect
+			V_AddSpotLight(ent.origin, ent.axis[0], 240, -0.95, 1.0f, 0.85f, 0.7f);
+		}
+	}
+	else
+	{
+		AngleVectors(cent->current.angles, v_fwd, NULL, NULL);
+		if(cent->current.eType == 0 /*ET_GENERAL*/)
+			V_AddSpotLight(ent.origin, v_fwd, 300, -0.92, 0.7f, 0.1f, 0.0f); //red
+		else
+			V_AddSpotLight(ent.origin, v_fwd, 240, -0.92, 1.0f, 0.85f, 0.6f);
+	}
 }

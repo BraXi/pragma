@@ -14,7 +14,7 @@ See the attached GNU General Public License v2 for more details.
 
 void CG_AddViewMuzzleFlash(rentity_t* refent, player_state_t* ps);
 void CG_AddViewFlashLight(rentity_t* refent, player_state_t* ps);
-
+void CG_AddFlashLightToEntity(clentity_t* cent, rentity_t* refent);
 /*
 ==========================================================================
 
@@ -320,7 +320,6 @@ void CL_AddPacketEntities(frame_t* frame)
 #if 0
 		//
 		// add dynamic light
-		// TODO: figure out lightstyle
 		//
 		if (state->effects & RF_LIGHT)
 		{
@@ -331,6 +330,9 @@ void CL_AddPacketEntities(frame_t* frame)
 			V_AddLight(rent.origin, state->lightIntensity, -state->lightColor[0], -state->lightColor[1], -state->lightColor[2]);
 		}
 #endif
+
+		CG_AddFlashLightToEntity(clent, &rent);
+
 		//
 		// if entity has no model just skip at this point
 		//
@@ -381,7 +383,7 @@ void CL_AddPacketEntities(frame_t* frame)
 CL_AddViewWeapon
 ==============
 */
-void CL_AddViewWeapon(player_state_t *ps, player_state_t *ops)
+void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 {
 	rentity_t	viewmodel; 
 	int			i;
@@ -401,10 +403,8 @@ void CL_AddViewWeapon(player_state_t *ps, player_state_t *ops)
 		viewmodel.model = cl.model_draw[ps->viewmodel_index];
 
 	if (!viewmodel.model)
-	{
-		CG_AddViewFlashLight(NULL, ps);
+	
 		return;
-	}
 
 	// set up position
 	for (i = 0; i < 3; i++)
