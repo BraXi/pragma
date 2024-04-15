@@ -328,13 +328,13 @@ void R_DrawProfilingReport()
 	float x, y, h;
 
 	x = vid.width - 10;
-	y = 32 + 230;
+	y = 32 + 250;
 	h = R_GetFontHeight(0) * fontscale;
 
 	Vector4Set(color, 0, 0, 0, 0.35f);
 
 	R_ProgUniform4f(LOC_COLOR4, 0, 0, 0, 0.5);
-	R_DrawFill(vid.width - 175, 25 + 230, 175, (NUM_PROFILES - 1) * h + 16);
+	R_DrawFill(vid.width - 175, 45 + 230, 175, (NUM_PROFILES - 1) * h + 16);
 
 	Vector4Set(color, 1, 1, 1, 1.0);
 	for (int i = 1; i < NUM_PROFILES; i++)

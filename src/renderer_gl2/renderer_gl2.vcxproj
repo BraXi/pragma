@@ -186,7 +186,6 @@
     <ClCompile Include="r_misc.c" />
     <ClCompile Include="r_sprite.c" />
     <ClCompile Include="r_state.c" />
-    <ClCompile Include="r_surf.c" />
     <ClCompile Include="r_warp.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

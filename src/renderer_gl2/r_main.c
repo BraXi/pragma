@@ -464,7 +464,7 @@ static void R_SetupGL()
 	memcpy(r_world_matrix, mat, sizeof(mat));
 
 	//only send the matricies once since they'll never change during a frame.
-	R_BindProgram(GLPROG_WORLD_NEW);
+	R_BindProgram(GLPROG_WORLD);
 
 	//
 	// set drawing parms

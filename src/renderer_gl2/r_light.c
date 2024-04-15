@@ -169,7 +169,6 @@ void R_SendDynamicLightsToCurrentProgram()
 
 	}
 
-	//	R_BindProgram(r_fastworld->value ? GLPROG_WORLD_NEW : GLPROG_WORLD);
 	R_ProgUniform1i(LOC_DLIGHT_COUNT, numDynLights);
 	if (numDynLights > 0)
 	{
@@ -177,7 +176,6 @@ void R_SendDynamicLightsToCurrentProgram()
 		R_ProgUniform4fv(LOC_DLIGHT_POS_AND_RAD, numDynLights, &dl_pos_and_rad[0][0]);
 		R_ProgUniform4fv(LOC_DLIGHT_DIR_AND_CUTOFF, numDynLights, &dl_dir_and_cutoff[0][0]);
 	}
-	//	R_UnbindProgram();
 }
 
 

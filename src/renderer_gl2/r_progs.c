@@ -108,8 +108,7 @@ static proginfo_t proginfo[] =
 	{GLPROG_GUI,			"gui",				PF_ORTHO},
 	{GLPROG_POSTFX,			"postfx",			PF_ORTHO},
 	{GLPROG_DEBUGSTRING,	"debug_string"},
-	{GLPROG_DEBUGLINE,		"debug_line"},
-	{GLPROG_WORLD_NEW,		"world-new"}
+	{GLPROG_DEBUGLINE,		"debug_line"}
 };
 
 #define NUM_PROGINFO sizeof(proginfo) / sizeof(proginfo[0])

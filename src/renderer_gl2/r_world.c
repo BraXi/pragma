@@ -13,9 +13,13 @@ See the attached GNU General Public License v2 for more details.
 #include <assert.h>
 #include "r_local.h"
 
-extern vec3_t		modelorg;		// relative to viewpoint
-extern msurface_t	*r_alpha_surfaces;
-extern image_t		*R_World_TextureAnimation(mtexinfo_t* tex);
+static vec3_t		modelorg; // relative to viewpoint
+static msurface_t	*r_alpha_surfaces = NULL; //transparent surfs
+static byte			fatvis[MAX_MAP_LEAFS_QBSP / 8]; // markleaves
+
+extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
+extern void R_BeginLinesRendering(qboolean dt);
+extern void R_EndLinesRendering();
 
 extern int registration_sequence; // experimental nature heh
 
@@ -49,6 +53,93 @@ typedef struct gfx_world_s
 static gfx_world_t gfx_world = { 0 };
 
 
+
+/*
+===============
+R_BuildPolygonFromSurface
+
+Does also calculate proper lightmap coordinates for poly
+===============
+*/
+void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
+{
+	int i, lnumverts;
+	medge_t* pedges, * r_pedge;
+	float* vec;
+	poly_t* poly;
+	vec3_t total;
+	vec3_t normal;
+
+	// reconstruct the polygon
+	pedges = mod->edges;
+	lnumverts = surf->numedges;
+
+	VectorClear(total);
+
+	/* draw texture */
+	poly = Hunk_Alloc(sizeof(poly_t) + (lnumverts - 4) * sizeof(polyvert_t));
+	poly->next = surf->polys;
+	poly->flags = surf->flags;
+	surf->polys = poly;
+	poly->numverts = lnumverts;
+
+	VectorCopy(surf->plane->normal, normal);
+
+	if (surf->flags & SURF_PLANEBACK)
+	{
+		// if for some reason the normal sticks to the back of 
+		// the plane, invert it so it'surf usable for the shader
+		for (i = 0; i < 3; ++i)
+			normal[i] = -normal[i];
+	}
+
+	float alpha = 1.0f;
+	if (surf->texinfo->flags & SURF_TRANS66)
+		alpha = 0.66f;
+	else if (surf->texinfo->flags & SURF_TRANS33)
+		alpha = 0.33;
+
+	for (i = 0; i < lnumverts; i++)
+	{
+		polyvert_t* vert;
+		float s, t;
+		int lindex;
+
+		vert = &poly->verts[i];
+
+		lindex = mod->surfedges[surf->firstedge + i];
+
+		if (lindex > 0)
+		{
+			r_pedge = &pedges[lindex];
+			vec = mod->vertexes[r_pedge->v[0]].position;
+		}
+		else
+		{
+			r_pedge = &pedges[-lindex];
+			vec = mod->vertexes[r_pedge->v[1]].position;
+		}
+
+		//
+		// diffuse texture coordinates
+		//
+		s = DotProduct(vec, surf->texinfo->vecs[0]) + surf->texinfo->vecs[0][3];
+		s /= surf->texinfo->image->width;
+
+		t = DotProduct(vec, surf->texinfo->vecs[1]) + surf->texinfo->vecs[1][3];
+		t /= surf->texinfo->image->height;
+
+		VectorAdd(total, vec, total);
+		VectorCopy(vec, vert->pos);
+		Vector2Set(vert->texCoord, s, t);
+
+		VectorCopy(normal, vert->normal);
+		vert->alpha = alpha;
+
+		R_LightMap_TexCoordsForSurf(surf, vert, vec);
+	}
+}
+
 // ==============================================================================
 // VERTEX BUFFER MANAGMENT
 // ==============================================================================
@@ -67,7 +158,7 @@ static void R_DestroyWorldVertexBuffer()
 
 	glDeleteBuffers(1, &gfx_world.vbo);
 
-	ri.Printf(PRINT_ALL, "Freed world surface cache.\n");
+	ri.Printf(PRINT_LOW, "Freed world surface cache.\n");
 	memset(&gfx_world, 0, sizeof(gfx_world));
 }
 
@@ -168,7 +259,7 @@ static void R_World_BeginRendering()
 
 	// bind shader and buffer and assign attrib locations
 
-	R_BindProgram(GLPROG_WORLD_NEW);
+	R_BindProgram(GLPROG_WORLD);
 	glBindBuffer(GL_ARRAY_BUFFER, gfx_world.vbo);
 
 	attrib = R_GetProgAttribLoc(VALOC_POS);
@@ -262,6 +353,30 @@ static void R_World_DrawAndFlushBufferedGeo()
 // ==============================================================================
 // BATCHING
 // ==============================================================================
+
+/*
+===============
+R_World_TextureAnimation
+
+Returns the proper texture for a given time and base texture
+===============
+*/
+image_t* R_World_TextureAnimation(mtexinfo_t* tex)
+{
+	int		c;
+
+	if (!tex->next)
+		return tex->image;
+
+	c = pCurrentRefEnt->frame % tex->numframes;
+	while (c)
+	{
+		tex = tex->next;
+		c--;
+	}
+
+	return tex->image;
+}
 
 /*
 =======================
@@ -442,12 +557,12 @@ void R_World_LightInlineModel()
 
 /*
 =================
-R_DrawInlineBModel_NEW
+R_DrawBrushModel_Internal
 
 This is a copy of R_DrawInlineBModel adapted for batching
 =================
 */
-void R_DrawInlineBModel_NEW()
+static void R_DrawBrushModel_Internal()
 {
 	int			i;
 	cplane_t	*pplane;
@@ -509,11 +624,73 @@ void R_DrawInlineBModel_NEW()
 
 
 /*
+=================
+R_DrawBrushModel
+=================
+*/
+void R_DrawBrushModel(rentity_t* e)
+{
+	vec3_t		mins, maxs;
+	int			i;
+	qboolean	rotated;
+
+	if (pCurrentModel->nummodelsurfaces == 0)
+		return;
+
+	pCurrentRefEnt = e;
+
+	if (e->angles[0] || e->angles[1] || e->angles[2])
+	{
+		rotated = true;
+		for (i = 0; i < 3; i++)
+		{
+			mins[i] = e->origin[i] - pCurrentModel->radius;
+			maxs[i] = e->origin[i] + pCurrentModel->radius;
+		}
+	}
+	else
+	{
+		rotated = false;
+		VectorAdd(e->origin, pCurrentModel->mins, mins);
+		VectorAdd(e->origin, pCurrentModel->maxs, maxs);
+	}
+
+	if (R_CullBox(mins, maxs))
+		return;
+
+
+	VectorSubtract(r_newrefdef.view.origin, e->origin, modelorg);
+	if (rotated)
+	{
+		vec3_t	temp;
+		vec3_t	forward, right, up;
+
+		VectorCopy(modelorg, temp);
+		AngleVectors(e->angles, forward, right, up);
+		modelorg[0] = DotProduct(temp, forward);
+		modelorg[1] = -DotProduct(temp, right);
+		modelorg[2] = DotProduct(temp, up);
+	}
+
+#ifndef FIX_SQB
+	e->angles[0] = -e->angles[0];	// stupid quake bug
+	e->angles[2] = -e->angles[2];	// stupid quake bug
+#endif
+	R_RotateForEntity(e);
+#ifndef FIX_SQB
+	e->angles[0] = -e->angles[0];	// stupid quake bug
+	e->angles[2] = -e->angles[2];	// stupid quake bug
+#endif
+
+	R_DrawBrushModel_Internal();
+}
+
+/*
 ================
-R_DrawWorld_TextureChains_NEW
+R_World_DrawSortedByDiffuseMap
 ================
 */
-static void R_DrawWorld_TextureChains_NEW()
+static void R_World_DrawSortedByDiffuseMap()
 {
 	int		i;
 	msurface_t* s;
@@ -538,7 +715,6 @@ static void R_DrawWorld_TextureChains_NEW()
 			if (!(s->flags & SURF_DRAWTURB))
 			{ 
 				R_World_NewDrawSurface(s, true);
-				// draw all lightmapped surfs
 			}
 		}
 	}
@@ -579,45 +755,385 @@ static void R_DrawWorld_TextureChains_NEW()
 /*
 ================
 R_World_DrawAlphaSurfaces_NEW
+
+Draw water surfaces and windows without writing to the depth buffer.
+The BSP tree is waled front to back, so unwinding the chain
+of alpha_surfaces will draw back to front, giving proper ordering.
 ================
 */
-void R_World_DrawAlphaSurfaces_NEW()
+void R_World_DrawAlphaSurfaces()
 {
 	msurface_t* surf;
+	
+	// go back to the world matrix
+	memcpy(r_local_matrix, mat4_identity, sizeof(mat4_t));
 
-	// we are already at world matrix
-	//glLoadMatrixf(r_world_matrix);
-
-	R_World_BeginRendering();
-
+	//dont write z and enable blending
 	R_WriteToDepthBuffer(false);
 	R_Blend(true);
 
+	R_World_BeginRendering();
 	for (surf = r_alpha_surfaces; surf; surf = surf->texturechain)
 	{
-		//All surfaces can go through the same pipe now.
 		R_World_NewDrawSurface(surf, false);
 	}
 	R_World_DrawAndFlushBufferedGeo();
+	R_World_EndRendering();
 
 	R_WriteToDepthBuffer(true);
 	R_Blend(false);
-	R_World_EndRendering();
 
 	r_alpha_surfaces = NULL;
+}
+
+// ==============================================================================
+// BSP TREE
+// ==============================================================================
+
+/*
+===============
+R_World_MarkLeaves
+
+Mark the leaves and nodes that are in the PVS for the current cluster
+Note: a camera may be in two PVS areas hence there ate two clusters
+===============
+*/
+void R_World_MarkLeaves()
+{
+	byte* vis;
+	mnode_t* node;
+	int		i, c;
+	mleaf_t* leaf;
+	int		cluster;
+
+	if (r_oldviewcluster == r_viewcluster && r_oldviewcluster2 == r_viewcluster2 && !r_novis->value && r_viewcluster != -1)
+		return;
+
+	// development aid to let you run around and see exactly where the pvs ends
+	if (r_lockpvs->value)
+		return;
+
+	r_visframecount++;
+	r_oldviewcluster = r_viewcluster;
+	r_oldviewcluster2 = r_viewcluster2;
+
+	if (r_novis->value || r_viewcluster == -1 || !r_worldmodel->vis)
+	{
+		// mark everything
+		for (i = 0; i < r_worldmodel->numleafs; i++)
+			r_worldmodel->leafs[i].visframe = r_visframecount;
+		for (i = 0; i < r_worldmodel->numnodes; i++)
+			r_worldmodel->nodes[i].visframe = r_visframecount;
+		return;
+	}
+
+	vis = Mod_BSP_ClusterPVS(r_viewcluster, r_worldmodel);
+	// may have to combine two clusters because of solid water boundaries
+	if (r_viewcluster2 != r_viewcluster)
+	{
+		memcpy(fatvis, vis, (r_worldmodel->numleafs + 7) / 8);
+		vis = Mod_BSP_ClusterPVS(r_viewcluster2, r_worldmodel);
+		c = (r_worldmodel->numleafs + 31) / 32;
+		for (i = 0; i < c; i++)
+			((int*)fatvis)[i] |= ((int*)vis)[i];
+		vis = fatvis;
+	}
+
+	for (i = 0, leaf = r_worldmodel->leafs; i < r_worldmodel->numleafs; i++, leaf++)
+	{
+		cluster = leaf->cluster;
+		if (cluster == -1)
+			continue;
+		if (vis[cluster >> 3] & (1 << (cluster & 7)))
+		{
+			node = (mnode_t*)leaf;
+			do
+			{
+				if (node->visframe == r_visframecount)
+					break;
+				node->visframe = r_visframecount;
+				node = node->parent;
+			} while (node);
+		}
+	}
 }
 
 
 /*
 ================
-R_DrawWorld_NEW
+R_World_RecursiveNode
 
+Builts two chains for solid and transparent geometry which we later use
+to draw world, discards nodes which are not in PVS or frustum
 ================
 */
-void R_DrawWorld_NEW()
+static void R_World_RecursiveNode(mnode_t* node)
 {
-	// we already have texturechains
+	int			c, side, sidebit;
+	cplane_t* plane;
+	msurface_t* surf, ** mark;
+	mleaf_t* pleaf;
+	float		dot;
+	image_t* image;
 
+	if (node->contents == CONTENTS_SOLID)
+		return;		// solid
+
+	if (node->visframe != r_visframecount)
+		return;
+
+	if (R_CullBox(node->mins, node->maxs))
+		return;
+
+	// if a leaf node, draw stuff
+	if (node->contents != -1)
+	{
+		pleaf = (mleaf_t*)node;
+
+		// check for door connected areas
+		if (r_newrefdef.areabits)
+		{
+			if (!(r_newrefdef.areabits[pleaf->area >> 3] & (1 << (pleaf->area & 7))))
+				return;	// not visible
+		}
+
+		mark = pleaf->firstmarksurface;
+		c = pleaf->nummarksurfaces;
+
+		if (c)
+		{
+			do
+			{
+				(*mark)->visframe = r_framecount;
+				mark++;
+			} while (--c);
+		}
+
+		return;
+	}
+
+	//
+	// node is just a decision point, so go down the apropriate sides
+	//
+
+	// find which side of the node we are on
+	plane = node->plane;
+
+	switch (plane->type)
+	{
+	case PLANE_X:
+		dot = modelorg[0] - plane->dist;
+		break;
+	case PLANE_Y:
+		dot = modelorg[1] - plane->dist;
+		break;
+	case PLANE_Z:
+		dot = modelorg[2] - plane->dist;
+		break;
+	default:
+		dot = DotProduct(modelorg, plane->normal) - plane->dist;
+		break;
+	}
+
+	if (dot >= 0)
+	{
+		side = 0;
+		sidebit = 0;
+	}
+	else
+	{
+		side = 1;
+		sidebit = SURF_PLANEBACK;
+	}
+
+	// recurse down the children, front side first
+	R_World_RecursiveNode(node->children[side]);
+
+	// draw stuff
+	for (c = node->numsurfaces, surf = r_worldmodel->surfaces + node->firstsurface; c; c--, surf++)
+	{
+		if (surf->visframe != r_framecount)
+			continue;
+
+		if ((surf->flags & SURF_PLANEBACK) != sidebit)
+			continue;		// wrong side
+
+		if (surf->texinfo->flags & SURF_SKY)
+		{
+			//
+			// add to visible sky bounds
+			//
+			R_AddSkySurface(surf);
+		}
+		else if (surf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66))
+		{
+			//
+			// add surface to the translucent chain
+			//
+			surf->texturechain = r_alpha_surfaces;
+			r_alpha_surfaces = surf;
+		}
+		else
+		{
+			//
+			// add surface to the texture chain
+			//
+			// FIXME: this is a hack for animation
+			image = R_World_TextureAnimation(surf->texinfo);
+			surf->texturechain = image->texturechain;
+			image->texturechain = surf;
+		}
+	}
+
+	// recurse down the back side
+	R_World_RecursiveNode(node->children[!side]);
+}
+
+
+/*
+================
+R_World_DrawTriangleOutlines
+
+r_showtris
+
+todo: get rid of im rendering calls
+================
+*/
+static void R_World_DrawTriangleOutlines()
+{
+	int		i, j;
+	msurface_t* surf;
+	poly_t* p;
+	image_t* image;
+
+	if (!r_showtris->value)
+		return;
+
+	R_WriteToDepthBuffer(false);
+	R_BeginLinesRendering(r_showtris->value >= 2 ? true : false);
+
+	if (r_showtris->value > 1)
+	{
+		glEnable(GL_POLYGON_OFFSET_LINE);
+		glPolygonOffset(-1, -1);
+		glLineWidth(2);
+	}
+
+	R_BindProgram(GLPROG_DEBUGLINE);
+	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
+	{
+		if (!image->registration_sequence)
+			continue;
+
+		surf = image->texturechain;
+		if (!surf)
+			continue;
+
+		for (; surf; surf = surf->texturechain)
+		{
+			if (r_showtris->value > 2)
+			{
+				if (surf->flags & SURF_DRAWTURB)
+					R_ProgUniform4f(LOC_COLOR4, 0.0f, 0.2f, 1.0f, 1.0f);
+				else if (surf->flags & SURF_UNDERWATER)
+					R_ProgUniform4f(LOC_COLOR4, 0.0f, 1.0f, 0.0f, 1.0f);
+				else
+					R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
+			}
+
+			p = surf->polys;
+			for (; p; p = p->chain)
+			{
+				for (j = 2; j < p->numverts; j++)
+				{
+					glBegin(GL_LINE_STRIP);
+					glVertex3fv(p->verts[0].pos);
+					glVertex3fv(p->verts[j - 1].pos);
+					glVertex3fv(p->verts[j].pos);
+					glVertex3fv(p->verts[0].pos);
+					glEnd();
+				}
+			}
+		}
+		image->texturechain = NULL;
+	}
+
+	// draw transparent
+	if (r_alpha_surfaces)
+	{
+		R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 0.0f, 1.0f);
+		for (surf = r_alpha_surfaces; surf; surf = surf->texturechain)
+		{
+			p = surf->polys;
+			for (; p; p = p->chain)
+			{
+				for (j = 2; j < p->numverts; j++)
+				{
+					glBegin(GL_LINE_STRIP);
+					glVertex3fv(p->verts[0].pos);
+					glVertex3fv(p->verts[j - 1].pos);
+					glVertex3fv(p->verts[j].pos);
+					glVertex3fv(p->verts[0].pos);
+					glEnd();
+				}
+			}
+		}
+	}
+
+	R_UnbindProgram();
+
+	if (r_showtris->value > 1)
+	{
+		glDisable(GL_POLYGON_OFFSET_LINE);
+		glPolygonOffset(0.0f, 0.0f);
+	}
+
+	R_EndLinesRendering();
+	R_WriteToDepthBuffer(true);
+}
+
+/*
+================
+R_DrawWorld
+
+Draws world and skybox
+================
+*/
+void R_DrawWorld()
+{
+	rentity_t	ent;
+
+	if (!r_drawworld->value)
+		return;
+
+	if (r_newrefdef.view.flags & RDF_NOWORLDMODEL)
+		return;
+
+	memset(&ent, 0, sizeof(ent));
+	ent.frame = (int)(r_newrefdef.time * 2);
+	VectorSet(ent.renderColor, 1.0f, 1.0f, 1.0f);
+	ent.alpha = 1.0f;
+
+	pCurrentRefEnt = &ent;
+	pCurrentModel = r_worldmodel;
+
+	VectorCopy(r_newrefdef.view.origin, modelorg);
+
+	R_ClearSkyBox();
+
+	// build texture chains
+	R_World_RecursiveNode(r_worldmodel->nodes);
+
+	//no local transform needed for world. 
+	memcpy(r_local_matrix, mat4_identity, sizeof(mat4_t));
+
+
+	//
+	// DRAW THE WORLD
+	// 
+	
 	// should move this to Mod_LoadFaces or Mod_LoadBSP
 	if (registration_sequence != gfx_world.registration_sequence)
 	{
@@ -630,8 +1146,12 @@ void R_DrawWorld_NEW()
 		R_BuildVertexBufferForWorld();
 	}
 
+	R_World_DrawSortedByDiffuseMap();
 
-	R_DrawWorld_TextureChains_NEW();
+	// 
+	// DRAW SKYBOX
+	//
+	R_DrawSkyBox();
 
-	R_World_EndRendering(); // to make sure we're out of rendering world
+	R_World_DrawTriangleOutlines();
 }

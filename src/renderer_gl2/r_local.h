@@ -97,7 +97,6 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse);
 enum
 {
 	GLPROG_WORLD,
-	GLPROG_WORLD_NEW,
 	GLPROG_SKY,
 	GLPROG_ALIAS,
 	GLPROG_SPRITE,
@@ -287,8 +286,6 @@ extern	cvar_t	*r_fullbright;
 extern	cvar_t	*r_novis;
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_lerpmodels;
-extern	cvar_t	*r_fastworld;
-
 extern cvar_t	*gl_ext_swapinterval;
 
 extern	cvar_t	*r_bitdepth;
@@ -347,7 +344,7 @@ void GL_SetDefaultState(void);
 void GL_UpdateSwapInterval(void);
 
 //===================================================================
-// r_surf.c
+// r_world.c
 //===================================================================
 void R_DrawWorld();
 void R_World_MarkLeaves();
@@ -487,7 +484,6 @@ a better gl state tracker
 extern inline void R_AlphaTest(qboolean enable);
 extern inline void R_Blend(qboolean enable);
 extern inline void R_DepthTest(qboolean enable);
-extern  void R_Texturing(qboolean enable);
 extern inline void R_CullFace(qboolean enable);
 
 extern inline void R_SetCullFace(GLenum newstate);

@@ -73,7 +73,6 @@ inline void funcName(stateValType newstateA, stateValType newstateB) { \
 OGL_TOGGLE_STATE_FUNC(R_AlphaTest, glstate.alphaTestEnabled, GL_ALPHA_TEST)
 OGL_TOGGLE_STATE_FUNC(R_Blend, glstate.blendEnabled, GL_BLEND)
 OGL_TOGGLE_STATE_FUNC(R_DepthTest, glstate.depthTestEnabled, GL_DEPTH_TEST)
-//OGL_TOGGLE_STATE_FUNC(R_Texturing, glstate.textureEnabled, GL_TEXTURE_2D)
 OGL_TOGGLE_STATE_FUNC(R_CullFace, glstate.cullFaceEnabled, GL_CULL_FACE)
 
 OGL_STATE_FUNC(R_SetCullFace, glstate.cullface, glCullFace, GLenum)
