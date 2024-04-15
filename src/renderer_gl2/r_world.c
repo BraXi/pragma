@@ -589,6 +589,8 @@ void R_World_DrawAlphaSurfaces_NEW()
 	//glLoadMatrixf(r_world_matrix);
 
 	R_World_BeginRendering();
+
+	R_WriteToDepthBuffer(false);
 	R_Blend(true);
 
 	for (surf = r_alpha_surfaces; surf; surf = surf->texturechain)
@@ -598,6 +600,7 @@ void R_World_DrawAlphaSurfaces_NEW()
 	}
 	R_World_DrawAndFlushBufferedGeo();
 
+	R_WriteToDepthBuffer(true);
 	R_Blend(false);
 	R_World_EndRendering();
 

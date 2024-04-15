@@ -13,7 +13,8 @@ See the attached GNU General Public License v2 for more details.
 
 void R_Clear (void);
 
-model_t		*r_worldmodel;
+model_t		*r_worldmodel = NULL;
+model_t		*r_defaultmodel = NULL; //for missing models
 
 float		gldepthmin, gldepthmax;
 
@@ -541,17 +542,23 @@ void R_RenderView (refdef_t *fd)
 	R_ClearFBO(); 
 	R_RenderToFBO(true); // begin rendering to fbo
 	R_ProfileAtStage(STAGE_SETUP);
+
 	R_DrawWorld();
 	R_ProfileAtStage(STAGE_DRAWWORLD);
+
 	R_DrawEntitiesOnList();
 	R_ProfileAtStage(STAGE_ENTITIES);
+
 	R_DrawDebugLines();
 	R_ProfileAtStage(STAGE_DEBUG);
+
 //	R_RenderDlights ();
 	R_World_DrawAlphaSurfaces();
 	R_ProfileAtStage(STAGE_ALPHASURFS);
+
 	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
 	R_ProfileAtStage(STAGE_PARTICLES);
+
 	R_RenderToFBO(false); // end rendering to fbo
 	
 	R_SelectTextureUnit(0);
@@ -599,12 +606,15 @@ static void R_DrawPerfCounters()
 	Vector4Set(color, 0, 0, 0, 0.35f);
 	
 	R_ProgUniform4f(LOC_COLOR4, 0, 0, 0, 0.5);
-	R_DrawFill(vid.width-175, 25, 175, 220);
+	R_DrawFill(vid.width-175, 42, 175, 220);
 
 	fontscale = 0.25;
 	x = vid.width - 10;
-	y = 32;
+	y = 46;
 	h = R_GetFontHeight(0) * fontscale;
+
+	Vector4Set(color, 1.0, 0.65, 0, 1.0);
+	R_DrawText(x + 5, h + 4, 2, 0, fontscale, color, va("%s", gl_config.renderer_string));
 
 	Vector4Set(color, 1, 1, 1, 1.0);
 	R_DrawText(x, y, 2, 0, fontscale, color, va("%i brush polygons", rperf.brush_polys));

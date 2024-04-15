@@ -199,7 +199,6 @@ void R_World_DrawAlphaSurfaces()
 	//
 	// go back to the world matrix
 	//
-    glLoadMatrixf (r_world_matrix);
 	memcpy(r_local_matrix, mat4_identity, sizeof(mat4_t));
 
 	if (r_fastworld->value)

@@ -62,7 +62,8 @@ model_t* R_ModelForNum(int index)
 	// out of range gets the default model
 	if (index < 1 || index >= r_models_count)
 	{
-		return &r_models[0];
+//		return &r_models[0];
+		return r_defaultmodel;
 	}
 
 	mod = &r_models[index];
@@ -142,9 +143,8 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	pLoadModel = mod;
 
 	//
-	// fill it in
-	//
 	// call the apropriate loader
+	//
 	switch (LittleLong(*(unsigned*)buf))
 	{
 	case MD3_IDENT: /* Quake3 .md3 model */
@@ -267,7 +267,7 @@ struct model_s* R_RegisterModel(char* name)
 	{
 		mod->registration_sequence = registration_sequence;
 
-		// register any images used by the models
+		// register all images used by the models
 		if (mod->type == MOD_SPRITE)
 		{
 			sp2Header = (sp2Header_t*)mod->extradata;
@@ -324,18 +324,24 @@ void R_BeginRegistration(const char *worldName)
 	// explicitly free the old map if different, this guarantees that r_models[0] is the world map
 	// this also ensures we don't reload the map when restarting level
 	flushmap = ri.Cvar_Get("flushmap", "0", 0);
-	if (strcmp(r_models[0].name, fullname) || flushmap->value)
-		R_FreeModel(&r_models[0]);
+	if (r_worldmodel && (strcmp(r_worldmodel->name, fullname) || flushmap->value))
+	{
+		R_FreeModel(r_worldmodel);
+		r_worldmodel = NULL;
+	}
+	// 
+//	if (strcmp(r_models[0].name, fullname) || flushmap->value)
+//		R_FreeModel(&r_models[0]);
 
 	r_worldmodel = R_ModelForName(fullname, true);
-	r_viewcluster = -1;
+	r_viewcluster = r_viewcluster2 = -1;
 }
 
 /*
 ================
 R_EndRegistration
 
-Loads the world BSP model and bumps registration sequence so the unused assets can be freed after init is done
+Frees images and models which haven't bumped their registration sequence (they're no longer needed)
 ================
 */
 void R_EndRegistration(void)
@@ -343,6 +349,7 @@ void R_EndRegistration(void)
 	R_FreeUnusedModels();
 	R_FreeUnusedTextures();
 }
+
 //=============================================================================
 
 /*
@@ -366,12 +373,12 @@ void Cmd_modellist_f(void)
 			continue;
 
 		if (mod->type == MOD_BRUSH)
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d bytes]\n", i, mtypes[mod->type], mod->name, mod->extradatasize);
+			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mtypes[mod->type], mod->name, mod->extradatasize/1024);
 		else
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d bytes]\n", i, mtypes[mod->type], mod->name, mod->numframes, mod->extradatasize);
+			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d kb]\n", i, mtypes[mod->type], mod->name, mod->numframes, mod->extradatasize/1024);
 		total += mod->extradatasize;
 	}
-	ri.Printf(PRINT_ALL, "\nTotal resident: %i\n", total);
+	ri.Printf(PRINT_ALL, "\nTotal resident: %i kb\n", total / 1024);
 	ri.Printf(PRINT_ALL, "Total %i out of %i models in use\n\n", i, RD_MAX_MODELS);
 }
 
@@ -1374,7 +1381,8 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	dbsp_header_t	*header;
 	mmodel_t 	*bm;
 	
-	if (pLoadModel != r_models)
+//	if (pLoadModel != r_models)
+	if (r_worldmodel != NULL && pLoadModel != r_worldmodel)
 		ri.Error (ERR_DROP, "Mod_LoadBSP: Loaded BSP after the world");
 
 	header = (dbsp_header_t *)buffer;

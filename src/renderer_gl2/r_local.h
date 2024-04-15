@@ -327,6 +327,8 @@ extern mat4_t r_ortho_matrix;
 // r_model.c
 //===================================================================
 extern model_t *r_worldmodel;
+extern model_t* r_defaultmodel;
+
 extern int registration_sequence;
 void R_InitSprites();
 
