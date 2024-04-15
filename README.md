@@ -24,6 +24,7 @@ Pragma is an highly modified IdTech2 engine derived from Quake II aimed at stand
 - Player movement code (`pmove`) was moved from client exe to cg/svg qc modules which allows mods to write new physics code while retaining prediction
 - Plenty of bug fixes
 - Not. Even. A. Single. Dependency. - everything is buildable out of the box in VS2019 without the need to configure anything
+- Supports multiple bitmap fonts with proper glyph sizes
 
 
 ## Other notable planned changes:
