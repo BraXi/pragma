@@ -2,62 +2,33 @@
 
 [![Build Status](https://github.com/BraXi/pragma/actions/workflows/msbuild.yml/badge.svg)](https://github.com/BraXi/pragma/actions/workflows/msbuild.yml) [![Build Status](https://github.com/BraXi/pragma/actions/workflows/msbuild-release-x86.yml/badge.svg)](https://github.com/BraXi/pragma/actions/workflows/msbuild-release-x86.yml)
 
-Pragma is an highly modified and upgraded IdTech2 engine with strong focus on QC scripting and is entirely aimed at standalone projects.
-
+Pragma is an highly modified IdTech2 engine derived from Quake II aimed at standalone projects.
 
 > THIS IS NOT ANOTHER SOURCE PORT AND YOU CANNOT PLAY QUAKE 2 WITH IT. 
->
-> IT IS HEAVILY UNDER CONSTRUCTION AND IN EXPERIMENTAL STAGE, THAT MEANS DRASTIC CHANGES TO CODE AND APIs HAPPEN
-
-The biggest change is the complete removal of native game code (the Q2's game library), which was replaced with QuakeC VM, that is QC programs run across all supported operating systems and are being more secure, allowing users to run various mods and not worry about any malicious code.
-
-Along with server progs, it does also introduce QC scripting for client-game and GUIs.
-
-Project has a simple rule - *no bloat*, all the changes and additions should not add unnecessary complexity, no plethora of fileformats and very limited dependencies to the code, the smaller the code is, the better.
-
-I'm trying to avoid including any unnecessary dependencies to the point where you can compile it out of the box with Visual Studio 2019 and 2022 editions.
 
 
-## pragma vs. IdTech2 (Quake2) comparision, goals and current state
-(* means the initial work has been done but its not usable in current form or incomplete, ** feature will be removed completly, *** feature will be implemented or needs to be reimplemented because current implementation is bad)
-| Feature            | pragma | idTech2 (Q2) |
-|----------------|--------|--------------|
-| Server game | SV QuakeC | Native library |
-| Client game | CL QuakeC | Hardcoded in engine |
-| GUI (menus, hud)| GUI QuakeC | Hardcoded in engine |
-| Pmove | In CG/SG QC scripts | Hardcoded in engine |
-| Renderers | OpenGL 2.1 | OpenGL 1.1, Software |
-| Color palette | RGBA | colormap dependant (256 colors)|
-| Image formats | TGA | TGA (sky only), PCX, WAL |
-| Model formats | MD3, SP2 | MD2, SP2 |
-| Map format | Q2 BSP + QBISM BSP | Q2 BSP V.38 |
-| IPX | No, nobody uses it | Yes |
-| CDAudio | No, who still has cd drive? | Yes |
-| Cinematics | No*** | Yes (.cin format) |
-| savegames | No*** | Yes (prone to bugs, OS dependant) |
-| Asset limits (net) | up to 32768 models and sounds, 256 gui images | 256 models, 256 sounds, 256 images |
-| Renderer limits | raised by a lot oob ;) | 32 dlights, 128 models, 4096 particles |
-
-
-## Features:
-Pragma so far had introduced following additions and changes to Q2 engine:
-- It's completly standalone, does not require Quake2 assets
-- completly platform independant QuakeC Virtual Machine instead of native game library
-- Improved OpenGL renderer with a noticeable perf improvment, post process effects, GLSL shaders -- complete removal of color palette, 8bit textures and ancient hardware releated code
-- Support for high resolution textures, you're not limited to 256x256px anymore
-- dedicated server binary (win32 + linux x86 are the only targets for now)
-- Improved network protocol -- higher asset limits, full precision coordinates, more control over entities compared
-- Supports Qbism extended BSP format allowing for much more detailed and bigger maps
-- server-side game, client-side game and GUI QC programs
-- MD3 models with raised limits
-- lots of bug fixes and improvments to logic where necessary
-- removed obscure "features" and ancient code, including CDAudio, IPX, qhost, conproc and more...
-- its super simple even for newbies - all you need is a text editor and FTEQCC compiler to create your first mod, any change to QC programs will be instantly loaded by reloading map
+## Quick Overview
+- Native Game DLL was replaced with platform independant QuakeC Virtual Machine
+- It's completly standalone and does not require Quake 2 data
+- OpenGL 2.1 renderer which offloads much of the work to GPU
+- Full upport for `MD3` models including groups, tags and per-surf textures
+- Per pixel lighting, GLSL shaders, post process effects and more
+- Dedicated server binary (currently x86 windows + linux)
+- Textures are no longer limited to `256 x 256px`
+- Improved network protocol, you're no longer limited to 4096qu coordinates limit
+- Model, sound and image limits have been significantly raised
+- Supports extended Quake 2 BSP format (qbism) which practicaly removes most of the limitations of the level format
+- Decoupled lightmap support for maps compiled with `ericw-tools` (allowing for much greater lightmap quality)
+- Client game, server game and user interface modules in QC which are (re)loaded only when needed
+- Obscure features and file formats were removed including IPX protocol, CDAudio and `WAL, MD2, SP2` file formats
+- Player movement code (`pmove`) was moved from client exe to cg/svg qc modules which allows mods to write new physics code while retaining prediction
+- Plenty of bug fixes
+- Not. Even. A. Single. Dependency. - everything is buildable out of the box in VS2019 without the need to configure anything
 
 
 ## Other notable planned changes:
 - usage of bspx lumps lightgrids, normals and decoupledlm
-- proper linux support (pragma runs fine in Wine, for now only native linux dedicated server binary)
+- proper linux support (pragma runs fine in Wine)
 - native 64bit binaries
 
 ## Directory overview:
@@ -75,7 +46,7 @@ Pragma so far had introduced following additions and changes to Q2 engine:
 Currently the only supported platform is Windows and the project build *must* be set to `x86`, while this is quite unfortunate, this project is based on id's original code release with outdated platform targets that were cut.
 In future the project should move to GLFW or SDL, allowing pragma to be built for linux and other platforms.
 
-You'll need Visual Studio 2019 or Visual Studio 2022 to compile the engine (engine.exe) and renderer (renderer_ogl1.dll) projects, and FTEQCC to compile QC scripts (included in this repo).
+You'll need Visual Studio 2019 or Visual Studio 2022 to compile the engine (engine.exe) and renderer (renderer_gl2.dll) projects, and FTEQCC to compile QC scripts (included in this repo).
 
 1. Download ZIP or clone this repo.
 
@@ -88,12 +59,3 @@ You'll need Visual Studio 2019 or Visual Studio 2022 to compile the engine (engi
 > These scripts compile QC with FTEQCC and copy compiled binaries to gamedir
 
 5. Run pragma with `run_pragma.bat` :)
-
-
-# pragma in action
-
-
-
-
-
-
