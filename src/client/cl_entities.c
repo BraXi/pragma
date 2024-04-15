@@ -12,6 +12,9 @@ See the attached GNU General Public License v2 for more details.
 
 #include "client.h"
 
+void CG_AddViewMuzzleFlash(rentity_t* refent, player_state_t* ps);
+void CG_AddViewFlashLight(rentity_t* refent, player_state_t* ps);
+void CG_AddFlashLightToEntity(clentity_t* cent, rentity_t* refent);
 /*
 ==========================================================================
 
@@ -21,6 +24,7 @@ INTERPOLATE BETWEEN FRAMES TO GET RENDERING PARMS
 */
 
 static unsigned int c_effects, c_renderfx;
+
 
 /*
 ===============
@@ -144,7 +148,12 @@ static inline void CL_EntityPositionAndRotation(clentity_t* clent, entity_state_
 	AnglesToAxis(refent->angles, refent->axis);
 }
 
-static void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parentModel, int tagIndex)
+/*
+===============
+PositionRotatedEntityOnTag
+===============
+*/
+void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parentModel, int tagIndex)
 {
 	int				i;
 	orientation_t	lerped;
@@ -190,14 +199,13 @@ static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t*
 
 		//memset(&attachEnt, 0, sizeof(attachEnt));
 		attachEnt = *refent; // copy all of it
-		attachEnt.frame = 0;
+		attachEnt.frame = attachEnt.oldframe = 0;
 		r = *refent;
 
 		AxisClear(attachEnt.axis);
 		PositionRotatedEntityOnTag(&attachEnt, &r, clent->current.modelindex, (attachInfo->parentTag - 1));
 
 		attachEnt.model = cl.model_draw[state->attachments[i].modelindex];
-//		attachEnt.inheritLight = refent->index;
 		VectorAngles(attachEnt.axis[0], attachEnt.axis[2], angles);
 		VectorCopy(angles, attachEnt.angles);
 
@@ -221,7 +229,7 @@ static inline void CL_EntityAddParticleTrails(clentity_t* clent, entity_state_t*
 	if (effects & EF_ROCKET)
 	{
 		CG_PartFX_RocketTrail(clent->lerp_origin, refent->origin, clent);
-		V_AddLight(refent->origin, 128, 1.000000, 0.670588, 0.027451);
+		V_AddPointLight(refent->origin, 128, 1.000000, 0.670588, 0.027451);
 	}
 	/* diminishing blood trail */
 	else if (effects & EF_GIB)
@@ -312,7 +320,6 @@ void CL_AddPacketEntities(frame_t* frame)
 #if 0
 		//
 		// add dynamic light
-		// TODO: figure out lightstyle
 		//
 		if (state->effects & RF_LIGHT)
 		{
@@ -323,6 +330,9 @@ void CL_AddPacketEntities(frame_t* frame)
 			V_AddLight(rent.origin, state->lightIntensity, -state->lightColor[0], -state->lightColor[1], -state->lightColor[2]);
 		}
 #endif
+
+		CG_AddFlashLightToEntity(clent, &rent);
+
 		//
 		// if entity has no model just skip at this point
 		//
@@ -366,41 +376,34 @@ void CL_AddPacketEntities(frame_t* frame)
 	}
 }
 
+
+
 /*
 ==============
 CL_AddViewWeapon
 ==============
 */
-extern muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES];
-
 void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 {
 	rentity_t	viewmodel; 
 	int			i;
-	rentity_t	flash;
-	vec3_t  v_fwd, v_right, v_up;
-	muzzleflash_t* mz;
 
 	// allow the gun to be completely removed
 	if (!cl_drawviewmodel->value)
+	{
+		CG_AddViewFlashLight(NULL, ps);
 		return;
+	}
 
-	//
-	// set up viewmodel
-	//
 	memset (&viewmodel, 0, sizeof(viewmodel));
 
-	if (gun_model && CL_CheatsAllowed())
-	{
-		// development tool
-		viewmodel.model = gun_model;
-	}
+	if (gun_model && CL_CheatsAllowed())		
+		viewmodel.model = gun_model; // development tool
 	else
-	{
 		viewmodel.model = cl.model_draw[ps->viewmodel_index];
-	}
 
 	if (!viewmodel.model)
+	
 		return;
 
 	// set up position
@@ -441,32 +444,10 @@ void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
 	viewmodel.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
 	V_AddEntity (&viewmodel);
 
-	//
-	// set up muzzleflash
-	//
-	if (cl.time > cl.muzzleflash_time)
-		return;
+	AnglesToAxis(viewmodel.angles, viewmodel.axis);
 
-	memset(&flash, 0, sizeof(flash));
-
-	VectorCopy(viewmodel.angles, flash.angles);
-	VectorCopy(viewmodel.origin, flash.origin);
-
-	AngleVectors(flash.angles, v_fwd, v_right, v_up);
-
-	mz = &cl_muzzleflashes[cl.muzzleflash];
-	VectorMA(flash.origin, mz->forward, v_fwd, flash.origin);
-	VectorMA(flash.origin, mz->up, v_up, flash.origin);
-	VectorMA(flash.origin, mz->right, v_right, flash.origin);
-
-	VectorCopy(flash.origin, flash.oldorigin);	// don't lerp at all
-
-	flash.frame = flash.oldframe = cl.muzzleflash_frame;
-	flash.renderfx = RF_FULLBRIGHT | RF_DEPTHHACK | RF_VIEW_MODEL | RF_SCALE | RF_TRANSLUCENT;
-	flash.scale = mz->flashscale;
-	flash.alpha = 0.7;
-	flash.model = cgMedia.mod_v_muzzleflash;
-	V_AddEntity(&flash);
+	CG_AddViewMuzzleFlash(&viewmodel, ps);
+	CG_AddViewFlashLight(&viewmodel, ps);
 }
 
 /*

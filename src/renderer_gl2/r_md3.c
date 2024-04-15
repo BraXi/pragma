@@ -566,6 +566,7 @@ void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVer
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+extern qboolean r_pendingflip;
 /*
 =================
 R_DrawMD3Model
@@ -600,6 +601,11 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
 	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
 	R_ProgUniform1f(LOC_LERPFRAC, animlerp);
+	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
+	if (r_pendingflip)
+	{
+		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
+	}
 
 	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
 		R_ProgUniform1f(LOC_PARM0, 1);
@@ -629,10 +635,16 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 
 		anythingToDraw = true;
 
-		R_BindTexture(ent->model->images[surf]->texnum);
+		R_MultiTextureBind(TMU_DIFFUSE, ent->model->images[surf]->texnum);
 		DrawVertexBuffer(ent, ent->model->vb[surf], 0, surfverts);
 
 		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
+	}
+
+	if (r_pendingflip)
+	{
+		Mat4Scale(r_projection_matrix, -1, 1, 1);
+		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 	}
 
 	if (r_speeds->value && anythingToDraw)

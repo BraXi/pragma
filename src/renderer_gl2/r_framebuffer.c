@@ -144,6 +144,9 @@ R_FreeFrameBuffer
 */
 void R_FreeFrameBuffer()
 {
+	if (!glDeleteTextures)
+		return; // no gl context
+
 	glDeleteTextures(1, &fbo_tex_diffuse);
 //	glDeleteTextures(1, &fbo_tex_depth);
 
@@ -226,7 +229,7 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 	R_ApplyPostEffects();
 
 	//if (diffuse)
-		R_BindTexture(fbo_tex_diffuse);
+	R_MultiTextureBind(TMU_DIFFUSE, fbo_tex_diffuse);
 	//	else
 	//		R_BindTexture(fbo_tex_depth);
 

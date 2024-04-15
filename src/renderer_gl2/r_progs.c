@@ -29,6 +29,7 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	/* global */
 	{ LOC_COLORMAP,			"colormap",			F_INT },
 	{ LOC_LIGHTMAP,			"lightmap",			F_INT },
+	{ LOC_LIGHTSTYLES,		"lightstyles",		F_VECTOR3 }, //F_VECTOR3*4
 	{ LOC_COLOR4,			"color_rgba",		F_FLOAT },
 	{ LOC_SCALE,			"scale",			F_VECTOR3 },
 	{ LOC_TIME,				"time",				F_FLOAT }, // fixme: unset
@@ -37,6 +38,8 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_SHADEVECTOR,		"shade_vector",		F_VECTOR3 },
 	{ LOC_SHADECOLOR,		"shade_light",		F_VECTOR3 },
 	{ LOC_LERPFRAC,			"lerpFrac",			F_FLOAT },
+	{ LOC_WARPSTRENGTH,		"warpstrength",		F_FLOAT },
+	{ LOC_FLOWSTRENGTH,		"flowstrength",		F_VECTOR2 },
 
 	/* for materials */
 	{ LOC_PARM0,			"parm0_f",			F_FLOAT },
@@ -53,6 +56,17 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_INVERSE,			"fx_inverse",		F_FLOAT },
 	{ LOC_NOISE,			"fx_noise",			F_FLOAT },
 
+	/* dynamic lights */
+	{ LOC_DLIGHT_COUNT,		"dlights",			F_INT },
+	{ LOC_DLIGHT_COLORS,	"dlight_colors",	F_VECTOR3 },
+	{ LOC_DLIGHT_POS_AND_RAD, "dlight_pos_and_rad",	F_VECTOR4 },
+	{ LOC_DLIGHT_DIR_AND_CUTOFF, "dlight_dir_and_cutoff",	F_VECTOR4 },
+
+	/* matricies */
+	//[ISB] the type is incorrect but this isn't used anywhere so fix later I guess.
+	{ LOC_PROJECTION, "projection",	F_VECTOR4 },
+	{ LOC_MODELVIEW,  "modelview",	F_VECTOR4 },
+	{ LOC_LOCALMODELVIEW, "localmodelview",	F_VECTOR4 },
 };
 
 /* vertex attributes */
@@ -60,13 +74,47 @@ static glprogloc_t progVertAtrribLocs[NUM_VALOCS] =
 {
 	{ VALOC_POS,			"inVertPos",		F_VECTOR3 },
 	{ VALOC_NORMAL,			"inNormal",			F_VECTOR3 },
-	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR3 },
+	{ VALOC_TEXCOORD,		"inTexCoord",		F_VECTOR2 },
+	{ VALOC_LMTEXCOORD,		"inLightMapCoord",	F_VECTOR2 }, // BSP ONLY
+	{ VALOC_ALPHA,			"inAlpha",			F_FLOAT }, // BSP ONLY
 	{ VALOC_COLOR,			"inVertCol",		F_VECTOR3 },
 
 	/*md3 rendering only*/
-	{ VALOC_OLD_POS,		"inOldVertPos",		F_VECTOR3 },
-	{ VALOC_OLD_NORMAL,		"inOldNormal",		F_VECTOR3 },
+	{ VALOC_OLD_POS,		"inOldVertPos",		F_VECTOR3 }, // MD3 ONLY
+	{ VALOC_OLD_NORMAL,		"inOldNormal",		F_VECTOR3 } // MD3 ONLY
 };
+
+//Program metadata.
+//This is used to class shaders based on what data needs to be updated. 
+typedef enum
+{
+	PF_ORTHO = 1	//update with ortho projection
+} progflags_t;
+
+typedef struct
+{
+	int progid;
+	const char* name;
+	int flags;
+} proginfo_t;
+
+static proginfo_t proginfo[] =
+{
+	{GLPROG_WORLD,			"world"},
+	{GLPROG_SKY,			"sky"},
+	{GLPROG_ALIAS,			"model_alias"},
+	{GLPROG_SPRITE,			"model_sprite"},
+	{GLPROG_PARTICLE,		"particle"},
+	{GLPROG_GUI,			"gui",				PF_ORTHO},
+	{GLPROG_POSTFX,			"postfx",			PF_ORTHO},
+	{GLPROG_DEBUGSTRING,	"debug_string"},
+	{GLPROG_DEBUGLINE,		"debug_line"}
+};
+
+#define NUM_PROGINFO sizeof(proginfo) / sizeof(proginfo[0])
+//Since there's holes in the shader list (should be fixed, 
+// proginfolookup looks up an id from 0-NUM_PROGINFO and returns a number 0-MAX_GLPROGS. 
+int proginfolookup[NUM_PROGINFO];
 
 #define CheckProgUni(uni) \
 { \
@@ -248,7 +296,7 @@ void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4)
 
 /*
 =================
-R_ProgUniform3f
+R_ProgUniform4f
 =================
 */
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4)
@@ -270,6 +318,39 @@ void R_ProgUniformVec4(int uniform, vec4_t v)
 
 /*
 =================
+R_ProgUniform3fv
+=================
+*/
+void R_ProgUniform3fv(int uniform, int count, float* val)
+{
+	CheckProgUni(uniform);
+	glUniform3fv(pCurrentProgram->locs[uniform], count, (const GLfloat*)val);
+}
+
+/*
+=================
+R_ProgUniform4fv
+=================
+*/
+void R_ProgUniform4fv(int uniform, int count, float *val)
+{
+	CheckProgUni(uniform);
+	glUniform4fv(pCurrentProgram->locs[uniform], count, (const GLfloat*)val);
+}
+
+/*
+=================
+R_ProgUniformMatrix4fv
+=================
+*/
+void R_ProgUniformMatrix4fv(int uniform, int count, float* val)
+{
+	CheckProgUni(uniform);
+	glUniformMatrix4fv(pCurrentProgram->locs[uniform], count, GL_FALSE, (const GLfloat*)val);
+}
+
+/*
+=================
 R_FreeProgram
 =================
 */
@@ -279,7 +360,7 @@ void R_FreeProgram(glprog_t* prog)
 		R_UnbindProgram();
 
 	if (prog->vertexShader)
-			glDeleteShader(prog->vertexShader);
+		glDeleteShader(prog->vertexShader);
 	if (prog->fragmentShader)
 		glDeleteShader(prog->fragmentShader);
 	if (prog->programObject)
@@ -396,6 +477,49 @@ static qboolean R_LinkProgram(glprog_t* prog)
 	return true;
 }
 
+
+/*
+=================
+R_UpdateCommonProgUniforms
+
+Called each frame to update common uniforms in all shader programs
+Currently it does update time and dlights in shaders which use these uniforms
+
+orthoonly is true if you want to only update the uniforms for UI related shaders
+Set to false to update the world related shaders
+=================
+*/
+void R_UpdateCommonProgUniforms(qboolean orthoonly)
+{
+	glprog_t* prog;
+	proginfo_t* info;
+	int i;
+
+	for (i = 0; i < NUM_PROGINFO; i++)
+	{
+		info = &proginfo[i];
+		prog = &glprogs[proginfolookup[i]];
+		if (!prog->isValid)
+			continue;
+
+		R_BindProgram(prog->index);
+		R_ProgUniform1f(LOC_TIME, r_newrefdef.time);
+
+		if (info->flags & PF_ORTHO && orthoonly)
+		{
+			R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_ortho_matrix);
+		}
+		else if (!orthoonly)
+		{
+			R_SendDynamicLightsToCurrentProgram();
+			R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
+			R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
+		}
+
+	}
+	R_UnbindProgram();
+}
+
 /*
 =================
 R_FindUniformLocations
@@ -413,8 +537,8 @@ static void R_FindUniformLocations(glprog_t* prog)
 		prog->locs[progUniLocs[i].loc] = R_FindProgramUniform(progUniLocs[i].name);
 
 	// set default values
-	R_ProgUniform1i(LOC_COLORMAP, 0);
-	R_ProgUniform1i(LOC_LIGHTMAP, 1);
+	R_ProgUniform1i(LOC_COLORMAP, TMU_DIFFUSE);
+	R_ProgUniform1i(LOC_LIGHTMAP, TMU_LIGHTMAP);
 	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
 	R_UnbindProgram();
 }
@@ -500,13 +624,14 @@ char *R_GetCurrentProgramName()
 R_LoadProgram
 =================
 */
-static int R_LoadProgram(int program, char *name)
+static int R_LoadProgram(int id)
 {
 	glprog_t* prog;
+	proginfo_t* info = &proginfo[id];
 	
-	prog = R_ProgramIndex(program);
+	prog = R_ProgramIndex(info->progid);
 
-	strcpy(prog->name, name);
+	strcpy(prog->name, info->name);
 
 	if (!R_CompileShader(prog, true))
 		return -1;
@@ -516,11 +641,12 @@ static int R_LoadProgram(int program, char *name)
 		return -1;
 
 	prog->isValid = true;
-	prog->index = program;
+	prog->index = info->progid;
 	numProgs++;
 
 	R_FindUniformLocations(prog);
 	R_FindVertexAttribLocations(prog);
+	proginfolookup[id] = info->progid;
 
 	return prog->index;
 }
@@ -535,12 +661,20 @@ void R_FreePrograms()
 {
 	glprog_t* prog;
 
+	if (!glUseProgram)
+		return; // no opengl context
+
 	R_UnbindProgram();
 
 	for (int i = 0; i < MAX_GLPROGS; i++)
 	{
 		prog = &glprogs[i];
 		R_FreeProgram(prog);
+	}
+
+	for (int i = 0; i < NUM_PROGINFO; i++)
+	{
+		proginfolookup[i] = -1;
 	}
 
 	memset(glprogs, 0, sizeof(glprogs));
@@ -558,16 +692,10 @@ void R_InitPrograms()
 {
 	R_FreePrograms();
 
-	R_LoadProgram(GLPROG_WORLD, "world");
-	R_LoadProgram(GLPROG_WORLD_LIQUID, "world-liquid");
-	R_LoadProgram(GLPROG_SKY, "sky");
-	R_LoadProgram(GLPROG_ALIAS, "model_alias");
-	R_LoadProgram(GLPROG_SPRITE, "model_sprite");
-	R_LoadProgram(GLPROG_PARTICLE, "particle");
-	R_LoadProgram(GLPROG_GUI, "gui");
-	R_LoadProgram(GLPROG_POSTFX, "postfx");
-	R_LoadProgram(GLPROG_DEBUGSTRING, "debug_string");
-	R_LoadProgram(GLPROG_DEBUGLINE, "debug_line");
+	for (int i = 0; i < NUM_PROGINFO; i++)
+	{
+		R_LoadProgram(i);
+	}
 }
 
 

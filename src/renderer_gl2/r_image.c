@@ -21,79 +21,64 @@ int		gl_filter_max = GL_LINEAR;
 
 static void R_LoadTGA(char* name, byte** pic, int* width, int* height);
 
-void R_EnableMultitexture( qboolean enable )
-{
-	if (!glActiveTexture)
-		return;
+static mte = false;
 
-	if ( enable )
+
+void R_EnableMultiTexture()
+{
+	for (int i = MIN_TEXTURE_MAPPING_UNITS; i != -1; i--)
 	{
-		R_SelectTextureUnit( GL_TEXTURE1 );
-		glEnable( GL_TEXTURE_2D );
+		gl_state.current_texture[i] = -1;
+		R_SelectTextureUnit(i);
+		glEnable(GL_TEXTURE_2D);
 	}
-	else
-	{
-		R_SelectTextureUnit( GL_TEXTURE1 );
-		glDisable( GL_TEXTURE_2D );
-	}
-	R_SelectTextureUnit( GL_TEXTURE0 );
 }
 
-void R_SelectTextureUnit( GLenum texture )
+void R_DisableMultiTexture()
 {
-	int tmu;
+	// disable everything but diffuse
+	for (int i = MIN_TEXTURE_MAPPING_UNITS; i != 0; i--)
+	{
+		R_SelectTextureUnit(i);
+		glDisable(GL_TEXTURE_2D);
+	}
+	R_SelectTextureUnit(TMU_DIFFUSE);
+}
 
-	if (!glActiveTexture)
+
+void R_SelectTextureUnit( unsigned int tmu )
+{
+	if ( tmu == gl_state.current_tmu )
 		return;
 
-	if ( texture == GL_TEXTURE0 )
-		tmu = 0;
-	else
-		tmu = 1;
-
-	if ( tmu == gl_state.currenttmu )
-		return;
-
-	gl_state.currenttmu = tmu;
-
-	if ( tmu == 0 )
-		glActiveTexture( GL_TEXTURE0 );
-	else
-		glActiveTexture( GL_TEXTURE1 );
+	glActiveTexture(GL_TEXTURE0 + tmu);
+	gl_state.current_tmu = tmu;
 }
 
 
 void R_BindTexture(int texnum)
 {
-	extern	image_t	*font_current;
+	if (r_nobind->value)
+	{
+		return;
+	}
 
-	if (r_nobind->value && font_current && texnum == font_current->texnum) // performance evaluation option
-		texnum = font_current->texnum;
-	if ( gl_state.currenttextures[gl_state.currenttmu] == texnum)
+	if ( gl_state.current_texture[gl_state.current_tmu] == texnum)
 		return;
 
-	rperf.texture_binds++;
+	rperf.texture_binds[gl_state.current_tmu]++;
 
-	gl_state.currenttextures[gl_state.currenttmu] = texnum;
+	gl_state.current_texture[gl_state.current_tmu] = texnum;
 	glBindTexture(GL_TEXTURE_2D, texnum);
 }
 
-void R_MultiTextureBind(GLenum target, int texnum)
+void R_MultiTextureBind(unsigned int tmu, int texnum)
 {
-	if (!glActiveTexture)
+	R_SelectTextureUnit( tmu );
+
+	if ( gl_state.current_texture[tmu] == texnum )
 		return;
 
-	R_SelectTextureUnit( target );
-	if ( target == GL_TEXTURE0 )
-	{
-		if ( gl_state.currenttextures[0] == texnum )
-			return;
-	}
-	else
-	{
-		if ( gl_state.currenttextures[1] == texnum )
-			return;
-	}
 	R_BindTexture( texnum );
 }
 
@@ -619,8 +604,9 @@ void R_FreeTextures()
 		if (!image->registration_sequence)
 			continue;		// free image_t slot
 
-		// free it
-		glDeleteTextures (1, &image->texnum);
+		
+		if(glDeleteTextures) // check if gl context exists
+			glDeleteTextures (1, &image->texnum); // free it
 		memset (image, 0, sizeof(*image));
 	}
 }

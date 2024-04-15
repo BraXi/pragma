@@ -12,20 +12,23 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
+int		registration_sequence; // increased with each level load
+
 model_t	*pLoadModel;		// ptr to model which is being loaded
 int		modelFileLength;	// length of loaded model file
 
 static qboolean bExtendedBSP = false; // this is true when qbism bsp is detected
 static int bspx_lumps_count = 0;
 static int bspx_lumps_offset = 0;
-//static bspx_lump_t bspx_lumps;
 
 static byte mod_novis[MAX_MAP_LEAFS_QBSP/8];
+static byte *mod_base = NULL;
 
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
 #define RD_MAX_SP2_HUNKSIZE		0x10000 // 64KB
 #define RD_MAX_BSP_HUNKSIZE		0x1000000 // 16 MB
-#define RD_MAX_QBSP_HUNKSIZE	(RD_MAX_BSP_HUNKSIZE*6) // 96 MB -- we let much bigger qbism bsps
+#define RD_MAX_QBSP_HUNKSIZE	(RD_MAX_BSP_HUNKSIZE*8) // 96 MB -- we let much bigger qbism bsps 
+														// even more for bench2
 
 #define	RD_MAX_MODELS	1024
 static model_t	r_models[RD_MAX_MODELS];
@@ -36,7 +39,14 @@ extern void Mod_LoadSP2(model_t* mod, void* buffer);
 extern void Mod_LoadBSP(model_t* mod, void* buffer);
 extern void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod);
 
-int registration_sequence; // increased with each level load
+
+void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf);
+
+void R_LightMap_CreateForSurface(msurface_t* surf);
+void R_LightMap_EndBuilding();
+void R_LightMap_BeginBuilding(model_t* mod);
+
+static qboolean Mod_BSP_EXT_LoadDecoupledLM();
 
 /*
 =================
@@ -52,7 +62,8 @@ model_t* R_ModelForNum(int index)
 	// out of range gets the default model
 	if (index < 1 || index >= r_models_count)
 	{
-		return &r_models[0];
+//		return &r_models[0];
+		return r_defaultmodel;
 	}
 
 	mod = &r_models[index];
@@ -132,11 +143,8 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	pLoadModel = mod;
 
 	//
-	// fill it in
-	//
-
-
 	// call the apropriate loader
+	//
 	switch (LittleLong(*(unsigned*)buf))
 	{
 	case MD3_IDENT: /* Quake3 .md3 model */
@@ -247,7 +255,7 @@ Loads a model and associated textures
 struct model_s* R_RegisterModel(char* name)
 {
 	model_t* mod;
-	int		i, j;
+	int		i, j, nt = 0;
 	sp2Header_t* sp2Header;
 	md3Header_t* md3Header;
 
@@ -259,7 +267,7 @@ struct model_s* R_RegisterModel(char* name)
 	{
 		mod->registration_sequence = registration_sequence;
 
-		// register any images used by the models
+		// register all images used by the models
 		if (mod->type == MOD_SPRITE)
 		{
 			sp2Header = (sp2Header_t*)mod->extradata;
@@ -269,6 +277,7 @@ struct model_s* R_RegisterModel(char* name)
 		}
 		else if (mod->type == MOD_MD3)
 		{
+			nt = 0;
 			md3Header = mod->md3[LOD_HIGH];
 			mod->numframes = md3Header->numFrames;
 			surf = (md3Surface_t*)((byte*)md3Header + md3Header->ofsSurfaces);
@@ -277,8 +286,11 @@ struct model_s* R_RegisterModel(char* name)
 				shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
 				for (j = 0; j < surf->numShaders; j++, shader++)
 				{
-					mod->images[i + j] = R_FindTexture(shader->name, it_model, true);
-					shader->shaderIndex = mod->images[i]->texnum;
+					mod->images[nt] = R_FindTexture(shader->name, it_model, true);
+					if (mod->images[nt] == NULL)
+						mod->images[nt] = r_texture_missing;
+					shader->shaderIndex = mod->images[nt]->texnum;
+					nt++;
 				}
 				surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 			}
@@ -312,18 +324,24 @@ void R_BeginRegistration(const char *worldName)
 	// explicitly free the old map if different, this guarantees that r_models[0] is the world map
 	// this also ensures we don't reload the map when restarting level
 	flushmap = ri.Cvar_Get("flushmap", "0", 0);
-	if (strcmp(r_models[0].name, fullname) || flushmap->value)
-		R_FreeModel(&r_models[0]);
+	if (r_worldmodel && (strcmp(r_worldmodel->name, fullname) || flushmap->value))
+	{
+		R_FreeModel(r_worldmodel);
+		r_worldmodel = NULL;
+	}
+	// 
+//	if (strcmp(r_models[0].name, fullname) || flushmap->value)
+//		R_FreeModel(&r_models[0]);
 
 	r_worldmodel = R_ModelForName(fullname, true);
-	r_viewcluster = -1;
+	r_viewcluster = r_viewcluster2 = -1;
 }
 
 /*
 ================
 R_EndRegistration
 
-Loads the world BSP model and bumps registration sequence so the unused assets can be freed after init is done
+Frees images and models which haven't bumped their registration sequence (they're no longer needed)
 ================
 */
 void R_EndRegistration(void)
@@ -331,6 +349,7 @@ void R_EndRegistration(void)
 	R_FreeUnusedModels();
 	R_FreeUnusedTextures();
 }
+
 //=============================================================================
 
 /*
@@ -354,12 +373,12 @@ void Cmd_modellist_f(void)
 			continue;
 
 		if (mod->type == MOD_BRUSH)
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d bytes]\n", i, mtypes[mod->type], mod->name, mod->extradatasize);
+			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mtypes[mod->type], mod->name, mod->extradatasize/1024);
 		else
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d bytes]\n", i, mtypes[mod->type], mod->name, mod->numframes, mod->extradatasize);
+			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d kb]\n", i, mtypes[mod->type], mod->name, mod->numframes, mod->extradatasize/1024);
 		total += mod->extradatasize;
 	}
-	ri.Printf(PRINT_ALL, "\nTotal resident: %i\n", total);
+	ri.Printf(PRINT_ALL, "\nTotal resident: %i kb\n", total / 1024);
 	ri.Printf(PRINT_ALL, "Total %i out of %i models in use\n\n", i, RD_MAX_MODELS);
 }
 
@@ -473,8 +492,6 @@ byte *Mod_BSP_ClusterPVS(int cluster, model_t *model)
 ===============================================================================
 */
 
-static byte *mod_base;
-
 /*
 =================
 CMod_ValidateBSPLump
@@ -562,7 +579,7 @@ Mod_BSP_LoadVerts
 */
 static void Mod_BSP_LoadVerts(lump_t *l)
 {
-	dvertex_t	*in;
+	dbsp_vertex_t	*in;
 	mvertex_t	*out;
 	int			i, count;
 
@@ -590,7 +607,7 @@ Mod_BSP_LoadInlineModels
 */
 static void Mod_BSP_LoadInlineModels(lump_t *l)
 {
-	dmodel_t	*in;
+	dbsp_model_t	*in;
 	mmodel_t	*out;
 	int			i, j, count;
 
@@ -637,7 +654,7 @@ static void Mod_BSP_LoadEdges(lump_t *l)
 
 	if (bExtendedBSP)
 	{
-		dedge_ext_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_edge_ext_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			out->v[0] = (unsigned int)LittleLong(in->v[0]);
@@ -646,7 +663,7 @@ static void Mod_BSP_LoadEdges(lump_t *l)
 	}
 	else
 	{
-		dedge_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_edge_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			out->v[0] = (unsigned short)LittleShort(in->v[0]);
@@ -662,7 +679,7 @@ Mod_BSP_LoadTexinfo
 */
 static void Mod_BSP_LoadTexinfo(lump_t *l)
 {
-	texinfo_t *in;
+	dbsp_texinfo_t *in;
 	mtexinfo_t *out, *step;
 	int 	i, j, count;
 	char	name[MAX_QPATH];
@@ -771,18 +788,11 @@ static void BSP_CalcSurfaceExtents(msurface_t *s)
 }
 
 
-void R_BuildPolygonFromSurface(msurface_t *fa);
-void R_CreateLightMapForSurface (msurface_t *surf);
-void R_LightMap_EndBuilding();
-void R_LightMap_BeginBuilding(model_t *m);
-
-static qboolean Mod_BSP_EXT_LoadDecoupledLM();
-
 static void Mod_BSP_FaceLighting(msurface_t* out, byte* styles, int lightofs)
 {
 	int i;
 
-	for (i = 0; i < MAXLIGHTMAPS; i++)
+	for (i = 0; i < MAX_LIGHTMAPS_PER_SURFACE; i++)
 		out->styles[i] = styles[i];
 
 	if (out->samples == NULL) // NO decoupledlm
@@ -809,7 +819,7 @@ Mod_BSP_LoadFaces
 static void Mod_BSP_LoadFaces(lump_t *l)
 {
 	msurface_t 	*out;
-	int			i, count, surfnum, side;
+	int			count, surfnum, side;
 	unsigned int	planenum;
 	int			ti;
 
@@ -826,7 +836,7 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 
 	if (bExtendedBSP)
 	{
-		dface_ext_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_face_ext_t* in = (void*)(mod_base + l->fileofs);
 		for (surfnum = 0; surfnum < count; surfnum++, in++, out++)
 		{
 			out->firstedge = LittleLong(in->firstedge);
@@ -852,26 +862,27 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 			if (out->texinfo->flags & SURF_WARP)
 			{
 				out->flags |= SURF_DRAWTURB;
+				/* [ISB] always do the normal polygon builder, subdivision is unneeded for shader warp. 
 				for (i = 0; i < 2; i++)
 				{
 					out->extents[i] = 16384;
 					out->texturemins[i] = -8192;
 				}
-				GL_SubdivideSurface(out);	// cut up polygon for warps
+				R_SubdivideSurface(out);	// cut up polygon for warps*/
 			}
 
 			// create lightmaps and polygons
 			if (!(out->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP)))
-				R_CreateLightMapForSurface(out);
+				R_LightMap_CreateForSurface(out);
 
-			if (!(out->texinfo->flags & SURF_WARP))
-				R_BuildPolygonFromSurface(out);
+			//if (!(out->texinfo->flags & SURF_WARP))
+				R_BuildPolygonFromSurface(pCurrentModel, out);
 		}
 
 	}
 	else
 	{
-		dface_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_face_t* in = (void*)(mod_base + l->fileofs);
 		for (surfnum = 0; surfnum < count; surfnum++, in++, out++)
 		{
 			out->firstedge = LittleLong(in->firstedge);
@@ -898,20 +909,21 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 			if (out->texinfo->flags & SURF_WARP)
 			{
 				out->flags |= SURF_DRAWTURB;
+				/* [ISB] always do the normal polygon builder, subdivision is unneeded for shader warp.
 				for (i = 0; i < 2; i++)
 				{
 					out->extents[i] = 16384;
 					out->texturemins[i] = -8192;
 				}
-				GL_SubdivideSurface(out);	// cut up polygon for warps
+				R_SubdivideSurface(out);	// cut up polygon for warps*/
 			}
 
 			// create lightmaps and polygons
 			if (!(out->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP)))
-				R_CreateLightMapForSurface(out);
+				R_LightMap_CreateForSurface(out);
 
-			if (!(out->texinfo->flags & SURF_WARP))
-				R_BuildPolygonFromSurface(out);
+			//if (!(out->texinfo->flags & SURF_WARP))
+			R_BuildPolygonFromSurface(pCurrentModel, out);
 		}
 	}
 
@@ -951,7 +963,7 @@ static void Mod_BSP_LoadNodes(lump_t *l)
 
 	if (bExtendedBSP)
 	{
-		dnode_ext_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_node_ext_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			for (j = 0; j < 3; j++)
@@ -979,7 +991,7 @@ static void Mod_BSP_LoadNodes(lump_t *l)
 	}
 	else
 	{
-		dnode_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_node_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			for (j = 0; j < 3; j++)
@@ -1018,7 +1030,6 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 {
 	mleaf_t 	*out;
 	int			i, j, count;
-//	glpoly_t	*poly;
 
 	CMod_ValidateBSPLump(l, BSP_LEAFS, &count, 1, "leafs", __FUNCTION__);
 	
@@ -1029,7 +1040,7 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 
 	if (bExtendedBSP)
 	{
-		dleaf_ext_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_leaf_ext_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			for (j = 0; j < 3; j++)
@@ -1044,11 +1055,25 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 
 			out->firstmarksurface = pLoadModel->marksurfaces + (unsigned int)LittleLong(in->firstleafface);
 			out->nummarksurfaces = (unsigned int)LittleLong(in->numleaffaces);
+
+#if 0
+			// for (currently not used) underwater warp
+			poly_t* poly;
+			if (out->contents & (CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA))
+			{
+				for (j = 0; j < out->nummarksurfaces; j++)
+				{
+					out->firstmarksurface[j]->flags |= SURF_UNDERWATER;
+					for (poly = out->firstmarksurface[j]->polys; poly; poly = poly->next)
+						poly->flags |= SURF_UNDERWATER;
+				}
+			}
+#endif
 		}
 	}
 	else
 	{
-		dleaf_t* in = (void*)(mod_base + l->fileofs);
+		dbsp_leaf_t* in = (void*)(mod_base + l->fileofs);
 		for (i = 0; i < count; i++, in++, out++)
 		{
 			for (j = 0; j < 3; j++)
@@ -1063,21 +1088,22 @@ static void Mod_BSP_LoadLeafs (lump_t *l)
 
 			out->firstmarksurface = pLoadModel->marksurfaces + LittleShort(in->firstleafface);
 			out->nummarksurfaces = LittleShort(in->numleaffaces);
+
+#if 0
+			// for (currently not used) underwater warp
+			poly_t* poly;
+			if (out->contents & (CONTENTS_WATER | CONTENTS_SLIME | CONTENTS_LAVA))
+			{
+				for (j = 0; j < out->nummarksurfaces; j++)
+				{
+					out->firstmarksurface[j]->flags |= SURF_UNDERWATER;
+					for (poly = out->firstmarksurface[j]->polys; poly; poly = poly->next)
+						poly->flags |= SURF_UNDERWATER;
+				}
+			}
+#endif
 		}
 	}
-		
-#if 0
-		// for (currently not used) underwater warp
-		if ( out->contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA) )
-		{
-			for (j = 0; j < out->nummarksurfaces; j++)
-			{
-				out->firstmarksurface[j]->flags |= SURF_UNDERWATER;
-				for (poly = out->firstmarksurface[j]->polys; poly; poly = poly->next)
-					poly->flags |= SURF_UNDERWATER;
-			}
-		}
-#endif	
 }
 
 /*
@@ -1149,7 +1175,7 @@ Mod_BSP_LoadPlanes
 */
 static void Mod_BSP_LoadPlanes(lump_t *l)
 {
-	dplane_t	*in;
+	dbsp_plane_t	*in;
 	cplane_t	*out;
 	int			i, j, count, bits;
 
@@ -1298,11 +1324,11 @@ Parses the bsp for BSPX lumps
 */
 static void Mod_BSP_FindExtLumps()
 {
-	dheader_t* header;
+	dbsp_header_t* header;
 	bspx_header_t* bspx;
 	int offset, lastlump, i;
 
-	header = (dheader_t*)mod_base;
+	header = (dbsp_header_t*)mod_base;
 
 	bspx_lumps_count = 0;
 	bspx_lumps_offset = 0;
@@ -1352,13 +1378,14 @@ Mod_LoadBSP
 void Mod_LoadBSP(model_t *mod, void *buffer)
 {
 	int			i;
-	dheader_t	*header;
+	dbsp_header_t	*header;
 	mmodel_t 	*bm;
 	
-	if (pLoadModel != r_models)
+//	if (pLoadModel != r_models)
+	if (r_worldmodel != NULL && pLoadModel != r_worldmodel)
 		ri.Error (ERR_DROP, "Mod_LoadBSP: Loaded BSP after the world");
 
-	header = (dheader_t *)buffer;
+	header = (dbsp_header_t *)buffer;
 
 	i = LittleLong (header->version);
 	if (i != BSP_VERSION)
@@ -1366,7 +1393,7 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 
 	// swap all the lumps
 	mod_base = (byte *)header;
-	for (i = 0; i < sizeof(dheader_t)/4 ; i++)
+	for (i = 0; i < sizeof(dbsp_header_t)/4 ; i++)
 		((int *)header)[i] = LittleLong(((int *)header)[i]);
 
 	mod->type = MOD_BRUSH;

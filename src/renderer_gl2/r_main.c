@@ -13,7 +13,8 @@ See the attached GNU General Public License v2 for more details.
 
 void R_Clear (void);
 
-model_t		*r_worldmodel;
+model_t		*r_worldmodel = NULL;
+model_t		*r_defaultmodel = NULL; //for missing models
 
 float		gldepthmin, gldepthmax;
 
@@ -49,8 +50,10 @@ vec3_t	vpn;
 vec3_t	vright;
 vec3_t	r_origin;
 
-float	r_world_matrix[16];
-float	r_base_world_matrix[16];
+mat4_t	r_projection_matrix;
+mat4_t	r_ortho_matrix;
+mat4_t	r_world_matrix;
+mat4_t	r_local_matrix;
 
 vertexbuffer_t* vb_particles;
 //
@@ -67,6 +70,9 @@ extern void R_RenderToFBO(qboolean enable);
 extern void R_DrawDebugLines(void);
 extern void R_DrawEntityModel(rentity_t* ent);
 
+extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+extern int R_GetFontHeight(int fontId);
+
 /*
 =================
 R_CullBox
@@ -81,7 +87,7 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 	if (r_nocull->value)
 		return false;
 
-	for (i=0; i < 4; i++)
+	for (i = 0; i < 4; i++)
 		if ( BOX_ON_PLANE_SIDE(mins, maxs, &frustum[i]) == 2)
 			return true;
 
@@ -91,17 +97,21 @@ qboolean R_CullBox (vec3_t mins, vec3_t maxs)
 /*
 =================
 R_RotateForEntity
-
-STUPID QUAKE BUG included ;)
 =================
 */
 void R_RotateForEntity (rentity_t *e)
 {
-    glTranslatef (e->origin[0],  e->origin[1],  e->origin[2]);
+	Mat4MakeIdentity(r_local_matrix);
+	Mat4Translate(r_local_matrix, e->origin[0], e->origin[1], e->origin[2]);
+	Mat4RotateAroundZ(r_local_matrix, e->angles[1]);
 
-    glRotatef (e->angles[1],  0, 0, 1);
-    glRotatef (-e->angles[0],  0, 1, 0);
-    glRotatef (-e->angles[2],  1, 0, 0);
+#ifdef FIX_SQB
+	Mat4RotateAroundY(r_local_matrix, e->angles[0]);
+	Mat4RotateAroundX(r_local_matrix, e->angles[2]);
+#else
+	Mat4RotateAroundY(r_local_matrix, -e->angles[0]); // stupid quake bug
+	Mat4RotateAroundX(r_local_matrix, -e->angles[2]); // stupid quake bug
+#endif
 }
 
 
@@ -114,15 +124,15 @@ Draw the default model
 */
 static void R_DrawNullModel (void)
 {
+#if 0 //TODO need to do something here
 	vec3_t	shadelight;
 	int		i;
 
-	if ( pCurrentRefEnt->renderfx & RF_FULLBRIGHT )
-		model_shadelight[0] = model_shadelight[1] = model_shadelight[2] = 1.0F;
+	if (pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
+		VectorSet(model_shadelight, 1.0f, 1.0f, 1.0f);
 	else
 		R_LightPoint (pCurrentRefEnt->origin, shadelight);
 
-    glPushMatrix ();
 	R_RotateForEntity (pCurrentRefEnt);
 
 	glDisable (GL_TEXTURE_2D);
@@ -141,8 +151,8 @@ static void R_DrawNullModel (void)
 	glEnd ();
 
 	glColor3f (1,1,1);
-	glPopMatrix ();
 	glEnable (GL_TEXTURE_2D);
+#endif
 }
 
 
@@ -242,7 +252,7 @@ void R_DrawParticles( int num_particles, const particle_t particles[] )
 
 		Vector4Set(vb_particles->verts[vertcnt].rgba, p->color[0], p->color[1], p->color[2], p->alpha);
 		Vector2Set(vb_particles->verts[vertcnt].st, 0.0625, 0.0625 );
-		VectorCopy( p->origin, vb_particles->verts[vertcnt].xyz);
+		VectorCopy(p->origin, vb_particles->verts[vertcnt].xyz);
 		vertcnt++;
 
 		Vector4Set(vb_particles->verts[vertcnt].rgba, p->color[0], p->color[1], p->color[2], p->alpha);
@@ -256,10 +266,10 @@ void R_DrawParticles( int num_particles, const particle_t particles[] )
 		vertcnt++;
 	}
 
-	R_UpdateVertexBuffer(vb_particles, NULL, vertcnt, (V_UV|V_COLOR));
+	R_UpdateVertexBuffer(vb_particles, NULL, vertcnt, (V_UV|V_COLOR|V_NOFREE));
 
 	R_BindProgram(GLPROG_PARTICLE);
-	R_BindTexture(r_texture_particle->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, r_texture_particle->texnum);
 	//R_BindTexture(r_texture_white->texnum); // testing
 
 	R_Blend(true);
@@ -330,7 +340,6 @@ R_SetupFrame
 */
 static void R_SetupFrame()
 {
-	int i;
 	mleaf_t	*leaf;
 
 	r_framecount++;
@@ -373,12 +382,7 @@ static void R_SetupFrame()
 		}
 	}
 
-	for (i=0 ; i<4 ; i++)
-		v_blend[i] = r_newrefdef.view.fx.blend[i];
-
-	rperf.brush_polys = 0;
-	rperf.alias_tris = 0;
-	rperf.alias_drawcalls = 0;
+	Vector4Copy(r_newrefdef.view.fx.blend, v_blend);
 
 	// clear out the portion of the screen that the NOWORLDMODEL defines
 	if ( r_newrefdef.view.flags & RDF_NOWORLDMODEL )
@@ -399,18 +403,20 @@ MYgluPerspective
 */
 void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar )
 {
-   GLdouble xmin, xmax, ymin, ymax;
+	GLdouble xmin, xmax, ymin, ymax;
 
-   ymax = zNear * tan( fovy * M_PI / 360.0 );
-   ymin = -ymax;
+	ymax = zNear * tan( fovy * M_PI / 360.0 );
+	ymin = -ymax;
 
-   xmin = ymin * aspect;
-   xmax = ymax * aspect;
+	xmin = ymin * aspect;
+	xmax = ymax * aspect;
 
-   xmin += -( 2 * gl_state.camera_separation ) / zNear;
-   xmax += -( 2 * gl_state.camera_separation ) / zNear;
+	xmin += -( 2 * gl_state.camera_separation ) / zNear;
+	xmax += -( 2 * gl_state.camera_separation ) / zNear;
 
-   glFrustum( xmin, xmax, ymin, ymax, zNear, zFar );
+	mat4_t mat;
+	Mat4Perspective(mat, xmin, xmax, ymin, ymax, zNear, zFar);
+	memcpy(r_projection_matrix, mat, sizeof(mat));
 }
 
 /*
@@ -441,24 +447,24 @@ static void R_SetupGL()
 	// set up projection matrix
 	//
     screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
-	glMatrixMode(GL_PROJECTION);
-    glLoadIdentity ();
     MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096);
 
 	R_SetCullFace(GL_FRONT);
 
-	glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity ();
+	mat4_t mat;
+	Mat4MakeIdentity(mat);
 
-    glRotatef (-90,  1, 0, 0);	    // put Z going up
-    glRotatef (90,  0, 0, 1);	    // put Z going up
-    glRotatef (-r_newrefdef.view.angles[2],  1, 0, 0);
-    glRotatef (-r_newrefdef.view.angles[0],  0, 1, 0);
-    glRotatef (-r_newrefdef.view.angles[1],  0, 0, 1);
-    glTranslatef (-r_newrefdef.view.origin[0],  -r_newrefdef.view.origin[1],  -r_newrefdef.view.origin[2]);
+	Mat4RotateAroundX(mat, -90);	// put Z going up
+	Mat4RotateAroundZ(mat, 90);	// put Z going up
+	Mat4RotateAroundX(mat, -r_newrefdef.view.angles[2]);
+	Mat4RotateAroundY(mat, -r_newrefdef.view.angles[0]);
+	Mat4RotateAroundZ(mat, -r_newrefdef.view.angles[1]);
+	Mat4Translate(mat, -r_newrefdef.view.origin[0], -r_newrefdef.view.origin[1], -r_newrefdef.view.origin[2]);
 
+	memcpy(r_world_matrix, mat, sizeof(mat));
 
-	glGetFloatv (GL_MODELVIEW_MATRIX, r_world_matrix);
+	//only send the matricies once since they'll never change during a frame.
+	R_BindProgram(GLPROG_WORLD);
 
 	//
 	// set drawing parms
@@ -507,13 +513,17 @@ void R_RenderView (refdef_t *fd)
 	if (!r_worldmodel && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 		ri.Error (ERR_DROP, "R_RenderView: NULL worldmodel");
 
-	if (r_speeds->value)
-	{
-		rperf.brush_polys = 0;
-		rperf.alias_tris = 0;
-		rperf.texture_binds = 0;
-	}
+	// clear performance counters
+	rperf.brush_polys = 0;
+	rperf.brush_tris = 0;
+	rperf.brush_drawcalls = 0;
+	rperf.alias_tris = 0;
+	rperf.alias_drawcalls = 0;
 
+	for(int i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
+		rperf.texture_binds[i] = 0;
+
+	R_StartProfiling();
 	R_PushDlights ();
 
 	if (r_finish->value)
@@ -525,29 +535,45 @@ void R_RenderView (refdef_t *fd)
 
 	R_SetupGL ();
 
-	R_MarkLeaves ();	// done here so we know if we're in water
+	R_World_MarkLeaves ();	// done here so we know if we're in water
 
+	R_UpdateCommonProgUniforms(false);
 
 	R_ClearFBO(); 
 	R_RenderToFBO(true); // begin rendering to fbo
+	R_ProfileAtStage(STAGE_SETUP);
+
 	R_DrawWorld();
+	R_ProfileAtStage(STAGE_DRAWWORLD);
+
 	R_DrawEntitiesOnList();
+	R_ProfileAtStage(STAGE_ENTITIES);
+
 	R_DrawDebugLines();
+	R_ProfileAtStage(STAGE_DEBUG);
+
 //	R_RenderDlights ();
-	R_DrawWorldAlphaSurfaces();
+	R_World_DrawAlphaSurfaces();
+	R_ProfileAtStage(STAGE_ALPHASURFS);
+
 	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
+	R_ProfileAtStage(STAGE_PARTICLES);
+
 	R_RenderToFBO(false); // end rendering to fbo
 	
-
+	R_SelectTextureUnit(0);
 	if (r_speeds->value == 1.0f)
 	{
-		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i vislmaps, %i texbinds\n",
+		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i texbinds, %i lmbinds,\n",
 			rperf.brush_polys,
 			rperf.alias_tris,
-			rperf.visible_textures, 
-			rperf.visible_lightmaps,
-			rperf.texture_binds); 
+			rperf.brush_textures,
+			rperf.texture_binds[TMU_DIFFUSE],
+			rperf.texture_binds[TMU_LIGHTMAP]);
 	}
+
+	R_ProfileAtStage(STAGE_TOTAL);
+	R_FinishProfiling();
 }
 
 /*
@@ -559,11 +585,8 @@ void R_BeginOrthoProjection()
 {
 	// set 2D virtual screen size
 	glViewport (0,0, vid.width, vid.height);
-	glMatrixMode(GL_PROJECTION);
-    glLoadIdentity ();
-	glOrtho  (0, vid.width, vid.height, 0, -99999, 99999);
-	glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity ();
+	Mat4Ortho(r_ortho_matrix, 0, vid.width, vid.height, 0, -99999, 99999);
+	R_UpdateCommonProgUniforms(true);
 	R_DepthTest(false);
 	R_CullFace(false);
 	R_Blend(false);
@@ -573,73 +596,50 @@ void R_BeginOrthoProjection()
 void R_NewDrawFill(rect_t pos, rgba_t color);
 static void R_DrawPerfCounters()
 {
+	float x, y, h;
+	vec4_t color;
+	float fontscale;
+
 	if (r_speeds->value <= 1.0f)
 		return;
 
-	rect_t pos = { 800 - 110, 15, 110, 170 };
-	float color[4];
-
 	Vector4Set(color, 0, 0, 0, 0.35f);
-	R_NewDrawFill(pos, color);
+	
+	R_ProgUniform4f(LOC_COLOR4, 0, 0, 0, 0.5);
+	R_DrawFill(vid.width-175, 42, 175, 220);
 
-	float x, y, h;
-
-#if 1
-	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
-	extern int R_GetFontHeight(int fontId);
-
-	float fontscale = 0.25;
+	fontscale = 0.25;
 	x = vid.width - 10;
-	y = 32;
+	y = 46;
 	h = R_GetFontHeight(0) * fontscale;
 
+	Vector4Set(color, 1.0, 0.65, 0, 1.0);
+	R_DrawText(x + 5, h + 4, 2, 0, fontscale, color, va("%s", gl_config.renderer_string));
+
 	Vector4Set(color, 1, 1, 1, 1.0);
-	R_DrawText(x, y, 2, 0, fontscale, color, va("%i BSP polygons", rperf.brush_polys));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i visible textures", rperf.visible_textures));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i visible light maps", rperf.visible_lightmaps));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture bindings", rperf.texture_binds));
+	R_DrawText(x, y, 2, 0, fontscale, color, va("%i brush polygons", rperf.brush_polys));
+
+	if (rperf.brush_tris > 0)
+	{
+		R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i brush triangles", rperf.brush_tris));
+	}
+
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i brush drawcalls", rperf.brush_drawcalls));
+
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.brush_textures));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i lightmap binds", rperf.texture_binds[TMU_LIGHTMAP]));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture binds", rperf.texture_binds[TMU_DIFFUSE]));
 
 	Vector4Set(color, 0.8, 0.8, 1, 1.0);
 	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("%i dynamic lights", r_newrefdef.num_dlights));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i render entities", r_newrefdef.num_entities));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i particles count", r_newrefdef.num_particles));
 
-	Vector4Set(color, 0.2, 1, 0, 1.0);
+	Vector4Set(color, 1, 1, 1, 1.0);
 	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("%i rendered models", rperf.alias_drawcalls));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i model tris total", rperf.alias_tris));
 
-	Vector4Set(color, 1.0, 0.5, 0, 1.0);
-
-	if (r_singlepass->value)
-		R_DrawText(x, y += h * 2, 2, 0, fontscale, color, "SINGLE PASS BSP (COL+LM)");
-	else
-		R_DrawText(x, y += h * 2, 2, 0, fontscale, color, "OLD TWO PASS BSP DRAWING");
-#else
-	y = 20;
-	Vector4Set(color, 1, 1, 1, 1.0);
-
-	R_DrawStringOld(va("%i        BSP polygons", rperf.brush_polys), 795, y, 0.7, 1, color);
-	R_DrawStringOld(va("%i    visible textures", rperf.visible_textures), 795, y += 8, 0.7, 1, color);
-	R_DrawStringOld(va("%i  visible light maps", rperf.visible_lightmaps), 795, y += 8, 0.7, 1, color);
-	R_DrawStringOld(va("%i    texture bindings", rperf.texture_binds), 795, y += 8, 0.7, 1, color);
-
-	Vector4Set(color, 0.8, 0.8, 1, 1.0);
-	R_DrawStringOld(va("%i      dynamic lights", r_newrefdef.num_dlights), 795, y += 16, 0.7, 1, color);
-	R_DrawStringOld(va("%i     render entities", r_newrefdef.num_entities), 795, y += 8, 0.7, 1, color);
-	R_DrawStringOld(va("%i     particles count", r_newrefdef.num_particles), 795, y += 8, 0.7, 1, color);
-
-	Vector4Set(color, 0.2, 1, 0, 1.0);
-	R_DrawStringOld(va("%i     rendered models", rperf.alias_drawcalls), 795, y += 16, 0.7, 1, color);
-	R_DrawStringOld(va("%i    model tris total", rperf.alias_tris), 795, y += 8, 0.7, 1, color);
-	
-	Vector4Set(color, 1.0, 0.5, 0, 1.0);
-
-	if(r_singlepass->value)
-		R_DrawStringOld("SINGLE PASS BSP (COL+LM)", 795, y += 14, 0.7, 1, color);
-	else
-		R_DrawStringOld("OLD TWO PASS BSP DRAWING", 795, y += 14, 0.7, 1, color);
-#endif	
-	
+	R_DrawProfilingReport();
 }
 
 /*
@@ -662,7 +662,7 @@ void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 	//
 	// enter 2d mode
 	//
-	R_BeginOrthoProjection ();
+	R_BeginOrthoProjection (); //yes this uploads the uniforms twice but sometimes beginframe isn't called or something
 
 	if (!onlyortho)
 	{

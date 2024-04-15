@@ -8,7 +8,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-// r_light.c
+// r_light.c - dynamic lights and light sampling from lightmap
 
 #include "r_local.h"
 
@@ -17,89 +17,30 @@ int	r_dlightframecount;
 #define	DLIGHT_CUTOFF	64
 
 /*
-=============================================================================
-
-DYNAMIC LIGHTS BLEND RENDERING
-
-=============================================================================
-*/
-
-void R_RenderDlight (dlight_t *light)
-{
-#if 0
-	int		i, j;
-	float	a;
-	vec3_t	v;
-	float	rad;
-
-	rad = light->intensity * 0.35;
-
-	VectorSubtract (light->origin, r_origin, v);
-
-	glBegin (GL_TRIANGLE_FAN);
-	glColor3f (light->color[0]*0.2, light->color[1]*0.2, light->color[2]*0.2);
-	for (i=0 ; i<3 ; i++)
-		v[i] = light->origin[i] - vpn[i]*rad;
-	glVertex3fv (v);
-	glColor3f (0,0,0);
-	for (i=16 ; i>=0 ; i--)
-	{
-		a = i/16.0 * M_PI*2;
-		for (j=0 ; j<3 ; j++)
-			v[j] = light->origin[j] + vright[j]*cos(a)*rad
-				+ vup[j]*sin(a)*rad;
-		glVertex3fv (v);
-	}
-	glEnd ();
-#endif
-}
-
-
-/*
 =============
 R_RenderDlights
 =============
 */
-
-void R_RenderDlights (void)
+void R_RenderDlights(void)
 {
 #if 0
 	int		i;
-	dlight_t	*l;
-
-	r_dlightframecount = r_framecount + 1;	// because the count hasn't
-											//  advanced yet for this frame
-	R_WriteToDepthBuffer(GL_FALSE);
-	glDisable (GL_TEXTURE_2D);
-	R_Blend(true);
-	R_BlendFunc(GL_ONE, GL_ONE);
+	dlight_t* l;
 
 	l = r_newrefdef.dlights;
-	for (i=0 ; i<r_newrefdef.num_dlights ; i++, l++)
-		R_RenderDlight (l);
-
-	glColor3f (1,1,1);
-	R_Blend(false);
-	glEnable (GL_TEXTURE_2D);
-	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	R_WriteToDepthBuffer(GL_TRUE);
+	for (i = 0; i < r_newrefdef.num_dlights; i++, l++)
+	{
+	}
 #endif
 }
 
-/*
-=============================================================================
 
-DYNAMIC LIGHTS
-
-=============================================================================
-*/
 
 /*
 =============
 R_MarkLights
 =============
 */
-
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
 {
 	cplane_t	*splitplane;
@@ -127,7 +68,7 @@ void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
 		
 // mark the polygons
 	surf = r_worldmodel->surfaces + node->firstsurface;
-	for (i=0 ; i<node->numsurfaces ; i++, surf++)
+	for (i = 0; i < node->numsurfaces ; i++, surf++)
 	{
 		if (surf->dlightframe != r_dlightframecount)
 		{
@@ -140,7 +81,6 @@ void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
 	R_MarkLights(light, lightorg, bit, node->children[1]);
 }
 
-
 /*
 =============
 R_PushDlights
@@ -151,13 +91,90 @@ void R_PushDlights (void)
 	int			i;
 	dlight_t	*l;
 
-	r_dlightframecount = r_framecount + 1;	// because the count hasn't
-											//  advanced yet for this frame
+	r_dlightframecount = r_framecount + 1;	// because the count hasn't advanced yet for this frame
+	
 	l = r_newrefdef.dlights;
 	for (i = 0; i < r_newrefdef.num_dlights; i++, l++)
 	{
-//		R_MarkLights(l, 1 << i, r_worldmodel->nodes);
 		R_MarkLights(l, l->origin, 1 << i, r_worldmodel->nodes);
+	}
+
+	// braxi -- moved dlight shader updates to R_UpdateCommonProgUniforms()
+}
+
+/*
+=================
+R_SendDynamicLightsToCurrentProgram
+=================
+*/
+void R_SendDynamicLightsToCurrentProgram()
+{
+	dlight_t* dlight;
+	int			i, j;
+	vec4_t		dl_pos_and_rad[MAX_DLIGHTS]; // holds xyz + radius for each light
+	vec4_t		dl_dir_and_cutoff[MAX_DLIGHTS]; // holds xyz direction + spot cutoff for each light
+	vec3_t		dl_colors[MAX_DLIGHTS];
+	int			numDynLights;
+
+	if (!r_worldmodel || !R_UsingProgram())
+		return;
+
+	numDynLights = !r_dynamic->value ? 0 : r_newrefdef.num_dlights; // no dlights when r_dynamic is off
+
+	dlight = r_newrefdef.dlights;
+	for (i = 0; i < numDynLights; i++, dlight++)
+	{
+//		if (dlight->intensity <= DLIGHT_CUTOFF)
+//			continue;
+
+		for (j = 0; j < 3; j++)
+			dl_pos_and_rad[i][j] = dlight->origin[j];
+		dl_pos_and_rad[i][3] = dlight->intensity;
+
+		VectorCopy(dlight->color, dl_colors[i]);
+
+		//Notes about spotlights:
+		//xyz must be normalized. (this could be done in shader if really needed)
+		//xyz should probably be valid, even if spotlights aren't being used.
+		//spot cutoff is in the range -1 (infinitely small cone) to 1 (disable spotlight entirely)
+
+#if 0 // test
+		srand(i);
+		dlight->type = DL_SPOTLIGHT;
+		for (j = 0; j < 3; j++)
+		{
+			dl_dir_and_cutoff[i][j] = rand() / (float)RAND_MAX * 2 - 1;
+			VectorNormalize(dl_dir_and_cutoff[i]);
+		}
+		float coff = -rand() / (float)RAND_MAX;
+		dl_dir_and_cutoff[i][3] = -0.95;
+#else
+		if (dlight->type == DL_SPOTLIGHT)
+		{
+			for (j = 0; j < 3; j++)
+			{
+				dl_dir_and_cutoff[i][j] = dlight->dir[j];
+				//VectorNormalize(dl_dir_and_cutoff[i]);
+			}
+
+			dl_dir_and_cutoff[i][3] = dlight->cutoff;
+		}
+		else
+		{
+			//In the absence of spotlights, set these to values that disable spotlights
+			dl_dir_and_cutoff[i][0] = dl_dir_and_cutoff[i][3] = 1.f;
+			dl_dir_and_cutoff[i][1] = dl_dir_and_cutoff[i][2] = 0.f;
+		}
+#endif
+
+	}
+
+	R_ProgUniform1i(LOC_DLIGHT_COUNT, numDynLights);
+	if (numDynLights > 0)
+	{
+		R_ProgUniform3fv(LOC_DLIGHT_COLORS, numDynLights, &dl_colors[0][0]);
+		R_ProgUniform4fv(LOC_DLIGHT_POS_AND_RAD, numDynLights, &dl_pos_and_rad[0][0]);
+		R_ProgUniform4fv(LOC_DLIGHT_DIR_AND_CUTOFF, numDynLights, &dl_dir_and_cutoff[0][0]);
 	}
 }
 
@@ -266,18 +283,25 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 
 			lightmap += 3 * (dt * ((surf->extents[0] >> surf->lmshift) + 1) + ds);
 
-			for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
-					maps++)
+			for (maps = 0 ; maps < MAX_LIGHTMAPS_PER_SURFACE && surf->styles[maps] != 255 ; maps++)
 			{
-				for (i=0 ; i<3 ; i++)
-					scale[i] = r_modulate->value*r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+				if (r_dynamic->value)
+				{
+					for (i = 0; i < 3; i++)
+						scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
 
-				pointcolor[0] += lightmap[0] * scale[0] * (1.0/255);
-				pointcolor[1] += lightmap[1] * scale[1] * (1.0/255);
-				pointcolor[2] += lightmap[2] * scale[2] * (1.0/255);
+					pointcolor[0] += lightmap[0] * scale[0] * (1.0 / 255);
+					pointcolor[1] += lightmap[1] * scale[1] * (1.0 / 255);
+					pointcolor[2] += lightmap[2] * scale[2] * (1.0 / 255);
+				}
+				else
+				{
+					pointcolor[0] += lightmap[0] * r_modulate->value * (1.0 / 255);
+					pointcolor[1] += lightmap[1] * r_modulate->value * (1.0 / 255);
+					pointcolor[2] += lightmap[2] * r_modulate->value * (1.0 / 255);
+				}
 
-				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) *
-					((surf->extents[1] >> surf->lmshift) + 1);
+				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) * ((surf->extents[1] >> surf->lmshift) + 1);
 			}
 		}	
 		return 1;
@@ -291,22 +315,17 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 ===============
 R_LightPoint
 
-Returns the lightmap pixel color under p plus and probes for dynamic lights around p
+Returns the lightmap pixel color under p
 ===============
 */
 void R_LightPoint(vec3_t p, vec3_t color)
 {
 	vec3_t		end;
 	float		r;
-	int			lnum;
-	dlight_t	*dl;
-	float		light;
-	vec3_t		dist;
-	float		add;
 	
 	if (!r_worldmodel->lightdata || r_worldmodel->lightdatasize <= 0)
 	{
-		color[0] = color[1] = color[2] = 1.0;
+		VectorSet(color, 1.0f, 1.0f, 1.0f); // fullbright
 		return;
 	}
 	
@@ -324,437 +343,6 @@ void R_LightPoint(vec3_t p, vec3_t color)
 	else
 		VectorCopy (pointcolor, color);
 
-	//
-	// add dynamic lights
-	//
-	light = 0;
-	dl = r_newrefdef.dlights;
-	for (lnum = 0; lnum < r_newrefdef.num_dlights; lnum++, dl++)
-	{
-		VectorSubtract (pCurrentRefEnt->origin, dl->origin, dist); // distance
-		add = dl->intensity - VectorLength(dist);
-		add *= (1.0/256);
-		if (add > 0)
-		{
-			VectorMA (color, add, dl->color, color);
-		}
-	}
-
 	// scale the light color with r_modulate cvar
 	VectorScale (color, r_modulate->value, color);
 }
-
-
-//===================================================================
-
-
-#ifdef DECOUPLED_LM
-#define BLOCKLIGHT_DIMS (256*256)
-#else
-#define BLOCKLIGHT_DIMS (34*34)
-#endif
-
-static float s_blocklights[BLOCKLIGHT_DIMS * 3];
-/*
-===============
-R_AddDynamicLights
-
-FIXME: The higher lightmap resolution is the more edgy dlights are
-===============
-*/
-static void R_AddDynamicLights(msurface_t *surf)
-{
-	int			lightNum;
-	int			sd, td;
-	float		fdist, frad, fminlight;
-	vec3_t		impact, local;
-	int			s, t;
-	int			i;
-	int			smax, tmax;
-	mtexinfo_t	*tex;
-	dlight_t	*dl;
-	float		*pfBL;
-	float		fsacc, ftacc;
-	vec3_t		lightofs; //Spike: light surfaces based upon where they are now instead of their default position.
-
-	smax = (surf->extents[0] >> surf->lmshift) + 1;
-	tmax = (surf->extents[1] >> surf->lmshift) + 1;
-
-	tex = surf->texinfo;
-
-	for (lightNum = 0; lightNum < r_newrefdef.num_dlights; lightNum++)
-	{
-		if ( !(surf->dlightbits & (1<<lightNum) ) ) // generaly unsafe waiting for explosion heh
-			continue;		// not lit by this light
-
-		dl = &r_newrefdef.dlights[lightNum];
-		frad = dl->intensity;
-
-		// Spike's fix from QS
-		VectorSubtract(dl->origin, pCurrentRefEnt->origin, lightofs);
-		fdist = DotProduct(lightofs, surf->plane->normal) - surf->plane->dist;
-
-		frad -= fabs(fdist); // frad is now the highest intensity on the plane
-			
-		fminlight = DLIGHT_CUTOFF;	// FIXME: make configurable?
-		if (frad < fminlight)
-			continue;
-		fminlight = frad - fminlight;
-
-		for( i = 0 ; i < 3 ; i++)
-		{
-			// Spike's fix from QS
-			impact[i] = lightofs[i] - surf->plane->normal[i] * fdist;
-		}
-
-#ifdef DECOUPLED_LM
-		local[0] = DotProduct(impact, surf->lmvecs[0]) + surf->lmvecs[0][3] - surf->texturemins[0];
-		local[1] = DotProduct(impact, surf->lmvecs[1]) + surf->lmvecs[1][3] - surf->texturemins[1];
-#else
-		local[0] = DotProduct (impact, tex->vecs[0]) + tex->vecs[0][3] - surf->texturemins[0];
-		local[1] = DotProduct (impact, tex->vecs[1]) + tex->vecs[1][3] - surf->texturemins[1];
-#endif
-
-		pfBL = s_blocklights;
-
-		for (t = 0, ftacc = 0; t < tmax; t++, ftacc += (1 << surf->lmshift))
-		{
-			td = local[1] - ftacc;
-
-			if ( td < 0 )
-				td = -td;
-
-#ifdef DECOUPLED_LM
-			td *= surf->lmvlen[1];
-#endif
-
-			for (s = 0, fsacc = 0; s < smax; s++, fsacc += (1 << surf->lmshift), pfBL += 3)
-			{
-				sd = Q_ftol( local[0] - fsacc );
-
-				if ( sd < 0 )
-					sd = -sd;
-
-#ifdef DECOUPLED_LM
-				sd *= surf->lmvlen[0];
-#endif
-
-				if (sd > td)
-					fdist = sd + (td>>1);
-				else
-					fdist = td + (sd>>1);
-
-				if ( fdist < fminlight )
-				{
-					float diff = frad - fdist; // shamefuly inspired by yquake2
-
-					pfBL[0] += diff * dl->color[0];
-					pfBL[1] += diff * dl->color[1];
-					pfBL[2] += diff * dl->color[2];
-				}
-			}
-		}
-	}
-}
-
-
-/*
-===============
-R_LightMap_SetCacheStateForSurf
-===============
-*/
-void R_LightMap_SetCacheStateForSurf( msurface_t *surf )
-{
-	int maps;
-
-	for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255; maps++)
-	{
-		surf->cached_light[maps] = r_newrefdef.lightstyles[surf->styles[maps]].white;
-	}
-}
-
-/*
-===============
-R_LightMap_Build
-
-Combine and scale multiple lightmaps into the floating format in blocklights
-===============
-*/
-void R_LightMap_Build (msurface_t *surf, byte *dest, int stride)
-{
-	int			smax, tmax;
-	int			r, g, b, a, max;
-	int			i, j, size;
-	byte		*lightmap;
-	float		scale[4];
-	int			nummaps;
-	float		*bl;
-	lightstyle_t	*style;
-	int monolightmap;
-
-	if ( surf->texinfo->flags & (SURF_SKY|SURF_TRANS33|SURF_TRANS66|SURF_WARP) )
-		ri.Error (ERR_DROP, "R_LightMap_Build called for non-lit surface");
-
-	smax = (surf->extents[0] >> surf->lmshift) + 1;
-	tmax = (surf->extents[1] >> surf->lmshift) + 1;
-
-	size = smax*tmax;
-	//int bsize = sizeof(s_blocklights) >> 4; // "probably vanilla bug" -- paril.
-	int bsize = sizeof(s_blocklights) / 12;
-	if (size > (bsize) )
-		ri.Error (ERR_DROP, "Bad s_blocklights size");
-
-// set to full bright if no light data
-	if (!surf->samples)
-	{
-		int maps;
-
-		for (i=0 ; i<size*3 ; i++)
-			s_blocklights[i] = 255;
-		for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
-			 maps++)
-		{
-			style = &r_newrefdef.lightstyles[surf->styles[maps]];
-		}
-		goto store;
-	}
-
-	// count the # of maps
-	for ( nummaps = 0 ; nummaps < MAXLIGHTMAPS && surf->styles[nummaps] != 255 ;
-		 nummaps++)
-		;
-
-	lightmap = surf->samples;
-
-	// add all the lightmaps
-	if ( nummaps == 1 )
-	{
-		int maps;
-
-		for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
-			 maps++)
-		{
-			bl = s_blocklights;
-
-			for (i=0 ; i<3 ; i++)
-				scale[i] = r_modulate->value*r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
-
-			if ( scale[0] == 1.0F &&
-				 scale[1] == 1.0F &&
-				 scale[2] == 1.0F )
-			{
-				for (i=0 ; i<size ; i++, bl+=3)
-				{
-					bl[0] = lightmap[i*3+0];
-					bl[1] = lightmap[i*3+1];
-					bl[2] = lightmap[i*3+2];
-				}
-			}
-			else
-			{
-				for (i=0 ; i<size ; i++, bl+=3)
-				{
-					bl[0] = lightmap[i*3+0] * scale[0];
-					bl[1] = lightmap[i*3+1] * scale[1];
-					bl[2] = lightmap[i*3+2] * scale[2];
-				}
-			}
-			lightmap += size*3;		// skip to next lightmap
-		}
-	}
-	else
-	{
-		int maps;
-
-		memset( s_blocklights, 0, sizeof( s_blocklights[0] ) * size * 3 );
-
-		for (maps = 0 ; maps < MAXLIGHTMAPS && surf->styles[maps] != 255 ;
-			 maps++)
-		{
-			bl = s_blocklights;
-
-			for (i=0 ; i<3 ; i++)
-				scale[i] = r_modulate->value*r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
-
-			if ( scale[0] == 1.0F &&
-				 scale[1] == 1.0F &&
-				 scale[2] == 1.0F )
-			{
-				for (i=0 ; i<size ; i++, bl+=3 )
-				{
-					bl[0] += lightmap[i*3+0];
-					bl[1] += lightmap[i*3+1];
-					bl[2] += lightmap[i*3+2];
-				}
-			}
-			else
-			{
-				for (i=0 ; i<size ; i++, bl+=3)
-				{
-					bl[0] += lightmap[i*3+0] * scale[0];
-					bl[1] += lightmap[i*3+1] * scale[1];
-					bl[2] += lightmap[i*3+2] * scale[2];
-				}
-			}
-			lightmap += size*3;		// skip to next lightmap
-		}
-	}
-
-// add all the dynamic lights
-	if (surf->dlightframe == r_framecount)
-		R_AddDynamicLights (surf);
-
-// put into texture format
-store:
-	stride -= (smax<<2);
-	bl = s_blocklights;
-
-	monolightmap = r_monolightmap->string[0];
-
-	if ( monolightmap == '0' )
-	{
-		for (i=0 ; i<tmax ; i++, dest += stride)
-		{
-			for (j=0 ; j<smax ; j++)
-			{
-				
-				r = Q_ftol( bl[0] );
-				g = Q_ftol( bl[1] );
-				b = Q_ftol( bl[2] );
-
-				// catch negative lights
-				if (r < 0)
-					r = 0;
-				if (g < 0)
-					g = 0;
-				if (b < 0)
-					b = 0;
-
-				/*
-				** determine the brightest of the three color components
-				*/
-				if (r > g)
-					max = r;
-				else
-					max = g;
-				if (b > max)
-					max = b;
-
-				/*
-				** alpha is ONLY used for the mono lightmap case.  For this reason
-				** we set it to the brightest of the color components so that 
-				** things don't get too dim.
-				*/
-				a = max;
-
-				/*
-				** rescale all the color components if the intensity of the greatest
-				** channel exceeds 1.0
-				*/
-				if (max > 255)
-				{
-					float t = 255.0F / max;
-
-					r = r*t;
-					g = g*t;
-					b = b*t;
-					a = a*t;
-				}
-
-				dest[0] = r;
-				dest[1] = g;
-				dest[2] = b;
-				dest[3] = a;
-
-				bl += 3;
-				dest += 4;
-			}
-		}
-	}
-	else
-	{
-		for (i=0 ; i<tmax ; i++, dest += stride)
-		{
-			for (j=0 ; j<smax ; j++)
-			{
-				
-				r = Q_ftol( bl[0] );
-				g = Q_ftol( bl[1] );
-				b = Q_ftol( bl[2] );
-
-				// catch negative lights
-				if (r < 0)
-					r = 0;
-				if (g < 0)
-					g = 0;
-				if (b < 0)
-					b = 0;
-
-				/*
-				** determine the brightest of the three color components
-				*/
-				if (r > g)
-					max = r;
-				else
-					max = g;
-				if (b > max)
-					max = b;
-
-				/*
-				** alpha is ONLY used for the mono lightmap case.  For this reason
-				** we set it to the brightest of the color components so that 
-				** things don't get too dim.
-				*/
-				a = max;
-
-				/*
-				** rescale all the color components if the intensity of the greatest
-				** channel exceeds 1.0
-				*/
-				if (max > 255)
-				{
-					float t = 255.0F / max;
-
-					r = r*t;
-					g = g*t;
-					b = b*t;
-					a = a*t;
-				}
-
-				/*
-				** So if we are doing alpha lightmaps we need to set the R, G, and B
-				** components to 0 and we need to set alpha to 1-alpha.
-				*/
-				switch ( monolightmap )
-				{
-				case 'L':
-				case 'I':
-					r = a;
-					g = b = 0;
-					break;
-				case 'C':
-					// try faking colored lighting
-					a = 255 - ((r+g+b)/3);
-					r *= a/255.0;
-					g *= a/255.0;
-					b *= a/255.0;
-					break;
-				case 'A':
-				default:
-					r = g = b = 0;
-					a = 255 - a;
-					break;
-				}
-
-				dest[0] = r;
-				dest[1] = g;
-				dest[2] = b;
-				dest[3] = a;
-
-				bl += 3;
-				dest += 4;
-			}
-		}
-	}
-}
-

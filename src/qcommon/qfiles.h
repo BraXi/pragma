@@ -236,7 +236,7 @@ typedef enum
 
 
 //
-// QBISM EXTENDED QUKE2 BSP FORMAT
+// QBISM EXTENDED QUAKE2 BSP FORMAT
 //
 #define QBISM_IDENT				 ('Q' | ('B' << 8) | ('S' << 16) | ('P' << 24))
 
@@ -263,12 +263,13 @@ typedef enum
 
 // BSPX extensions to BSP
 #define BSPX_IDENT		(('X'<<24)+('P'<<16)+('S'<<8)+'B') // little-endian "BSPX"
+
 typedef struct
 {
 	unsigned short	width;
 	unsigned short	height;
-	int		lightofs;
-	float	vecs[2][4];
+	int		lightofs;		// start of numstyles (from face struct) * (width * height) samples
+	float	vecs[2][4];		// this is a world -> lightmap space transformation matrix
 } bspx_decoupledlm_t;
 
 typedef struct
@@ -280,7 +281,6 @@ typedef struct
 
 typedef struct
 {
-//	char ident[4];	// "BSPX"
 	int ident;		// BSPX_IDENT
 	int numlumps;	// bspx_lump_t[numlumps]
 } bspx_header_t;
@@ -319,7 +319,7 @@ typedef struct
 	int			ident;
 	int			version;	
 	lump_t		lumps[HEADER_LUMPS];
-} dheader_t;
+} dbsp_header_t;
 
 typedef struct
 {
@@ -328,13 +328,13 @@ typedef struct
 	int			headnode;
 	int			firstface, numfaces;	// inlineModels just draw faces
 										// without walking the bsp tree
-} dmodel_t;
+} dbsp_model_t;
 
 
 typedef struct
 {
 	float	point[3];
-} dvertex_t;
+} dbsp_vertex_t;
 
 
 // 0-2 are axial planes
@@ -354,7 +354,7 @@ typedef struct
 	float	normal[3];
 	float	dist;
 	int		type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
-} dplane_t;
+} dbsp_plane_t;
 
 
 // contents flags are seperate bits
@@ -408,7 +408,7 @@ typedef struct
 #define	SURF_HINT		0x100	// make a primary bsp splitter
 #define	SURF_SKIP		0x200	// completely ignore, allowing non-closed brushes
 
-// ericw_tools additional contents
+// ericw_tools additional surface flags
 #define SURF_ALPHATEST	(1 << 25) // alpha test flag
 #define SURF_N64_UV		(1 << 28) // N64 UV and surface flag hack
 #define SURF_SCROLLX	(1 << 29) // slow x scroll
@@ -424,7 +424,7 @@ typedef struct
 	short		maxs[3];
 	unsigned short	firstface;
 	unsigned short	numfaces;	// counting both sides
-} dnode_t;
+} dbsp_node_t;
 
 typedef struct
 {
@@ -434,7 +434,7 @@ typedef struct
 	float		maxs[3];
 	unsigned int firstface;
 	unsigned int numfaces; // counting both sides
-} dnode_ext_t;	// QBSP
+} dbsp_node_ext_t;	// QBISM BSP
 
 
 typedef struct texinfo_s
@@ -444,7 +444,7 @@ typedef struct texinfo_s
 	int			value;			// light emission, etc
 	char		texture[32];	// texture name (textures/*.tga)
 	int			nexttexinfo;	// for animations, -1 = end of chain
-} texinfo_t;
+} dbsp_texinfo_t;
 
 
 // note that edge 0 is never used, because negative edge nums are used for
@@ -452,15 +452,15 @@ typedef struct texinfo_s
 typedef struct
 {
 	unsigned short	v[2];		// vertex numbers
-} dedge_t;
+} dbsp_edge_t;
 
 typedef struct
 {
 	unsigned int v[2]; // vertex numbers
-} dedge_ext_t; // QBSP
+} dbsp_edge_ext_t; // QBISM BSP
 
 
-#define	MAXLIGHTMAPS	4
+#define	MAX_LIGHTMAPS_PER_SURFACE	4 // this is also max lightstyles for surf
 typedef struct
 {
 	unsigned short	planenum;
@@ -471,9 +471,9 @@ typedef struct
 	short		texinfo;
 
 // lighting info
-	byte		styles[MAXLIGHTMAPS];
+	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
 	int			lightofs;		// start of [numstyles*surfsize] samples
-} dface_t;
+} dbsp_face_t;
 
 typedef struct
 {
@@ -485,9 +485,9 @@ typedef struct
 	int			texinfo;
 
 	// lighting info
-	byte		styles[MAXLIGHTMAPS];
+	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
 	int			lightofs; // start of [numstyles*surfsize] samples
-} dface_ext_t; // QBSP
+} dbsp_face_ext_t; // QBISM BSP
 
 
 typedef struct
@@ -505,7 +505,7 @@ typedef struct
 
 	unsigned short	firstleafbrush;
 	unsigned short	numleafbrushes;
-} dleaf_t;
+} dbsp_leaf_t;
 
 typedef struct
 {
@@ -522,20 +522,20 @@ typedef struct
 
 	unsigned int	firstleafbrush;
 	unsigned int	numleafbrushes;
-} dleaf_ext_t; // QBSP
+} dbsp_leaf_ext_t; // QBISM BSP
 
 
 typedef struct
 {
 	unsigned short	planenum;		// facing out of the leaf
 	short			texinfo;
-} dbrushside_t;
+} dbsp_brushside_t;
 
 typedef struct
 {
 	unsigned int	planenum; // facing out of the leaf
 	int				texinfo;
-} dbrushside_ext_t; // qb: qbsp
+} dbsp_brushside_ext_t; // QBISM BSP
 
 typedef struct
 {
@@ -544,8 +544,8 @@ typedef struct
 	int			contents;
 } dbrush_t;
 
-#define	ANGLE_UP	-1
-#define	ANGLE_DOWN	-2
+//#define	ANGLE_UP	-1 // braxi -- unused
+//#define	ANGLE_DOWN	-2 // braxi -- unused
 
 
 // the visibility lump consists of a header with a count, then
@@ -559,7 +559,7 @@ typedef struct
 {
 	int			numclusters;
 	int			bitofs[8][DVIS_NUM];	// bitofs[numclusters][DVIS_NUM]
-} dvis_t;
+} dbsp_vis_t;
 
 // each area has a list of portals that lead into other areas
 // when portals are closed, other areas may not be visible or
@@ -568,10 +568,10 @@ typedef struct
 {
 	int		portalnum;
 	int		otherarea;
-} dareaportal_t;
+} dbsp_areaportal_t;
 
 typedef struct
 {
 	int		numareaportals;
 	int		firstareaportal;
-} darea_t;
+} dbsp_area_t;

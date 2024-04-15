@@ -167,6 +167,7 @@
     <ClCompile Include="..\qcommon\shared.c" />
     <ClCompile Include="..\platform\win_shared.c" />
     <ClCompile Include="glad_gl21.c" />
+    <ClCompile Include="r_lightmap.c" />
     <ClCompile Include="r_text.c" />
     <ClCompile Include="r_framebuffer.c" />
     <ClCompile Include="r_progs.c" />
@@ -185,7 +186,6 @@
     <ClCompile Include="r_misc.c" />
     <ClCompile Include="r_sprite.c" />
     <ClCompile Include="r_state.c" />
-    <ClCompile Include="r_surf.c" />
     <ClCompile Include="r_warp.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

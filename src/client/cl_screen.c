@@ -750,7 +750,7 @@ Draws current FPS
 ==================
 */
 extern int frame_time;
-extern cvar_t* cl_showfps;
+extern cvar_t* cl_showfps, *cl_maxfps;
 static void SCR_DrawFPS()
 {
 	float color[4];
@@ -770,6 +770,10 @@ static void SCR_DrawFPS()
 	re.SetColor(1, 1, 1, 1);
 	VectorSet(color, 1, 1, 1);
 	color[3] = 1;
+
+
+	if (fps > cl_maxfps->value)
+		fps = cl_maxfps->value;
 
 	if (fps >= 1000)
 		VectorSet(color, 0.3, 0.8, 0);

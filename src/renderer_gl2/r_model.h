@@ -50,16 +50,18 @@ typedef struct
 #define	SIDE_ON		2
 
 
+// braxi -- added unused SURF_ flags for completness
 #define	SURF_PLANEBACK		2
 #define	SURF_DRAWSKY		4
+//#define SURF_DRAWSPRITE	8 // was never used ?
 #define SURF_DRAWTURB		0x10
-#define SURF_DRAWBACKGROUND	0x40
+//#define SURF_DRAWTILED	0x20
+//#define SURF_DRAWBACKGROUND	0x40 // used in soft renderer
 #define SURF_UNDERWATER		0x80
 
 typedef struct
 {
-	unsigned int	v[2]; // braxi -- was unsigned short
-	unsigned int	cachededgeoffset; // braxi -- unused
+	unsigned int	v[2];
 } medge_t;
 
 typedef struct mtexinfo_s
@@ -71,7 +73,14 @@ typedef struct mtexinfo_s
 	image_t		*image;
 } mtexinfo_t;
 
-#define	VERTEXSIZE	7
+typedef struct polyvert_s
+{
+	vec3_t	pos;
+	float	alpha;
+	float	texCoord[2];
+	float	lmTexCoord[2];  // lightmap texture coordinate (sometimes unused)
+	vec3_t	normal;
+} polyvert_t;
 
 typedef struct glpoly_s
 {
@@ -79,8 +88,8 @@ typedef struct glpoly_s
 	struct	glpoly_s	*chain;
 	int		numverts;
 	int		flags;					// for SURF_UNDERWATER (not needed anymore?)
-	float	verts[4][VERTEXSIZE];	// variable sized (xyz s1t1 s2t2)
-} glpoly_t;
+	polyvert_t	verts[4]; // variable sized
+} poly_t;
 
 typedef struct msurface_s
 {
@@ -89,18 +98,19 @@ typedef struct msurface_s
 	cplane_t	*plane;
 	int			flags;
 
-	int			firstedge;	// look up in model->surfedges[], negative numbers
-	int			numedges;	// are backwards edges
+	int			firstedge;	// look up in model->surfedges[], negative numbers are backwards edges
+	int			numedges;
+
+	int			firstvert;	// exp rendering
+	int			numverts;	// exp rendering
 	
 	short		texturemins[2];
 	short		extents[2];
 
 	int			light_s, light_t;	// gl lightmap coordinates
-	int			dlight_s, dlight_t; // gl lightmap coordinates for dynamic lightmaps
 
-	glpoly_t	*polys;				// multiple if warped
-	struct	msurface_s	*texturechain;
-	struct  msurface_s	*lightmapchain;
+	poly_t		*polys;				// multiple if warped
+	struct msurface_s	*texturechain;
 
 	mtexinfo_t	*texinfo;
 	
@@ -115,9 +125,9 @@ typedef struct msurface_s
 	int				dlightframe;
 	unsigned int	dlightbits;
 
-	int			lightmaptexturenum;
-	byte		styles[MAXLIGHTMAPS];
-	float		cached_light[MAXLIGHTMAPS];	// values currently used in lightmap
+	int			lightMapTextureNum;
+	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
+//	float		cached_light[MAX_LIGHTMAPS_PER_SURFACE];	// values currently used in lightmap
 	byte		*samples;		// ptr to lightmap data [numstyles*surfsize]
 } msurface_t;
 
@@ -192,6 +202,7 @@ typedef struct model_s
 //
 // brush model
 //
+
 	int			firstmodelsurface, nummodelsurfaces;
 	int			lightmap;		// only for inlineModels
 
@@ -226,7 +237,7 @@ typedef struct model_s
 	int			nummarksurfaces;
 	msurface_t	**marksurfaces;
 
-	dvis_t		*vis;
+	dbsp_vis_t		*vis;
 
 	byte		*lightdata;
 	int			lightdatasize;

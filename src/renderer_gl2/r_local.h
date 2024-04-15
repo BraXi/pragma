@@ -8,31 +8,44 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+#pragma once
+
 #ifdef _WIN32
 	#include <windows.h>
 #endif
 
 #include <stdio.h>
+
 #if 0
 #include "include/glad/glad_gl33core.h"
 #else
 #include "include/glad/glad_21.h"
 #endif
+
 #include <math.h>
 #include "../qcommon/renderer.h"
 #include "win_qgl.h"
 
-#define	REF_VERSION	"0.4-next"
+#define	REF_VERSION	"0.5-next"
 
 #define DECOUPLED_LM 1
 
-// -- sin table --
+//===================================================================
+// used to generate sin tables
+//===================================================================
+
+//#ifndef RAD2DEG
 //#define RAD2DEG( a ) ( ( (a) * 180.0f ) / M_PI ) // unused
+//#endif
+
+#ifndef DEG2RAD
 #define DEG2RAD( a ) ( ( (a) * M_PI ) / 180.0F )
+#endif
 
 #define FUNCTABLE_SIZE		1024
 #define FUNCTABLE_MASK		(FUNCTABLE_SIZE-1)
-// -- sin table --
+
+//===================================================================
 
 
 #define	PITCH	0	// up / down
@@ -70,24 +83,20 @@ typedef struct image_s
 	qboolean		has_alpha;
 } image_t;
 
-#define	TEXNUM_LIGHTMAPS	1024
-#define	TEXNUM_IMAGES		1153
-#define	MAX_GLTEXTURES		1024
 
 //===================================================================
-
-//
 // r_fbo.c
-//
+//===================================================================
 qboolean R_InitFrameBuffer();
 void R_FreeFrameBuffer();
 void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse);
 
 //===================================================================
+// r_progs.c
+//===================================================================
 enum
 {
 	GLPROG_WORLD,
-	GLPROG_WORLD_LIQUID,
 	GLPROG_SKY,
 	GLPROG_ALIAS,
 	GLPROG_SPRITE,
@@ -102,15 +111,20 @@ typedef enum
 {
 	LOC_COLORMAP,
 	LOC_LIGHTMAP,
+	LOC_LIGHTSTYLES,
 	LOC_SCALE,
 	LOC_COLOR4,
 	LOC_TIME,
 	LOC_SHADEVECTOR,
 	LOC_SHADECOLOR,
 	LOC_LERPFRAC,
+	LOC_WARPSTRENGTH,
+	LOC_FLOWSTRENGTH,
+
 	LOC_PARM0,
 	LOC_PARM1,
 	LOC_PARM2,
+
 	LOC_SCREENSIZE,
 	LOC_INTENSITY,
 	LOC_GAMMA,
@@ -119,6 +133,16 @@ typedef enum
 	LOC_GRAYSCALE,
 	LOC_INVERSE,
 	LOC_NOISE,
+
+	LOC_DLIGHT_COUNT,
+	LOC_DLIGHT_COLORS,
+	LOC_DLIGHT_POS_AND_RAD,
+	LOC_DLIGHT_DIR_AND_CUTOFF,
+
+	LOC_PROJECTION,
+	LOC_MODELVIEW,
+	LOC_LOCALMODELVIEW, //Used to properly light models
+
 	NUM_LOCS,
 } glprogLoc_t;
 
@@ -127,6 +151,8 @@ typedef enum
 	VALOC_POS,
 	VALOC_NORMAL,
 	VALOC_TEXCOORD,
+	VALOC_LMTEXCOORD, // BSP ONLY
+	VALOC_ALPHA,		// BSP ONLY?
 	VALOC_COLOR,
 	VALOC_OLD_POS,
 	VALOC_OLD_NORMAL,
@@ -144,9 +170,6 @@ typedef struct glprog_s
 	qboolean		isValid;
 } glprog_t;
 
-//
-// r_progs.c
-//
 extern glprog_t glprogs[MAX_GLPROGS];
 extern glprog_t* pCurrentProgram;
 extern int numProgs;
@@ -154,7 +177,6 @@ extern int numProgs;
 glprog_t* R_ProgramIndex(int progindex);
 void R_BindProgram(int progindex);
 void R_UnbindProgram();
-int R_LoadProgram(int program, char* name);
 void R_FreePrograms();
 void R_InitPrograms();
 
@@ -169,16 +191,19 @@ void R_ProgUniformVec3(int uniform, vec3_t v);
 void R_ProgUniform4i(int uniform, int val, int val2, int val3, int val4);
 void R_ProgUniform4f(int uniform, float val, float val2, float val3, float val4);
 void R_ProgUniformVec4(int uniform, vec4_t v);
+void R_ProgUniform3fv(int uniform, int count, float* val);
+void R_ProgUniform4fv(int uniform, int count, float* val);
+void R_ProgUniformMatrix4fv(int uniform, int count, float* val);
 int R_GetProgAttribLoc(glprogLoc_t attrib);
 char* R_GetProgAttribName(glprogLoc_t attrib);
 char* R_GetCurrentProgramName();
-
 qboolean R_UsingProgram();
-
-void	R_ShaderList_f(void);
+void R_UpdateCommonProgUniforms(qboolean orthoonly);
+void R_ShaderList_f(void);
 
 //===================================================================
-
+// r_vertexbuffer.c
+//===================================================================
 typedef struct
 {
 	float	xyz[3];
@@ -192,7 +217,8 @@ typedef enum
 	V_UV = 1,
 	V_NORMAL = 2,
 	V_COLOR = 4,
-	V_INDICES = 8
+	V_INDICES = 8,
+	V_NOFREE = 16	// don't free verts allocated by R_AllocVertexBuffer after upload to gpu
 } vboFlags_t;
 
 typedef struct
@@ -216,32 +242,9 @@ void R_DeleteVertexBuffers(vertexbuffer_t* vbo); // this is handy for stack allo
 void R_FreeVertexBuffer(vertexbuffer_t* vbo);
 
 //===================================================================
-typedef enum
-{
-	rserr_ok,
-	rserr_invalid_fullscreen,
-	rserr_invalid_mode,
-	rserr_unknown
-} rserr_t;
+
 
 #include "r_model.h"
-
-void GL_SetDefaultState( void );
-void GL_UpdateSwapInterval( void );
-
-typedef struct
-{
-	int	brush_polys;
-
-	int alias_tris;
-	int alias_drawcalls;
-
-	int	texture_binds;
-
-	int	visible_lightmaps;
-	int	visible_textures;
-
-} rperfcounters_t;
 
 
 #define BACKFACE_EPSILON	0.01
@@ -249,23 +252,15 @@ typedef struct
 
 //====================================================
 
-extern	image_t		r_textures[MAX_GLTEXTURES];
-extern	int			r_textures_count;
-
-extern	image_t		*r_texture_white;
-extern	image_t		*r_texture_missing;
-extern	image_t		*r_texture_particle;
-extern	image_t		*r_texture_view;
-
 extern	rentity_t	*pCurrentRefEnt;
 extern	model_t		*pCurrentModel;
+
+//====================================================
+
 extern	int			r_visframecount;
 extern	int			r_framecount;
 extern	cplane_t	frustum[4];
 
-extern rperfcounters_t rperf;
-
-extern	int			gl_filter_min, gl_filter_max;
 extern	float		gldepthmin, gldepthmax;
 
 //
@@ -288,18 +283,15 @@ extern	cvar_t	*r_drawentities;
 extern	cvar_t	*r_drawworld;
 extern	cvar_t	*r_speeds;
 extern	cvar_t	*r_fullbright;
-extern	cvar_t	*r_singlepass;
 extern	cvar_t	*r_novis;
 extern	cvar_t	*r_nocull;
 extern	cvar_t	*r_lerpmodels;
-
 extern cvar_t	*gl_ext_swapinterval;
 
 extern	cvar_t	*r_bitdepth;
 extern	cvar_t	*r_mode;
 extern	cvar_t	*r_lightmap;
 extern	cvar_t	*r_dynamic;
-extern  cvar_t  *r_monolightmap;
 extern	cvar_t	*r_nobind;
 extern	cvar_t	*r_picmip;
 extern	cvar_t	*r_showtris;
@@ -313,108 +305,139 @@ extern	cvar_t	*r_swapinterval;
 extern	cvar_t	*r_texturemode;
 extern	cvar_t	*r_texturealphamode;
 extern	cvar_t	*r_texturesolidmode;
-extern  cvar_t  *r_saturatelighting;
 extern  cvar_t  *r_lockpvs;
 
 extern	cvar_t	*r_fullscreen;
 extern	cvar_t	*r_gamma;
 extern	cvar_t	*r_intensity;
 
-extern	int		gl_lightmap_format;
 extern	int		gl_tex_solid_format;
 extern	int		gl_tex_alpha_format;
 
-extern float r_world_matrix[16];
+extern mat4_t r_world_matrix;
+extern mat4_t r_local_matrix; //Transforms a vertex into its final position in the world
+extern mat4_t r_projection_matrix;
+extern mat4_t r_ortho_matrix;
 
-void R_LightPoint (vec3_t p, vec3_t color);
-void R_PushDlights (void);
 
-//====================================================================
+//===================================================================
+// r_model.c
+//===================================================================
+extern model_t *r_worldmodel;
+extern model_t* r_defaultmodel;
 
-extern	model_t	*r_worldmodel;
+extern int registration_sequence;
+void R_InitSprites();
 
-extern	int		registration_sequence;
-
+//===================================================================
 // r_init.c
-int 	R_Init( void *hinstance, void *hWnd );
-void	R_Shutdown( void );
+//===================================================================
+int R_Init( void *hinstance, void *hWnd );
+void R_Shutdown( void );
 
-void R_RenderView (refdef_t *fd);
-void R_ScreenShot_f (void);
-void R_DrawBrushModel (rentity_t *e);
-void R_DrawBeam( rentity_t *e );
-void R_DrawWorld (void);
-void R_RenderDlights(void);
-void R_DrawWorldAlphaSurfaces();
-void R_RenderBrushPoly (msurface_t *fa);
+//===================================================================
+// r_misc.c
+//===================================================================
 void R_InitCodeTextures();
-void R_LoadFonts();
-void GL_SubdivideSurface (msurface_t *fa);
-qboolean R_CullBox (vec3_t mins, vec3_t maxs);
-void R_RotateForEntity (rentity_t *e);
-void R_MarkLeaves (void);
+void R_ScreenShot_f(void);
+void GL_SetDefaultState(void);
+void GL_UpdateSwapInterval(void);
 
-void EmitWaterPolys (msurface_t *fa);
+//===================================================================
+// r_world.c
+//===================================================================
+void R_DrawWorld();
+void R_World_MarkLeaves();
+void R_World_DrawAlphaSurfaces(); //old rendering path
+void R_DrawBrushModel(rentity_t* e);
+
+//===================================================================
+// r_warp.c
+//===================================================================
+void R_SubdivideSurface(msurface_t* fa);
+void R_World_DrawUnlitWaterSurf (msurface_t *fa); //old rendering path
 void R_AddSkySurface (msurface_t *fa);
-void R_ClearSkyBox (void);
-void R_DrawSkyBox (void);
+void R_ClearSkyBox();
+void R_DrawSkyBox();
 
+//===================================================================
+// r_main.c 
+//===================================================================
+void R_RenderView(refdef_t* fd);
+void R_BeginFrame(float camera_separation);
+void R_RotateForEntity(rentity_t* e);
+qboolean R_CullBox(vec3_t mins, vec3_t maxs);
+void R_DrawBeam(rentity_t* e);
+
+//===================================================================
+// r_light.c
+//===================================================================
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
+void R_LightPoint(vec3_t p, vec3_t color);
+void R_PushDlights(void);
+void R_SendDynamicLightsToCurrentProgram();
+void R_RenderDlights(void); // development aid
 
-#if 0
-short LittleShort (short l);
-short BigShort (short l);
-int	LittleLong (int l);
-float LittleFloat (float f);
+//===================================================================
+// shared.c
+//===================================================================
+// void COM_StripExtension (char *in, char *out); //unused in render
 
-char	*va(char *format, ...);
-// does a varargs printf into a temp buffer
-#endif
 
-void COM_StripExtension (char *in, char *out);
+//===================================================================
+// r_draw.c
+//===================================================================
+void R_LoadFonts();
+void R_GetImageSize (int *w, int *h, char *name);
+void R_DrawImage (int x, int y, char *name);
+void R_DrawStretchImage (int x, int y, int w, int h, char *name);
+void R_DrawSingleChar (int x, int y, int c, int charSize);
+void R_DrawTileClear (int x, int y, int w, int h, char *name);
+void R_DrawFill (int x, int y, int w, int h);
 
-void	R_GetImageSize (int *w, int *h, char *name);
-void	R_DrawImage (int x, int y, char *name);
-void	R_DrawStretchImage (int x, int y, int w, int h, char *name);
-void	R_DrawSingleChar (int x, int y, int c, int charSize);
-void	R_DrawTileClear (int x, int y, int w, int h, char *name);
-void	R_DrawFill (int x, int y, int w, int h);
-
-void	R_BeginFrame( float camera_separation );
-
-struct image_s *R_RegisterSkin (char *name);
-
-//
+//===================================================================
 // r_image.c
-//
-void R_EnableMultitexture(qboolean enable);
-void R_SelectTextureUnit(GLenum texture);
+//===================================================================
+struct image_s* R_RegisterSkin(char* name);
+void R_EnableMultiTexture();
+void R_DisableMultiTexture();
+void R_SelectTextureUnit(unsigned int textureMappingUnit);
 void R_BindTexture(int texnum);
-void R_MultiTextureBind(GLenum target, int texnum);
-
+void R_MultiTextureBind(unsigned int tmu, int texnum);
 image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_t type, int bits);
 image_t	*R_FindTexture(char *name, texType_t type, qboolean load);
-
 void R_SetTextureMode(char *string);
 void R_TextureList_f(void);
-
-
 void R_InitTextures();
 void R_FreeTextures();
-
 void R_FreeUnusedTextures();
-
 void R_SetTextureAlphaMode(char *string);
 void R_TextureSolidMode(char *string);
 
-/*
-** GL extension emulation functions
-*/
-void GL_DrawParticles( int n, const particle_t particles[] );
+#define	TEXNUM_IMAGES		1153
+#define	MAX_GLTEXTURES		1024
 
-/*
-** GL config stuff
-*/
+#define MIN_TEXTURE_MAPPING_UNITS 4
+
+enum
+{
+	TMU_DIFFUSE,
+	TMU_LIGHTMAP,
+};
+
+extern int gl_filter_min, gl_filter_max;
+
+extern	image_t	r_textures[MAX_GLTEXTURES];
+extern	int		r_textures_count;
+
+extern	image_t* r_texture_white;
+extern	image_t* r_texture_missing;
+extern	image_t* r_texture_particle;
+extern	image_t* r_texture_view;
+
+//===================================================================
+// GL config stuff
+//===================================================================
 #define GL_RENDERER_OTHER		0
 #define GL_RENDERER_NVIDIA		1
 #define GL_RENDERER_AMD			2
@@ -436,20 +459,17 @@ typedef struct
 
 typedef struct
 {
-//	float inverse_intensity;
 	qboolean fullscreen;
-
 	int     prev_mode;			// previous r_mode->value
 
 	int lightmap_textures;		// TEXNUM_LIGHTMAPS + NUM_LIGHTMAPS
 
-	int	currenttextures[2];		// currently bound textures [TEX0, TEX1]
-	int currenttmu;				// GL_TEXTURE0 or GL_TEXTURE1
+	int current_lightmap;		// currently bound lightmap textureset
+	int	current_texture[5];		// currently bound textures [TEX0-TEX4]
+	int current_tmu;			// GL_TEXTURE0 to GL_TEXTURE4
 
 	float camera_separation;
 	qboolean stereo_enabled;
-
-
 } glstate_t;
 
 extern glconfig_t  gl_config;
@@ -464,17 +484,68 @@ a better gl state tracker
 extern inline void R_AlphaTest(qboolean enable);
 extern inline void R_Blend(qboolean enable);
 extern inline void R_DepthTest(qboolean enable);
-extern  void R_Texturing(qboolean enable);
 extern inline void R_CullFace(qboolean enable);
 
 extern inline void R_SetCullFace(GLenum newstate);
 extern inline void R_WriteToDepthBuffer(GLboolean newstate);
 extern inline void R_BlendFunc(GLenum newstateA, GLenum newstateB);
 
-// inline void R_SetColor(float r, float g, float b, float a);
 extern inline void R_SetClearColor(float r, float g, float b, float a);
 
 extern void R_InitialOGLState();
+
+/*
+====================================================================
+Live profiling (currently windows only) + counters
+====================================================================
+*/
+
+typedef struct
+{
+	int	brush_polys;
+	int brush_tris;
+	int brush_drawcalls;
+	int	brush_textures;
+
+	int alias_tris;
+	int alias_drawcalls;
+
+	int	texture_binds[MIN_TEXTURE_MAPPING_UNITS];
+} rperfcounters_t;
+
+extern rperfcounters_t rperf;
+
+#define NUM_TIMESAMPLES 16
+typedef enum
+{
+	STAGE_START,
+	STAGE_SETUP,
+	STAGE_DRAWWORLD,
+	STAGE_ENTITIES,
+	STAGE_DEBUG,
+	STAGE_ALPHASURFS,
+	STAGE_PARTICLES,
+	STAGE_TOTAL,
+	NUM_PROFILES
+} profiletype_e;
+
+#ifdef _WIN32
+extern LARGE_INTEGER qpc_freq;
+extern LARGE_INTEGER qpc_samples[NUM_PROFILES];
+#endif
+
+extern double lastsamples[NUM_PROFILES][NUM_TIMESAMPLES];
+
+//Starts profiling. Will record the time it was called at.
+void R_StartProfiling();
+//Called at the end of a stage, compares the stage's time to the previous,
+//unless that stage is STAGE_TOTAL, at which it compares to the time at the call of R_StartProfiling.
+void R_ProfileAtStage(profiletype_e stage);
+//Finishes profiling by converting all the relevant numbers into milliseconds and incrementing the sample number.
+void R_FinishProfiling();
+
+//Draws the profiling report to screen.
+void R_DrawProfilingReport();
 
 /*
 ====================================================================
@@ -490,15 +561,22 @@ extern	refimport_t	ri;
 /*
 ====================================================================
 
-IMPLEMENTATION SPECIFIC FUNCTIONS
+IMPLEMENTATION SPECIFIC FUNCTIONS - win_opengl.c
 
 ====================================================================
 */
 
-void		GLimp_BeginFrame( float camera_separation );
-void		GLimp_EndFrame( void );
-int 		GLimp_Init( void *hinstance, void *hWnd );
-void		GLimp_Shutdown( void );
-int     	GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen );
-void		GLimp_AppActivate( qboolean active );
+void GLimp_BeginFrame( float camera_separation );
+void GLimp_EndFrame( void );
+int GLimp_Init( void *hinstance, void *hWnd );
+void GLimp_Shutdown( void );
+int GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen );
+void GLimp_AppActivate( qboolean active );
 
+typedef enum
+{
+	rserr_ok,
+	rserr_invalid_fullscreen,
+	rserr_invalid_mode,
+	rserr_unknown
+} rserr_t;

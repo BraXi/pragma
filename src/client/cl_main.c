@@ -1128,7 +1128,7 @@ void CL_InitLocal (void)
 
 	cl_name = Cvar_Get("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
 	cl_rate = Cvar_Get("rate", va("%i", NET_RATE_DEFAULT), CVAR_USERINFO | CVAR_ARCHIVE);
-	cl_hand = Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
+	cl_hand = Cvar_Get("cl_hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
 	fov = Cvar_Get("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
 
 	//

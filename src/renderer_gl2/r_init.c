@@ -18,7 +18,6 @@ cvar_t* r_drawentities;
 cvar_t* r_drawworld;
 cvar_t* r_speeds;
 cvar_t* r_fullbright;
-cvar_t* r_singlepass;
 cvar_t* r_novis;
 cvar_t* r_nocull;
 cvar_t* r_lerpmodels;
@@ -32,7 +31,6 @@ cvar_t* gl_driver;
 cvar_t* r_lightmap;
 cvar_t* r_mode;
 cvar_t* r_dynamic;
-cvar_t* r_monolightmap;
 cvar_t* r_modulate;
 cvar_t* r_nobind;
 cvar_t* r_picmip;
@@ -40,7 +38,6 @@ cvar_t* r_showtris;
 cvar_t* r_finish;
 cvar_t* r_clear;
 cvar_t* r_cull;
-cvar_t* r_saturatelighting;
 cvar_t* r_swapinterval;
 cvar_t* r_texturemode;
 cvar_t* r_texturealphamode;
@@ -79,8 +76,6 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
 
-	r_singlepass = ri.Cvar_Get("r_singlepass", "1", 0);
-
 	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);
 	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT);
 
@@ -96,25 +91,24 @@ void R_RegisterCvarsAndCommands(void)
 	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
 	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT);
 	r_dynamic = ri.Cvar_Get("r_dynamic", "1", CVAR_CHEAT);
-	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT);
 	r_picmip = ri.Cvar_Get("r_picmip", "0", 0);
-	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT);
+	
+	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT);
+	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT);	
 	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE);
 	r_clear = ri.Cvar_Get("r_clear", "0", 0);
 	r_cull = ri.Cvar_Get("r_cull", "1", CVAR_CHEAT);
-	r_monolightmap = ri.Cvar_Get("r_monolightmap", "0", CVAR_CHEAT);
+	
 	gl_driver = ri.Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE);
+	
 	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
 	r_texturesolidmode = ri.Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE);
-
 
 	gl_ext_swapinterval = ri.Cvar_Get("gl_ext_swapinterval", "1", CVAR_ARCHIVE);
 
 	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT);
 	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
-
-	r_saturatelighting = ri.Cvar_Get("r_saturatelighting", "0", CVAR_CHEAT);
 
 	r_fullscreen = ri.Cvar_Get("r_fullscreen", "0", CVAR_ARCHIVE);
 
@@ -231,6 +225,10 @@ static void R_OpenGLConfig()
 		gl_config.renderer = GL_RENDERER_INTEL;
 	else
 		gl_config.renderer = GL_RENDERER_OTHER;
+
+
+	if (gl_config.max_tmu < MIN_TEXTURE_MAPPING_UNITS)
+		ri.Error(ERR_FATAL, "Your graphics card doesn't support 4 texture mapping units");
 }
 
 /*
@@ -291,13 +289,6 @@ int R_Init(void* hinstance, void* hWnd)
 	// get our various GL strings and consts
 	R_OpenGLConfig();
 
-
-	if (toupper(r_monolightmap->string[1]) != 'F')
-	{
-		ri.Cvar_Set("r_monolightmap", "0");
-
-	}
-
 	ri.Cvar_Set("scr_drawall", "1");
 
 	/*
@@ -314,11 +305,36 @@ int R_Init(void* hinstance, void* hWnd)
 		ri.Printf(PRINT_ALL, "...WGL_EXT_swap_control not found\n");
 	}
 
+	srand(time(NULL));
+	QueryPerformanceFrequency(&qpc_freq);
+
+#if 0 //[ISB] SSE matrix multiplication experimental benchmark. 
+	mat4_t a, b, sourcea;
+	for (int i = 0; i < 16; i++)
+	{
+		sourcea[i] = (float)rand() / RAND_MAX;
+		b[i] = (float)rand() / RAND_MAX;
+	}
+
+	LARGE_INTEGER test, test2;
+	QueryPerformanceCounter(&test);
+	for (int run = 0; run < 100000000; run++)
+	{
+		memcpy(a, sourcea, sizeof(a));
+		Mat4Multiply(a, b);
+	}
+	QueryPerformanceCounter(&test2);
+	test2.QuadPart -= test.QuadPart;
+	double ms = (double)test2.QuadPart / qpc_freq.QuadPart * 1000;
+	ri.Printf(PRINT_ALL, "100000000 matrix multiplies in %f MS (side effect %f)\n", ms, a[rand() & 15]);
+#endif
+
 #endif
 	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 	
 //	glActiveTexture = 0;
 //	glMultiTexCoord2f = 0;
+	R_EnableMultiTexture();
 
 	R_InitTextures();
 	R_InitPrograms();
@@ -332,9 +348,10 @@ int R_Init(void* hinstance, void* hWnd)
 		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
 	R_InitModels();
+	R_InitSprites();
 	R_LoadFonts();
 
-	vb_particles = R_AllocVertexBuffer((V_UV | V_COLOR), (3 * MAX_PARTICLES), 0);
+	vb_particles = R_AllocVertexBuffer((V_UV | V_COLOR | V_NOFREE), (3 * MAX_PARTICLES), 0);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)

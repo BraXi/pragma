@@ -299,7 +299,7 @@ static void R_DrawTextInternal(float x, float y, font_t* f, float scale, vec4_t 
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], color[3]);
-	R_BindTexture(f->texnum);
+	R_MultiTextureBind(TMU_DIFFUSE, f->texnum);
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 }
 

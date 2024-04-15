@@ -1,16 +1,26 @@
 #include "shared.h"
 
+#define USE_SSE
+#ifdef USE_SSE
+#include <intrin.h>
+#endif
+
 vec3_t vec3_origin = { 0,0,0 };
 
 #define DEG2RAD( a ) ( a * M_PI ) / 180.0F
 
+/*
+================
+MakeNormalVectors
+================
+*/
 void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 {
 	float		d;
 
 	// this rotate and negat guarantees a vector
 	// not colinear with the original
-	right[1] = -forward[0];
+	right[1] = -forward[0]; // stupid quake bug?
 	right[2] = forward[1];
 	right[0] = forward[2];
 
@@ -20,6 +30,11 @@ void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up)
 	CrossProduct(right, forward, up);
 }
 
+/*
+================
+RotatePointAroundVector
+================
+*/
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {
 	mat3x3_t	m;
@@ -79,8 +94,11 @@ void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, f
 #pragma optimize( "", on )
 #endif
 
-
-
+/*
+================
+AngleVectors
+================
+*/
 void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
 	float		angle;
@@ -105,19 +123,24 @@ void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 	}
 	if (right)
 	{
-		right[0] = (-1 * sr * sp * cy + -1 * cr * -sy);
-		right[1] = (-1 * sr * sp * sy + -1 * cr * cy);
-		right[2] = -1 * sr * cp;
+		// stupid quake bug here?
+		right[0] = -sr * sp * cy + cr * sy;
+		right[1] = -sr * sp * sy - cr * cy;
+		right[2] = -sr * cp;
 	}
 	if (up)
 	{
-		up[0] = (cr * sp * cy + -sr * -sy);
-		up[1] = (cr * sp * sy + -sr * cy);
+		up[0] = cr * sp * cy + sr * sy;
+		up[1] = cr * sp * sy - sr * cy;
 		up[2] = cr * cp;
 	}
 }
 
-
+/*
+================
+ProjectPointOnPlane
+================
+*/
 void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal)
 {
 	float d;
@@ -138,7 +161,11 @@ void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal)
 }
 
 /*
-** assumes "src" is normalized
+================
+PerpendicularVector
+
+assumes scr is normalied
+================
 */
 void PerpendicularVector(vec3_t dst, const vec3_t src)
 {
@@ -327,7 +354,6 @@ BoxOnPlaneSide
 Returns 1, 2, or 1 + 2
 ==================
 */
-#if !id386 || defined __linux__ 
 int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s* p)
 {
 	float	dist1, dist2;
@@ -394,240 +420,6 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s* p)
 
 	return sides;
 }
-#else
-#pragma warning( disable: 4035 )
-
-__declspec(naked) int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s* p)
-{
-	static int bops_initialized;
-	static int Ljmptab[8];
-
-	__asm {
-
-		push ebx
-
-		cmp bops_initialized, 1
-		je  initialized
-		mov bops_initialized, 1
-
-		mov Ljmptab[0 * 4], offset Lcase0
-		mov Ljmptab[1 * 4], offset Lcase1
-		mov Ljmptab[2 * 4], offset Lcase2
-		mov Ljmptab[3 * 4], offset Lcase3
-		mov Ljmptab[4 * 4], offset Lcase4
-		mov Ljmptab[5 * 4], offset Lcase5
-		mov Ljmptab[6 * 4], offset Lcase6
-		mov Ljmptab[7 * 4], offset Lcase7
-
-		initialized :
-
-		mov edx, ds : dword ptr[4 + 12 + esp]
-			mov ecx, ds : dword ptr[4 + 4 + esp]
-			xor eax, eax
-			mov ebx, ds : dword ptr[4 + 8 + esp]
-			mov al, ds : byte ptr[17 + edx]
-			cmp al, 8
-			jge Lerror
-			fld ds : dword ptr[0 + edx]
-			fld st(0)
-			jmp dword ptr[Ljmptab + eax * 4]
-			Lcase0 :
-			fmul ds : dword ptr[ebx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ebx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase1 :
-		fmul ds : dword ptr[ecx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ebx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase2 :
-		fmul ds : dword ptr[ebx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ecx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase3 :
-		fmul ds : dword ptr[ecx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ecx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase4 :
-		fmul ds : dword ptr[ebx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ebx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase5 :
-		fmul ds : dword ptr[ecx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ebx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase6 :
-		fmul ds : dword ptr[ebx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ecx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ecx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			jmp LSetSides
-			Lcase7 :
-		fmul ds : dword ptr[ecx]
-			fld ds : dword ptr[0 + 4 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[4 + ecx]
-			fld ds : dword ptr[0 + 8 + edx]
-			fxch st(2)
-			fmul ds : dword ptr[4 + ebx]
-			fxch st(2)
-			fld st(0)
-			fmul ds : dword ptr[8 + ecx]
-			fxch st(5)
-			faddp st(3), st(0)
-			fmul ds : dword ptr[8 + ebx]
-			fxch st(1)
-			faddp st(3), st(0)
-			fxch st(3)
-			faddp st(2), st(0)
-			LSetSides :
-			faddp st(2), st(0)
-			fcomp ds : dword ptr[12 + edx]
-			xor ecx, ecx
-			fnstsw ax
-			fcomp ds : dword ptr[12 + edx]
-			and ah, 1
-			xor ah, 1
-			add cl, ah
-			fnstsw ax
-			and ah, 1
-			add ah, ah
-			add cl, ah
-			pop ebx
-			mov eax, ecx
-			ret
-			Lerror :
-		int 3
-	}
-}
-#pragma warning( default: 4035 )
-#endif
 
 void ClearBounds(vec3_t mins, vec3_t maxs)
 {
@@ -843,6 +635,45 @@ int Q_log2(int val)
 
 /*
 =================
+VectorAngles_Fixed
+
+Stupid quake bug dismissed.
+=================
+*/
+void VectorAngles_Fixed(const float* forward, float* result)
+{
+	float tmp, yaw, pitch;
+
+	if (forward[1] == 0 && forward[0] == 0)
+	{
+		yaw = 0;
+		if (forward[2] > 0)
+			pitch = 270.0f;
+		else
+			pitch = 90.0f;
+	}
+	else
+	{
+		yaw = (atan2(forward[1], forward[0]) * 180.0f / M_PI);
+
+		if (yaw < 0.0f)
+			yaw += 360.0f;
+
+		tmp = sqrt( ((double)forward[0] * (double)forward[0]) + ((double)forward[1] * (double)forward[1]));
+		pitch = (atan2(-forward[2], tmp) * 180.0f / M_PI);
+
+		if (pitch < 0.0f)
+			pitch += 360.0f;
+	}
+
+	result[0] = pitch;
+	result[1] = yaw;
+	result[2] = 0;
+}
+
+
+/*
+=================
 VectorAngles
 Code written by Spoike
 =================
@@ -930,8 +761,8 @@ void AxisToAngles(vec3_t axis[3], vec3_t outAngles)
 	pitch = pitch * 180.0 / M_PI;
 	roll = roll * 180.0 / M_PI;
 
-	outAngles[0] = 0;
-	outAngles[1] = pitch;
+	outAngles[0] = pitch;
+	outAngles[1] = yaw;
 	outAngles[2] = roll;
 }
 
@@ -940,7 +771,7 @@ void AxisToAngles(vec3_t axis[3], vec3_t outAngles)
 AnglesToAxis (Q3)
 =================
 */
-void AnglesToAxis(vec3_t angles, vec3_t axis[3])
+void AnglesToAxis(vec3_t angles, vec3_t axis[3]) 
 {
 	vec3_t	right;
 
@@ -1023,6 +854,249 @@ float RadiusFromBounds(vec3_t mins, vec3_t maxs)
 	}
 
 	return VectorLength(corner);
+}
+
+mat4_t mat4_identity =	{1, 0, 0, 0,
+						 0, 1, 0, 0,
+						 0, 0, 1, 0,
+						 0, 0, 0, 1 };
+
+/*
+=================
+Mat4MakeIdentity
+=================
+*/
+void Mat4MakeIdentity(mat4_t mat)
+{
+	memset(mat, 0, sizeof(mat4_t));
+	mat[0] = mat[5] = mat[10] = mat[15] = 1;
+}
+
+/*
+=================
+Mat4Perspective
+
+Unlike glFrustum, this does not multiply by another matrix, it only creates one.
+=================
+*/
+void Mat4Perspective(mat4_t mat, float l, float r, float b, float t, float znear, float zfar)
+{
+	memset(mat, 0, sizeof(mat4_t));
+	mat[0] = (2 * znear) / (r - l);
+	mat[5] = (2 * znear) / (t - b);
+	mat[8] = (r + l) / (r - l);
+	mat[9] = (t + b) / (t - b);
+	mat[10] = -((zfar + znear) / (zfar - znear));
+	mat[11] = -1;
+	mat[14] = -((2 * zfar * znear) / (zfar - znear));
+}
+
+/*
+=================
+Mat4Ortho
+
+Unlike glOrtho, this does not multiply by another matrix, it only creates one.
+=================
+*/
+void Mat4Ortho(mat4_t mat, float l, float r, float b, float t, float znear, float zfar)
+{
+	memset(mat, 0, sizeof(mat4_t));
+	mat[0] = 2 / (r - l);
+	mat[5] = 2 / (t - b);
+	mat[10] = -2 / (zfar - znear);
+	mat[12] = -((r + l) / (r - l));
+	mat[13] = -((t + b) / (t - b));
+	mat[14] = -((zfar + znear) / (zfar - znear));
+	mat[15] = 1;
+}
+
+/*
+=================
+Mat4Multiply
+=================
+*/
+void Mat4Multiply(mat4_t left, mat4_t right)
+{
+	mat4_t t;
+	memcpy(t, left, sizeof(t));
+#ifdef USE_SSE
+	//The same 4 columns are always used, so load them first.
+	__m128 columns[4];
+	__m128 rightvalue[4];
+	__m128 res;
+	columns[0] = _mm_loadu_ps(&t[0]);
+	columns[1] = _mm_loadu_ps(&t[4]);
+	columns[2] = _mm_loadu_ps(&t[8]);
+	columns[3] = _mm_loadu_ps(&t[12]);
+
+	//Each column will broadcast 4 values from the right matrix and multiply each column by it, 
+	// and then sum up the resultant vectors to form a result column. 
+	for (int i = 0; i < 4; i++)
+	{
+		rightvalue[0] = _mm_mul_ps(_mm_load_ps1(&right[i * 4 + 0]), columns[0]);
+		rightvalue[1] = _mm_mul_ps(_mm_load_ps1(&right[i * 4 + 1]), columns[1]);
+		rightvalue[2] = _mm_mul_ps(_mm_load_ps1(&right[i * 4 + 2]), columns[2]);
+		rightvalue[3] = _mm_mul_ps(_mm_load_ps1(&right[i * 4 + 3]), columns[3]);
+
+		//From some quick profiling this seems slightly faster than nesting all the adds. 
+		res = _mm_add_ps(rightvalue[0], rightvalue[1]);
+		res = _mm_add_ps(res, rightvalue[2]);
+		res = _mm_add_ps(res, rightvalue[3]);
+
+		_mm_storeu_ps(&left[i * 4], res);
+	}
+
+#else
+	left[0] = t[0] * right[0] + t[4] * right[1] + t[8]  * right[2] + t[12] * right[3]; //i1 j1
+	left[1] = t[1] * right[0] + t[5] * right[1] + t[9]  * right[2] + t[13] * right[3]; //i2 j1
+	left[2] = t[2] * right[0] + t[6] * right[1] + t[10] * right[2] + t[14] * right[3]; //i3 j1
+	left[3] = t[3] * right[0] + t[7] * right[1] + t[11] * right[2] + t[15] * right[3]; //14 j1
+
+	left[4] = t[0] * right[4] + t[4] * right[5] + t[8]  * right[6] + t[12] * right[7]; //i1 j2
+	left[5] = t[1] * right[4] + t[5] * right[5] + t[9]  * right[6] + t[13] * right[7]; //i2 j2
+	left[6] = t[2] * right[4] + t[6] * right[5] + t[10] * right[6] + t[14] * right[7]; //i3 j2
+	left[7] = t[3] * right[4] + t[7] * right[5] + t[11] * right[6] + t[15] * right[7]; //i4 j2
+
+	left[8]  = t[0] * right[8] + t[4] * right[9] + t[8]  * right[10] + t[12] * right[11]; //i1 j3
+	left[9]  = t[1] * right[8] + t[5] * right[9] + t[9]  * right[10] + t[13] * right[11]; //i2 j3
+	left[10] = t[2] * right[8] + t[6] * right[9] + t[10] * right[10] + t[14] * right[11]; //i3 j3
+	left[11] = t[3] * right[8] + t[7] * right[9] + t[11] * right[10] + t[15] * right[11]; //i4 j3
+
+	left[12] = t[0] * right[12] + t[4] * right[13] + t[8]  * right[14] + t[12] * right[15]; //i1 j4
+	left[13] = t[1] * right[12] + t[5] * right[13] + t[9]  * right[14] + t[13] * right[15]; //i2 j4
+	left[14] = t[2] * right[12] + t[6] * right[13] + t[10] * right[14] + t[14] * right[15]; //i3 j4
+	left[15] = t[3] * right[12] + t[7] * right[13] + t[11] * right[14] + t[15] * right[15]; //i4 j4
+#endif
+}
+
+/*
+=================
+Mat4RotateAroundX
+=================
+*/
+void Mat4RotateAroundX(mat4_t mat, float angle)
+{
+	mat4_t rotmat = {0};
+	angle = DEG2RAD(angle);
+	rotmat[0] = rotmat[15] = 1;
+	rotmat[5] = cos(angle);
+	rotmat[6] = sin(angle);
+	rotmat[9] = -sin(angle);
+	rotmat[10] = cos(angle);
+
+	Mat4Multiply(mat, rotmat);
+}
+
+/*
+=================
+Mat4RotateAroundY
+=================
+*/
+void Mat4RotateAroundY(mat4_t mat, float angle)
+{
+	mat4_t rotmat = { 0 };
+	angle = DEG2RAD(angle);
+	rotmat[5] = rotmat[15] = 1;
+	rotmat[0] = cos(angle);
+	rotmat[2] = -sin(angle);
+	rotmat[8] = sin(angle);
+	rotmat[10] = cos(angle);
+
+	Mat4Multiply(mat, rotmat);
+}
+
+/*
+=================
+Mat4RotateAroundZ
+=================
+*/
+void Mat4RotateAroundZ(mat4_t mat, float angle)
+{
+	mat4_t rotmat = { 0 };
+	angle = DEG2RAD(angle);
+	rotmat[10] = rotmat[15] = 1;
+	rotmat[0] = cos(angle);
+	rotmat[1] = sin(angle);
+	rotmat[4] = -sin(angle);
+	rotmat[5] = cos(angle);
+
+	Mat4Multiply(mat, rotmat);
+}
+
+/*
+=================
+Mat4Rotate
+=================
+*/
+void Mat4Rotate(mat4_t mat, float angle, float x, float y, float z)
+{
+	mat4_t rotmat = { 0 };
+	rotmat[15] = 1;
+	angle = DEG2RAD(angle);
+	float c = cos(angle);
+	float s = sin(angle);
+	float xx = x * x;
+	float xy = x * y;
+	float xz = x * z;
+	float yy = y * y;
+	float yz = y * z;
+	float zz = z * z;
+	float xs = x * s;
+	float ys = y * s;
+	float zs = z * s;
+	float oneminusc = (1 - c);
+
+	float length = sqrt(x * x + y * y + z * z);
+	//don't do anything on a null vector. 
+	if (length == 0)
+		return; 
+
+	if (abs(length - 1) > 1e-4)
+	{
+		x /= length; y /= length; z /= length;
+	}
+
+	rotmat[0] = xx * oneminusc + c;
+	rotmat[1] = xy * oneminusc + zs;
+	rotmat[2] = xz * oneminusc - ys;
+
+	rotmat[4] = xy * oneminusc - zs;
+	rotmat[5] = yy * oneminusc + c;
+	rotmat[6] = yz * oneminusc + xs;
+
+	rotmat[8] = xz * oneminusc + ys;
+	rotmat[9] = yz * oneminusc - xs;
+	rotmat[10] = zz * oneminusc + c;
+
+	Mat4Multiply(mat, rotmat);
+}
+
+/*
+=================
+Mat4Translate
+=================
+*/
+void Mat4Translate(mat4_t mat, float x, float y, float z)
+{
+	mat4_t trans = { 0 };
+	trans[0] = trans[5] = trans[10] = trans[15] = 1;
+	trans[12] = x; trans[13] = y; trans[14] = z;
+
+	Mat4Multiply(mat, trans);
+}
+
+/*
+=================
+Mat4Scale
+=================
+*/
+void Mat4Scale(mat4_t mat, float x, float y, float z)
+{
+	mat4_t scale = { 0 };
+	scale[15] = 1;
+	scale[0] = x; scale[5] = y; scale[10] = z;
+
+	Mat4Multiply(mat, scale);
 }
 
 //====================================================================================

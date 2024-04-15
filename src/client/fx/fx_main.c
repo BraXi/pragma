@@ -27,7 +27,7 @@ int FX_GetNumTags() // FIXME
 }
 
 
-// void CL_NewDynamicLight(int key, float x, float y, float z, float radius, float time)
+// void CL_NewDynamicPointLight(int key, float x, float y, float z, float radius, float time)
 
 /*
 =================

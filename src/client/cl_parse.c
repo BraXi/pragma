@@ -441,7 +441,7 @@ void CL_ParseServerMessage (void)
 			break;
 
 		case SVC_MUZZLEFLASH:
-			CL_ParseMuzzleFlash ();
+			CG_ParseMuzzleFlashMessage ();
 			break;
 
 		case SVC_CGCMD:
