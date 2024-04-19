@@ -744,7 +744,7 @@ void CL_ParseStatusMessage (void)
 
 	server_entry_t* sv = &ui_servers[ui_numServers];
 
-	// "hostname" "game" "map" "numPlayers" "maxPlayers"
+	// "sv_hostname" "game" "map" "numPlayers" "maxPlayers"
 	token = COM_Parse(&info);
 	if (!info)	return;
 	Com_sprintf(sv->name, sizeof(sv->name), "%s", token);
@@ -791,7 +791,7 @@ void CL_PingServers_f (void)
 	Com_Printf ("pinging broadcast...\n");
 	ui_numServers = 0;
 
-	net_noudp = Cvar_Get ("net_noudp", "0", CVAR_NOSET);
+	net_noudp = Cvar_Get ("net_noudp", "0", CVAR_NOSET, NULL);
 	if (!net_noudp->value)
 	{
 		adr.type = NA_BROADCAST;
@@ -1072,64 +1072,64 @@ void CL_InitLocal (void)
 	CL_InitInput ();
 
 	for( int i = 0; i < 16; i++)
-		Cvar_Get( va("favorite_server_%i", i), "", CVAR_ARCHIVE );
+		Cvar_Get( va("favorite_server_%i", i), "", CVAR_ARCHIVE, NULL);
 
 //
 // register our variables
 //
-	cl_add_blend = Cvar_Get ("cl_blend", "1", CVAR_CHEAT);
-	cl_add_lights = Cvar_Get ("cl_lights", "1", CVAR_CHEAT);
-	cl_add_particles = Cvar_Get ("cl_particles", "1", CVAR_CHEAT);
-	cl_add_entities = Cvar_Get ("cl_entities", "1", CVAR_CHEAT);
-	cl_drawviewmodel = Cvar_Get ("cl_drawviewmodel", "1", 0);
-	cl_predict = Cvar_Get ("cl_predict", "1", 0);
+	cl_add_blend = Cvar_Get ("cl_blend", "1", CVAR_CHEAT, NULL);
+	cl_add_lights = Cvar_Get ("cl_lights", "1", CVAR_CHEAT, NULL);
+	cl_add_particles = Cvar_Get ("cl_particles", "1", CVAR_CHEAT, NULL);
+	cl_add_entities = Cvar_Get ("cl_entities", "1", CVAR_CHEAT, NULL);
+	cl_drawviewmodel = Cvar_Get ("cl_drawviewmodel", "1", 0, NULL);
+	cl_predict = Cvar_Get ("cl_predict", "1", 0, NULL);
 
 #ifdef _DEBUG
-	cl_minfps = Cvar_Get ("cl_minfps", "5", CVAR_CHEAT);
+	cl_minfps = Cvar_Get ("cl_minfps", "5", CVAR_CHEAT, NULL);
 #endif
-	cl_maxfps = Cvar_Get ("cl_maxfps", "90", 0);
+	cl_maxfps = Cvar_Get ("cl_maxfps", "90", 0, NULL);
 
-	cl_upspeed = Cvar_Get ("cl_upspeed", "200", 0);
-	cl_forwardspeed = Cvar_Get ("cl_forwardspeed", "200", 0);
-	cl_sidespeed = Cvar_Get ("cl_sidespeed", "200", 0);
-	cl_yawspeed = Cvar_Get ("cl_yawspeed", "140", 0);
-	cl_pitchspeed = Cvar_Get ("cl_pitchspeed", "150", 0);
-	cl_anglespeedkey = Cvar_Get ("cl_anglespeedkey", "1.5", 0);
+	cl_upspeed = Cvar_Get ("cl_upspeed", "200", 0, NULL);
+	cl_forwardspeed = Cvar_Get ("cl_forwardspeed", "200", 0, NULL);
+	cl_sidespeed = Cvar_Get ("cl_sidespeed", "200", 0, NULL);
+	cl_yawspeed = Cvar_Get ("cl_yawspeed", "140", 0, NULL);
+	cl_pitchspeed = Cvar_Get ("cl_pitchspeed", "150", 0, NULL);
+	cl_anglespeedkey = Cvar_Get ("cl_anglespeedkey", "1.5", 0, NULL);
 
-	cl_run = Cvar_Get ("cl_run", "0", CVAR_ARCHIVE);
-	freelook = Cvar_Get( "freelook", "1", CVAR_ARCHIVE );
-	lookspring = Cvar_Get ("lookspring", "0", CVAR_ARCHIVE);
-	lookstrafe = Cvar_Get ("lookstrafe", "0", CVAR_ARCHIVE);
-	sensitivity = Cvar_Get ("sensitivity", "3", CVAR_ARCHIVE);
+	cl_run = Cvar_Get ("cl_run", "0", CVAR_ARCHIVE, NULL);
+	freelook = Cvar_Get( "freelook", "1", CVAR_ARCHIVE, NULL);
+	lookspring = Cvar_Get ("lookspring", "0", CVAR_ARCHIVE, NULL);
+	lookstrafe = Cvar_Get ("lookstrafe", "0", CVAR_ARCHIVE, NULL);
+	sensitivity = Cvar_Get ("sensitivity", "3", CVAR_ARCHIVE, NULL);
 
-	m_pitch = Cvar_Get ("m_pitch", "0.022", CVAR_ARCHIVE);
-	m_yaw = Cvar_Get ("m_yaw", "0.022", 0);
-	m_forward = Cvar_Get ("m_forward", "1", 0);
-	m_side = Cvar_Get ("m_side", "1", 0);
+	m_pitch = Cvar_Get ("m_pitch", "0.022", CVAR_ARCHIVE, NULL);
+	m_yaw = Cvar_Get ("m_yaw", "0.022", 0, NULL);
+	m_forward = Cvar_Get ("m_forward", "1", 0, NULL);
+	m_side = Cvar_Get ("m_side", "1", 0, NULL);
 
-	cl_shownet = Cvar_Get ("cl_shownet", "0", 0);
-	cl_showmiss = Cvar_Get ("cl_showmiss", "0", 0);
-	cl_showclamp = Cvar_Get ("cl_showclamp", "0", 0);
-	cl_timeout = Cvar_Get ("cl_timeout", "120", 0);
-	cl_paused = Cvar_Get ("paused", "0", 0);
-	cl_timedemo = Cvar_Get ("timedemo", "0", CVAR_CHEAT);
+	cl_shownet = Cvar_Get ("cl_shownet", "0", 0, NULL);
+	cl_showmiss = Cvar_Get ("cl_showmiss", "0", 0, NULL);
+	cl_showclamp = Cvar_Get ("cl_showclamp", "0", 0, NULL);
+	cl_timeout = Cvar_Get ("cl_timeout", "120", 0, NULL);
+	cl_paused = Cvar_Get ("paused", "0", 0, NULL);
+	cl_timedemo = Cvar_Get ("timedemo", "0", CVAR_CHEAT, NULL);
 
-	cl_showfps = Cvar_Get("cl_showfps", "0", CVAR_ARCHIVE);
+	cl_showfps = Cvar_Get("cl_showfps", "0", CVAR_ARCHIVE, NULL);
 
-	rcon_client_password = Cvar_Get ("rcon_password", "", 0);
-	rcon_address = Cvar_Get ("rcon_address", "", 0);
+	rcon_client_password = Cvar_Get ("rcon_password", "", 0, NULL);
+	rcon_address = Cvar_Get ("rcon_address", "", 0, NULL);
 
 
 	//
 	// userinfo
 	//
-	info_password = Cvar_Get("password", "", CVAR_USERINFO);
-	info_msglevel = Cvar_Get("messagelevel", "1", CVAR_USERINFO | CVAR_ARCHIVE);
+	info_password = Cvar_Get("password", "", CVAR_USERINFO, NULL);
+	info_msglevel = Cvar_Get("messagelevel", "1", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
 
-	cl_name = Cvar_Get("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE);
-	cl_rate = Cvar_Get("rate", va("%i", NET_RATE_DEFAULT), CVAR_USERINFO | CVAR_ARCHIVE);
-	cl_hand = Cvar_Get("cl_hand", "0", CVAR_USERINFO | CVAR_ARCHIVE);
-	fov = Cvar_Get("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE);
+	cl_name = Cvar_Get("name", "unnamed", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
+	cl_rate = Cvar_Get("rate", va("%i", NET_RATE_DEFAULT), CVAR_USERINFO | CVAR_ARCHIVE, NULL);
+	cl_hand = Cvar_Get("cl_hand", "0", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
+	fov = Cvar_Get("fov", "90", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
 
 	//
 	// register our commands
@@ -1273,6 +1273,12 @@ cheatvar_t	cheatvars[] =
 
 int		numcheatvars;
 
+/*
+==================
+CL_FixCvarCheats
+Fixme: This is very silly.
+==================
+*/
 void CL_FixCvarCheats (void)
 {
 	int			i;
@@ -1287,13 +1293,13 @@ void CL_FixCvarCheats (void)
 	{
 		while (cheatvars[numcheatvars].name)
 		{
-			cheatvars[numcheatvars].var = Cvar_Get (cheatvars[numcheatvars].name, cheatvars[numcheatvars].value, 0);
+			cheatvars[numcheatvars].var = Cvar_Get (cheatvars[numcheatvars].name, cheatvars[numcheatvars].value, 0, NULL);
 			numcheatvars++;
 		}
 	}
 
 	// make sure they are all set to the proper values
-	for (i=0, var = cheatvars ; i<numcheatvars ; i++, var++)
+	for (i=0, var = cheatvars ; i < numcheatvars; i++, var++)
 	{
 		if ( strcmp (var->var->string, var->value) )
 		{

@@ -34,13 +34,11 @@ int			scr_draw_loading;
 
 vrect_t		scr_vrect;		// position of render window on screen
 
-
 cvar_t		*scr_viewsize;
 cvar_t		*scr_conspeed;
 cvar_t		*scr_centertime;
 cvar_t		*scr_showpause;
 cvar_t		*scr_printspeed;
-cvar_t		*scr_drawall;
 
 extern void CL_DrawGraphOnScreen();
 extern void CL_InitGraph();
@@ -287,13 +285,11 @@ SCR_Init
 */
 void SCR_Init (void)
 {
-	scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE);
-	scr_conspeed = Cvar_Get ("scr_conspeed", "3", 0);
-	scr_showpause = Cvar_Get ("scr_showpause", "1", 0);
-	scr_centertime = Cvar_Get ("scr_centertime", "2.5", 0);
-	scr_printspeed = Cvar_Get ("scr_printspeed", "8", 0);
-
-	scr_drawall = Cvar_Get ("scr_drawall", "0", 0);
+	scr_viewsize = Cvar_Get ("viewsize", "100", CVAR_ARCHIVE, NULL);
+	scr_conspeed = Cvar_Get ("scr_conspeed", "3", 0, NULL);
+	scr_showpause = Cvar_Get ("scr_showpause", "1", 0, NULL);
+	scr_centertime = Cvar_Get ("scr_centertime", "2.5", 0, NULL);
+	scr_printspeed = Cvar_Get ("scr_printspeed", "8", 0, NULL);
 
 	CL_InitGraph();
 
@@ -628,8 +624,7 @@ void SCR_TileClear (void)
 	int		top, bottom, left, right;
 	dirty_t	clear;
 
-	if (scr_drawall->value)
-		SCR_DirtyScreen ();	// for power vr or broken page flippers...
+	SCR_DirtyScreen ();	// for power vr or broken page flippers...
 
 	if (scr_con_current == 1.0)
 		return;		// full screen console

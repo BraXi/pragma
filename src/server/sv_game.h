@@ -88,6 +88,8 @@ struct gclient_s
 };
 
 #define ENTITYNUM_NULL -1
+#define ENTITYNUM_WORLD 0
+
 struct gentity_s
 {
 	entity_state_t		s;

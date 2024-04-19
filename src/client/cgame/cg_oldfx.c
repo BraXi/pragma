@@ -13,9 +13,6 @@ See the attached GNU General Public License v2 for more details.
 #include "../client.h"
 #include "cg_local.h"
 
-//static vec3_t avelocities [MD2_NUMVERTEXNORMALS];
-
-
 /*
 ===============
 CG_PartFX_Flame
@@ -29,7 +26,6 @@ void CG_PartFX_Flame(clentity_t* ent, vec3_t origin)
 	int			j;
 	cparticle_t* p;
 
-#if 1
 	count = 10 + (rand() & 5);
 
 	for (n = 0; n < count; n++)
@@ -44,7 +40,7 @@ void CG_PartFX_Flame(clentity_t* ent, vec3_t origin)
 		p->alpha = 0.7;
 		p->alphavel = -1.0 / (1 + frand() * 0.2);
 		Vector2Set(p->size, 12, 10);
-		VectorSet(p->color, 0.937255, 0.498039, 0.000000); // p->color = 226 + (rand() % 4);
+		VectorSet(p->color, 0.937255, 0.498039, 0.000000);
 		for (j = 0; j < 3; j++)
 		{
 			if (j == 2)
@@ -56,7 +52,6 @@ void CG_PartFX_Flame(clentity_t* ent, vec3_t origin)
 		p->vel[2] = 16;// crand() * -3;
 		p->accel[2] = -5; // -PARTICLE_GRAVITY;
 	}
-#endif
 
 	count = 6 + (rand() & 0x7);
 	for (n = 0; n < count; n++)
@@ -72,7 +67,7 @@ void CG_PartFX_Flame(clentity_t* ent, vec3_t origin)
 		p->alpha = 1.0;
 		p->alphavel = -1.0 / (1 + frand() * 0.5);
 		Vector2Set(p->size, 11, 11);
-		VectorSet(p->color, 0.184314, 0.184314, 0.184314); //p->color = 0 + (rand() % 4);
+		VectorSet(p->color, 0.184314, 0.184314, 0.184314);
 		for (j = 0; j < 3; j++)
 		{
 			if (j == 2)
@@ -239,7 +234,7 @@ void CG_PartFX_DiminishingTrail (vec3_t start, vec3_t end, clentity_t *old, int 
 			{
 				p->alpha = 1.0;
 				p->alphavel = -1.0 / (1+frand()*0.4);
-				VectorSet(p->color, 0.607843, 0.121569, 0.000000);//p->color = 0xe8 + (rand()&7);
+				VectorSet(p->color, 0.607843, 0.121569, 0.000000);
 				for (j=0 ; j<3 ; j++)
 				{
 					p->org[j] = move[j] + crand()*orgscale;
@@ -252,7 +247,7 @@ void CG_PartFX_DiminishingTrail (vec3_t start, vec3_t end, clentity_t *old, int 
 			{
 				p->alpha = 1.0;
 				p->alphavel = -1.0 / (1+frand()*0.4);
-				VectorSet(p->color, 1.000000, 1.000000, 0.325490); // p->color = 0xdb + (rand() & 7);
+				VectorSet(p->color, 1.000000, 1.000000, 0.325490);
 				for (j=0; j< 3; j++)
 				{
 					p->org[j] = move[j] + crand()*orgscale;
@@ -265,7 +260,7 @@ void CG_PartFX_DiminishingTrail (vec3_t start, vec3_t end, clentity_t *old, int 
 			{
 				p->alpha = 1.0;
 				p->alphavel = -1.0 / (1+frand()*0.2);
-				VectorSet(p->color, 0.247059, 0.247059, 0.247059); //p->color = 4 + (rand()&7);
+				VectorSet(p->color, 0.247059, 0.247059, 0.247059);
 				for (j=0 ; j<3 ; j++)
 				{
 					p->org[j] = move[j] + crand()*orgscale;

@@ -294,7 +294,7 @@ Con_Init
 */
 void Con_Init (void)
 {
-	con_notifytime = Cvar_Get ("con_notifytime", "4", 0);
+	con_notifytime = Cvar_Get ("con_notifytime", "4", 0, NULL);
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
 	Cmd_AddCommand ("togglechat", Con_ToggleChat_f);

@@ -653,7 +653,7 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	static unsigned	last_checksum;
 
 //	Com_Printf("CM_LoadMap: %s\n", name);
-	map_noareas = Cvar_Get ("map_noareas", "0", 0);
+	map_noareas = Cvar_Get ("map_noareas", "0", 0, NULL);
 
 	if( !strcmp (cm_world.map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
 	{

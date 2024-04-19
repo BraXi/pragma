@@ -645,10 +645,10 @@ void V_Init (void)
 
 	Cmd_AddCommand ("viewpos", V_Viewpos_f);
 
-	cl_testblend = Cvar_Get ("cl_testblend", "0", CVAR_CHEAT);
-	cl_testparticles = Cvar_Get ("cl_testparticles", "0", CVAR_CHEAT);
-	cl_testentities = Cvar_Get ("cl_testentities", "0", CVAR_CHEAT);
-	cl_testlights = Cvar_Get ("cl_testlights", "0", CVAR_CHEAT);
+	cl_testblend = Cvar_Get ("cl_testblend", "0", CVAR_CHEAT, NULL);
+	cl_testparticles = Cvar_Get ("cl_testparticles", "0", CVAR_CHEAT, NULL);
+	cl_testentities = Cvar_Get ("cl_testentities", "0", CVAR_CHEAT, NULL);
+	cl_testlights = Cvar_Get ("cl_testlights", "0", CVAR_CHEAT, NULL);
 
-	cl_stats = Cvar_Get ("cl_stats", "0", 0);
+	cl_stats = Cvar_Get ("cl_stats", "0", 0, NULL);
 }

@@ -323,7 +323,7 @@ void R_BeginRegistration(const char *worldName)
 
 	// explicitly free the old map if different, this guarantees that r_models[0] is the world map
 	// this also ensures we don't reload the map when restarting level
-	flushmap = ri.Cvar_Get("flushmap", "0", 0);
+	flushmap = ri.Cvar_Get("flushmap", "0", 0, NULL);
 	if (r_worldmodel && (strcmp(r_worldmodel->name, fullname) || flushmap->value))
 	{
 		R_FreeModel(r_worldmodel);

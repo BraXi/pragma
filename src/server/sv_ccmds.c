@@ -427,7 +427,7 @@ void SV_WriteServerFile (qboolean autosave)
 	fwrite (svs.mapcmd, 1, sizeof(svs.mapcmd), f);
 
 	// write all CVAR_LATCH cvars
-	// these will be things like coop, skill, deathmatch, etc
+	// these will be things like coop, skill, multiplayer, etc
 	for (var = cvar_vars ; var ; var=var->next)
 	{
 		if (!(var->flags & CVAR_LATCH))
@@ -481,7 +481,7 @@ void SV_ReadServerFile (void)
 	FS_Read (comment, sizeof(comment), f);	// read the comment field
 	FS_Read (mapcmd, sizeof(mapcmd), f);	// read the mapcmd
 
-	// read all CVAR_LATCH cvars, these will be things like coop, skill, deathmatch, etc
+	// read all CVAR_LATCH cvars, these will be things like coop, skill, multiplayer, etc
 	while (1)
 	{
 		if (!fread (name, 1, sizeof(name), f))
@@ -715,9 +715,9 @@ void SV_Savegame_f (void)
 		return;
 	}
 
-	if (Cvar_VariableValue("deathmatch"))
+	if (Cvar_VariableValue("multiplayer"))
 	{
-		Com_Printf ("Can't savegame in a deathmatch\n");
+		Com_Printf ("Can't savegame in a multiplayer\n");
 		return;
 	}
 

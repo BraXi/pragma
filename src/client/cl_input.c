@@ -445,7 +445,7 @@ void CL_InitInput (void)
 	Cmd_AddCommand ("+klook", IN_KLookDown);
 	Cmd_AddCommand ("-klook", IN_KLookUp);
 
-	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0);
+	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0, NULL);
 }
 
 

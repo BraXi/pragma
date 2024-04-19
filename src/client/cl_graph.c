@@ -146,10 +146,10 @@ CL_InitGraph
 */
 void CL_InitGraph()
 {
-	scr_netgraph = Cvar_Get("netgraph", "0", 0);
-	scr_timegraph = Cvar_Get("timegraph", "0", 0);
-	scr_debuggraph = Cvar_Get("debuggraph", "0", 0);
-	scr_graphheight = Cvar_Get("graphheight", "32", 0);
-	scr_graphscale = Cvar_Get("graphscale", "1", 0);
-	scr_graphshift = Cvar_Get("graphshift", "0", 0);
+	scr_netgraph = Cvar_Get("netgraph", "0", 0, NULL);
+	scr_timegraph = Cvar_Get("timegraph", "0", 0, NULL);
+	scr_debuggraph = Cvar_Get("debuggraph", "0", 0, NULL);
+	scr_graphheight = Cvar_Get("graphheight", "32", 0, NULL);
+	scr_graphscale = Cvar_Get("graphscale", "1", 0, NULL);
+	scr_graphshift = Cvar_Get("graphshift", "0", 0, NULL);
 }

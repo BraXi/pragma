@@ -20,9 +20,6 @@ static void SV_LoadSP2(svmodel_t* out, void* buffer);
 static svmodel_t* SV_LoadModel(char* name, qboolean crash);
 static qboolean SV_FileExists(char* name, qboolean crash);
 static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char* func);
-
-svmodel_t sv_nomodel;
-
 /*
 ================
 SV_ModelIndex

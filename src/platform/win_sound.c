@@ -587,7 +587,7 @@ int SNDDMA_Init(void)
 
 	memset ((void *)&dma, 0, sizeof (dma));
 
-	s_wavonly = Cvar_Get ("s_wavonly", "0", 0);
+	s_wavonly = Cvar_Get ("s_wavonly", "0", 0, NULL);
 
 	dsound_init = wav_init = 0;
 

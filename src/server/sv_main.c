@@ -39,7 +39,7 @@ cvar_t	*sv_cheats;
 
 cvar_t *sv_nolateloading;
 
-cvar_t	*hostname;
+cvar_t	*sv_hostname;
 cvar_t	*public_server;			// should heartbeats be sent
 
 cvar_t	*sv_reconnect_limit;	// minimum seconds between connect messages
@@ -221,8 +221,8 @@ void SVC_Info (void)
 		if (svs.clients[i].state >= cs_connected)
 			numPlayers++;
 
-	// "hostname" "game" "map name", "numplayers", "maxplayers"
-	Com_sprintf (string, sizeof(string), "\"%s\" \"%s\" \"%s\" \"%i\" \"%i\"\n", hostname->string, Cvar_VariableString("game"), sv.name, numPlayers, (int)sv_maxclients->value);
+	// "sv_hostname" "game" "map name", "numplayers", "maxplayers"
+	Com_sprintf (string, sizeof(string), "\"%s\" \"%s\" \"%s\" \"%i\" \"%i\"\n", sv_hostname->string, Cvar_VariableString("game"), sv.name, numPlayers, (int)sv_maxclients->value);
 
 	Netchan_OutOfBandPrint (NS_SERVER, net_from, "info\n%s", string);
 }
@@ -820,7 +820,7 @@ static inline void SV_NotifyWhenCvarChanged(cvar_t* cvar)
 SV_UpdateCvars
 ================
 */
-extern cvar_t* hostname;
+extern cvar_t* sv_hostname;
 void SV_CheckCvars()
 {
 	// give server enough time to initialize
@@ -831,7 +831,7 @@ void SV_CheckCvars()
 	if (sv_maxclients->value == 1)
 		return;
 
-	SV_NotifyWhenCvarChanged(hostname);
+	SV_NotifyWhenCvarChanged(sv_hostname);
 	SV_NotifyWhenCvarChanged(sv_cheats);
 	SV_NotifyWhenCvarChanged(sv_maxvelocity);
 	SV_NotifyWhenCvarChanged(sv_gravity);
@@ -1023,50 +1023,41 @@ void SV_Init (void)
 {
 	SV_InitOperatorCommands	();
 
-	rcon_password = Cvar_Get ("rcon_password", "", 0);
+	rcon_password = Cvar_Get ("rcon_password", "", 0, "Password for remote console access.");
 
-	Cvar_Get ("deathmatch", "0", CVAR_LATCH);
-	Cvar_Get ("coop", "0", CVAR_LATCH);
+	Cvar_Get ("coop", "0", CVAR_LATCH, "Enable to force Cooperative mode (this takes priority over multiplayer cvar).");
+	Cvar_Get("multiplayer", "0", CVAR_LATCH, "Regular Multiplayer.");
 
-//	sv_cheats = Cvar_Get ("sv_cheats", "0", CVAR_SERVERINFO|CVAR_LATCH);
+	Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO|CVAR_NOSET, "Protocol version, do not change, seriously.");
 
-	Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO|CVAR_NOSET);
+	sv_nolateloading = Cvar_Get("sv_nolateloading", "0", 0, "Throw error when trying to precache asset after server is done initializing.");
+	sv_password = Cvar_Get("sv_password", "", 0, "When set, server will require password to connect.");
+	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH, "Maximum number of players.");
+	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO, "Enable cheats.");
+	sv_maxentities = Cvar_Get("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH, "Maximum number of server entities. Better don't change.");
+	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0, "Maximum velocity of an entities (excluding players).");
+	sv_gravity = Cvar_Get("sv_gravity", "800", 0, "Gravity (default 800).");
 
-	sv_nolateloading = Cvar_Get("sv_nolateloading", "0", 0);
+	sv_hostname = Cvar_Get ("hostname", "pragma server", CVAR_SERVERINFO | CVAR_ARCHIVE, "This is the server's name.");
 
-	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO);
-	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
-	sv_password = Cvar_Get("sv_password", "", 0);
-	sv_maxentities = Cvar_Get("sv_maxentities", "1024", CVAR_LATCH);
+	sv_timeout = Cvar_Get ("sv_timeout", "10", 0, "Drop client from server if it hasn't sent any message in this many seconds.");
+	sv_zombietime = Cvar_Get ("sv_zombietime", "2", 0, "When client leaves, don't let it connect for this many second to prevent spam.");
 
-	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0);
-	sv_gravity = Cvar_Get("sv_gravity", "800", 0);
+	sv_showclamp = Cvar_Get ("sv_showclamp", "0", 0, "When enabled, prints warning to console when the server can't keep up.");
+	sv_paused = Cvar_Get ("paused", "0", 0, NULL);
+	sv_timedemo = Cvar_Get ("timedemo", "0", 0, NULL);
+	sv_enforcetime = Cvar_Get ("sv_enforcetime", "0", 0, "Helps preventing speed hacks.");
 
+	allow_download = Cvar_Get ("allow_download", "0", CVAR_ARCHIVE, "When enabled clients will be allowed to download (mod) files from server.");
+	allow_download_models = Cvar_Get ("allow_download_models", "1", CVAR_ARCHIVE, "Allow downloading models.");
+	allow_download_sounds = Cvar_Get ("allow_download_sounds", "1", CVAR_ARCHIVE, "Allow downloading sounds.");
+	allow_download_maps	  = Cvar_Get ("allow_download_maps", "1", CVAR_ARCHIVE, "Allow downloading maps.");
 
-#ifdef _DEBUG
-	hostname = Cvar_Get ("hostname", "pragma test server", CVAR_SERVERINFO | CVAR_ARCHIVE);
-#else
-	hostname = Cvar_Get("hostname", "pragma server", CVAR_SERVERINFO | CVAR_ARCHIVE);
-#endif
+	sv_noreload = Cvar_Get ("sv_noreload", "1", 0, NULL);
 
-	sv_timeout = Cvar_Get ("sv_timeout", "10", 0);
-	sv_zombietime = Cvar_Get ("sv_zombietime", "2", 0);
+	public_server = Cvar_Get ("public", "1", 0, "Set to 0 if you don't want server to be visible in server browser (no worky atm sowwy).");
 
-	sv_showclamp = Cvar_Get ("sv_showclamp", "0", 0);
-	sv_paused = Cvar_Get ("paused", "0", 0);
-	sv_timedemo = Cvar_Get ("timedemo", "0", 0);
-	sv_enforcetime = Cvar_Get ("sv_enforcetime", "0", 0);
-
-	allow_download = Cvar_Get ("allow_download", "0", CVAR_ARCHIVE);
-	allow_download_models = Cvar_Get ("allow_download_models", "1", CVAR_ARCHIVE);
-	allow_download_sounds = Cvar_Get ("allow_download_sounds", "1", CVAR_ARCHIVE);
-	allow_download_maps	  = Cvar_Get ("allow_download_maps", "1", CVAR_ARCHIVE);
-
-	sv_noreload = Cvar_Get ("sv_noreload", "1", 0);
-
-	public_server = Cvar_Get ("public", "0", 0);
-
-	sv_reconnect_limit = Cvar_Get ("sv_reconnect_limit", "3", CVAR_ARCHIVE);
+	sv_reconnect_limit = Cvar_Get ("sv_reconnect_limit", "3", CVAR_ARCHIVE, "Minimum seconds between connect messages.");
 
 	SZ_Init (&net_message, net_message_buffer, sizeof(net_message_buffer));
 }

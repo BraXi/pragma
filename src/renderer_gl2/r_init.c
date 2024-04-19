@@ -71,57 +71,57 @@ register all cvars and commands
 */
 void R_RegisterCvarsAndCommands(void)
 {
-	r_lefthand = ri.Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE);
-	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0);
+	r_lefthand = ri.Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
+	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0, NULL);
 
-	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT);
+	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT, "Skip all lighting (development tool).");
 
-	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT);
-	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT);
+	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT, "Draw entities (development tool).");
+	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT, "Draw world  (development tool).");
 
-	r_speeds = ri.Cvar_Get("r_speeds", "0", 0);
-	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT);
-	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT);
-	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT);
+	r_speeds = ri.Cvar_Get("r_speeds", "0", 0, "Show performance counters - 1 in console, 2 detailed osd.");
+	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT, "Do not cull by VIS data.");
+	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT, "Disable frustum culling.");
+	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT, "Lock PVS.");
 
-	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT);
+	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT, "Smooth model animations.");
 
-	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_CHEAT);
-	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0);
-	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE);
-	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT);
-	r_dynamic = ri.Cvar_Get("r_dynamic", "1", CVAR_CHEAT);
-	r_picmip = ri.Cvar_Get("r_picmip", "0", 0);
+	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_CHEAT, NULL);
+	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0, NULL);
+	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE, NULL);
+	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT, NULL);
+	r_dynamic = ri.Cvar_Get("r_dynamic", "1", CVAR_CHEAT, "Enable dynamic lights and light styles.");
+	r_picmip = ri.Cvar_Get("r_picmip", "0", 0, NULL);
 	
-	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT);
-	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT);	
-	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE);
-	r_clear = ri.Cvar_Get("r_clear", "0", 0);
-	r_cull = ri.Cvar_Get("r_cull", "1", CVAR_CHEAT);
+	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT, NULL);
+	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT, NULL);
+	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE, NULL);
+	r_clear = ri.Cvar_Get("r_clear", "0", 0, NULL);
+	r_cull = ri.Cvar_Get("r_cull", "1", CVAR_CHEAT, NULL);
 	
-	gl_driver = ri.Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE);
+	gl_driver = ri.Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE, NULL);
 	
-	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE);
-	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE);
-	r_texturesolidmode = ri.Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE);
+	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE, NULL);
+	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE, NULL);
+	r_texturesolidmode = ri.Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE, NULL);
 
-	gl_ext_swapinterval = ri.Cvar_Get("gl_ext_swapinterval", "1", CVAR_ARCHIVE);
+	gl_ext_swapinterval = ri.Cvar_Get("gl_ext_swapinterval", "1", CVAR_ARCHIVE, NULL);
 
-	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT);
-	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE);
+	r_drawbuffer = ri.Cvar_Get("r_drawbuffer", "GL_BACK", CVAR_CHEAT, NULL);
+	r_swapinterval = ri.Cvar_Get("r_swapinterval", "1", CVAR_ARCHIVE, NULL);
 
-	r_fullscreen = ri.Cvar_Get("r_fullscreen", "0", CVAR_ARCHIVE);
+	r_fullscreen = ri.Cvar_Get("r_fullscreen", "0", CVAR_ARCHIVE, "Enable full screen.");
 
-	r_renderer = ri.Cvar_Get("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE);
+	r_renderer = ri.Cvar_Get("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE, NULL);
 
-	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE);
+	r_gamma = ri.Cvar_Get("r_gamma", "1.0", CVAR_ARCHIVE, NULL);
 
-	r_intensity = ri.Cvar_Get("r_intensity", "1.5", CVAR_CHEAT);
-	r_postfx_blur = ri.Cvar_Get("r_fx_blur", "0", CVAR_CHEAT);
-	r_postfx_contrast = ri.Cvar_Get("r_fx_contrast", "0", CVAR_CHEAT);
-	r_postfx_grayscale = ri.Cvar_Get("r_fx_grayscale", "0", CVAR_CHEAT);
-	r_postfx_inverse = ri.Cvar_Get("r_fx_inverse", "0", CVAR_CHEAT);
-	r_postfx_noise = ri.Cvar_Get("r_fx_noise", "0", CVAR_CHEAT);
+	r_intensity = ri.Cvar_Get("r_intensity", "1.5", CVAR_CHEAT, NULL);
+	r_postfx_blur = ri.Cvar_Get("r_fx_blur", "0", CVAR_CHEAT, NULL);
+	r_postfx_contrast = ri.Cvar_Get("r_fx_contrast", "0", CVAR_CHEAT, NULL);
+	r_postfx_grayscale = ri.Cvar_Get("r_fx_grayscale", "0", CVAR_CHEAT, NULL);
+	r_postfx_inverse = ri.Cvar_Get("r_fx_inverse", "0", CVAR_CHEAT, NULL);
+	r_postfx_noise = ri.Cvar_Get("r_fx_noise", "0", CVAR_CHEAT, NULL);
 
 	ri.AddCommand("shaderlist", R_ShaderList_f);
 	ri.AddCommand("imagelist", R_TextureList_f);

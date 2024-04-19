@@ -682,11 +682,11 @@ VID_Init
 void VID_Init (void)
 {
 	/* Create the video variables so we know how to start the graphics drivers */
-	r_renderer = Cvar_Get ("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE);
-	r_xpos = Cvar_Get ("r_xpos", "20", CVAR_ARCHIVE);
-	r_ypos = Cvar_Get ("r_ypos", "20", CVAR_ARCHIVE);
-	r_fullscreen = Cvar_Get ("r_fullscreen", "0", CVAR_ARCHIVE);
-	win_noalttab = Cvar_Get( "win_noalttab", "0", CVAR_ARCHIVE );
+	r_renderer = Cvar_Get ("r_renderer", DEFAULT_RENDERER, CVAR_ARCHIVE, "What renderer to use.");
+	r_xpos = Cvar_Get ("r_xpos", "20", CVAR_ARCHIVE, "X position of a window.");
+	r_ypos = Cvar_Get ("r_ypos", "20", CVAR_ARCHIVE, "Y position of a window.");
+	r_fullscreen = Cvar_Get ("r_fullscreen", "0", CVAR_ARCHIVE, "Enable fullscreen mode.");
+	win_noalttab = Cvar_Get( "win_noalttab", "0", CVAR_ARCHIVE, "Disable Alt+Tab." );
 
 	/* Add some console commands that we want to handle */
 	Cmd_AddCommand ("vid_restart", VID_Restart_f);

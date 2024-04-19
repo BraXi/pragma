@@ -115,7 +115,7 @@ If the variable already exists, the value will not be set
 The flags will be or'ed in if the variable exists.
 ============
 */
-cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
+cvar_t *Cvar_Get (char *var_name, char *var_value, int flags, char *var_desc)
 {
 	cvar_t	*var;
 	
@@ -149,6 +149,10 @@ cvar_t *Cvar_Get (char *var_name, char *var_value, int flags)
 
 	var = Z_Malloc (sizeof(*var));
 	var->name = CopyString (var_name);
+	
+	if (var_desc != NULL)
+		var->description = CopyString(var_desc);
+
 	var->string = CopyString (var_value);
 	var->modified = true;
 	var->value = atof (var->string);
@@ -174,7 +178,7 @@ cvar_t *Cvar_Set2 (char *var_name, char *value, qboolean force)
 	var = Cvar_FindVar (var_name);
 	if (!var)
 	{	// create it
-		return Cvar_Get (var_name, value, 0);
+		return Cvar_Get (var_name, value, 0, NULL);
 	}
 
 	if (var->flags & (CVAR_USERINFO | CVAR_SERVERINFO))
@@ -276,14 +280,15 @@ cvar_t *Cvar_Set (char *var_name, char *value)
 Cvar_FullSet
 ============
 */
-cvar_t *Cvar_FullSet (char *var_name, char *value, int flags)
+cvar_t *Cvar_FullSet (char *var_name, char *value, int flags, char *desc)
 {
 	cvar_t	*var;
 	
 	var = Cvar_FindVar (var_name);
 	if (!var)
+
 	{	// create it
-		return Cvar_Get (var_name, value, flags);
+		return Cvar_Get (var_name, value, flags, desc);
 	}
 
 	var->modified = true;
@@ -363,7 +368,10 @@ qboolean Cvar_Command (void)
 // perform a variable print or set
 	if (Cmd_Argc() == 1)
 	{
-		Com_Printf ("cvar \"%s\" is \"%s\"\n", v->name, v->string);
+		if(v->description != NULL)
+			Com_Printf("cvar \"%s\" is \"%s\" - %s\n", v->name, v->string, v->description);
+		else
+			Com_Printf ("cvar \"%s\" is \"%s\"\n", v->name, v->string);
 		return true;
 	}
 
@@ -402,7 +410,7 @@ void Cvar_Set_f (void)
 			Com_Printf ("flags can only be 'u' or 's'\n");
 			return;
 		}
-		Cvar_FullSet (Cmd_Argv(1), Cmd_Argv(2), flags);
+		Cvar_FullSet (Cmd_Argv(1), Cmd_Argv(2), flags, NULL);
 	}
 	else
 		Cvar_Set (Cmd_Argv(1), Cmd_Argv(2));

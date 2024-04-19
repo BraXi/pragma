@@ -285,7 +285,7 @@ void PFSV_setmodel(void)
 	}
 
 	name = Scr_GetParmString(1);
-	if (!name)
+	if (!name || !name[0])
 	{
 		Scr_RunError("setmodel(): empty model name for entity %i\n", NUM_FOR_EDICT(ent));
 		return;

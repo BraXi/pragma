@@ -448,19 +448,19 @@ static void NET_OpenIP (void)
 	int		port;
 	int		isdedicated;
 
-	ip = Cvar_Get ("ip", "localhost", CVAR_NOSET);
+	ip = Cvar_Get ("ip", "localhost", CVAR_NOSET, NULL);
 
 	isdedicated = Cvar_VariableValue ("dedicated");
 
 	if (!ip_sockets[NS_SERVER])
 	{
-		port = Cvar_Get("ip_hostport", "0", CVAR_NOSET)->value;
+		port = Cvar_Get("ip_hostport", "0", CVAR_NOSET, NULL)->value;
 		if (!port)
 		{
-			port = Cvar_Get("hostport", "0", CVAR_NOSET)->value;
+			port = Cvar_Get("hostport", "0", CVAR_NOSET, NULL)->value;
 			if (!port)
 			{
-				port = Cvar_Get("port", va("%i", PORT_SERVER), CVAR_NOSET)->value;
+				port = Cvar_Get("port", va("%i", PORT_SERVER), CVAR_NOSET, NULL)->value;
 			}
 		}
 		ip_sockets[NS_SERVER] = NET_IPSocket (ip->string, port);
@@ -475,10 +475,10 @@ static void NET_OpenIP (void)
 
 	if (!ip_sockets[NS_CLIENT])
 	{
-		port = Cvar_Get("ip_clientport", "0", CVAR_NOSET)->value;
+		port = Cvar_Get("ip_clientport", "0", CVAR_NOSET, NULL)->value;
 		if (!port)
 		{
-			port = Cvar_Get("clientport", va("%i", PORT_CLIENT), CVAR_NOSET)->value;
+			port = Cvar_Get("clientport", va("%i", PORT_CLIENT), CVAR_NOSET, NULL)->value;
 			if (!port)
 				port = PORT_ANY;
 		}
@@ -571,7 +571,7 @@ void NET_Init (void)
 
 //	Com_Printf("Winsock Initialized\n");
 
-	net_noudp = Cvar_Get ("net_noudp", "0", CVAR_NOSET);
+	net_noudp = Cvar_Get ("net_noudp", "0", CVAR_NOSET, NULL);
 
 //	net_shownet = Cvar_Get ("net_shownet", "0", 0); //braxi -- not used anywhere
 }

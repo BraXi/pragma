@@ -114,7 +114,7 @@ CL_InitEffects
 */
 void CL_InitEffects()
 {
-	fx_show  = Cvar_Get("fx_show", "1", CVAR_CHEAT);
+	fx_show  = Cvar_Get("fx_show", "1", CVAR_CHEAT, NULL);
 
 	FX_ClearParticles();
 

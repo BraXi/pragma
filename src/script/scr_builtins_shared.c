@@ -256,7 +256,7 @@ void PF_cvar(void)
 		return;
 	}
 
-	cvar = Cvar_Get(str, NULL, 0);
+	cvar = Cvar_Get(str, NULL, 0, NULL);
 	if (cvar)
 	{
 		Scr_ReturnFloat(cvar->value);
@@ -290,7 +290,7 @@ void PF_cvarstring(void)
 		return;
 	}
 
-	cvar = Cvar_Get(str, NULL, 0);
+	cvar = Cvar_Get(str, NULL, 0, NULL);
 	if (cvar)
 	{
 		Scr_ReturnString(cvar->string);
@@ -309,7 +309,7 @@ sets value of a cvar
 
 void cvarset(string cvarname, string value, ...)
 
-cvarset("motd", "welcome to ", hostname, " server!");
+cvarset("motd", "welcome to ", sv_hostname, " server!");
 =================
 */
 void PF_cvarset(void)

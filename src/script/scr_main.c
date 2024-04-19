@@ -616,7 +616,7 @@ void Scr_PreInitVMs()
 	UI_InitScriptBuiltins();
 	SV_InitScriptBuiltins();
 
-	vm_runaway = Cvar_Get("vm_runaway", va("%i", VM_DEFAULT_RUNAWAY), 0);
+	vm_runaway = Cvar_Get("vm_runaway", va("%i", VM_DEFAULT_RUNAWAY), 0, "Count of executed QC instructions to trigger runaway error.");
 
 //	Cmd_AddCommand("vm_reload", cmd_vm_reload_f);
 	Cmd_AddCommand("vm_generatedefs", cmd_vm_generatedefs_f);

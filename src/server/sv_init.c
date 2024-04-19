@@ -66,7 +66,7 @@ void SV_CheckForSavegame (void)
 	if (sv_noreload->value)
 		return;
 
-	if (Cvar_VariableValue ("deathmatch"))
+	if (Cvar_VariableValue ("multiplayer"))
 		return;
 
 	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
@@ -255,15 +255,15 @@ static void SV_DropPathNodeToFloor(gentity_t *self)
 	if (trace.startsolid)
 	{
 		Com_Printf("WARNING: Path node %i at %s in solid, removed.\n", (int)self->v.nodeIndex, vtos(self->v.origin));
-		//SV_FreeEntity(self);
-		//return;
+		SV_FreeEntity(self);
+		return;
 	}
 
 	if (trace.fraction == 1.0)
 	{
 		Com_Printf("WARNING: Path node %i at %s too far from floor, removed.\n", (int)self->v.nodeIndex, vtos(self->v.origin));
-		//SV_FreeEntity(self);
-		//return;
+		SV_FreeEntity(self);
+		return;
 	}
 
 	VectorCopy(trace.endpos, self->v.origin);
@@ -304,6 +304,23 @@ static void SV_LinkAllPathNodes()
 
 /*
 ================
+SV_SetWorldEntityFields
+
+We actually do it twice, once when QCVM initializes and later to enforce it if any dumbass decided its fun to mess up world fields
+================
+*/
+static void SV_SetWorldEntityFields()
+{
+	gentity_t* world = &sv.edicts[ENTITYNUM_WORLD];
+	world->v.classname = Scr_SetString("worldspawn");
+	world->v.model = Scr_SetString(sv.configstrings[CS_MODELS + 1]); // set model name
+	world->v.modelindex = 1; // world model MUST always be index 1	
+	world->v.movetype = MOVETYPE_PUSH;
+	world->v.solid = SOLID_BSP;
+}
+
+/*
+================
 SV_InitGameProgs
 
 Create QCVM and entities
@@ -321,8 +338,7 @@ static void SV_InitGameProgs()
 	sv.qcvm_active = true;
 	sv.script_globals = Scr_GetGlobals();
 
-	// set world model
-	sv.edicts[0].v.model = Scr_SetString(sv.configstrings[CS_MODELS + 1]);
+	SV_SetWorldEntityFields();
 }
 
 /*
@@ -466,9 +482,9 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	Com_SetServerState (sv.state);
 
 	// set serverinfo variables before executing any scripts so they can query them
-	Cvar_FullSet("mapname", sv.name, CVAR_SERVERINFO | CVAR_NOSET);
-	Cvar_FullSet("gamename", "pragma", CVAR_SERVERINFO | CVAR_LATCH);
-	Cvar_FullSet("gamedate", __DATE__, CVAR_SERVERINFO | CVAR_NOSET);
+	Cvar_FullSet("mapname", sv.name, CVAR_SERVERINFO | CVAR_NOSET, NULL);
+	Cvar_FullSet("gamename", "pragma", CVAR_SERVERINFO | CVAR_LATCH, NULL);
+	Cvar_FullSet("gamedate", __DATE__, CVAR_SERVERINFO | CVAR_NOSET, NULL);
 
 	// load and spawn all other entities
 	SV_SpawnEntities( sv.name, CM_EntityString(), spawnpoint );
@@ -479,19 +495,17 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 
 	Com_sprintf(sv.configstrings[CS_CHEATS_ENABLED], sizeof(sv.configstrings[CS_CHEATS_ENABLED]), "%i", (int)sv_cheats->value);
 
-#if 1
-	// run two frames to allow everything to settle
+	// give it a frame so the entities can spawn and drop to floor
 	SV_RunWorldFrame();
-	SV_LinkAllPathNodes(); // give it a frame so the entities can spawn and drop to floor
-	SV_RunWorldFrame();
-#else
-	
-	for(i = 0; i < 2; i++)
-		SV_RunWorldFrame();
-#endif
 
+	// link pathnodes
+	SV_LinkAllPathNodes(); 
+
+	// one more frame to settle everything
+	SV_RunWorldFrame();
 
 	// all precaches are complete
+	SV_SetWorldEntityFields();
 	sv.state = serverstate;
 	Com_SetServerState (sv.state);
 	
@@ -499,7 +513,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	SV_CreateBaseline();
 
 	// check for a savegame
-//	SV_CheckForSavegame();
+	//SV_CheckForSavegame();
 
 	if (dedicated->value)
 	{
@@ -543,56 +557,58 @@ void SV_InitGame (void)
 
 	svs.initialized = true;
 
-	if (Cvar_VariableValue ("coop") && Cvar_VariableValue ("deathmatch"))
+	if (Cvar_VariableValue ("coop") && Cvar_VariableValue ("multiplayer"))
 	{
-		Com_Printf("Deathmatch and Coop both set, disabling Coop\n");
-		Cvar_FullSet ("coop", "0",  CVAR_SERVERINFO | CVAR_LATCH);
+		Com_Printf("Multiplayer and Cooperative both set, disabling Multiplayer\n");
+
+		Cvar_FullSet("multiplayer", "0", CVAR_SERVERINFO | CVAR_LATCH, NULL);
+		Cvar_FullSet("coop", "1",  CVAR_SERVERINFO | CVAR_LATCH, NULL);
 	}
 
-	// dedicated servers are can't be single player and are usually DM
-	// so unless they explicity set coop, force it to deathmatch
+	// dedicated servers can't be single player and are usually COOP
+	// so unless they explicity set multiplayer, force it to coop
 	if (dedicated->value)
 	{
-		if (!Cvar_VariableValue ("coop"))
-			Cvar_FullSet ("deathmatch", "1",  CVAR_SERVERINFO | CVAR_LATCH);
+		if (!Cvar_VariableValue ("multiplayer"))
+			Cvar_FullSet ("coop", "1",  CVAR_SERVERINFO | CVAR_LATCH, NULL);
 	}
 
 	// init clients
-	if (Cvar_VariableValue ("deathmatch"))
+	if (Cvar_VariableValue ("multiplayer"))
 	{
 		if (sv_maxclients->value <= 1)
-			Cvar_FullSet ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
+			Cvar_FullSet ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH, NULL);
 		else if (sv_maxclients->value > MAX_CLIENTS)
-			Cvar_FullSet ("sv_maxclients", va("%i", MAX_CLIENTS), CVAR_SERVERINFO | CVAR_LATCH);
+			Cvar_FullSet ("sv_maxclients", va("%i", MAX_CLIENTS), CVAR_SERVERINFO | CVAR_LATCH, NULL);
 	}
 	else if (Cvar_VariableValue ("coop"))
 	{
-		if (sv_maxclients->value <= 1 || sv_maxclients->value > 4)
-			Cvar_FullSet ("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
+		if (sv_maxclients->value <= 1 || sv_maxclients->value > 8)
+			Cvar_FullSet ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH, NULL);
 	}
-	else	// non-deathmatch, non-coop is one player
+	else	// non-multiplayer, non-coop is one player
 	{
-		Cvar_FullSet ("sv_maxclients", "1", CVAR_SERVERINFO | CVAR_LATCH);
+		Cvar_FullSet ("sv_maxclients", "1", CVAR_SERVERINFO | CVAR_LATCH, NULL);
 	}
 
-	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO);
-	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
-	sv_password = Cvar_Get("sv_password", "", 0);
-	sv_maxentities = Cvar_Get("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH);
+	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO, NULL);
+	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH, NULL);
+	sv_password = Cvar_Get("sv_password", "", 0, NULL);
+	sv_maxentities = Cvar_Get("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH, NULL);
 
-	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0);
-	sv_gravity = Cvar_Get("sv_gravity", "800", 0);
+	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0, NULL);
+	sv_gravity = Cvar_Get("sv_gravity", "800", 0, NULL);
 
 	// make sure critical cvars are in their proper range
 	if (sv_maxclients->value <= 0)
-		Cvar_FullSet("sv_maxclients", "1", CVAR_SERVERINFO | CVAR_LATCH);
+		Cvar_FullSet("sv_maxclients", "1", CVAR_SERVERINFO | CVAR_LATCH, NULL);
 	else if (sv_maxclients->value > MAX_CLIENTS)
-		Cvar_FullSet("sv_maxclients", va("%i", MAX_CLIENTS), CVAR_SERVERINFO | CVAR_LATCH);
+		Cvar_FullSet("sv_maxclients", va("%i", MAX_CLIENTS), CVAR_SERVERINFO | CVAR_LATCH, NULL);
 
 	if (sv_maxentities->value < 256)
-		Cvar_FullSet("sv_maxentities", va("%i", 256), CVAR_LATCH);
+		Cvar_FullSet("sv_maxentities", va("%i", 256), CVAR_LATCH, NULL);
 	else if (sv_maxentities->value > MAX_GENTITIES)
-		Cvar_FullSet("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH);
+		Cvar_FullSet("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH, NULL);
 
 	svs.spawncount = rand();
 	svs.clients = Z_Malloc (sizeof(client_t)*sv_maxclients->value);
@@ -607,15 +623,15 @@ void SV_InitGame (void)
 	Com_sprintf(masterserver, sizeof(masterserver), "192.246.40.37:%i", PORT_MASTER);
 	NET_StringToAdr (masterserver, &master_adr[0]);
 
-	dedicated = Cvar_Get("dedicated", "0", CVAR_NOSET);
+	dedicated = Cvar_Get("dedicated", "0", CVAR_NOSET, NULL);
 
-	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO);
-	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH);
-	sv_password = Cvar_Get("sv_password", "", 0);
-	sv_maxentities = Cvar_Get("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH);
+	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO, NULL);
+	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH, NULL);
+	sv_password = Cvar_Get("sv_password", "", 0, NULL);
+	sv_maxentities = Cvar_Get("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH, NULL);
 
-	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0);
-	sv_gravity = Cvar_Get("sv_gravity", "800", 0);
+	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0, NULL);
+	sv_gravity = Cvar_Get("sv_gravity", "800", 0, NULL);
 
 	// initialize all clients for this game
 	svs.max_clients = sv_maxclients->value;
@@ -663,8 +679,6 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame, qboolea
 
 	if (sv.state == ss_dead && !sv.loadgame)
 		SV_InitGame ();	// the game is just starting
-
-	
 
 	if (!persGlobals)
 		memset(&svs.saved, 0, sizeof(svs.saved));

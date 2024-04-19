@@ -624,12 +624,12 @@ void FS_SetGamedir (char *dir)
 
 	if (!strcmp(dir,BASEDIRNAME) || (*dir == 0))
 	{
-		Cvar_FullSet ("gamedir", "", CVAR_SERVERINFO|CVAR_NOSET);
-		Cvar_FullSet ("game", "", CVAR_LATCH|CVAR_SERVERINFO);
+		Cvar_FullSet ("gamedir", "", CVAR_SERVERINFO|CVAR_NOSET, NULL);
+		Cvar_FullSet ("game", "", CVAR_LATCH|CVAR_SERVERINFO, NULL);
 	}
 	else
 	{
-		Cvar_FullSet ("gamedir", dir, CVAR_SERVERINFO|CVAR_NOSET);
+		Cvar_FullSet ("gamedir", dir, CVAR_SERVERINFO|CVAR_NOSET, NULL);
 		if (fs_cddir->string[0])
 			FS_AddGameDirectory (va("%s/%s", fs_cddir->string, dir) );
 		FS_AddGameDirectory (va("%s/%s", fs_basedir->string, dir) );
@@ -850,14 +850,14 @@ void FS_InitFilesystem (void)
 	// basedir <path>
 	// allows the game to run from outside the data tree
 	//
-	fs_basedir = Cvar_Get ("basedir", ".", CVAR_NOSET);
+	fs_basedir = Cvar_Get ("basedir", ".", CVAR_NOSET, "Allows the game to run from outside the data tree.");
 
 	//
 	// cddir <path>
 	// Logically concatenates the cddir after the basedir for 
-	// allows the game to run from outside the data tree
+	// allowing the game to run from outside the data tree
 	//
-	fs_cddir = Cvar_Get ("cddir", "", CVAR_NOSET);
+	fs_cddir = Cvar_Get ("cddir", "", CVAR_NOSET, "Logically concatenates the cddir after the basedir for allowing the game to run from outside the data tree.");
 	if (fs_cddir->string[0])
 		FS_AddGameDirectory (va("%s/"BASEDIRNAME, fs_cddir->string) );
 
@@ -870,7 +870,7 @@ void FS_InitFilesystem (void)
 	fs_base_searchpaths = fs_searchpaths;
 
 	// check for game override
-	fs_gamedirvar = Cvar_Get ("game", "", CVAR_LATCH|CVAR_SERVERINFO);
+	fs_gamedirvar = Cvar_Get ("game", "", CVAR_LATCH|CVAR_SERVERINFO, "Name of mod to load.");
 	if (fs_gamedirvar->string[0])
 		FS_SetGamedir (fs_gamedirvar->string);
 }

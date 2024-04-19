@@ -270,6 +270,7 @@ CVARS (console variables)
 typedef struct cvar_s
 {
 	char		*name;
+	char		*description; // can be NULL
 	char		*string;
 	char		*latched_string;	// for CVAR_LATCH vars
 	int			flags;
@@ -499,7 +500,7 @@ typedef struct
 #define	EF_ANIM23			128		// automatically cycle between frames 2 and 3 at 2 hz
 #define EF_ANIM_ALL			256		// automatically cycle through all frames at 2hz
 #define EF_ANIM_ALLFAST		512		// automatically cycle through all frames at 10hz
-#define EF_GREENGIB			32768	// diminishing green blood trail
+#define EF_GREENGIB			1024	// diminishing green blood trail
 
 
 // entity_state_t->renderfx flags
@@ -531,8 +532,7 @@ enum
 	FX_MUZZLEFLASH_PISTOL,
 	FX_MUZZLEFLASH_RIFLE,
 	FX_MUZZLEFLASH_SHOTGUN,
-	FX_WEAPON_MUZZLEFLASHES,
-	FX_MUZZLEFLASH_NEGATIVE_LIGHT,
+	FX_WEAPON_MUZZLEFLASHES
 };
 
 

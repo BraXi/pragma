@@ -432,8 +432,8 @@ void UI_Init()
 	Com_Printf("------- GUI Initialization -------\n");
 	memset(&ui, 0, sizeof(uistate_t));
 
-	ui_maxitems = Cvar_Get("ui_maxitems", "4096", CVAR_NOSET);
-	ui_maxguis = Cvar_Get("ui_maxguis", "32", CVAR_NOSET);
+	ui_maxitems = Cvar_Get("ui_maxitems", "4096", CVAR_NOSET, "For mod authors, increase if you hit max items per GUI limit");
+	ui_maxguis = Cvar_Get("ui_maxguis", "32", CVAR_NOSET, "For mod authors, increase if you hit max GUIs limit");
 
 	if (ui_maxitems->value < 1024)
 		Cvar_ForceSet("ui_maxitems", "1024");

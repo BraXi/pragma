@@ -264,7 +264,7 @@ typedef struct
 	void	(*FreeFile) (void *buf);
 	char	*(*GetGameDir) (void);
 
-	cvar_t	*(*Cvar_Get) (char *name, char *value, int flags);
+	cvar_t	*(*Cvar_Get) (char *name, char *value, int flags, char *desc);
 	cvar_t	*(*Cvar_Set)( char *name, char *value );
 	void	 (*Cvar_SetValue)( char *name, float value );
 
