@@ -475,7 +475,11 @@ void Cvar_List_f (void)
 			Com_Printf ("L");
 		else
 			Com_Printf (" ");
-		Com_Printf (" %s \"%s\"\n", var->name, var->string);
+
+		if(var->description != NULL)
+			Com_Printf(" %s \"%s\" - %s\n", var->name, var->string, var->description);
+		else
+			Com_Printf (" %s \"%s\"\n", var->name, var->string);
 	}
 	Com_Printf ("%i cvars\n", i);
 }
