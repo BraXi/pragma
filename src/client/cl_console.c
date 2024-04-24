@@ -240,8 +240,11 @@ void Con_CheckResize (void)
 	if (width == con.linewidth)
 		return;
 
-	if(re.GetFontHeight)
+	if (re.GetFontHeight)
+	{
 		con_charheight = re.GetFontHeight(con_font) * con_fontscale;
+		width = viddef.width / con_charheight; // FIXME this is wrong (should be width) but better than nothing
+	}
 
 	if (width < 1)			// video hasn't been initialized yet
 	{
@@ -253,7 +256,7 @@ void Con_CheckResize (void)
 	else
 	{
 		oldwidth = con.linewidth;
-		con.linewidth = width; //viddef.width/con_charsize->value
+		con.linewidth = width;
 		oldtotallines = con.totallines;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
 		numlines = oldtotallines;

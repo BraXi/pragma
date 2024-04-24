@@ -76,7 +76,7 @@ char* Scr_ValueString(etype_t type, eval_t* val)
 		sprintf(line, "%s", ScrInternal_String(val->string));
 		break;
 	case ev_entity:
-		//sprintf(line, "entity %i", NUM_FOR_EDICT(PROG_TO_GENT(val->edict))); // braxi -- fixme
+		sprintf(line, "entity %i", NUM_FOR_ENT(VM_TO_ENT(val->edict)));
 		break;
 	case ev_function:
 		f = active_qcvm->functions + val->function;
@@ -87,19 +87,76 @@ char* Scr_ValueString(etype_t type, eval_t* val)
 		sprintf(line, ".%s", ScrInternal_String(def->s_name));
 		break;
 	case ev_void:
-		sprintf(line, "void");
+		sprintf(line, "*void*");
 		break;
 	case ev_float:
-		sprintf(line, "%5.1f", val->_float);
+		sprintf(line, "%f", val->_float);
 		break;
 	case ev_integer:
 		sprintf(line, "%i", val->_int);
 		break;
 	case ev_vector:
-		sprintf(line, "'%5.1f %5.1f %5.1f'", val->vector[0], val->vector[1], val->vector[2]);
+		sprintf(line, "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
 		break;
 	case ev_pointer:
-		sprintf(line, "pointer");
+		sprintf(line, "*pointer*");
+		break;
+	default:
+		sprintf(line, "bad type %i", type);
+		break;
+	}
+
+	return line;
+}
+
+
+/*
+============
+Scr_ValueStringDeveloper
+
+Returns a string describing *data in a type specific manner
+=============
+*/
+char* Scr_ValueStringDeveloper(etype_t type, eval_t* val)
+{
+	static char	line[256];
+	ddef_t* def;
+	dfunction_t* f;
+
+	type &= ~DEF_SAVEGLOBAL;
+
+	CheckScriptVM(__FUNCTION__);
+
+	switch (type)
+	{
+	case ev_string:
+		sprintf(line, "'%s' [string]", ScrInternal_String(val->string));
+		break;
+	case ev_entity:
+		sprintf(line, "%i [entity]", NUM_FOR_ENT(VM_TO_ENT(val->edict)));
+		break;
+	case ev_function:
+		f = active_qcvm->functions + val->function;
+		sprintf(line, "%s [function]", ScrInternal_String(f->s_name));
+		break;
+	case ev_field:
+		def = ScrInternal_FieldAtOfs(val->_int);
+		sprintf(line, "%s [field]", ScrInternal_String(def->s_name));
+		break;
+	case ev_void:
+		sprintf(line, "*void*");
+		break;
+	case ev_float:
+		sprintf(line, "%f [float]", val->_float);
+		break;
+	case ev_integer:
+		sprintf(line, "%i [int]", val->_int);
+		break;
+	case ev_vector:
+		sprintf(line, "%f %f %f [vector]", val->vector[0], val->vector[1], val->vector[2]);
+		break;
+	case ev_pointer:
+		sprintf(line, "*pointer*");
 		break;
 	default:
 		sprintf(line, "bad type %i", type);

@@ -17,6 +17,9 @@ extern ddef_t* ScrInternal_GlobalAtOfs(int ofs);
 extern ddef_t* Scr_FindEntityField(char* name);
 extern void Scr_PrintEntityFields(vm_entity_t* ent);
 
+char* Scr_ValueString(etype_t type, eval_t* val);
+char* Scr_ValueStringDeveloper(etype_t type, eval_t* val);
+
 #define ENTVARSOFFSET(ent) (int*)(&ent[0] + active_qcvm->offsetToEntVars)
 
 /*
@@ -810,6 +813,8 @@ static int type_size[9] =
 	1							// FTEQC: ev_integer
 };
 
+
+
 /*
 =============
 Scr_PrintEntityFields
@@ -817,10 +822,8 @@ Scr_PrintEntityFields
 For debugging
 =============
 */
-char* Scr_ValueString(etype_t type, eval_t* val);
 void Scr_PrintEntityFields(vm_entity_t* ent)
 {
-	int		l;
 	ddef_t* d;
 	int* v;
 	int		i, j;
@@ -835,7 +838,6 @@ void Scr_PrintEntityFields(vm_entity_t* ent)
 
 	CheckScriptVM(__FUNCTION__);
 
-//	Com_Printf("\nENTITY #%i:\n", NUM_FOR_EDICT(ent));
 	for (i = 1; i < active_qcvm->progs->numFieldDefs; i++)
 	{
 		d = &active_qcvm->fieldDefs[i];
@@ -854,57 +856,121 @@ void Scr_PrintEntityFields(vm_entity_t* ent)
 		if (j == type_size[type])
 			continue;
 
-		Com_Printf("%s", name);
-		l = strlen(name);
-		while (l++ < 15)
-			Com_Printf(" ");
-
-		Com_Printf("%s\n", Scr_ValueString(d->type, (eval_t*)v));
+		Com_Printf("%s = %s\n", name, Scr_ValueStringDeveloper(d->type, (eval_t*)v));
 	}
 }
 
-void cmd_printedict_f(void)
+/*
+=============
+Cmd_PrintVMEntity_f
+
+vm_printentity cmd, for debugging
+=============
+*/
+void Cmd_PrintVMEntity_f(void)
 {
-#if 0
-	if (Cmd_Argc() != 2)
+	int num;
+	vmType_t vm;
+	char *vmname;
+
+	if (!developer->value || !Com_ServerState())
 	{
-		Com_Printf("usage: edict entitynum\n");
+		Com_Printf("developer mode must be enabled for 'vm_printent' and the server must be running localy.\n");
 		return;
 	}
-	int num;
 
-	num = atoi(Cmd_Argv(1));
-	Scr_PrintServerEdict(ENT_FOR_NUM(num));
-#endif
+	if (Cmd_Argc() != 3)
+	{
+		Com_Printf("usage: vm_printent [server/client/gui] entitynum -- print all fields for given entity.\n");
+		return;
+	}
+
+	vmname = Cmd_Argv(1);
+
+	if (!strcmp(vmname, "server"))
+		vm = VM_SVGAME;
+	else if (!strcmp(vmname, "client"))
+		vm = VM_CLGAME;
+	else if (!strcmp(vmname, "gui"))
+		vm = VM_GUI;
+	else
+	{
+		Com_Printf("vm_printent with unknown vm `%s` - correct are `server`, `client` and `gui`.\n", vmname);
+		return;
+	}
+
+	if (!Scr_IsVMLoaded(vm))
+	{
+		Com_Printf("%s qcvm is not loaded.\n", vmname);
+		return;
+	}
+
+	num = atoi(Cmd_Argv(2));
+
+	Scr_BindVM(vm);
+	if (num >= 0 && num < active_qcvm->num_entities)
+	{
+		Com_Printf("-------------- %s entity %i --------------\n", vmname, num);
+		Scr_PrintEntityFields(ENT_FOR_NUM(num));
+	}
 }
 
-void cmd_printedicts_f(void)
+
+/*
+=============
+Cmd_PrintVMEntity_f
+
+vm_entities cmd, for debugging
+=============
+*/
+void Cmd_PrintAllVMEntities_f(void)
 {
-#if 0
-	int y = 0;
 	int num;
-	gentity_t * ent;
+	vm_entity_t* ent;
+	vmType_t vm;
+	char* vmname;
 
-	if (Cmd_Argc() == 2)
+	if (!developer->value || !Com_ServerState())
 	{
-		Com_Printf("searching for all entities matching %s\n", Cmd_Argv(1));
+		Com_Printf("developer mode must be enabled for 'vm_printents' and the server must be running localy.\n");
+		return;
 	}
 
-	for (num = 0; num <= sv.max_edicts; num++)
+	if (Cmd_Argc() != 2)
 	{
-		ent = EDICT_NUM(num);
-		if (ent->inuse)
-		{
-			if (Cmd_Argc() == 1 || Cmd_Argc() == 2 && strstr(Scr_GetString(ent->v.classname), Cmd_Argv(1)))
-			{
-				y++;
-				Scr_PrintServerEdict(ent);
-				Com_Printf("-----------------------\n");
-			}
-		}	
+		Com_Printf("usage: vm_printents [server/client/gui] -- print all entity fields.\n");
+		return;
 	}
-	Com_Printf("%i (%i) out of %i entities in use\n", sv.num_edicts,y, sv.max_edicts);
-#endif
+
+	vmname = Cmd_Argv(1);
+
+	if (!strcmp(vmname, "server"))
+		vm = VM_SVGAME;
+	else if (!strcmp(vmname, "client"))
+		vm = VM_CLGAME;
+	else if (!strcmp(vmname, "gui"))
+		vm = VM_GUI;
+	else
+	{
+		Com_Printf("vm_printents with unknown vm `%s` - correct are `server`, `client` and `gui`.\n", vmname);
+		return;
+	}
+
+	if(!Scr_IsVMLoaded(vm))
+	{
+		Com_Printf("%s qcvm is not loaded.\n", vmname);
+		return;
+	}
+
+	Scr_BindVM(vm);
+
+	for (num = 0; num < active_qcvm->num_entities; num++)
+	{
+		ent = ENT_FOR_NUM(num);
+		
+		Com_Printf("-------------- %s entity %i --------------\n", vmname, num);
+		Scr_PrintEntityFields(ent);
+	}
 }
 
 

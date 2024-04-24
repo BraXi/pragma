@@ -407,7 +407,7 @@ void Cvar_Set_f (void)
 			flags = CVAR_SERVERINFO;
 		else
 		{
-			Com_Printf ("flags can only be 'u' or 's'\n");
+			Com_Printf ("flags can only be 'u' for userinfo or 's' for serverinfo.\n");
 			return;
 		}
 		Cvar_FullSet (Cmd_Argv(1), Cmd_Argv(2), flags, NULL);

@@ -33,7 +33,18 @@ const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 
 #define	G_INT(o)	(*(int *)&active_qcvm->globals[o])
 
+void Cmd_PrintVMEntity_f(void);
+void Cmd_PrintAllVMEntities_f(void);
 
+extern void CG_InitScriptBuiltins();
+extern void UI_InitScriptBuiltins();
+extern void SV_InitScriptBuiltins();
+
+/*
+============
+Scr_VMName
+============
+*/
 static const char* Scr_VMName(vmType_t vm)
 {
 	return vmDefs[vm].name;
@@ -81,7 +92,9 @@ ddef_t* ScrInternal_FieldAtOfs(int ofs)
 
 /*
 ============
-Scr_FindEdictField
+Scr_FindEntityField
+
+Returns ddef for an entity field matching name in active qcvm
 ============
 */
 ddef_t* Scr_FindEntityField(char* name)
@@ -105,8 +118,7 @@ ddef_t* Scr_FindEntityField(char* name)
 =============
 Scr_ParseEpair
 
-Can parse either fields or globals, MUST BIND VM BEFORE USE!
-returns false if error
+Can parse either fields or globals, MUST BIND VM BEFORE USE! returns false if error
 =============
 */
 qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
@@ -156,8 +168,8 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 		def = Scr_FindEntityField(s);
 		if (!def)
 		{
-			//			if (strncmp(s, "sky", 3) && strcmp(s, "fog"))
-			//				Com_DPrintf(DP_ALL, "Can't find field %s\n", s);
+			//if (strncmp(s, "sky", 3) && strcmp(s, "fog"))
+			//	Com_DPrintf(DP_ALL, "Can't find field %s\n", s);
 			return false;
 		}
 		*(int*)d = G_INT(def->ofs);
@@ -182,6 +194,8 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 /*
 ============
 Scr_FindGlobal
+
+Returns ddef for a glibal variable in active qcvm
 ============
 */
 ddef_t* Scr_FindGlobal(char* name)
@@ -203,6 +217,8 @@ ddef_t* Scr_FindGlobal(char* name)
 /*
 ============
 Scr_FindFunction
+
+Finds a function with specified name in active qcvm or NULL if not found
 ============
 */
 dfunction_t* ScrInternal_FindFunction(char* name)
@@ -272,7 +288,7 @@ void Scr_GenerateBuiltinsDefs(char *filename, pb_t execon)
 ===============
 Scr_LoadProgs
 
-Loads progs .dat file, sets edict size
+Load qc programs from file and set proper entity size
 ===============
 */
 void Scr_LoadProgs(qcvm_t *vm, char* filename)
@@ -281,7 +297,7 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 	byte	*raw;
 
 	if (!vm)
-		Com_Error(ERR_FATAL, "%s: called but the active_qcvm is NULL\n", __FUNCTION__);
+		Com_Error(ERR_FATAL, "%s: called but the vm is NULL\n", __FUNCTION__);
 
 	if(vm->progs)
 		Com_Error(ERR_FATAL, "%s: tried to load second instance of %s script\n", __FUNCTION__, Scr_VMName(vm->progsType));
@@ -304,7 +320,7 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 
 	if (vm->progs->version != PROG_VERSION)
 	{
-		if (vm->progs->version == 7 /*FTEQC*/)
+		if (vm->progs->version == PROG_VERSION_FTE)
 			Com_Printf("%s: \"%s\" is FTE version and not all opcodes are supported in pragma\n", __FUNCTION__, filename);
 		else
 			Com_Error(ERR_FATAL, "%s: \"%s\" is wrong version %i (should be %i)\n", __FUNCTION__, filename, vm->progs->version, PROG_VERSION);
@@ -328,10 +344,8 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 	vm->globalDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_globaldefs);
 	vm->fieldDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_fielddefs);
 	vm->statements = (dstatement_t*)((byte*)vm->progs + vm->progs->ofs_statements);
-
 	vm->globals_struct =((byte*)vm->progs + vm->progs->ofs_globals);	
 	vm->globals = (float*)vm->globals_struct;
-
 	vm->entity_size = vm->entity_size + (vm->progs->entityfields * 4);
 
 	// byte swap all the data
@@ -375,10 +389,12 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 
 /*
 ===============
-Scr_Logfile
+Scr_OpenLogFileForVM
+
+Opens a logfile for qcvm in developer mode, this allows logprint() to save to disk
 ===============
 */
-static void Scr_Logfile(qcvm_t *vm)
+static void Scr_OpenLogFileForVM(qcvm_t *vm)
 {
 	char name[MAX_OSPATH];
 
@@ -389,6 +405,9 @@ static void Scr_Logfile(qcvm_t *vm)
 //		vm->logfile = NULL;
 //		return;
 //	}
+
+	if (!developer->value)
+		return;
 
 	sprintf(name, "%s/%s.log", FS_Gamedir(), Scr_VMName(vm->progsType));
 
@@ -409,8 +428,6 @@ Scr_CreateScriptVM
 Create script execution context
 ===============
 */
-void cmd_printedict_f(void);
-void cmd_printedicts_f(void);
 
 void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs)
 {
@@ -441,13 +458,11 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 		Com_Error(ERR_FATAL, "Couldn't allocate entities for %s script VM\n", Scr_VMName(vmType));
 
 	// add developer comands
-	if (vmType == VM_SVGAME)
-	{
-		Cmd_AddCommand("edict", cmd_printedict_f);
-		Cmd_AddCommand("edicts", cmd_printedicts_f);
-	}
+	Cmd_AddCommand("vm_printent", Cmd_PrintVMEntity_f);
+	Cmd_AddCommand("vm_printents", Cmd_PrintAllVMEntities_f);
 
-	Scr_Logfile(vm);
+	// open devlog
+	Scr_OpenLogFileForVM(vm);
 
 	// print statistics
 	dprograms_t* progs = vm->progs;
@@ -495,8 +510,10 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 
 	if (vm->progsType == VM_SVGAME)
 	{
-		Cmd_RemoveCommand("edict");
-		Cmd_RemoveCommand("edicts");
+		// FIXME: it is generaly very bad to remove these commands in this function, 
+		// and its also very bad to register them each time qcvm is being created
+		Cmd_RemoveCommand("vm_printent");
+		Cmd_RemoveCommand("vm_printents");
 	}
 	if (vm->progsType == VM_CLGAME)
 	{
@@ -507,7 +524,7 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 	qcvm[vmtype] = NULL;
 
 	Scr_BindVM(VM_NONE);
-	Com_Printf("freed %s script vm...\n", Scr_VMName(vmtype));
+	Com_Printf("freed %s script...\n", Scr_VMName(vmtype));
 }
 
 #if 0
@@ -532,9 +549,23 @@ void Cmd_Script_PrintFunctions(void)
 
 /*
 ===============
-Scr_GenerateBuiltinsDefs
+Scr_IsVMLoaded
 
-Returns true if programs can be executed
+Return true if a specified qcvm is loaded
+===============
+*/
+qboolean Scr_IsVMLoaded(vmType_t vmtype)
+{
+	if (qcvm[vmtype] == NULL)
+		return false;
+	return true;
+}
+
+/*
+===============
+Scr_BindVM
+
+Select (bind) QCVM for use, this is important for Get/Set/Call/Return scr functions
 ===============
 */
 void Scr_BindVM(vmType_t vmtype)
@@ -545,25 +576,44 @@ void Scr_BindVM(vmType_t vmtype)
 	CheckScriptVM(__FUNCTION__);
 }
 
-
+/*
+===============
+Scr_GetGlobals
+===============
+*/
 void* Scr_GetGlobals()
 {
 	CheckScriptVM(__FUNCTION__);
 	return active_qcvm->globals_struct;
 }
 
+/*
+===============
+Scr_GetEntitySize
+===============
+*/
 int Scr_GetEntitySize()
 {
 	CheckScriptVM(__FUNCTION__);
 	return active_qcvm->entity_size;
 }
 
+/*
+===============
+Scr_GetEntityPtr
+===============
+*/
 vm_entity_t* Scr_GetEntityPtr()
 {
 	CheckScriptVM(__FUNCTION__);
 	return active_qcvm->entities;
 }
 
+/*
+===============
+Scr_GetProgsCRC
+===============
+*/
 extern unsigned Scr_GetProgsCRC(vmType_t vmType)
 {
 	if (qcvm[vmType] == NULL)
@@ -571,13 +621,25 @@ extern unsigned Scr_GetProgsCRC(vmType_t vmType)
 	return qcvm[vmType]->crc;
 }
 
+/*
+===============
+Scr_GetEntityFieldsSize
+===============
+*/
 int Scr_GetEntityFieldsSize()
 {
 	CheckScriptVM(__FUNCTION__);
 	return (active_qcvm->progs->entityfields * 4);
 }
 
-void cmd_vm_generatedefs_f(void)
+/*
+===============
+Cmd_VM_GenerateDefs_f
+
+vm_generatedefs command
+===============
+*/
+void Cmd_VM_GenerateDefs_f(void)
 {
 	if (!developer->value)
 	{
@@ -592,9 +654,6 @@ void cmd_vm_generatedefs_f(void)
 	}
 }
 
-extern void CG_InitScriptBuiltins();
-extern void UI_InitScriptBuiltins();
-extern void SV_InitScriptBuiltins();
 /*
 ===============
 Scr_PreInitVMs
@@ -619,7 +678,7 @@ void Scr_PreInitVMs()
 	vm_runaway = Cvar_Get("vm_runaway", va("%i", VM_DEFAULT_RUNAWAY), 0, "Count of executed QC instructions to trigger runaway error.");
 
 //	Cmd_AddCommand("vm_reload", cmd_vm_reload_f);
-	Cmd_AddCommand("vm_generatedefs", cmd_vm_generatedefs_f);
+	Cmd_AddCommand("vm_generatedefs", Cmd_VM_GenerateDefs_f);
 }
 
 /*

@@ -36,6 +36,7 @@ etype_t;
 #define	SCR_LOCALSTACK_SIZE		2048
 
 #define	PROG_VERSION		6
+#define	PROG_VERSION_FTE	7
 
 #define	OFS_NULL			0
 #define	OFS_RETURN			1

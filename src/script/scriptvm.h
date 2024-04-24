@@ -47,7 +47,7 @@ typedef enum
 	VM_NONE,	// no program execution at all
 	VM_SVGAME,	// server game
 	VM_CLGAME,	// client game
-	VM_GUI,		// client gui
+	VM_GUI,		// gui
 	NUM_SCRIPT_VMS
 } vmType_t;
 
@@ -64,6 +64,7 @@ typedef union eval_s
 
 extern void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs);
 extern void Scr_FreeScriptVM(vmType_t vmType);
+extern qboolean Scr_IsVMLoaded(vmType_t vmtype);
 extern void Scr_BindVM(vmType_t vmType);
 extern int Scr_GetEntitySize();
 extern vm_entity_t* Scr_GetEntityPtr();
@@ -76,6 +77,7 @@ extern void Scr_Shutdown();
 
 // scr_debug.c
 void Scr_StackTrace();
+
 // scr_exec.c
 extern void Scr_RunError(char* error, ...);
 extern void Scr_Execute(vmType_t vm, scr_func_t fnum, char* callFromFuncName);

@@ -517,7 +517,7 @@ static __inline void CMod_ValidateBSPLump(lump_t* l, bspDataType type, unsigned 
 		ri.Error(ERR_DROP, "Map with no %s", what);
 
 	if (*count >= limit)
-		ri.Error(ERR_DROP, "Map has too many %s (%i), max is %s", what, count, limit);
+		ri.Error(ERR_DROP, "Map has too many %s (%i), max is %i", what, count, limit);
 }
 
 /*
@@ -527,7 +527,7 @@ Mod_BSP_LoadLightMaps
 */
 static void Mod_BSP_LoadLightMaps(lump_t *l)
 {
-	int count;
+	int count = 0;
 	if (!l->filelen)
 	{
 		pLoadModel->lightdatasize = -1;
