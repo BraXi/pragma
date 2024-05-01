@@ -712,7 +712,7 @@ typedef struct
 {
 	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
 	float		*mins, *maxs;	// size of the moving object
-	vec3_t		mins2, maxs2;	// size when clipping against mosnters
+	vec3_t		mins2, maxs2;	// size when clipping against monsters
 	float		*start, *end;
 	trace_t		trace;
 	gentity_t		*passedict;
@@ -720,32 +720,54 @@ typedef struct
 } moveclip_t;
 
 
+/*
+================
+SV_EntityHasInlineModel
+================
+*/
+static qboolean SV_EntityHasInlineModel(gentity_t* ent)
+{
+	// note: modelindex is offset by one in server code thats why I do <= check
+	// in SV 1 is world, 2 is first "brush model", etc.. but in CM 0 is world and brush models follow
+	if ((int)ent->v.modelindex <= CM_NumInlineModels() && (int)ent->v.modelindex > 0)
+		return true;
+	return false;	
+}
 
 /*
 ================
 SV_HullForEntity
 
-Returns a headnode that can be used for testing or clipping an
-object of mins/maxs size.
+Returns a headnode that can be used for testing or clipping an object of mins/maxs size.
 Offset is filled in to contain the adjustment that must be added to the
 testing object's origin to get a point to use with the returned hull.
+
+inline models are mandatory for SOLID_BSP and optional for SOLID_TRIGGER
+
+SOLID_BSP entities must error when they have no inline model set
+SOLID_TRIGGER entities will explictly use inline model instead of bounding box when they have inline model set
 ================
 */
 int SV_HullForEntity(gentity_t* ent)
 {
 	cmodel_t* model;
 
-	// decide which clipping hull to use, based on the size
-	if (ent->v.solid == SOLID_BSP)
+	// decide which clipping hull to use
+	if (!SV_EntityHasInlineModel(ent) && ent->v.solid == SOLID_BSP)
 	{
-		// explicit hulls in the BSP model
-		model = sv.models[(int)ent->v.modelindex].bmodel;
+		Scr_RunError("entity %s (%i) at [%i %i %i] has SOLID_BSP set but doesn't use inline model\n", Scr_GetString(ent->v.classname),
+			NUM_FOR_EDICT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+		return -1;
+	}
 
+	if (SV_EntityHasInlineModel(ent) && (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER))
+	{
+		model = sv.models[(int)ent->v.modelindex].bmodel;
 		if (!model)
 		{
-			Scr_RunError("MOVETYPE_PUSH with a non BSP model for entity %s (%i) at [%i %i %i]\n", Scr_GetString(ent->v.classname),
+			Scr_RunError("entity %s (%i) at [%i %i %i] has no bsp model - this should never happen!\n", Scr_GetString(ent->v.classname),
 				NUM_FOR_EDICT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
-			return -1; // msvc
+			return -1;
 		}
 
 		return model->headnode;
@@ -760,11 +782,40 @@ int SV_HullForEntity(gentity_t* ent)
 
 /*
 ====================
-SV_ClipMoveToEntities
+SV_Clip
 
+Returns true if clipent overlaps with the bounding box
 ====================
 */
-void SV_ClipMoveToEntities ( moveclip_t *clip )
+trace_t SV_Clip(gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask) 
+{
+	trace_t     trace;
+
+	if (!mins)
+		mins = vec3_origin;
+	if (!maxs)
+		maxs = vec3_origin;
+
+	if (clipent == sv.edicts)
+		trace = CM_BoxTrace(start, end, mins, maxs, 0, contentmask);
+	else
+		trace = CM_TransformedBoxTrace(start, end, mins, maxs, SV_HullForEntity(clipent), contentmask, clipent->v.origin, clipent->v.angles);
+
+	trace.ent = clipent;
+	if (trace.ent == NULL)
+		trace.entitynum = ENTITYNUM_NULL;
+	else
+		trace.entitynum = NUM_FOR_ENT(trace.ent);
+
+	return trace;
+}
+
+/*
+====================
+SV_ClipMoveToEntities
+====================
+*/
+void SV_ClipMoveToEntities( moveclip_t *clip )
 {
 	int			i, num;
 	gentity_t	*touchlist[MAX_GENTITIES], *touch;
@@ -815,8 +866,7 @@ void SV_ClipMoveToEntities ( moveclip_t *clip )
 				clip->mins, clip->maxs, headnode,  clip->contentmask,
 				touch->v.origin, angles);
 
-		if (trace.allsolid || trace.startsolid ||
-		trace.fraction < clip->trace.fraction)
+		if (trace.allsolid || trace.startsolid || trace.fraction < clip->trace.fraction)
 		{
 			trace.ent = touch;
 		 	if (clip->trace.startsolid)
@@ -829,6 +879,11 @@ void SV_ClipMoveToEntities ( moveclip_t *clip )
 		}
 		else if (trace.startsolid)
 			clip->trace.startsolid = true;
+
+		if (trace.ent == NULL)
+			trace.entitynum = ENTITYNUM_NULL;
+		else
+			trace.entitynum = NUM_FOR_ENT(trace.ent);
 	}
 }
 

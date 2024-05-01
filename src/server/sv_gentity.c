@@ -184,6 +184,7 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 {
 	int			i, num, touched;
 	gentity_t* touch[MAX_GENTITIES], * hit;
+	trace_t		clip;
 
 #if 0
 	if (areatype == AREA_PATHNODES && !((int)ent->v.svflags & SVF_MONSTER))
@@ -198,6 +199,14 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 		hit = touch[i];
 		if (!hit->inuse)
 			continue;
+
+		if (areatype == AREA_TRIGGERS && (int)hit->v.modelindex > 0)
+		{
+			clip = SV_Clip(hit, ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent->v.clipmask);
+			if (clip.fraction == 1.0f)
+				continue;
+		}
+
 		touched++;
 		Scr_Event_Touch(hit, ent, NULL, NULL);
 	}

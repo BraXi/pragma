@@ -250,15 +250,6 @@ struct sfx_t* CG_FindOrRegisterSound(char *filename)
 	return sfx;
 }
 
-
-
-
-
-//
-// add view model
-//
-
-
 /*
 =================
 CG_AddEntities
