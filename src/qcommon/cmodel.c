@@ -249,7 +249,8 @@ static void CMod_LoadInlineModels(lump_t *l)
 		out = &cm_world.inlineModels[i];
 
 		for (j = 0; j < 3; j++)
-		{	// spread the mins / maxs by a pixel
+		{	
+			// spread the mins / maxs by a pixel
 			out->mins[j] = LittleFloat (in->mins[j]) - 1;
 			out->maxs[j] = LittleFloat (in->maxs[j]) + 1;
 			out->origin[j] = LittleFloat (in->origin[j]);
@@ -635,7 +636,40 @@ static void CMod_LoadEntityString(lump_t *l)
 	memcpy (cm_world.entity_string, cmod_base + l->fileofs, l->filelen);
 }
 
+/*
+==================
+CM_NullInlineModel
+==================
+*/
+static cmodel_t* CM_NullInlineModel()
+{
+	memset(&null_inline_model, 0, sizeof(null_inline_model));
+	return &null_inline_model;
+}
 
+/*
+==================
+CM_FreeMap
+
+Frees cm_world
+==================
+*/
+void CM_FreeMap()
+{
+	if (cm_world.map_name[0])
+		Com_Printf("%s: freeing map %s\n", __FUNCTION__, cm_world.map_name);
+
+	if (cm_world.extradata != NULL)
+	{
+		Hunk_Free(cm_world.extradata);
+		memset(&cm_world, 0, sizeof(cm_world));
+	}
+
+	cm_world.numLeafs = 0;	// *don't* allow leaf funcs to be called without a map FIXME
+	cm_world.numAreas = 0;
+	cm_world.numClusters = 0;
+
+}
 
 /*
 ==================
@@ -652,7 +686,7 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	int				length;
 	static unsigned	last_checksum;
 
-//	Com_Printf("CM_LoadMap: %s\n", name);
+	Com_DPrintf(DP_ALL, "%s: %s\n", __FUNCTION__, name);
 	map_noareas = Cvar_Get ("map_noareas", "0", 0, NULL);
 
 	if( !strcmp (cm_world.map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
@@ -665,24 +699,13 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 		}
 		if (cm_world.inlineModels == NULL)
 		{
-			// panic here?
+			// panic here? braxi: this fixes a rare crash in cgame?
+			return CM_NullInlineModel();
 		}
 		return &cm_world.inlineModels[0];		// still have the right version
 	}
 
-
-	//
-	// free old stuff
-	//
-	if (cm_world.extradata != NULL)
-	{
-		Hunk_Free(cm_world.extradata);
-		memset(&cm_world, 0, sizeof(cm_world));
-	}
-
-	cm_world.numLeafs = 1;	// allow leaf funcs to be called without a map FIXME
-	cm_world.numAreas = 1;	// fixme!!
-	cm_world.numClusters = 1; // fixme!!
+	CM_FreeMap();
 
 	if (!name || !name[0])
 	{
@@ -692,9 +715,8 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 		cm_world.numAreas = 1;
 		*checksum = 0;
 
-		memset(&null_inline_model, 0, sizeof(null_inline_model));
-		return &null_inline_model;
-		//return &cm_world.inlineModels[0];
+		return CM_NullInlineModel();
+		//was: return &cm_world.inlineModels[0];
 	}
 
 	//
@@ -757,9 +779,11 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 /*
 ==================
 CM_InlineModel
+
+Returns the inline model by name
 ==================
 */
-cmodel_t	*CM_InlineModel (char *name)
+cmodel_t *CM_InlineModel(char *name)
 {
 	int		num;
 
@@ -772,39 +796,75 @@ cmodel_t	*CM_InlineModel (char *name)
 	return &cm_world.inlineModels[num];
 }
 
-int		CM_NumClusters (void)
+/*
+==================
+CM_NumClusters
+Returns the number of clusters
+==================
+*/
+int	CM_NumClusters(void)
 {
 	return cm_world.numClusters;
 }
 
-int		CM_NumInlineModels (void)
+/*
+==================
+CM_NumInlineModels
+Returns the number of inline models
+==================
+*/
+int	CM_NumInlineModels(void)
 {
 	return cm_world.numInlineModels;
 }
 
-char	*CM_EntityString (void)
+/*
+==================
+CM_EntityString
+Returns the entity string for parsing, can be NULL
+==================
+*/
+char *CM_EntityString(void)
 {
 	return cm_world.entity_string;
 }
 
-int		CM_LeafContents (int leafnum)
+/*
+==================
+CM_LeafContents
+Returns the contents of a leaf
+==================
+*/
+int	CM_LeafContents (int leafnum)
 {
 	if (leafnum < 0 || leafnum >= cm_world.numLeafs)
-		Com_Error (ERR_DROP, "CM_LeafContents: bad number");
+		Com_Error(ERR_DROP, "%s: bad leaf number %i", __FUNCTION__, leafnum);
 	return cm_world.leafs[leafnum].contents;
 }
 
-int		CM_LeafCluster (int leafnum)
+/*
+==================
+CM_LeafCluster
+Returns the cluster of a leaf
+==================
+*/
+int	CM_LeafCluster(int leafnum)
 {
 	if (leafnum < 0 || leafnum >= cm_world.numLeafs)
-		Com_Error (ERR_DROP, "CM_LeafCluster: bad number");
+		Com_Error(ERR_DROP, "%s: bad leaf number %i", __FUNCTION__, leafnum);
 	return cm_world.leafs[leafnum].cluster;
 }
 
-int		CM_LeafArea (int leafnum)
+/*
+==================
+CM_LeafArea
+Returns the area of a leaf
+==================
+*/
+int	CM_LeafArea(int leafnum)
 {
 	if (leafnum < 0 || leafnum >= cm_world.numLeafs)
-		Com_Error (ERR_DROP, "CM_LeafArea: bad number");
+		Com_Error (ERR_DROP, "%s: bad leaf number %i", __FUNCTION__, leafnum);
 	return cm_world.leafs[leafnum].area;
 }
 

@@ -96,6 +96,9 @@ void CL_ShutdownClientGame()
 	cg.qcvm_active = false;
 	Scr_FreeScriptVM(VM_CLGAME);
 
+	// free the map but not when server is running
+	if(Cvar_VariableValue("flushmap") && !Com_ServerState())
+		CM_FreeMap();
 }
 
 /*
@@ -251,6 +254,10 @@ struct sfx_t* CG_FindOrRegisterSound(char *filename)
 
 
 
+//
+// add view model
+//
+
 
 /*
 =================
@@ -261,6 +268,7 @@ Emits all entities, particles, and lights to the refresh
 */
 void CG_AddEntities()
 {
+//	CG_AddViewWeapon(ps, ops);
 	CG_AddTempEntities();
 	CG_SimulateAndAddParticles();
 	CG_AddDynamicLights();

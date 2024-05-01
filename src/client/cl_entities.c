@@ -8,13 +8,14 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-// cl_ents.c -- entity management
+// cl_entities.c -- entity management
 
 #include "client.h"
 
-void CG_AddViewMuzzleFlash(rentity_t* refent, player_state_t* ps);
-void CG_AddViewFlashLight(rentity_t* refent, player_state_t* ps);
 void CG_AddFlashLightToEntity(clentity_t* cent, rentity_t* refent);
+void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops);
+void CG_PartFX_DiminishingTrail(vec3_t start, vec3_t end, clentity_t* old, int flags);
+
 /*
 ==========================================================================
 
@@ -220,7 +221,6 @@ CL_EntityAddParticleTrails
 Add particle trails to entity, they may have dlight attached to them
 ===============
 */
-extern void CG_PartFX_DiminishingTrail(vec3_t start, vec3_t end, clentity_t* old, int flags);
 static inline void CL_EntityAddParticleTrails(clentity_t* clent, entity_state_t* state, rentity_t* refent)
 {
 	unsigned int effects = state->effects;
@@ -378,83 +378,13 @@ void CL_AddPacketEntities(frame_t* frame)
 
 
 
-/*
-==============
-CL_AddViewWeapon
-==============
-*/
-void CL_AddViewWeapon (player_state_t *ps, player_state_t *ops)
-{
-	rentity_t	viewmodel; 
-	int			i;
 
-	// allow the gun to be completely removed
-	if (!cl_drawviewmodel->value)
-	{
-		CG_AddViewFlashLight(NULL, ps);
-		return;
-	}
-
-	memset (&viewmodel, 0, sizeof(viewmodel));
-
-	if (gun_model && CL_CheatsAllowed())		
-		viewmodel.model = gun_model; // development tool
-	else
-		viewmodel.model = cl.model_draw[ps->viewmodel_index];
-
-	if (!viewmodel.model)
-	
-		return;
-
-	// set up position
-	for (i = 0; i < 3; i++)
-	{
-		viewmodel.origin[i] = cl.refdef.view.origin[i] + ops->viewmodel_offset[i]
-			+ cl.lerpfrac * (ps->viewmodel_offset[i] - ops->viewmodel_offset[i]);
-		viewmodel.angles[i] = cl.refdef.view.angles[i] + LerpAngle (ops->viewmodel_angles[i],
-			ps->viewmodel_angles[i], cl.lerpfrac);
-	}
-
-	if (gun_frame && CL_CheatsAllowed())
-	{
-		// development tool
-		viewmodel.frame = gun_frame;
-		viewmodel.oldframe = gun_frame;
-		viewmodel.backlerp = 1.0 - cl.lerpfrac;
-	}
-	else
-	{
-		viewmodel.frame = ps->viewmodel_frame;
-
-		// just changed weapons, don't lerp from oldframe and remove muzzleflash if present
-		if (ps->viewmodel_index != ops->viewmodel_index)
-		{
-			cl.muzzleflash_time = 0;
-			viewmodel.oldframe = viewmodel.frame;
-			viewmodel.backlerp = 1;
-		}
-		else
-		{
-			viewmodel.oldframe = ops->viewmodel_frame;
-			viewmodel.backlerp = 1.0 - cl.lerpfrac;
-		}
-	}
-	viewmodel.animbacklerp = viewmodel.backlerp;
-	VectorCopy(viewmodel.origin, viewmodel.oldorigin);
-	viewmodel.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
-	V_AddEntity (&viewmodel);
-
-	AnglesToAxis(viewmodel.angles, viewmodel.axis);
-
-	CG_AddViewMuzzleFlash(&viewmodel, ps);
-	CG_AddViewFlashLight(&viewmodel, ps);
-}
 
 /*
 ===============
 CL_CalcViewValues
 
-Sets cl.refdef view values
+Sets cl.refdef view values and cl.v_forward, cl.v_right, cl.v_up
 ===============
 */
 void CL_CalcViewValues()
@@ -570,7 +500,7 @@ void CL_CalcViewValues()
 	//
 	// add view model
 	//
-	CL_AddViewWeapon (ps, ops);
+	CG_AddViewWeapon(ps, ops);
 }
 
 /*

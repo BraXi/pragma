@@ -63,6 +63,7 @@
     <ClCompile Include="client\cgame\cg_particles.c" />
     <ClCompile Include="client\cgame\cg_oldfx.c" />
     <ClCompile Include="client\cgame\cg_temp_entities.c" />
+    <ClCompile Include="client\cgame\cg_weapon.c" />
     <ClCompile Include="client\cgame\cg_world.c" />
     <ClCompile Include="client\cl_cinematic.c" />
     <ClCompile Include="client\cl_download.c" />

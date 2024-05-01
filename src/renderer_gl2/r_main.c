@@ -447,7 +447,7 @@ static void R_SetupGL()
 	// set up projection matrix
 	//
     screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
-    MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096);
+    MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096*2);
 
 	R_SetCullFace(GL_FRONT);
 

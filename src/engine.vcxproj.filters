@@ -223,6 +223,9 @@
     <ClCompile Include="client\ui\ui_action.c">
       <Filter>client\ui</Filter>
     </ClCompile>
+    <ClCompile Include="client\cgame\cg_weapon.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">

@@ -582,9 +582,9 @@ static void R_MakeSkyVec(float s, float t, int axis)
 	vec3_t		v, b;
 	int			j, k;
 
-	b[0] = s*2048;
-	b[1] = t*2048;
-	b[2] = 2048;
+	b[0] = s*4048;
+	b[1] = t*4048;
+	b[2] = 4048;
 
 	for (j=0 ; j<3 ; j++)
 	{
