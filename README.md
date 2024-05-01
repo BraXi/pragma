@@ -29,6 +29,7 @@
 - Plenty of bug fixes
 - Not. Even. A. Single. Dependency. - everything is buildable out of the box in VS2019 without the need to configure anything
 - Supports multiple bitmap fonts with proper glyph sizes
+- Trigger entities can use inline models for perfect touch detecton
 
 ## Directory overview:
 
