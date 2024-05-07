@@ -127,8 +127,9 @@ void R_LightMap_BuildLightMaps(msurface_t* surf, int stride, int offsetInLMbuf)
 	int i, j, size, map, nummaps;
 	byte* lightmap;
 
-	if (surf->texinfo->flags & (SURF_SKY | SURF_TRANS33 | SURF_TRANS66 | SURF_WARP))
+	if (surf->texinfo->flags & (SURF_SKY /*SURF_TRANS33 | SURF_TRANS66 |*/ | SURF_WARP)) // braxi -- lightmapped transparents
 		ri.Error(ERR_DROP, "%s called for non-lit surface", __FUNCTION__);
+
 
 	smax = (surf->extents[0] >> surf->lmshift) + 1;
 	tmax = (surf->extents[1] >> surf->lmshift) + 1;
