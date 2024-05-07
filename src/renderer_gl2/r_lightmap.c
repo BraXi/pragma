@@ -14,8 +14,8 @@ See the attached GNU General Public License v2 for more details.
 
 #define	LM_BLOCK_WIDTH		256
 #define	LM_BLOCK_HEIGHT		256
-#define	MAX_LIGHTMAPS		128		// maximum lightmap textures
-#define	TEXNUM_LIGHTMAPS	1024
+#define	MAX_LIGHTMAPS		256		// maximum lightmap textures
+#define	TEXNUM_LIGHTMAPS	2048
 #define LM_BYTES 4
 #define LIGHTMAP_GL_FORMAT	GL_RGBA // texture format for lightmap
 
