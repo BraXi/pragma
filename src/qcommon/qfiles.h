@@ -396,6 +396,7 @@ typedef struct
 #define	CONTENTS_DETAIL			0x8000000	// brushes to be added after vis leafs
 #define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
 #define	CONTENTS_LADDER			0x20000000	// player can climb it
+#define	CONTENTS_PLAYER			0x40000000	// player, should never be on a brush, only in game
 
 #define	SURF_LIGHT		0x1		// value will hold the light strength
 #define	SURF_SLICK		0x2		// effects game physics

@@ -629,7 +629,7 @@ void SV_AreaEdicts_r (areanode_t *node)
 
 		if (area_count == area_maxcount)
 		{
-			Com_Printf ("SV_AreaEdicts: MAXCOUNT\n");
+			Com_Printf ("SV_AreaEntities: hit MAXCOUNT (%i)\n", area_maxcount);
 			return;
 		}
 
@@ -649,10 +649,12 @@ void SV_AreaEdicts_r (areanode_t *node)
 
 /*
 ================
-SV_AreaEdicts
+SV_AreaEntities
+
+Returns the **list of entities within mins/maxs og a given type
 ================
 */
-int SV_AreaEdicts (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, int areatype)
+int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, int areatype)
 {
 	area_mins = mins;
 	area_maxs = maxs;
@@ -674,11 +676,11 @@ int SV_AreaEdicts (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, int
 SV_PointContents
 =============
 */
-int SV_PointContents (vec3_t p)
+int SV_PointContents(vec3_t p)
 {
-	gentity_t		*touch[MAX_GENTITIES], *hit;
+	gentity_t	*touch[MAX_GENTITIES], *hit;
 	int			i, num;
-	int			contents, c2;
+	int			contents, contents2;
 	int			headnode;
 	float		*angles;
 
@@ -686,7 +688,7 @@ int SV_PointContents (vec3_t p)
 	contents = CM_PointContents (p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
 
 	// or in contents from all the other entities
-	num = SV_AreaEdicts (p, p, touch, MAX_GENTITIES, AREA_SOLID);
+	num = SV_AreaEntities (p, p, touch, MAX_GENTITIES, AREA_SOLID);
 
 	for (i=0 ; i<num ; i++)
 	{
@@ -698,9 +700,9 @@ int SV_PointContents (vec3_t p)
 		if (hit->v.solid != SOLID_BSP)
 			angles = vec3_origin;	// boxes don't rotate
 
-		c2 = CM_TransformedPointContents (p, headnode, hit->v.origin, hit->v.angles);
+		contents2 = CM_TransformedPointContents (p, headnode, hit->v.origin, hit->v.angles);
 
-		contents |= c2;
+		contents |= contents2;
 	}
 
 	return contents;
@@ -823,14 +825,14 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 	int			headnode;
 	float		*angles;
 
-	num = SV_AreaEdicts(clip->boxmins, clip->boxmaxs, touchlist, MAX_GENTITIES, AREA_SOLID);
+	num = SV_AreaEntities(clip->boxmins, clip->boxmaxs, touchlist, MAX_GENTITIES, AREA_SOLID);
 
 	// be careful, it is possible to have an entity in this
 	// list removed before we get to it (killtriggered)
-	for (i=0 ; i<num ; i++)
+	for (i = 0; i < num; i++)
 	{
 		touch = touchlist[i];
-		if (touch->v.solid == SOLID_NOT)
+		if ((int)touch->v.solid == SOLID_NOT)
 			continue;
 
 		if (touch == clip->passedict)
@@ -847,9 +849,11 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 				continue;	// don't clip against owner
 		}
 
-		if ( !(clip->contentmask & CONTENTS_DEADMONSTER)
-		&& ((int)touch->v.svflags & SVF_DEADMONSTER) )
+		if ( !(clip->contentmask & CONTENTS_DEADMONSTER) && ((int)touch->v.svflags & SVF_DEADMONSTER) )
 				continue;
+
+		if (!(clip->contentmask & CONTENTS_PLAYER) && ((int)touch->v.svflags & SVF_PLAYER))
+			continue; // don't clip player against other players
 
 		// might intersect, so do an exact clip
 		headnode = SV_HullForEntity (touch);
@@ -857,14 +861,10 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 		if (touch->v.solid != SOLID_BSP)
 			angles = vec3_origin;	// boxes don't rotate
 
-		if ((int)touch->v.svflags & SVF_MONSTER)
-			trace = CM_TransformedBoxTrace (clip->start, clip->end,
-				clip->mins2, clip->maxs2, headnode, clip->contentmask,
-				touch->v.origin, angles);
+		if ((int)touch->v.svflags & SVF_MONSTER) //braxi: this is silly as mins/maxs is copied to mins2/maxs2, probably quake1 leftover?
+			trace = CM_TransformedBoxTrace (clip->start, clip->end, clip->mins2, clip->maxs2, headnode, clip->contentmask, touch->v.origin, angles);
 		else
-			trace = CM_TransformedBoxTrace (clip->start, clip->end,
-				clip->mins, clip->maxs, headnode,  clip->contentmask,
-				touch->v.origin, angles);
+			trace = CM_TransformedBoxTrace (clip->start, clip->end, clip->mins, clip->maxs, headnode, clip->contentmask, touch->v.origin, angles);
 
 		if (trace.allsolid || trace.startsolid || trace.fraction < clip->trace.fraction)
 		{
@@ -941,7 +941,13 @@ trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t 
 
 	// clip to world
 	clip.trace = CM_BoxTrace (start, end, mins, maxs, 0, contentmask);
-	clip.trace.ent = sv.edicts;
+
+	clip.trace.ent = sv.edicts; // world
+	if (clip.trace.ent == NULL)
+		clip.trace.entitynum = ENTITYNUM_NULL;
+	else
+		clip.trace.entitynum = NUM_FOR_ENT(clip.trace.ent);
+
 	if (clip.trace.fraction == 0)
 		return clip.trace;		// blocked by the world
 

@@ -26,7 +26,7 @@ typedef struct link_s
 #define	SVF_SINGLECLIENT	16	// send to only one client (.showto must be set to desider player entity number)
 #define	SVF_ONLYTEAM		32	// send only to players in matching team team (.showto must match team)
 #define	SVF_PATHNODE		64	// this entity is an pathnode
-
+#define	SVF_PLAYER			128	// don't clip against other players
 
 // edict->v.flags
 #define FL_NOSTEP				1

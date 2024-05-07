@@ -222,7 +222,7 @@ void SVC_Info (void)
 			numPlayers++;
 
 	// "sv_hostname" "game" "map name", "numplayers", "maxplayers"
-	Com_sprintf (string, sizeof(string), "\"%s\" \"%s\" \"%s\" \"%i\" \"%i\"\n", sv_hostname->string, Cvar_VariableString("game"), sv.name, numPlayers, (int)sv_maxclients->value);
+	Com_sprintf (string, sizeof(string), "\"%s\" \"%s\" \"%s\" \"%i\" \"%i\"\n", sv_hostname->string, Cvar_VariableString("game"), sv.mapname, numPlayers, (int)sv_maxclients->value);
 
 	Netchan_OutOfBandPrint (NS_SERVER, net_from, "info\n%s", string);
 }

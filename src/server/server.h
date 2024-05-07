@@ -57,7 +57,7 @@ typedef struct svmodel_s
 typedef enum 
 {
 	ss_dead,			// no map loaded
-	ss_loading,			// spawning level edicts
+	ss_loading,			// spawning level entities and precaches
 	ss_game,			// actively running
 	ss_cinematic,
 	ss_demo,
@@ -78,7 +78,7 @@ typedef struct
 	unsigned			time;					// always sv.framenum * SV_FRAMETIME_MSEC msec
 	int					framenum;
 
-	char				name[MAX_QPATH];		// BSP map name, or cinematic name
+	char				mapname[MAX_QPATH];		// BSP map name, or cinematic name
 
 	svmodel_t			models[MAX_MODELS];		// md3, sprites, brushmodels
 	int					num_models;
@@ -377,7 +377,7 @@ void SV_LinkEdict (gentity_t *ent);
 // sets ent->leafnums[] for pvs determination even if the entity
 // is not solid
 
-int SV_AreaEdicts (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, int areatype);
+int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, int areatype);
 // fills in a table of edict pointers with edicts that have bounding boxes
 // that intersect the given area.  It is possible for a non-axial bmodel
 // to be returned that doesn't actually intersect the area on an exact

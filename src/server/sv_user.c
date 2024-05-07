@@ -35,7 +35,7 @@ void SV_BeginDemoserver (void)
 {
 	char		name[MAX_OSPATH];
 
-	Com_sprintf (name, sizeof(name), "demos/%s", sv.name);
+	Com_sprintf (name, sizeof(name), "demos/%s", sv.mapname);
 	FS_FOpenFile (name, &sv.demofile);
 	if (!sv.demofile)
 		Com_Error (ERR_DROP, "Couldn't open %s\n", name);
@@ -105,7 +105,7 @@ void SV_New_f (void)
 
 		// begin fetching configstrings
 		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
-		MSG_WriteString (&sv_client->netchan.message, va("cmd configstrings %i 0\n",svs.spawncount) );
+		MSG_WriteString (&sv_client->netchan.message, va("cmd configstrings %i 0\n", svs.spawncount) );
 	}
 
 }

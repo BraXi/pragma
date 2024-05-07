@@ -18,21 +18,21 @@ server_static_t	svs;				// persistant server info
 server_t		sv;					// local server
 
 void SV_ScriptMain();
-
+void Nav_Init();
+void SV_LinkAllPathNodes();
 
 /*
 ================
 SV_CreateBaseline
 
-Entity baselines are used to compress the update messages
-to the clients -- only the fields that differ from the
-baseline will be transmitted
+Entity baselines are used to compress the update messages to the clients.
+Only the fields that differ from the baseline will be transmitted.
 ================
 */
-void SV_CreateBaseline (void)
+static void SV_CreateBaseline()
 {
-	gentity_t			*svent;
-	int				entnum;	
+	gentity_t	*svent;
+	int			entnum;	
 
 	for (entnum = 1; entnum < sv.max_edicts; entnum++)
 	{
@@ -69,7 +69,7 @@ void SV_CheckForSavegame (void)
 	if (Cvar_VariableValue ("multiplayer"))
 		return;
 
-	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
+	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.mapname);
 	f = fopen (name, "rb");
 	if (!f)
 		return;		// no savegame
@@ -99,208 +99,6 @@ void SV_CheckForSavegame (void)
 	}
 }
 
-void Nav_Init();
-int Nav_AddPathNode(float x, float y, float z);
-qboolean Nav_AddPathNodeLink(int nodeId, int linkTo);
-int Nav_GetNodeLinkCount(int node);
-int Nav_GetMaxLinksCount();
-
-static vec3_t node_origin; // for qsorting distance
-typedef struct // for qsorting pathnodes from closest to farthest
-{
-	int	index;
-	vec3_t origin;
-} tempnode_t;
-
-float dist3d(vec3_t p1, vec3_t p2)
-{
-	vec3_t vtemp;
-	VectorSubtract(p1, p2, vtemp);
-	return VectorLength(vtemp);
-}
-
-static char* vtos(vec3_t p)
-{
-	return va("[%i %i %i]", (int)p[0], (int)p[1], (int)p[2]);
-}
-
-int CompareNodeDistances(const void* a, const void* b) 
-{
-	tempnode_t* nodeA = (tempnode_t*)a;
-	tempnode_t* nodeB = (tempnode_t*)b;
-
-	float distanceA = dist3d(nodeA->origin, node_origin);
-	float distanceB = dist3d(nodeB->origin, node_origin);
-
-	if (distanceA < distanceB) 
-		return -1;
-	else if (distanceA > distanceB) 
-		return 1;
-	else return 0; // distances are equal so the order doesn't matter
-}
-
-
-static int nodeLinkDist = 148;
-static void SV_LinkPathNode(gentity_t* self)
-{
-	int			i, num;
-	gentity_t	*other;
-	vec3_t		mins, maxs;
-	trace_t		trace;
-	tempnode_t nodes[32];
-
-	num = 0;
-	VectorCopy(self->v.origin, node_origin);
-
-	if ((int)self->v.nodeIndex == -1 || self->v.solid != SOLID_PATHNODE)
-	{
-		Com_Printf("WARNING: %s at %s is not a path node.\n", Scr_GetString(self->v.classname), vtos(self->v.origin));
-		return;
-	}
-
-
-	if (Nav_GetNodeLinkCount(self->v.nodeIndex) >= Nav_GetMaxLinksCount())
-	{
-		return; // already linked
-	}
-
-//	static vec3_t expand = { nodeLinkDist, nodeLinkDist, nodeLinkDist };
-//	VectorSubtract(self->v.absmin, expand, mins);
-//	VectorAdd(self->v.absmax, expand, maxs);
-//	num = SV_AreaEdicts(mins, maxs, nodes, MAX_GENTITIES, AREA_PATHNODES);
-	 
-	//
-	// find nodes within reasonable distance to self
-	//
-	for (i = svs.max_clients; i < sv.max_edicts; i++)
-	{
-		other = ENT_FOR_NUM(i);
-		if (!other->inuse)
-			continue;
-		if (other == self)
-			continue;
-		if (other->v.solid != SOLID_PATHNODE)
-			continue;
-		if (dist3d(self->v.origin, other->v.origin) > nodeLinkDist)
-			continue;
-		
-		VectorCopy(other->v.origin, nodes[num].origin);
-		nodes[num].index = other->v.nodeIndex;
-		num++;
-
-		if (num == 32)
-		{
-			Com_Printf("WARNING: Path node %i at %s is crowded (32 neighbors or more).\n", (int)self->v.nodeIndex, vtos(self->v.origin));
-			break;
-		}
-	}
-
-	if (!num)
-	{
-		Com_Printf("WARNING: Path node at %s is too far from other nodes (node %i will not be linked).\n", vtos(self->v.origin), (int)self->v.nodeIndex);
-		return;
-	}
-
-
-	//
-	// sort the nodes from closest to farthest
-	//
-	qsort(nodes, sizeof(nodes) / sizeof(nodes[0]), sizeof(tempnode_t), CompareNodeDistances);
-
-
-	//
-	// do a trace check to see if we can link with nodes
-	//
-	VectorSet(mins, -4, -4, -4);
-	VectorSet(maxs, 4, 4, 4);
-
-	vec3_t start, end;
-	VectorCopy(self->v.origin, start);
-	start[2] += 16;
-
-	for (i = 0; i < num; i++)
-	{
-		VectorCopy(nodes[i].origin, end);
-		end[2] += 16;
-		trace = SV_Trace(start, mins, maxs, end, self, MASK_MONSTERSOLID);
-
-		if (trace.fraction != 1.0)
-			continue;
-		
-		if (!Nav_AddPathNodeLink(self->v.nodeIndex, nodes[i].index))
-		{
-			Com_Printf("WARNING: Path node %i at %s reached link count limit (nodes are too crowded)\n", (int)self->v.nodeIndex, vtos(self->v.origin));
-			break;
-		}
-	}
-}
-
-/*
-================
-SV_DropPathNodeToFloor
-
-Drop pathnode to floor, removes nodes that are stuck in solid.
-================
-*/
-static void SV_DropPathNodeToFloor(gentity_t *self)
-{
-	trace_t trace;
-	vec3_t dest;
-
-	VectorCopy(self->v.origin, dest);
-	dest[2] -= 128;
-
-	trace = SV_Trace(self->v.origin, self->v.mins, self->v.maxs, dest, self, MASK_MONSTERSOLID);
-
-	if (trace.startsolid)
-	{
-		Com_Printf("WARNING: Path node %i at %s in solid, removed.\n", (int)self->v.nodeIndex, vtos(self->v.origin));
-		SV_FreeEntity(self);
-		return;
-	}
-
-	if (trace.fraction == 1.0)
-	{
-		Com_Printf("WARNING: Path node %i at %s too far from floor, removed.\n", (int)self->v.nodeIndex, vtos(self->v.origin));
-		SV_FreeEntity(self);
-		return;
-	}
-
-	VectorCopy(trace.endpos, self->v.origin);
-	SV_LinkEdict(self);
-
-	self->v.nodeIndex = Nav_AddPathNode(self->v.origin[0], self->v.origin[1], self->v.origin[2]);
-}
-/*
-================
-SV_LinkAllPathNodes
-
-Link all pathnodes
-================
-*/
-static void SV_LinkAllPathNodes()
-{
-	int i;
-	gentity_t* ent;
-
-	// first off, drop all nodes to ground
-	for (i = svs.max_clients; i < sv.max_edicts; i++)
-	{
-		ent = ENT_FOR_NUM(i);
-		if (!ent->inuse || ent->v.solid != SOLID_PATHNODE)
-			continue;
-		SV_DropPathNodeToFloor(ent);
-	}
-	
-	// and then link them
-	for (i = svs.max_clients; i < sv.max_edicts; i++)
-	{
-		ent = ENT_FOR_NUM(i);
-		if (!ent->inuse || ent->v.solid != SOLID_PATHNODE)
-			continue;
-		SV_LinkPathNode(ent);
-	}
-}
 
 /*
 ================
@@ -350,7 +148,7 @@ clients along with it.
 
 ================
 */
-void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
+void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
 {
 	int			i;
 	unsigned	checksum_map, checksum_cgprogs;
@@ -360,7 +158,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 		Cvar_Set ("paused", "0");
 
 	Com_Printf ("------- Server Initialization -------\n");
-	Com_DPrintf (DP_ALL,"SpawnServer: %s\n",server);
+	Com_DPrintf (DP_ALL,"SpawnServer: %s\n",mapname);
 
 	if (sv.demofile)
 		fclose (sv.demofile);
@@ -382,7 +180,7 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	sv.time = 1000;
 
 	// save bsp name for levels that don't set message key properly
-	strcpy (sv.configstrings[CS_NAME], server);
+	strcpy (sv.configstrings[CS_NAME], mapname);
 
 	SZ_Init (&sv.multicast, sv.multicast_buf, sizeof(sv.multicast_buf));
 
@@ -401,25 +199,28 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 		svs.clients[i].lastframe = -1;
 	}
 
-	strcpy (sv.name, server);
-	strcpy (sv.configstrings[CS_NAME], server);
+	strcpy (sv.mapname, mapname);
+	strcpy (sv.configstrings[CS_NAME], mapname);
 
+	//
+	// initialize server models, sv.models[1] is world model, followed by all inline models and md3s
+	//
 	sv.models[0].type = MOD_BAD;
 	strcpy(sv.models[0].name, "none");
 
-	//sv.models[1] is world
 	sv.models[MODELINDEX_WORLD].type = MOD_BRUSH;
-	sv.num_models = 2;
+	sv.num_models = 2; // because modelindex 0 is no model
+
 	if (serverstate != ss_game)
 	{
-		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap ("", false, &checksum_map);	// no real map
+		// no real map -- cinematic server
+		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap ("", false, &checksum_map);	
 	}
 	else
 	{
-		//set configstring
-		Com_sprintf (sv.configstrings[CS_MODELS+1],sizeof(sv.configstrings[CS_MODELS+1]), "maps/%s.bsp", server);
-
+		Com_sprintf (sv.configstrings[CS_MODELS+1],sizeof(sv.configstrings[CS_MODELS+1]), "maps/%s.bsp", mapname);
 		strcpy(sv.models[MODELINDEX_WORLD].name, sv.configstrings[CS_MODELS + 1]);
+
 		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap (sv.models[1].name, false, &checksum_map);
 	}
 
@@ -482,16 +283,15 @@ void SV_SpawnServer (char *server, char *spawnpoint, server_state_t serverstate,
 	Com_SetServerState (sv.state);
 
 	// set serverinfo variables before executing any scripts so they can query them
-	Cvar_FullSet("mapname", sv.name, CVAR_SERVERINFO | CVAR_NOSET, NULL);
+	Cvar_FullSet("mapname", sv.mapname, CVAR_SERVERINFO | CVAR_NOSET, NULL);
 	Cvar_FullSet("gamename", "pragma", CVAR_SERVERINFO | CVAR_LATCH, NULL);
 	Cvar_FullSet("gamedate", __DATE__, CVAR_SERVERINFO | CVAR_NOSET, NULL);
 
 	// load and spawn all other entities
-	SV_SpawnEntities( sv.name, CM_EntityString(), spawnpoint );
+	SV_SpawnEntities( sv.mapname, CM_EntityString(), spawnpoint );
 
 	// call the main function in server progs
 	SV_ScriptMain();
-
 
 	Com_sprintf(sv.configstrings[CS_CHEATS_ENABLED], sizeof(sv.configstrings[CS_CHEATS_ENABLED]), "%i", (int)sv_cheats->value);
 

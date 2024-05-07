@@ -546,8 +546,10 @@ void R_RenderView (refdef_t *fd)
 	R_DrawWorld();
 	R_ProfileAtStage(STAGE_DRAWWORLD);
 
+	//glDisable(GL_CULL_FACE); //test
 	R_DrawEntitiesOnList();
 	R_ProfileAtStage(STAGE_ENTITIES);
+	//glEnable(GL_CULL_FACE);
 
 	R_DrawDebugLines();
 	R_ProfileAtStage(STAGE_DEBUG);

@@ -191,7 +191,7 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 		return;
 #endif
 
-	num = SV_AreaEdicts(ent->v.absmin, ent->v.absmax, touch, MAX_GENTITIES, areatype);
+	num = SV_AreaEntities(ent->v.absmin, ent->v.absmax, touch, MAX_GENTITIES, areatype);
 	touched = 0;
 	// be careful, it is possible to have an entity in this list removed before we get to it (killtriggered)
 	for (i = 0; i < num; i++)
@@ -436,7 +436,7 @@ void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 			discard++;
 		total++;
 	}
-	Com_Printf("'%s' entities: %i inhibited, %i discarded (%i in map total)\n", sv.name, inhibit, discard, total);
+	Com_Printf("'%s' entities: %i inhibited, %i discarded (%i in map total)\n", sv.mapname, inhibit, discard, total);
 }
 
 

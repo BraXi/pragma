@@ -10,6 +10,278 @@ See the attached GNU General Public License v2 for more details.
 
 #include "server.h"
 
+int Nav_AddPathNode(float x, float y, float z);
+qboolean Nav_AddPathNodeLink(int nodeId, int linkTo);
+int Nav_GetNodeLinkCount(int node);
+int Nav_GetMaxLinksCount();
+
+static vec3_t node_origin; // for qsorting distance
+typedef struct // for qsorting pathnodes from closest to farthest
+{
+	int	index;
+	vec3_t origin;
+} tempnode_t;
+
+float dist3d(vec3_t p1, vec3_t p2)
+{
+	vec3_t vtemp;
+	VectorSubtract(p1, p2, vtemp);
+	return VectorLength(vtemp);
+}
+
+static char* vtos(vec3_t p)
+{
+	return va("[%i %i %i]", (int)p[0], (int)p[1], (int)p[2]);
+}
+
+int CompareNodeDistances(const void* a, const void* b)
+{
+	tempnode_t* nodeA = (tempnode_t*)a;
+	tempnode_t* nodeB = (tempnode_t*)b;
+
+	float distanceA = dist3d(nodeA->origin, node_origin);
+	float distanceB = dist3d(nodeB->origin, node_origin);
+
+	if (distanceA < distanceB)
+		return -1;
+	else if (distanceA > distanceB)
+		return 1;
+	else return 0; // distances are equal so the order doesn't matter
+}
+
+/*
+================
+SV_LinkPathNode
+
+Link pathnode to neighbors
+================
+*/
+static void SV_LinkPathNode(gentity_t* self)
+{
+	int			i, num;
+	gentity_t* other;
+	vec3_t		mins, maxs;
+	trace_t		trace;
+	tempnode_t nodes[32];
+
+	static const int nodeLinkDist = 148;
+
+	num = 0;
+	VectorCopy(self->v.origin, node_origin);
+
+	if ((int)self->v.nodeIndex == -1 || self->v.solid != SOLID_PATHNODE)
+	{
+		Com_Printf("WARNING: %s at %s is not a path node.\n", Scr_GetString(self->v.classname), vtos(self->v.origin));
+		return;
+	}
+
+
+	if (Nav_GetNodeLinkCount(self->v.nodeIndex) >= Nav_GetMaxLinksCount())
+	{
+		return; // already linked
+	}
+
+	//	static vec3_t expand = { nodeLinkDist, nodeLinkDist, nodeLinkDist };
+	//	VectorSubtract(self->v.absmin, expand, mins);
+	//	VectorAdd(self->v.absmax, expand, maxs);
+	//	num = SV_AreaEntities(mins, maxs, nodes, MAX_GENTITIES, AREA_PATHNODES);
+
+		//
+		// find nodes within reasonable distance to self
+		//
+	for (i = svs.max_clients; i < sv.max_edicts; i++)
+	{
+		other = ENT_FOR_NUM(i);
+		if (!other->inuse)
+			continue;
+		if (other == self)
+			continue;
+		if (other->v.solid != SOLID_PATHNODE)
+			continue;
+		if (dist3d(self->v.origin, other->v.origin) > nodeLinkDist)
+			continue;
+
+		VectorCopy(other->v.origin, nodes[num].origin);
+		nodes[num].index = other->v.nodeIndex;
+		num++;
+
+		if (num == 32)
+		{
+			Com_Printf("WARNING: Path node %i at %s is crowded (32 neighbors or more).\n", (int)self->v.nodeIndex, vtos(self->v.origin));
+			break;
+		}
+	}
+
+	if (!num)
+	{
+		Com_Printf("WARNING: Path node at %s is too far from other nodes (node %i will not be linked).\n", vtos(self->v.origin), (int)self->v.nodeIndex);
+		return;
+	}
+
+
+	//
+	// sort the nodes from closest to farthest
+	//
+	qsort(nodes, sizeof(nodes) / sizeof(nodes[0]), sizeof(tempnode_t), CompareNodeDistances);
+
+
+	//
+	// do a trace check to see if we can link with nodes
+	//
+	VectorSet(mins, -4, -4, -4);
+	VectorSet(maxs, 4, 4, 4);
+
+	vec3_t start, end;
+	VectorCopy(self->v.origin, start);
+	start[2] += 16;
+
+	for (i = 0; i < num; i++)
+	{
+		VectorCopy(nodes[i].origin, end);
+		end[2] += 16;
+		trace = SV_Trace(start, mins, maxs, end, self, MASK_MONSTERSOLID);
+
+		if (trace.fraction != 1.0)
+			continue;
+
+		if (!Nav_AddPathNodeLink(self->v.nodeIndex, nodes[i].index))
+		{
+			Com_Printf("WARNING: Path node %i at %s reached link count limit (nodes are too crowded)\n", (int)self->v.nodeIndex, vtos(self->v.origin));
+			break;
+		}
+	}
+}
+
+/*
+================
+SV_DropPathNodeToFloor
+
+Drop pathnode to floor, removes nodes that are stuck in solid.
+================
+*/
+static void SV_DropPathNodeToFloor(gentity_t* self)
+{
+	trace_t trace;
+	vec3_t dest;
+
+	VectorCopy(self->v.origin, dest);
+	dest[2] -= 128;
+
+	trace = SV_Trace(self->v.origin, self->v.mins, self->v.maxs, dest, self, MASK_MONSTERSOLID);
+
+	if (trace.startsolid)
+	{
+		Com_Printf("WARNING: Path node %i at %s in solid, removed.\n", (int)self->v.nodeIndex, vtos(self->v.origin));
+		SV_FreeEntity(self);
+		return;
+	}
+
+	if (trace.fraction == 1.0)
+	{
+		Com_Printf("WARNING: Path node %i at %s too far from floor, removed.\n", (int)self->v.nodeIndex, vtos(self->v.origin));
+		SV_FreeEntity(self);
+		return;
+	}
+
+	VectorCopy(trace.endpos, self->v.origin);
+	SV_LinkEdict(self);
+
+	self->v.nodeIndex = Nav_AddPathNode(self->v.origin[0], self->v.origin[1], self->v.origin[2]);
+}
+
+/*
+================
+SV_LinkAllPathNodes
+
+Link all pathnodes
+================
+*/
+void SV_LinkAllPathNodes()
+{
+	int i;
+	gentity_t* ent;
+
+	// first off, drop all nodes to ground
+	for (i = svs.max_clients; i < sv.max_edicts; i++)
+	{
+		ent = ENT_FOR_NUM(i);
+		if (!ent->inuse || ent->v.solid != SOLID_PATHNODE)
+			continue;
+		SV_DropPathNodeToFloor(ent);
+	}
+
+	// and then link them
+	for (i = svs.max_clients; i < sv.max_edicts; i++)
+	{
+		ent = ENT_FOR_NUM(i);
+		if (!ent->inuse || ent->v.solid != SOLID_PATHNODE)
+			continue;
+		SV_LinkPathNode(ent);
+	}
+}
+
+/*
+================
+SV_GetNearestNode
+
+Like Nav_GetNearestNode, but does a trace so the node doesn't ent up behind a wall
+================
+*/
+static void SV_GetNearestPathNode(vec3_t point)
+{
+	int			i, num, cnt;
+	gentity_t* node;
+	vec3_t		mins, maxs;
+	trace_t		trace;
+	tempnode_t nodes[32];
+
+	VectorSet(mins, 196, 196, 196);
+	VectorAdd(mins, point, mins);
+	VectorSet(maxs, 196, 196, 196);
+	VectorAdd(maxs, point, maxs);
+
+	gentity_t* areanodes[MAX_GENTITIES];
+	num = SV_AreaEntities(mins, maxs, areanodes, MAX_GENTITIES, AREA_PATHNODES);
+
+	if (!num)
+	{
+		Com_Printf("SV_GetNearestPathNode: no nearby nodes\n");
+		return;
+	}
+
+	cnt = 0;
+	for (i = 0; i < num; i++)
+	{
+		node = areanodes[i];
+		if (!node->inuse)
+			continue;
+
+		VectorCopy(node->v.origin, nodes[cnt].origin);
+		nodes[cnt].index = node->v.nodeIndex;
+
+		if (cnt == 32)
+			break;
+	}
+
+	// sort the nodes from closest to farthest
+	qsort(nodes, sizeof(nodes) / sizeof(nodes[0]), sizeof(tempnode_t), CompareNodeDistances);
+
+	vec3_t start, end;
+	VectorCopy(point, start);
+	start[2] += 16;
+
+	for (i = 0; i < num; i++)
+	{
+		VectorCopy(nodes[i].origin, end);
+		end[2] += 16;
+		trace = SV_Trace(start, vec3_origin, vec3_origin, end, NULL, MASK_MONSTERSOLID);
+
+		if (trace.fraction != 1.0)
+			continue;
+	}
+}
+
+
 /*
 
 	goal = VM_TO_ENT(ent->v.goal_entity);

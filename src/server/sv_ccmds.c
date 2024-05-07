@@ -334,7 +334,7 @@ void SV_WriteLevelFile (void)
 
 	Com_DPrintf(DP_SV,"SV_WriteLevelFile()\n");
 
-	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sv2", FS_Gamedir(), sv.name);
+	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sv2", FS_Gamedir(), sv.mapname);
 	f = fopen(name, "wb");
 	if (!f)
 	{
@@ -345,7 +345,7 @@ void SV_WriteLevelFile (void)
 	CM_WritePortalState (f);
 	fclose (f);
 
-	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
+	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.mapname);
 	WriteLevel (name);
 #endif
 }
@@ -363,7 +363,7 @@ void SV_ReadLevelFile (void)
 
 	Com_DPrintf(DP_SV, "SV_ReadLevelFile()\n");
 
-	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sv2", FS_Gamedir(), sv.name);
+	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sv2", FS_Gamedir(), sv.mapname);
 	f = fopen(name, "rb");
 	if (!f)
 	{
@@ -374,7 +374,7 @@ void SV_ReadLevelFile (void)
 	CM_ReadPortalState (f);
 	fclose (f);
 
-	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.name);
+	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.mapname);
 	ReadLevel (name);
 }
 
@@ -829,7 +829,7 @@ void SV_Status_f (void)
 
 
 	Com_Printf("hostname  : %s\n", Cvar_VariableString("hostname"));
-	Com_Printf("map       : %s\n", sv.name);
+	Com_Printf("map       : %s\n", sv.mapname);
 	Com_Printf("gamedir   : %s\n\n", FS_Gamedir());
 
 	Com_Printf("Clients   : %i / %i\n", numplayers, svs.max_clients);
