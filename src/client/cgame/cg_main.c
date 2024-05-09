@@ -14,6 +14,7 @@ See the attached GNU General Public License v2 for more details.
 cg_t cg;
 cgMedia_t cgMedia;
 
+void CG_SpawnEntities(char* mapname, char* entities);
 
 static qboolean cg_allow_drawcalls;
 
@@ -103,6 +104,37 @@ void CL_ShutdownClientGame()
 
 /*
 ===============
+CG_UpdateScriptGlobals
+
+Bind cgame vm and update globals
+===============
+*/
+static void CG_UpdateScriptGlobals()
+{
+	cl_globalvars_t	*g;
+
+	if (!cg.qcvm_active || cg.script_globals == NULL)
+		return;
+
+	Scr_BindVM(VM_CLGAME);
+
+	g = cg.script_globals;
+
+	g->frametime = cls.frametime;
+	g->time = cl.time;
+	g->realtime = cls.realtime;
+
+	g->vid_width = viddef.width;
+	g->vid_height = viddef.height;
+
+	g->localplayernum = cl.playernum;
+
+	//g->self = g->other = ENT_TO_VM(cg.localEntities);  //test
+}
+
+
+/*
+===============
 CG_InitClientGame
 
 Called when engine is starting, connection to server is established, or it is changing to a different game (mod) directory.
@@ -112,20 +144,26 @@ Calls progs function CG_Main so scripts can begin initialization
 */
 void CG_InitClientGame()
 {
-	Com_Printf("------- CGAME Initialization -------\n");
-	Scr_CreateScriptVM(VM_CLGAME, 512, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
+	Com_Printf("------- Client Game Init -------\n");
+	
+	//
+	// create cgame instance of progs vm and allocate entities for it
+	//
+	Scr_CreateScriptVM(VM_CLGAME, MAX_CLIENT_ENTITIES, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
 	Scr_BindVM(VM_CLGAME); // so we can get proper entity size and ptrs
 
-	cg.max_entities = 512;
-	cg.entity_size = Scr_GetEntitySize();
-	cg.entities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
 	cg.qcvm_active = true;
+	cg.maxLocalEntities = MAX_CLIENT_ENTITIES;
+	cg.localEntitySize = Scr_GetEntitySize();
+	cg.localEntities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
 	cg.script_globals = Scr_GetGlobals();
 
-	cg.script_globals->localplayernum = cl.playernum;
+	CG_UpdateScriptGlobals();
+	CG_SpawnEntities(cl.configstrings[CS_MODELS+1], CM_EntityString());
+
 	Scr_Execute(VM_CLGAME, cg.script_globals->CG_Main, __FUNCTION__);
 
-	Com_Printf("Initialized cgame.\n");
+	Com_Printf("Client game initialized\n");
 }
 
 /*
@@ -137,7 +175,7 @@ Returns true if CG qcvm is active
 */
 static qboolean CG_IsActive()
 {
-	return cg.qcvm_active;
+	return (cg.qcvm_active == true);
 }
 
 
@@ -173,7 +211,7 @@ CG_Frame
 This calls progs function CG_Frame at the beginning of each client frame
 ===============
 */
-void CG_Frame(float frametime, int time, float realtime)
+void CG_Frame()
 {
 	// advance local effects for next frame
 	CG_RunDynamicLights();
@@ -182,13 +220,7 @@ void CG_Frame(float frametime, int time, float realtime)
 	if (CG_IsActive() == false)
 		return;
 
-	Scr_BindVM(VM_CLGAME);
-
-	cg.script_globals->frametime = frametime;
-	cg.script_globals->time = time;
-	cg.script_globals->realtime = realtime;
-	cg.script_globals->localplayernum = cl.playernum;
-
+	CG_UpdateScriptGlobals();
 	Scr_Execute(VM_CLGAME, cg.script_globals->CG_Frame, __FUNCTION__);
 }
 

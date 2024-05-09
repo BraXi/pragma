@@ -71,6 +71,7 @@ typedef enum memtag_s
 	TAG_NAV_NODES,
 	TAG_SERVER_MODELDATA,
 	TAG_SERVER_GAME,
+	TAG_CLIENT_GAME,
 
 	NUM_MEMORY_TAGS
 } memtag_t;

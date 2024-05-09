@@ -21,14 +21,17 @@ typedef struct cl_globalvars_s
 {
 	int	pad[28];
 
-	float			frametime;
-	int				time; 
-	float			realtime;
+	float			frametime; // seconds since last frame
+	int				time; // this is the time value that the clientis rendering at. always <= realtime between oldframe and frame
+	int				realtime; // always increasing, no clamping
 
 	int				vid_width;
 	int				vid_height;
 
-	float			localplayernum;
+	float			localplayernum; // packetentity number of local player
+
+	scr_entity_t	self;
+	scr_entity_t	other;
 
 	vec3_t			v_forward, v_up, v_right;
 
@@ -62,8 +65,18 @@ typedef struct cl_globalvars_s
 } cl_globalvars_t;
 
 
-// gentity_t prog fields
 typedef struct cl_entvars_s
 {
-	vec3_t origin;
+	scr_string_t	classname;
+	scr_string_t	model;
+
+	int				modelindex;
+
+	vec3_t			origin;
+	vec3_t			angles;
+
+	float			scale;
+	vec3_t			color;
+
+	float			fullbright;
 } cl_entvars_t;

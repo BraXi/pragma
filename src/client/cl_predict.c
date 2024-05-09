@@ -186,7 +186,7 @@ void CL_PredictMovement (void)
 
 	cl_globalvars_t* cgGlobals = NULL;
 
-	if (cg.qcvm_active && cg.entities)
+	if (cg.qcvm_active && cg.localEntities)
 	{
 		cgGlobals = cg.script_globals;	// reki -- 27-12-23 Can cg.script_globals be NULL? hopefully not. 
 										// BraXi - yup, can be when !cg.qcvm_active
@@ -229,7 +229,7 @@ void CL_PredictMovement (void)
 		for (i = 0; i < 3; i++)
 			inangles[i] = (float)cmd->angles[i];
 
-		if(cg.qcvm_active && cg.entities && cgGlobals != NULL)
+		if(cg.qcvm_active && cg.localEntities && cgGlobals != NULL)
 		{
 			//
 			// call cgame's pmove

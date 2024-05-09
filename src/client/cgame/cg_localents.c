@@ -11,6 +11,7 @@ See the attached GNU General Public License v2 for more details.
 #include "../client.h"
 #include "cg_local.h"
 
+#if 0
 // cg_localents.c -- every frame, generate renderer commands for locally
 // processed entities, like gibs, physics objects, shells, etc.
 
@@ -94,3 +95,4 @@ localEntity_t* CG_AllocLocalEntity()
 	cg_activeLocalEntities.next = le;
 	return le;
 }
+#endif

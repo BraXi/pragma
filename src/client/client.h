@@ -72,6 +72,9 @@ typedef struct
 
 	animstate_t	anim;
 
+	// local entities
+	int			number;
+	qboolean	inuse;
 	cl_entvars_t v;
 } clentity_t;
 

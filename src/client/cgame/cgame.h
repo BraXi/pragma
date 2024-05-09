@@ -10,6 +10,7 @@ See the attached GNU General Public License v2 for more details.
 
 #pragma once
 
+#define MAX_CLIENT_ENTITIES		2048
 //
 // all loaded media by cgame
 //
@@ -37,10 +38,11 @@ typedef struct
 	//
 	qboolean			qcvm_active;
 	cl_globalvars_t		*script_globals;	// qcvm globals
-	rentity_t*			 entities;			// allocated by qcvm
-	int					max_entities;
-	int					entity_size;		// retrieved from progs
-	int					num_edicts;			// increases towards MAX_EDICTS
+
+	struct clentity_t			*localEntities;			// local (not broadcasted) entities allocated by qcvm
+	int					maxLocalEntities;		// number of progs allocated entities
+	int					localEntitySize;		// retrieved from progs
+	int					numActiveLocalEnts;		// increases towards MAX_CLENTITIES
 } cg_t;
 
 extern cg_t cg;
@@ -53,7 +55,7 @@ void CL_ShutdownClientGame();
 void CG_InitClientGame();
 void CG_AddEntities();
 
-void CG_Frame(float frametime, int time, float realtime);
+void CG_Frame();
 void CG_DrawGUI();
 
 qboolean CG_CanDrawCall();

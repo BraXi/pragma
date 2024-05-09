@@ -110,6 +110,11 @@ void SV_FreeEntity(gentity_t* self)
 
 	SV_UnlinkEdict(self);
 
+	Scr_BindVM(VM_SVGAME);
+
+	//
+	// walk all entities and remove references of self, other and owner
+	//
 	if (self != sv.edicts)
 	{
 		// dereference self and other globals in script if they're us
@@ -119,10 +124,6 @@ void SV_FreeEntity(gentity_t* self)
 			sv.script_globals->other = GENT_TO_PROG(sv.edicts);
 	}
 
-	Scr_BindVM(VM_SVGAME);
-
-	// walk all entities and unset their .owner if its self
-	Scr_BindVM(VM_SVGAME);
 	for (int i = 1; i < sv.num_edicts; i++)
 	{
 		gentity_t* ent = ENT_FOR_NUM(i);
@@ -217,12 +218,12 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 
 /*
 ===============
-SV_CallSpawn
+SV_CallSpawnForEntity
 
 Finds the spawn function for the entity and calls it
 ===============
 */
-void SV_CallSpawn(gentity_t* ent)
+void SV_CallSpawnForEntity(gentity_t* ent)
 {
 	gentity_t	*oldSelf, *oldOther;
 	char		*classname;
@@ -234,14 +235,14 @@ void SV_CallSpawn(gentity_t* ent)
 
 	if (strlen(classname) > 60)
 	{
-		printf("SV_CallSpawn: classname '%s' is too long\n", classname);
+		printf("SV_CallSpawnForEntity: classname '%s' is too long\n", classname);
 		return;
 	}
 
 	// check if someone is trying to spawn world...
 	if( NUM_FOR_ENT(ent) > 0 && EDICT_NUM(0)->inuse && stricmp(classname, "worldspawn") == 0 )
 	{
-		Com_Error(ERR_DROP, "SV_CallSpawn: only one worldspawn allowed\n", classname);
+		Com_Error(ERR_DROP, "SV_CallSpawnForEntity: only one worldspawn allowed\n", classname);
 		return;
 	}
 
@@ -265,7 +266,7 @@ void SV_CallSpawn(gentity_t* ent)
 	spawnfunc = Scr_FindFunction(spawnFuncName);
 	if (spawnfunc == -1 && ent != sv.edicts)
 	{
-		Com_DPrintf( DP_SV, "SV_CallSpawn: unknown classname '%s'\n", classname);
+		Com_DPrintf( DP_SV, "SV_CallSpawnForEntity: unknown classname '%s'\n", classname);
 		SV_FreeEntity(ent);
 		return;
 	}
@@ -281,7 +282,7 @@ void SV_CallSpawn(gentity_t* ent)
 
 	// an entity may refuse to spawn (requires coop, certain skill level, etc..)
 	// if returned value from prog is false we delete entity right now (unless its world)
-	if (ent != sv.edicts && Scr_GetReturnFloat() <= 0)
+	if (ent != sv.edicts && (Scr_GetReturnFloat() <= 0 || spawnfunc == -1))
 	{
 //		printf("CallSpawn: \"%s\" at (%i %i %i) discarded\n", classname, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 		SV_FreeEntity(ent);
@@ -305,59 +306,52 @@ Used for initial level loadand for savegames.
 */
 char* SV_ParseEntity(char* data, gentity_t * ent)
 {
-	ddef_t* key;
-	qboolean	init;
+	ddef_t		*key;
+	qboolean	init = false;
 	char		keyname[256];
-	char* token;
-	qboolean		anglehack;
+	char		*token;
+	qboolean	anglehack;
 
-	init = false;
 
-	// clear it
 	if (ent != sv.edicts)
 	{
-		memset(&ent->v, 0, Scr_GetEntityFieldsSize());
 		SV_InitEntity(ent);
 	}
 
 	// go through all the dictionary pairs
 	while (1)
-	{
-		// parse key
-		token = COM_Parse(&data);
-
+	{	
+		token = COM_Parse(&data); // parse key
 		if (token[0] == '}')
 			break;
 
 		if (!data)
 			Com_Error(ERR_DROP, "%s: EOF without closing brace\n", __FUNCTION__);
-
-		// anglehack is to allow QuakeEd to write single scalar angles
-		// and allow them to be turned into vectors.
-		// BraXi - why the hell level editors still set ANGLE instead of ANGLES? in 2023?
+	
+		anglehack = false;
 		if (!strcmp(token, "angle"))
 		{
+			// anglehack is to allow QuakeEd to write single scalar angles and allow them to be turned into vectors
 			strcpy(token, "angles");
 			anglehack = true;
 		}
-		else
-			anglehack = false;
 
 		strcpy(keyname, token);
 
-		// parse value
-		token = COM_Parse(&data);
+		token = COM_Parse(&data); // parse value
 		if (!token)
-			Com_Error(ERR_DROP, "%s: null token\n", __FUNCTION__);
+		{
+			Com_Error(ERR_DROP, "%s: NULL token\n", __FUNCTION__);
+			return NULL; //msvc
+		}
 
 		if (token[0] == '}')
 			Com_Error(ERR_DROP, "%s: closing brace without data\n", __FUNCTION__);
 
 		init = true;
 
-		// skip utility coments
 		if (keyname[0] == '_')
-			continue;
+			continue; // skip utility coments
 
 		key = Scr_FindEntityField(keyname);
 		if (!key)
@@ -427,7 +421,7 @@ void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 		
 
 		entities = SV_ParseEntity(entities, ent);
-		SV_CallSpawn(ent);
+		SV_CallSpawnForEntity(ent);
 
 		//stats
 		if (ent && ent->inuse)

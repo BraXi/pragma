@@ -110,6 +110,7 @@ typedef enum
 	DP_NET,
 	DP_SV,
 	DP_GAME,
+	DP_CGAME,
 	DP_SCRIPT,
 } dprintLevel_t;
 

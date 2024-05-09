@@ -213,6 +213,8 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 	qcvm_t			*vm;
 	vm_entity_t		*ent;
 
+	if (fnum == -1)
+		return;
 
 	Scr_BindVM(vmtype);
 	CheckScriptVM(__FUNCTION__);
@@ -225,6 +227,12 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 		if (vm->progsType == VM_SVGAME)
 		{
 			sv_globalvars_t *g = vm->globals_struct;
+			if (g->self)
+				Scr_PrintEntityFields(VM_TO_ENT(g->self));
+		}
+		else if (vm->progsType == VM_CLGAME)
+		{
+			cl_globalvars_t* g = vm->globals_struct;
 			if (g->self)
 				Scr_PrintEntityFields(VM_TO_ENT(g->self));
 		}

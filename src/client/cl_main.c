@@ -1386,8 +1386,8 @@ void CL_Frame (int msec)
 	// fetch results from server
 	CL_ReadPackets ();
 
-	// run cgame
-	CG_Frame(cls.frametime, cl.time, cls.realtime);
+	// update client game
+	CG_Frame();
 
 	// send a new command message to the server
 	CL_SendCommand ();

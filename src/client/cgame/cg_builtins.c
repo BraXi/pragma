@@ -206,7 +206,7 @@ static void PFCG_trace(void)
 	cg.script_globals->trace_plane_dist = trace.plane.dist;
 	VectorCopy(trace.plane.normal, cg.script_globals->trace_plane_normal);
 	VectorCopy(trace.endpos, cg.script_globals->trace_endpos);
-//	cg.script_globals->trace_ent = cg.entities;
+//	cg.script_globals->trace_ent = ENT_TO_VM(cg.localEntities); // FIXME
 	cg.script_globals->trace_entnum = trace.entitynum;
 	cg.script_globals->trace_contents = trace.contents;
 
