@@ -72,6 +72,9 @@ typedef struct cl_entvars_s
 
 	int				modelindex;
 
+	vec3_t			mins;
+	vec3_t			maxs;
+
 	vec3_t			origin;
 	vec3_t			angles;
 

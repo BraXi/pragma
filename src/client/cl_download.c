@@ -277,9 +277,10 @@ void CL_RequestNextDownload(void)
 	CL_RegisterSounds();
 	CL_PrepRefresh();
 
+	CG_BeginGame();
+
 	MSG_WriteByte(&cls.netchan.message, clc_stringcmd);
 	MSG_WriteString(&cls.netchan.message, va("begin %i\n", precache_spawncount));
-
 }
 
 

@@ -138,8 +138,8 @@ static void CG_UpdateScriptGlobals()
 CG_InitClientGame
 
 Called when engine is starting, connection to server is established, or it is changing to a different game (mod) directory.
+Create client game instance of progs vm and allocate entities for it
 
-Calls progs function CG_Main so scripts can begin initialization
 ===============
 */
 void CG_InitClientGame()
@@ -158,12 +158,7 @@ void CG_InitClientGame()
 	cg.localEntities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
 	cg.script_globals = Scr_GetGlobals();
 
-	CG_UpdateScriptGlobals();
-	CG_SpawnEntities(cl.configstrings[CS_MODELS+1], CM_EntityString());
-
-	Scr_Execute(VM_CLGAME, cg.script_globals->CG_Main, __FUNCTION__);
-
-	Com_Printf("Client game initialized\n");
+	Com_Printf("Client game VM spawned.\n");
 }
 
 /*
@@ -178,6 +173,26 @@ static qboolean CG_IsActive()
 	return (cg.qcvm_active == true);
 }
 
+
+/*
+===============
+CG_BeginGame
+
+Client has established with server, has all the configstrings and baselines and loaded map. 
+It is the last moment to finish initialization before client is let into the game.
+===============
+*/
+void CG_BeginGame()
+{
+	// call main() to setup things before entities are spawned
+	CG_UpdateScriptGlobals();
+	Scr_Execute(VM_CLGAME, cg.script_globals->CG_Main, __FUNCTION__);
+
+	// spawn local entities
+	//CG_SpawnEntities(cl.configstrings[CS_MODELS + 1], CM_EntityString());
+
+//	Com_Printf("CG_BeginGame\n");
+}
 
 /*
 ===============
@@ -219,6 +234,9 @@ void CG_Frame()
 
 	if (CG_IsActive() == false)
 		return;
+
+//	CG_UpdateScriptGlobals();
+//	CG_RunLocalEntities();
 
 	CG_UpdateScriptGlobals();
 	Scr_Execute(VM_CLGAME, cg.script_globals->CG_Frame, __FUNCTION__);
@@ -293,6 +311,7 @@ void CG_AddEntities()
 {
 //	CG_AddViewWeapon(ps, ops);
 	CG_AddTempEntities();
+//	CG_AddLocalEntities();
 	CG_SimulateAndAddParticles();
 	CG_AddDynamicLights();
 	CG_AddLightStyles();

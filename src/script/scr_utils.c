@@ -13,7 +13,7 @@ See the attached GNU General Public License v2 for more details.
 #include "script_internals.h"
 
 #define	G_INT(o)			(*(int *)&active_qcvm->globals[o])
-#define	G_EDICT(o)			((gentity_t *)((byte *)active_qcvm->entities + *(int *)&active_qcvm->globals[o]))
+#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int *)&active_qcvm->globals[o]))
 #define	G_FLOAT(o)			(active_qcvm->globals[o])
 #define	G_STRING(o)			(active_qcvm->strings + *(scr_string_t *)&active_qcvm->globals[o])
 #define	G_VECTOR(o)			(&active_qcvm->globals[o])
@@ -120,13 +120,14 @@ static int ScrInternal_GetParmOffset(unsigned int parm)
 	return ofs;
 }
 
+#define TEMP_VARSTRINGS 8
+static int vstr = 0;
+
 /*
 ============
 Scr_VarString
 ============
 */
-#define TEMP_VARSTRINGS 8
-static int vstr = 0;
 char* Scr_VarString(int first)
 {
 	static char out[TEMP_VARSTRINGS][256];
@@ -150,15 +151,17 @@ char* Scr_VarString(int first)
 
 /*
 ============
-Scr_GetParmEdict
+Scr_GetParmEntity
 
 Returns param as server edict
 ============
 */
-gentity_t *Scr_GetParmEdict(unsigned int parm)
+vm_entity_t *Scr_GetParmEntity(unsigned int parm)
 {
 	int ofs = ScrInternal_GetParmOffset(parm);
-	return G_EDICT(ofs);
+
+//	return ((vm_entity_t*)((byte*)active_qcvm->entities + *(int*)&active_qcvm->globals[ofs]));
+	return G_ENTITY(ofs);
 }
 
 /*

@@ -361,7 +361,7 @@ void CL_PrepRefresh (void)
 	CG_RegisterMedia ();
 
 
-	for (i=1 ; i<MAX_MODELS && cl.configstrings[CS_MODELS+i][0] ; i++)
+	for (i=1 ; i < MAX_MODELS && cl.configstrings[CS_MODELS+i][0] ; i++)
 	{
 		strcpy (name, cl.configstrings[CS_MODELS+i]);
 		name[37] = 0;	// never go beyond one line

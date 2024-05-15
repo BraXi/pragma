@@ -76,7 +76,7 @@ char* _strlwr(char* x);
 
 #ifdef PROTOCOL_EXTENDED_ASSETS
 	#define	MAX_MODELS			1024	// these can be sent over the net as shorts
-	#define	MAX_SOUNDS			1024	// so theoretical limit is 23768 for each
+	#define	MAX_SOUNDS			1024	// so theoretical limit is 32768 for each
 #else
 	#define	MAX_MODELS			256		// these are sent over the net as bytes
 	#define	MAX_SOUNDS			256		// so they cannot be higher than 255

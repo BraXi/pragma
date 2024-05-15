@@ -1106,7 +1106,8 @@ void CL_ParseFrame(void)
 	{
 		old = &cl.frames[cl.frame.deltaframe & UPDATE_MASK];
 		if (!old->valid)
-		{	// should never happen
+		{	
+			// should never happen
 			Com_Printf("Delta from invalid frame (not supposed to happen!).\n");
 		}
 		if (old->serverframe != cl.frame.deltaframe)

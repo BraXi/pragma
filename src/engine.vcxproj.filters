@@ -211,7 +211,7 @@
     <ClCompile Include="client\cgame\cg_world.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
-    <ClCompile Include="client\cgame\cg_localents.c">
+    <ClCompile Include="client\cgame\cg_tempents.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
     <ClCompile Include="client\cgame\cg_model.c">
@@ -224,6 +224,9 @@
       <Filter>client\ui</Filter>
     </ClCompile>
     <ClCompile Include="client\cgame\cg_weapon.c">
+      <Filter>client\cgame</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_entities.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
   </ItemGroup>

@@ -49,10 +49,13 @@ extern cg_t cg;
 
 extern cgMedia_t cgMedia;
 
+//
+// cg_main.c
+//
 void CG_ClearState();
-
 void CL_ShutdownClientGame();
 void CG_InitClientGame();
+void CG_BeginGame();
 void CG_AddEntities();
 
 void CG_Frame();

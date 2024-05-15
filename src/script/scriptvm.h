@@ -92,8 +92,7 @@ extern int Scr_SetString(char* str);
 extern char* Scr_GetString(int num);
 extern char* Scr_VarString(int first);
 
-
-extern gentity_t* Scr_GetParmEdict(unsigned int parm);
+extern vm_entity_t* Scr_GetParmEntity(unsigned int parm);
 extern float Scr_GetParmFloat(unsigned int parm);
 extern int Scr_GetParmInt(unsigned int parm);
 extern char* Scr_GetParmString(unsigned int parm);

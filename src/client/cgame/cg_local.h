@@ -81,5 +81,5 @@ int CG_PointContents(vec3_t point);
 // cg_localents.c
 //
 //void CG_InitLocalEntities();
-//void CG_FreeLocalEntity(localEntity_t* le);
+//void CG_FreeEntity(localEntity_t* le);
 //localEntity_t* CG_AllocLocalEntity();

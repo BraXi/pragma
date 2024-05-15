@@ -198,7 +198,7 @@ void CL_Record_f (void)
 	MSG_WriteString (&buf, cl.configstrings[CS_NAME]);
 
 	// configstrings
-	for (i=0 ; i<MAX_CONFIGSTRINGS ; i++)
+	for (i = 0; i < MAX_CONFIGSTRINGS; i++)
 	{
 		if (cl.configstrings[i][0])
 		{

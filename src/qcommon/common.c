@@ -197,7 +197,7 @@ void Com_Error (int code, char *fmt, ...)
 	va_end (argptr);
 	
 
-	printf("Com_Error: %s\n", msg);
+	//printf("Com_Error: %s\n", msg);
 	if (code == ERR_DISCONNECT)
 	{
 		Com_Printf("%s\n", msg);

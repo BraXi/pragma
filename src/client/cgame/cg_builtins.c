@@ -41,16 +41,28 @@ void PFCG_AngleVectors(void)
 	AngleVectors(Scr_GetParmVector(0), cg.script_globals->v_forward, cg.script_globals->v_right, cg.script_globals->v_up);
 }
 
+static int CG_ModelIndex(char* name, qboolean fromServer)
+{
+	int index;
+
+	if (!name || !name[0])
+		return 0;
+
+	for (index = 1; index < MAX_MODELS && cl.configstrings[CS_MODELS + index][0]; index++)
+		if (!strcmp(cl.configstrings[CS_MODELS + index], name))
+			return index;
+}
+
 /*
 =================
-PFCG_precache_model
+PFCG_modelindex
 
 Returns true if MD3/SP2 model was loaded, false otherwise.
 
 float precache_model(string filename)
 =================
 */
-static void PFCG_precache_model(void)
+static void PFCG_modelindex(void)
 {
 	float loaded;
 	char* filename = Scr_GetParmString(0);
@@ -62,7 +74,7 @@ static void PFCG_precache_model(void)
 
 /*
 =================
-PFSV_precache_sound
+PFCG_precache_sound
 
 Returns true if sound was loaded, false otherwise.
 File must be in 'sound/' directory.
@@ -82,7 +94,7 @@ static void PFCG_precache_sound(void)
 
 /*
 =================
-PFSV_precache_image
+PFCG_precache_image
 
 Returns true if image was loaded, false otherwise.
 File must be in 'gfx/' directory.
@@ -431,6 +443,49 @@ void PFCG_getbindkey(void)
 	}
 	Scr_ReturnString(key);
 }
+
+
+void PFCG_setmodel(void)
+{
+	clentity_t* ent;
+	char* name;
+	int modelindex;
+
+	ent = Scr_GetParmEntity(0);
+	if (!ent->inuse)
+		return;
+
+	if (ent == cg.localEntities) // don't change world
+	{
+		//Com_DPrintf(DP_CGAME, "setmodel(): cannot change world model\n");
+		Com_Printf("setmodel(): cannot change world model\n");
+		return;
+	}
+
+	name = Scr_GetParmString(1);
+	if (!name || !name[0])
+	{
+		Scr_RunError("setmodel(): empty model name for entity %i\n", NUM_FOR_ENT(ent));
+		return;
+	}
+
+//	modelindex = SV_ModelIndex(name);
+	if (modelindex == ent->v.modelindex)
+		return; // model has not changed
+
+	ent->v.model = Scr_SetString(name);
+	ent->v.modelindex = modelindex;
+
+	// if it is an inline model, get the size information for it
+	if (name[0] == '*')
+	{
+		cmodel_t* mod = CM_InlineModel(name);
+		VectorCopy(mod->mins, ent->v.mins);
+		VectorCopy(mod->maxs, ent->v.maxs);
+//		CG_LinkLocalEntity(ent);
+	}
+}
+
 #endif /*not DEDICATED_ONLY*/
 
 /*
@@ -446,7 +501,7 @@ void CG_InitScriptBuiltins()
 	CG_StubScriptBuiltins();
 #else
 	// precache
-	Scr_DefineBuiltin(PFCG_precache_model, PF_CL, "precache_model", "float(string fn)");
+	Scr_DefineBuiltin(PFCG_modelindex, PF_CL, "precache_model", "float(string fn)");
 	Scr_DefineBuiltin(PFCG_precache_sound, PF_CL, "precache_sound", "float(string fn)");
 	Scr_DefineBuiltin(PFCG_precache_image, PF_CL, "precache_image", "float(string fn)");
 
@@ -484,6 +539,9 @@ void CG_InitScriptBuiltins()
 	// commands
 	Scr_DefineBuiltin(PFCG_addcommand, PF_CL, "addcommand", "void(string cn, void() f)");
 	Scr_DefineBuiltin(PFCG_getbindkey, PF_CL, "getbindkey", "string(string bind)");
+
+	// visual
+	Scr_DefineBuiltin(PFCG_setmodel, PF_CL, "setmodel", "void(entity e, string m)");
 #endif
 }
 

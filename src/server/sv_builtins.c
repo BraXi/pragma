@@ -86,7 +86,7 @@ remove(entity)
 */
 void PFSV_remove(void)
 {
-	gentity_t* ent = Scr_GetParmEdict(0);
+	gentity_t* ent = Scr_GetParmEntity(0);
 	if (ent && ent->inuse)
 		SV_FreeEntity(ent);
 }
@@ -136,7 +136,7 @@ void PFSV_nextent(void)
 	gentity_t* ent;
 	int entnum;
 
-	entnum = NUM_FOR_EDICT( Scr_GetParmEdict(0) ) + 1;// start from next entity
+	entnum = NUM_FOR_EDICT( Scr_GetParmEntity(0) ) + 1;// start from next entity
 	ent = sv.edicts; //world
 
 	if (entnum >= sv.max_edicts-1)
@@ -186,7 +186,7 @@ void PFSV_findradius(void)
 	vec3_t	eorg;
 	int		i, j;
 
-	from = Scr_GetParmEdict(0);
+	from = Scr_GetParmEntity(0);
 	org = Scr_GetParmVector(1);
 	rad = Scr_GetParmFloat(2);
 
@@ -226,7 +226,7 @@ float num = entnum(self);
 */
 void PFSV_getEntNum(void)
 {
-	Scr_ReturnFloat( NUM_FOR_EDICT(Scr_GetParmEdict(0)) );
+	Scr_ReturnFloat( NUM_FOR_EDICT(Scr_GetParmEntity(0)) );
 }
 
 
@@ -250,7 +250,7 @@ void PFSV_setorigin(void)
 	gentity_t	*ent;
 	float		*org;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	org = Scr_GetParmVector(1);
 
 	VectorCopy(org, ent->v.origin);
@@ -274,7 +274,7 @@ void PFSV_setmodel(void)
 	char* name;
 	int modelindex;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse)
 		return;
 
@@ -336,7 +336,7 @@ void PFSV_setsize(void)
 	gentity_t* ent;
 	float* min, * max;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse || ent == sv.edicts /*don't change world*/)
 		return;
 
@@ -372,7 +372,7 @@ void linkentity(entity ent)
 void PFSV_linkentity(void)
 {
 	gentity_t* ent;
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse || ent == sv.edicts /*don't change world*/)
 		return;
 	SV_LinkEdict(ent);
@@ -391,7 +391,7 @@ void linkentity(entity ent)
 void PFSV_unlinkentity(void)
 {
 	gentity_t* ent;
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse || ent == sv.edicts /*don't change world*/)
 		return;
 	SV_UnlinkEdict(ent);
@@ -413,7 +413,7 @@ void PFSV_attach(void)
 	char *tagname;
 	char* model;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	tagname = Scr_GetParmString(1);
 	model = Scr_GetParmString(2);
 
@@ -444,7 +444,7 @@ void PFSV_detach(void)
 	gentity_t* ent;
 	char* model;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	model = Scr_GetParmString(1);
 
 	if (!ent->inuse)
@@ -473,7 +473,7 @@ void PFSV_detachall(void)
 {
 	gentity_t* ent;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse)
 		return;
 
@@ -502,7 +502,7 @@ void PFSV_hidepart(void)
 	gentity_t* ent;
 	char* part;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	part  = Scr_GetParmString(1);
 
 	if (!ent->inuse || ent == sv.edicts)
@@ -528,7 +528,7 @@ void PFSV_showpart(void)
 	gentity_t* ent;
 	char* part;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	part = Scr_GetParmString(1);
 
 	if (!ent->inuse || ent == sv.edicts)
@@ -552,7 +552,7 @@ showallpart(self);
 void PFSV_showallparts(void)
 {
 	gentity_t* ent;
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse || ent == sv.edicts)
 	{
 		return;
@@ -598,7 +598,7 @@ void PFSV_trace(void)
 	max = Scr_GetParmVector(2);
 	end = Scr_GetParmVector(3);
 
-	ignoreEnt = Scr_GetParmEdict(4);
+	ignoreEnt = Scr_GetParmEntity(4);
 	contentmask = Scr_GetParmInt(5);
 
 	if (ignoreEnt == sv.edicts)
@@ -658,7 +658,7 @@ void PFSV_sound(void)
 	float volume, attenuation, timeofs;
 	float* pos;
 	
-	ent = Scr_GetParmEdict(1);
+	ent = Scr_GetParmEntity(1);
 	if (!ent->inuse)
 		return;
 
@@ -689,7 +689,7 @@ this also removes looping sound
 void PFSV_stopsounds(void)
 {
 	gentity_t* ent;
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse)
 		return;
 
@@ -906,7 +906,7 @@ void PFSV_Unicast(void)
 	gentity_t	*ent;
 	float		reliable;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	reliable = Scr_GetParmFloat(1) > 0 ? true : false;
 
 	MSG_Unicast(ent, reliable);
@@ -979,7 +979,7 @@ void PFSV_stuffcmd(void)
 	char		*cmd;
 	int			entnum;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	cmd = Scr_VarString(1);
 
 	entnum = NUM_FOR_EDICT(ent);
@@ -1016,7 +1016,7 @@ void PFSV_sprint(void)
 	char		*msg;
 	int			entnum, printlevel;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	printlevel = Scr_GetParmFloat(1);
 	msg = Scr_VarString(2);
 
@@ -1063,7 +1063,7 @@ void PFSV_centerprint(void)
 	char		*msg;
 	int			entnum;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	msg = Scr_VarString(1);
 
 	entnum = NUM_FOR_EDICT(ent);
@@ -1102,7 +1102,7 @@ float isplayer(entity)
 void PFSV_isplayer(void)
 {
 	gentity_t* ent;
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	Scr_ReturnFloat(ent->client == NULL ? 0 : 1);
 }
 
@@ -1123,7 +1123,7 @@ void PFSV_setviewmodel(void)
 	char* model;
 	int			newmodelindex;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	model = Scr_GetParmString(1);
 
 	if (!ent->client || ent->client->pers.connected == false)
@@ -1169,7 +1169,7 @@ void PFSV_setvieweffect(void)
 	gclient_t* cl;
 	int fx;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
 		Scr_RunError("setvieweffect(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
@@ -1241,7 +1241,7 @@ TODO: figure out more network efficient way
 void PFSV_clearvieweffects(void)
 {
 	gentity_t* ent;
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
 		Scr_RunError("clearvieweffects(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
@@ -1267,7 +1267,7 @@ void PFSV_saveclientfield(void)
 	gclient_t* cl;
 	int idx;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
 		Scr_RunError("saveclientfield(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
@@ -1302,7 +1302,7 @@ void PFSV_loadclientfield(void)
 	gclient_t* cl;
 	int idx;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
 		Scr_RunError("loadclientfield(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
@@ -1417,7 +1417,7 @@ void PFSV_kickclient(void)
 {
 	gentity_t* ent;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
 		Scr_RunError("kickclient(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
@@ -1440,7 +1440,7 @@ void PFSV_getclientname(void)
 {
 	gentity_t* ent;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
 		Scr_RunError("getclientname(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
@@ -1462,7 +1462,7 @@ void PFSV_setstat(void)
 	gclient_t* cl;
 	int idx;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (!ent->client || ent->client->pers.connected == false)
 	{
 		Scr_RunError("setstat(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
@@ -1493,7 +1493,7 @@ void PFSV_checkbottom(void)
 {
 	gentity_t* ent;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	if (ent == sv.edicts)
 	{
 		Scr_RunError("checkbottom(): on world entity\n");
@@ -1523,8 +1523,8 @@ void PFSV_movetogoal(void)
 	gentity_t	*actor, *goal;
 	float		movedist, result;
 
-	actor = Scr_GetParmEdict(0);
-	goal = Scr_GetParmEdict(1);
+	actor = Scr_GetParmEntity(0);
+	goal = Scr_GetParmEntity(1);
 	movedist = Scr_GetParmFloat(2);
 
 	if (actor == sv.edicts)
@@ -1565,7 +1565,7 @@ void PFSV_walkmove(void)
 	gentity_t	*actor;
 	float		movedist, yaw, result;
 
-	actor = Scr_GetParmEdict(0);
+	actor = Scr_GetParmEntity(0);
 	yaw = Scr_GetParmFloat(1);
 	movedist = Scr_GetParmFloat(2);
 
@@ -1603,7 +1603,7 @@ void PFSV_touchentities(void)
 	int areatype, numtouched;
 	int param;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 
 	if (ent == sv.edicts)
 	{
@@ -2007,7 +2007,7 @@ void PFSV_gettagorigin(void)
 	svmodel_t *model;
 	orientation_t* tag;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	tagName = Scr_GetParmString(1);
 
 	if (!ent->inuse)
@@ -2055,7 +2055,7 @@ void PFSV_gettagangles(void)
 	orientation_t* tag;
 	vec3_t out;
 
-	ent = Scr_GetParmEdict(0);
+	ent = Scr_GetParmEntity(0);
 	tagName = Scr_GetParmString(1);
 
 	if (!ent->inuse)

@@ -496,7 +496,7 @@ void SV_LinkEdict (gentity_t *ent)
 	// entity is outside the world and can be considered unlinked
 	if (!num_leafs) 
 	{
-		Com_DPrintf(DP_SV, "%s: entity %i is outside the world at %f %f %f\n", __FUNCTION__, NUM_FOR_ENT(ent), ent->v.origin[0], ent->v.origin[1], ent->v.origin[2]);
+		Com_DPrintf(DP_SV, "%s: entity %i is outside the world at %i %i %i\n", __FUNCTION__, NUM_FOR_ENT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 		return;
 	}
 
