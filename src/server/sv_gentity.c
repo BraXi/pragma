@@ -455,7 +455,7 @@ void SV_AttachModel(gentity_t *self, char* tagname, char *model)
 	}
 
 	svmod = SV_ModelForNum((int)self->v.modelindex);
-	if (svmod == NULL || svmod->type != MOD_MD3 || svmod->modelindex == 0)
+	if (svmod == NULL || svmod->type != MOD_ALIAS || svmod->modelindex == 0)
 	{
 		Com_DPrintf(DP_GAME, "WARNING: entity %s has no model\n", Scr_GetString(self->v.classname));
 		return;
@@ -578,7 +578,7 @@ void SV_HideEntitySurface(gentity_t* self, char* surfaceName)
 		return;
 
 	svmod = SV_ModelForNum((int)self->v.modelindex);
-	if (svmod == NULL || svmod->type != MOD_MD3 || svmod->modelindex == 0)
+	if (svmod == NULL || svmod->type != MOD_ALIAS || svmod->modelindex == 0)
 	{
 		Com_DPrintf(DP_GAME, "WARNING: entity %s has no model (%s)\n", Scr_GetString(self->v.classname), __FUNCTION__);
 		return;
@@ -659,13 +659,13 @@ qboolean SV_EntityCanBeDrawn(gentity_t* self)
 	if ((self->v.renderFlags & RF_TRANSLUCENT) && self->v.renderAlpha <= 0)
 		return false; // totally transparent!
 
-	if (svmod->type != MOD_MD3)
+	if (svmod->type != MOD_ALIAS)
 		return true; // quick case, md3s have special handling
 
 	if (self->s.hidePartBits <= 0)
 		return true; // nothing was hidden
 
-	if (svmod->type == MOD_MD3)
+	if (svmod->type == MOD_ALIAS)
 	{
 		hidden = 0;
 		for (i = 0; i < svmod->numSurfaces; i++)

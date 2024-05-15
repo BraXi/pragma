@@ -24,7 +24,7 @@ void CG_GetTagOrigin(clentity_t *ent, int tagIndex, vec3_t outOrigin)
 	orientation_t* tag;
 
 
-	if (!model || model->type != MOD_MD3 || !model->numTags)
+	if (!model || model->type != MOD_ALIAS || !model->numTags)
 	{
 		//	Scr_RunError(Scr_GetString(ent->v.model));
 		Scr_ReturnVector(ent->v.origin);
@@ -57,7 +57,7 @@ orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
 	int index;
 
 	mod = SV_ModelForNum(modelindex);
-	if (!mod || mod->type != MOD_MD3)
+	if (!mod || mod->type != MOD_ALIAS)
 	{
 		Com_Error(ERR_DROP, "SV_GetTag: wrong model for index %i\n", modelindex);
 		return NULL;

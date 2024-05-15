@@ -56,7 +56,7 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 			return false;
 	}
 
-	if (ent->model->type == MOD_MD3) 
+	if (ent->model->type == MOD_ALIAS) 
 	{
 		// technicaly this could be used for sprites, but it takes 
 		// more cycles culling than actually rendering them lol
@@ -225,7 +225,7 @@ void R_DrawEntityModel(rentity_t* ent)
 	// render model
 	switch (ent->model->type)
 	{
-	case MOD_MD3:
+	case MOD_ALIAS:
 		lod = LOD_HIGH; // fixme: allow lods
 		R_DrawMD3Model(ent, lod, lerp);
 		break;

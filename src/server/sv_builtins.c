@@ -1941,7 +1941,7 @@ void PFSV_gettagscount(void)
 		return;
 	}
 
-	if (mod->type == MOD_MD3)
+	if (mod->type == MOD_ALIAS)
 		Scr_ReturnFloat(mod->numTags); 
 	else
 	{
@@ -1977,7 +1977,7 @@ void PFSV_tagexists(void)
 	}
 
 	model = SV_ModelForNum(ent->v.modelindex);
-	if (!model || model->type != MOD_MD3 || !model->numTags)
+	if (!model || model->type != MOD_ALIAS || !model->numTags)
 	{
 		Scr_ReturnFloat(0.0f);
 		return;
@@ -2017,7 +2017,7 @@ void PFSV_gettagorigin(void)
 	}
 
 	model = SV_ModelForNum(ent->v.modelindex);
-	if (!model || model->type != MOD_MD3 || !model->numTags)
+	if (!model || model->type != MOD_ALIAS || !model->numTags)
 	{
 	//	Scr_RunError(Scr_GetString(ent->v.model));
 		Scr_ReturnVector(ent->v.origin);
@@ -2065,7 +2065,7 @@ void PFSV_gettagangles(void)
 	}
 
 	model = SV_ModelForNum((int)ent->v.modelindex);
-	if (!model || model->type != MOD_MD3 || !model->numTags)
+	if (!model || model->type != MOD_ALIAS || !model->numTags)
 	{
 		Scr_ReturnVector(ent->v.angles);
 		return;

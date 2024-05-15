@@ -252,7 +252,7 @@ typedef struct model_s
 
 	int			cullDist;	// don't draw if farther than this
 
-	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_MD3
+	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_ALIAS
 	vertexbuffer_t *vb[MD3_MAX_SURFACES];
 } model_t;
 

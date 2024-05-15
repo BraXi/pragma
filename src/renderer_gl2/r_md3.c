@@ -309,7 +309,7 @@ void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod)
 
 	}
 
-	mod->type = MOD_MD3;
+	mod->type = MOD_ALIAS;
 	mod->numframes = mod->md3[lod]->numFrames;
 	mod->radius = MD3_ModelRadius(mod->index);
 	MD3_ModelBounds(mod->index, mod->mins, mod->maxs);

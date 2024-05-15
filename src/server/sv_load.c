@@ -210,7 +210,7 @@ static void SV_LoadDefForModel(svmodel_t* model)
 
 	memset(&model->def, 0, sizeof(model->def));
 
-	if (model->type != MOD_MD3)
+	if (model->type != MOD_ALIAS)
 		return;
 
 	strcpy(defname, model->name);
@@ -452,7 +452,7 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 
 	}
 
-	out->type = MOD_MD3;
+	out->type = MOD_ALIAS;
 }
 
 
@@ -495,7 +495,7 @@ int SV_ModelSurfIndexForName(int modelindex, char* surfaceName)
 	int index;
 
 	mod = SV_ModelForNum(modelindex);
-	if (!mod || mod->type != MOD_MD3)
+	if (!mod || mod->type != MOD_ALIAS)
 	{
 		return -1;
 	}
@@ -526,7 +526,7 @@ int SV_TagIndexForName(int modelindex, char* tagName)
 	int frame = 0;
 
 	mod = SV_ModelForNum(modelindex);
-	if (!mod || mod->type != MOD_MD3)
+	if (!mod || mod->type != MOD_ALIAS)
 	{
 		Com_Error(ERR_DROP, "SV_TagIndexForName: wrong model for index %i\n", modelindex);
 		return -1; //doesn't get here
@@ -557,7 +557,7 @@ orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
 	int index;
 
 	mod = SV_ModelForNum(modelindex);
-	if (!mod || mod->type != MOD_MD3)
+	if (!mod || mod->type != MOD_ALIAS)
 	{
 		Com_Error(ERR_DROP, "SV_GetTag: wrong model for index %i\n", modelindex);
 		return NULL;

@@ -41,7 +41,7 @@ typedef struct svmodel_s
 
 	cmodel_t		*bmodel; // only if type == MOD_BRUSH
 
-	// only if type == MOD_MD3
+	// only if type == MOD_ALIAS
 	char			surfNames[MD3_MAX_SURFACES][MD3_MAX_NAME];
 	char			tagNames[MD3_MAX_TAGS][MD3_MAX_NAME];
 	orientation_t	*tagFrames;	// numTags * numFrames

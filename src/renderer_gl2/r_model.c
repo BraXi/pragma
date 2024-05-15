@@ -275,7 +275,7 @@ struct model_s* R_RegisterModel(char* name)
 			for (i = 0; i < sp2Header->numframes; i++)
 				mod->images[i] = R_FindTexture(sp2Header->frames[i].name, it_sprite, true);
 		}
-		else if (mod->type == MOD_MD3)
+		else if (mod->type == MOD_ALIAS)
 		{
 			nt = 0;
 			md3Header = mod->md3[LOD_HIGH];
