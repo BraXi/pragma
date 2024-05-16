@@ -541,7 +541,7 @@ void CG_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_getbindkey, PF_CL, "getbindkey", "string(string bind)");
 
 	// visual
-	Scr_DefineBuiltin(PFCG_setmodel, PF_CL, "setmodel", "void(entity e, string m)");
+//	Scr_DefineBuiltin(PFCG_setmodel, PF_CL, "setmodel", "void(entity e, string m)");
 #endif
 }
 

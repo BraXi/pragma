@@ -402,7 +402,7 @@ skipwhite:
 	return com_token;
 }
 
-#if 0
+#if 1
 
 /*
 ==============
@@ -423,7 +423,13 @@ void COM_TokenizeString(char* text)
 
 	// clear the args from the last string
 	for (i = 0; i < parser_argc; i++)
-		Z_Free(parser_argv[i]);
+	{
+		if (parser_argv[i])
+		{
+			free(parser_argv[i]);
+			parser_argv[i] = NULL;
+		}
+	}
 
 	parser_argc = 0;
 	parser_args[0] = 0;
@@ -467,7 +473,7 @@ void COM_TokenizeString(char* text)
 
 		if (parser_argc < MAX_STRING_TOKENS)
 		{
-			parser_argv[parser_argc] = Z_Malloc(strlen(token) + 1);
+			parser_argv[parser_argc] = malloc(strlen(token) + 1);
 			strcpy(parser_argv[parser_argc], token);
 			parser_argc++;
 		}

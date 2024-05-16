@@ -24,6 +24,7 @@ static int bspx_lumps_offset = 0;
 static byte mod_novis[MAX_MAP_LEAFS_QBSP/8];
 static byte *mod_base = NULL;
 
+#define RD_MAX_SMDL_HUNKSIZE	0x400000 // 4 MB
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
 #define RD_MAX_SP2_HUNKSIZE		0x10000 // 64KB
 #define RD_MAX_BSP_HUNKSIZE		0x1000000 // 16 MB
@@ -38,7 +39,7 @@ static model_t	r_inlineModels[RD_MAX_MODELS]; // the inline * brush models from 
 extern void Mod_LoadSP2(model_t* mod, void* buffer);
 extern void Mod_LoadBSP(model_t* mod, void* buffer);
 extern void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod);
-
+extern void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod);
 
 void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf);
 
@@ -170,7 +171,9 @@ model_t* R_ModelForName(char* name, qboolean crash)
 		break;
 
 	default:
-		ri.Error(ERR_DROP, "R_ModelForName: file %s is not a vaild model", mod->name);
+		Mod_LoadSkelModel(mod, buf, LOD_HIGH);
+		if(mod->type == MOD_BAD)
+			ri.Error(ERR_DROP, "R_ModelForName: file %s is not a vaild model", mod->name);
 		break;
 	}
 

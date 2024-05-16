@@ -16,6 +16,7 @@ See the attached GNU General Public License v2 for more details.
 vec3_t	model_shadevector;
 vec3_t	model_shadelight;
 
+void R_DrawSkelModel(rentity_t* ent, lod_t lod, float animlerp); // r_skel.c
 void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp); // r_md3.c
 void R_DrawSprite(rentity_t* ent); // r_sprite.c
 
@@ -228,6 +229,11 @@ void R_DrawEntityModel(rentity_t* ent)
 	case MOD_ALIAS:
 		lod = LOD_HIGH; // fixme: allow lods
 		R_DrawMD3Model(ent, lod, lerp);
+		break;
+
+	case MOD_SKEL:
+		lod = LOD_HIGH; // fixme: allow lods
+		R_DrawSkelModel(ent, lod, lerp);
 		break;
 
 	case MOD_SPRITE:

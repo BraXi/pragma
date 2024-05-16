@@ -177,32 +177,23 @@ typedef struct mleaf_s
 typedef struct model_s
 {
 	char		name[MAX_QPATH];
-	int			index;		// our index to model array
-
+	int			index;		// index to model array
 	int			registration_sequence;
-
 	modtype_t	type;
 
 	int			numframes;
-	
 	int			flags;
 
-//
-// volume occupied by the model graphics
-//		
+	// volume occupied by the model graphics	
 	vec3_t		mins, maxs;
 	float		radius;
 
-//
-// solid volume for clipping 
-//
+	// solid volume for clipping 
 	qboolean	clipbox;
 	vec3_t		clipmins, clipmaxs;
 
-//
-// brush model
-//
 
+	// brush model
 	int			firstmodelsurface, nummodelsurfaces;
 	int			lightmap;		// only for inlineModels
 
@@ -242,9 +233,8 @@ typedef struct model_s
 	byte		*lightdata;
 	int			lightdatasize;
 
-//
-// for alias models and sprites
-//
+	// non brush models and sprites
+	vertexbuffer_t* vb[MD3_MAX_SURFACES];
 	image_t		*images[32];
 
 	int			extradatasize;
@@ -252,8 +242,14 @@ typedef struct model_s
 
 	int			cullDist;	// don't draw if farther than this
 
-	md3Header_t	*md3[MD3_MAX_LODS];	// only if type == MOD_ALIAS
-	vertexbuffer_t *vb[MD3_MAX_SURFACES];
+	md3Header_t	*md3[NUM_LODS];	// only if type == MOD_ALIAS
+
+	// only if type == MOD_SKEL
+	smdl_header_t *smdl[NUM_LODS]; 
+	smdl_bone_t* bones[SMDL_MAX_BONES];
+	smdl_seq_t* seqences[SMDL_MAX_FRAMES];
+	smdl_surf_t* surfs[SMDL_MAX_GROUPS];
+	smdl_vert_t* verts[SMDL_MAX_VERTS];
 } model_t;
 
 //============================================================================

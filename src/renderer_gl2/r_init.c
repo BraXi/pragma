@@ -62,6 +62,14 @@ void GL_Strings_f(void);
 extern vertexbuffer_t vb_gui;
 extern vertexbuffer_t vb_sky;
 extern vertexbuffer_t *vb_particles;
+
+//void Mod_LoadSkelModel_Text(model_t* mod, void* buffer, lod_t lod);
+model_t* R_ModelForName(char* name, qboolean crash);
+void R_LoadMod_f(void)
+{
+//	Mod_LoadSkelModel_Text(NULL, NULL, LOD_HIGH);
+	R_ModelForName(va("models/%s.smd",ri.Cmd_Argv(1)), false);
+}
 /*
 ==================
 R_RegisterCvarsAndCommands
@@ -127,6 +135,8 @@ void R_RegisterCvarsAndCommands(void)
 	ri.AddCommand("imagelist", R_TextureList_f);
 	ri.AddCommand("screenshot", R_ScreenShot_f);
 	ri.AddCommand("gl_strings", GL_Strings_f);
+
+	ri.AddCommand("loadmod", R_LoadMod_f);
 }
 
 /*

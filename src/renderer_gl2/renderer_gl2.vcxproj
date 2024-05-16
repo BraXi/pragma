@@ -156,6 +156,7 @@
     <ClInclude Include="..\qcommon\shared.h" />
     <ClInclude Include="..\qcommon\renderer.h" />
     <ClInclude Include="include\glad\glad_21.h" />
+    <ClInclude Include="include\mod_skel.h" />
     <ClInclude Include="win_glw.h" />
     <ClInclude Include="r_local.h" />
     <ClInclude Include="r_model.h" />
@@ -168,6 +169,7 @@
     <ClCompile Include="..\platform\win_shared.c" />
     <ClCompile Include="glad_gl21.c" />
     <ClCompile Include="r_lightmap.c" />
+    <ClCompile Include="r_smdl_load.c" />
     <ClCompile Include="r_text.c" />
     <ClCompile Include="r_framebuffer.c" />
     <ClCompile Include="r_progs.c" />
