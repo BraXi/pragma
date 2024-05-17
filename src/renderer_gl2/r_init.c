@@ -63,11 +63,11 @@ extern vertexbuffer_t vb_gui;
 extern vertexbuffer_t vb_sky;
 extern vertexbuffer_t *vb_particles;
 
-//void Mod_LoadSkelModel_Text(model_t* mod, void* buffer, lod_t lod);
+//void Mod_LoadSMD(model_t* mod, void* buffer, lod_t lod);
 model_t* R_ModelForName(char* name, qboolean crash);
 void R_LoadMod_f(void)
 {
-//	Mod_LoadSkelModel_Text(NULL, NULL, LOD_HIGH);
+//	Mod_LoadSMD(NULL, NULL, LOD_HIGH);
 	R_ModelForName(va("models/%s.smd",ri.Cmd_Argv(1)), false);
 }
 /*

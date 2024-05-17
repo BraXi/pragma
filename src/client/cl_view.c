@@ -22,7 +22,7 @@ struct model_s	*gun_model;
 //=============
 
 cvar_t		*cl_testparticles;
-cvar_t		*cl_testentities;
+cvar_t		*testmodel;
 cvar_t		*cl_testlights;
 cvar_t		*cl_testblend;
 
@@ -215,36 +215,31 @@ void V_TestParticles (void)
 
 /*
 ================
-V_TestEntities
-
-If cl_testentities is set, create 32 player models
+V_TestModel
 ================
 */
-void V_TestEntities (void)
+
+static rentity_t tm;
+void V_TestModel(void)
 {
-#if 0
-	int			i, j;
-	float		f, r;
-	rentity_t	*ent;
+	char modname[MAX_QPATH];
 
-	r_numentities = 32;
-	memset (r_entities, 0, sizeof(r_entities));
-
-	for (i=0 ; i<r_numentities ; i++)
+	if (testmodel->modified)
 	{
-		ent = &r_entities[i];
+		testmodel->modified = false;
+		memset(&tm, 0, sizeof(tm));
 
-		r = 64 * ( (i%4) - 1.5 );
-		f = 64 * (i/4) + 128;
+		for (int i = 0; i < 3; i++)
+			tm.origin[i] = cl.refdef.view.origin[i] + cl.v_forward[i] * 96 - cl.v_up[i] * 30;
 
-		for (j=0 ; j<3 ; j++)
-			ent->origin[j] = cl.refdef.vieworg[j] + cl.v_forward[j]*f +
-			cl.v_right[j]*r;
+		tm.angles[1] = cl.refdef.view.angles[1];
 
-		ent->model = cl.baseclientinfo.model;
-		ent->skin = cl.baseclientinfo.skin;
+		Com_sprintf(modname, sizeof(modname), "models/%s", testmodel->string);
+		tm.model = re.RegisterModel(modname);
 	}
-#endif
+
+	if(tm.model)
+		V_AddEntity(&tm);
 }
 
 /*
@@ -478,7 +473,7 @@ void V_Gun_Model_f (void)
 		return;
 	}
 
-	Com_sprintf (name, sizeof(name), "models/%s.md3", Cmd_Argv(1));
+	Com_sprintf (name, sizeof(name), "models/%s", Cmd_Argv(1));
 	gun_model = re.RegisterModel (name);
 
 	if(gun_model)
@@ -535,8 +530,8 @@ void V_RenderView(float stereo_separation)
 		if (cl_testparticles->value)
 			V_TestParticles ();
 
-		if (cl_testentities->value)
-			V_TestEntities ();
+		if (testmodel->string[0])
+			V_TestModel ();
 		
 		V_TestLights ();
 
@@ -647,7 +642,7 @@ void V_Init (void)
 
 	cl_testblend = Cvar_Get ("cl_testblend", "0", CVAR_CHEAT, NULL);
 	cl_testparticles = Cvar_Get ("cl_testparticles", "0", CVAR_CHEAT, NULL);
-	cl_testentities = Cvar_Get ("cl_testentities", "0", CVAR_CHEAT, NULL);
+	testmodel = Cvar_Get ("testmodel", "", CVAR_CHEAT, NULL);
 	cl_testlights = Cvar_Get ("cl_testlights", "0", CVAR_CHEAT, NULL);
 
 	cl_stats = Cvar_Get ("cl_stats", "0", 0, NULL);

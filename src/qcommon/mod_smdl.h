@@ -24,10 +24,11 @@ skeletal model and animation format
 #define SMDL_IDENT		(('F'<<24)+('S'<<16)+('X'<<8)+'B') // little-endian "BXSF"
 #define SMDL_VERSION	1
 
-#define SMDL_MAX_BONES	64 // all the limits can be easily changed
-#define SMDL_MAX_FRAMES	512
-#define SMDL_MAX_GROUPS	8
-#define SMDL_MAX_VERTS	4096
+#define SMDL_MAX_BONES		128 // all the limits can be easily changed
+#define SMDL_MAX_FRAMES		512
+#define SMDL_MAX_SURFACES	8
+#define SMDL_MAX_TRIS		32768 // total
+#define SMDL_MAX_VERTS		(SMDL_MAX_TRIS*3) // total
 
 typedef struct smdl_tri_s
 {
@@ -74,17 +75,28 @@ typedef struct smdl_header_s
 
 	float mins[3];	// local bbox of model verts or entire animaton
 	float maxs[3];
-
-	int ofs_bones;
-	int ofs_seq;
-	int ofs_groups;
-	int ofs_verts;
 } smdl_header_t;
 
+typedef enum
+{
+	SMDL_BAD,
+	SMDL_MODEL,
+	SMDL_ANIMATION
+} SMDL_Type;
 
 typedef struct smdl_data_s
 {
+	char			name[MAX_QPATH];
+	SMDL_Type		type;
+
 	smdl_header_t	hdr;
+
+	smdl_bone_t* bones[SMDL_MAX_BONES];
+	smdl_seq_t* seqences[SMDL_MAX_FRAMES];
+
+	// animations don't have these
+	smdl_surf_t* surfaces[SMDL_MAX_SURFACES];
+	smdl_vert_t* verts;
 } smdl_data_t;
 
 #endif /*_mod_skel_h_*/

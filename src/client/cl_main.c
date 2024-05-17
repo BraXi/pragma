@@ -1249,7 +1249,7 @@ cheatvar_t	cheatvars[] =
 
 	{"cl_testblend", "0"},
 	{"cl_testparticles", "0"},
-	{"cl_testentities", "0"},
+	{"testmodel", ""},
 	{"cl_testlights", "0"},
 
 	// renderer

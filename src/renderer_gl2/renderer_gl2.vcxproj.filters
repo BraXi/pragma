@@ -71,6 +71,7 @@
     <ClCompile Include="r_text.c" />
     <ClCompile Include="r_lightmap.c" />
     <ClCompile Include="r_smdl_load.c" />
+    <ClCompile Include="r_smdl.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

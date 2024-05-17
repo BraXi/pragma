@@ -259,6 +259,7 @@ struct model_s* R_RegisterModel(char* name)
 {
 	model_t* mod;
 	int		i, j, nt = 0;
+	char texturename[MAX_QPATH];
 	sp2Header_t* sp2Header;
 	md3Header_t* md3Header;
 
@@ -296,6 +297,23 @@ struct model_s* R_RegisterModel(char* name)
 					nt++;
 				}
 				surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
+			}
+		}
+		else if (mod->type == MOD_SKEL && mod->smdl != NULL)
+		{
+			smdl_surf_t *surf = mod->smdl->surfaces[0];
+			for (int i = 0; i < mod->smdl->hdr.numsurfaces; i++)
+			{
+				if (surf->texture[0] == '$')
+				{
+					mod->images[i] = R_FindTexture(surf->texture, it_model, true);
+				}
+				else
+				{
+					Com_sprintf(texturename, sizeof(texturename), "modelskins/%s", surf->texture);
+					mod->images[i] = R_FindTexture(texturename, it_model, true);
+				}
+				surf->texnum = mod->images[i]->texnum;
 			}
 		}
 		else if (mod->type == MOD_BRUSH)
@@ -366,7 +384,7 @@ void Cmd_modellist_f(void)
 	model_t* mod;
 	int		total;
 
-	static char* mtypes[4] = { "BAD", "BSP", "SPRITE", "MD3" };
+	static char *mods[] = { "BAD", "BSP", "SPRITE", "ALIAS", "SMDL"};
 
 	total = 0;
 	ri.Printf(PRINT_ALL, "Loaded models:\n");
@@ -376,9 +394,11 @@ void Cmd_modellist_f(void)
 			continue;
 
 		if (mod->type == MOD_BRUSH)
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mtypes[mod->type], mod->name, mod->extradatasize/1024);
+			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mods[mod->type], mod->name, mod->extradatasize/1024);
+		else if (mod->type == MOD_SKEL)
+			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d bones, %d kb]\n", i, mods[mod->type], mod->name, mod->smdl->hdr.numbones, mod->extradatasize / 1024);
 		else
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d kb]\n", i, mtypes[mod->type], mod->name, mod->numframes, mod->extradatasize/1024);
+			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d kb]\n", i, mods[mod->type], mod->name, mod->numframes, mod->extradatasize/1024);
 		total += mod->extradatasize;
 	}
 	ri.Printf(PRINT_ALL, "\nTotal resident: %i kb\n", total / 1024);

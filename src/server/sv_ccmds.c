@@ -25,7 +25,7 @@ void SV_ModelList_f(void)
 	int		i,j, nonbmodels = 0;
 	svmodel_t	* mod;
 
-	static char mtypes[5][4] = { "BAD", "BSP", "SPR", "MD3", "BXM" };
+	static char *mods[] = { "BAD", "BSP", "SPR", "ALIAS", "SMDL" };
 
 	if (sv.state == ss_dead)
 	{
@@ -53,7 +53,7 @@ void SV_ModelList_f(void)
 		if (mod->type != MOD_BRUSH && mod->type != MOD_BAD)
 		{
 			nonbmodels++;
-			Com_Printf("%i: %s '%s' [%i anims, %i frames, %i tags, %i skins]\n", i, mtypes[mod->type], mod->name, mod->def.numAnimations, mod->numFrames, mod->numTags, mod->def.numSkins);
+			Com_Printf("%i: %s '%s' [%i anims, %i frames, %i tags, %i skins]\n", i, mods[mod->type], mod->name, mod->def.numAnimations, mod->numFrames, mod->numTags, mod->def.numSkins);
 			
 			if(mod->def.numAnimations > 1)
 				for(j = 1; j < mod->def.numAnimations; j++)
@@ -67,7 +67,7 @@ void SV_ModelList_f(void)
 
 		}
 		else
-			Com_Printf("%i: %s '%s' \n", i, mtypes[mod->type], mod->name);
+			Com_Printf("%i: %s '%s' \n", i, mods[mod->type], mod->name);
 	}
 
 

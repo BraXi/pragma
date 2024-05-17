@@ -103,6 +103,7 @@ static proginfo_t proginfo[] =
 	{GLPROG_WORLD,			"world"},
 	{GLPROG_SKY,			"sky"},
 	{GLPROG_ALIAS,			"model_alias"},
+	{GLPROG_SMDL,			"model_smdl"},
 	{GLPROG_SPRITE,			"model_sprite"},
 	{GLPROG_PARTICLE,		"particle"},
 	{GLPROG_GUI,			"gui",				PF_ORTHO},

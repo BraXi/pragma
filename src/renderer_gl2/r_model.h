@@ -244,12 +244,8 @@ typedef struct model_s
 
 	md3Header_t	*md3[NUM_LODS];	// only if type == MOD_ALIAS
 
-	// only if type == MOD_SKEL
-	smdl_header_t *smdl[NUM_LODS]; 
-	smdl_bone_t* bones[SMDL_MAX_BONES];
-	smdl_seq_t* seqences[SMDL_MAX_FRAMES];
-	smdl_surf_t* surfs[SMDL_MAX_GROUPS];
-	smdl_vert_t* verts[SMDL_MAX_VERTS];
+
+	smdl_data_t	*smdl; // only if type == MOD_SKEL
 } model_t;
 
 //============================================================================
