@@ -474,7 +474,7 @@ qboolean Mod_LoadSMD(smdl_data_t *out, void* buffer, SMDL_Type loadType)
 	memcpy(out->verts, temp_verts, sizeof(smdl_vert_t)* hdr->numverts);
 	free(temp_verts);
 
-	strncpy(out->name, COM_SkipPath(pLoadModel->name), MAX_QPATH);
+	//strncpy(out->name, COM_SkipPath(pLoadModel->name), MAX_QPATH);
 	out->type = loadType;
 
 	if (loadType == SMDL_MODEL)
@@ -556,12 +556,71 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 	mod->type = MOD_SKEL;
 }
 
+#define MAX_ANIMATIONS 128
+static smdl_anim_t animsArray[MAX_ANIMATIONS];
+static unsigned int animsCount = 0;
 
 /*
 =================
-Mod_LoadAnimation
+AnimationForName
 =================
 */
-void Mod_LoadAnimation(smdl_data_t* anim)
+smdl_anim_t* AnimationForName(char *name, qboolean crash)
 {
+	smdl_anim_t	*anim;
+	unsigned	*buf;
+	int			i, fileLen;
+	qboolean	loaded;
+
+	if (!name[0])
+		ri.Error(ERR_DROP, "%s: NULL name", __FUNCTION__);
+
+	for (i = 0, anim = animsArray; i < animsCount; i++, anim++)
+	{
+		if (!anim->name[0])
+			continue;
+
+		if (!strcmp(anim->name, name))
+			return anim;
+	}
+
+	for (i = 0, anim = animsArray; i < animsCount; i++, anim++)
+	{
+		if (!anim->name[0])
+			break;
+	}
+
+	if (i == animsCount)
+	{
+		if (animsCount == MAX_ANIMATIONS)
+			ri.Error(ERR_DROP, "%s: hit limit of %d animations", __FUNCTION__, MAX_ANIMATIONS);
+		animsCount++;
+	}
+
+	fileLen = ri.LoadFile(anim->name, &buf);
+	if (!buf)
+	{
+		if (crash)
+			ri.Error(ERR_DROP, "%s: %s not found", __FUNCTION__, anim->name);
+
+		memset(anim->name, 0, sizeof(anim->name));
+		return NULL;
+	}
+
+	anim->extradata = Hunk_Begin(1024 * 512, "animation");
+
+	loaded = Mod_LoadSMD(&anim->data, buf, SMDL_ANIMATION);
+
+	if (!loaded)
+	{
+		ri.Printf(PRINT_LOW, "Loading animation '%s' failed.\n", anim->name);
+		Hunk_Free(anim->extradata);
+		memset(&anim, 0, sizeof(anim));
+		return NULL;
+	}
+
+	anim->extradatasize = Hunk_End();
+
+	strcpy(anim->name, name);
+	return anim;
 }

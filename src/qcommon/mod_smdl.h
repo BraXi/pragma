@@ -86,7 +86,6 @@ typedef enum
 
 typedef struct smdl_data_s
 {
-	char			name[MAX_QPATH];
 	SMDL_Type		type;
 
 	smdl_header_t	hdr;
@@ -98,5 +97,14 @@ typedef struct smdl_data_s
 	smdl_surf_t* surfaces[SMDL_MAX_SURFACES];
 	smdl_vert_t* verts;
 } smdl_data_t;
+
+typedef struct smdl_anim_s
+{
+	char			name[MAX_QPATH];
+	smdl_data_t		data;
+
+	int				extradatasize;
+	void			*extradata;
+} smdl_anim_t;
 
 #endif /*_mod_skel_h_*/
