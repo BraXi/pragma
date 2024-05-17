@@ -610,7 +610,7 @@ smdl_anim_t* AnimationForName(char *name, qboolean crash)
 		return NULL;
 	}
 
-	anim->extradata = Hunk_Begin(1024 * 512, "animation");
+	anim->extradata = Hunk_Begin(1024 * 256, "animation"); // 256kb should be more than plenty?
 
 	loaded = Mod_LoadSMD(&anim->data, buf, SMDL_ANIMATION);
 
