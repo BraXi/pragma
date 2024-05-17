@@ -571,6 +571,7 @@ smdl_anim_t* AnimationForName(char *name, qboolean crash)
 	unsigned	*buf;
 	int			i, fileLen;
 	qboolean	loaded;
+	char		filename[MAX_QPATH];
 
 	if (!name[0])
 		ri.Error(ERR_DROP, "%s: NULL name", __FUNCTION__);
@@ -597,6 +598,8 @@ smdl_anim_t* AnimationForName(char *name, qboolean crash)
 		animsCount++;
 	}
 
+	Com_sprintf(filename, sizeof(filename), "modelanims/%s.smd", name);
+
 	fileLen = ri.LoadFile(anim->name, &buf);
 	if (!buf)
 	{
@@ -620,7 +623,7 @@ smdl_anim_t* AnimationForName(char *name, qboolean crash)
 	}
 
 	anim->extradatasize = Hunk_End();
+	strncpy(anim->name, name, MAX_QPATH);
 
-	strcpy(anim->name, name);
 	return anim;
 }
