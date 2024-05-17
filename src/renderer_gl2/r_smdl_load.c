@@ -539,10 +539,20 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 			Com_sprintf(texturename, sizeof(texturename), "modelskins/%s", surf->texture);
 			mod->images[i] = R_FindTexture(texturename, it_model, true);
 		}
+
+		if (!mod->images[i])
+			mod->images[i] = r_texture_missing;
+
 		surf->texnum = mod->images[i]->texnum;
 	}
 
+
+	VectorCopy(mod->smdl->hdr.mins, mod->mins);
+	VectorCopy(mod->smdl->hdr.maxs, mod->maxs);
+	mod->radius = RadiusFromBounds(mod->mins, mod->maxs);
+
 	R_UploadSkelModel(mod);
+
 	mod->type = MOD_SKEL;
 }
 

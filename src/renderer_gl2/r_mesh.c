@@ -184,8 +184,8 @@ void R_DrawEntityModel(rentity_t* ent)
 	lod_t		lod;
 
 	// don't bother if we're not visible
-//	if (!R_EntityShouldRender(ent))
-//		return;
+	if (!R_EntityShouldRender(ent))
+		return;
 
 	// check if the animation is correct and set lerp
 	R_EntityAnim(ent, __FUNCTION__);

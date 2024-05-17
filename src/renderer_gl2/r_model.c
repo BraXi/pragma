@@ -313,6 +313,9 @@ struct model_s* R_RegisterModel(char* name)
 					Com_sprintf(texturename, sizeof(texturename), "modelskins/%s", surf->texture);
 					mod->images[i] = R_FindTexture(texturename, it_model, true);
 				}
+				if (!mod->images[i])
+					mod->images[i] = r_texture_missing;
+
 				surf->texnum = mod->images[i]->texnum;
 			}
 		}
