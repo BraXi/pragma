@@ -600,7 +600,7 @@ smdl_anim_t* AnimationForName(char *name, qboolean crash)
 
 	Com_sprintf(filename, sizeof(filename), "modelanims/%s.smd", name);
 
-	fileLen = ri.LoadFile(anim->name, &buf);
+	fileLen = ri.LoadFile(filename, &buf);
 	if (!buf)
 	{
 		if (crash)
