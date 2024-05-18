@@ -75,6 +75,7 @@ typedef struct smdl_header_s
 
 	float mins[3];	// local bbox of model verts or entire animaton
 	float maxs[3];
+	int boundingradius;
 } smdl_header_t;
 
 typedef enum

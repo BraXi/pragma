@@ -479,6 +479,8 @@ qboolean Mod_LoadSMD(smdl_data_t *out, void* buffer, SMDL_Type loadType)
 
 	if (loadType == SMDL_MODEL)
 	{
+		hdr->boundingradius = RadiusFromBounds(hdr->mins, hdr->maxs);
+
 		//ri.Printf(PRINT_LOW, "Mins/Maxs: [%f %f %f] [%f %f %f]\n", hdr->mins[0], hdr->mins[1], hdr->mins[2], hdr->maxs[0], hdr->maxs[1], hdr->maxs[2]);
 		ri.Printf(PRINT_LOW, "Loaded model with %i surfaces, %i verts (%i tris total), %i bones.\n", hdr->numsurfaces, hdr->numverts, hdr->numverts / 3, hdr->numbones);
 	}
@@ -549,7 +551,7 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 
 	VectorCopy(mod->smdl->hdr.mins, mod->mins);
 	VectorCopy(mod->smdl->hdr.maxs, mod->maxs);
-	mod->radius = RadiusFromBounds(mod->mins, mod->maxs);
+	mod->radius = mod->smdl->hdr.boundingradius;
 
 	R_UploadSkelModel(mod);
 
