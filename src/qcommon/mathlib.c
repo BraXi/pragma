@@ -5,9 +5,9 @@
 #include <intrin.h>
 #endif
 
-vec3_t vec3_origin = { 0,0,0 };
+const vec3_t vec3_origin = { 0,0,0 };
 
-#define DEG2RAD( a ) ( a * M_PI ) / 180.0F
+#define DEG2RAD( a ) ( a * M_PI ) / 180.0F 
 
 /*
 ================
@@ -88,6 +88,31 @@ void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, f
 	{
 		dst[i] = rot[i][0] * point[0] + rot[i][1] * point[1] + rot[i][2] * point[2];
 	}
+}
+
+/*
+================
+AnglesToQuaternion
+================
+*/
+void AnglesToQuaternion(quat_t quatOut, double pitch, double yaw, double roll)
+{
+	// convert degrees to radians
+	double p = DEG2RAD(pitch);
+	double y = DEG2RAD(yaw);
+	double r = DEG2RAD(roll);
+	
+	double cp = cos(p * 0.5);
+	double sp = sin(p * 0.5);
+	double cy = cos(y * 0.5);
+	double sy = sin(y * 0.5);
+	double cr = cos(r * 0.5);
+	double sr = sin(r * 0.5);
+
+	quatOut.w = cr * cp * cy + sr * sp * sy;
+	quatOut.x = sr * cp * cy - cr * sp * sy;
+	quatOut.y = cr * sp * cy + sr * cp * sy;
+	quatOut.z = cr * cp * sy - sr * sp * cy;
 }
 
 #ifdef _WIN32
@@ -265,7 +290,11 @@ void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4])
 
 //============================================================================
 
-
+/*
+===============
+Q_fabs
+===============
+*/
 float Q_fabs(float f)
 {
 	int tmp = *(int*)&f;
@@ -273,23 +302,9 @@ float Q_fabs(float f)
 	return *(float*)&tmp;
 }
 
-#if defined _M_IX86 && !defined C_ONLY
-#pragma warning (disable:4035)
-__declspec(naked) long Q_ftol(float f)
-{
-	static int tmp;
-	__asm fld dword ptr[esp + 4]
-		__asm fistp tmp
-	__asm mov eax, tmp
-	__asm ret
-}
-#pragma warning (default:4035)
-#endif
-
 /*
 ===============
 LerpAngle
-
 ===============
 */
 float LerpAngle(float a2, float a1, float frac)
@@ -301,8 +316,12 @@ float LerpAngle(float a2, float a1, float frac)
 	return a2 + frac * (a1 - a2);
 }
 
-
-float	anglemod(float a)
+/*
+===============
+anglemod
+===============
+*/
+float anglemod(float a)
 {
 #if 0
 	if (a >= 0)
@@ -315,7 +334,13 @@ float	anglemod(float a)
 }
 
 
-// this is the slow, general version
+/*
+===============
+BoxOnPlaneSide2
+
+this is the slow, general version
+===============
+*/
 int BoxOnPlaneSide2(vec3_t emins, vec3_t emaxs, struct cplane_s* p)
 {
 	int		i;
@@ -421,12 +446,22 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s* p)
 	return sides;
 }
 
+/*
+===============
+ClearBounds
+===============
+*/
 void ClearBounds(vec3_t mins, vec3_t maxs)
 {
 	mins[0] = mins[1] = mins[2] = 99999;
 	maxs[0] = maxs[1] = maxs[2] = -99999;
 }
 
+/*
+===============
+AddPointToBounds
+===============
+*/
 void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs)
 {
 	int		i;
@@ -442,6 +477,13 @@ void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs)
 	}
 }
 
+/*
+===============
+Vector2Compare
+
+Returns 1 when vector2s are identical
+===============
+*/
 int Vector2Compare(vec2_t v1, vec2_t v2)
 {
 	if (v1[0] != v2[0] || v1[1] != v2[1])
@@ -450,6 +492,13 @@ int Vector2Compare(vec2_t v1, vec2_t v2)
 	return 1;
 }
 
+/*
+===============
+Vector3Compare
+
+Returns 1 when vector3s are identical
+===============
+*/
 int VectorCompare(vec3_t v1, vec3_t v2)
 {
 	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2])
@@ -458,6 +507,13 @@ int VectorCompare(vec3_t v1, vec3_t v2)
 	return 1;
 }
 
+/*
+===============
+Vector4Compare
+
+Returns 1 when vector4s are identical
+===============
+*/
 int Vector4Compare(vec4_t v1, vec4_t v2)
 {
 	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2] || v1[3] != v2[3])
@@ -466,6 +522,13 @@ int Vector4Compare(vec4_t v1, vec4_t v2)
 	return 1;
 }
 
+/*
+===============
+VectorNormalize
+
+Normalizes vector3 and returns length
+===============
+*/
 vec_t VectorNormalize(vec3_t v)
 {
 	float	length, ilength;
@@ -483,6 +546,12 @@ vec_t VectorNormalize(vec3_t v)
 	return length;
 }
 
+/*
+===============
+VectorNormalize2
+Normalizes vector3 and returns length
+===============
+*/
 vec_t VectorNormalize2(vec3_t v, vec3_t out)
 {
 	float	length, ilength;
@@ -502,12 +571,24 @@ vec_t VectorNormalize2(vec3_t v, vec3_t out)
 
 }
 
+/*
+===============
+Vector2MA
+Multiple add vec2
+===============
+*/
 void Vector2MA(vec2_t veca, float scale, vec2_t vecb, vec2_t vecc)
 {
 	vecc[0] = veca[0] + scale * vecb[0];
 	vecc[1] = veca[1] + scale * vecb[1];
 }
 
+/*
+===============
+VectorMA
+Multiple add vec3
+===============
+*/
 void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
 {
 	vecc[0] = veca[0] + scale * vecb[0];
@@ -515,6 +596,12 @@ void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
 	vecc[2] = veca[2] + scale * vecb[2];
 }
 
+/*
+===============
+Vector2MA
+Multiple add vec4
+===============
+*/
 void Vector4MA(vec4_t veca, float scale, vec4_t vecb, vec4_t vecc)
 {
 	vecc[0] = veca[0] + scale * vecb[0];
@@ -523,11 +610,23 @@ void Vector4MA(vec4_t veca, float scale, vec4_t vecb, vec4_t vecc)
 	vecc[3] = veca[3] + scale * vecb[3];
 }
 
+/*
+===============
+_DotProduct
+Calculate ot product from two vec3s
+===============
+*/
 vec_t _DotProduct(vec3_t v1, vec3_t v2)
 {
 	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 
+/*
+===============
+_VectorSubtract
+Substract vec3 from vec3
+===============
+*/
 void _VectorSubtract(vec3_t veca, vec3_t vecb, vec3_t out)
 {
 	out[0] = veca[0] - vecb[0];
@@ -535,6 +634,12 @@ void _VectorSubtract(vec3_t veca, vec3_t vecb, vec3_t out)
 	out[2] = veca[2] - vecb[2];
 }
 
+/*
+===============
+_VectorAdd
+Add vec3 to vec3
+===============
+*/
 void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out)
 {
 	out[0] = veca[0] + vecb[0];
@@ -542,6 +647,12 @@ void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out)
 	out[2] = veca[2] + vecb[2];
 }
 
+/*
+===============
+_VectorCopy
+Copy vec3
+===============
+*/
 void _VectorCopy(vec3_t in, vec3_t out)
 {
 	out[0] = in[0];
@@ -549,6 +660,12 @@ void _VectorCopy(vec3_t in, vec3_t out)
 	out[2] = in[2];
 }
 
+/*
+===============
+CrossProduct
+calculate cross product for two vec3s
+===============
+*/
 void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross)
 {
 	cross[0] = v1[1] * v2[2] - v1[2] * v2[1];
