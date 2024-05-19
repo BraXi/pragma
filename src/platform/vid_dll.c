@@ -530,6 +530,9 @@ unsigned int _GetBSPElementSize(bspDataType type, qboolean extendedbsp)
 	bExtendedBSP = old;
 	return ret;
 }
+
+qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
+
 /*
 ==============
 VID_LoadRefresh
@@ -575,6 +578,7 @@ qboolean VID_LoadRefresh( char *name )
 	ri.Vid_GetModeInfo = VID_GetModeInfo;
 	ri.Vid_NewWindow = VID_NewWindow;
 
+	ri.LoadAnimOrModel = Com_LoadAnimOrModel;
 	ri.GetBSPLimit = _GetBSPLimit;
 	ri.GetBSPElementSize = _GetBSPElementSize;
 

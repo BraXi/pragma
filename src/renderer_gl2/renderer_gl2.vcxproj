@@ -170,8 +170,7 @@
     <ClCompile Include="..\platform\win_shared.c" />
     <ClCompile Include="glad_gl21.c" />
     <ClCompile Include="r_lightmap.c" />
-    <ClCompile Include="r_smdl.c" />
-    <ClCompile Include="r_smdl_load.c" />
+    <ClCompile Include="r_newmod.c" />
     <ClCompile Include="r_text.c" />
     <ClCompile Include="r_framebuffer.c" />
     <ClCompile Include="r_progs.c" />

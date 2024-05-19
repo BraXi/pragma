@@ -229,6 +229,9 @@
     <ClCompile Include="client\cgame\cg_entities.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
+    <ClCompile Include="qcommon\smdl_load.c">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\client.h">
