@@ -114,23 +114,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="qcommon\crc.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="qcommon\qcommon.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="qcommon\qfiles.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="server\server.h">
       <Filter>server</Filter>
     </ClInclude>
     <ClInclude Include="server\sv_game.h">
       <Filter>server</Filter>
-    </ClInclude>
-    <ClInclude Include="qcommon\shared.h">
-      <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="script\progdefs_client.h">
       <Filter>script\headers</Filter>
@@ -155,10 +143,28 @@
       <Filter>script\headers</Filter>
     </ClInclude>
     <ClInclude Include="qcommon\anorms.h">
-      <Filter>common</Filter>
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\crc.h">
+      <Filter>common\inc</Filter>
     </ClInclude>
     <ClInclude Include="qcommon\mathlib.h">
-      <Filter>common</Filter>
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\qcommon.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\qfiles.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\shared.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\mod_md3.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\mod_smdl.h">
+      <Filter>common\inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -179,6 +185,9 @@
     </Filter>
     <Filter Include="platform">
       <UniqueIdentifier>{2b77c318-d5b8-47fd-99a7-de7f1659962e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\inc">
+      <UniqueIdentifier>{39758c4f-639f-4e84-b585-7bb8a35a8fc7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

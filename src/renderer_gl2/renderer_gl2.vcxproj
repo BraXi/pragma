@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="..\platform\winquake.h" />
     <ClInclude Include="..\qcommon\mathlib.h" />
+    <ClInclude Include="..\qcommon\mod_md3.h" />
     <ClInclude Include="..\qcommon\shared.h" />
     <ClInclude Include="..\qcommon\renderer.h" />
     <ClInclude Include="include\glad\glad_21.h" />

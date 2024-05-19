@@ -31,8 +31,11 @@
     <ClInclude Include="include\glad\glad_21.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\qcommon\mod_md3.h">
+      <Filter>common</Filter>
+    </ClInclude>
     <ClInclude Include="include\mod_skel.h">
-      <Filter>include</Filter>
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -65,12 +68,14 @@
     <ClCompile Include="r_progs.c" />
     <ClCompile Include="r_framebuffer.c" />
     <ClCompile Include="r_vertexbuffer.c" />
-    <ClCompile Include="glad_gl21.c" />
     <ClCompile Include="r_world.c" />
     <ClCompile Include="r_text.c" />
     <ClCompile Include="r_lightmap.c" />
     <ClCompile Include="r_smdl_load.c" />
     <ClCompile Include="r_smdl.c" />
+    <ClCompile Include="glad_gl21.c">
+      <Filter>sys</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

@@ -246,15 +246,6 @@
     <ClInclude Include="client\vid.h">
       <Filter>client</Filter>
     </ClInclude>
-    <ClInclude Include="qcommon\crc.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="qcommon\qcommon.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="qcommon\qfiles.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="client\console.h">
       <Filter>client</Filter>
     </ClInclude>
@@ -263,9 +254,6 @@
     </ClInclude>
     <ClInclude Include="server\sv_game.h">
       <Filter>server</Filter>
-    </ClInclude>
-    <ClInclude Include="qcommon\shared.h">
-      <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="script\progdefs_server.h">
       <Filter>script\headers</Filter>
@@ -289,9 +277,6 @@
     <ClInclude Include="client\cgame\cgame.h">
       <Filter>client\cgame</Filter>
     </ClInclude>
-    <ClInclude Include="qcommon\anorms.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="client\ui\gui.h">
       <Filter>client\ui</Filter>
     </ClInclude>
@@ -313,14 +298,35 @@
     <ClInclude Include="client\fx\effects.h">
       <Filter>client\fx</Filter>
     </ClInclude>
-    <ClInclude Include="qcommon\mathlib.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="client\cgame\cg_local.h">
       <Filter>client\cgame</Filter>
     </ClInclude>
     <ClInclude Include="client\cgame\progdefs_client.h">
       <Filter>client\cgame</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\anorms.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\crc.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\mathlib.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\mod_smdl.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\mod_md3.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\qcommon.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\shared.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\qfiles.h">
+      <Filter>common\inc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -353,6 +359,9 @@
     </Filter>
     <Filter Include="client\sound">
       <UniqueIdentifier>{97e6b15e-4c1a-4883-95cb-0316412def22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\inc">
+      <UniqueIdentifier>{d8b52cc2-7cf6-4c38-b50e-cbe4e63d2083}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
