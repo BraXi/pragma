@@ -13,10 +13,12 @@ See the attached GNU General Public License v2 for more details.
 #include "server.h"
 
 qboolean ModelDef_LoadFile(char* filename, modeldef_t* def);
+qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
 
 static void SV_LoadMD3(svmodel_t* out, void* buffer);
-
+static void SV_LoadSMDL(svmodel_t* out, void* buffer);
 static svmodel_t* SV_LoadModel(char* name, qboolean crash);
+
 static qboolean SV_FileExists(char* name, qboolean crash);
 static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char* func);
 /*
@@ -178,7 +180,7 @@ static qboolean SV_FileExists(char* name, qboolean crash)
 
 	if (!name[0])
 	{
-		Com_Error(ERR_DROP, "SV_FileExists: NULL name");
+		Com_Error(ERR_DROP, "%s: NULL name", __FUNCTION__);
 		return false;
 	}
 
@@ -309,7 +311,12 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 	case MD3_IDENT:
 		SV_LoadMD3(model, buf);
 		break;
+	case SMDL_IDENT:
+		FS_FreeFile(buf);
+		Com_Error(ERR_DROP, "unimplemented in %s", __FUNCTION__);
+		break;
 	default:
+		FS_FreeFile(buf);
 		Com_Error(ERR_DROP, "'%s' is not a model", model->name);
 	}
 
@@ -331,7 +338,7 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 SV_LoadMD3
 =================
 */
-static void SV_LoadMD3(svmodel_t* out, void* buffer)
+static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 {
 	int				i, j;
 	md3Header_t* in;
@@ -353,24 +360,32 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 
 	if (in->ident != MD3_IDENT)
 	{
-		Com_Printf("SV_LoadMD3: %s is not a model\n", out->name);
+		Com_Printf("%s: %s is not a model\n", __FUNCTION__, mod->name);
 		return;
 	}
 	if (in->version != MD3_VERSION)
 	{
-		Com_Printf("SV_LoadMD3: '%s' has wrong version (%i should be %i)\n", out->name, in->version, MD3_VERSION);
+		Com_Printf("%s: '%s' has wrong version (%i should be %i)\n", __FUNCTION__, mod->name, in->version, MD3_VERSION);
 		return;
 	}
 
 	if (in->numFrames < 1)
 	{
-		Com_Printf("SV_LoadMD3: '%s' is corrupt (doesn't have a single frame)\n", out->name);
+		Com_Printf("%s: '%s' is corrupt (doesn't have a single frame)\n", __FUNCTION__, mod->name);
 		return;
 	}
 
-	out->numFrames = in->numFrames;
-	out->numTags = in->numTags;
-	out->numSurfaces = in->numSurfaces;
+	mod->numFrames = in->numFrames;
+	mod->numTags = in->numTags;
+	mod->numSurfaces = in->numSurfaces;
+
+	if (mod->extradata != NULL)
+	{
+		Com_Error(ERR_FATAL, "mod->extradata not NULL");
+	}
+
+	mod->extradata = Hunk_Begin(1024 * 32, "alias model (server)"); //32k should be sufficient?
+	mod->alias = Hunk_Alloc(sizeof(alias_data_t));
 
 	if (in->numTags)
 	{
@@ -378,22 +393,22 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 		// we'd end up with duplicated tagnames * numframes * numtags
 
 		// copy tag names
-		memset(out->tagNames, 0, sizeof(out->tagNames));
+		memset(mod->alias->tagNames, 0, sizeof(mod->alias->tagNames));
 		tag = (md3Tag_t*)((byte*)in + in->ofsTags);
 		for (i = 0; i < in->numTags; i++, tag++)
 		{
 			if (!tag->name[0])
 			{
-				Com_Error(ERR_DROP, "SV_LoadMD3: tag #%i in '%s' has empty name\n", i, out->name);
+				Com_Error(ERR_DROP, "%s: tag #%i in '%s' has empty name\n", __FUNCTION__, i, mod->name);
 			}
 
 			// lowercase the tag name so search compares are faster
 			_strlwr(tag->name);
-			memcpy(out->tagNames[i], tag->name, sizeof(tag->name));
+			memcpy(mod->alias->tagNames[i], tag->name, sizeof(tag->name));
 		}
 
 		// copy tags
-		out->tagFrames = Z_TagMalloc(sizeof(orientation_t) * in->numTags * in->numFrames, TAG_SERVER_MODELDATA);
+		mod->alias->tagFrames = Hunk_Alloc(sizeof(orientation_t) * in->numTags * in->numFrames);
 
 		tag = (md3Tag_t*)((byte*)in + in->ofsTags);
 		for (i = 0; i < in->numTags * in->numFrames; i++, tag++)
@@ -405,8 +420,8 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 				tag->axis[1][j] = LittleFloat(tag->axis[1][j]);
 				tag->axis[2][j] = LittleFloat(tag->axis[2][j]);
 			}
-			VectorCopy(tag->origin, out->tagFrames[i].origin);
-			memcpy(out->tagFrames[i].axis, tag->axis, sizeof(tag->axis));
+			VectorCopy(tag->origin, mod->alias->tagFrames[i].origin);
+			memcpy(mod->alias->tagFrames[i].axis, tag->axis, sizeof(tag->axis));
 		}
 	}
 
@@ -423,11 +438,11 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 		// don't really need these ifs here, but this will probably help a bit
 		if (surf->numVerts > MD3_MAX_VERTS)
 		{
-			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i verts on a surface (%i)", out->name, MD3_MAX_VERTS, surf->numVerts);
+			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i verts on a surface (%i)", mod->name, MD3_MAX_VERTS, surf->numVerts);
 		}
 		if (surf->numTriangles > MD3_MAX_TRIANGLES)
 		{
-			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i triangles on a surface (%i)", out->name, MD3_MAX_TRIANGLES, surf->numTriangles);
+			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i triangles on a surface (%i)", mod->name, MD3_MAX_TRIANGLES, surf->numTriangles);
 		}
 
 
@@ -441,14 +456,59 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 			surf->name[j - 2] = 0;
 		}
 
-		memcpy(out->surfNames[i], surf->name, sizeof(surf->name));
+		memcpy(mod->alias->surfNames[i], surf->name, sizeof(surf->name));
 
 		// find the next surface
 		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 
 	}
 
-	out->type = MOD_ALIAS;
+	mod->type = MOD_ALIAS;
+}
+
+
+/*
+=================
+SV_LoadSkelModel
+=================
+*/
+static void SV_LoadSkelModel(svmodel_t* mod, int filelen, void* buffer, char* name)
+{
+	qboolean	loaded = false;
+	smdl_surf_t	*surf;
+	char texturename[MAX_QPATH];
+
+	if (mod->extradata != NULL)
+	{
+		Com_Error(ERR_FATAL, "mod->extradata not NULL");
+	}
+
+	mod->extradata = Hunk_Begin(1024 * 32, "smdl (server)"); //32k should be sufficient?
+	mod->mesh = Hunk_Alloc(sizeof(smdl_data_t));
+
+	loaded = Com_LoadAnimOrModel(SMDL_MODEL_NO_TRIS, mod->mesh, name, filelen, buffer); // server doesn't need tris data
+	if (!loaded)
+	{
+		Hunk_Free(mod->extradata);
+		mod->extradata = NULL;
+		return;
+	}
+
+	mod->extradatasize = Hunk_End();
+
+	surf = mod->mesh->surfaces[0];
+	for (int i = 0; i < mod->mesh->hdr.numsurfaces; i++)
+	{
+		Com_sprintf(surf->texture, sizeof(texturename), "surface_%i", i+1); // temporary fix
+	}
+
+	mod->type = MOD_SKEL;
+	mod->numTags = mod->mesh->hdr.numbones;
+	mod->numSurfaces = mod->mesh->hdr.numsurfaces;
+	mod->numFrames = 1;
+
+//	VectorCopy(mod->mesh->hdr.mins, mod->mins);
+//	VectorCopy(mod->mesh->hdr.maxs, mod->maxs);
 }
 
 
@@ -463,16 +523,36 @@ int SV_ModelSurfIndexForName(int modelindex, char* surfaceName)
 	int index;
 
 	mod = SV_ModelForNum(modelindex);
-	if (!mod || mod->type != MOD_ALIAS)
+	if (!mod)
 	{
 		return -1;
 	}
 
-	for (index = 0; index < mod->numSurfaces; index++)
+	if (mod->type == MOD_SKEL)
 	{
-		if (!Q_stricmp(mod->surfNames[index], surfaceName))
+		if (mod->mesh == NULL)
+			Com_Error(ERR_DROP, "%s: SMDL but mod->mesh is NULL\n", __FUNCTION__);
+
+		for (index = 0; index < mod->numSurfaces; index++)
 		{
-			return index;
+			smdl_surf_t* surf = mod->mesh->surfaces[index];
+			if (!Q_stricmp(surf->texture, surfaceName))
+			{
+				return index;
+			}
+		}
+	}
+	else if (mod->type == MOD_ALIAS)
+	{
+		if (mod->alias == NULL)
+			Com_Error(ERR_DROP, "%s: MD3 but mod->mesh is NULL\n", __FUNCTION__);
+		
+		for (index = 0; index < mod->numSurfaces; index++)
+		{
+			if (!Q_stricmp(mod->alias->surfNames[index], surfaceName))
+			{
+				return index;
+			}
 		}
 	}
 	return -1;
@@ -489,23 +569,42 @@ returns index of a tag or -1 if not found
 int SV_TagIndexForName(int modelindex, char* tagName)
 {
 	svmodel_t* mod;
-	orientation_t* tagdata;
 	int index;
-	int frame = 0;
 
 	mod = SV_ModelForNum(modelindex);
-	if (!mod || mod->type != MOD_ALIAS)
+	if (!mod)
 	{
-		Com_Error(ERR_DROP, "SV_TagIndexForName: wrong model for index %i\n", modelindex);
+		Com_Error(ERR_DROP, "%s: wrong model for index %i\n", __FUNCTION__, modelindex);
 		return -1; //doesn't get here
 	}
 
-	tagdata = (orientation_t*)((byte*)mod->tagFrames) + (frame * mod->numTags);
-	for (index = 0; index < mod->numTags; index++, tagdata++)
+	if (mod->type == MOD_SKEL)
 	{
-		if (!strcmp(mod->tagNames[index], tagName))
+		if (mod->mesh == NULL)
+			Com_Error(ERR_DROP, "%s: SMDL but mod->mesh is NULL\n", __FUNCTION__);
+
+		smdl_bone_t* tag = mod->mesh->bones[0];
+		for (index = 0; index < mod->numTags; index++, tag++)
 		{
-			return index; // found it
+			if (!strcmp(mod->alias->tagNames[index], tagName))
+			{
+				return index; // found it
+			}
+		}
+	}
+	else if (mod->type == MOD_ALIAS)
+	{
+		if(mod->alias == NULL)
+			Com_Error(ERR_DROP, "%s: MD3 but mod->mesh is NULL\n", __FUNCTION__);
+	
+		int frame = 0; // will I ever need this here? probably no.
+		orientation_t* tagdata = (orientation_t*)((byte*)mod->alias->tagFrames) + (frame * mod->numTags);
+		for (index = 0; index < mod->numTags; index++, tagdata++)
+		{
+			if (!strcmp(mod->alias->tagNames[index], tagName))
+			{
+				return index; // found it
+			}
 		}
 	}
 	return -1;
@@ -521,13 +620,12 @@ returns orientation_t of a tag for a given frame or NULL if not found
 orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
 {
 	svmodel_t* mod;
-	orientation_t* tagdata;
 	int index;
 
 	mod = SV_ModelForNum(modelindex);
-	if (!mod || mod->type != MOD_ALIAS)
+	if (!mod)
 	{
-		Com_Error(ERR_DROP, "SV_GetTag: wrong model for index %i\n", modelindex);
+		Com_Error(ERR_DROP, "%s: wrong model for index %i\n", __FUNCTION__, modelindex);
 		return NULL;
 	}
 
@@ -537,12 +635,35 @@ orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
 	else if (frame < 0)
 		frame = 0;
 
-	tagdata = (orientation_t*)((byte*)mod->tagFrames) + (frame * mod->numTags);
-	for (index = 0; index < mod->numTags; index++, tagdata++)
+	if (mod->type == MOD_SKEL)
 	{
-		if (!strcmp(mod->tagNames[index], tagName))
+		if (mod->mesh == NULL)
+			Com_Error(ERR_DROP, "%s: SMDL but mod->mesh is NULL\n", __FUNCTION__);
+
+		Com_Printf("SMDL unimplemented in %s\n", __FUNCTION__);
+		return NULL;
+		//smdl_bone_t* tag = mod->mesh->bones[0];
+		//for (index = 0; index < mod->numTags; index++, tag++)
+		//{
+		//	if (!strcmp(mod->alias->tagNames[index], tagName))
+		//	{
+		//		return tag;
+		//	}
+		//}
+	}
+	else if (mod->type == MOD_ALIAS)
+	{
+		if (mod->alias == NULL)
+			Com_Error(ERR_DROP, "%s: MD3 but mod->mesh is NULL\n", __FUNCTION__);
+
+		orientation_t* tagdata;
+		tagdata = (orientation_t*)((byte*)mod->alias->tagFrames) + (frame * mod->numTags);
+		for (index = 0; index < mod->numTags; index++, tagdata++)
 		{
-			return tagdata; // found it
+			if (!strcmp(mod->alias->tagNames[index], tagName))
+			{
+				return tagdata; // found it
+			}
 		}
 	}
 	return NULL;

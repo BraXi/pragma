@@ -151,7 +151,7 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 		return false;
 	}
 
-	if (loadType != SMDL_MODEL && loadType != SMDL_ANIMATION)
+	if (loadType != SMDL_MODEL && loadType != SMDL_MODEL_NO_TRIS && loadType != SMDL_ANIMATION)
 	{
 		Com_Error(ERR_FATAL, "%s with weird loadType", __FUNCTION__);
 		return false;
@@ -160,13 +160,16 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 	loadFileName = name;
 	loadFileLength = fileLength;
 
-	temp_verts = calloc(SMDL_MAX_VERTS, sizeof(smdl_vert_t));
-	if (!temp_verts)
+	if (loadType == SMDL_MODEL)
 	{
-		Com_Error(ERR_FATAL, "%s failed to allocate temp_verts", __FUNCTION__, name); // gib moar rrraaammm
-		return false;
+		temp_verts = calloc(SMDL_MAX_VERTS, sizeof(smdl_vert_t));
+		if (!temp_verts)
+		{
+			Com_Error(ERR_FATAL, "%s failed to allocate temp_verts", __FUNCTION__, name); // gib moar rrraaammm
+			return false;
+		}
+		vert = temp_verts;
 	}
-	vert = temp_verts;
 
 	out->type = SMDL_BAD;
 
@@ -476,26 +479,42 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 				return false;
 			}
 
-			vert->bone = atoi(COM_TokenGetArg(0));
+			if (loadType == SMDL_MODEL)
+			{
+				vert->bone = atoi(COM_TokenGetArg(0));
 
-			vert->xyz[0] = atof(COM_TokenGetArg(1));
-			vert->xyz[1] = atof(COM_TokenGetArg(2));
-			vert->xyz[2] = atof(COM_TokenGetArg(3));
+				vert->xyz[0] = atof(COM_TokenGetArg(1));
+				vert->xyz[1] = atof(COM_TokenGetArg(2));
+				vert->xyz[2] = atof(COM_TokenGetArg(3));
 
-			vert->normal[0] = atof(COM_TokenGetArg(4));
-			vert->normal[1] = atof(COM_TokenGetArg(5));
-			vert->normal[2] = atof(COM_TokenGetArg(6));
+				vert->normal[0] = atof(COM_TokenGetArg(4));
+				vert->normal[1] = atof(COM_TokenGetArg(5));
+				vert->normal[2] = atof(COM_TokenGetArg(6));
 
-			vert->uv[0] = atof(COM_TokenGetArg(7));
-			vert->uv[1] = -atof(COM_TokenGetArg(8)); // must negate uv
+				vert->uv[0] = atof(COM_TokenGetArg(7));
+				vert->uv[1] = -atof(COM_TokenGetArg(8)); // must negate uv
 
-			AddPointToBounds(vert->xyz, hdr->mins, hdr->maxs);
+				AddPointToBounds(vert->xyz, hdr->mins, hdr->maxs);
+				vert++;
+			}
+			else if (loadType == SMDL_MODEL_NO_TRIS) // only calculate bounds
+			{
+				vec3_t xyz;
+
+				xyz[0] = atof(COM_TokenGetArg(1));
+				xyz[1] = atof(COM_TokenGetArg(2));
+				xyz[2] = atof(COM_TokenGetArg(3));
+				AddPointToBounds(xyz, hdr->mins, hdr->maxs);
+			}
+			else
+			{
+				Com_Error(ERR_FATAL, "no way.\n");
+			}
 
 			//if (COM_TokenNumArgs() == 12) // with bone weights
 			//{
 			//}
 
-			vert++;
 			surface->numverts++;
 			hdr->numverts++;
 		}

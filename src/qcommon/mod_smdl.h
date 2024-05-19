@@ -92,12 +92,12 @@ typedef struct smdl_header_s
 	int boundingradius; // radius from bounds
 } smdl_header_t;
 
-typedef enum
+typedef enum // NOTE: DO NOT CHANGE ORDER 
 {
 	SMDL_BAD,
+	SMDL_ANIMATION,
 	SMDL_MODEL,
-	SMDL_ANIMATION
-//	SMDL_BUNDLE // model and animations in a single file
+	SMDL_MODEL_NO_TRIS // because server doesn't need tris
 } SMDL_Type;
 
 typedef struct smdl_data_s

@@ -134,7 +134,6 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 	char texturename[MAX_QPATH];
 
 	mod->extradata = Hunk_Begin(1024*1024, "skeletal model");
-
 	mod->smdl = Hunk_Alloc(sizeof(smdl_data_t));
 
 	loaded = ri.LoadAnimOrModel(SMDL_MODEL, mod->smdl, pLoadModel->name, modelFileLength, buffer);

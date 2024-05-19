@@ -32,6 +32,13 @@ See the attached GNU General Public License v2 for more details.
 
 extern debugprimitive_t* sv_debugPrimitives;// [MAX_DEBUG_PRIMITIVES]
 
+typedef struct alias_data_s
+{
+	char surfNames[MD3_MAX_SURFACES][MD3_MAX_NAME];
+	char tagNames[MD3_MAX_TAGS][MD3_MAX_NAME];
+	orientation_t* tagFrames;	// numTags * numFrames
+} alias_data_t;
+
 typedef struct svmodel_s
 {
 	char			name[MAX_QPATH];
@@ -39,19 +46,18 @@ typedef struct svmodel_s
 
 	int				modelindex;
 
-	cmodel_t		*bmodel; // only if type == MOD_BRUSH
-
-	// only if type == MOD_ALIAS
-	char			surfNames[MD3_MAX_SURFACES][MD3_MAX_NAME];
-	char			tagNames[MD3_MAX_TAGS][MD3_MAX_NAME];
-	orientation_t	*tagFrames;	// numTags * numFrames
-
-	modeldef_t		def;
+	cmodel_t		*bmodel;	// MOD_BRUSH
+	alias_data_t	*alias;		// MOD_ALIAS
+	smdl_data_t		*mesh;		// MOD_SKEL
 
 	// common
 	int				numFrames;
 	int				numTags;
 	int				numSurfaces;
+	modeldef_t		def;
+
+	void			*extradata;
+	int				extradatasize;
 } svmodel_t;
 
 typedef enum 
