@@ -158,7 +158,7 @@ static void R_DestroyWorldVertexBuffer()
 
 	glDeleteBuffers(1, &gfx_world.vbo);
 
-	ri.Printf(PRINT_LOW, "Freed world surface cache.\n");
+//	ri.Printf(PRINT_LOW, "Freed world surface cache.\n");
 	memset(&gfx_world, 0, sizeof(gfx_world));
 }
 
@@ -238,7 +238,7 @@ static void R_BuildVertexBufferForWorld()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	ri.Printf(PRINT_LOW, "World surface cache is %i kb (%i verts in %i surfaces)\n", bufsize / 1024, gfx_world.totalVertCount, r_worldmodel->numsurfaces);
+//	ri.Printf(PRINT_LOW, "World surface cache is %i kb (%i verts in %i surfaces)\n", bufsize / 1024, gfx_world.totalVertCount, r_worldmodel->numsurfaces);
 }
 
 // ==============================================================================

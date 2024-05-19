@@ -813,7 +813,7 @@ static inline void SV_NotifyWhenCvarChanged(cvar_t* cvar)
 	if (cvar->modified)
 	{
 //		Cvar_Set(cvar->name, cvar->latched_string);
-		SV_BroadcastPrintf(PRINT_HIGH, "Server: `%s` changed to '%s`\n", cvar->name, cvar->string);
+		SV_BroadcastPrintf(PRINT_HIGH, "Server changed cvar `%s` to '%s`.\n", cvar->name, cvar->string);
 		cvar->modified = false;
 
 		if (cvar == sv_cheats) // haaack no. 9000
