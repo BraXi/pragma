@@ -100,7 +100,6 @@ enum
 	GLPROG_SKY,
 	GLPROG_ALIAS,
 	GLPROG_SMDL,
-	GLPROG_SPRITE,
 	GLPROG_PARTICLE,
 	GLPROG_GUI,
 	GLPROG_POSTFX,
@@ -328,7 +327,6 @@ extern model_t *r_worldmodel;
 extern model_t* r_defaultmodel;
 
 extern int registration_sequence;
-void R_InitSprites();
 
 //===================================================================
 // r_init.c

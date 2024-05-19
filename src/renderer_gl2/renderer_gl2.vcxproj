@@ -187,7 +187,6 @@
     <ClCompile Include="r_model.c" />
     <ClCompile Include="r_main.c" />
     <ClCompile Include="r_misc.c" />
-    <ClCompile Include="r_sprite.c" />
     <ClCompile Include="r_state.c" />
     <ClCompile Include="r_warp.c" />
   </ItemGroup>

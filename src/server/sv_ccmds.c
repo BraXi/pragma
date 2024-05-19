@@ -25,7 +25,7 @@ void SV_ModelList_f(void)
 	int		i,j, nonbmodels = 0;
 	svmodel_t	* mod;
 
-	static char *mods[] = { "BAD", "BSP", "SPR", "ALIAS", "SMDL" };
+	static char *mods[] = { "BAD", "BSP", "ALIAS", "SMDL" };
 
 	if (sv.state == ss_dead)
 	{

@@ -80,7 +80,7 @@ typedef struct
 
 	char				mapname[MAX_QPATH];		// BSP map name, or cinematic name
 
-	svmodel_t			models[MAX_MODELS];		// md3, sprites, brushmodels
+	svmodel_t			models[MAX_MODELS];		// md3, smdl, brushmodels
 	int					num_models;
 
 	qboolean			qcvm_active;

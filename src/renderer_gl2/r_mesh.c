@@ -18,7 +18,6 @@ vec3_t	model_shadelight;
 
 void R_DrawSkelModel(rentity_t* ent); // r_smdl.c
 void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp); // r_md3.c
-void R_DrawSprite(rentity_t* ent); // r_sprite.c
 
 /*
 =================
@@ -35,9 +34,6 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 
 	if (!ent->model) // this shouldn't really happen at this point!
 		return false;
-
-	if (ent->model->type == MOD_SPRITE)
-		return true;
 
 	if (ent->alpha <= 0.01f && (ent->renderfx & RF_TRANSLUCENT))
 	{
@@ -59,11 +55,8 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 
 	if (ent->model->type == MOD_ALIAS || ent->model->type == MOD_SKEL)
 	{
-		// technicaly this could be used for sprites, but it takes 
-		// more cycles culling than actually rendering them lol
-
 		if ((ent->renderfx & RF_SCALE) && ent->scale != 1.0f && ent->scale > 0.0f)
-			scale = ent->scale;
+			scale = ent->scale; // adjust radius if the model was scaled
 
 		if (ent->angles[0] || ent->angles[1] || ent->angles[2] || scale != 1.0)
 		{
@@ -236,9 +229,6 @@ void R_DrawEntityModel(rentity_t* ent)
 		R_DrawSkelModel(ent /*,lod, lerp*/);
 		break;
 
-	case MOD_SPRITE:
-		R_DrawSprite(ent);
-		break;
 	default:
 		ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);
 	}

@@ -1901,7 +1901,7 @@ void PFSV_nav_getnodelink(void)
 PFSV_getframescount
 
 float getframescount(float modelindex)
-Returns the number of animation frames in md3 and sp2 models
+Returns the number of animation frames in md3
 
 float numanimframes = getframescount(self.modelindex);
 =================

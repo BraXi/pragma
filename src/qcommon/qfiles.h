@@ -58,7 +58,6 @@ typedef struct
 */
 
 typedef enum {LOD_HIGH, LOD_MEDIUM, LOD_LOW, NUM_LODS} lod_t;
-//float lodDist[NUM_LODS] = { 0.0f, 512.0f, 1024.0f };
 
 #define MD3_IDENT			(('3'<<24)+('P'<<16)+('D'<<8)+'I')
 #define MD3_VERSION			15
@@ -166,33 +165,6 @@ typedef struct
 	int			ofsEnd;				// end of file
 } md3Header_t;
 
-
-/*
-========================================================================
-
-.SP2 sprite file format
-
-========================================================================
-*/
-
-#define SP2_IDENT			(('2'<<24)+('S'<<16)+('D'<<8)+'I') // little-endian "IDS2"
-#define SP2_VERSION			2
-#define SP2_MAX_PICNAME		64
-
-typedef struct
-{
-	int		width, height;
-	int		origin_x, origin_y;		// raster coordinates inside pic
-	char	name[SP2_MAX_PICNAME];	// name of TGA file
-} sp2Frame_t;
-
-typedef struct 
-{
-	int			ident;
-	int			version;
-	int			numframes;
-	sp2Frame_t	frames[1];			// variable sized
-} sp2Header_t;
 
 // key / value pair sizes
 #define	MAX_KEY		32

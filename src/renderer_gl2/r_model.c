@@ -26,7 +26,6 @@ static byte *mod_base = NULL;
 
 #define RD_MAX_SMDL_HUNKSIZE	0x400000 // 4 MB
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
-#define RD_MAX_SP2_HUNKSIZE		0x10000 // 64KB
 #define RD_MAX_BSP_HUNKSIZE		0x1000000 // 16 MB
 #define RD_MAX_QBSP_HUNKSIZE	(RD_MAX_BSP_HUNKSIZE*8) // 96 MB -- we let much bigger qbism bsps 
 														// even more for bench2
@@ -36,7 +35,6 @@ static model_t	r_models[RD_MAX_MODELS];
 static int		r_models_count;
 static model_t	r_inlineModels[RD_MAX_MODELS]; // the inline * brush models from the current map are kept seperate
 
-extern void Mod_LoadSP2(model_t* mod, void* buffer);
 extern void Mod_LoadBSP(model_t* mod, void* buffer);
 extern void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod);
 extern void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod);
@@ -153,11 +151,6 @@ model_t* R_ModelForName(char* name, qboolean crash)
 		Mod_LoadMD3(mod, buf, LOD_HIGH);
 		break;
 
-	case SP2_IDENT: /* Quake2 .sp2 sprite */
-		pLoadModel->extradata = Hunk_Begin(RD_MAX_SP2_HUNKSIZE, "sprite");
-		Mod_LoadSP2(mod, buf);
-		break;
-
 	case BSP_IDENT: /* Quake2 .bsp v38*/
 		bExtendedBSP = false;
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "world bsp");
@@ -260,9 +253,8 @@ struct model_s* R_RegisterModel(char* name)
 	model_t* mod;
 	int		i, j, nt = 0;
 	char texturename[MAX_QPATH];
-	sp2Header_t* sp2Header;
-	md3Header_t* md3Header;
 
+	md3Header_t* md3Header;
 	md3Surface_t* surf;
 	md3Shader_t* shader;
 
@@ -272,17 +264,10 @@ struct model_s* R_RegisterModel(char* name)
 		mod->registration_sequence = registration_sequence;
 
 		// register all images used by the models
-		if (mod->type == MOD_SPRITE)
-		{
-			sp2Header = (sp2Header_t*)mod->extradata;
-			mod->numframes = sp2Header->numframes;
-			for (i = 0; i < sp2Header->numframes; i++)
-				mod->images[i] = R_FindTexture(sp2Header->frames[i].name, it_sprite, true);
-		}
-		else if (mod->type == MOD_ALIAS)
+		if (mod->type == MOD_ALIAS)
 		{
 			nt = 0;
-			md3Header = mod->md3[LOD_HIGH];
+			md3Header = mod->md3[LOD_HIGH]; // FIXME lod
 			mod->numframes = md3Header->numFrames;
 			surf = (md3Surface_t*)((byte*)md3Header + md3Header->ofsSurfaces);
 			for (i = 0; i < md3Header->numSurfaces; i++)
@@ -387,7 +372,7 @@ void Cmd_modellist_f(void)
 	model_t* mod;
 	int		total;
 
-	static char *mods[] = { "BAD", "BSP", "SPRITE", "ALIAS", "SMDL"};
+	static char *mods[] = { "BAD", "BSP", "ALIAS", "SMDL"};
 
 	total = 0;
 	ri.Printf(PRINT_ALL, "Loaded models:\n");
@@ -1470,51 +1455,6 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 
 		starmod->numleafs = bm->visleafs;
 	}
-}
-
-/*
-==============================================================================
-
-QUAKE2 SP2 MODELS
-
-==============================================================================
-*/
-
-/*
-=================
-Mod_LoadSpriteModel
-=================
-*/
-void Mod_LoadSP2 (model_t *mod, void *buffer)
-{
-	sp2Header_t	*sprin, *sprout;
-	int			i;
-
-	sprin = (sp2Header_t *)buffer;
-	sprout = Hunk_Alloc (modelFileLength);
-
-	sprout->ident = LittleLong (sprin->ident);
-	sprout->version = LittleLong (sprin->version);
-	sprout->numframes = LittleLong (sprin->numframes);
-
-	if (sprout->version != SP2_VERSION)
-		ri.Error (ERR_DROP, "%s has wrong version number (%i should be %i)", mod->name, sprout->version, SP2_VERSION);
-
-	if (sprout->numframes > 32)
-		ri.Error (ERR_DROP, "%s has too many frames (%i > %i)", mod->name, sprout->numframes, 32);
-
-	// byte swap everything
-	for (i=0 ; i<sprout->numframes ; i++)
-	{
-		sprout->frames[i].width = LittleLong (sprin->frames[i].width);
-		sprout->frames[i].height = LittleLong (sprin->frames[i].height);
-		sprout->frames[i].origin_x = LittleLong (sprin->frames[i].origin_x);
-		sprout->frames[i].origin_y = LittleLong (sprin->frames[i].origin_y);
-		memcpy (sprout->frames[i].name, sprin->frames[i].name, MAX_QPATH);
-		mod->images[i] = R_FindTexture (sprout->frames[i].name, it_sprite, true);
-	}
-
-	mod->type = MOD_SPRITE;
 }
 
 

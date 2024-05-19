@@ -15,7 +15,6 @@ See the attached GNU General Public License v2 for more details.
 qboolean ModelDef_LoadFile(char* filename, modeldef_t* def);
 
 static void SV_LoadMD3(svmodel_t* out, void* buffer);
-static void SV_LoadSP2(svmodel_t* out, void* buffer);
 
 static svmodel_t* SV_LoadModel(char* name, qboolean crash);
 static qboolean SV_FileExists(char* name, qboolean crash);
@@ -310,9 +309,6 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 	case MD3_IDENT:
 		SV_LoadMD3(model, buf);
 		break;
-	case SP2_IDENT:
-		SV_LoadSP2(model, buf);
-		break;
 	default:
 		Com_Error(ERR_DROP, "'%s' is not a model", model->name);
 	}
@@ -454,34 +450,6 @@ static void SV_LoadMD3(svmodel_t* out, void* buffer)
 
 	out->type = MOD_ALIAS;
 }
-
-
-/*
-=================
-SV_LoadSP2
-=================
-*/
-static void SV_LoadSP2(svmodel_t* out, void* buffer)
-{
-	sp2Header_t* in;
-
-	in = (sp2Header_t*)buffer;
-
-	in->ident = LittleLong(in->ident);
-	in->version = LittleLong(in->version);
-	in->numframes = LittleLong(in->numframes);
-
-	if( in->version != SP2_VERSION)
-		Com_Error(ERR_DROP, "SV_LoadSP2: '%s' is wrong version %i", out->name, in->version);
-
-	if (in->numframes > 32)
-		Com_Error(ERR_DROP, "SV_LoadSP2: '%s' has too many frames (%i > %i)", out->name, in->numframes, 32);
-
-	out->numFrames = in->numframes;
-	out->numSurfaces = 1;
-	out->type = MOD_SPRITE;
-}
-
 
 
 /*
