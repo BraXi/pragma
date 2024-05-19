@@ -802,6 +802,12 @@ void SV_SetConfigString(int index, char *valueString)
 		SV_Multicast(vec3_origin, MULTICAST_ALL_R); // send the update to everyone
 	}
 }
+
+/*
+================
+SV_NotifyWhenCvarChanged
+================
+*/
 static inline void SV_NotifyWhenCvarChanged(cvar_t* cvar)
 {
 	if (cvar->modified)
@@ -828,11 +834,13 @@ void SV_CheckCvars()
 		return; 
 	if (sv.state != ss_game)
 		return;
+
+	SV_NotifyWhenCvarChanged(sv_cheats);
+	
 	if (sv_maxclients->value == 1)
 		return;
 
 	SV_NotifyWhenCvarChanged(sv_hostname);
-	SV_NotifyWhenCvarChanged(sv_cheats);
 	SV_NotifyWhenCvarChanged(sv_maxvelocity);
 	SV_NotifyWhenCvarChanged(sv_gravity);
 }
@@ -1131,7 +1139,7 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 		Z_Free(svs.gclients);
 
 	Z_FreeTags(TAG_SERVER_GAME);
-	Z_FreeTags(TAG_SERVER_MODELDATA);
+	SV_FreeModels();
 	memset (&sv, 0, sizeof(sv));
 	 
 	Nav_Shutdown();

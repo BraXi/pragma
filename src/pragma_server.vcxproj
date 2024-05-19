@@ -53,6 +53,7 @@
     <ClCompile Include="qcommon\md4.c" />
     <ClCompile Include="qcommon\net_chan.c" />
     <ClCompile Include="qcommon\shared.c" />
+    <ClCompile Include="qcommon\smdl_load.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_debug.c" />
     <ClCompile Include="script\scr_exec.c" />

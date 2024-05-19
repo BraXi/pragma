@@ -16,7 +16,7 @@ qboolean ModelDef_LoadFile(char* filename, modeldef_t* def);
 qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
 
 static void SV_LoadMD3(svmodel_t* out, void* buffer);
-static void SV_LoadSMDL(svmodel_t* out, void* buffer);
+static void SV_LoadSkelModel(svmodel_t* mod, int filelen, void* buffer, char* name);
 static svmodel_t* SV_LoadModel(char* name, qboolean crash);
 
 static qboolean SV_FileExists(char* name, qboolean crash);
@@ -249,6 +249,32 @@ static void SV_LoadDefForModel(svmodel_t* model)
 
 /*
 =================
+SV_FreeModels
+=================
+*/
+void SV_FreeModels()
+{
+	svmodel_t* mod;
+
+	if(sv.num_models)
+		Com_Printf("Freeing %i models (server)...\n", sv.num_models);
+
+	for (int i = 0; i < MAX_MODELS; i++)
+	{
+		mod = &sv.models[i];
+		if (mod->extradata)
+		{
+			Hunk_Free(mod->extradata);
+		}
+		memset(&sv.models[i], 0, sizeof(svmodel_t));
+	}
+	sv.num_models = 0;
+}
+
+
+
+/*
+=================
 SV_LoadModel
 =================
 */
@@ -316,15 +342,15 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 		Com_Error(ERR_DROP, "unimplemented in %s", __FUNCTION__);
 		break;
 	default:
-		FS_FreeFile(buf);
-		Com_Error(ERR_DROP, "'%s' is not a model", model->name);
+		SV_LoadSkelModel(model, fileLen, buf, model->name);
+		break;
 	}
 
 	FS_FreeFile(buf);
 
 	if (model->type == MOD_BAD)
 	{
-		Com_Error(ERR_DROP, "bad model '%s'", model->name);
+		Com_Error(ERR_DROP, "'%s' is missing or bad", model->name);
 		return NULL;
 	}
 
@@ -375,10 +401,6 @@ static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 		return;
 	}
 
-	mod->numFrames = in->numFrames;
-	mod->numTags = in->numTags;
-	mod->numSurfaces = in->numSurfaces;
-
 	if (mod->extradata != NULL)
 	{
 		Com_Error(ERR_FATAL, "mod->extradata not NULL");
@@ -386,6 +408,10 @@ static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 
 	mod->extradata = Hunk_Begin(1024 * 32, "alias model (server)"); //32k should be sufficient?
 	mod->alias = Hunk_Alloc(sizeof(alias_data_t));
+
+	mod->numFrames = in->numFrames;
+	mod->numTags = in->numTags;
+	mod->numSurfaces = in->numSurfaces;
 
 	if (in->numTags)
 	{
@@ -438,13 +464,12 @@ static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 		// don't really need these ifs here, but this will probably help a bit
 		if (surf->numVerts > MD3_MAX_VERTS)
 		{
-			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i verts on a surface (%i)", mod->name, MD3_MAX_VERTS, surf->numVerts);
+			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i verts on a surface (%i)\n", mod->name, MD3_MAX_VERTS, surf->numVerts);
 		}
 		if (surf->numTriangles > MD3_MAX_TRIANGLES)
 		{
-			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i triangles on a surface (%i)", mod->name, MD3_MAX_TRIANGLES, surf->numTriangles);
+			Com_Error(ERR_DROP, "SV_LoadMD3: %s has more than %i triangles on a surface (%i)\n", mod->name, MD3_MAX_TRIANGLES, surf->numTriangles);
 		}
-
 
 		// lowercase the surface name so skin compares are faster
 		_strlwr(surf->name);
@@ -463,6 +488,7 @@ static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 
 	}
 
+	mod->extradatasize = Hunk_End();
 	mod->type = MOD_ALIAS;
 }
 
@@ -499,7 +525,9 @@ static void SV_LoadSkelModel(svmodel_t* mod, int filelen, void* buffer, char* na
 	surf = mod->mesh->surfaces[0];
 	for (int i = 0; i < mod->mesh->hdr.numsurfaces; i++)
 	{
-		Com_sprintf(surf->texture, sizeof(texturename), "surface_%i", i+1); // temporary fix
+		// SMD models have no surface names, and we can not use texture
+		// names because they may repeat, instead rename textures to surfaces
+		Com_sprintf(surf->texture, sizeof(texturename), "surf_%i", 1+i); 
 	}
 
 	mod->type = MOD_SKEL;

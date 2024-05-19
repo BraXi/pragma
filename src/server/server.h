@@ -46,7 +46,7 @@ typedef struct svmodel_s
 
 	int				modelindex;
 
-	cmodel_t		*bmodel;	// MOD_BRUSH
+	cmodel_t		*bmodel;	// MOD_BRUSH, allocated and freed by cmodel
 	alias_data_t	*alias;		// MOD_ALIAS
 	smdl_data_t		*mesh;		// MOD_SKEL
 
@@ -262,6 +262,7 @@ extern	gentity_t	*sv_entity;
 int SV_ModelIndex(char* name);
 int SV_SoundIndex(char* name);
 int SV_ImageIndex(char* name);
+void SV_FreeModels();
 svmodel_t* SV_ModelForNum(unsigned int index);
 svmodel_t* SV_ModelForName(char *name);
 int SV_ModelSurfIndexForName(int modelindex, char* surfaceName);

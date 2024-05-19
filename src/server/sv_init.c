@@ -158,7 +158,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 		Cvar_Set ("paused", "0");
 
 	Com_Printf ("------- Server Initialization -------\n");
-	Com_DPrintf (DP_ALL,"SpawnServer: %s\n",mapname);
+	Com_Printf ("Spawning %s server on a map `%s`, %i spawncount.\n", (dedicated->value > 0.0f ? "dedicated" : "local"), mapname, svs.spawncount);
 
 	if (sv.demofile)
 		fclose (sv.demofile);
@@ -171,7 +171,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	// clean memory and wipe the entire per-level structure
 	//
 	Z_FreeTags(TAG_SERVER_GAME);
-	Z_FreeTags(TAG_SERVER_MODELDATA);
+	SV_FreeModels();
 	memset (&sv, 0, sizeof(sv));
 
 	svs.realtime = 0;

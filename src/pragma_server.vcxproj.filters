@@ -112,6 +112,9 @@
     <ClCompile Include="qcommon\bg_modeldef.c">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="qcommon\smdl_load.c">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="server\server.h">
