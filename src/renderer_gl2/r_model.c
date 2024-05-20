@@ -93,7 +93,7 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	{
 		i = atoi(name + 1);
 		if (i < 1 || !r_worldmodel || i >= r_worldmodel->numInlineModels)
-			ri.Error(ERR_DROP, "bad inline model number");
+			ri.Error(ERR_DROP, "%s: bad inline model number %i.\n", __FUNCTION__);
 		return &r_inlineModels[i];
 	}
 
@@ -120,7 +120,7 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	if (i == r_models_count)
 	{
 		if (r_models_count == RD_MAX_MODELS)
-			ri.Error(ERR_DROP, "R_ModelForName: hit limit of %d models", RD_MAX_MODELS);
+			ri.Error(ERR_DROP, "%s: hit limit of %d models.\n", __FUNCTION__, RD_MAX_MODELS);
 		r_models_count++;
 	}
 
@@ -134,7 +134,10 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	if (!buf)
 	{
 		if (crash)
-			ri.Error(ERR_DROP, "R_ModelForName: %s not found", mod->name);
+			ri.Error(ERR_DROP, "%s: %s not found.\n", __FUNCTION__, mod->name);
+		else
+			ri.Printf(PRINT_LOW, "Warning: model %s not found (%s).\n", mod->name, __FUNCTION__);
+
 		memset(mod->name, 0, sizeof(mod->name));
 		return NULL;
 	}
@@ -147,19 +150,19 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	switch (LittleLong(*(unsigned*)buf))
 	{
 	case MD3_IDENT: /* Quake3 .md3 model */
-		pLoadModel->extradata = Hunk_Begin(RD_MAX_MD3_HUNKSIZE, "model");
+		pLoadModel->extradata = Hunk_Begin(RD_MAX_MD3_HUNKSIZE, "Alias Model (Renderer)");
 		Mod_LoadMD3(mod, buf, LOD_HIGH);
 		break;
 
 	case BSP_IDENT: /* Quake2 .bsp v38*/
 		bExtendedBSP = false;
-		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "world bsp");
+		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "World BSP (Renderer)");
 		Mod_LoadBSP(mod, buf);
 		break;
 
 	case QBISM_IDENT: /* Qbism extended BSP */
 		bExtendedBSP = true;
-		pLoadModel->extradata = Hunk_Begin(RD_MAX_QBSP_HUNKSIZE, "world bsp");
+		pLoadModel->extradata = Hunk_Begin(RD_MAX_QBSP_HUNKSIZE, "Extended World BSP (Renderer)");
 		Mod_LoadBSP(mod, buf);
 		break;
 
@@ -171,7 +174,8 @@ model_t* R_ModelForName(char* name, qboolean crash)
 		break;
 	}
 
-	pLoadModel->extradatasize = Hunk_End();
+	if(mod->type != MOD_SKEL) // skel models have memory shared with EXE and their extradatasize is set in Mod_LoadSkelModel
+		pLoadModel->extradatasize = Hunk_End();
 
 	ri.FreeFile(buf);
 
@@ -194,7 +198,12 @@ void R_FreeModel(model_t* mod)
 	}
 
 	if (mod->extradata)
+	{
+		if(mod->type == MOD_SKEL) // because skel models are allocated by EXE
+			ri.Glob_HunkFree(mod->extradata);
+		else
 		Hunk_Free(mod->extradata);
+	}
 
 	memset(mod, 0, sizeof(*mod));
 }

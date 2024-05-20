@@ -133,7 +133,7 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 	smdl_surf_t* surf;
 	char texturename[MAX_QPATH];
 
-	mod->extradata = ri.Glob_HunkBegin(1024*1024, "skeletal model");
+	mod->extradata = ri.Glob_HunkBegin(1024*1024, "Skeletal Model (Renderer/EXE)");
 	mod->smdl = ri.Glob_HunkAlloc(sizeof(smdl_data_t));
 
 	loaded = ri.LoadAnimOrModel(SMDL_MODEL, mod->smdl, pLoadModel->name, modelFileLength, buffer);
@@ -142,7 +142,7 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 	{
 		ri.Glob_HunkFree(mod->extradata);
 		mod->extradata = NULL;
-		ri.Printf(PRINT_LOW, "Loading model '%s' failed.\n", mod->name);
+		//ri.Printf(PRINT_LOW, "Warning: failed to load model '%s'.\n", mod->name);
 		return;
 	}
 
@@ -165,6 +165,7 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 		surf->texnum = mod->images[i]->texnum;
 	}
 
+	mod->extradatasize = ri.Glob_HunkEnd();
 	mod->type = MOD_SKEL;
 	mod->numframes = 1;
 
