@@ -43,6 +43,25 @@ static smdl_vert_t* temp_verts = NULL;
 
 /*
 =================
+SMD_ClipBoneRotation
+clip bone rotaton between -pi <= rot < pi
+=================
+*/
+static void SMD_ClipBoneRotation(vec3_t bonerot)
+{
+	
+	for (int i = 0; i < 3; i++) 
+	{
+
+		while (bonerot[i] >= M_PI)
+			bonerot[i] -= M_PI * 2;
+		while (bonerot[i] < -M_PI)
+			bonerot[i] += M_PI * 2;
+	}
+}
+
+/*
+=================
 SMD_CleanUp
 An error during parsing has happened so clean up, note that out should be freed by user
 =================
@@ -115,7 +134,7 @@ static void SMD_ParseErrorAtLine(char* fmt, ...)
 Com_LoadAnimOrModel
 
 Parses SMD file and returns true on success.
-smd_data_t *out which will contain either model or animation data dependng what loadType was
+smd_data_t *out contains model or animation data dependng what loadType was
 
 Most stupid parse errors are forgiven, you must allocate *out with Hunk_Alloc and pass the file *buffer before use
 =================
@@ -381,6 +400,8 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 			s->rot[1] = atof(COM_TokenGetArg(5));
 			s->rot[2] = atof(COM_TokenGetArg(6));
 
+			SMD_ClipBoneRotation(s->rot);
+
 			if (s->bone > hdr->numbones || s->bone < 0)
 			{
 				SMD_ParseErrorAtLine("wrong bone index %i.", s->bone);
@@ -416,7 +437,7 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 			{
 				if (hdr->numverts <= 0)
 				{
-					SMD_ParseError("model group has no verts.");
+					SMD_ParseError("model has no verts.");
 					return false;
 				}
 
@@ -435,6 +456,8 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 				{
 					out->surfaces[hdr->numsurfaces] = Hunk_Alloc(sizeof(smdl_surf_t));
 					surface = out->surfaces[hdr->numsurfaces];
+
+					strncpy(surface->name, va("surf_%i", hdr->numsurfaces), MAX_QPATH);
 
 					strncpy(surface->texture, newtexture, MAX_QPATH);
 					strncpy(currentTexture, newtexture, MAX_QPATH);
@@ -520,15 +543,13 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 		}
 	}
 
-	out->verts = Hunk_Alloc(sizeof(smdl_vert_t) * hdr->numverts);
-	memcpy(out->verts, temp_verts, sizeof(smdl_vert_t) * hdr->numverts);
-	free(temp_verts);
-
-	//strncpy(out->name, COM_SkipPath(pLoadModel->name), MAX_QPATH);
-	out->type = loadType;
-
 	if (loadType == SMDL_MODEL)
 	{
+		unsigned int vertsize = (sizeof(smdl_vert_t) * hdr->numverts);
+		out->verts = Hunk_Alloc(vertsize);
+		memcpy(out->verts, temp_verts, vertsize);
+		free(temp_verts);
+
 		hdr->boundingradius = RadiusFromBounds(hdr->mins, hdr->maxs);
 
 		//Com_DPrintf(DP_ALL, "Mins/Maxs: [%f %f %f] [%f %f %f]\n", hdr->mins[0], hdr->mins[1], hdr->mins[2], hdr->maxs[0], hdr->maxs[1], hdr->maxs[2]);
@@ -538,6 +559,9 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 	{
 		Com_DPrintf(DP_ALL, "Loaded animation with %i frames, %i bones.\n", hdr->numframes, hdr->numbones);
 	}
+
+	out->type = loadType;
+	//strncpy(out->name, COM_SkipPath(pLoadModel->name), MAX_QPATH);
 
 	return true;
 }
@@ -563,4 +587,89 @@ Writes an optimized binary format for faster loading
 */
 static void Com_WriteBinaryAnimation(smdl_data_t* mod)
 {
+}
+
+
+
+// 
+
+
+#define MAX_ANIMATIONS 128
+static smdl_anim_t animsArray[MAX_ANIMATIONS];
+static unsigned int animsCount = 0;
+
+
+
+/*
+=================
+Com_AnimationForName
+=================
+*/
+smdl_anim_t* Com_AnimationForName(char* name, qboolean crash)
+{
+	smdl_anim_t* anim;
+	unsigned* buf;
+	int			i, fileLen;
+	qboolean	loaded;
+	char		filename[MAX_QPATH];
+
+	if (!name[0])
+		Com_Error(ERR_DROP, "%s: NULL name", __FUNCTION__);
+
+	for (i = 0, anim = animsArray; i < animsCount; i++, anim++)
+	{
+		if (!anim->name[0])
+			continue;
+
+		if (!strcmp(anim->name, name))
+			return anim;
+	}
+
+	for (i = 0, anim = animsArray; i < animsCount; i++, anim++)
+	{
+		if (!anim->name[0])
+			break;
+	}
+
+	if (i == animsCount)
+	{
+		if (animsCount == MAX_ANIMATIONS)
+			Com_Error(ERR_DROP, "%s: hit limit of %d animations", __FUNCTION__, MAX_ANIMATIONS);
+		animsCount++;
+	}
+
+	Com_sprintf(filename, sizeof(filename), "modelanims/%s.smd", name);
+
+	fileLen = FS_LoadFile(filename, &buf);
+	if (!buf)
+	{
+		if (crash)
+			Com_Error(ERR_DROP, "%s: animation `%s` not found.\n", __FUNCTION__, anim->name);
+
+		memset(anim->name, 0, sizeof(anim->name));
+		return NULL;
+	}
+
+	anim->extradata = Hunk_Begin(1024 * 256, "animation"); // 256kb should be more than plenty?
+	loaded = Com_LoadAnimOrModel(SMDL_MODEL, &anim->data, name, fileLen, buf);
+
+	FS_FreeFile(buf);
+
+	if (!loaded)
+	{
+		Hunk_Free(anim->extradata);
+		memset(&anim, 0, sizeof(anim));
+
+		if (crash)
+			Com_Error(ERR_DROP, "%s: failed to load animation `%s`.\n", __FUNCTION__, anim->name);
+
+		return NULL;
+	}
+
+	anim->data.hdr.playrate = SANIM_FPS;
+
+	anim->extradatasize = Hunk_End();
+	strncpy(anim->name, name, MAX_QPATH);
+
+	return anim;
 }

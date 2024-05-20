@@ -339,7 +339,7 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 		break;
 	case SMDL_IDENT:
 		FS_FreeFile(buf);
-		Com_Error(ERR_DROP, "unimplemented in %s", __FUNCTION__);
+		Com_Error(ERR_FATAL, "unimplemented in %s", __FUNCTION__);
 		break;
 	default:
 		SV_LoadSkelModel(model, fileLen, buf, model->name);
@@ -347,12 +347,14 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 	}
 
 	FS_FreeFile(buf);
+	model->extradatasize = Hunk_End();
 
 	if (model->type == MOD_BAD)
 	{
 		Com_Error(ERR_DROP, "'%s' is missing or bad", model->name);
 		return NULL;
 	}
+
 
 	SV_LoadDefForModel(model);
 	sv.num_models++;
@@ -487,8 +489,6 @@ static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
 
 	}
-
-	mod->extradatasize = Hunk_End();
 	mod->type = MOD_ALIAS;
 }
 
@@ -501,8 +501,8 @@ SV_LoadSkelModel
 static void SV_LoadSkelModel(svmodel_t* mod, int filelen, void* buffer, char* name)
 {
 	qboolean	loaded = false;
-	smdl_surf_t	*surf;
-	char texturename[MAX_QPATH];
+	//smdl_surf_t	*surf;
+	//char texturename[MAX_QPATH];
 
 	if (mod->extradata != NULL)
 	{
@@ -522,13 +522,13 @@ static void SV_LoadSkelModel(svmodel_t* mod, int filelen, void* buffer, char* na
 
 	mod->extradatasize = Hunk_End();
 
-	surf = mod->mesh->surfaces[0];
-	for (int i = 0; i < mod->mesh->hdr.numsurfaces; i++)
-	{
+	//surf = mod->mesh->surfaces[0];
+	//for (int i = 0; i < mod->mesh->hdr.numsurfaces; i++)
+	//{
 		// SMD models have no surface names, and we can not use texture
 		// names because they may repeat, instead rename textures to surfaces
-		Com_sprintf(surf->texture, sizeof(texturename), "surf_%i", 1+i); 
-	}
+		//Com_sprintf(surf->texture, sizeof(texturename), "surf_%i", 1+i); 
+	//}
 
 	mod->type = MOD_SKEL;
 	mod->numTags = mod->mesh->hdr.numbones;

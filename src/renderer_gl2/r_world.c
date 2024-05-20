@@ -176,7 +176,7 @@ static void R_BuildVertexBufferForWorld()
 	int			i, j, v, bufsize;
 	GLint		ongpusize = 0;
 
-	polyvert_t* tempVerts;
+	polyvert_t* tempVerts = NULL;
 
 	if (!r_worldmodel)
 		return;

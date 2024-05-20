@@ -133,14 +133,14 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 	smdl_surf_t* surf;
 	char texturename[MAX_QPATH];
 
-	mod->extradata = Hunk_Begin(1024*1024, "skeletal model");
-	mod->smdl = Hunk_Alloc(sizeof(smdl_data_t));
+	mod->extradata = ri.Glob_HunkBegin(1024*1024, "skeletal model");
+	mod->smdl = ri.Glob_HunkAlloc(sizeof(smdl_data_t));
 
 	loaded = ri.LoadAnimOrModel(SMDL_MODEL, mod->smdl, pLoadModel->name, modelFileLength, buffer);
 
 	if (!loaded)
 	{
-		Hunk_Free(mod->extradata);
+		ri.Glob_HunkFree(mod->extradata);
 		mod->extradata = NULL;
 		ri.Printf(PRINT_LOW, "Loading model '%s' failed.\n", mod->name);
 		return;
@@ -176,80 +176,8 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 
 }
 
-#define MAX_ANIMATIONS 128
-static smdl_anim_t animsArray[MAX_ANIMATIONS];
-static unsigned int animsCount = 0;
 
-/*
-=================
-AnimationForName
-=================
-*/
-smdl_anim_t* AnimationForName(char *name, qboolean crash)
-{
-	smdl_anim_t	*anim;
-	unsigned	*buf;
-	int			i, fileLen;
-	qboolean	loaded;
-	char		filename[MAX_QPATH];
 
-	if (!name[0])
-		ri.Error(ERR_DROP, "%s: NULL name", __FUNCTION__);
-
-	for (i = 0, anim = animsArray; i < animsCount; i++, anim++)
-	{
-		if (!anim->name[0])
-			continue;
-
-		if (!strcmp(anim->name, name))
-			return anim;
-	}
-
-	for (i = 0, anim = animsArray; i < animsCount; i++, anim++)
-	{
-		if (!anim->name[0])
-			break;
-	}
-
-	if (i == animsCount)
-	{
-		if (animsCount == MAX_ANIMATIONS)
-			ri.Error(ERR_DROP, "%s: hit limit of %d animations", __FUNCTION__, MAX_ANIMATIONS);
-		animsCount++;
-	}
-
-	Com_sprintf(filename, sizeof(filename), "modelanims/%s.smd", name);
-
-	fileLen = ri.LoadFile(filename, &buf);
-	if (!buf)
-	{
-		if (crash)
-			ri.Error(ERR_DROP, "%s: %s not found", __FUNCTION__, anim->name);
-
-		memset(anim->name, 0, sizeof(anim->name));
-		return NULL;
-	}
-
-	anim->extradata = Hunk_Begin(1024 * 256, "animation"); // 256kb should be more than plenty?
-
-	loaded = ri.LoadAnimOrModel(SMDL_MODEL, &anim->data, name, modelFileLength, buf);
-
-	if (!loaded)
-	{
-		ri.Printf(PRINT_LOW, "Loading animation '%s' failed.\n", anim->name);
-		Hunk_Free(anim->extradata);
-		ri.FreeFile(buf);
-		memset(&anim, 0, sizeof(anim));
-		return NULL;
-	}
-
-	ri.FreeFile(buf);
-
-	anim->extradatasize = Hunk_End();
-	strncpy(anim->name, name, MAX_QPATH);
-
-	return anim;
-}
 
 
 

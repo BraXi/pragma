@@ -11,6 +11,9 @@ See the attached GNU General Public License v2 for more details.
 #ifndef _mod_skel_h_
 #define _mod_skel_h_
 
+
+// IF THIS IS CHANGED RENDERER MUST BE RECOMPILED
+
 /*
 ========================================================================
 
@@ -30,7 +33,7 @@ structs also match optimized binary file
 #define SANIM_IDENT		(('Q'<<24)+('E'<<16)+('S'<<8)+'B') // little-endian "BSEQ"
 #define SANIM_VERSION	1
 
-#define SANIM_PLAYRATE	10 // default
+#define SANIM_FPS		10 // default
 
 #define SMDL_IDENT		(('D'<<24)+('O'<<16)+('M'<<8)+'B') // little-endian "BMOD"
 #define SMDL_VERSION	1
@@ -52,6 +55,7 @@ typedef struct smdl_vert_s
 
 typedef struct smdl_group_s
 {
+	char name[32];
 	char texture[MAX_QPATH];
 	int firstvert;			// smdl_vert_t[firstvert]
 	int numverts;			// smdl_vert_t[firstvert+numverts] always enough to form triangles

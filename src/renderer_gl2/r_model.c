@@ -164,6 +164,7 @@ model_t* R_ModelForName(char* name, qboolean crash)
 		break;
 
 	default:
+		//pLoadModel->extradata = Hunk_Begin(RD_MAX_SMDL_HUNKSIZE, "world bsp");
 		Mod_LoadSkelModel(mod, buf, LOD_HIGH);
 		if(mod->type == MOD_BAD)
 			ri.Error(ERR_DROP, "R_ModelForName: file %s is not a vaild model", mod->name);

@@ -578,6 +578,11 @@ qboolean VID_LoadRefresh( char *name )
 	ri.Vid_GetModeInfo = VID_GetModeInfo;
 	ri.Vid_NewWindow = VID_NewWindow;
 
+	ri.Glob_HunkBegin = Hunk_Begin;
+	ri.Glob_HunkAlloc = Hunk_Alloc;
+	ri.Glob_HunkEnd = Hunk_End;
+	ri.Glob_HunkFree = Hunk_Free;
+
 	ri.LoadAnimOrModel = Com_LoadAnimOrModel;
 	ri.GetBSPLimit = _GetBSPLimit;
 	ri.GetBSPElementSize = _GetBSPElementSize;

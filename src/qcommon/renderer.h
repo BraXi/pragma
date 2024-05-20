@@ -271,6 +271,11 @@ typedef struct
 	qboolean	(*Vid_GetModeInfo)( int *width, int *height, int mode );
 	void		(*Vid_NewWindow)( int width, int height );
 
+	void	*(*Glob_HunkBegin)(int maxsize, char* name);
+	void	*(*Glob_HunkAlloc)(int size);
+	int		(*Glob_HunkEnd)(void);
+	void	(*Glob_HunkFree)(void* base);
+
 	qboolean	(*LoadAnimOrModel)(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
 
 	unsigned int (*GetBSPLimit)(bspDataType type, qboolean extendedbsp);
