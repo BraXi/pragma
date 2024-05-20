@@ -645,13 +645,15 @@ smdl_anim_t* Com_AnimationForName(char* name, qboolean crash)
 	{
 		if (crash)
 			Com_Error(ERR_DROP, "%s: animation `%s` not found.\n", __FUNCTION__, anim->name);
+		else
+			Com_DPrintf(DP_ALL, "Warning: animation `%s` not found.\n", __FUNCTION__, anim->name);
 
 		memset(anim->name, 0, sizeof(anim->name));
 		return NULL;
 	}
 
 	anim->extradata = Hunk_Begin(1024 * 256, "animation"); // 256kb should be more than plenty?
-	loaded = Com_LoadAnimOrModel(SMDL_MODEL, &anim->data, name, fileLen, buf);
+	loaded = Com_LoadAnimOrModel(SMDL_ANIMATION, &anim->data, name, fileLen, buf);
 
 	FS_FreeFile(buf);
 
@@ -662,11 +664,13 @@ smdl_anim_t* Com_AnimationForName(char* name, qboolean crash)
 
 		if (crash)
 			Com_Error(ERR_DROP, "%s: failed to load animation `%s`.\n", __FUNCTION__, anim->name);
+		else
+			Com_DPrintf(DP_ALL, "Warning: failed to load animation `%s`.\n", __FUNCTION__, anim->name);
 
 		return NULL;
 	}
 
-	anim->data.hdr.playrate = SANIM_FPS;
+	anim->data.hdr.playrate = SANIM_FPS; // set the default fps untill modeldef code is updated and hooked to smdl
 
 	anim->extradatasize = Hunk_End();
 	strncpy(anim->name, name, MAX_QPATH);

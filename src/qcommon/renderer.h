@@ -277,6 +277,7 @@ typedef struct
 	void	(*Glob_HunkFree)(void* base);
 
 	qboolean	(*LoadAnimOrModel)(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
+	smdl_anim_t	*(*AnimationForName)(char* name, qboolean crash);
 
 	unsigned int (*GetBSPLimit)(bspDataType type, qboolean extendedbsp);
 	unsigned int (*GetBSPElementSize)(bspDataType type, qboolean extendedbsp);
