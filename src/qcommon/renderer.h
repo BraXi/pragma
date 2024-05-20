@@ -167,7 +167,7 @@ typedef struct
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'6')
+#define	API_VERSION		('B'+'X'+'I'+'7')
 
 //
 // these are the functions exported by the refresh module

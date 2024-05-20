@@ -671,9 +671,8 @@ smdl_anim_t* Com_AnimationForName(char* name, qboolean crash)
 	}
 
 	anim->data.hdr.playrate = SANIM_FPS; // set the default fps untill modeldef code is updated and hooked to smdl
-
-	anim->extradatasize = Hunk_End();
 	strncpy(anim->name, name, MAX_QPATH);
 
+	anim->extradatasize = Hunk_End();
 	return anim;
 }
