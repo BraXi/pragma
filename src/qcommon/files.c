@@ -359,12 +359,12 @@ int FS_LoadFile (char *path, void **buffer)
 {
 	FILE	*h;
 	byte	*buf;
-	int		len;
+	long	fileLength;
 
 	buf = NULL;	// quiet compiler warning
 
 // look for it in the filesystem or pack files
-	len = FS_FOpenFile (path, &h);
+	fileLength = FS_FOpenFile (path, &h);
 	if (!h)
 	{
 		if (buffer)
@@ -375,17 +375,17 @@ int FS_LoadFile (char *path, void **buffer)
 	if (!buffer)
 	{
 		fclose (h);
-		return len;
+		return fileLength;
 	}
 
-	buf = Z_Malloc(len);
+	buf = Z_Malloc(fileLength+1);
 	*buffer = buf;
 
-	FS_Read (buf, len, h);
+	fread(buf, fileLength, 1, h);
 
 	fclose (h);
 
-	return len;
+	return fileLength;
 }
 
 

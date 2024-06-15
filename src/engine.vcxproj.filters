@@ -193,9 +193,6 @@
     <ClCompile Include="client\cgame\cg_particles.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
-    <ClCompile Include="cl_cgame.c">
-      <Filter>client</Filter>
-    </ClCompile>
     <ClCompile Include="client\cgame\cg_flash.c">
       <Filter>client\cgame</Filter>
     </ClCompile>

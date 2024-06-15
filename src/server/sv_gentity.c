@@ -406,7 +406,7 @@ void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 			break;
 
 		if (com_token[0] != '{')
-			Com_Error(ERR_FATAL, "SV_SpawnEntities: found %s when expecting {\n", com_token);
+			Com_Error(ERR_FATAL, "%s: found %s when expecting {\n", __FUNCTION__, com_token);
 
 		if (!ent)
 		{

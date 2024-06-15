@@ -655,7 +655,15 @@ void VID_CheckChanges (void)
 		cl.refresh_prepped = false;
 		cls.disable_screen = true;
 
-		Com_sprintf(name, sizeof(name), "renderer_%s.dll", r_renderer->string );
+
+#if defined(__x86_64__) || defined(_M_X64)
+		Com_sprintf(name, sizeof(name), "pragma_renderer_%s_x64.dll", r_renderer->string);
+#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+		Com_sprintf(name, sizeof(name), "pragma_renderer_%s_x86.dll", r_renderer->string);
+#else
+#error "fix this"
+#endif
+
 		if ( !VID_LoadRefresh( name ) )
 		{
 			if ( strcmp (r_renderer->string, DEFAULT_RENDERER) == 0 )

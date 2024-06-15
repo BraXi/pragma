@@ -143,7 +143,7 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 {
 	int	parse_position = 0;
 	int parsePoint = SMD_HEADER;
-	int seq_numbones; // when parsing sequences this must match hdr->numbones
+	int seq_numbones = 0; // when parsing sequences this must match hdr->numbones
 	char currentTexture[MAX_QPATH];
 	char* data;
 
@@ -631,7 +631,7 @@ smdl_anim_t* Com_AnimationForName(char* name, qboolean crash)
 			break;
 	}
 
-	if (i == animsCount)
+	if (i == (int)animsCount)
 	{
 		if (animsCount == MAX_ANIMATIONS)
 			Com_Error(ERR_DROP, "%s: hit limit of %d animations", __FUNCTION__, MAX_ANIMATIONS);
