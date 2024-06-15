@@ -787,7 +787,7 @@ void SV_SetConfigString(int index, char *valueString)
 		return;
 	}
 
-	if (!valueString)
+	if (!valueString || valueString == NULL)
 		valueString = "";
 
 	// change the string in sv

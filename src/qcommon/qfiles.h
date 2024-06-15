@@ -26,14 +26,14 @@ The .pak files are just a linear collapse of a directory tree
 typedef struct
 {
 	char	name[56];
-	int		filepos, filelen;
+	int32_t		filepos, filelen;
 } dpackfile_t;
 
 typedef struct
 {
-	int		ident;		// == IDPAKHEADER
-	int		dirofs;
-	int		dirlen;
+	int32_t		ident;		// == IDPAKHEADER
+	int32_t		dirofs;
+	int32_t		dirlen;
 } dpackheader_t;
 
 #define	MAX_FILES_IN_PACK	4096
@@ -134,30 +134,30 @@ typedef enum
 
 typedef struct
 {
-	unsigned short	width;
-	unsigned short	height;
-	int		lightofs;		// start of numstyles (from face struct) * (width * height) samples
+	uint16_t	width;
+	uint16_t	height;
+	int32_t		lightofs;		// start of numstyles (from face struct) * (width * height) samples
 	float	vecs[2][4];		// this is a world -> lightmap space transformation matrix
 } bspx_decoupledlm_t;
 
 typedef struct
 {
 	char	name[24];	// up to 23 chars, zero-padded
-	int		fileofs;	// from file start
-	int		filelen;
+	int32_t		fileofs;	// from file start
+	int32_t		filelen;
 } bspx_lump_t;
 
 typedef struct
 {
-	int ident;		// BSPX_IDENT
-	int numlumps;	// bspx_lump_t[numlumps]
+	int32_t ident;		// BSPX_IDENT
+	int32_t numlumps;	// bspx_lump_t[numlumps]
 } bspx_header_t;
 
 //=============================================================================
 
 typedef struct
 {
-	int		fileofs, filelen;
+	int32_t		fileofs, filelen;
 } lump_t;
 
 // standard lumps
@@ -184,8 +184,8 @@ typedef struct
 
 typedef struct
 {
-	int			ident;
-	int			version;	
+	int32_t			ident;
+	int32_t			version;
 	lump_t		lumps[HEADER_LUMPS];
 } dbsp_header_t;
 
@@ -193,8 +193,8 @@ typedef struct
 {
 	float		mins[3], maxs[3];
 	float		origin[3];		// for sounds or lights
-	int			headnode;
-	int			firstface, numfaces;	// inlineModels just draw faces
+	int32_t		headnode;
+	int32_t		firstface, numfaces;	// inlineModels just draw faces
 										// without walking the bsp tree
 } dbsp_model_t;
 
@@ -221,7 +221,7 @@ typedef struct
 {
 	float	normal[3];
 	float	dist;
-	int		type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
+	int32_t	type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
 } dbsp_plane_t;
 
 
@@ -287,32 +287,32 @@ typedef struct
 
 typedef struct
 {
-	int			planenum;
-	int			children[2];	// negative numbers are -(leafs+1), not nodes
-	short		mins[3];		// for frustom culling
-	short		maxs[3];
-	unsigned short	firstface;
-	unsigned short	numfaces;	// counting both sides
+	int32_t		planenum;
+	int32_t		children[2];	// negative numbers are -(leafs+1), not nodes
+	int16_t		mins[3];		// for frustom culling
+	int16_t		maxs[3];
+	uint16_t	firstface;
+	uint16_t	numfaces;	// counting both sides
 } dbsp_node_t;
 
 typedef struct
 {
-	int			planenum;
-	int			children[2];	// negative numbers are -(leafs+1), not nodes
+	int32_t			planenum;
+	int32_t			children[2];	// negative numbers are -(leafs+1), not nodes
 	float		mins[3];		// for frustom culling
 	float		maxs[3];
-	unsigned int firstface;
-	unsigned int numfaces; // counting both sides
+	uint32_t firstface;
+	uint32_t numfaces; // counting both sides
 } dbsp_node_ext_t;	// QBISM BSP
 
 
 typedef struct texinfo_s
 {
 	float		vecs[2][4];		// [s/t][xyz offset]
-	int			flags;			// miptex flags + overrides
-	int			value;			// light emission, etc
+	int32_t		flags;			// miptex flags + overrides
+	int32_t		value;			// light emission, etc
 	char		texture[32];	// texture name (textures/*.tga)
-	int			nexttexinfo;	// for animations, -1 = end of chain
+	int32_t		nexttexinfo;	// for animations, -1 = end of chain
 } dbsp_texinfo_t;
 
 
@@ -320,97 +320,97 @@ typedef struct texinfo_s
 // counterclockwise use of the edge in a face
 typedef struct
 {
-	unsigned short	v[2];		// vertex numbers
+	uint16_t	v[2];		// vertex numbers
 } dbsp_edge_t;
 
 typedef struct
 {
-	unsigned int v[2]; // vertex numbers
+	uint32_t v[2]; // vertex numbers
 } dbsp_edge_ext_t; // QBISM BSP
 
 
 #define	MAX_LIGHTMAPS_PER_SURFACE	4 // this is also max lightstyles for surf
 typedef struct
 {
-	unsigned short	planenum;
-	short		side;
+	uint16_t	planenum;
+	int16_t		side;
 
-	int			firstedge;		// we must support > 64k edges
-	short		numedges;	
-	short		texinfo;
+	int32_t		firstedge;		// we must support > 64k edges
+	int16_t		numedges;
+	int16_t		texinfo;
 
 // lighting info
 	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
-	int			lightofs;		// start of [numstyles*surfsize] samples
+	int32_t			lightofs;		// start of [numstyles*surfsize] samples
 } dbsp_face_t;
 
 typedef struct
 {
-	unsigned int planenum;
-	int			side;
+	uint32_t		planenum;
+	int32_t			side;
 
-	int			firstedge; // we must support > 64k edges
-	int			numedges;
-	int			texinfo;
+	int32_t			firstedge; // we must support > 64k edges
+	int32_t			numedges;
+	int32_t			texinfo;
 
 	// lighting info
 	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
-	int			lightofs; // start of [numstyles*surfsize] samples
+	int32_t			lightofs; // start of [numstyles*surfsize] samples
 } dbsp_face_ext_t; // QBISM BSP
 
 
 typedef struct
 {
-	int				contents;			// OR of all brushes (not needed?)
+	int32_t			contents;			// OR of all brushes (not needed?)
 
-	short			cluster;
-	short			area;
+	int16_t			cluster;
+	int16_t			area;
 
-	short			mins[3];			// for frustum culling
-	short			maxs[3];
+	int16_t			mins[3];			// for frustum culling
+	int16_t			maxs[3];
 
-	unsigned short	firstleafface;
-	unsigned short	numleaffaces;
+	uint16_t	firstleafface;
+	uint16_t	numleaffaces;
 
-	unsigned short	firstleafbrush;
-	unsigned short	numleafbrushes;
+	uint16_t	firstleafbrush;
+	uint16_t	numleafbrushes;
 } dbsp_leaf_t;
 
 typedef struct
 {
-	int				contents; // OR of all brushes (not needed?)
+	int32_t			contents; // OR of all brushes (not needed?)
 
-	int				cluster;
-	int				area;
+	int32_t			cluster;
+	int32_t			area;
 
 	float			mins[3]; // for frustum culling
 	float			maxs[3];
 
-	unsigned int	firstleafface;
-	unsigned int	numleaffaces;
+	uint32_t	firstleafface;
+	uint32_t	numleaffaces;
 
-	unsigned int	firstleafbrush;
-	unsigned int	numleafbrushes;
+	uint32_t	firstleafbrush;
+	uint32_t	numleafbrushes;
 } dbsp_leaf_ext_t; // QBISM BSP
 
 
 typedef struct
 {
-	unsigned short	planenum;		// facing out of the leaf
-	short			texinfo;
+	uint16_t	planenum;		// facing out of the leaf
+	int16_t		texinfo;
 } dbsp_brushside_t;
 
 typedef struct
 {
-	unsigned int	planenum; // facing out of the leaf
-	int				texinfo;
+	uint32_t	planenum; // facing out of the leaf
+	int32_t				texinfo;
 } dbsp_brushside_ext_t; // QBISM BSP
 
 typedef struct
 {
-	int			firstside;
-	int			numsides;
-	int			contents;
+	int32_t			firstside;
+	int32_t			numsides;
+	int32_t			contents;
 } dbrush_t;
 
 //#define	ANGLE_UP	-1 // braxi -- unused
@@ -426,8 +426,8 @@ typedef struct
 
 typedef struct
 {
-	int			numclusters;
-	int			bitofs[8][DVIS_NUM];	// bitofs[numclusters][DVIS_NUM]
+	int32_t			numclusters;
+	int32_t			bitofs[8][DVIS_NUM];	// bitofs[numclusters][DVIS_NUM]
 } dbsp_vis_t;
 
 // each area has a list of portals that lead into other areas
@@ -435,12 +435,12 @@ typedef struct
 // hearable even if the vis info says that it should be
 typedef struct
 {
-	int		portalnum;
-	int		otherarea;
+	int32_t		portalnum;
+	int32_t		otherarea;
 } dbsp_areaportal_t;
 
 typedef struct
 {
-	int		numareaportals;
-	int		firstareaportal;
+	int32_t		numareaportals;
+	int32_t		firstareaportal;
 } dbsp_area_t;

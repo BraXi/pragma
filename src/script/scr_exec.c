@@ -22,6 +22,9 @@ char* Scr_ValueStringDeveloper(etype_t type, eval_t* val);
 
 #define ENTVARSOFFSET(ent) (int*)(&ent[0] + active_qcvm->offsetToEntVars)
 
+
+#define QCVMDEBUGLEVEL 0
+
 /*
 ============
 Scr_GetEntityFieldValue
@@ -98,7 +101,6 @@ void Scr_RunError(char* error, ...)
 	Com_Error(ERR_DROP, "script runtime error in %s", vmDefs[active_qcvm->progsType].filename);
 }
 
-#define QCVMDEBUGLEVEL 0
 /*
 ============
 Scr_NumArgs
@@ -603,7 +605,9 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		case OP_EQ_S: // == string
-			c->_float = !strcmp(ScrInternal_String(a->string), ScrInternal_String(b->string));
+			char * ta = ScrInternal_String(a->string);
+			char * tb = ScrInternal_String(b->string);
+			c->_float = !strcmp(ta, tb);
 			break;
 
 		case OP_EQ_E: // equal int

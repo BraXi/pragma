@@ -63,35 +63,35 @@ typedef struct md3Tag_s
 
 typedef struct
 {
-	int		ident;
+	int32_t	ident;
 
 	char	name[MD3_MAX_NAME];	// polyset name
 
-	int		flags;
+	int32_t		flags;
 
-	int		numFrames;			// all surfaces in a model should have the same
-	int		numShaders;			// all surfaces in a model should have the same
-	int		numVerts;
-	int		numTriangles;
+	int32_t		numFrames;			// all surfaces in a model should have the same
+	int32_t		numShaders;			// all surfaces in a model should have the same
+	int32_t		numVerts;
+	int32_t		numTriangles;
 
-	int		ofsTriangles;
+	int32_t		ofsTriangles;
 
-	int		ofsShaders;			// offset from start of md3Surface_t
-	int		ofsSt;				// texture coords are common for all frames
-	int		ofsXyzNormals;		// numVerts * numFrames
+	int32_t		ofsShaders;			// offset from start of md3Surface_t
+	int32_t		ofsSt;				// texture coords are common for all frames
+	int32_t		ofsXyzNormals;		// numVerts * numFrames
 
-	int		ofsEnd;				// next surface follows
+	int32_t		ofsEnd;				// next surface follows
 } md3Surface_t;
 
 typedef struct
 {
 	char			name[MAX_QPATH];
-	int				shaderIndex;	// for in-game use
+	int32_t			shaderIndex;	// for in-game use
 } md3Shader_t;
 
 typedef struct
 {
-	int			indexes[3];
+	int32_t			indexes[3];
 } md3Triangle_t;
 
 typedef struct
@@ -101,30 +101,30 @@ typedef struct
 
 typedef struct
 {
-	short		xyz[3];
-	short		normal;
+	int16_t	xyz[3];
+	int16_t	normal;
 } md3XyzNormal_t;
 
 typedef struct
 {
-	int			ident;				// == MD3_IDENT
-	int			version;			// == MD3_VERSION
+	int32_t			ident;				// == MD3_IDENT
+	int32_t			version;			// == MD3_VERSION
 
 	char		name[MAX_QPATH];	// model name
 
-	int			flags;
+	int32_t			flags;
 
-	int			numFrames;
-	int			numTags;
-	int			numSurfaces;
+	int32_t			numFrames;
+	int32_t			numTags;
+	int32_t			numSurfaces;
 
-	int			numSkins;
+	int32_t			numSkins;
 
-	int			ofsFrames;			// offset for first frame
-	int			ofsTags;			// numFrames * numTags
-	int			ofsSurfaces;		// first surface, others follow
+	int32_t			ofsFrames;			// offset for first frame
+	int32_t			ofsTags;			// numFrames * numTags
+	int32_t			ofsSurfaces;		// first surface, others follow
 
-	int			ofsEnd;				// end of file
+	int32_t			ofsEnd;				// end of file
 } md3Header_t;
 
 #endif /*_mod_md3_h_*/

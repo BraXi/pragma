@@ -78,7 +78,7 @@ typedef enum memtag_s
 
 //============================================================================
 
-#define	FOFS(type,x) (int)&(((type *)0)->x)
+//#define	FOFS(type,x) (int)&(((type *)0)->x)
 typedef void (*parsecommand_t) (char* value, byte* basePtr);
 
 typedef enum

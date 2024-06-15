@@ -10,16 +10,16 @@ See the attached GNU General Public License v2 for more details.
 
 
 #ifndef scr_func_t
-	typedef int scr_func_t;
-	typedef int scr_entity_t;
-	typedef int scr_string_t;
+	typedef int32_t scr_func_t;
+	typedef int32_t scr_entity_t;
+	typedef int32_t scr_string_t;
 #endif
 
 
 // prog globals
 typedef struct sv_globalvars_s
 {
-	int	pad[28];
+	int32_t	pad[28];
 
 	scr_entity_t 	worldspawn;
 	scr_entity_t	self;
@@ -30,7 +30,7 @@ typedef struct sv_globalvars_s
 	float			g_frameTime;
 	float			g_intermissionTime;
 
-	int				sv_time;
+	int32_t			sv_time;
 
 	vec3_t			v_forward, v_up, v_right;
 
@@ -39,7 +39,7 @@ typedef struct sv_globalvars_s
 	scr_entity_t	trace_ent;
 	float			trace_entnum;  	// this is tricky, if nothing is hit trace_ent = world, but 
 									// trace_entnum will be -1, thats because QC's null entity is world
-	int				trace_contents;
+	int32_t			trace_contents;
 	scr_string_t	trace_surface_name;
 	float			trace_surface_flags;
 	float			trace_surface_value;
@@ -71,13 +71,13 @@ typedef struct sv_entvars_s
 	vec3_t		old_origin;		// for lerping
 
 	float		modelindex;		// models
-	int			anim;			// index to anim def
-	int			animstarttime;	// sv.time when animation started
+	int32_t		anim;			// index to anim def
+	int32_t		animstarttime;	// sv.time when animation started
 	float		animFrame;		// current animation frame
 	float		skinnum;		// for MD3 this should be index to .skin file
-	int			effects;		// PGM - we're filling it, so it needs to be unsigned
+	int32_t		effects;		// PGM - we're filling it, so it needs to be unsigned
 
-	int			renderFlags;	// RF_ flags
+	int32_t		renderFlags;	// RF_ flags
 	float		renderScale;	// used when renderFlags & RF_SCALE 
 	vec3_t		renderColor;	// used when renderFlags & RF_COLOR
 	float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
@@ -97,13 +97,13 @@ typedef struct sv_entvars_s
 	scr_string_t	model;		// setmodel() sets this
 
 	// physics
-	int				linkcount;	// increased each time linkentity() is invoked
+	int32_t			linkcount;	// increased each time linkentity() is invoked
 	float			solid;		// SOLID_NOT etc
 	float			movetype;	// MOVETYPE_NONE etc
 	float			gravity;	// [0-1.0]
-	int				clipmask;	
-	int				groundentity_num; // -1 = in air, 0 world, etc..
-	int				groundentity_linkcount;
+	int32_t			clipmask;
+	int32_t			groundentity_num; // -1 = in air, 0 world, etc..
+	int32_t			groundentity_linkcount;
 	vec3_t			size;		// DON'T CHANGE! set by linkentity()
 	scr_entity_t	owner;		// will not collide with owner
 

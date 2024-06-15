@@ -63,29 +63,29 @@ enum
 
 typedef struct
 {
-	int		first_statement;	// negative numbers are builtins
-	int		parm_start;
-	int		locals;				// total ints of parms + locals
-	int		profile;			// runtime
-	int		s_name;				// function name
-	int		s_file;				// source file defined in
-	int		numparms;
-	byte	parm_size[MAX_PARMS];
+	int32_t		first_statement;	// negative numbers are builtins
+	int32_t		parm_start;
+	int32_t		locals;				// total ints of parms + locals
+	int32_t		profile;			// runtime
+	int32_t		s_name;				// function name
+	int32_t		s_file;				// source file defined in
+	int32_t		numparms;
+	byte		parm_size[MAX_PARMS];
 } dfunction_t;
 
 
 
 typedef struct statement_s
 {
-	unsigned short	op;
-	short	a, b, c;
+	uint16_t	op;
+	int16_t	a, b, c;
 } dstatement_t;
 
 typedef struct
 {
-	unsigned short	type;		// if DEF_SAVEGLOBGAL bit is set the variable needs to be saved in savegames
-	unsigned short	ofs;
-	int			s_name;
+	uint16_t	type;		// if DEF_SAVEGLOBGAL bit is set the variable needs to be saved in savegames
+	uint16_t	ofs;
+	int32_t		s_name;
 } ddef_t;
 
 
@@ -101,28 +101,28 @@ typedef struct
 
 typedef struct
 {
-	int		version;
-	int		crc;			// check of header file
+	int32_t		version;
+	int32_t		crc;			// check of header file
 
-	int		ofs_statements;
-	int		numStatements;	// statement 0 is an error
+	int32_t		ofs_statements;
+	int32_t		numStatements;	// statement 0 is an error
 
-	int		ofs_globaldefs;
-	int		numGlobalDefs;
+	int32_t		ofs_globaldefs;
+	int32_t		numGlobalDefs;
 
-	int		ofs_fielddefs;
-	int		numFieldDefs;
+	int32_t		ofs_fielddefs;
+	int32_t		numFieldDefs;
 
-	int		ofs_functions;
-	int		numFunctions;	// function 0 is an empty
+	int32_t		ofs_functions;
+	int32_t		numFunctions;	// function 0 is an empty
 
-	int		ofs_strings;
-	int		numstrings;		// first string is a null string
+	int32_t		ofs_strings;
+	int32_t		numstrings;		// first string is a null string
 
-	int		ofs_globals;
-	int		numGlobals;
+	int32_t		ofs_globals;
+	int32_t		numGlobals;
 
-	int		entityfields;
+	int32_t		entityfields;
 } dprograms_t;
 
 
@@ -134,7 +134,7 @@ typedef struct
 
 typedef struct
 {
-	int				s;
+	int32_t			s;
 	dfunction_t		*f;
 } prstack_t;
 
@@ -155,8 +155,8 @@ typedef struct qcvm_s
 //	sv_globalvars_t	*globals_struct;
 	unsigned int	num_entities;		// number of allocated entities
 	vm_entity_t		*entities;
-	size_t			entity_size;		// size of single entity
-	size_t			offsetToEntVars;	// *ptr + ofs = ent->v
+	unsigned int	entity_size;		// size of single entity
+	unsigned int			offsetToEntVars;	// *ptr + ofs = ent->v
 
 	void			*globals_struct;	// sv_globalvars_t
 

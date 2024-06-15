@@ -76,7 +76,7 @@ char* Scr_ValueString(etype_t type, eval_t* val)
 		sprintf(line, "%s", ScrInternal_String(val->string));
 		break;
 	case ev_entity:
-		sprintf(line, "entity %i", NUM_FOR_ENT(VM_TO_ENT(val->edict)));
+		sprintf(line, "entity %i", (int)NUM_FOR_ENT(VM_TO_ENT(val->edict)));
 		break;
 	case ev_function:
 		f = active_qcvm->functions + val->function;
@@ -133,7 +133,7 @@ char* Scr_ValueStringDeveloper(etype_t type, eval_t* val)
 		sprintf(line, "'%s' [string]", ScrInternal_String(val->string));
 		break;
 	case ev_entity:
-		sprintf(line, "%i [entity]", NUM_FOR_ENT(VM_TO_ENT(val->edict)));
+		sprintf(line, "%i [entity]", (int)NUM_FOR_ENT(VM_TO_ENT(val->edict)));
 		break;
 	case ev_function:
 		f = active_qcvm->functions + val->function;
@@ -244,7 +244,7 @@ char* Scr_GlobalString(int ofs)
 		sprintf(line, "%i(%s)%s", ofs, ScrInternal_String(def->s_name), s);
 	}
 
-	i = strlen(line);
+	i = (int)strlen(line);
 	for (; i < 20; i++)
 		strcat(line, " ");
 	strcat(line, " ");
@@ -265,7 +265,7 @@ char* Scr_GlobalStringNoContents(int ofs)
 	else
 		sprintf(line, "%i(%s)", ofs, ScrInternal_String(def->s_name));
 
-	i = strlen(line);
+	i = (int)strlen(line);
 	for (; i < 20; i++)
 		strcat(line, " ");
 	strcat(line, " ");
@@ -287,7 +287,7 @@ void Scr_PrintStatement(dstatement_t* s)
 	if ((unsigned)s->op < sizeof(qcvm_op_names) / sizeof(qcvm_op_names[0]))
 	{
 		Com_Printf("%s ", qcvm_op_names[s->op]);
-		i = strlen(qcvm_op_names[s->op]);
+		i = (int)strlen(qcvm_op_names[s->op]);
 		for (; i < 10; i++)
 			Com_Printf(" ");
 	}

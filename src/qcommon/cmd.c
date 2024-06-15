@@ -82,14 +82,14 @@ void Cbuf_AddText (char *text)
 {
 	int		l;
 	
-	l = strlen (text);
+	l = (int)strlen (text);
 
 	if (cmd_text.cursize + l >= cmd_text.maxsize)
 	{
 		Com_Printf ("Cbuf_AddText: overflow\n");
 		return;
 	}
-	SZ_Write (&cmd_text, text, strlen (text));
+	SZ_Write (&cmd_text, text, (int)strlen (text));
 }
 
 
@@ -297,7 +297,7 @@ qboolean Cbuf_AddLateCommands (void)
 	argc = COM_Argc();
 	for (i=1 ; i<argc ; i++)
 	{
-		s += strlen (COM_Argv(i)) + 1;
+		s += (int)strlen (COM_Argv(i)) + 1;
 	}
 	if (!s)
 		return false;
@@ -541,7 +541,7 @@ char *Cmd_MacroExpandString (char *text)
 	inquote = false;
 	scan = text;
 
-	len = strlen (scan);
+	len = (int)strlen (scan);
 	if (len >= MAX_STRING_CHARS)
 	{
 		Com_Printf ("Line exceeded %i chars, discarded.\n", MAX_STRING_CHARS);
@@ -566,7 +566,7 @@ char *Cmd_MacroExpandString (char *text)
 	
 		token = Cvar_VariableString (token);
 
-		j = strlen(token);
+		j = (int)strlen(token);
 		len += j;
 		if (len >= MAX_STRING_CHARS)
 		{
@@ -650,7 +650,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 			strcpy (cmd_args, text);
 
 			// strip off any trailing whitespace
-			l = strlen(cmd_args) - 1;
+			l = (int)strlen(cmd_args) - 1;
 			for ( ; l >= 0 ; l--)
 				if (cmd_args[l] <= ' ')
 					cmd_args[l] = 0;
@@ -664,7 +664,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 
 		if (cmd_argc < MAX_STRING_TOKENS)
 		{
-			cmd_argv[cmd_argc] = Z_Malloc (strlen(com_token)+1);
+			cmd_argv[cmd_argc] = Z_Malloc ((int)strlen(com_token)+1);
 			strcpy (cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
@@ -827,7 +827,7 @@ char *Cmd_CompleteCommand (char *partial)
 	int				len;
 	cmdalias_t		*a;
 	
-	len = strlen(partial);
+	len = (int)strlen(partial);
 	
 	if (!len)
 		return NULL;
