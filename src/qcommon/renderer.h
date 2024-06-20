@@ -101,7 +101,8 @@ typedef struct rentity_s
 typedef enum
 {
 	DL_POINTLIGHT,
-	DL_SPOTLIGHT
+	DL_SPOTLIGHT,
+	DL_VIEW_FLASHLIGHT
 } dLightType_t;
 
 typedef struct

@@ -515,7 +515,7 @@ qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char *name, i
 				vert->normal[2] = atof(COM_TokenGetArg(6));
 
 				vert->uv[0] = atof(COM_TokenGetArg(7));
-				vert->uv[1] = -atof(COM_TokenGetArg(8)); // must negate uv
+				vert->uv[1] = atof(COM_TokenGetArg(8));
 
 				AddPointToBounds(vert->xyz, hdr->mins, hdr->maxs);
 				vert++;

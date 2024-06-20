@@ -93,8 +93,10 @@ void R_DrawSkelModel(rentity_t* ent)
 		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 	}
 
+	if (ent->renderfx & RF_VIEW_MODEL)
+		R_SendDynamicLightsToCurrentProgram(true);
 
-	glDisable(GL_CULL_FACE); // cull order is BACK for smds
+	glDisable(GL_CULL_FACE); // FIXME: cull order is BACK for smds
 	for (i = 0; i < mod->hdr.numsurfaces; i++)
 	{
 		if ((ent->hiddenPartsBits & (1 << i)))
@@ -115,6 +117,9 @@ void R_DrawSkelModel(rentity_t* ent)
 		Mat4Scale(r_projection_matrix, -1, 1, 1);
 		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 	}
+
+	if (ent->renderfx & RF_VIEW_MODEL)
+		R_SendDynamicLightsToCurrentProgram(false);
 
 	if (r_speeds->value)
 		rperf.alias_drawcalls++;

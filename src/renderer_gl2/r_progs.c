@@ -511,7 +511,7 @@ void R_UpdateCommonProgUniforms(qboolean orthoonly)
 		}
 		else if (!orthoonly)
 		{
-			R_SendDynamicLightsToCurrentProgram();
+			R_SendDynamicLightsToCurrentProgram(false);
 			R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 			R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
 		}

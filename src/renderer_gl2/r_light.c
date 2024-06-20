@@ -107,10 +107,10 @@ void R_PushDlights (void)
 R_SendDynamicLightsToCurrentProgram
 =================
 */
-void R_SendDynamicLightsToCurrentProgram()
+void R_SendDynamicLightsToCurrentProgram(qboolean bNoViewFlashLight)
 {
 	dlight_t* dlight;
-	int			i, j;
+	int			i, j, ln;
 	vec4_t		dl_pos_and_rad[MAX_DLIGHTS]; // holds xyz + radius for each light
 	vec4_t		dl_dir_and_cutoff[MAX_DLIGHTS]; // holds xyz direction + spot cutoff for each light
 	vec3_t		dl_colors[MAX_DLIGHTS];
@@ -122,16 +122,22 @@ void R_SendDynamicLightsToCurrentProgram()
 	numDynLights = !r_dynamic->value ? 0 : r_newrefdef.num_dlights; // no dlights when r_dynamic is off
 
 	dlight = r_newrefdef.dlights;
-	for (i = 0; i < numDynLights; i++, dlight++)
+	for (ln = 0, i = 0; i < numDynLights; i++, dlight++)
 	{
+		if (dlight->type == DL_VIEW_FLASHLIGHT && bNoViewFlashLight)
+		{
+			int y = i;
+			continue;
+		}
+
 //		if (dlight->intensity <= DLIGHT_CUTOFF)
 //			continue;
 
 		for (j = 0; j < 3; j++)
-			dl_pos_and_rad[i][j] = dlight->origin[j];
-		dl_pos_and_rad[i][3] = dlight->intensity;
+			dl_pos_and_rad[ln][j] = dlight->origin[j];
+		dl_pos_and_rad[ln][3] = dlight->intensity;
 
-		VectorCopy(dlight->color, dl_colors[i]);
+		VectorCopy(dlight->color, dl_colors[ln]);
 
 		//Notes about spotlights:
 		//xyz must be normalized. (this could be done in shader if really needed)
@@ -149,32 +155,33 @@ void R_SendDynamicLightsToCurrentProgram()
 		float coff = -rand() / (float)RAND_MAX;
 		dl_dir_and_cutoff[i][3] = -0.95;
 #else
-		if (dlight->type == DL_SPOTLIGHT)
+		if (dlight->type == DL_SPOTLIGHT || dlight->type == DL_VIEW_FLASHLIGHT)
 		{
 			for (j = 0; j < 3; j++)
 			{
-				dl_dir_and_cutoff[i][j] = dlight->dir[j];
+				dl_dir_and_cutoff[ln][j] = dlight->dir[j];
 				//VectorNormalize(dl_dir_and_cutoff[i]);
 			}
 
-			dl_dir_and_cutoff[i][3] = dlight->cutoff;
+			dl_dir_and_cutoff[ln][3] = dlight->cutoff;
 		}
 		else
 		{
 			//In the absence of spotlights, set these to values that disable spotlights
-			dl_dir_and_cutoff[i][0] = dl_dir_and_cutoff[i][3] = 1.f;
-			dl_dir_and_cutoff[i][1] = dl_dir_and_cutoff[i][2] = 0.f;
+			dl_dir_and_cutoff[ln][0] = dl_dir_and_cutoff[ln][3] = 1.f;
+			dl_dir_and_cutoff[ln][1] = dl_dir_and_cutoff[ln][2] = 0.f;
 		}
 #endif
+		ln++;
 
 	}
 
-	R_ProgUniform1i(LOC_DLIGHT_COUNT, numDynLights);
-	if (numDynLights > 0)
+	R_ProgUniform1i(LOC_DLIGHT_COUNT, ln);
+	if (ln > 0)
 	{
-		R_ProgUniform3fv(LOC_DLIGHT_COLORS, numDynLights, &dl_colors[0][0]);
-		R_ProgUniform4fv(LOC_DLIGHT_POS_AND_RAD, numDynLights, &dl_pos_and_rad[0][0]);
-		R_ProgUniform4fv(LOC_DLIGHT_DIR_AND_CUTOFF, numDynLights, &dl_dir_and_cutoff[0][0]);
+		R_ProgUniform3fv(LOC_DLIGHT_COLORS, ln, &dl_colors[0][0]);
+		R_ProgUniform4fv(LOC_DLIGHT_POS_AND_RAD, ln, &dl_pos_and_rad[0][0]);
+		R_ProgUniform4fv(LOC_DLIGHT_DIR_AND_CUTOFF, ln, &dl_dir_and_cutoff[0][0]);
 	}
 }
 
