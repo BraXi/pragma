@@ -120,6 +120,10 @@ void CG_AddViewMuzzleFlash(rentity_t* refent, player_state_t* ps)
 	V_AddEntity(&ent);
 }
 
+// viewmodel flashlight hack
+extern int			r_numdlights;
+extern dlight_t	r_dlights[MAX_DLIGHTS];
+
 /*
 ==============
 CG_AddViewFlashLight
@@ -127,7 +131,7 @@ CG_AddViewFlashLight
 For now we have no model for it, and ignore cl_hand
 ==============
 */
-void CG_AddViewFlashLight(rentity_t* refent, player_state_t* ps)
+void CG_AddViewFlashLight(rentity_t* parentEnt, player_state_t* ps)
 {
 	clentity_t* cent;
 	rentity_t ent;
@@ -141,26 +145,32 @@ void CG_AddViewFlashLight(rentity_t* refent, player_state_t* ps)
 	if (!(cent->current.effects & EF_FLASHLIGHT))
 		return;
 
-	if (refent && refent->model)
+	if (parentEnt && parentEnt->model)
 	{
-		tag = re.TagIndexForName(refent->model, "tag_light");
+		tag = re.TagIndexForName(parentEnt->model, "tag_light");
 		if (tag == -1)
-			tag = re.TagIndexForName(refent->model, "tag_flash");
+			tag = re.TagIndexForName(parentEnt->model, "tag_flash");
 
 		if (tag != -1)
 		{
 			memset(&ent, 0, sizeof(ent));
 
 			AxisClear(ent.axis);
-			PositionRotatedEntityOnTag(&ent, refent, ps->viewmodel_index, tag);	
+			PositionRotatedEntityOnTag(&ent, parentEnt, ps->viewmodel_index, tag);	
 			VectorAngles_Fixed(ent.axis[0], ent.angles);
 
+			//VectorCopy(cl.refdef.view.origin, ent.origin);
+		
 			ent.model = cgMedia.mod_v_flashlight;
 			ent.renderfx = RF_FULLBRIGHT | RF_TRANSLUCENT| RF_DEPTHHACK | RF_VIEW_MODEL;
 			ent.alpha = 0.075f;
 			V_AddEntity(&ent);
 
-			V_AddSpotLight(ent.origin, ent.axis[0], 900, -0.95, 1.0f, 0.85f, 0.7f);
+			V_AddSpotLight(cl.refdef.view.origin, ent.axis[0], 900, -0.96, 1.0f, 0.85f, 0.7f);
+
+			dlight_t* dl;
+			dl = &r_dlights[r_numdlights-1];
+			dl->type = DL_VIEW_FLASHLIGHT; // haaaack, revisit this later!
 		}
 	}
 	else
@@ -180,7 +190,7 @@ Otherwise entity will cast light forward from its origin
 This is used for dynamic alarm lights
 ==============
 */
-void CG_AddFlashLightToEntity(clentity_t *cent, rentity_t* refent)
+void CG_AddFlashLightToEntity(clentity_t *cent, rentity_t* parentEnt)
 {
 	rentity_t ent;
 	int tag;
@@ -192,17 +202,17 @@ void CG_AddFlashLightToEntity(clentity_t *cent, rentity_t* refent)
 	if (cent->current.number == cl.playernum + 1)
 		return; // dont draw world effect for local player
 
-	if (cent->current.modelindex && refent->model)
+	if (cent->current.modelindex && parentEnt->model)
 	{
-		tag = re.TagIndexForName(refent->model, "tag_light");
+		tag = re.TagIndexForName(parentEnt->model, "tag_light");
 		if (tag == -1)
-			tag = re.TagIndexForName(refent->model, "tag_head");
+			tag = re.TagIndexForName(parentEnt->model, "tag_head");
 
 		if (tag != -1)
 		{
 			memset(&ent, 0, sizeof(ent));
 			AxisClear(ent.axis);
-			PositionRotatedEntityOnTag(&ent, refent, cent->current.modelindex, tag);
+			PositionRotatedEntityOnTag(&ent, parentEnt, cent->current.modelindex, tag);
 			VectorAngles_Fixed(ent.axis[0], ent.angles);
 
 			ent.model = cgMedia.mod_w_flashlight;

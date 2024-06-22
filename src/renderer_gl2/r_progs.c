@@ -104,7 +104,6 @@ static proginfo_t proginfo[] =
 	{GLPROG_SKY,			"sky"},
 	{GLPROG_ALIAS,			"model_alias"},
 	{GLPROG_SMDL,			"model_smdl"},
-	{GLPROG_SPRITE,			"model_sprite"},
 	{GLPROG_PARTICLE,		"particle"},
 	{GLPROG_GUI,			"gui",				PF_ORTHO},
 	{GLPROG_POSTFX,			"postfx",			PF_ORTHO},
@@ -512,7 +511,7 @@ void R_UpdateCommonProgUniforms(qboolean orthoonly)
 		}
 		else if (!orthoonly)
 		{
-			R_SendDynamicLightsToCurrentProgram();
+			R_SendDynamicLightsToCurrentProgram(false);
 			R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 			R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
 		}

@@ -1901,7 +1901,7 @@ void PFSV_nav_getnodelink(void)
 PFSV_getframescount
 
 float getframescount(float modelindex)
-Returns the number of animation frames in md3 and sp2 models
+Returns the number of animation frames in md3
 
 float numanimframes = getframescount(self.modelindex);
 =================
@@ -1941,13 +1941,7 @@ void PFSV_gettagscount(void)
 		return;
 	}
 
-	if (mod->type == MOD_ALIAS)
-		Scr_ReturnFloat(mod->numTags); 
-	else
-	{
-		Scr_ReturnFloat(0);
-//		Scr_RunError("getnumtags(): non MD3 model '%s'\n", mod->name);
-	}
+	Scr_ReturnFloat(mod->numTags); 
 }
 
 /*
@@ -1977,7 +1971,7 @@ void PFSV_tagexists(void)
 	}
 
 	model = SV_ModelForNum(ent->v.modelindex);
-	if (!model || model->type != MOD_ALIAS || !model->numTags)
+	if (!model || !model->numTags)
 	{
 		Scr_ReturnFloat(0.0f);
 		return;
@@ -2017,7 +2011,7 @@ void PFSV_gettagorigin(void)
 	}
 
 	model = SV_ModelForNum(ent->v.modelindex);
-	if (!model || model->type != MOD_ALIAS || !model->numTags)
+	if (!model || !model->numTags)
 	{
 	//	Scr_RunError(Scr_GetString(ent->v.model));
 		Scr_ReturnVector(ent->v.origin);
@@ -2065,7 +2059,7 @@ void PFSV_gettagangles(void)
 	}
 
 	model = SV_ModelForNum((int)ent->v.modelindex);
-	if (!model || model->type != MOD_ALIAS || !model->numTags)
+	if (!model || !model->numTags)
 	{
 		Scr_ReturnVector(ent->v.angles);
 		return;

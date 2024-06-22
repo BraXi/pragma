@@ -161,6 +161,7 @@ void V_AddSpotLight(vec3_t org, vec3_t dir, float intensity, float cutoff, float
 	VectorSet(dl->color, r, g, b);
 }
 
+
 /*
 =====================
 V_AddLightStyle

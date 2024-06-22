@@ -315,7 +315,7 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 	active_qcvm = vm; // just in case..
 
 	// byte swap the header
-	for (i = 0; i < sizeof(*vm->progs) / 4; i++)
+	for (i = 0; i < sizeof(*vm->progs) / sizeof(int); i++)
 		((int*)vm->progs)[i] = LittleLong(((int*)vm->progs)[i]);
 
 	if (vm->progs->version != PROG_VERSION)
@@ -384,7 +384,7 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 	}
 
 	for (i = 0; i < vm->progs->numGlobals; i++)
-		((int*)vm->globals)[i] = LittleLong(((int*)vm->globals)[i]);
+		((int*)vm->globals)[i] = LittleLong(((int32_t*)vm->globals)[i]);
 }
 
 /*
@@ -595,7 +595,7 @@ Scr_GetEntitySize
 int Scr_GetEntitySize()
 {
 	CheckScriptVM(__FUNCTION__);
-	return active_qcvm->entity_size;
+	return (int)active_qcvm->entity_size;
 }
 
 /*

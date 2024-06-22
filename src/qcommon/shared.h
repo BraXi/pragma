@@ -13,6 +13,8 @@ See the attached GNU General Public License v2 for more details.
 
 #include "../pragma_config.h"
 
+#include <stdint.h>
+
 #ifdef _WIN32
 // unknown pragmas are SUPPOSED to be ignored, but....
 #pragma warning(disable : 4244)     

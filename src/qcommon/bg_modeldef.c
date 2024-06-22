@@ -16,12 +16,12 @@ static char* parseFileName = "";
 static parsefield_t fields_anim[] =
 {
 	/* animation */
-//	{"animation", F_STRING, FOFS(animation_t,name)},
-	{"first", F_INT, FOFS(animation_t,firstFrame)},
-//	{"lastFrame", F_INT, FOFS(animation_t,lastFrame)},
-	{"frames", F_INT, FOFS(animation_t,numFrames)},
-	{"fps", F_INT, FOFS(animation_t,lerpTime)},
-	{"looping", F_BOOLEAN, FOFS(animation_t,looping)},
+//	{"animation", F_STRING, offsetof(animation_t,name)},
+	{"first", F_INT, offsetof(animation_t,firstFrame)},
+//	{"lastFrame", F_INT, offsetof(animation_t,lastFrame)},
+	{"frames", F_INT, offsetof(animation_t,numFrames)},
+	{"fps", F_INT, offsetof(animation_t,lerpTime)},
+	{"looping", F_BOOLEAN, offsetof(animation_t,looping)},
 };
 
 

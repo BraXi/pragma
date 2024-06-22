@@ -57,7 +57,7 @@ static int CG_ModelIndex(char* name, qboolean fromServer)
 =================
 PFCG_modelindex
 
-Returns true if MD3/SP2 model was loaded, false otherwise.
+Returns true if MD3/SMDL model was loaded, false otherwise.
 
 float precache_model(string filename)
 =================
@@ -449,7 +449,7 @@ void PFCG_setmodel(void)
 {
 	clentity_t* ent;
 	char* name;
-	int modelindex;
+	int modelindex = 0;
 
 	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse)

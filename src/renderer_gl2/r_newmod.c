@@ -8,21 +8,25 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-// r_smdl.c -- skeletal models and animations rendering
-
+// r_newmod.c -- skeletal model and animation loading
 
 #include "r_local.h"
+
+
+extern int modelFileLength;
+extern model_t* pLoadModel;
 
 extern vec3_t	model_shadevector;
 extern float	model_shadelight[3];
 extern qboolean r_pendingflip;
+
 
 /*
 =================
 R_UploadSkelModel
 =================
 */
-void R_UploadSkelModel(model_t* mod)
+static void R_UploadSkelModel(model_t* mod)
 {
 	smdl_data_t* smdl = mod->smdl;
 	smdl_vert_t* v;
@@ -49,8 +53,8 @@ R_TempDrawSkelModel
 */
 void R_DrawSkelModel(rentity_t* ent)
 {
-	smdl_data_t	*mod;
-	smdl_surf_t	*surf;
+	smdl_data_t* mod;
+	smdl_surf_t* surf;
 	int i;
 
 	mod = ent->model->smdl;
@@ -89,8 +93,10 @@ void R_DrawSkelModel(rentity_t* ent)
 		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 	}
 
+	if (ent->renderfx & RF_VIEW_MODEL)
+		R_SendDynamicLightsToCurrentProgram(true);
 
-	glDisable(GL_CULL_FACE); // cull order is BACK for smds
+	glDisable(GL_CULL_FACE); // FIXME: cull order is BACK for smds
 	for (i = 0; i < mod->hdr.numsurfaces; i++)
 	{
 		if ((ent->hiddenPartsBits & (1 << i)))
@@ -112,7 +118,73 @@ void R_DrawSkelModel(rentity_t* ent)
 		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 	}
 
+	if (ent->renderfx & RF_VIEW_MODEL)
+		R_SendDynamicLightsToCurrentProgram(false);
+
 	if (r_speeds->value)
 		rperf.alias_drawcalls++;
 
 }
+
+
+/*
+=================
+Mod_LoadSkelModel
+=================
+*/
+void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
+{
+	qboolean loaded = false;
+	smdl_surf_t* surf;
+	char texturename[MAX_QPATH];
+
+	mod->extradata = ri.Glob_HunkBegin(1024*1024, "Skeletal Model (Renderer/EXE)");
+	mod->smdl = ri.Glob_HunkAlloc(sizeof(smdl_data_t));
+
+	loaded = ri.LoadAnimOrModel(SMDL_MODEL, mod->smdl, pLoadModel->name, modelFileLength, buffer);
+
+	if (!loaded)
+	{
+		ri.Glob_HunkFree(mod->extradata);
+		mod->extradata = NULL;
+		//ri.Printf(PRINT_LOW, "Warning: failed to load model '%s'.\n", mod->name);
+		return;
+	}
+
+	surf = mod->smdl->surfaces[0];
+	for (int i = 0; i < mod->smdl->hdr.numsurfaces; i++)
+	{
+		if (surf->texture[0] == '$')
+		{
+			mod->images[i] = R_FindTexture(surf->texture, it_model, true);
+		}
+		else
+		{
+			Com_sprintf(texturename, sizeof(texturename), "modelskins/%s", surf->texture);
+			mod->images[i] = R_FindTexture(texturename, it_model, true);
+		}
+
+		if (!mod->images[i])
+			mod->images[i] = r_texture_missing;
+
+		surf->texnum = mod->images[i]->texnum;
+	}
+
+	mod->extradatasize = ri.Glob_HunkEnd();
+	mod->type = MOD_SKEL;
+	mod->numframes = 1;
+
+	VectorCopy(mod->smdl->hdr.mins, mod->mins);
+	VectorCopy(mod->smdl->hdr.maxs, mod->maxs);
+	mod->radius = mod->smdl->hdr.boundingradius;
+
+	R_UploadSkelModel(mod);
+
+}
+
+
+
+
+
+
+

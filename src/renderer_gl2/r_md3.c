@@ -617,6 +617,9 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 	else
 		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
 
+	if (ent->renderfx & RF_VIEW_MODEL)
+		R_SendDynamicLightsToCurrentProgram(true);
+
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{
 		surfverts = ent->model->vb[surf]->numVerts / pModel->numFrames;
@@ -646,6 +649,9 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 		Mat4Scale(r_projection_matrix, -1, 1, 1);
 		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 	}
+
+	if (ent->renderfx & RF_VIEW_MODEL)
+		R_SendDynamicLightsToCurrentProgram(false);
 
 	if (r_speeds->value && anythingToDraw)
 		rperf.alias_drawcalls++;

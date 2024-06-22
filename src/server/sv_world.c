@@ -206,7 +206,8 @@ FIXME: this use of "area" is different from the bsp file use
 // (type *)STRUCT_FROM_LINK(link_t *link, type, member)
 // ent = STRUCT_FROM_LINK(link,centity_t,order)
 // FIXME: remove this mess!
-#define	STRUCT_FROM_LINK(l,t,m) ((t *)((byte *)l - (int)&(((t *)0)->m)))
+//#define	STRUCT_FROM_LINK(l,t,m) ((t *)((byte *)l - (int)&(((t *)0)->m)))
+#define	STRUCT_FROM_LINK(l,t,m) ((t *)((byte *)l - offsetof(t,m)))
 
 #define	EDICT_FROM_AREA(l) STRUCT_FROM_LINK(l,gentity_t,area)
 
@@ -615,7 +616,7 @@ void SV_AreaEdicts_r (areanode_t *node)
 	for (l=start->next  ; l != start ; l = next)
 	{
 		next = l->next;
-		check = EDICT_FROM_AREA(l);
+		check = (gentity_t*)EDICT_FROM_AREA(l);
 
 		if (check->v.solid == SOLID_NOT)
 			continue;		// deactivated

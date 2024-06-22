@@ -23,11 +23,11 @@ extern cvar_t* vm_runaway;
 typedef byte vm_entity_t;
 
 // FIXME -- move server and client stuff out of here
-typedef struct gentity_s gentity_t;
+//typedef struct gentity_s gentity_t;
 #include "progdefs_server.h" 
-typedef struct rentity_s rentity_t;
+//typedef struct rentity_s rentity_t;
 #include "../client/cgame/progdefs_client.h" 
-typedef struct rentity_s rentity_t;
+//typedef struct rentity_s rentity_t;
 #include "progdefs_ui.h" 
 
 

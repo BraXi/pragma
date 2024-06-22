@@ -241,7 +241,7 @@ void Sys_ConsoleOutput (char *string)
 		WriteFile(houtput, text, console_textlen+2, &dummy, NULL);
 	}
 
-	WriteFile(houtput, string, strlen(string), &dummy, NULL);
+	WriteFile(houtput, string, (DWORD)strlen(string), &dummy, NULL);
 
 	if (console_textlen)
 		WriteFile(houtput, console_text, console_textlen, &dummy, NULL);
@@ -457,7 +457,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			time = newtime - oldtime;
 		} while (time < 1);
 
-		_controlfp(_PC_24, _MCW_PC);
+		//_controlfp(_PC_24, _MCW_PC);
 		Qcommon_Frame(time);
 
 		oldtime = newtime;

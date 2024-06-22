@@ -325,7 +325,7 @@ void FS_Read (void *buffer, int len, FILE *f)
 		block = remaining;
 		if (block > MAX_READ)
 			block = MAX_READ;
-		read = fread (buf, 1, block, f);
+		read = (int)fread (buf, 1, block, f);
 		if (read == 0)
 		{
 			// we might have been trying to read from a CD
@@ -359,12 +359,12 @@ int FS_LoadFile (char *path, void **buffer)
 {
 	FILE	*h;
 	byte	*buf;
-	int		len;
+	long	fileLength;
 
 	buf = NULL;	// quiet compiler warning
 
 // look for it in the filesystem or pack files
-	len = FS_FOpenFile (path, &h);
+	fileLength = FS_FOpenFile (path, &h);
 	if (!h)
 	{
 		if (buffer)
@@ -375,17 +375,17 @@ int FS_LoadFile (char *path, void **buffer)
 	if (!buffer)
 	{
 		fclose (h);
-		return len;
+		return fileLength;
 	}
 
-	buf = Z_Malloc(len);
+	buf = Z_Malloc(fileLength+1);
 	*buffer = buf;
 
-	FS_Read (buf, len, h);
+	fread(buf, fileLength, 1, h);
 
 	fclose (h);
 
-	return len;
+	return fileLength;
 }
 
 
@@ -679,7 +679,7 @@ void FS_Link_f (void)
 	l->next = fs_links;
 	fs_links = l;
 	l->from = CopyString(Cmd_Argv(1));
-	l->fromlength = strlen(l->from);
+	l->fromlength = (int)strlen(l->from);
 	l->to = CopyString(Cmd_Argv(2));
 }
 

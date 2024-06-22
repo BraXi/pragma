@@ -22,10 +22,11 @@ These commands can only be entered from stdin or by a remote operator datagram
 
 void SV_ModelList_f(void)
 {
-	int		i,j, nonbmodels = 0;
 	svmodel_t	* mod;
+	int		i;
+	int nonbmodels = 0, usedsize = 0;
 
-	static char *mods[] = { "BAD", "BSP", "SPR", "ALIAS", "SMDL" };
+	static char *mods[] = { "BAD", "BSP", "ALIAS", "SMDL" };
 
 	if (sv.state == ss_dead)
 	{
@@ -53,28 +54,25 @@ void SV_ModelList_f(void)
 		if (mod->type != MOD_BRUSH && mod->type != MOD_BAD)
 		{
 			nonbmodels++;
-			Com_Printf("%i: %s '%s' [%i anims, %i frames, %i tags, %i skins]\n", i, mods[mod->type], mod->name, mod->def.numAnimations, mod->numFrames, mod->numTags, mod->def.numSkins);
-			
-			if(mod->def.numAnimations > 1)
-				for(j = 1; j < mod->def.numAnimations; j++)
-					Com_Printf("     ANIM %.2i: '%s' [start %i, frames %i, end %i]\n", j, mod->def.anims[j].name, mod->def.anims[j].firstFrame, mod->def.anims[j].numFrames, mod->def.anims[j].lastFrame);
+			if(mod->type == MOD_ALIAS)
+				Com_Printf("%i: %s '%s' (%i frames)\n", i, mods[mod->type], mod->name, mod->numFrames);
+			else
+				Com_Printf("%i: %s '%s' \n", i, mods[mod->type], mod->name);
 
-			//if (mod->def.numSkins > 0) //todo
-			//{
-			//	for (j = 1; j < mod->def.numSkins; j++)
-			//		Com_Printf("     SKIN %.2i: surf '%s' -> '%s'\n", mod->def.);
-			//}
-
+			//Com_Printf("%i: %s '%s' [%i anims, %i frames, %i tags, %i skins]\n", i, mods[mod->type], mod->name, mod->def.numAnimations, mod->numFrames, mod->numTags, mod->def.numSkins);
+			usedsize += mod->extradatasize;
 		}
 		else
-			Com_Printf("%i: %s '%s' \n", i, mods[mod->type], mod->name);
+			Com_Printf("%i: %s '%s'\n", i, mods[mod->type], mod->name);
 	}
 
 
 
 	Com_Printf("\n");
-	Com_Printf("%i brush models, %i models\n", CM_NumInlineModels(), nonbmodels);
-	Com_Printf("used %i out of %i model slots\n", sv.num_models, MAX_MODELS);
+	Com_Printf("... %i brush models.\n... %i external models.\nUsing %iKB of memory for external models.\n", CM_NumInlineModels(), nonbmodels, usedsize/1024);
+
+	// minus the 'bad model'
+	Com_Printf("Server is using %i models (limit is %i).\n", sv.num_models-1, MAX_MODELS-1);
 }
 
 

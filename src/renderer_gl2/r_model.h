@@ -233,19 +233,21 @@ typedef struct model_s
 	byte		*lightdata;
 	int			lightdatasize;
 
-	// non brush models and sprites
-	vertexbuffer_t* vb[MD3_MAX_SURFACES];
-	image_t		*images[32];
+	//
+	// MOD_ALIAS & MOD_SMDL
+	//
+	int			cullDist;	// don't draw if farther than this
+
+	md3Header_t* md3[NUM_LODS];	// if type == MOD_ALIAS
+	smdl_data_t* smdl; // if type == MOD_SKEL
+
+	// SMDL_MAX_SURFACES == MD3_MAX_SURFACES == max textures, todo: make it less confusing?
+	vertexbuffer_t* vb[SMDL_MAX_SURFACES]; // smdls are always at 0
+	image_t		*images[SMDL_MAX_SURFACES];
+
 
 	int			extradatasize;
 	void		*extradata;
-
-	int			cullDist;	// don't draw if farther than this
-
-	md3Header_t	*md3[NUM_LODS];	// only if type == MOD_ALIAS
-
-
-	smdl_data_t	*smdl; // only if type == MOD_SKEL
 } model_t;
 
 //============================================================================

@@ -23,6 +23,8 @@
     <ClInclude Include="qcommon\anorms.h" />
     <ClInclude Include="qcommon\crc.h" />
     <ClInclude Include="qcommon\mathlib.h" />
+    <ClInclude Include="qcommon\mod_md3.h" />
+    <ClInclude Include="qcommon\mod_smdl.h" />
     <ClInclude Include="qcommon\qcommon.h" />
     <ClInclude Include="qcommon\qfiles.h" />
     <ClInclude Include="qcommon\shared.h" />
@@ -51,6 +53,7 @@
     <ClCompile Include="qcommon\md4.c" />
     <ClCompile Include="qcommon\net_chan.c" />
     <ClCompile Include="qcommon\shared.c" />
+    <ClCompile Include="qcommon\smdl_load.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_debug.c" />
     <ClCompile Include="script\scr_exec.c" />
@@ -81,6 +84,7 @@
     <ProjectGuid>{0CA27754-F257-489E-B808-16610454DE81}</ProjectGuid>
     <RootNamespace>pragma_server</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>pragma_dedsv</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -107,7 +111,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -131,22 +135,28 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>.\..\build\</OutDir>
+    <OutDir>$(SolutionDir)\..\build\</OutDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>pragma_dedsv_x86debug</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>.\..\build\</OutDir>
+    <OutDir>$(SolutionDir)\..\build\</OutDir>
+    <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>pragma_dedsv_x86</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>.\..\build\</OutDir>
-    <TargetName>$(ProjectName)_x64</TargetName>
+    <OutDir>$(SolutionDir)\..\build\</OutDir>
+    <TargetName>pragma_dedsv_x64debug</TargetName>
+    <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>.\..\build\</OutDir>
-    <TargetName>$(ProjectName)_x64</TargetName>
+    <OutDir>$(SolutionDir)\..\build\</OutDir>
+    <TargetName>pragma_dedsv_x64</TargetName>
+    <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -178,7 +188,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalDependencies>winmm.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -186,13 +196,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;DEDICATED_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glu32.lib;odbc32.lib;odbccp32.lib;opengl32.lib;comctl32.lib;winmm.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -201,7 +211,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;DEDICATED_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -209,6 +219,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

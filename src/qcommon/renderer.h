@@ -101,7 +101,8 @@ typedef struct rentity_s
 typedef enum
 {
 	DL_POINTLIGHT,
-	DL_SPOTLIGHT
+	DL_SPOTLIGHT,
+	DL_VIEW_FLASHLIGHT
 } dLightType_t;
 
 typedef struct
@@ -167,7 +168,7 @@ typedef struct
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'6')
+#define	API_VERSION		('B'+'X'+'I'+'7')
 
 //
 // these are the functions exported by the refresh module
@@ -270,6 +271,14 @@ typedef struct
 
 	qboolean	(*Vid_GetModeInfo)( int *width, int *height, int mode );
 	void		(*Vid_NewWindow)( int width, int height );
+
+	void	*(*Glob_HunkBegin)(int maxsize, char* name);
+	void	*(*Glob_HunkAlloc)(int size);
+	int		(*Glob_HunkEnd)(void);
+	void	(*Glob_HunkFree)(void* base);
+
+	qboolean	(*LoadAnimOrModel)(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
+	smdl_anim_t	*(*AnimationForName)(char* name, qboolean crash);
 
 	unsigned int (*GetBSPLimit)(bspDataType type, qboolean extendedbsp);
 	unsigned int (*GetBSPElementSize)(bspDataType type, qboolean extendedbsp);

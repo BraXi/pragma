@@ -100,7 +100,6 @@ enum
 	GLPROG_SKY,
 	GLPROG_ALIAS,
 	GLPROG_SMDL,
-	GLPROG_SPRITE,
 	GLPROG_PARTICLE,
 	GLPROG_GUI,
 	GLPROG_POSTFX,
@@ -328,7 +327,6 @@ extern model_t *r_worldmodel;
 extern model_t* r_defaultmodel;
 
 extern int registration_sequence;
-void R_InitSprites();
 
 //===================================================================
 // r_init.c
@@ -376,7 +374,7 @@ void R_DrawBeam(rentity_t* e);
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
 void R_LightPoint(vec3_t p, vec3_t color);
 void R_PushDlights(void);
-void R_SendDynamicLightsToCurrentProgram();
+void R_SendDynamicLightsToCurrentProgram(qboolean bViewFlashLight);
 void R_RenderDlights(void); // development aid
 
 //===================================================================

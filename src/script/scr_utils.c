@@ -12,12 +12,12 @@ See the attached GNU General Public License v2 for more details.
 #include "../server/server.h"
 #include "script_internals.h"
 
-#define	G_INT(o)			(*(int *)&active_qcvm->globals[o])
-#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int *)&active_qcvm->globals[o]))
+#define	G_INT(o)			(*(int32_t *)&active_qcvm->globals[o])
+#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int32_t *)&active_qcvm->globals[o]))
 #define	G_FLOAT(o)			(active_qcvm->globals[o])
 #define	G_STRING(o)			(active_qcvm->strings + *(scr_string_t *)&active_qcvm->globals[o])
 #define	G_VECTOR(o)			(&active_qcvm->globals[o])
-#define	RETURN_EDICT(e)		(((int *)active_qcvm->globals)[OFS_RETURN] = ENT_TO_VM(e))
+#define	RETURN_EDICT(e)		(((int32_t *)active_qcvm->globals)[OFS_RETURN] = ENT_TO_VM(e))
 
 
 /*
@@ -88,7 +88,7 @@ Scr_GetString
 Returns string from script
 ============
 */
-char* Scr_GetString(int str)
+char* Scr_GetString(int32_t str)
 {
 	return active_qcvm->strings + str;
 }
@@ -200,7 +200,7 @@ Returns param as a string
 */
 char* Scr_GetParmString(unsigned int parm)
 {
-	int ofs = ScrInternal_GetParmOffset(parm);
+	int32_t ofs = ScrInternal_GetParmOffset(parm);
 	return G_STRING(ofs);
 }
 

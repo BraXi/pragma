@@ -23,37 +23,37 @@ static char* parseFileName;
 
 static parsefield_t fields_fx_particle[] =
 {
-	{"lifetime", F_FLOAT, FOFS(fx_particle_def_t,lifetime)},
+	{"lifetime", F_FLOAT, offsetof(fx_particle_def_t,lifetime)},
 
-	{"fadeaftertime", F_FLOAT, FOFS(fx_particle_def_t,fadeColorAfterTime)},
-	{"scaleaftertime", F_FLOAT, FOFS(fx_particle_def_t,scaleAfterTime)},
+	{"fadeaftertime", F_FLOAT, offsetof(fx_particle_def_t,fadeColorAfterTime)},
+	{"scaleaftertime", F_FLOAT, offsetof(fx_particle_def_t,scaleAfterTime)},
 
-	{"delay", F_FLOAT, FOFS(fx_particle_def_t,delay)},		
+	{"delay", F_FLOAT, offsetof(fx_particle_def_t,delay)},
 	
-	{"count", F_INT, FOFS(fx_particle_def_t,count)},			// if !(flags & FXF_RANDOM_COUNT)
-	{"addrandomcount", F_INT, FOFS(fx_particle_def_t,addRandomCount)},
+	{"count", F_INT, offsetof(fx_particle_def_t,count)},			// if !(flags & FXF_RANDOM_COUNT)
+	{"addrandomcount", F_INT, offsetof(fx_particle_def_t,addRandomCount)},
 	
-	{"origin", F_VECTOR3, FOFS(fx_particle_def_t,origin)},
-	{"randomdistrubution", F_VECTOR3, FOFS(fx_particle_def_t,randomDistrubution)},
+	{"origin", F_VECTOR3, offsetof(fx_particle_def_t,origin)},
+	{"randomdistrubution", F_VECTOR3, offsetof(fx_particle_def_t,randomDistrubution)},
 
-	{"velocity", F_VECTOR3, FOFS(fx_particle_def_t,velocity)},	// if !(flags & FXF_RANDOM_VELOCITY)
-	{"addrandomvelocity", F_FLOAT, FOFS(fx_particle_def_t,addRandomVelocity)},		// if !(flags & FXF_RANDOM_GRAVITY)
+	{"velocity", F_VECTOR3, offsetof(fx_particle_def_t,velocity)},	// if !(flags & FXF_RANDOM_VELOCITY)
+	{"addrandomvelocity", F_FLOAT, offsetof(fx_particle_def_t,addRandomVelocity)},		// if !(flags & FXF_RANDOM_GRAVITY)
 	
-	{"gravity", F_FLOAT, FOFS(fx_particle_def_t,gravity)},
-	{"addrandomgravity", F_FLOAT, FOFS(fx_particle_def_t,addRandomGravity)},
+	{"gravity", F_FLOAT, offsetof(fx_particle_def_t,gravity)},
+	{"addrandomgravity", F_FLOAT, offsetof(fx_particle_def_t,addRandomGravity)},
 
-	{"color", F_VECTOR4, FOFS(fx_particle_def_t,color)},
-	{"color2", F_VECTOR4, FOFS(fx_particle_def_t,color2)},
+	{"color", F_VECTOR4, offsetof(fx_particle_def_t,color)},
+	{"color2", F_VECTOR4, offsetof(fx_particle_def_t,color2)},
 
-	{"size", F_VECTOR2, FOFS(fx_particle_def_t,size)},
-	{"size2", F_VECTOR2, FOFS(fx_particle_def_t,size2)}
+	{"size", F_VECTOR2, offsetof(fx_particle_def_t,size)},
+	{"size2", F_VECTOR2, offsetof(fx_particle_def_t,size2)}
 };
 
 static parsefield_t fields_fx_dlight[] =
 {
-	{"origin", F_VECTOR3, FOFS(fx_dlight_t,origin)},
-	{"color", F_VECTOR3, FOFS(fx_dlight_t,color)},
-	{"radius", F_FLOAT, FOFS(fx_dlight_t,radius)}
+	{"origin", F_VECTOR3, offsetof(fx_dlight_t,origin)},
+	{"color", F_VECTOR3, offsetof(fx_dlight_t,color)},
+	{"radius", F_FLOAT, offsetof(fx_dlight_t,radius)}
 };
 
 

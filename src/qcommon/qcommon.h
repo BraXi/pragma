@@ -69,7 +69,6 @@ typedef enum memtag_s
 	TAG_GUI = 100,
 	TAG_FX,
 	TAG_NAV_NODES,
-	TAG_SERVER_MODELDATA,
 	TAG_SERVER_GAME,
 	TAG_CLIENT_GAME,
 
@@ -79,7 +78,7 @@ typedef enum memtag_s
 
 //============================================================================
 
-#define	FOFS(type,x) (int)&(((type *)0)->x)
+//#define	FOFS(type,x) (int)&(((type *)0)->x)
 typedef void (*parsecommand_t) (char* value, byte* basePtr);
 
 typedef enum
@@ -107,7 +106,7 @@ typedef struct
 
 //============================================================================
 
-typedef enum { MOD_BAD, MOD_BRUSH, MOD_SPRITE, MOD_ALIAS, MOD_SKEL } modtype_t;
+typedef enum { MOD_BAD, MOD_BRUSH, MOD_ALIAS, MOD_SKEL } modtype_t;
 
 //============================================================================
 typedef enum { DPRIMITIVE_LINE, DPRIMITIVE_POINT, DPRIMITIVE_BOX, DPRIMITIVE_TEXT } dprimitive_t;

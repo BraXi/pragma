@@ -787,7 +787,7 @@ void SV_SetConfigString(int index, char *valueString)
 		return;
 	}
 
-	if (!valueString)
+	if (!valueString || valueString == NULL)
 		valueString = "";
 
 	// change the string in sv
@@ -802,12 +802,18 @@ void SV_SetConfigString(int index, char *valueString)
 		SV_Multicast(vec3_origin, MULTICAST_ALL_R); // send the update to everyone
 	}
 }
+
+/*
+================
+SV_NotifyWhenCvarChanged
+================
+*/
 static inline void SV_NotifyWhenCvarChanged(cvar_t* cvar)
 {
 	if (cvar->modified)
 	{
 //		Cvar_Set(cvar->name, cvar->latched_string);
-		SV_BroadcastPrintf(PRINT_HIGH, "Server: `%s` changed to '%s`\n", cvar->name, cvar->string);
+		SV_BroadcastPrintf(PRINT_HIGH, "Server changed cvar `%s` to '%s`.\n", cvar->name, cvar->string);
 		cvar->modified = false;
 
 		if (cvar == sv_cheats) // haaack no. 9000
@@ -828,11 +834,13 @@ void SV_CheckCvars()
 		return; 
 	if (sv.state != ss_game)
 		return;
+
+	SV_NotifyWhenCvarChanged(sv_cheats);
+	
 	if (sv_maxclients->value == 1)
 		return;
 
 	SV_NotifyWhenCvarChanged(sv_hostname);
-	SV_NotifyWhenCvarChanged(sv_cheats);
 	SV_NotifyWhenCvarChanged(sv_maxvelocity);
 	SV_NotifyWhenCvarChanged(sv_gravity);
 }
@@ -1131,7 +1139,7 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 		Z_Free(svs.gclients);
 
 	Z_FreeTags(TAG_SERVER_GAME);
-	Z_FreeTags(TAG_SERVER_MODELDATA);
+	SV_FreeModels();
 	memset (&sv, 0, sizeof(sv));
 	 
 	Nav_Shutdown();

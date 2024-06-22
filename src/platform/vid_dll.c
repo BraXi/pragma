@@ -530,6 +530,10 @@ unsigned int _GetBSPElementSize(bspDataType type, qboolean extendedbsp)
 	bExtendedBSP = old;
 	return ret;
 }
+
+qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
+smdl_anim_t* Com_AnimationForName(char* name, qboolean crash);
+
 /*
 ==============
 VID_LoadRefresh
@@ -574,6 +578,14 @@ qboolean VID_LoadRefresh( char *name )
 	ri.Cvar_SetValue = Cvar_SetValue;
 	ri.Vid_GetModeInfo = VID_GetModeInfo;
 	ri.Vid_NewWindow = VID_NewWindow;
+
+	ri.Glob_HunkBegin = Hunk_Begin;
+	ri.Glob_HunkAlloc = Hunk_Alloc;
+	ri.Glob_HunkEnd = Hunk_End;
+	ri.Glob_HunkFree = Hunk_Free;
+
+	ri.LoadAnimOrModel = Com_LoadAnimOrModel;
+	ri.AnimationForName = Com_AnimationForName;
 
 	ri.GetBSPLimit = _GetBSPLimit;
 	ri.GetBSPElementSize = _GetBSPElementSize;
@@ -643,7 +655,15 @@ void VID_CheckChanges (void)
 		cl.refresh_prepped = false;
 		cls.disable_screen = true;
 
-		Com_sprintf(name, sizeof(name), "renderer_%s.dll", r_renderer->string );
+
+#if defined(__x86_64__) || defined(_M_X64)
+		Com_sprintf(name, sizeof(name), "pragma_renderer_%s_x64.dll", r_renderer->string);
+#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+		Com_sprintf(name, sizeof(name), "pragma_renderer_%s_x86.dll", r_renderer->string);
+#else
+#error "fix this"
+#endif
+
 		if ( !VID_LoadRefresh( name ) )
 		{
 			if ( strcmp (r_renderer->string, DEFAULT_RENDERER) == 0 )

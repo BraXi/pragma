@@ -26,177 +26,31 @@ The .pak files are just a linear collapse of a directory tree
 typedef struct
 {
 	char	name[56];
-	int		filepos, filelen;
+	int32_t		filepos, filelen;
 } dpackfile_t;
 
 typedef struct
 {
-	int		ident;		// == IDPAKHEADER
-	int		dirofs;
-	int		dirlen;
+	int32_t		ident;		// == IDPAKHEADER
+	int32_t		dirofs;
+	int32_t		dirlen;
 } dpackheader_t;
 
 #define	MAX_FILES_IN_PACK	4096
 
+
 /*
 ========================================================================
 
-.SMD animation and model format
+ MODELS
 
 ========================================================================
 */
+
+typedef enum { LOD_HIGH, LOD_MEDIUM, LOD_LOW, NUM_LODS } lod_t;
 
 #include "mod_smdl.h"
-
-
-/*
-========================================================================
-
-.MD3 triangle model file format
-
-========================================================================
-*/
-
-typedef enum {LOD_HIGH, LOD_MEDIUM, LOD_LOW, NUM_LODS} lod_t;
-//float lodDist[NUM_LODS] = { 0.0f, 512.0f, 1024.0f };
-
-#define MD3_IDENT			(('3'<<24)+('P'<<16)+('D'<<8)+'I')
-#define MD3_VERSION			15
-
-// limits
-#define MD3_MAX_LODS		NUM_LODS // was 4, but we want NUM_LODS in pragma
-#define	MD3_MAX_TRIANGLES	8192	// per surface
-#define MD3_MAX_VERTS		4096	// per surface
-#define MD3_MAX_SHADERS		256		// per surface (???)
-#define MD3_MAX_FRAMES		1024	// per model
-#define	MD3_MAX_SURFACES	8		// per model, braxi -- was 32, changed to 8 to fit into network's hidePartBits
-#define MD3_MAX_TAGS		16		// per frame
-#define MD3_MAX_NAME		64		// max tag and skin names len, this was MAX_QPATH
-
-#define	MD3_XYZ_SCALE		(1.0/64) // vertex scales
-
-typedef struct md3Frame_s 
-{
-	vec3_t		bounds[2];
-	vec3_t		localOrigin;
-	float		radius;
-	char		name[16];
-} md3Frame_t;
-
-typedef struct md3Tag_s 
-{
-	char		name[MD3_MAX_NAME];	// tag name
-	vec3_t		origin;
-	vec3_t		axis[3];
-} md3Tag_t;
-
-/*
-** md3Surface_t
-**
-** CHUNK			SIZE
-** header			sizeof( md3Surface_t )
-** shaders			sizeof( md3Shader_t ) * numShaders
-** triangles[0]		sizeof( md3Triangle_t ) * numTriangles
-** st				sizeof( md3St_t ) * numVerts
-** XyzNormals		sizeof( md3XyzNormal_t ) * numVerts * numFrames
-*/
-typedef struct 
-{
-	int		ident;				
-
-	char	name[MD3_MAX_NAME];	// polyset name
-
-	int		flags;
-
-	int		numFrames;			// all surfaces in a model should have the same
-	int		numShaders;			// all surfaces in a model should have the same
-	int		numVerts;
-	int		numTriangles;
-
-	int		ofsTriangles;
-
-	int		ofsShaders;			// offset from start of md3Surface_t
-	int		ofsSt;				// texture coords are common for all frames
-	int		ofsXyzNormals;		// numVerts * numFrames
-
-	int		ofsEnd;				// next surface follows
-} md3Surface_t;
-
-typedef struct 
-{
-	char			name[MAX_QPATH];
-	int				shaderIndex;	// for in-game use
-} md3Shader_t;
-
-typedef struct
-{
-	int			indexes[3];
-} md3Triangle_t;
-
-typedef struct 
-{
-	float		st[2];
-} md3St_t;
-
-typedef struct 
-{
-	short		xyz[3];
-	short		normal;
-} md3XyzNormal_t;
-
-typedef struct 
-{
-	int			ident;				// == MD3_IDENT
-	int			version;			// == MD3_VERSION
-
-	char		name[MAX_QPATH];	// model name
-
-	int			flags;
-
-	int			numFrames;
-	int			numTags;
-	int			numSurfaces;
-
-	int			numSkins;
-
-	int			ofsFrames;			// offset for first frame
-	int			ofsTags;			// numFrames * numTags
-	int			ofsSurfaces;		// first surface, others follow
-
-	int			ofsEnd;				// end of file
-} md3Header_t;
-
-
-/*
-========================================================================
-
-.SP2 sprite file format
-
-========================================================================
-*/
-
-#define SP2_IDENT			(('2'<<24)+('S'<<16)+('D'<<8)+'I') // little-endian "IDS2"
-#define SP2_VERSION			2
-#define SP2_MAX_PICNAME		64
-
-typedef struct
-{
-	int		width, height;
-	int		origin_x, origin_y;		// raster coordinates inside pic
-	char	name[SP2_MAX_PICNAME];	// name of TGA file
-} sp2Frame_t;
-
-typedef struct 
-{
-	int			ident;
-	int			version;
-	int			numframes;
-	sp2Frame_t	frames[1];			// variable sized
-} sp2Header_t;
-
-// key / value pair sizes
-#define	MAX_KEY		32
-#define	MAX_VALUE	1024
+#include "mod_md3.h" // md3s are cheap to animate but consume much more memory
 
 /*
 ==============================================================================
@@ -205,6 +59,10 @@ typedef struct
 
 ==============================================================================
 */
+
+// key / value pair sizes
+#define	MAX_KEY		32
+#define	MAX_VALUE	1024
 
 typedef enum
 {
@@ -276,30 +134,30 @@ typedef enum
 
 typedef struct
 {
-	unsigned short	width;
-	unsigned short	height;
-	int		lightofs;		// start of numstyles (from face struct) * (width * height) samples
+	uint16_t	width;
+	uint16_t	height;
+	int32_t		lightofs;		// start of numstyles (from face struct) * (width * height) samples
 	float	vecs[2][4];		// this is a world -> lightmap space transformation matrix
 } bspx_decoupledlm_t;
 
 typedef struct
 {
 	char	name[24];	// up to 23 chars, zero-padded
-	int		fileofs;	// from file start
-	int		filelen;
+	int32_t		fileofs;	// from file start
+	int32_t		filelen;
 } bspx_lump_t;
 
 typedef struct
 {
-	int ident;		// BSPX_IDENT
-	int numlumps;	// bspx_lump_t[numlumps]
+	int32_t ident;		// BSPX_IDENT
+	int32_t numlumps;	// bspx_lump_t[numlumps]
 } bspx_header_t;
 
 //=============================================================================
 
 typedef struct
 {
-	int		fileofs, filelen;
+	int32_t		fileofs, filelen;
 } lump_t;
 
 // standard lumps
@@ -326,8 +184,8 @@ typedef struct
 
 typedef struct
 {
-	int			ident;
-	int			version;	
+	int32_t			ident;
+	int32_t			version;
 	lump_t		lumps[HEADER_LUMPS];
 } dbsp_header_t;
 
@@ -335,8 +193,8 @@ typedef struct
 {
 	float		mins[3], maxs[3];
 	float		origin[3];		// for sounds or lights
-	int			headnode;
-	int			firstface, numfaces;	// inlineModels just draw faces
+	int32_t		headnode;
+	int32_t		firstface, numfaces;	// inlineModels just draw faces
 										// without walking the bsp tree
 } dbsp_model_t;
 
@@ -363,7 +221,7 @@ typedef struct
 {
 	float	normal[3];
 	float	dist;
-	int		type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
+	int32_t	type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
 } dbsp_plane_t;
 
 
@@ -429,32 +287,32 @@ typedef struct
 
 typedef struct
 {
-	int			planenum;
-	int			children[2];	// negative numbers are -(leafs+1), not nodes
-	short		mins[3];		// for frustom culling
-	short		maxs[3];
-	unsigned short	firstface;
-	unsigned short	numfaces;	// counting both sides
+	int32_t		planenum;
+	int32_t		children[2];	// negative numbers are -(leafs+1), not nodes
+	int16_t		mins[3];		// for frustom culling
+	int16_t		maxs[3];
+	uint16_t	firstface;
+	uint16_t	numfaces;	// counting both sides
 } dbsp_node_t;
 
 typedef struct
 {
-	int			planenum;
-	int			children[2];	// negative numbers are -(leafs+1), not nodes
+	int32_t			planenum;
+	int32_t			children[2];	// negative numbers are -(leafs+1), not nodes
 	float		mins[3];		// for frustom culling
 	float		maxs[3];
-	unsigned int firstface;
-	unsigned int numfaces; // counting both sides
+	uint32_t firstface;
+	uint32_t numfaces; // counting both sides
 } dbsp_node_ext_t;	// QBISM BSP
 
 
 typedef struct texinfo_s
 {
 	float		vecs[2][4];		// [s/t][xyz offset]
-	int			flags;			// miptex flags + overrides
-	int			value;			// light emission, etc
+	int32_t		flags;			// miptex flags + overrides
+	int32_t		value;			// light emission, etc
 	char		texture[32];	// texture name (textures/*.tga)
-	int			nexttexinfo;	// for animations, -1 = end of chain
+	int32_t		nexttexinfo;	// for animations, -1 = end of chain
 } dbsp_texinfo_t;
 
 
@@ -462,97 +320,97 @@ typedef struct texinfo_s
 // counterclockwise use of the edge in a face
 typedef struct
 {
-	unsigned short	v[2];		// vertex numbers
+	uint16_t	v[2];		// vertex numbers
 } dbsp_edge_t;
 
 typedef struct
 {
-	unsigned int v[2]; // vertex numbers
+	uint32_t v[2]; // vertex numbers
 } dbsp_edge_ext_t; // QBISM BSP
 
 
 #define	MAX_LIGHTMAPS_PER_SURFACE	4 // this is also max lightstyles for surf
 typedef struct
 {
-	unsigned short	planenum;
-	short		side;
+	uint16_t	planenum;
+	int16_t		side;
 
-	int			firstedge;		// we must support > 64k edges
-	short		numedges;	
-	short		texinfo;
+	int32_t		firstedge;		// we must support > 64k edges
+	int16_t		numedges;
+	int16_t		texinfo;
 
 // lighting info
 	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
-	int			lightofs;		// start of [numstyles*surfsize] samples
+	int32_t			lightofs;		// start of [numstyles*surfsize] samples
 } dbsp_face_t;
 
 typedef struct
 {
-	unsigned int planenum;
-	int			side;
+	uint32_t		planenum;
+	int32_t			side;
 
-	int			firstedge; // we must support > 64k edges
-	int			numedges;
-	int			texinfo;
+	int32_t			firstedge; // we must support > 64k edges
+	int32_t			numedges;
+	int32_t			texinfo;
 
 	// lighting info
 	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
-	int			lightofs; // start of [numstyles*surfsize] samples
+	int32_t			lightofs; // start of [numstyles*surfsize] samples
 } dbsp_face_ext_t; // QBISM BSP
 
 
 typedef struct
 {
-	int				contents;			// OR of all brushes (not needed?)
+	int32_t			contents;			// OR of all brushes (not needed?)
 
-	short			cluster;
-	short			area;
+	int16_t			cluster;
+	int16_t			area;
 
-	short			mins[3];			// for frustum culling
-	short			maxs[3];
+	int16_t			mins[3];			// for frustum culling
+	int16_t			maxs[3];
 
-	unsigned short	firstleafface;
-	unsigned short	numleaffaces;
+	uint16_t	firstleafface;
+	uint16_t	numleaffaces;
 
-	unsigned short	firstleafbrush;
-	unsigned short	numleafbrushes;
+	uint16_t	firstleafbrush;
+	uint16_t	numleafbrushes;
 } dbsp_leaf_t;
 
 typedef struct
 {
-	int				contents; // OR of all brushes (not needed?)
+	int32_t			contents; // OR of all brushes (not needed?)
 
-	int				cluster;
-	int				area;
+	int32_t			cluster;
+	int32_t			area;
 
 	float			mins[3]; // for frustum culling
 	float			maxs[3];
 
-	unsigned int	firstleafface;
-	unsigned int	numleaffaces;
+	uint32_t	firstleafface;
+	uint32_t	numleaffaces;
 
-	unsigned int	firstleafbrush;
-	unsigned int	numleafbrushes;
+	uint32_t	firstleafbrush;
+	uint32_t	numleafbrushes;
 } dbsp_leaf_ext_t; // QBISM BSP
 
 
 typedef struct
 {
-	unsigned short	planenum;		// facing out of the leaf
-	short			texinfo;
+	uint16_t	planenum;		// facing out of the leaf
+	int16_t		texinfo;
 } dbsp_brushside_t;
 
 typedef struct
 {
-	unsigned int	planenum; // facing out of the leaf
-	int				texinfo;
+	uint32_t	planenum; // facing out of the leaf
+	int32_t				texinfo;
 } dbsp_brushside_ext_t; // QBISM BSP
 
 typedef struct
 {
-	int			firstside;
-	int			numsides;
-	int			contents;
+	int32_t			firstside;
+	int32_t			numsides;
+	int32_t			contents;
 } dbrush_t;
 
 //#define	ANGLE_UP	-1 // braxi -- unused
@@ -568,8 +426,8 @@ typedef struct
 
 typedef struct
 {
-	int			numclusters;
-	int			bitofs[8][DVIS_NUM];	// bitofs[numclusters][DVIS_NUM]
+	int32_t			numclusters;
+	int32_t			bitofs[8][DVIS_NUM];	// bitofs[numclusters][DVIS_NUM]
 } dbsp_vis_t;
 
 // each area has a list of portals that lead into other areas
@@ -577,12 +435,12 @@ typedef struct
 // hearable even if the vis info says that it should be
 typedef struct
 {
-	int		portalnum;
-	int		otherarea;
+	int32_t		portalnum;
+	int32_t		otherarea;
 } dbsp_areaportal_t;
 
 typedef struct
 {
-	int		numareaportals;
-	int		firstareaportal;
+	int32_t		numareaportals;
+	int32_t		firstareaportal;
 } dbsp_area_t;
