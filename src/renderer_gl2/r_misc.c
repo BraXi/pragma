@@ -264,8 +264,9 @@ static int currentsample; //0 - (NUM_TIMESAMPLES-1)
 const char* stagenames[NUM_PROFILES] =
 {
 	"start",
-	"setup",
-	"world",
+	"setup and BSP",
+	"shadow pass",
+	"world geo",
 	"entities",
 	"debug",
 	"alpha surfaces",

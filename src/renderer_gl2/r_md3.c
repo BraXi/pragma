@@ -598,8 +598,8 @@ void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp)
 
 	R_BindProgram(GLPROG_ALIAS);
 
-	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
-	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
+	R_ProgUniformVec3(LOC_AMBIENT_COLOR, model_shadelight);
+	R_ProgUniformVec3(LOC_AMBIENT_DIR, model_shadevector);
 	R_ProgUniform1f(LOC_LERPFRAC, animlerp);
 	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
 	if (r_pendingflip)

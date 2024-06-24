@@ -102,7 +102,7 @@ Sets string in script
 */
 int Scr_SetString(char* str)
 {
-	return (int)(str - active_qcvm->strings);
+	return (str - active_qcvm->strings);
 }
 
 /*

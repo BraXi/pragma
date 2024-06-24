@@ -87,9 +87,25 @@ typedef struct image_s
 //===================================================================
 // r_fbo.c
 //===================================================================
+
 qboolean R_InitFrameBuffer();
 void R_FreeFrameBuffer();
 void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse);
+
+
+//===================================================================
+// r_shadow.c
+//===================================================================
+
+qboolean R_InitShadowMap(unsigned int width, unsigned int height);
+void R_DestroyShadowMapFBO();
+
+void R_BeginShadowMapPass();
+void R_EndShadowMapPass();
+
+void BindForReading();
+
+extern GLuint r_texture_shadow_id;
 
 //===================================================================
 // r_progs.c
@@ -105,18 +121,23 @@ enum
 	GLPROG_POSTFX,
 	GLPROG_DEBUGSTRING,
 	GLPROG_DEBUGLINE,
+	GLPROG_WORLD_SHADOW,
+	GLPROG_ALIAS_SHADOW,
+	GLPROG_SMDL_SHADOW,
+	GLPROG_SHADOW,
 	MAX_GLPROGS
 };
 typedef enum
 {
 	LOC_COLORMAP,
 	LOC_LIGHTMAP,
+	LOC_SHADOWMAP,
 	LOC_LIGHTSTYLES,
 	LOC_SCALE,
 	LOC_COLOR4,
 	LOC_TIME,
-	LOC_SHADEVECTOR,
-	LOC_SHADECOLOR,
+	LOC_AMBIENT_DIR,
+	LOC_AMBIENT_COLOR,
 	LOC_LERPFRAC,
 	LOC_WARPSTRENGTH,
 	LOC_FLOWSTRENGTH,
@@ -277,6 +298,7 @@ extern	vec3_t	r_origin;
 extern	refdef_t	r_newrefdef;
 extern	int			r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
+extern cvar_t* r_test;
 extern	cvar_t	*r_norefresh;
 extern	cvar_t	*r_lefthand;
 extern	cvar_t	*r_drawentities;
@@ -323,54 +345,68 @@ extern mat4_t r_ortho_matrix;
 //===================================================================
 // r_model.c
 //===================================================================
+
 extern model_t *r_worldmodel;
 extern model_t* r_defaultmodel;
 
 extern int registration_sequence;
 
+
 //===================================================================
 // r_init.c
 //===================================================================
+
 int R_Init( void *hinstance, void *hWnd );
 void R_Shutdown( void );
+
 
 //===================================================================
 // r_misc.c
 //===================================================================
+
 void R_InitCodeTextures();
 void R_ScreenShot_f(void);
 void GL_SetDefaultState(void);
 void GL_UpdateSwapInterval(void);
 
+
 //===================================================================
 // r_world.c
 //===================================================================
+
+void R_TraverseWorldBSP();
 void R_DrawWorld();
 void R_World_MarkLeaves();
 void R_World_DrawAlphaSurfaces(); //old rendering path
 void R_DrawBrushModel(rentity_t* e);
 
+
 //===================================================================
 // r_warp.c
 //===================================================================
+
 void R_SubdivideSurface(msurface_t* fa);
 void R_World_DrawUnlitWaterSurf (msurface_t *fa); //old rendering path
 void R_AddSkySurface (msurface_t *fa);
 void R_ClearSkyBox();
 void R_DrawSkyBox();
 
+
 //===================================================================
 // r_main.c 
 //===================================================================
+
 void R_RenderView(refdef_t* fd);
 void R_BeginFrame(float camera_separation);
 void R_RotateForEntity(rentity_t* e);
 qboolean R_CullBox(vec3_t mins, vec3_t maxs);
 void R_DrawBeam(rentity_t* e);
 
+
 //===================================================================
 // r_light.c
 //===================================================================
+
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
 void R_LightPoint(vec3_t p, vec3_t color);
 void R_PushDlights(void);
@@ -383,9 +419,11 @@ void R_RenderDlights(void); // development aid
 // void COM_StripExtension (char *in, char *out); //unused in render
 
 
+
 //===================================================================
 // r_draw.c
 //===================================================================
+
 void R_LoadFonts();
 void R_GetImageSize (int *w, int *h, char *name);
 void R_DrawImage (int x, int y, char *name);
@@ -394,9 +432,11 @@ void R_DrawSingleChar (int x, int y, int c, int charSize);
 void R_DrawTileClear (int x, int y, int w, int h, char *name);
 void R_DrawFill (int x, int y, int w, int h);
 
+
 //===================================================================
 // r_image.c
 //===================================================================
+
 struct image_s* R_RegisterSkin(char* name);
 void R_EnableMultiTexture();
 void R_DisableMultiTexture();
@@ -416,12 +456,15 @@ void R_TextureSolidMode(char *string);
 #define	TEXNUM_IMAGES		1153
 #define	MAX_GLTEXTURES		1024
 
-#define MIN_TEXTURE_MAPPING_UNITS 4
+#define MIN_TEXTURE_MAPPING_UNITS 4 //5
 
 enum
 {
 	TMU_DIFFUSE,
 	TMU_LIGHTMAP,
+	TMU_SHADOWMAP
+	//TMU_SPECULAR,
+	//TMU_NORMAL
 };
 
 extern int gl_filter_min, gl_filter_max;
@@ -460,6 +503,10 @@ typedef struct
 {
 	qboolean fullscreen;
 	int     prev_mode;			// previous r_mode->value
+
+	qboolean bTraversedBSP;
+	qboolean bShadowMapPass;
+	qboolean bDrawingTransparents;
 
 	int lightmap_textures;		// TEXNUM_LIGHTMAPS + NUM_LIGHTMAPS
 
@@ -519,6 +566,7 @@ typedef enum
 {
 	STAGE_START,
 	STAGE_SETUP,
+	STAGE_SHADOWMAP,
 	STAGE_DRAWWORLD,
 	STAGE_ENTITIES,
 	STAGE_DEBUG,

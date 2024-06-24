@@ -525,7 +525,7 @@ typedef struct
 // player_state_t->refdef flags
 #define	RDF_UNDERWATER		1		// warp the screen as apropriate
 #define RDF_NOWORLDMODEL	2		// used for player configuration screen
-
+#define RDF_FLASHLIGHT		4		// flashlight shadow
 
 //
 // muzzle flashes / player effects

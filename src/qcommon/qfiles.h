@@ -403,7 +403,7 @@ typedef struct
 typedef struct
 {
 	uint32_t	planenum; // facing out of the leaf
-	int32_t				texinfo;
+	uint32_t				texinfo;
 } dbsp_brushside_ext_t; // QBISM BSP
 
 typedef struct

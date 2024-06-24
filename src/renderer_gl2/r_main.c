@@ -192,35 +192,64 @@ static inline void R_DrawCurrentEntity()
 R_DrawEntitiesOnList
 =============
 */
-void R_DrawEntitiesOnList (void)
+void R_DrawEntitiesOnList(void)
 {
 	int		i;
 
 	if (!r_drawentities->value)
 		return;
 
-	// draw non-transparent first
+	//
+	// draw opaque entities
+	//
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		pCurrentRefEnt = &r_newrefdef.entities[i];
 		pCurrentModel = pCurrentRefEnt->model;
+
 		if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
-			continue;	// reject transparent
+		{
+			continue; // reject transparent
+		}
+
+		if (gl_state.bShadowMapPass && (pCurrentRefEnt->renderfx & RF_VIEW_MODEL))
+		{
+			continue; // reject view models in shadow pass
+		}
+
 		R_DrawCurrentEntity();
 	}
 
-
+	//
 	// draw transparent entities
-	R_WriteToDepthBuffer(GL_FALSE);	// no z writes
+	//
+	
+	gl_state.bDrawingTransparents = true;
+
+	// braxi -- line below commented out as we alphatest now
+	//R_WriteToDepthBuffer(GL_FALSE); // no z writes
+
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		pCurrentRefEnt = &r_newrefdef.entities[i];
 		pCurrentModel = pCurrentRefEnt->model;
+
 		if (!(pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
-			continue;	// reject solid
+		{
+			continue; // reject opaque
+		}
+		if (gl_state.bShadowMapPass && (pCurrentRefEnt->renderfx & RF_VIEW_MODEL))
+		{
+			continue; // reject view models in shadow pass
+		}
+
 		R_DrawCurrentEntity();
 	}
-	R_WriteToDepthBuffer(GL_TRUE);	// reenable z writing
+
+	gl_state.bDrawingTransparents = false;
+
+	// braxi -- line below commented out as we alphatest now
+	//R_WriteToDepthBuffer(GL_TRUE);// reenable z writing
 
 	R_UnbindProgram();
 }
@@ -421,18 +450,13 @@ void MYgluPerspective( GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble 
 
 /*
 =============
-R_SetupGL
+R_SetViewport
 =============
 */
-static void R_SetupGL()
+static void R_SetViewport()
 {
-	float	screenaspect;
-//	float	yfov;
-	int		x, x2, y2, y, w, h;
+	int x, x2, y2, y, w, h;
 
-	//
-	// set up viewport
-	//
 	x = floor(r_newrefdef.x * vid.width / vid.width);
 	x2 = ceil((r_newrefdef.x + r_newrefdef.width) * vid.width / vid.width);
 	y = floor(vid.height - r_newrefdef.y * vid.height / vid.height);
@@ -441,39 +465,42 @@ static void R_SetupGL()
 	w = x2 - x;
 	h = y - y2;
 
-	glViewport (x, y2, w, h);
+	glViewport(x, y2, w, h);
+}
+
+/*
+=============
+R_SetupProjection
+
+Calculates new r_projection_matrix and r_world_matrix.
+r_newrefdef.width/r_newrefdef.height
+r_newrefdef.view.fov_y
+=============
+*/
+void R_SetupProjection(unsigned int width, unsigned int height, float fov_y, float znear, float zfar, vec3_t origin, vec3_t angles)
+{
+	float	screenaspect;
+	mat4_t mat;
 
 	//
 	// set up projection matrix
 	//
-    screenaspect = (float)r_newrefdef.width/r_newrefdef.height;
-    MYgluPerspective (r_newrefdef.view.fov_y,  screenaspect,  4, 4096*2);
+    screenaspect = (float)width/height;
+    MYgluPerspective (fov_y, screenaspect, znear, zfar);
 
-	R_SetCullFace(GL_FRONT);
-
-	mat4_t mat;
+	//
+	// set up world matrix, put Z going up
+	//
 	Mat4MakeIdentity(mat);
 
-	Mat4RotateAroundX(mat, -90);	// put Z going up
-	Mat4RotateAroundZ(mat, 90);	// put Z going up
-	Mat4RotateAroundX(mat, -r_newrefdef.view.angles[2]);
-	Mat4RotateAroundY(mat, -r_newrefdef.view.angles[0]);
-	Mat4RotateAroundZ(mat, -r_newrefdef.view.angles[1]);
-	Mat4Translate(mat, -r_newrefdef.view.origin[0], -r_newrefdef.view.origin[1], -r_newrefdef.view.origin[2]);
+	Mat4RotateAroundX(mat, -90); // put Z going up
+	Mat4RotateAroundZ(mat, 90); // put Z going up
+	Mat4RotateAroundX(mat, -angles[2]);
+	Mat4RotateAroundY(mat, -angles[0]);
+	Mat4RotateAroundZ(mat, -angles[1]);
+	Mat4Translate(mat, -origin[0], -origin[1], -origin[2]);
 
 	memcpy(r_world_matrix, mat, sizeof(mat));
-
-	//only send the matricies once since they'll never change during a frame.
-	R_BindProgram(GLPROG_WORLD);
-
-	//
-	// set drawing parms
-	//
-	R_CullFace(r_cull->value);
-
-	R_Blend(false);
-	R_AlphaTest(false);
-	R_DepthTest(true);
 }
 
 /*
@@ -495,7 +522,7 @@ void R_Clear (void)
 	glDepthRange (gldepthmin, gldepthmax);
 }
 
-
+//extern GLuint r_texture_shadow_id;
 /*
 ================
 R_RenderView
@@ -529,19 +556,66 @@ void R_RenderView (refdef_t *fd)
 	if (r_finish->value)
 		glFinish ();
 
+	//
+	// set drawing parms
+	//
+	R_SetCullFace(GL_FRONT);
+	R_CullFace(r_cull->value);
+
+	R_Blend(false);
+	R_AlphaTest(false);
+	R_DepthTest(true);
+
 	R_SetupFrame ();
 
 	R_SetFrustum ();
 
-	R_SetupGL ();
-
 	R_World_MarkLeaves ();	// done here so we know if we're in water
+	
+	gl_state.bDrawingTransparents = false;
+	gl_state.bTraversedBSP = false;
 
+	R_TraverseWorldBSP();
+
+	R_ProfileAtStage(STAGE_SETUP);
+
+	//
+	// SHADOW MAP PASS    !!!ASSUMES ONLY FLASHLIGHT IS CASTING SHADOW!!!
+	// 
+	// Bind shadowmap FBO and render only to the depth buffer
+	// Traverse BSP to build surfaces
+	// Do not wipe texture chains after rendering wworld surfaces
+	// Do not draw translucent surfaces (TODO: draw them alpha tested)
+	// Do not draw skybox
+	// Do not bind any textures except shadowmap
+	// Skip lighting, particles, debug lines, and all the other things which shouldn't render to depth
+	//
+
+	if (r_test->value)
+	{
+		R_InitShadowMap(vid.width, vid.height);
+		R_BeginShadowMapPass();
+
+		R_DrawWorld();
+		R_DrawEntitiesOnList();
+
+		R_EndShadowMapPass();
+
+	}
+
+	R_ProfileAtStage(STAGE_SHADOWMAP);
+
+	//
+	// FINAL PASS
+	// Draw all surfaces (we've previously ommited sky and transparents)
+	//
+
+	R_SetViewport();
+	R_SetupProjection(r_newrefdef.width, r_newrefdef.height, r_newrefdef.view.fov_y, 4, 4096 * 2, r_newrefdef.view.origin, r_newrefdef.view.angles);
 	R_UpdateCommonProgUniforms(false);
 
 	R_ClearFBO(); 
 	R_RenderToFBO(true); // begin rendering to fbo
-	R_ProfileAtStage(STAGE_SETUP);
 
 	R_DrawWorld();
 	R_ProfileAtStage(STAGE_DRAWWORLD);
@@ -563,6 +637,7 @@ void R_RenderView (refdef_t *fd)
 
 	R_RenderToFBO(false); // end rendering to fbo
 	
+	gl_state.bShadowMapPass = false;
 	R_SelectTextureUnit(0);
 	if (r_speeds->value == 1.0f)
 	{
@@ -673,6 +748,9 @@ void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 
 		// draw the frame buffer
 		R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
+
+		if (r_test->value)
+			R_DrawFBO(0, 0, r_newrefdef.width/3, r_newrefdef.height/3, false);
 	}
 
 	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
@@ -695,7 +773,7 @@ R_BeginFrame
 void R_BeginFrame( float camera_separation )
 {
 
-	gl_state.camera_separation = camera_separation;
+	gl_state.camera_separation = 0;
 
 	/*
 	** change modes if necessary

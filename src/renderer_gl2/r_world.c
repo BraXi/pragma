@@ -390,6 +390,13 @@ static void R_World_GrabSurfaceTextures(const msurface_t* surf, int *outDiffuse,
 	image_t* image;
 	qboolean lightmapped = true;
 
+	//if (gl_state.bShadowMapPass)
+	//{
+	//	*outDiffuse = r_texture_white->texnum;
+	//	*outLM = r_texture_white->texnum;
+	//	return;
+	//}
+
 	image = R_World_TextureAnimation(surf->texinfo);
 	if (!image)
 		image = r_texture_missing;
@@ -468,7 +475,10 @@ static void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
 	R_World_GrabSurfaceTextures(surf, &tex_diffuse, &tex_lightmap);
 
 	// fullbright surfaces (water, translucent) have no styles
-	stylechanged = R_World_UpdateLightStylesForSurf((r_fullbright->value > 0.0f || !lightmapped) ? NULL : surf);
+	if (gl_state.bShadowMapPass)
+		stylechanged = false;
+	else
+		stylechanged = R_World_UpdateLightStylesForSurf((r_fullbright->value > 0.0f || !lightmapped) ? NULL : surf);
 
 	numTris = surf->numedges - 2;
 	numIndices = numTris * 3;
@@ -725,30 +735,33 @@ static void R_World_DrawSortedByDiffuseMap()
 	// [ISB] To avoid a context change by changing shaders, and the overhead of updating uniforms,
 	// the world shader always performs warps but the strength is zeroed to cancel it out. 
 	//
-	R_ProgUniform1f(LOC_WARPSTRENGTH, 1.f);
-	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
+	if (gl_state.bShadowMapPass == false)
 	{
-		if (!image->registration_sequence)
-			continue;
-
-		s = image->texturechain;
-		if (!s)
-			continue;
-
-		for (; s; s = s->texturechain)
+		R_ProgUniform1f(LOC_WARPSTRENGTH, 1.f);
+		for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 		{
-			if (s->flags & SURF_DRAWTURB)
-			{
-				// draw surf
-				R_World_NewDrawSurface(s, false);
-			}
-		}
+			if (!image->registration_sequence)
+				continue;
 
-		if (!r_showtris->value) // texture chains are used in r_showtris
-			image->texturechain = NULL;
+			s = image->texturechain;
+			if (!s)
+				continue;
+
+			for (; s; s = s->texturechain)
+			{
+				if (s->flags & SURF_DRAWTURB)
+				{
+					// draw surf
+					R_World_NewDrawSurface(s, false);
+				}
+			}
+
+			if (!r_showtris->value) // texture chains are used in r_showtris
+				image->texturechain = NULL;
+		}
+		R_World_DrawAndFlushBufferedGeo();
+		R_ProgUniform1f(LOC_WARPSTRENGTH, 0.f);
 	}
-	R_World_DrawAndFlushBufferedGeo();
-	R_ProgUniform1f(LOC_WARPSTRENGTH, 0.f);
 	R_World_EndRendering();
 }
 
@@ -1096,6 +1109,45 @@ static void R_World_DrawTriangleOutlines()
 
 /*
 ================
+R_TraverseWorldBSP
+
+Traverse BSP tree and build texture chains for efficient rendering.
+!!ASSUMES WE HAVE ONLY ONE SHADOW CASTER AT MAX!!
+================
+*/
+
+void R_TraverseWorldBSP()
+{
+	if (!r_drawworld->value)
+		return;
+
+	if (r_newrefdef.view.flags & RDF_NOWORLDMODEL)
+		return;
+
+	if (gl_state.bTraversedBSP)
+		return;
+
+	// clear skybox
+	R_ClearSkyBox();
+
+	// clear texture chains
+	int i;
+	image_t* image;
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
+	{
+		if (!image->registration_sequence || !image->texturechain)
+			continue;
+		image->texturechain = NULL;
+	}
+
+	// walk bsp tree and build surface chains
+	R_World_RecursiveNode(r_worldmodel->nodes);
+
+	gl_state.bTraversedBSP = true;
+}
+
+/*
+================
 R_DrawWorld
 
 Draws world and skybox
@@ -1111,6 +1163,11 @@ void R_DrawWorld()
 	if (r_newrefdef.view.flags & RDF_NOWORLDMODEL)
 		return;
 
+	if (!gl_state.bTraversedBSP)
+	{
+		ri.Error(ERR_FATAL, "R_DrawWorld without traversal of BSP");
+	}
+
 	memset(&ent, 0, sizeof(ent));
 	ent.frame = (int)(r_newrefdef.time * 2);
 	VectorSet(ent.renderColor, 1.0f, 1.0f, 1.0f);
@@ -1120,11 +1177,6 @@ void R_DrawWorld()
 	pCurrentModel = r_worldmodel;
 
 	VectorCopy(r_newrefdef.view.origin, modelorg);
-
-	R_ClearSkyBox();
-
-	// build texture chains
-	R_World_RecursiveNode(r_worldmodel->nodes);
 
 	//no local transform needed for world. 
 	memcpy(r_local_matrix, mat4_identity, sizeof(mat4_t));
@@ -1149,9 +1201,12 @@ void R_DrawWorld()
 	R_World_DrawSortedByDiffuseMap();
 
 	// 
-	// DRAW SKYBOX
+	// DRAW SKYBOX but only in final pass
 	//
-	R_DrawSkyBox();
+	if (gl_state.bShadowMapPass == false)
+	{
+		R_DrawSkyBox();
 
-	R_World_DrawTriangleOutlines();
+		R_World_DrawTriangleOutlines();
+	}
 }

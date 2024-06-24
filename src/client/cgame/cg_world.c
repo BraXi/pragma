@@ -112,6 +112,8 @@ trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int content
 	if (!maxs)
 		maxs = vec3_origin;
 
+	memset(&trace, 0, sizeof(trace_t));
+
 	// check against world
 	trace = CM_BoxTrace(start, end, mins, maxs, 0, contentsMask);
 	if (trace.fraction == 0.0f)

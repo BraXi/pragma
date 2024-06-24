@@ -195,6 +195,8 @@ vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, uns
 /*
 ===============
 R_UpdateVertexBuffer
+
+TODO: Check VBO status
 ===============
 */
 void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags)

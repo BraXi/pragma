@@ -556,7 +556,7 @@ static void Mod_BSP_LoadLightMaps(lump_t *l)
 		return;
 	}
 
-	CMod_ValidateBSPLump(l, BSP_LIGHTING, &count, 0, "lightmaps", __FUNCTION__);
+	//CMod_ValidateBSPLump(l, BSP_LIGHTING, &count, 0, "lightmaps", __FUNCTION__);
 
 	pLoadModel->lightdatasize = l->filelen;
 	pLoadModel->lightdata = Hunk_Alloc(l->filelen);	
@@ -1389,6 +1389,8 @@ static void Mod_BSP_FindExtLumps()
 
 		bspx_lumps_offset = offset;
 	}
+
+	ri.Printf(PRINT_ALL, "Mod_BSP_FindExtLumps OK.\n");
 }
 
 /*

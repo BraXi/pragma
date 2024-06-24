@@ -101,7 +101,6 @@ void R_PushDlights (void)
 
 	// braxi -- moved dlight shader updates to R_UpdateCommonProgUniforms()
 }
-
 /*
 =================
 R_SendDynamicLightsToCurrentProgram

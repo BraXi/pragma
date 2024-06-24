@@ -127,7 +127,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>.\renderer.def</ModuleDefinitionFile>
       <AdditionalDependencies>winmm.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -185,6 +185,7 @@
     <ClCompile Include="glad_gl21.c" />
     <ClCompile Include="r_lightmap.c" />
     <ClCompile Include="r_newmod.c" />
+    <ClCompile Include="r_shadow.c" />
     <ClCompile Include="r_text.c" />
     <ClCompile Include="r_framebuffer.c" />
     <ClCompile Include="r_progs.c" />

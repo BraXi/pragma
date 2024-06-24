@@ -139,6 +139,8 @@ typedef struct rdCamParams_s
 	float	angles[3];
 	float	fov_x, fov_y;
 	int		flags;			// RDF_UNDERWATER, etc
+
+	float	flashlight_angles[3];
 	rdViewFX_t fx;
 }rdCamParams_t;
 
@@ -237,7 +239,7 @@ typedef struct
 	void	(*SetColor)(float r, float g, float b, float a);
 
 	int		(*TagIndexForName)(struct model_s* model, const char* tagName);
-	qboolean (*LerpTag)(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex);
+	qboolean (*LerpTag)(orientation_t* tag, struct model_s* model, int startFrame, int endFrame, float frac, int tagIndex);
 } refexport_t;
 
 //

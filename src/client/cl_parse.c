@@ -155,7 +155,7 @@ CL_ParseBaseline
 void CL_ParseBaseline (void)
 {
 	entity_state_t	*es;
-	int				bits;
+	unsigned int bits; // was int
 	int				newnum;
 	entity_state_t	nullstate;
 
@@ -270,7 +270,8 @@ void CL_ParseStartSoundPacket(void)
 		ofs = 0;
 
 	if (flags & SND_ENT)
-	{	// entity reletive
+	{	
+		// entity relative
 		channel = MSG_ReadShort(&net_message); 
 		ent = channel>>3;
 		if (ent > MAX_GENTITIES)

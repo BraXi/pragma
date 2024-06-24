@@ -74,6 +74,9 @@ void R_BindTexture(int texnum)
 
 void R_MultiTextureBind(unsigned int tmu, int texnum)
 {
+	if (gl_state.bShadowMapPass && gl_state.bDrawingTransparents == false)
+		return; // no texturng in shadow pass
+
 	R_SelectTextureUnit( tmu );
 
 	if ( gl_state.current_texture[tmu] == texnum )

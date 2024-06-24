@@ -224,14 +224,63 @@ void R_DrawFBO(int x, int y, int w, int h, qboolean diffuse)
 
 	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
 
-	R_BindProgram(GLPROG_POSTFX);	
-	R_ProgUniform2f(LOC_SCREENSIZE, (float)vid.width, (float)vid.height);	
+	if (diffuse)
+	{
+		R_BindProgram(GLPROG_POSTFX);
+		R_ProgUniform2f(LOC_SCREENSIZE, (float)vid.width, (float)vid.height);
+		R_ApplyPostEffects();
+		R_MultiTextureBind(TMU_DIFFUSE, fbo_tex_diffuse);
+	}
+	else
+	{
+		R_BindProgram(GLPROG_SHADOW);
+		R_MultiTextureBind(TMU_DIFFUSE, r_texture_shadow_id);
+	}
+
+	R_DrawVertexBuffer(&vb_gui, 0, 0);
+	R_UnbindProgram();
+}
+
+
+/*
+===============
+R_DrawFBO
+
+Draw contents of FBO on screen
+===============
+*/
+void R_DrawShadowMap(int x, int y, int w, int h, qboolean diffuse)
+{
+	rect_t rect;
+	rect[0] = x;
+	rect[1] = y;
+	rect[2] = w;
+	rect[3] = h;
+
+	ClearVertexBuffer();
+	PushVert(rect[0], rect[1], 0);
+	SetTexCoords(0.0f, 1.0f);
+	PushVert(rect[0] + rect[2], rect[1], 0);
+	SetTexCoords(1.0f, 1.0f);
+	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
+	SetTexCoords(1.0f, 0.0f);
+	PushVert(rect[0], rect[1], 0);
+	SetTexCoords(0.0f, 1.0f);
+	PushVert(rect[0] + rect[2], rect[1] + rect[3], 0);
+	SetTexCoords(1.0f, 0.0f);
+	PushVert(rect[0], rect[1] + rect[3], 0);
+	SetTexCoords(0.0f, 0.0f);
+
+	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
+
+	R_BindProgram(GLPROG_POSTFX);
+	R_ProgUniform2f(LOC_SCREENSIZE, (float)vid.width, (float)vid.height);
 	R_ApplyPostEffects();
 
-	//if (diffuse)
-	R_MultiTextureBind(TMU_DIFFUSE, fbo_tex_diffuse);
-	//	else
-	//		R_BindTexture(fbo_tex_depth);
+	if (diffuse)
+		R_MultiTextureBind(TMU_DIFFUSE, fbo_tex_diffuse);
+	else
+		R_MultiTextureBind(TMU_DIFFUSE, r_texture_shadow_id);
 
 	R_DrawVertexBuffer(&vb_gui, 0, 0);
 	R_UnbindProgram();

@@ -75,6 +75,7 @@
     <ClCompile Include="glad_gl21.c">
       <Filter>sys</Filter>
     </ClCompile>
+    <ClCompile Include="r_shadow.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

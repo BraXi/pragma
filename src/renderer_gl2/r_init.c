@@ -13,6 +13,8 @@ See the attached GNU General Public License v2 for more details.
 
 refimport_t	ri;
 
+cvar_t* r_test;
+
 cvar_t* r_norefresh;
 cvar_t* r_drawentities;
 cvar_t* r_drawworld;
@@ -79,6 +81,8 @@ register all cvars and commands
 */
 void R_RegisterCvarsAndCommands(void)
 {
+	r_test = ri.Cvar_Get("r_test", "1", 0, NULL);
+
 	r_lefthand = ri.Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0, NULL);
 

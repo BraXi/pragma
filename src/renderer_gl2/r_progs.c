@@ -29,14 +29,16 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	/* global */
 	{ LOC_COLORMAP,			"colormap",			F_INT },
 	{ LOC_LIGHTMAP,			"lightmap",			F_INT },
+	{ LOC_SHADOWMAP,		"shadowmap",		F_INT },
+
 	{ LOC_LIGHTSTYLES,		"lightstyles",		F_VECTOR3 }, //F_VECTOR3*4
 	{ LOC_COLOR4,			"color_rgba",		F_FLOAT },
 	{ LOC_SCALE,			"scale",			F_VECTOR3 },
 	{ LOC_TIME,				"time",				F_FLOAT }, // fixme: unset
 
 	/* md3 models */
-	{ LOC_SHADEVECTOR,		"shade_vector",		F_VECTOR3 },
-	{ LOC_SHADECOLOR,		"shade_light",		F_VECTOR3 },
+	{ LOC_AMBIENT_DIR,		"shade_vector",		F_VECTOR3 },
+	{ LOC_AMBIENT_COLOR,	"shade_light",		F_VECTOR3 },
 	{ LOC_LERPFRAC,			"lerpFrac",			F_FLOAT },
 	{ LOC_WARPSTRENGTH,		"warpstrength",		F_FLOAT },
 	{ LOC_FLOWSTRENGTH,		"flowstrength",		F_VECTOR2 },
@@ -108,7 +110,11 @@ static proginfo_t proginfo[] =
 	{GLPROG_GUI,			"gui",				PF_ORTHO},
 	{GLPROG_POSTFX,			"postfx",			PF_ORTHO},
 	{GLPROG_DEBUGSTRING,	"debug_string"},
-	{GLPROG_DEBUGLINE,		"debug_line"}
+	{GLPROG_DEBUGLINE,		"debug_line"},
+	{GLPROG_WORLD_SHADOW,	"shadow_world"}, // TODO: insert define SHADOW_PASS to regular shaders for these instead of writing additinal shader programs...
+	{GLPROG_ALIAS_SHADOW,	"shadow_alias"},
+	{GLPROG_SMDL_SHADOW,	"shadow_smdl"},
+	{GLPROG_SHADOW,			"shadow",			PF_ORTHO}
 };
 
 #define NUM_PROGINFO sizeof(proginfo) / sizeof(proginfo[0])
@@ -539,6 +545,8 @@ static void R_FindUniformLocations(glprog_t* prog)
 	// set default values
 	R_ProgUniform1i(LOC_COLORMAP, TMU_DIFFUSE);
 	R_ProgUniform1i(LOC_LIGHTMAP, TMU_LIGHTMAP);
+	R_ProgUniform1i(LOC_SHADOWMAP, TMU_SHADOWMAP);
+
 	R_ProgUniform4f(LOC_COLOR4, 1.0f, 1.0f, 1.0f, 1.0f);
 	R_UnbindProgram();
 }

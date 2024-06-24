@@ -171,6 +171,8 @@ void CG_AddViewFlashLight(rentity_t* parentEnt, player_state_t* ps)
 			dlight_t* dl;
 			dl = &r_dlights[r_numdlights-1];
 			dl->type = DL_VIEW_FLASHLIGHT; // haaaack, revisit this later!
+
+			VectorCopy(ent.angles, cl.refdef.view.flashlight_angles);
 		}
 	}
 	else

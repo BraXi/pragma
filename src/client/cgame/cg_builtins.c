@@ -41,7 +41,7 @@ void PFCG_AngleVectors(void)
 	AngleVectors(Scr_GetParmVector(0), cg.script_globals->v_forward, cg.script_globals->v_right, cg.script_globals->v_up);
 }
 
-static int CG_ModelIndex(char* name, qboolean fromServer)
+static int CG_ModelIndex(char* name/*, qboolean fromServer*/)
 {
 	int index;
 
@@ -221,6 +221,7 @@ static void PFCG_trace(void)
 //	cg.script_globals->trace_ent = ENT_TO_VM(cg.localEntities); // FIXME
 	cg.script_globals->trace_entnum = trace.entitynum;
 	cg.script_globals->trace_contents = trace.contents;
+
 
 	if (trace.surface)
 	{

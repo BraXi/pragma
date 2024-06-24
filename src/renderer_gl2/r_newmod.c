@@ -57,13 +57,14 @@ void R_DrawSkelModel(rentity_t* ent)
 	smdl_surf_t* surf;
 	int i;
 
-	mod = ent->model->smdl;
-	mod = ent->model->smdl;
-	if (ent == NULL || mod == NULL || !ent->model->vb[0])
+
+	if (ent == NULL || ent->model == NULL || ent->model->smdl == NULL || !ent->model->vb[0])
 	{
 		ri.Printf(PRINT_LOW, "R_DrawSkelModel: ent has no model\n");
 		return;
 	}
+
+	mod = ent->model->smdl;
 
 #if 0
 	qboolean anythingToDraw = false;
@@ -81,8 +82,8 @@ void R_DrawSkelModel(rentity_t* ent)
 
 	R_BindProgram(GLPROG_SMDL);
 
-	R_ProgUniformVec3(LOC_SHADECOLOR, model_shadelight);
-	R_ProgUniformVec3(LOC_SHADEVECTOR, model_shadevector);
+	R_ProgUniformVec3(LOC_AMBIENT_COLOR, model_shadelight);
+	R_ProgUniformVec3(LOC_AMBIENT_DIR, model_shadevector);
 	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
 
 	R_ProgUniform1f(LOC_PARM0, (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT) ? 1.0f : 0.0f);
@@ -154,7 +155,7 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 	surf = mod->smdl->surfaces[0];
 	for (int i = 0; i < mod->smdl->hdr.numsurfaces; i++)
 	{
-		if (surf->texture[0] == '$')
+		if (surf->texture[0] == '$') // CODE TEXTURE
 		{
 			mod->images[i] = R_FindTexture(surf->texture, it_model, true);
 		}
