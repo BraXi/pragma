@@ -246,6 +246,7 @@ void R_DrawEntitiesOnList(void)
 		R_DrawCurrentEntity();
 	}
 
+	R_MultiTextureBind(TMU_DIFFUSE, r_texture_white->texnum);
 	gl_state.bDrawingTransparents = false;
 
 	// braxi -- line below commented out as we alphatest now
