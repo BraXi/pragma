@@ -520,7 +520,7 @@ typedef struct
 #define RF_SCALE			1024	// entity model is scaled by .renderScale
 #define	RF_NOANIMLERP		2048	// animation is not lerped (software q1 style)
 #define RF_NEGATIVE_LIGHT	4096	// light that substracts from world!
-#define RF_YAWHACK			8192
+#define RF_NO_SHADOW		8192
 
 // player_state_t->refdef flags
 #define	RDF_UNDERWATER		1		// warp the screen as apropriate

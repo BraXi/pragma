@@ -347,10 +347,6 @@ void CL_AddPacketEntities(frame_t* frame)
 		VectorCopy(state->renderColor, rent.renderColor);
 		rent.scale = state->renderScale;
 
-		// FIXME: this is a big temporary hack for (borrowed from) Q2R models :v
-		if (rent.renderfx & RF_YAWHACK)
-			rent.angles[1] -= 90; 
-
 		// add entity to refresh list
 		V_AddEntity(&rent);
 
