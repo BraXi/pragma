@@ -212,9 +212,10 @@ void R_DrawEntitiesOnList(void)
 			continue; // reject transparent
 		}
 
-		if (gl_state.bShadowMapPass && (pCurrentRefEnt->renderfx & RF_VIEW_MODEL))
+		if (gl_state.bShadowMapPass)
 		{
-			continue; // reject view models in shadow pass
+			if((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) || (pCurrentRefEnt->renderfx & RF_NO_SHADOW))
+				continue; // reject view models and non shadow casters in shadow pass
 		}
 
 		R_DrawCurrentEntity();
@@ -238,9 +239,10 @@ void R_DrawEntitiesOnList(void)
 		{
 			continue; // reject opaque
 		}
-		if (gl_state.bShadowMapPass && (pCurrentRefEnt->renderfx & RF_VIEW_MODEL))
+		if (gl_state.bShadowMapPass)
 		{
-			continue; // reject view models in shadow pass
+			if ((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) || (pCurrentRefEnt->renderfx & RF_NO_SHADOW))
+				continue; // reject view models and non shadow casters in shadow pass
 		}
 
 		R_DrawCurrentEntity();

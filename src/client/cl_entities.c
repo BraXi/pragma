@@ -325,10 +325,6 @@ void CL_AddPacketEntities(frame_t* frame)
 		{
 			V_AddLight(rent.origin, state->lightIntensity, state->lightColor[0], state->lightColor[1], state->lightColor[2]);
 		}
-		else if (state->effects & RF_NEGATIVE_LIGHT)
-		{
-			V_AddLight(rent.origin, state->lightIntensity, -state->lightColor[0], -state->lightColor[1], -state->lightColor[2]);
-		}
 #endif
 
 		CG_AddFlashLightToEntity(clent, &rent);
