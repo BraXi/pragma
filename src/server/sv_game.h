@@ -28,7 +28,7 @@ typedef struct link_s
 #define	SVF_PATHNODE		64	// this entity is an pathnode
 #define	SVF_PLAYER			128	// don't clip against other players
 
-// edict->v.flags
+// gentity->v.flags
 #define FL_NOSTEP				1
 #define	FL_FLY					2
 #define	FL_SWIM					4	// implied immunity to drowining
@@ -36,7 +36,7 @@ typedef struct link_s
 #define	FL_AWARE				16	// will zigzag a lot less
 #define	FL_TEAMSLAVE			32	// not the first on the team, used in moves - slaves follow master
 
-// edict->solid values
+// gentity->solid values
 typedef enum
 {
 	SOLID_NOT,				// no interaction with other objects

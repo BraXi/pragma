@@ -10,23 +10,23 @@ See the attached GNU General Public License v2 for more details.
 
 
 #ifndef scr_func_t
-	typedef int scr_func_t;
+	typedef int32_t scr_func_t;
 //	typedef vec3_t scr_vec_t;
-	typedef int scr_entity_t;
-	typedef int scr_string_t;
+	typedef int32_t scr_entity_t;
+	typedef int32_t scr_string_t;
 #endif
 
 // prog globals
 typedef struct cl_globalvars_s
 {
-	int	pad[28];
+	int32_t	pad[28];
 
 	float			frametime; // seconds since last frame
-	int				time; // this is the time value that the clientis rendering at. always <= realtime between oldframe and frame
-	int				realtime; // always increasing, no clamping
+	int32_t			time; // this is the time value that the clientis rendering at. always <= realtime between oldframe and frame
+	int32_t			realtime; // always increasing, no clamping
 
-	int				vid_width;
-	int				vid_height;
+	int32_t			vid_width;
+	int32_t			vid_height;
 
 	float			localplayernum; // packetentity number of local player
 
@@ -38,7 +38,7 @@ typedef struct cl_globalvars_s
 	float			trace_allsolid, trace_startsolid, trace_fraction, trace_plane_dist;
 	vec3_t			trace_endpos, trace_plane_normal;
 	float			trace_entnum;
-	int				trace_contents;
+	int32_t			trace_contents;
 	scr_string_t	trace_surface_name;
 	float			trace_surface_flags;
 	float			trace_surface_value;
@@ -68,9 +68,9 @@ typedef struct cl_globalvars_s
 typedef struct cl_entvars_s
 {
 	scr_string_t	classname;
-	scr_string_t	model;
 
-	int				modelindex;
+	scr_string_t	model;
+	int32_t			modelindex;
 
 	vec3_t			mins;
 	vec3_t			maxs;

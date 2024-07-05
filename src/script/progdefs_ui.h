@@ -9,24 +9,25 @@ See the attached GNU General Public License v2 for more details.
 */
 
 #ifndef scr_func_t
-	typedef int scr_func_t;
-	typedef vec3_t scr_vec_t;
-	typedef int scr_entity_t;
-	typedef int scr_string_t;
+typedef int32_t scr_func_t;
+typedef int32_t scr_int_t;
+//	typedef vec3_t scr_vec_t;
+typedef int32_t scr_entity_t;
+typedef int32_t scr_string_t;
 #endif
 
 typedef struct ui_globalvars_s
 {
-	int	pad[28];
+	int32_t	pad[28];
 
 	float			frametime;
-	int				time; 
+	int32_t			time;
 	float			realtime;
 
-	int				vid_width;
-	int				vid_height;
-	int				scr_width;
-	int				scr_height;
+	int32_t			vid_width;
+	int32_t			vid_height;
+	int32_t			scr_width;
+	int32_t			scr_height;
 
 	float			clientState; //cs_*
 	float			serverState; //ss_*

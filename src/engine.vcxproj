@@ -207,7 +207,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)\..\build\</OutDir>
+    <OutDir>$(SolutionDir)..\build\</OutDir>
     <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>pragma_x64debug</TargetName>
   </PropertyGroup>

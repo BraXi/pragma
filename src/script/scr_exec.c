@@ -269,6 +269,8 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 	s = ScrInternal_EnterFunction(f);
 
+	vm->traceEnabled = true;
+
 	while (1)
 	{
 		s++;	// next statement
@@ -279,7 +281,9 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 		c = (eval_t*)&vm->globals[st->c];
 
 		if (!--vm->runawayCounter)
+		{
 			Scr_RunError("runaway loop error in function %s (%s)", ScrInternal_String(f->s_name), vmDefs[vm->progsType].filename);
+		}
 
 		vm->xfunction->profile++;
 		vm->xstatement = s;

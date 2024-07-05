@@ -408,7 +408,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	VectorAdd(actor->v.origin, move, neworg);
 
 	// flying monsters don't step up
-	if ((int)actor->v.flags & (FL_SWIM | FL_FLY))
+	if (actor->v.flags & (FL_SWIM | FL_FLY))
 	{
 		// try one move with vertical motion, then one without
 		for (i = 0; i < 2; i++)
@@ -427,7 +427,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 				{
 					if (dz > 40)
 						neworg[2] -= 8;
-					if (!(((int)actor->v.flags & FL_SWIM) && (actor->v.waterlevel < 2)))
+					if (!((actor->v.flags & FL_SWIM) && (actor->v.waterlevel < 2)))
 						if (dz < 30)
 							neworg[2] += 8;
 				}
@@ -446,7 +446,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 			trace = SV_Trace(actor->v.origin, actor->v.mins, actor->v.maxs, neworg, actor, contentmask);
 
 			// fly monsters don't enter water voluntarily
-			if ((int)actor->v.flags & FL_FLY)
+			if (actor->v.flags & FL_FLY)
 			{
 				if (!actor->v.waterlevel)
 				{
@@ -463,7 +463,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 			}
 
 			// swim monsters don't exit water voluntarily
-			if ((int)actor->v.flags & FL_SWIM)
+			if (actor->v.flags & FL_SWIM)
 			{
 				if (actor->v.waterlevel < 2)
 				{
@@ -495,7 +495,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	}
 
 	// push down from a step height above the wished position
-	if (!((int)actor->v.flags & FL_NOSTEP))
+	if (!(actor->v.flags & FL_NOSTEP))
 		stepsize = STEPSIZE;
 	else
 		stepsize = 1;
@@ -533,7 +533,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	if (trace.fraction == 1)
 	{
 		// if monster had the ground pulled out, go ahead and fall
-		if ((int)actor->v.flags & FL_PARTIALGROUND)
+		if (actor->v.flags & FL_PARTIALGROUND)
 		{
 			VectorAdd(actor->v.origin, move, actor->v.origin);
 			if (relink)
@@ -554,7 +554,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 
 	if (!SV_CheckBottom(actor))
 	{
-		if ((int)actor->v.flags & FL_PARTIALGROUND)
+		if (actor->v.flags & FL_PARTIALGROUND)
 		{	// entity had floor mostly pulled out from underneath it
 			// and is trying to correct
 			if (relink)
@@ -569,11 +569,13 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 		return false;
 	}
 
-	if ((int)actor->v.flags & FL_PARTIALGROUND)
+	if (actor->v.flags & FL_PARTIALGROUND)
 	{
-		int temp = (int)actor->v.flags;
-		temp &= ~FL_PARTIALGROUND;
-		actor->v.flags = temp;
+		//int temp = (int)actor->v.flags; // TODO: see if linux build still need this since v.flags is int now
+		//temp &= ~FL_PARTIALGROUND;
+		//actor->v.flags = temp;
+
+		actor->v.flags &= ~FL_PARTIALGROUND;
 	}
 
 	actor->v.groundentity_num = trace.entitynum;
@@ -685,9 +687,10 @@ SV_FixCheckBottom
 */
 static void SV_FixCheckBottom(gentity_t* actor)
 {
-	int temp = (int)actor->v.flags;
-	temp |= FL_PARTIALGROUND;
-	actor->v.flags = temp;
+	//int temp = (int)actor->v.flags; // se if linux still needs this
+	//temp |= FL_PARTIALGROUND;
+	//actor->v.flags = temp;
+	actor->v.flags |= FL_PARTIALGROUND;
 }
 
 
@@ -815,7 +818,7 @@ qboolean SV_MoveToGoal(gentity_t* actor, gentity_t* goal, float dist)
 	if (!goal)
 		return false;
 
-	if (actor->v.groundentity_num == ENTITYNUM_NULL && !((int)actor->v.flags & (FL_FLY | FL_SWIM)))
+	if (actor->v.groundentity_num == ENTITYNUM_NULL && !(actor->v.flags & (FL_FLY | FL_SWIM)))
 		return false;
 
 	// if the next step hits the enemy, return immediately
@@ -841,7 +844,7 @@ qboolean SV_WalkMove(gentity_t* actor, float yaw, float dist)
 {
 	vec3_t	move;
 
-	if (actor->v.groundentity_num == ENTITYNUM_NULL && !((int)actor->v.flags & (FL_FLY | FL_SWIM)))
+	if (actor->v.groundentity_num == ENTITYNUM_NULL && !(actor->v.flags & (FL_FLY | FL_SWIM)))
 		return false;
 
 	yaw = yaw * M_PI * 2 / 360;

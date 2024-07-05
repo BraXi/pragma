@@ -232,12 +232,16 @@ char* Scr_GlobalString(int ofs)
 	ddef_t* def;
 	void* val;
 	static char	line[128];
+
+
 	CheckScriptVM(__FUNCTION__);
 
 	val = (void*)&active_qcvm->globals[ofs];
 	def = ScrInternal_GlobalAtOfs(ofs);
 	if (!def)
+	{
 		sprintf(line, "%i(???)", ofs);
+	}
 	else
 	{
 		s = Scr_ValueString(def->type, val);

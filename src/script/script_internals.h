@@ -93,7 +93,7 @@ typedef struct
 {
 	void		(*func)(void);
 	qboolean	devmode;
-	pb_t		execon; // client, server or both
+	pb_t		execon; // client, server, gui or both
 	char*		qcstring;
 	char* name;
 	struct builtin_t* next;

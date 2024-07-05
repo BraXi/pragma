@@ -9,8 +9,6 @@ See the attached GNU General Public License v2 for more details.
 */
 // scr_main.c
 
-#define PROGS_CHECK_CRC 0
-
 #include "../qcommon/qcommon.h"
 #include "script_internals.h"
 
@@ -25,8 +23,8 @@ int scr_numBuiltins = 0;
 const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 {
 	{VM_NONE, NULL, 0, "shared"},
-	{VM_SVGAME, "progs/svgame.dat", 63850, "svgame"},
-	{VM_CLGAME, "progs/cgame.dat", 42847, "clgame"},
+	{VM_SVGAME, "progs/svgame.dat", 4248, "svgame"},
+	{VM_CLGAME, "progs/cgame.dat", 15591, "clgame"},
 	{VM_GUI, "progs/gui.dat", 0, "gui"}
 };
 
@@ -287,12 +285,12 @@ void Scr_GenerateBuiltinsDefs(char *filename, pb_t execon)
 
 /*
 ===============
-Scr_LoadProgs
+Scr_LoadProgram
 
 Load qc programs from file and set proper entity size
 ===============
 */
-void Scr_LoadProgs(qcvm_t *vm, char* filename)
+void Scr_LoadProgram(qcvm_t *vm, char* filename)
 {
 	int		len, i;
 	byte	*raw;
@@ -329,15 +327,17 @@ void Scr_LoadProgs(qcvm_t *vm, char* filename)
 
 	vm->crc = CRC_Block(vm->progs, len);
 
-#if PROGS_CHECK_CRC == 1
 	if (vmDefs[vm->progsType].defs_crc_checksum != 0 && vm->progs->crc != vmDefs[vm->progsType].defs_crc_checksum )
 	{
-		Com_Error(ERR_DROP, "\"%s\" has wrong defs crc = '%i' (recompile progs with up to date headers)\n", filename, vm->progs->crc);
-		return;
+		if (developer->value)
+		{
+			Com_Error(ERR_DROP, "\"%s\" is compiled against diferent engine version.\nExpected defs checksum %i but found %i.\n", filename, vmDefs[vm->progsType].defs_crc_checksum, vm->progs->crc);
+		}
+		else
+		{
+			Com_Error(ERR_DROP, "\"%s\" is compiled against diferent engine version.\n", filename);
+		}
 	}
-#else
-	Com_Printf("PROGS CRC CHECK DISABLED, %s CRC checksum is %i\n", filename, vm->crc);
-#endif
 
 	// cast the data from progs
 	vm->functions = (dfunction_t*)((byte*)vm->progs + vm->progs->ofs_functions);
@@ -440,7 +440,7 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 
 	qcvm[vmType] = Z_Malloc(sizeof(qcvm_t));
 	if (qcvm == NULL)
-		Com_Error(ERR_FATAL, "Couldn't allocate %s script VM\n", Scr_VMName(vmType));
+		Com_Error(ERR_FATAL, "Couldn't allocate %s VM.\n", Scr_VMName(vmType));
 
 	qcvm_t* vm = qcvm[vmType];
 	vm = qcvm[vmType];
@@ -451,31 +451,36 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 	vm->entity_size = entitySize; // invaild now, will be set properly in loadprogs
 
 	// load progs from file
-	Scr_LoadProgs(vm, vmDefs[vmType].filename);
+	Scr_LoadProgram(vm, vmDefs[vmType].filename);
 
 	// allocate entities
 	vm->entities = (vm_entity_t*)Z_Malloc(vm->num_entities * vm->entity_size);
 	if (vm->entities == NULL)
-		Com_Error(ERR_FATAL, "Couldn't allocate entities for %s script VM\n", Scr_VMName(vmType));
+		Com_Error(ERR_FATAL, "Couldn't allocate entities for %s VM.\n", Scr_VMName(vmType));
 
 	// open devlog
 	Scr_OpenLogFileForVM(vm);
 
+	Com_Printf("Spawned %s QCVM from file \"%s\".\n", Scr_VMName(vm->progsType), vmDefs[vmType].filename);
+
 	// print statistics
-	dprograms_t* progs = vm->progs;
-	Com_Printf("-------------------------------------\n");
-	Com_Printf("%s qcvm: '%s'\n", Scr_VMName(vm->progsType), vmDefs[vmType].filename);
-	Com_Printf("          Functions: %i\n", progs->numFunctions);
-	Com_Printf("         Statements: %i\n", progs->numStatements);
-	Com_Printf("         GlobalDefs: %i\n", progs->numGlobalDefs);
-	Com_Printf("            Globals: %i\n", progs->numGlobals);
-	Com_Printf("      Entity fields: %i\n", progs->numFieldDefs);
-	Com_Printf(" Allocated entities: %i, %i bytes\n", vm->num_entities, vm->num_entities * Scr_GetEntitySize());
-	Com_Printf("        Entity size: %i bytes\n", Scr_GetEntitySize());
-	Com_Printf("\n");
-	Com_Printf("       CRC checksum: %i\n", vm->crc);
-	Com_Printf("      Programs size: %i bytes (%iKb)\n", vm->progsSize, vm->progsSize / 1024);
-	Com_Printf("-------------------------------------\n");
+	if (developer->value)
+	{
+		dprograms_t* progs = vm->progs;
+		Com_Printf("-------------------------------------\n");
+		Com_Printf("%s QCVM: '%s'\n", Scr_VMName(vm->progsType), vmDefs[vmType].filename);
+		Com_Printf("          Functions: %i\n", progs->numFunctions);
+		Com_Printf("         Statements: %i\n", progs->numStatements);
+		Com_Printf("         GlobalDefs: %i\n", progs->numGlobalDefs);
+		Com_Printf("            Globals: %i\n", progs->numGlobals);
+		Com_Printf("      Entity fields: %i\n", progs->numFieldDefs);
+		Com_Printf(" Allocated entities: %i, %i bytes\n", vm->num_entities, vm->num_entities * Scr_GetEntitySize());
+		Com_Printf("        Entity size: %i bytes\n", Scr_GetEntitySize());
+		Com_Printf("\n");
+		Com_Printf("       Programs CRC: %i\n", vm->crc);
+		Com_Printf("      Programs size: %i bytes (%iKb)\n", vm->progsSize, vm->progsSize / 1024);
+		Com_Printf("-------------------------------------\n");
+	}
 }
 
 /*

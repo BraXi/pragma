@@ -115,9 +115,9 @@ void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurfac
 
 void SV_ScriptMain()
 {
-	sv.script_globals->worldspawn = GENT_TO_PROG(sv.edicts);
-	sv.script_globals->self = sv.script_globals->worldspawn;
-	sv.script_globals->other = sv.script_globals->worldspawn;
+	sv.script_globals->world = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = sv.script_globals->world;
+	sv.script_globals->other = sv.script_globals->world;
 
 	sv.script_globals->sv_time = sv.time;
 	sv.script_globals->g_time = sv.gameTime;
@@ -130,9 +130,9 @@ void SV_ScriptMain()
 void SV_ScriptStartFrame()
 {
 	// let the progs know that a new frame has started
-	sv.script_globals->worldspawn = GENT_TO_PROG(sv.edicts);
-	sv.script_globals->self = sv.script_globals->worldspawn;
-	sv.script_globals->other = sv.script_globals->worldspawn;
+	sv.script_globals->world = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = sv.script_globals->world;
+	sv.script_globals->other = sv.script_globals->world;
 	sv.script_globals->sv_time = sv.time;
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->g_frameNum = sv.gameFrame;
@@ -142,9 +142,9 @@ void SV_ScriptStartFrame()
 
 void SV_ScriptEndFrame()
 {
-	sv.script_globals->worldspawn = GENT_TO_PROG(sv.edicts);
-	sv.script_globals->self = sv.script_globals->worldspawn;
-	sv.script_globals->other = sv.script_globals->worldspawn;
+	sv.script_globals->world = GENT_TO_PROG(sv.edicts);
+	sv.script_globals->self = sv.script_globals->world;
+	sv.script_globals->other = sv.script_globals->world;
 	sv.script_globals->sv_time = sv.time;
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->g_frameNum = sv.gameFrame;
