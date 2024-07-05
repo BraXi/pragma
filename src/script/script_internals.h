@@ -183,6 +183,8 @@ typedef struct qcvm_s
 
 	char			*callFromFuncName;			// printtrace
 
+	builtin_t		*currentBuiltinFunc; // development aid
+
 	FILE			*logfile;
 }qcvm_t;
 

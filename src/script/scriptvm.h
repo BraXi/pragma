@@ -76,12 +76,15 @@ extern void Scr_PreInitVMs();
 extern void Scr_Shutdown();
 
 // scr_debug.c
+
 void Scr_StackTrace();
 
 // scr_exec.c
+
 extern void Scr_RunError(char* error, ...);
 extern void Scr_Execute(vmType_t vm, scr_func_t fnum, char* callFromFuncName);
 extern int Scr_NumArgs();
+extern char *Scr_BuiltinFuncName();
 extern eval_t* Scr_GetEntityFieldValue(vm_entity_t* ent, char* field); // FIXME 
 
 

@@ -81,7 +81,7 @@ register all cvars and commands
 */
 void R_RegisterCvarsAndCommands(void)
 {
-	r_test = ri.Cvar_Get("r_test", "1", 0, NULL);
+	r_test = ri.Cvar_Get("r_test", "0", 0, NULL);
 
 	r_lefthand = ri.Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0, NULL);

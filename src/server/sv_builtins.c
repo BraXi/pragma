@@ -12,6 +12,22 @@ See the attached GNU General Public License v2 for more details.
 
 // =================================================================================
 
+#define BUILTIN_NOT_UNUSED(pEnt) \
+	if (!pEnt->inuse) { \
+		Scr_RunError("%s() on unused entity %i\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(pEnt)); \
+		return; }
+
+#define BUILTIN_NOT_WORLD(pEnt) \
+	if (pEnt == sv.edicts) { \
+		Scr_RunError("%s() on world entity\n", Scr_BuiltinFuncName()); \
+		return; }
+
+#define BUILTIN_PLAYER_ONLY(pEnt) \
+	if (!pEnt->client || pEnt->client->pers.connected == false) { \
+		Scr_RunError("%s() on non-client entity %i\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(pEnt)); \
+		return; }
+
+
 static void CheckEmptyString(char* s)  // definitely need to make it a shared code...
 {
 	if (s[0] <= ' ')
@@ -87,6 +103,10 @@ remove(entity)
 void PFSV_remove(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
+
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
+
 	if (ent && ent->inuse)
 		SV_FreeEntity(ent);
 }
@@ -112,6 +132,7 @@ void PFSV_getent(void)
 		Scr_RunError("getent(): entnum %i is out of range [0-%i]\n", entnum, sv.max_edicts);
 		return;
 	}
+
 	ent = EDICT_NUM(entnum);
 	if (!ent->inuse)
 	{
@@ -172,9 +193,10 @@ void PFSV_find(void)
 =================
 findradius
 
-Returns entities that have origins within a spherical area
+Returns entities that have origins within a spherical area, their solidity doesn't matter.
 
-findradius(entity from, origin, radius)
+entity findradius(entity from, origin, radius);
+entity entityInRadius = findradius(entityInRadius, self.origin, 128);
 =================
 */
 void PFSV_findradius(void)
@@ -201,7 +223,7 @@ void PFSV_findradius(void)
 //			continue;
 
 		for(j = 0; j < 3; j++)
-			eorg[j] = org[j] - (from->v.origin[j] + (from->v.mins[j] + from->v.maxs[j]) * 0.5);
+			eorg[j] = org[j] - (from->v.origin[j] + (from->v.mins[j] + from->v.maxs[j]) * 0.5f);
 
 		if (VectorLength(eorg) > rad)
 			continue;
@@ -275,14 +297,9 @@ void PFSV_setmodel(void)
 	int modelindex;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->inuse)
-		return;
 
-	if (ent == sv.edicts)  //don't change world
-	{
-		Scr_RunError("setmodel(): cannot change world model\n");
-		return;
-	}
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
 
 	name = Scr_GetParmString(1);
 	if (!name || !name[0])
@@ -302,7 +319,7 @@ void PFSV_setmodel(void)
 	if (modelindex == (int)ent->v.modelindex)
 		return; // model has not changed
 
-	SV_ShowEntitySurface(ent, NULL); // make all surfaces visible when models change
+	SV_ShowEntitySurface(ent, NULL); // make all surfaces visible when model change
 	SV_DetachAllModels(ent);
 
 	ent->v.model = Scr_SetString(name);
@@ -337,8 +354,9 @@ void PFSV_setsize(void)
 	float* min, * max;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->inuse || ent == sv.edicts /*don't change world*/)
-		return;
+
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
 
 	min = Scr_GetParmVector(1);
 	max = Scr_GetParmVector(2);
@@ -373,8 +391,10 @@ void PFSV_linkentity(void)
 {
 	gentity_t* ent;
 	ent = Scr_GetParmEntity(0);
-	if (!ent->inuse || ent == sv.edicts /*don't change world*/)
-		return;
+
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
+
 	SV_LinkEdict(ent);
 }
 
@@ -392,8 +412,10 @@ void PFSV_unlinkentity(void)
 {
 	gentity_t* ent;
 	ent = Scr_GetParmEntity(0);
-	if (!ent->inuse || ent == sv.edicts /*don't change world*/)
-		return;
+
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
+
 	SV_UnlinkEdict(ent);
 }
 
@@ -417,14 +439,8 @@ void PFSV_attach(void)
 	tagname = Scr_GetParmString(1);
 	model = Scr_GetParmString(2);
 
-	if (!ent->inuse)
-		return;
-
-	if (ent == sv.edicts)
-	{
-		Scr_RunError("tried to attach model to world entity\n");
-		return;
-	}
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
 
 	SV_AttachModel(ent, tagname, model);
 }
@@ -447,14 +463,8 @@ void PFSV_detach(void)
 	ent = Scr_GetParmEntity(0);
 	model = Scr_GetParmString(1);
 
-	if (!ent->inuse)
-		return;
-
-	if (ent == sv.edicts)
-	{
-		Scr_RunError("detach on world entity\n");
-		return;
-	}
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
 
 	SV_DetachModel(ent, model);
 }
@@ -474,14 +484,9 @@ void PFSV_detachall(void)
 	gentity_t* ent;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->inuse)
-		return;
 
-	if (ent == sv.edicts)
-	{
-		Scr_RunError("detach on world entity\n");
-		return;
-	}
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
 
 	SV_DetachAllModels(ent);
 }
@@ -505,10 +510,9 @@ void PFSV_hidepart(void)
 	ent = Scr_GetParmEntity(0);
 	part  = Scr_GetParmString(1);
 
-	if (!ent->inuse || ent == sv.edicts)
-	{
-		return;
-	}
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
+
 	SV_HideEntitySurface(ent, part);
 }
 
@@ -531,10 +535,9 @@ void PFSV_showpart(void)
 	ent = Scr_GetParmEntity(0);
 	part = Scr_GetParmString(1);
 
-	if (!ent->inuse || ent == sv.edicts)
-	{
-		return;
-	}
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
+
 	SV_ShowEntitySurface(ent, part);
 }
 
@@ -553,10 +556,10 @@ void PFSV_showallparts(void)
 {
 	gentity_t* ent;
 	ent = Scr_GetParmEntity(0);
-	if (!ent->inuse || ent == sv.edicts)
-	{
-		return;
-	}
+
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
+
 	SV_ShowEntitySurface(ent, NULL);
 }
 
@@ -682,16 +685,15 @@ PFSV_stopsounds
 
 void stopsounds(entity ent)
 
-Cancel all sounds which are played on an entity
-this also removes looping sound
+Cancel all sounds that are currently playing from this entity including looping sound.
 =================
 */
 void PFSV_stopsounds(void)
 {
 	gentity_t* ent;
 	ent = Scr_GetParmEntity(0);
-	if (!ent->inuse)
-		return;
+
+	BUILTIN_NOT_UNUSED(ent);
 
 	SV_StopSounds(ent);
 }
@@ -1074,12 +1076,7 @@ void PFSV_centerprint(void)
 		return;
 	}
 
-	if (!ent->inuse)
-	{
-		Scr_RunError("centerprint() to unused entity %i\n", entnum);
-		return;
-	}
-
+	BUILTIN_NOT_UNUSED(ent);
 
 	MSG_WriteByte(&sv.multicast, SVC_CENTERPRINT);
 	MSG_WriteString(&sv.multicast, msg);
@@ -1126,11 +1123,7 @@ void PFSV_setviewmodel(void)
 	ent = Scr_GetParmEntity(0);
 	model = Scr_GetParmString(1);
 
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("setviewmodel(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
+	BUILTIN_PLAYER_ONLY(ent);
 
 	newmodelindex = SV_ModelIndex(model);
 	if (ent->client->ps.viewmodel_index != newmodelindex)
@@ -1170,11 +1163,8 @@ void PFSV_setvieweffect(void)
 	int fx;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("setvieweffect(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
+	BUILTIN_PLAYER_ONLY(ent);
+
 	cl = ent->client;
 
 	fx = (int)Scr_GetParmFloat(1);
@@ -1242,11 +1232,8 @@ void PFSV_clearvieweffects(void)
 {
 	gentity_t* ent;
 	ent = Scr_GetParmEntity(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("clearvieweffects(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
+	BUILTIN_PLAYER_ONLY(ent);
+
 	memset(&ent->client->ps.fx, 0, sizeof(ent->client->ps.fx));
 }
 
@@ -1268,11 +1255,8 @@ void PFSV_saveclientfield(void)
 	int idx;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("saveclientfield(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
+	BUILTIN_PLAYER_ONLY(ent);
+
 	cl = ent->client;
 
 	idx = Scr_GetParmFloat(1);
@@ -1303,11 +1287,8 @@ void PFSV_loadclientfield(void)
 	int idx;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("loadclientfield(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
+	BUILTIN_PLAYER_ONLY(ent);
+
 	cl = ent->client;
 
 	idx = (int)Scr_GetParmFloat(1);
@@ -1418,11 +1399,8 @@ void PFSV_kickclient(void)
 	gentity_t* ent;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("kickclient(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
+	BUILTIN_PLAYER_ONLY(ent);
+
 	SV_BroadcastPrintf(PRINT_LOW, "%s was kicked from server.", ent->client->pers.netname);
 	SV_DropClient(ent->client);
 }
@@ -1441,11 +1419,8 @@ void PFSV_getclientname(void)
 	gentity_t* ent;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("getclientname(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
+	BUILTIN_PLAYER_ONLY(ent);
+
 	Scr_ReturnString(ent->client->pers.netname);
 }
 
@@ -1463,11 +1438,7 @@ void PFSV_setstat(void)
 	int idx;
 
 	ent = Scr_GetParmEntity(0);
-	if (!ent->client || ent->client->pers.connected == false)
-	{
-		Scr_RunError("setstat(): on non-client entity %i\n", NUM_FOR_EDICT(ent));
-		return;
-	}
+	BUILTIN_PLAYER_ONLY(ent);
 	cl = ent->client;
 
 	idx = Scr_GetParmFloat(1);
@@ -1494,11 +1465,8 @@ void PFSV_checkbottom(void)
 	gentity_t* ent;
 
 	ent = Scr_GetParmEntity(0);
-	if (ent == sv.edicts)
-	{
-		Scr_RunError("checkbottom(): on world entity\n");
-		return;
-	}
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
 
 	Scr_ReturnFloat(SV_CheckBottom(ent));
 }
@@ -1527,18 +1495,16 @@ void PFSV_movetogoal(void)
 	goal = Scr_GetParmEntity(1);
 	movedist = Scr_GetParmFloat(2);
 
-	if (actor == sv.edicts)
-	{
-		Scr_RunError("MoveToGoal called for world!\n");
-		Scr_ReturnFloat(0.0f);
-		return;
-	}
+	BUILTIN_NOT_UNUSED(actor);
+	BUILTIN_NOT_WORLD(actor);
+
 	if (goal == sv.edicts)
 	{
 		Scr_RunError("MoveToGoal aborted because goal is world for entity %i\n", NUM_FOR_ENT(actor));
 		Scr_ReturnFloat(0.0f);
 		return;
 	}
+
 	actor->v.goal_entity = ENT_TO_VM(goal);
 
 	result = SV_MoveToGoal(actor, goal, movedist) == true ? 1.0f : 0.0f;
@@ -1569,12 +1535,8 @@ void PFSV_walkmove(void)
 	yaw = Scr_GetParmFloat(1);
 	movedist = Scr_GetParmFloat(2);
 
-	if (actor == sv.edicts)
-	{
-		Scr_RunError("WalkMove called for world!\n");
-		Scr_ReturnFloat(0.0f);
-		return;
-	}
+	BUILTIN_NOT_UNUSED(actor);
+	BUILTIN_NOT_WORLD(actor);
 
 	result = SV_WalkMove(actor, yaw, movedist) == true ? 1.0f : 0.0f;
 	Scr_ReturnFloat(result);
@@ -1605,12 +1567,8 @@ void PFSV_touchentities(void)
 
 	ent = Scr_GetParmEntity(0);
 
-	if (ent == sv.edicts)
-	{
-		Scr_RunError("touchentities() called for world!\n");
-		Scr_ReturnFloat(0);
-		return;
-	}
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
 
 	param = (int)Scr_GetParmFloat(1);
 	if (param == 0)

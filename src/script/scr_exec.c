@@ -27,6 +27,22 @@ char* Scr_ValueStringDeveloper(etype_t type, eval_t* val);
 
 /*
 ============
+Scr_BuiltinFuncName
+Returns the name of builtin function that is _currently_ invoked.
+Used for better error printing
+============
+*/
+char* Scr_BuiltinFuncName()
+{
+	CheckScriptVM(__FUNCTION__);
+	if (active_qcvm->currentBuiltinFunc)
+		return active_qcvm->currentBuiltinFunc->name;
+	return "*none*";
+}
+
+
+/*
+============
 Scr_GetEntityFieldValue
 ============
 */
@@ -754,7 +770,8 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			newf = &vm->functions[a->function];
 
 			if (newf->first_statement < 0)
-			{	// negative statements are built in functions
+			{	
+				// negative statements are built in functions
 				i = -newf->first_statement;
 				if (i >= scr_numBuiltins)
 					Scr_RunError("%s: unknown builtin function (funcnum = %i) in %s\n", __FUNCTION__, i, vmDefs[vm->progsType].filename);
@@ -762,7 +779,10 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 				if(scr_builtins[i].execon != PF_ALL && vm->progsType != scr_builtins[i].execon)
 					Scr_RunError("%s: call to '%s' builtin in %s VM not allowed\n", __FUNCTION__, scr_builtins[i].name, vmDefs[vm->progsType].name);
 
+				vm->currentBuiltinFunc = &scr_builtins[i]; // development aid
 				scr_builtins[i].func();
+				vm->currentBuiltinFunc = NULL;
+
 				break;
 			}
 
