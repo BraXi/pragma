@@ -269,7 +269,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 	s = ScrInternal_EnterFunction(f);
 
-	vm->traceEnabled = true;
+	//vm->traceEnabled = true;
 
 	while (1)
 	{

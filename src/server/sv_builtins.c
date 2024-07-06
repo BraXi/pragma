@@ -576,39 +576,9 @@ void PFSV_contents(void)
 	Scr_ReturnFloat( SV_PointContents(point) );
 }
 
-/*
-=================
-PFSV_trace
 
-Moves the given mins/maxs volume through the world from start to end.
-ignoreEnt and entities owned by ignoreEnt are explicitly not checked.
-
-void trace(vector start, vector mins, vector maxs, vector end, entity ignoreEnt, int contentmask)
-
-trace(self.origin, self.mins, self.maxs, self.origin - '0 0 256', self, MASK_PLAYERSOLID);
-setorigin(self, trace_endpos);
-=================
-*/
-void PFSV_trace(void)
+static void CopyTraceToProgs(trace_t trace)
 {
-	trace_t		trace;
-	float		*start, *end, *min, *max;
-	gentity_t	*ignoreEnt;
-	int			contentmask;
-
-	start = Scr_GetParmVector(0);
-	min = Scr_GetParmVector(1);
-	max = Scr_GetParmVector(2);
-	end = Scr_GetParmVector(3);
-
-	ignoreEnt = Scr_GetParmEntity(4);
-	contentmask = Scr_GetParmInt(5);
-
-	if (ignoreEnt == sv.edicts)
-		ignoreEnt = NULL;
-
-	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask);
-
 	// set globals in progs
 	sv.script_globals->trace_allsolid = trace.allsolid;
 	sv.script_globals->trace_startsolid = trace.startsolid;
@@ -634,6 +604,71 @@ void PFSV_trace(void)
 	}
 }
 
+/*
+=================
+PFSV_traceline
+
+Moves the given mins/maxs volume through the world from start to end.
+ignoreEnt and entities owned by ignoreEnt are explicitly not checked.
+
+void traceline(vector start, vector end, entity ignoreEnt, int contentmask)
+
+traceline(self.origin, self.origin - '0 0 256', self, MASK_PLAYERSOLID);
+setorigin(self, trace_endpos);
+=================
+*/
+void PFSV_traceline(void)
+{
+	trace_t		trace;
+	float		*start, *end;
+	gentity_t	*ignoreEnt;
+	int			contentmask;
+
+	start = Scr_GetParmVector(0);
+	end = Scr_GetParmVector(1);
+	ignoreEnt = Scr_GetParmEntity(2);
+	contentmask = Scr_GetParmInt(3);
+
+	if (ignoreEnt == sv.edicts)
+		ignoreEnt = NULL;
+
+	trace = SV_Trace(start, vec3_origin, vec3_origin, end, ignoreEnt, contentmask);
+	CopyTraceToProgs(trace);
+}
+
+/*
+=================
+PFSV_tracebox
+
+Moves the given mins/maxs volume through the world from start to end.
+ignoreEnt and entities owned by ignoreEnt are explicitly not checked.
+
+void tracebox(vector start, vector end, vector mins, vector maxs, entity ignoreEnt, int contentmask)
+
+tracebox(self.origin, self.origin - '0 0 256', self.mins, self.maxs, self, MASK_PLAYERSOLID);
+setorigin(self, trace_endpos);
+=================
+*/
+void PFSV_tracebox(void)
+{
+	trace_t		trace;
+	float* start, * end, * min, * max;
+	gentity_t* ignoreEnt;
+	int			contentmask;
+
+	start = Scr_GetParmVector(0);
+	end = Scr_GetParmVector(1);
+	min = Scr_GetParmVector(2);
+	max = Scr_GetParmVector(3);
+	ignoreEnt = Scr_GetParmEntity(4);
+	contentmask = Scr_GetParmInt(5);
+
+	if (ignoreEnt == sv.edicts)
+		ignoreEnt = NULL;
+
+	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask);
+	CopyTraceToProgs(trace);
+}
 // =================================================================================
 
 /*
@@ -2087,12 +2122,10 @@ void SV_InitScriptBuiltins()
 
 	// collision and physics
 	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector v)");
-	Scr_DefineBuiltin(PFSV_trace, PF_SV, "trace", "void(vector p1, vector v1, vector v2, vector p2, entity e, int c)");
-
+	Scr_DefineBuiltin(PFSV_traceline, PF_SV, "traceline", "void(vector p1, vector p2, entity e, int c)");
+	Scr_DefineBuiltin(PFSV_tracebox, PF_SV, "tracebox", "void(vector p1, vector p2, vector v1, vector v2, entity e, int c)");
 	Scr_DefineBuiltin(PFSV_touchentities, PF_SV, "touchentities", "float(entity e, float at)");
-
 	Scr_DefineBuiltin(PFSV_checkbottom, PF_SV, "checkbottom", "float(entity e)");
-
 	Scr_DefineBuiltin(PFSV_movetogoal, PF_SV, "movetogoal", "float(entity e, entity g, float d)");
 	Scr_DefineBuiltin(PFSV_walkmove, PF_SV, "walkmove", "float(entity e, float y, float d)");
 

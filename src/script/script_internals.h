@@ -182,7 +182,6 @@ typedef struct qcvm_s
 	int				pr_numparms;
 
 	char			*callFromFuncName;			// printtrace
-
 	builtin_t		*currentBuiltinFunc; // development aid
 
 	FILE			*logfile;

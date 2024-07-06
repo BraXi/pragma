@@ -23,7 +23,7 @@ int scr_numBuiltins = 0;
 const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 {
 	{VM_NONE, NULL, 0, "shared"},
-	{VM_SVGAME, "progs/svgame.dat", 4248, "svgame"},
+	{VM_SVGAME, "progs/svgame.dat", 51933, "svgame"},
 	{VM_CLGAME, "progs/cgame.dat", 15591, "clgame"},
 	{VM_GUI, "progs/gui.dat", 0, "gui"}
 };
