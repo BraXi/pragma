@@ -106,7 +106,7 @@ void CG_AddViewMuzzleFlash(rentity_t* refent, player_state_t* ps)
 
 	memset(&ent, 0, sizeof(ent));
 	AxisClear(ent.axis);
-	PositionRotatedEntityOnTag(&ent, refent, ps->viewmodel_index, tag);
+	PositionRotatedEntityOnTag(&ent, refent, ps->viewmodel[0], tag);
 	VectorAngles_Fixed(ent.axis[0], out_angles);
 
 	VectorCopy(out_angles, ent.angles);
@@ -156,7 +156,7 @@ void CG_AddViewFlashLight(rentity_t* parentEnt, player_state_t* ps)
 			memset(&ent, 0, sizeof(ent));
 
 			AxisClear(ent.axis);
-			PositionRotatedEntityOnTag(&ent, parentEnt, ps->viewmodel_index, tag);	
+			PositionRotatedEntityOnTag(&ent, parentEnt, ps->viewmodel[0], tag);	
 			VectorAngles_Fixed(ent.axis[0], ent.angles);
 
 			//VectorCopy(cl.refdef.view.origin, ent.origin);

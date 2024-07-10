@@ -319,9 +319,11 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 	if (pflags & PS_VIEWMODEL_INDEX)
 	{
 #ifdef PROTOCOL_EXTENDED_ASSETS
-		MSG_WriteShort(msg, ps->viewmodel_index);
+		MSG_WriteShort(msg, ps->viewmodel[0]);
+		MSG_WriteShort(msg, ps->viewmodel[1]);
 #else
-		MSG_WriteByte(msg, ps->viewmodel_index);
+		MSG_WriteByte(msg, ps->viewmodel[0]);
+		MSG_WriteByte(msg, ps->viewmodel[1]);
 #endif
 	}
 

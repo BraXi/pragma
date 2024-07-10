@@ -140,10 +140,12 @@ typedef struct sv_entvars_s
 	vec3_t			viewoffset; // origin + viewoffset = camera position
 	vec3_t			kick_angles;
 
+	int32_t		viewmodel;
+	int32_t		viewmodel2; // hacked in for separate arms
+
 	vec3_t		viewmodel_angles;
 	vec3_t		viewmodel_offset;
-	int		viewmodel_index;
-	int		viewmodel_frame;
+	int32_t		viewmodel_frame;
 
 	int32_t		pm_type; //pmtype_t
 	vec3_t		pm_mins;

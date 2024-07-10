@@ -36,7 +36,7 @@ void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops)
 	if (gun_model && CL_CheatsAllowed())
 		viewmodel.model = gun_model; // development tool
 	else
-		viewmodel.model = cl.model_draw[ps->viewmodel_index];
+		viewmodel.model = cl.model_draw[ps->viewmodel[0]];
 
 	if (!viewmodel.model)
 		return;
@@ -62,7 +62,7 @@ void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops)
 		viewmodel.frame = ps->viewmodel_frame;
 
 		// just changed weapons, don't lerp from oldframe and remove muzzleflash if present
-		if (ps->viewmodel_index != ops->viewmodel_index)
+		if (ps->viewmodel[0] != ops->viewmodel[0])
 		{
 			cl.muzzleflash_time = 0;
 			viewmodel.oldframe = viewmodel.frame;
@@ -74,6 +74,7 @@ void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops)
 			viewmodel.backlerp = 1.0 - cl.lerpfrac;
 		}
 	}
+
 	viewmodel.animbacklerp = viewmodel.backlerp;
 	VectorCopy(viewmodel.origin, viewmodel.oldorigin);
 	viewmodel.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
@@ -84,4 +85,11 @@ void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops)
 
 	CG_AddViewMuzzleFlash(&viewmodel, ps);
 	CG_AddViewFlashLight(&viewmodel, ps);
+
+	// second viewmodel is arms so just copy all params to it
+	if (ps->viewmodel[1])
+	{
+		viewmodel.model = cl.model_draw[ps->viewmodel[1]];
+		V_AddEntity(&viewmodel);
+	}
 }

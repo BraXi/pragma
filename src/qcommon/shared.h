@@ -733,7 +733,7 @@ typedef struct
 
 	vec3_t		viewmodel_angles;
 	vec3_t		viewmodel_offset;
-	int			viewmodel_index;
+	int			viewmodel[2];
 	int			viewmodel_frame;
 
 	rdViewFX_t	fx;

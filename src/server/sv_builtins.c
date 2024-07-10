@@ -1151,20 +1151,7 @@ float newviewmodelindex = setviewmodel(entity player, string viewModelName)
 */
 void PFSV_setviewmodel(void)
 {
-	gentity_t* ent;
-	char* model;
-	int			newmodelindex;
-
-	ent = Scr_GetParmEntity(0);
-	model = Scr_GetParmString(1);
-
-	BUILTIN_PLAYER_ONLY(ent);
-
-	newmodelindex = SV_ModelIndex(model);
-	if (ent->client->ps.viewmodel_index != newmodelindex)
-		ent->v.viewmodel_index = newmodelindex;
-
-	Scr_ReturnFloat(ent->v.viewmodel_index);
+	Scr_RunError("setviewmodel() is gone.\n");
 }
 
 enum

@@ -996,16 +996,17 @@ void CL_ParsePlayerstate(frame_t* oldframe, frame_t* newframe)
 	if (flags & PS_VIEWMODEL_INDEX)
 	{
 #ifdef PROTOCOL_EXTENDED_ASSETS
-		state->viewmodel_index = MSG_ReadShort(&net_message);
+		state->viewmodel[0] = MSG_ReadShort(&net_message);
+		state->viewmodel[1] = MSG_ReadShort(&net_message);
 #else
-		state->viewmodel_index = MSG_ReadByte(&net_message);
+		state->viewmodel[0] = MSG_ReadByte(&net_message);
+		state->viewmodel[1] = MSG_ReadByte(&net_message);
 #endif
 	}
 
 	if (flags & PS_VIEWMODEL_PARAMS)
 	{
 		state->viewmodel_frame = MSG_ReadByte(&net_message); // braxi -- do I need more than 256 frames for viewmodel?
-
 		for (i = 0; i < 3; i++)
 			state->viewmodel_offset[i] = MSG_ReadChar(&net_message) * 0.25;
 
