@@ -24,7 +24,7 @@ See the attached GNU General Public License v2 for more details.
 
 #define BUILTIN_PLAYER_ONLY(pEnt) \
 	if (!pEnt->client || pEnt->client->pers.connected == false) { \
-		Scr_RunError("%s() on non-client entity %i\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(pEnt)); \
+		Scr_RunError("%s on non-client entity %i.\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(pEnt)); \
 		return; }
 
 
@@ -278,63 +278,170 @@ void PFSV_setorigin(void)
 	VectorCopy(org, ent->v.origin);
 	SV_LinkEdict(ent);
 }
+
+/*
+=================
+PF_setangles
+
+Sets entity angles properly within [0-360] degrees in any direction, makes sure bmodels 
+never have invaild YAW. When used on a player it will also change its view angles.
+Solid bmodels will automaticaly relink
+
+void setangles(entity ent, vector newangles)
+setangles(monster, '0 0 0');
+=================
+*/
+void PFSV_setangles(void)
+{
+	gentity_t* ent;
+	float* angles;
+	int i;
+
+	ent = Scr_GetParmEntity(0);
+	angles = Scr_GetParmVector(1);
+
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
+
+	VectorCopy(angles, ent->v.angles);
+
+	for(i = 0; i < 3; i++)
+	{
+		if(ent->v.angles[i] != 0.0f || ent->v.angles[i] != -0.0f) // love ya floats
+			ent->v.angles[i] = anglemod(ent->v.angles[i]); // shall clients set their roll too? or leave it to qc :P
+	}
+	
+	// bmodels are special
+	if (CM_NumInlineModels() > ent->v.modelindex)
+	{
+		// inline models should always have their YAW set properly
+		if(ent->v.angles[YAW] == 0.0f)
+			ent->v.angles[YAW] = 360.0f;
+
+		// solid inline models DO rotate their bounds so relink them
+		if ((int)ent->v.solid > SOLID_NOT)
+			SV_LinkEdict(ent);
+	}
+
+	// if this is the player update their view too
+	if (ent->client)
+	{
+		for (i = 0; i < 3; i++)
+		{
+			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->v.angles[i]);
+			ent->v.viewangles[i] = ent->v.angles[i];
+		}
+	}
+}
+
 /*
 =================
 PFSV_setmodel
-
-Sets entity's model, will detach all other models
+Sets entity model without affecting bbox size.
 
 void setmodel(entity ent, string modelname)
-
 setmodel(player, "models/characters/paula.md3");
 =================
 */
 void PFSV_setmodel(void)
 {
 	gentity_t* ent;
-	cmodel_t* mod;
 	char* name;
 	int modelindex;
 
 	ent = Scr_GetParmEntity(0);
+	name = Scr_GetParmString(1);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
 
-	name = Scr_GetParmString(1);
 	if (!name || !name[0])
 	{
-		Scr_RunError("setmodel(): empty model name for entity %i\n", NUM_FOR_EDICT(ent));
+		Scr_RunError("%s for entity %i with empty model name\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
 		return;
 	}
 
-	if (ent->v.solid == SOLID_BSP && name[0] != '*')
+	if (name[0] == '*')
 	{
-		Scr_RunError("setmodel(): is SOLID_BSP but tried to set non brushmodel %i\n", NUM_FOR_EDICT(ent));
+		Scr_RunError("%s tried to set inline model for entity %i\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
 		return;
 	}
 
-//	modelindex = SV_ModelForName(name); // some entities may setmodel during initialization without precache
+	//modelindex = SV_ModelForName(name)->modelindex; 
 	modelindex = SV_ModelIndex(name);
 	if (modelindex == (int)ent->v.modelindex)
-		return; // model has not changed
+		return;
 
-	SV_ShowEntitySurface(ent, NULL); // make all surfaces visible when model change
+	// make all surfaces visible when model change
+	SV_ShowEntitySurface(ent, NULL); 
 	SV_DetachAllModels(ent);
 
 	ent->v.model = Scr_SetString(name);
 	ent->v.modelindex = modelindex;
 
-	// if it is an inline model, get the size information for it
-	if (name[0] == '*')
+	if (ent->v.solid == SOLID_BSP)
 	{
-		mod = CM_InlineModel(name);
-		VectorCopy(mod->mins, ent->v.mins);
-		VectorCopy(mod->maxs, ent->v.maxs);
-		SV_LinkEdict(ent);
+		// keep this as error
+		Scr_RunError("%s set external model on a SOLID_BSP entity %i.\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
+
+		//Com_Printf("%s set external model on a SOLID_BSP entity %i, solidity changed to SOLID_NOT.\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
+		//ent->v.solid = SOLID_NOT;
+		//SV_LinkEdict(ent);
 	}
 }
 
+/*
+=================
+PFSV_setbrushmodel
+Sets inline model for an entity, update its mins/maxs derived from model and relink.
+
+void setbrushmodel(entity ent, string inlinemodelnumber)
+setbrushmodel(pusher, "*2");
+=================
+*/
+void PFSV_setbrushmodel(void)
+{
+	gentity_t* ent;
+	char* name;
+	svmodel_t* mod;
+
+	ent = Scr_GetParmEntity(0);
+	name = Scr_GetParmString(1);
+
+	BUILTIN_NOT_UNUSED(ent);
+	BUILTIN_NOT_WORLD(ent);
+
+	if (!name || !name[0])
+	{
+		Scr_RunError("%s for entity %i with empty model name\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
+		return;
+	}
+
+	mod = SV_ModelForName(name);
+	if (name[0] != '*' || mod->type != MOD_BRUSH || mod->bmodel == NULL)
+	{
+		Scr_RunError("%s with external model for entity %i\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
+		return;
+	}
+
+	if (mod->modelindex == (int)ent->v.modelindex)
+		return;
+
+	SV_ShowEntitySurface(ent, NULL);
+	SV_DetachAllModels(ent); // inline models have no tags anyway
+
+	ent->v.model = Scr_SetString(name);
+	ent->v.modelindex = mod->modelindex;
+
+	// inline models should always have their YAW set properly
+	if(ent->v.angles[YAW] == 0.0f)
+		ent->v.angles[YAW] = 360.0f;
+
+	// update mins and maxs and relink
+	VectorCopy(mod->bmodel->mins, ent->v.mins);
+	VectorCopy(mod->bmodel->maxs, ent->v.maxs);
+	SV_LinkEdict(ent);
+}
 
 /*
 =================
@@ -410,8 +517,7 @@ void linkentity(entity ent)
 */
 void PFSV_unlinkentity(void)
 {
-	gentity_t* ent;
-	ent = Scr_GetParmEntity(0);
+	gentity_t* ent = Scr_GetParmEntity(0);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -431,13 +537,9 @@ attach(self, "tag_head", "models/heads/test.md3");
 */
 void PFSV_attach(void)
 {
-	gentity_t* ent;
-	char *tagname;
-	char* model;
-
-	ent = Scr_GetParmEntity(0);
-	tagname = Scr_GetParmString(1);
-	model = Scr_GetParmString(2);
+	gentity_t* ent = Scr_GetParmEntity(0);
+	char *tagname = Scr_GetParmString(1);
+	char* model = Scr_GetParmString(2);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -457,11 +559,8 @@ detach(self, "models/heads/test.md3");
 */
 void PFSV_detach(void)
 {
-	gentity_t* ent;
-	char* model;
-
-	ent = Scr_GetParmEntity(0);
-	model = Scr_GetParmString(1);
+	gentity_t* ent = Scr_GetParmEntity(0);
+	char* model = Scr_GetParmString(1);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -481,9 +580,7 @@ detachall(self);
 */
 void PFSV_detachall(void)
 {
-	gentity_t* ent;
-
-	ent = Scr_GetParmEntity(0);
+	gentity_t* ent = Scr_GetParmEntity(0);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -504,11 +601,8 @@ hidepart(self, "head");
 */
 void PFSV_hidepart(void)
 {
-	gentity_t* ent;
-	char* part;
-
-	ent = Scr_GetParmEntity(0);
-	part  = Scr_GetParmString(1);
+	gentity_t* ent = Scr_GetParmEntity(0);
+	char* part = Scr_GetParmString(1); 
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -529,11 +623,8 @@ showpart(self, "head");
 */
 void PFSV_showpart(void)
 {
-	gentity_t* ent;
-	char* part;
-
-	ent = Scr_GetParmEntity(0);
-	part = Scr_GetParmString(1);
+	gentity_t* ent = Scr_GetParmEntity(0);
+	char* part = Scr_GetParmString(1);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -725,11 +816,8 @@ Cancel all sounds that are currently playing from this entity including looping 
 */
 void PFSV_stopsounds(void)
 {
-	gentity_t* ent;
-	ent = Scr_GetParmEntity(0);
-
+	gentity_t* ent = Scr_GetParmEntity(0);
 	BUILTIN_NOT_UNUSED(ent);
-
 	SV_StopSounds(ent);
 }
 
@@ -860,11 +948,8 @@ configstring(CS_SKY, "cloudynight");
 */
 void PFSV_configstring(void)
 {
-	int		index;
-	char	*val;
-
-	index = (int)Scr_GetParmFloat(0);
-	val = Scr_GetParmString(1);
+	int	index = (int)Scr_GetParmFloat(0);
+	char *val = Scr_GetParmString(1);
 
 	SV_SetConfigString(index, val);
 }
@@ -877,17 +962,13 @@ PFSV_lightstyle
 Sets the lightstyle animation string where 'a' is total darkness, 'm' is fullbright, 'z' is double bright
 
 void lightstyle(float lightStyleIndex, string lightStyle)
-
-lightstyle(0, "aamm"); // flickering world lighting!
+lightstyle(0, "aamm");
 =================
 */
 void PFSV_lightstyle(void)
 {
-	int		style;
-	char	*val;
-
-	style = (int)Scr_GetParmFloat(0);
-	val = Scr_GetParmString(1);
+	int style = (int)Scr_GetParmFloat(0);
+	char *val = Scr_GetParmString(1);
 
 	if (style < 0 || style >= MAX_LIGHTSTYLES)
 	{
@@ -907,7 +988,7 @@ void PFSV_lightstyle(void)
 
 static void MSG_Unicast(gentity_t* ent, qboolean reliable)
 {
-	int			entnum;
+	int entnum;
 	client_t* client;
 
 	entnum = NUM_FOR_EDICT(ent);
@@ -940,11 +1021,8 @@ unicast(player, true);
 */
 void PFSV_Unicast(void)
 {
-	gentity_t	*ent;
-	float		reliable;
-
-	ent = Scr_GetParmEntity(0);
-	reliable = Scr_GetParmFloat(1) > 0 ? true : false;
+	gentity_t *ent = Scr_GetParmEntity(0);
+	qboolean reliable = (Scr_GetParmFloat(1) > 0.0f) ? true : false;
 
 	MSG_Unicast(ent, reliable);
 }
@@ -972,11 +1050,8 @@ multicast(monster.origin, MULTICAST_PVS);
 */
 void PFSV_Multicast(void)
 {
-	float			*pos;
-	multicast_t		sendTo;
-
-	pos = Scr_GetParmVector(0);
-	sendTo = (int)Scr_GetParmFloat(1);
+	float* pos = Scr_GetParmVector(0);
+	multicast_t sendTo = (int)Scr_GetParmFloat(1);
 
 	if (sendTo < MULTICAST_ALL || sendTo > MULTICAST_PVS_R)
 	{
@@ -1095,7 +1170,6 @@ centerprint(world, "hello", " world!"); // center printed to everyone on the ser
 */
 void PFSV_centerprint(void)
 {
-	if (1) return;
 	gentity_t	*ent;
 	char		*msg;
 	int			entnum;
@@ -1103,15 +1177,15 @@ void PFSV_centerprint(void)
 	ent = Scr_GetParmEntity(0);
 	msg = Scr_VarString(1);
 
+	BUILTIN_NOT_UNUSED(ent);
+
 	entnum = NUM_FOR_EDICT(ent);
 
 	if (entnum > sv_maxclients->value && entnum != 0)
 	{
-		Scr_RunError("centerprint() to a non-client entity %i\n", entnum);
+		Scr_RunError("%s to a non-client entity %i\n", Scr_BuiltinFuncName(), entnum);
 		return;
 	}
-
-	BUILTIN_NOT_UNUSED(ent);
 
 	MSG_WriteByte(&sv.multicast, SVC_CENTERPRINT);
 	MSG_WriteString(&sv.multicast, msg);
@@ -1133,26 +1207,26 @@ float isplayer(entity)
 */
 void PFSV_isplayer(void)
 {
-	gentity_t* ent;
-	ent = Scr_GetParmEntity(0);
+	gentity_t* ent = Scr_GetParmEntity(0);
 	Scr_ReturnFloat(ent->client == NULL ? 0 : 1);
 }
 
 /*
 ===============
-PFSV_setviewmodel
-
-Sets view (gun, etc) model for player, if new model is diferent to old it
-will reset view model frame, angles and offset
-returns current view model index
-
-float newviewmodelindex = setviewmodel(entity player, string viewModelName)
+PFSV_getping
+Returns client ping in miliseconds
+float getping(entity player)
 ===============
 */
-void PFSV_setviewmodel(void)
+void PFSV_getping(void)
 {
-	Scr_RunError("setviewmodel() is gone.\n");
+	gentity_t* ent = Scr_GetParmEntity(0);
+
+	BUILTIN_PLAYER_ONLY(ent);
+
+	Scr_ReturnFloat(ent->client->ping);
 }
+
 
 enum
 {
@@ -1263,10 +1337,9 @@ void PFSV_clearvieweffects(void)
 ===============
 PFSV_saveclientfield
 
-saves persistent client data across map changes
+Saves value into persistent client data slot for keeping values between map changes.
 
 void saveclientfield(entity player, float index, float val)
-
 saveclientfield(self, PS_HEALTH, self.health);
 ===============
 */
@@ -1281,8 +1354,8 @@ void PFSV_saveclientfield(void)
 
 	cl = ent->client;
 
-	idx = Scr_GetParmFloat(1);
-	if (idx < 0 || idx >= 32)
+	idx = (int)Scr_GetParmFloat(1);
+	if (idx < 0 || idx >= MAX_PERS_FIELDS)
 	{
 		Scr_RunError("saveclientfield(): index %i is invaild\n", idx);
 		return;
@@ -1295,10 +1368,9 @@ void PFSV_saveclientfield(void)
 ===============
 PFSV_loadclientfield
 
-loads persistent data
+Returns value from persistent client data slot.
 
 float loadclientfield(entity player, float index)
-
 self.health = loadclientfield(self, PS_HEALTH);
 ===============
 */
@@ -1326,8 +1398,10 @@ void PFSV_loadclientfield(void)
 /*
 ===============
 PFSV_saveglobal
+Saves value into persistent level data slot for keeping values between map changes.
 
 void saveglobal(float index, float val)
+saveglobal(LP_TOTAL_KILLED_INFECTED, g_stats_killed_infected);
 ===============
 */
 void PFSV_saveglobal(void)
@@ -1346,8 +1420,10 @@ void PFSV_saveglobal(void)
 /*
 ===============
 PFSV_loadglobal
+Saves value into persistent level data slot for keeping values between map changes.
 
 float loadglobal(float index)
+g_stats_killed_infected = loadglobal(LP_TOTAL_KILLED_INFECTED);
 ===============
 */
 void PFSV_loadglobal(void)
@@ -1373,7 +1449,8 @@ float changemap(string nextmap, float savepers)
 Starts a new map, set savepers to true to keep persistent client/globals 
 fields across levels. Returns true if the bsp 'maps/[nextmap].bsp' exists on server.
 
-float mapexists = changemap("test", true);
+float bMapExists = changemap("c0e1", true); // this will carry over all client and level persistant data to another map
+float bMapExists = changemap("c0e1", false); // and this will clear all persistant data...
 ===============
 */
 void PFSV_changemap(void)
@@ -1390,7 +1467,7 @@ void PFSV_changemap(void)
 		Com_sprintf(expanded, sizeof(expanded), "maps/%s.bsp", nextmap);
 		if (FS_LoadFile(expanded, NULL) == -1)
 		{
-			Com_Printf("changemap(): can't change map to %s, map not on the server\n", expanded);
+			Com_Printf("WARNING: changemap() map \"%s\" not found\n", expanded);
 			Scr_ReturnFloat(0);
 			return;
 		}
@@ -1410,20 +1487,27 @@ void PFSV_changemap(void)
 /*
 ===============
 PFSV_kickclient
-
-void kickclient(entity player)
-
 Kick client out from server
+
+void kickclient(entity player, string reason)
+kickclient(player, "inactivity"); // "player was kicked from server due to inactivity."
 ===============
 */
 void PFSV_kickclient(void)
 {
 	gentity_t* ent;
+	char* reason;
 
 	ent = Scr_GetParmEntity(0);
+	reason = Scr_GetParmString(1);
+
 	BUILTIN_PLAYER_ONLY(ent);
 
-	SV_BroadcastPrintf(PRINT_LOW, "%s was kicked from server.", ent->client->pers.netname);
+	if(reason[0] && strlen(reason) > 2)
+		SV_BroadcastPrintf(PRINT_LOW, "%s was kicked from server due to %s.", ent->client->pers.netname, reason);
+	else
+		SV_BroadcastPrintf(PRINT_LOW, "%s was kicked from server.", ent->client->pers.netname);
+
 	SV_DropClient(ent->client);
 }
 
@@ -2080,7 +2164,7 @@ void SV_InitScriptBuiltins()
 
 	// server general
 	Scr_DefineBuiltin(PFSV_changemap, PF_SV, "changemap", "float(string nm, float pers)");
-	Scr_DefineBuiltin(PFSV_kickclient, PF_SV, "kickclient", "void(entity p)");
+	Scr_DefineBuiltin(PFSV_kickclient, PF_SV, "kickclient", "void(entity p, string reason)");
 	Scr_DefineBuiltin(PFSV_getclientname, PF_SV, "getclientname", "string(entity e)");
 
 	// entity general
@@ -2094,7 +2178,11 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_getEntNum, PF_SV, "getentnum", "float(entity e)");
 
 	Scr_DefineBuiltin(PFSV_setorigin, PF_SV, "setorigin", "void(entity e, vector v)");
+	Scr_DefineBuiltin(PFSV_setangles, PF_SV, "setangles", "void(entity e, vector v)");
+
 	Scr_DefineBuiltin(PFSV_setmodel, PF_SV, "setmodel", "void(entity e, string s)");
+	Scr_DefineBuiltin(PFSV_setbrushmodel, PF_SV, "setbrushmodel", "void(entity e, string s)");
+
 	Scr_DefineBuiltin(PFSV_setsize, PF_SV, "setsize", "void(entity e, vector v1, vector v2)");
 	Scr_DefineBuiltin(PFSV_linkentity, PF_SV, "linkentity", "void(entity e)");
 	Scr_DefineBuiltin(PFSV_unlinkentity, PF_SV, "unlinkentity", "void(entity e)");
@@ -2150,7 +2238,7 @@ void SV_InitScriptBuiltins()
 
 	// client
 	Scr_DefineBuiltin(PFSV_isplayer, PF_SV, "isplayer", "float(entity e)");
-	Scr_DefineBuiltin(PFSV_setviewmodel, PF_SV, "setviewmodel", "float(entity e, string s)");
+	Scr_DefineBuiltin(PFSV_getping, PF_SV, "getping", "float(entity e)");
 
 	Scr_DefineBuiltin(PFSV_setvieweffect, PF_SV, "setvieweffect", "void(entity e, float fx, ...)");
 	Scr_DefineBuiltin(PFSV_clearvieweffects, PF_SV, "clearvieweffects", "void(entity e)");

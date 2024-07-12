@@ -818,9 +818,9 @@ void SV_Status_f (void)
 	Com_Printf("\n--- server status ---\n\n");
 
 	if(developer->value)
-		Com_Printf("-- Server running in developer mode (%i) --\n", (int)developer->value);
+		Com_Printf("Server is running in developer mode (%i).\n", (int)developer->value);
 	if (sv_cheats->value)
-		Com_Printf("Cheats are allowed\n");
+		Com_Printf("Cheats are allowed.\n");
 
 	if (developer->value || sv_cheats->value)
 		Com_Printf("\n");
