@@ -137,7 +137,7 @@ void SCR_CheckDrawCenterString (void)
 	int x, y;
 	int font = 0;
 	float scale = 0.35;
-	vec4_t color = { 0,0,0,1 };
+	vec4_t color = { 0.05f, 0.05f, 0.05f, 1.0f };
 
 	scr_centertime_off -= cls.frametime;
 	
@@ -156,7 +156,7 @@ void SCR_CheckDrawCenterString (void)
 	int width = re.GetTextWidth(font, text) * scale; // text width in pixels
 	int charheight = re.GetFontHeight(font) * scale; // text height in pixels
 
-	re.SetColor(1,1,1, 0.9);
+	re.SetColor(1,1,1, 0.85);
 	re.DrawFill(x - (width / 2) - 24, y - 4, width + 48, charheight + 8);
 
 	re.NewDrawString(x, y, XALIGN_CENTER, font, scale, color, text);
