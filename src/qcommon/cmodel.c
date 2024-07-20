@@ -642,9 +642,9 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	int				length;
 	static unsigned	last_checksum;
 
-	map_noareas = Cvar_Get ("map_noareas", "0", 0, NULL);
+	map_noareas = Cvar_Get ("cm_noareas", "0", 0, NULL);
 
-	if ( !strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("flushmap")) )
+	if ( !strcmp (map_name, name) && (clientload || !Cvar_VariableValue ("cm_flushmap")) )
 	{
 		*checksum = last_checksum;
 		if (!clientload)

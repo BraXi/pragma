@@ -98,7 +98,7 @@ void CL_ShutdownClientGame()
 	Scr_FreeScriptVM(VM_CLGAME);
 
 	// free the map but not when server is running
-	if(Cvar_VariableValue("flushmap") && !Com_ServerState())
+	if(Cvar_VariableValue("cm_flushmap") && !Com_ServerState())
 		CM_FreeMap();
 }
 
