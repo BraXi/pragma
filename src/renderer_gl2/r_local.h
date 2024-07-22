@@ -164,6 +164,8 @@ typedef enum
 	LOC_MODELVIEW,
 	LOC_LOCALMODELVIEW, //Used to properly light models
 
+	LOC_BONES,
+
 	NUM_LOCS,
 } glprogLoc_t;
 
@@ -177,6 +179,9 @@ typedef enum
 	VALOC_COLOR,
 	VALOC_OLD_POS,
 	VALOC_OLD_NORMAL,
+
+	VALOC_BONEID, // smdl
+
 	NUM_VALOCS
 } glprogLoc_t;
 

@@ -69,6 +69,9 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_PROJECTION, "projection",	F_VECTOR4 },
 	{ LOC_MODELVIEW,  "modelview",	F_VECTOR4 },
 	{ LOC_LOCALMODELVIEW, "localmodelview",	F_VECTOR4 },
+
+
+	{ LOC_BONES, "bones",	F_VECTOR4 }, // SMDL EXPERIMENTAL STUFF
 };
 
 /* vertex attributes */
@@ -83,7 +86,10 @@ static glprogloc_t progVertAtrribLocs[NUM_VALOCS] =
 
 	/*md3 rendering only*/
 	{ VALOC_OLD_POS,		"inOldVertPos",		F_VECTOR3 }, // MD3 ONLY
-	{ VALOC_OLD_NORMAL,		"inOldNormal",		F_VECTOR3 } // MD3 ONLY
+	{ VALOC_OLD_NORMAL,		"inOldNormal",		F_VECTOR3 }, // MD3 ONLY
+
+	/*SMDL rendering only*/
+	{ VALOC_BONEID,			"inBoneId",			F_FLOAT } // SMDL ONLY
 };
 
 //Program metadata.
