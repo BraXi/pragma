@@ -28,7 +28,6 @@ in short - sequence contains all the bones for a given frame
 
 #include "r_local.h"
 
-
 // common to all models
 extern int modelFileLength;
 extern model_t* pLoadModel;
