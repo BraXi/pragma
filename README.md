@@ -9,27 +9,28 @@
 
 
 ## Quick Overview of changes
-- Native Game DLL replaced with platform independant QuakeC Virtual Machine
+- Zero dependencies on external C libraries - No need for cmake or any of that crap, compiles with Visual Studio out of the box
+- QuakeC Virtual Machines for game code, client game and GUI
 - It's completly standalone and does not require Quake 2 data
-- OpenGL 2.1 renderer which offloads much of the work to GPU
-- Full support for `MD3` models including groups, tags and per-surf textures
-- Per pixel lighting, GLSL shaders, post process effects (blur, contrast, gamma, grayscale...) and more
-- Dedicated server binary (currently x86 windows + linux)
-- All textures are RGB(A) `TGA` format and are no longer limited to `256 x 256px` and no color palette
-- Improved network protocol no longer limited to 4096qu coordinates in any direction
-- Model, sound and image limits have been significantly raised
-- Supports extended Quake 2 BSP format (qbism) which practicaly removes most of the limitations of the level format, levels can be bigger and richer in quality
-- Decoupled lightmap support for maps compiled with `ericw-tools` allowing for much greater lightmap quality
-- Client game, server game and user interface modules in QuakeC which are (re)loaded only when needed and completly secure
-- User interface system with GUI scripting, mouse input and automatic scaling
-- Obscure features and file formats were removed including IPX protocol, CDAudio, ConProc and `WAL, MD2, SP2` file formats
-- Player movement code (`pmove`) was moved from client exe to cg/svg qc modules, thus mods can freely modify physics code while retaining prediction and not needing to ship their own client binaries
-- Animations can be independant from server ticks and play at desired FPS, although old method of animating via `.frame` still works
+- Speedy OpenGL 2.1 renderer with GLSL programmed pipeline
+- Full support for `MD3` vertex morph models including groups, tags and per-surf textures
+- (Partial as of writing) support for skeletal animated `SMD` models
+- Improved network protocol, no longer limited to 4096qu coordinates in any direction, etc
+- Dynamic per pixel point and spot lights
+- Support for higher resolution lightmaps via `DECOUPLED_LM` bspx extension for BSPs compiled with `ericw-tools`
+- Supports extended `QBISM` BSP format which removes most of the limitations of the Q2 BSP, maps can be gigantic and richer in quality (use `-qbism` switch for ericw-tools qbsp program)
+- Post procesing effects (blur, contrast, gamma, grayscale...) and more
 - Server (thus all entities) can run at `40, 20 or 10` ticks per second (Q2 is at 10)
+- Dedicated server binary (only for windows and linux with 32bit libs)
+- All textures are RGB(A) `TGA` format and are no longer limited to `256 x 256px` and no color palette
+- Model, sound and image limits have been significantly raised and can be configured in `pragma_config.h`
+- Player movement code (`pmove`) was moved from client exe to cg/svg qc modules, thus mods can freely modify physics code while retaining prediction and not needing to ship their own client binaries
+- Obscure features and file formats were removed including IPX protocol, CDAudio, ConProc and `WAL, MD2, SP2` file formats
+- Animations can be independant from server ticks and play at desired FPS, although old method of animating via `.frame` still works
 - Plenty of bug fixes
-- Not. Even. A. Single. Dependency. - everything is buildable out of the box in VS2019 without the need to configure anything
 - Supports multiple bitmap fonts with proper glyph sizes
 - Trigger entities can use inline models for perfect touch detecton
+- Astar pathfinding
 
 ## Directory overview:
 
