@@ -113,9 +113,13 @@ typedef struct smdl_data_s
 	smdl_bone_t* bones[SMDL_MAX_BONES];
 	smdl_seq_t* seqences[SMDL_MAX_FRAMES];
 
+	// a model will have inverted bind pose matrix
+	mat4_t		invBindPoseMat[SMDL_MAX_BONES];
+
 	// animations don't have these
 	smdl_surf_t* surfaces[SMDL_MAX_SURFACES];
 	smdl_vert_t* verts;
+
 } smdl_data_t;
 
 typedef struct smdl_anim_s

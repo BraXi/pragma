@@ -184,7 +184,7 @@
     <ClCompile Include="..\platform\win_shared.c" />
     <ClCompile Include="glad_gl21.c" />
     <ClCompile Include="r_lightmap.c" />
-    <ClCompile Include="r_newmod.c" />
+    <ClCompile Include="r_skelmod.c" />
     <ClCompile Include="r_shadow.c" />
     <ClCompile Include="r_text.c" />
     <ClCompile Include="r_framebuffer.c" />

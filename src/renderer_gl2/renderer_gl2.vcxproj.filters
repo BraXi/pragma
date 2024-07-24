@@ -71,7 +71,7 @@
     <ClCompile Include="r_world.c" />
     <ClCompile Include="r_text.c" />
     <ClCompile Include="r_lightmap.c" />
-    <ClCompile Include="r_newmod.c" />
+    <ClCompile Include="r_skelmod.c" />
     <ClCompile Include="glad_gl21.c">
       <Filter>sys</Filter>
     </ClCompile>

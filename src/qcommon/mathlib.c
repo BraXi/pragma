@@ -1219,10 +1219,13 @@ void Mat4Scale(mat4_t mat, float x, float y, float z)
 /*
 =================
 Mat4Invert
+
+TODO: write SSE optimized version
 =================
 */
 void Mat4Invert(const mat4_t m, mat4_t invOut)
 {
+
 	float inv[16], det;
 	int i;
 
@@ -1351,6 +1354,7 @@ void Mat4Invert(const mat4_t m, mat4_t invOut)
 	{
 		invOut[i] = inv[i] * det;
 	}
+
 }
 
 //====================================================================================
