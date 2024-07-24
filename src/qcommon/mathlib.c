@@ -1216,4 +1216,282 @@ void Mat4Scale(mat4_t mat, float x, float y, float z)
 	Mat4Multiply(mat, scale);
 }
 
+/*
+=================
+Mat4Invert
+=================
+*/
+void Mat4Invert(const mat4_t m, mat4_t invOut)
+{
+	float inv[16], det;
+	int i;
+
+	inv[0] = m[5] * m[10] * m[15] -
+		m[5] * m[11] * m[14] -
+		m[9] * m[6] * m[15] +
+		m[9] * m[7] * m[14] +
+		m[13] * m[6] * m[11] -
+		m[13] * m[7] * m[10];
+
+	inv[4] = -m[4] * m[10] * m[15] +
+		m[4] * m[11] * m[14] +
+		m[8] * m[6] * m[15] -
+		m[8] * m[7] * m[14] -
+		m[12] * m[6] * m[11] +
+		m[12] * m[7] * m[10];
+
+	inv[8] = m[4] * m[9] * m[15] -
+		m[4] * m[11] * m[13] -
+		m[8] * m[5] * m[15] +
+		m[8] * m[7] * m[13] +
+		m[12] * m[5] * m[11] -
+		m[12] * m[7] * m[9];
+
+	inv[12] = -m[4] * m[9] * m[14] +
+		m[4] * m[10] * m[13] +
+		m[8] * m[5] * m[14] -
+		m[8] * m[6] * m[13] -
+		m[12] * m[5] * m[10] +
+		m[12] * m[6] * m[9];
+
+	inv[1] = -m[1] * m[10] * m[15] +
+		m[1] * m[11] * m[14] +
+		m[9] * m[2] * m[15] -
+		m[9] * m[3] * m[14] -
+		m[13] * m[2] * m[11] +
+		m[13] * m[3] * m[10];
+
+	inv[5] = m[0] * m[10] * m[15] -
+		m[0] * m[11] * m[14] -
+		m[8] * m[2] * m[15] +
+		m[8] * m[3] * m[14] +
+		m[12] * m[2] * m[11] -
+		m[12] * m[3] * m[10];
+
+	inv[9] = -m[0] * m[9] * m[15] +
+		m[0] * m[11] * m[13] +
+		m[8] * m[1] * m[15] -
+		m[8] * m[3] * m[13] -
+		m[12] * m[1] * m[11] +
+		m[12] * m[3] * m[9];
+
+	inv[13] = m[0] * m[9] * m[14] -
+		m[0] * m[10] * m[13] -
+		m[8] * m[1] * m[14] +
+		m[8] * m[2] * m[13] +
+		m[12] * m[1] * m[10] -
+		m[12] * m[2] * m[9];
+
+	inv[2] = m[1] * m[6] * m[15] -
+		m[1] * m[7] * m[14] -
+		m[5] * m[2] * m[15] +
+		m[5] * m[3] * m[14] +
+		m[13] * m[2] * m[7] -
+		m[13] * m[3] * m[6];
+
+	inv[6] = -m[0] * m[6] * m[15] +
+		m[0] * m[7] * m[14] +
+		m[4] * m[2] * m[15] -
+		m[4] * m[3] * m[14] -
+		m[12] * m[2] * m[7] +
+		m[12] * m[3] * m[6];
+
+	inv[10] = m[0] * m[5] * m[15] -
+		m[0] * m[7] * m[13] -
+		m[4] * m[1] * m[15] +
+		m[4] * m[3] * m[13] +
+		m[12] * m[1] * m[7] -
+		m[12] * m[3] * m[5];
+
+	inv[14] = -m[0] * m[5] * m[14] +
+		m[0] * m[6] * m[13] +
+		m[4] * m[1] * m[14] -
+		m[4] * m[2] * m[13] -
+		m[12] * m[1] * m[6] +
+		m[12] * m[2] * m[5];
+
+	inv[3] = -m[1] * m[6] * m[11] +
+		m[1] * m[7] * m[10] +
+		m[5] * m[2] * m[11] -
+		m[5] * m[3] * m[10] -
+		m[9] * m[2] * m[7] +
+		m[9] * m[3] * m[6];
+
+	inv[7] = m[0] * m[6] * m[11] -
+		m[0] * m[7] * m[10] -
+		m[4] * m[2] * m[11] +
+		m[4] * m[3] * m[10] +
+		m[8] * m[2] * m[7] -
+		m[8] * m[3] * m[6];
+
+	inv[11] = -m[0] * m[5] * m[11] +
+		m[0] * m[7] * m[9] +
+		m[4] * m[1] * m[11] -
+		m[4] * m[3] * m[9] -
+		m[8] * m[1] * m[7] +
+		m[8] * m[3] * m[5];
+
+	inv[15] = m[0] * m[5] * m[10] -
+		m[0] * m[6] * m[9] -
+		m[4] * m[1] * m[10] +
+		m[4] * m[2] * m[9] +
+		m[8] * m[1] * m[6] -
+		m[8] * m[2] * m[5];
+
+	det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+	if (det == 0)
+	{
+		return;
+	}
+
+	det = 1.0f / det;
+
+	for (i = 0; i < 16; i++)
+	{
+		invOut[i] = inv[i] * det;
+	}
+}
+
 //====================================================================================
+
+
+/*
+=================
+Quat_Normalize
+=================
+*/
+void Quat_Normalize(quat_t* q)
+{
+	float length = sqrtf(q->w * q->w + q->x * q->x + q->y * q->y + q->z * q->z);
+
+	//don't do anything on a null quaterion. 
+	if (length == 0)
+		return;
+
+	q->w /= length;
+	q->x /= length;
+	q->y /= length;
+	q->z /= length;
+}
+
+
+/*
+=================
+Quat_FromAngles
+=================
+*/
+void Quat_FromAngles(const vec3_t angles, quat_t *result)
+{
+	float angle, sr, sp, sy, cr, cp, cy;
+
+	angle = angles[2] * 0.5f;
+	sy = sinf(angle);
+	cy = cosf(angle);
+	angle = angles[1] * 0.5f;
+	sp = sinf(angle);
+	cp = cosf(angle);
+	angle = angles[0] * 0.5f;
+	sr = sinf(angle);
+	cr = cosf(angle);
+
+	result->w = cr * cp * cy + sr * sp * sy;
+	result->x = sr * cp * cy - cr * sp * sy;
+	result->y = cr * sp * cy + sr * cp * sy;
+	result->z = cr * cp * sy - sr * sp * cy;
+}
+
+
+/*
+=================
+Quat_ToMat4
+=================
+*/
+void Quat_ToMat4(quat_t q, mat4_t matrix)
+{
+	float xx, xy, xz, xw, yy, yz, yw, zz, zw;
+
+	//Quat_Normalize(&q);
+
+	xx = q.x * q.x;
+	xy = q.x * q.y;
+	xz = q.x * q.z;
+	xw = q.x * q.w;
+	yy = q.y * q.y;
+	yz = q.y * q.z;
+	yw = q.y * q.w;
+	zz = q.z * q.z;
+	zw = q.z * q.w;
+
+	matrix[0] = 1.0f - 2.0f * (yy + zz);
+	matrix[1] = 2.0f * (xy + zw);
+	matrix[2] = 2.0f * (xz - yw);
+	matrix[3] = 0.0f;
+
+	matrix[4] = 2.0f * (xy - zw);
+	matrix[5] = 1.0f - 2.0f * (xx + zz);
+	matrix[6] = 2.0f * (yz + xw);
+	matrix[7] = 0.0f;
+
+	matrix[8] = 2.0f * (xz + yw);
+	matrix[9] = 2.0f * (yz - xw);
+	matrix[10] = 1.0f - 2.0f * (xx + yy);
+	matrix[11] = 0.0f;
+
+	matrix[12] = 0.0f;
+	matrix[13] = 0.0f;
+	matrix[14] = 0.0f;
+	matrix[15] = 1.0f;
+}
+
+/*
+=================
+Quat_Slerp
+=================
+*/
+quat_t Quat_Slerp(quat_t q1, quat_t q2, float t) 
+{
+	float theta_0, theta, sin_theta, sin_theta_0, s1, s2;
+	quat_t result;
+
+	//Quat_Normalize(&q1);
+	//Quat_Normalize(&q2);
+
+	float dot = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+
+	// is quaterion backwards?
+	if (dot < 0.0f) 
+	{
+		q2.w = -q2.w;
+		q2.x = -q2.x;
+		q2.y = -q2.y;
+		q2.z = -q2.z;
+		dot = -dot;
+	}
+
+	const float THRESHOLD = 0.9995f;
+	if (dot > THRESHOLD) 
+	{	
+		result.w = q1.w + t * (q2.w - q1.w);
+		result.x = q1.x + t * (q2.x - q1.x);
+		result.y = q1.y + t * (q2.y - q1.y);
+		result.z = q1.z + t * (q2.z - q1.z);
+		Quat_Normalize(&result);
+		return result;
+	}
+
+	theta_0 = acosf(dot);
+	theta = theta_0 * t;
+	sin_theta = sinf(theta);
+	sin_theta_0 = sinf(theta_0);
+
+	s1 = cosf(theta) - dot * sin_theta / sin_theta_0;
+	s2 = sin_theta / sin_theta_0;
+
+	result.w = (s1 * q1.w) + (s2 * q2.w);
+	result.x = (s1 * q1.x) + (s2 * q2.x);
+	result.y = (s1 * q1.y) + (s2 * q2.y);
+	result.z = (s1 * q1.z) + (s2 * q2.z);
+
+	return result;
+}

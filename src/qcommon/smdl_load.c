@@ -49,7 +49,6 @@ clip bone rotaton between -pi <= rot < pi
 */
 static void SMD_ClipBoneRotation(vec3_t bonerot)
 {
-	
 	for (int i = 0; i < 3; i++) 
 	{
 

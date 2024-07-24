@@ -69,7 +69,7 @@ typedef struct smdl_seq_s
 	int bone;
 	float pos[3];
 	float rot[3];
-//	quat_t	qrot;
+	quat_t	q;
 } smdl_seq_t;
 
 typedef struct smdl_bone_s

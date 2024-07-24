@@ -146,6 +146,13 @@ void Mat4Rotate(mat4_t mat, float angle, float x, float y, float z);
 void Mat4Translate(mat4_t mat, float x, float y, float z);
 //Multiplies mat by a scale matrix composed of xyz.
 void Mat4Scale(mat4_t mat, float x, float y, float z);
+void Mat4Invert(const mat4_t m, mat4_t invOut);
+
+void Quat_Normalize(quat_t* q);
+void Quat_FromAngles(const vec3_t angles, quat_t* result);
+void Quat_ToMat4(quat_t q, mat4_t matrix);
+quat_t Quat_Slerp(quat_t q1, quat_t q2, float t);
+
 
 #define BOX_ON_PLANE_SIDE(emins, emaxs, p)	\
 	(((p)->type < 3)?						\
