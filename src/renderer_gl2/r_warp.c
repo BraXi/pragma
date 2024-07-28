@@ -624,10 +624,11 @@ R_DrawSkyBox
 void R_DrawSkyBox ()
 {
 	int		i;
+	mat4_t mat;
 
 	static const int skytexorder[6] = { 0,2,1,3,4,5 };
 
-	if (skyrotate)
+	if (skyrotate != 0.0f)
 	{	// check for no sky at all
 		for (i=0 ; i<6 ; i++)
 			if (skymins[0][i] < skymaxs[0][i]
@@ -637,14 +638,14 @@ void R_DrawSkyBox ()
 			return;		// nothing visible
 	}
 
-	mat4_t mat;
+
 	memcpy(mat, r_world_matrix, sizeof(mat));
 	Mat4Translate(mat, r_origin[0], r_origin[1], r_origin[2]);
 	Mat4Rotate(mat, r_newrefdef.time * skyrotate, skyaxis[0], skyaxis[1], skyaxis[2]);
 
 	for (i = 0; i < 6; i++)
 	{
-		if (skyrotate)
+		if (skyrotate != 0.0f)
 		{
 			// Hack to force full sky to draw when rotating
 			skymins[0][i] = -1;
@@ -691,7 +692,7 @@ void R_SetSky(char *name, float rotate, vec3_t axis, vec3_t color)
 	VectorCopy(axis, skyaxis);
 	VectorCopy(color, skycolor);
 
-	for (i=0 ; i<6 ; i++)
+	for (i = 0; i < 6; i++)
 	{
 		Com_sprintf (pathname, sizeof(pathname), "textures/sky/%s_%s.tga", skyname, sky_tex_prefix[i]);
 
