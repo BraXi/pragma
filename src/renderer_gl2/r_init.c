@@ -57,7 +57,6 @@ cvar_t* r_postfx_grayscale;
 cvar_t* r_postfx_inverse;
 cvar_t* r_postfx_noise;
 
-float sinTable[FUNCTABLE_SIZE];
 
 void GL_Strings_f(void);
 
@@ -65,13 +64,6 @@ extern vertexbuffer_t vb_gui;
 extern vertexbuffer_t vb_sky;
 extern vertexbuffer_t *vb_particles;
 
-//void Mod_LoadSMD(model_t* mod, void* buffer, lod_t lod);
-model_t* R_ModelForName(char* name, qboolean crash);
-void R_LoadMod_f(void)
-{
-//	Mod_LoadSMD(NULL, NULL, LOD_HIGH);
-	R_ModelForName(va("models/%s.smd",ri.Cmd_Argv(1)), false);
-}
 /*
 ==================
 R_RegisterCvarsAndCommands
@@ -139,8 +131,6 @@ void R_RegisterCvarsAndCommands(void)
 	ri.AddCommand("imagelist", R_TextureList_f);
 	ri.AddCommand("screenshot", R_ScreenShot_f);
 	ri.AddCommand("gl_strings", GL_Strings_f);
-
-	ri.AddCommand("loadmod", R_LoadMod_f);
 }
 
 /*
@@ -344,10 +334,11 @@ int R_Init(void* hinstance, void* hWnd)
 #endif
 
 #endif
-	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
-	
+
+//	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
 //	glActiveTexture = 0;
 //	glMultiTexCoord2f = 0;
+
 	R_EnableMultiTexture();
 
 	R_InitTextures();
@@ -356,10 +347,6 @@ int R_Init(void* hinstance, void* hWnd)
 
 	GL_SetDefaultState();
 	R_InitialOGLState(); //wip
-
-
-	for (int i = 0; i < FUNCTABLE_SIZE; i++)
-		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
 
 	R_InitModels();
 	R_LoadFonts();

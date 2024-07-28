@@ -16,6 +16,8 @@ See the attached GNU General Public License v2 for more details.
 
 .MD3 triangle model file format
 
+MOD_ALIAS is MD3
+
 ========================================================================
 */
 
@@ -34,7 +36,6 @@ See the attached GNU General Public License v2 for more details.
 #define MD3_VERSION			15
 
 // limits
-#define MD3_MAX_LODS		NUM_LODS // was 4, but we want NUM_LODS in pragma
 #define	MD3_MAX_TRIANGLES	8192	// per surface
 #define MD3_MAX_VERTS		4096	// per surface
 #define MD3_MAX_SHADERS		256		// per surface (???)

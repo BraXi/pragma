@@ -238,8 +238,8 @@ typedef struct model_s
 	//
 	int			cullDist;	// don't draw if farther than this
 
-	md3Header_t* md3[NUM_LODS];	// if type == MOD_ALIAS
-	smdl_data_t* smdl; // if type == MOD_SKEL
+	md3Header_t* alias;	// MOD_ALIAS
+	smdl_data_t* smdl; // MOD_SKEL
 
 	// SMDL_MAX_SURFACES == MD3_MAX_SURFACES == max textures, todo: make it less confusing?
 	vertexbuffer_t* vb[SMDL_MAX_SURFACES]; // smdls are always at 0

@@ -42,9 +42,6 @@ See the attached GNU General Public License v2 for more details.
 #define DEG2RAD( a ) ( ( (a) * M_PI ) / 180.0F )
 #endif
 
-#define FUNCTABLE_SIZE		1024
-#define FUNCTABLE_MASK		(FUNCTABLE_SIZE-1)
-
 //===================================================================
 
 

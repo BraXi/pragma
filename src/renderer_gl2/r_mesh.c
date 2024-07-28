@@ -17,7 +17,7 @@ vec3_t	model_shadevector;
 vec3_t	model_shadelight;
 
 void R_DrawSkelModel(rentity_t* ent); // r_smdl.c
-void R_DrawMD3Model(rentity_t* ent, lod_t lod, float animlerp); // r_md3.c
+void R_DrawAliasModel(rentity_t* ent, float animlerp); // r_aliasmod.c
 
 /*
 =================
@@ -174,7 +174,6 @@ qboolean r_pendingflip = false;
 void R_DrawEntityModel(rentity_t* ent)
 {
 	float		lerp;
-	lod_t		lod;
 
 	// don't bother if we're not visible
 	if (!R_EntityShouldRender(ent))
@@ -220,22 +219,16 @@ void R_DrawEntityModel(rentity_t* ent)
 	switch (ent->model->type)
 	{
 	case MOD_ALIAS:
-		lod = LOD_HIGH; // fixme: allow lods
-		R_DrawMD3Model(ent, lod, lerp);
+		R_DrawAliasModel(ent, lerp);
 		break;
 
 	case MOD_SKEL:
-		lod = LOD_HIGH; // fixme: allow lods
-		R_DrawSkelModel(ent /*,lod, lerp*/);
+		R_DrawSkelModel(ent /*, lerp*/);
 		break;
 
 	default:
 		ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);
 	}
-
-	// restore scale
-	//if (ent->renderfx & RF_SCALE)
-	//	glScalef(1/ent->scale, 1/ent->scale, 1/ent->scale);
 
 	// restore transparency
 	if (pCurrentRefEnt->renderfx & RF_TRANSLUCENT)

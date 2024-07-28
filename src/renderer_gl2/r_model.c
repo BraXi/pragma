@@ -33,11 +33,11 @@ static byte *mod_base = NULL;
 #define	RD_MAX_MODELS	1024
 static model_t	r_models[RD_MAX_MODELS];
 static int		r_models_count;
-static model_t	r_inlineModels[RD_MAX_MODELS]; // the inline * brush models from the current map are kept seperate
+static model_t	r_inlineModels[RD_MAX_MODELS]; // the inline "*" brush models from the current map are kept seperate
 
 extern void Mod_LoadBSP(model_t* mod, void* buffer);
-extern void Mod_LoadMD3(model_t* mod, void* buffer, lod_t lod);
-extern void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod);
+extern void Mod_LoadAliasMD3(model_t* mod, void* buffer);
+extern void Mod_LoadSkelModel(model_t* mod, void* buffer);
 
 void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf);
 
@@ -62,7 +62,7 @@ model_t* R_ModelForNum(int index)
 	if (index < 1 || index >= r_models_count)
 	{
 //		return &r_models[0];
-		return r_defaultmodel;
+		return r_defaultmodel; // NULL
 	}
 
 	mod = &r_models[index];
@@ -84,7 +84,7 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	int		i;
 
 	if (!name[0])
-		ri.Error(ERR_DROP, "R_ModelForName: NULL name");
+		ri.Error(ERR_DROP, "%s: alled with NULL name.\n", __FUNCTION__);
 
 	//
 	// inline models are grabbed only from worldmodel
@@ -136,7 +136,7 @@ model_t* R_ModelForName(char* name, qboolean crash)
 		if (crash)
 			ri.Error(ERR_DROP, "%s: %s not found.\n", __FUNCTION__, mod->name);
 		else
-			ri.Printf(PRINT_LOW, "Warning: model %s not found (%s).\n", mod->name, __FUNCTION__);
+			ri.Printf(PRINT_LOW, "%s: %s not found.\n", __FUNCTION__, mod->name);
 
 		memset(mod->name, 0, sizeof(mod->name));
 		return NULL;
@@ -151,7 +151,7 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	{
 	case MD3_IDENT: /* Quake3 .md3 model */
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_MD3_HUNKSIZE, "Alias Model (Renderer)");
-		Mod_LoadMD3(mod, buf, LOD_HIGH);
+		Mod_LoadAliasMD3(mod, buf);
 		break;
 
 	case BSP_IDENT: /* Quake2 .bsp v38*/
@@ -167,8 +167,8 @@ model_t* R_ModelForName(char* name, qboolean crash)
 		break;
 
 	default:
-		//pLoadModel->extradata = Hunk_Begin(RD_MAX_SMDL_HUNKSIZE, "world bsp");
-		Mod_LoadSkelModel(mod, buf, LOD_HIGH);
+		//pLoadModel->extradata for SMDLs is allocated by kernel
+		Mod_LoadSkelModel(mod, buf);
 		if(mod->type == MOD_BAD)
 			ri.Error(ERR_DROP, "R_ModelForName: file %s is not a vaild model", mod->name);
 		break;
@@ -199,10 +199,15 @@ void R_FreeModel(model_t* mod)
 
 	if (mod->extradata)
 	{
-		if(mod->type == MOD_SKEL) // because skel models are allocated by EXE
+		if (mod->type == MOD_SKEL)
+		{
+			// because skel models are allocated by EXE
 			ri.Glob_HunkFree(mod->extradata);
+		}
 		else
-		Hunk_Free(mod->extradata);
+		{
+			Hunk_Free(mod->extradata);
+		}
 	}
 
 	memset(mod, 0, sizeof(*mod));
@@ -244,82 +249,120 @@ static void R_FreeUnusedModels()
 
 		if (mod->registration_sequence != registration_sequence)
 		{
-			R_FreeModel(mod); // don't need this model
+			// don't need this model anymore
+			R_FreeModel(mod); 
 		}
 	}
 }
 
 //=============================================================================
 
+static void R_TouchAliasModel(model_t* mod)
+{
+	md3Header_t* md3Header;
+	md3Surface_t* surf;
+	md3Shader_t* shader;
+
+	int	i, j, nt = 0;
+
+	if (!mod->alias)
+	{
+		ri.Printf(PRINT_LOW, "%s: !mod->alias\n", __FUNCTION__);
+		return;
+	}
+
+	md3Header = mod->alias;
+	mod->numframes = md3Header->numFrames;
+
+	surf = (md3Surface_t*)((byte*)md3Header + md3Header->ofsSurfaces);
+	for (i = 0; i < md3Header->numSurfaces; i++)
+	{
+		shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
+		for (j = 0; j < surf->numShaders; j++, shader++)
+		{
+			mod->images[nt] = R_FindTexture(shader->name, it_model, true);
+
+			if (mod->images[nt] == NULL)
+				mod->images[nt] = r_texture_missing;
+
+			shader->shaderIndex = mod->images[nt]->texnum;
+			nt++;
+		}
+		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
+	}
+}
+
+static void R_TouchSkelModel(model_t* mod)
+{
+	smdl_surf_t* surf;
+	int i;
+	char texturename[MAX_QPATH];
+
+	if (!mod->smdl)
+	{
+		ri.Printf(PRINT_LOW, "%s: !mod->smdl\n", __FUNCTION__);
+		return;
+	}
+
+	surf = mod->smdl->surfaces[0];
+	for (i = 0; i < mod->smdl->hdr.numsurfaces; i++)
+	{
+		if (surf->texture[0] == '$')
+		{
+			mod->images[i] = R_FindTexture(surf->texture, it_model, true);
+		}
+		else
+		{
+			Com_sprintf(texturename, sizeof(texturename), "modelskins/%s", surf->texture);
+			mod->images[i] = R_FindTexture(texturename, it_model, true);
+		}
+		if (!mod->images[i])
+			mod->images[i] = r_texture_missing;
+
+		surf->texnum = mod->images[i]->texnum;
+	}
+}
+
+static void R_TouchBrushModel(model_t* mod)
+{
+	// textures are loaded only once, just bump their registration sequence
+	for (int i = 0; i < mod->numtexinfo; i++)
+		mod->texinfo[i].image->registration_sequence = registration_sequence;
+}
+
 /*
 ================
 R_RegisterModel
 
 Loads a model and associated textures
+bumps the registration_sequence for model and textures they use
 ================
 */
 struct model_s* R_RegisterModel(char* name)
 {
 	model_t* mod;
-	int		i, j, nt = 0;
-	char texturename[MAX_QPATH];
-
-	md3Header_t* md3Header;
-	md3Surface_t* surf;
-	md3Shader_t* shader;
 
 	mod = R_ModelForName(name, false);
-	if (mod)
+	if (!mod || mod == NULL)
+		return mod;
+
+	mod->registration_sequence = registration_sequence;
+
+	if (mod->type == MOD_ALIAS)
 	{
-		mod->registration_sequence = registration_sequence;
-
-		// register all images used by the models
-		if (mod->type == MOD_ALIAS)
-		{
-			nt = 0;
-			md3Header = mod->md3[LOD_HIGH]; // FIXME lod
-			mod->numframes = md3Header->numFrames;
-			surf = (md3Surface_t*)((byte*)md3Header + md3Header->ofsSurfaces);
-			for (i = 0; i < md3Header->numSurfaces; i++)
-			{
-				shader = (md3Shader_t*)((byte*)surf + surf->ofsShaders);
-				for (j = 0; j < surf->numShaders; j++, shader++)
-				{
-					mod->images[nt] = R_FindTexture(shader->name, it_model, true);
-					if (mod->images[nt] == NULL)
-						mod->images[nt] = r_texture_missing;
-					shader->shaderIndex = mod->images[nt]->texnum;
-					nt++;
-				}
-				surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
-			}
-		}
-		else if (mod->type == MOD_SKEL && mod->smdl != NULL)
-		{
-			smdl_surf_t *surf = mod->smdl->surfaces[0];
-			for (int i = 0; i < mod->smdl->hdr.numsurfaces; i++)
-			{
-				if (surf->texture[0] == '$')
-				{
-					mod->images[i] = R_FindTexture(surf->texture, it_model, true);
-				}
-				else
-				{
-					Com_sprintf(texturename, sizeof(texturename), "modelskins/%s", surf->texture);
-					mod->images[i] = R_FindTexture(texturename, it_model, true);
-				}
-				if (!mod->images[i])
-					mod->images[i] = r_texture_missing;
-
-				surf->texnum = mod->images[i]->texnum;
-			}
-		}
-		else if (mod->type == MOD_BRUSH)
-		{
-			for (i = 0; i < mod->numtexinfo; i++)
-				mod->texinfo[i].image->registration_sequence = registration_sequence;
-		}
+		R_TouchAliasModel(mod);
 	}
+	else if (mod->type == MOD_SKEL)
+	{
+		R_TouchSkelModel(mod);
+	}
+	else if (mod->type == MOD_BRUSH)
+	{
+		R_TouchBrushModel(mod);
+	}
+	//else
+		//ri.Printf(PRINT_LOW, "%s: unknown mod->type\n", __FUNCTION__);
+
 	return mod;
 }
 
@@ -400,7 +443,7 @@ void Cmd_modellist_f(void)
 		total += mod->extradatasize;
 	}
 	ri.Printf(PRINT_ALL, "\nTotal resident: %i kb\n", total / 1024);
-	ri.Printf(PRINT_ALL, "Total %i out of %i models in use\n\n", i, RD_MAX_MODELS);
+	ri.Printf(PRINT_ALL, "Total %i out of %i models in use\n", i, RD_MAX_MODELS);
 }
 
 /*

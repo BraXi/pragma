@@ -332,7 +332,7 @@ void R_DrawSkelModel(rentity_t* ent)
 Mod_LoadSkelModel
 =================
 */
-void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
+void Mod_LoadSkelModel(model_t* mod, void* buffer)
 {
 	qboolean loaded = false;
 	smdl_surf_t* surf;
@@ -347,6 +347,7 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer, lod_t lod)
 	{
 		ri.Glob_HunkFree(mod->extradata);
 		mod->extradata = NULL;
+		mod->smdl = NULL;
 		//ri.Printf(PRINT_LOW, "Warning: failed to load model '%s'.\n", mod->name);
 		return;
 	}
