@@ -35,7 +35,6 @@ See the attached GNU General Public License v2 for more details.
 
 //=============================================================================
 
-#define CHAR_SIZEX 8
 typedef enum
 {
 	XALIGN_LEFT = 0,

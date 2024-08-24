@@ -313,10 +313,21 @@ SCR_DrawNet
 */
 void SCR_DrawNet (void)
 {
+	static rgba_t col_red = { 0.8f, 0.1f, 0.2f, 1.0f };
+	vec2_t xy;
+	static const int fontid = 0; // FIXME
+
 	if (cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged < CMD_BACKUP-1)
 		return;
 
-	re.DrawImage(scr_vrect.x+64, scr_vrect.y, "code/net");
+	xy[0] = scr_vrect.x + (scr_vrect.width / 2.0f);
+	xy[1] = scr_vrect.y + scr_vrect.height - ((re.GetFontHeight(0) * 0.5f) * 5);
+
+	re.NewDrawString(xy[0], xy[1], XALIGN_CENTER, fontid, 0.5f, col_red, "Connection Problem?");
+
+	xy[1] += (re.GetFontHeight(0) * 0.5f);
+
+	re.NewDrawString(xy[0], xy[1], XALIGN_CENTER, fontid, 0.33f, col_red, "No response from server.");
 }
 
 /*
@@ -324,16 +335,22 @@ void SCR_DrawNet (void)
 SCR_DrawPause
 ==============
 */
-void SCR_DrawPause (void)
+void SCR_DrawPause(void)
 {
-	if (!scr_showpause->value)		// turn off for screenshots
-		return;
+	static rgba_t col_white = { 1.0f, 1.0f, 1.0f, 1.0f };
+	vec2_t xy;
+	static const int fontid = 0; // FIXME
+
+	if (!scr_showpause->value)
+		return; // turn off for screenshots
 
 	if (!cl_paused->value)
 		return;
 
-	static rgba_t col_white = { 1.0f, 1.0f, 1.0f, 1.0f };
-	re._DrawString("[Game Paused]", 400, 10, 1.0, XALIGN_CENTER, col_white);
+	xy[0] = scr_vrect.x + (scr_vrect.width / 2.0f);
+	xy[1] = scr_vrect.y + (scr_vrect.height / 2.0f) - ((re.GetFontHeight(0) * 0.5f) / 2);
+
+	re.NewDrawString(xy[0], xy[1], XALIGN_CENTER, fontid, 0.5f, col_white, "Game Paused");
 }
 
 /*
@@ -344,6 +361,8 @@ SCR_DrawLoading
 void SCR_DrawLoading (void)
 {
 //	int		w, h;
+	vec4_t rect;
+	int fontid = 0; // fixme
 	rgba_t rect_fullscreen;
 	rgba_t color;
 		
@@ -351,18 +370,19 @@ void SCR_DrawLoading (void)
 		return;
 
 	scr_draw_loading = false;
-
-	rect_fullscreen[0] = rect_fullscreen[1] = 0;
-	rect_fullscreen[2] = 800;
-	rect_fullscreen[3] = 600;
-
-	VectorSet(color, 0, 0, 0);
-	color[3] = 0.5;
+	
+	Vector4Set(rect, scr_vrect.x, scr_vrect.y, scr_vrect.width, scr_vrect.height);
+	Vector4Set(color, 0.0f, 0.0f, 0.0f, 0.7f);
 	re.NewDrawFill(rect_fullscreen, color);
 
-	VectorSet(color, 1, 1, 1);
-	color[3] = 1;
-	re._DrawString("loading", 400, 280, 2, 2, color);
+	rect[0] = scr_vrect.x + (scr_vrect.width / 2.0f);
+	rect[1] = scr_vrect.y + (scr_vrect.height / 2.0f) - ((re.GetFontHeight(0) * 0.5f));
+	Vector4Set(color, 0.84f, 0.8f, 0.8f, 1.0f);
+
+	re.NewDrawString(rect[0], rect[1], XALIGN_CENTER, fontid, 0.5f, color, "You're safe for now...");
+
+	rect[1] += ((re.GetFontHeight(0) * 0.6f));
+	re.NewDrawString(rect[0], rect[1], XALIGN_CENTER, fontid, 0.3f, color, "Entering next chapter.");
 }
 
 //=============================================================================
@@ -400,13 +420,89 @@ void SCR_RunConsole (void)
 
 static void SCR_DrawLoadingScreen()
 {
-	re.SetColor(0.1, 0.1, 0.1, 1);
-	re.DrawFill(0, 0, viddef.width, viddef.height);
+	//TODO: MOVE TO GUI QC !!!
+	static const int fontid = 0;
+	float fontscale;
+	vec4_t rect;
+	rgba_t color;
+	float fontheight;
+	char* str;
 
-	// weeeewwwy temporarry
-	rgba_t c = { 1,1,1,1 };
-	re._DrawString("Entering Game", 400, 170, 3, 2, c); //240
+	rgba_t col_white = { 1,1,1, 1.0f };
 
+
+	// background
+	Vector4Set(rect, scr_vrect.x, scr_vrect.y, scr_vrect.width, scr_vrect.height);
+	Vector4Set(color, 0.08f, 0, 0.02, 1.0f);
+	re.NewDrawFill(rect, color);
+
+	// connecting to...
+	fontscale = 0.35f;
+	fontheight = re.GetFontHeight(fontid) * fontscale;
+	str = va("Connecting to %s...", cls.servername);
+	Vector4Set(rect, scr_vrect.x + 10.0f, 12.0f, 0, 0);
+	re.NewDrawString(rect[0], rect[1], XALIGN_LEFT, fontid, fontscale, col_white, str);
+
+	// level name
+	rect[1] += fontheight;
+	fontscale = 0.6f;
+	fontheight = re.GetFontHeight(fontid) * fontscale;
+	str = cl.configstrings[CS_MODELS+1];
+	re.NewDrawString(rect[0], rect[1], XALIGN_LEFT, fontid, fontscale, col_white, str);
+
+	// top line
+	rect[0] = scr_vrect.x;
+	rect[1] = scr_vrect.y + 80.0;
+	rect[2] = scr_vrect.width;
+	rect[3] = 4.0f;
+
+	Vector4Set(color, 0.7f, 0.7f, 0.7f, 0.5f);
+	re.NewDrawFill(rect, color);
+	//
+	//(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);
+	Vector4Set(rect, scr_vrect.x, rect[1]+4.0f, scr_vrect.width, scr_vrect.height-168);
+	re.DrawStretchedImage(rect, col_white, "levelshots/test");
+
+	// bottom line
+	rect[0] = scr_vrect.x;
+	rect[1] = scr_vrect.y + scr_vrect.height - 80.0;
+	rect[2] = scr_vrect.width;
+	rect[3] = 4.0f;
+
+	Vector4Set(color, 0.7f, 0.7f, 0.7f, 0.5f);
+	re.NewDrawFill(rect, color);
+
+	if (CL_CheatsAllowed())
+	{
+		fontscale = 0.4f;
+		fontheight = re.GetFontHeight(fontid) * fontscale;
+		str = "cheats allowed | developer mode";
+
+		Vector4Set(rect, scr_vrect.x + (scr_vrect.width / 2), rect[1] + 20, 0, 0);
+		re.NewDrawString(rect[0], rect[1], XALIGN_CENTER, fontid, fontscale, col_white, str);
+	}
+
+	// players
+	fontscale = 0.7f;
+	fontheight = re.GetFontHeight(fontid) * fontscale;
+	str = va("Survival");
+	Vector4Set(rect, scr_vrect.x + scr_vrect.width / 2, (scr_vrect.y + 10), 0, 0);
+
+	Vector4Set(color, 0.75f, 0.05, 0, 0.75f);
+	re.NewDrawString(rect[0], rect[1], XALIGN_CENTER, fontid, fontscale, color, str);
+
+	// players
+	rect[1] += fontheight - 5;
+	fontscale = 0.3f;
+	fontheight = re.GetFontHeight(fontid) * fontscale;
+	str = va("Survive waves of infected and escape");
+
+	//Vector4Set(color, 0.8f, 0.8, 0.8, 0.8f);
+	re.NewDrawString(rect[0], rect[1], XALIGN_CENTER, fontid, fontscale, color, str);
+
+
+
+#if 0
 	// line
 	float rect[4] = { 220, 205, 360, 5 };
 	rgba_t c2 = { 0.8, 0.8, 0.8, 1 };
@@ -432,6 +528,8 @@ static void SCR_DrawLoadingScreen()
 		VectorSet(c, 0.8, 0.2, 0);
 		re._DrawString("- CHEATS ENABLED -", 400, 410, 2, 2, c);
 	}
+
+#endif
 }
 
 /*
@@ -702,22 +800,14 @@ void SCR_TileClear (void)
 
 //=======================================================
 
-static void SetStringHighBit2(char* s)
-{
-	while (*s)
-		*s++ |= 128;
-}
-
-extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 void DrawDownloadNotify()
 {
 	// fixme -- redo all of this in new UI
-	int		w, h;
-	char	dlstring[MAX_OSPATH+16];
-
 	if (!cls.download)
 		return;
 
+#if 0
+	extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 	Com_sprintf(dlstring, sizeof(dlstring), "%s [%02d%%]", cls.downloadname, cls.downloadpercent);
 	SetStringHighBit2(dlstring);
 
@@ -732,9 +822,8 @@ void DrawDownloadNotify()
 	UI_DrawString(w, h += 12, XALIGN_CENTER,"===============================");
 
 	UI_DrawString(w, h += 36, XALIGN_CENTER, dlstring);
-
-	
 //	UI_DrawString(w, h += 96, XALIGN_CENTER, "press [esc] to cancel");
+#endif
 }
 
 /*

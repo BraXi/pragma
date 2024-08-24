@@ -54,6 +54,8 @@ extern void Nav_Shutdown();
 #ifdef _DEBUG
 #ifndef DEDICATED_ONLY
 // completly out of place, used just in debug builds to see stats
+
+#if 0
 typedef enum
 {
 	XALIGN_NONE = 0,
@@ -65,18 +67,23 @@ typedef enum
 void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 extern PR_Profile(int x, int y);
 extern int		time_before, time_between, time_after;
+#endif
+
 void ShowServerStats(int x, int y)
 {
-	UI_DrawString(x, y + 10 * 0, XALIGN_RIGHT, va("map %s", sv.configstrings[CS_MODELS + 1]));
-	UI_DrawString(x, y + 10 * 2, XALIGN_RIGHT, va("server: frame %i time %i", sv.framenum, sv.time));
-	UI_DrawString(x, y + 10 * 3, XALIGN_RIGHT, va("game: frame %i time %f", sv.gameFrame, sv.gameTime));
-	UI_DrawString(x, y + 10 * 5, XALIGN_RIGHT, va("entities: %i/%i", sv.num_edicts, sv.max_edicts));
 
-	UI_DrawString(x, y + 10 * 7, XALIGN_RIGHT, va("server %i ms", time_between - time_before));
-	UI_DrawString(x, y + 10 * 8, XALIGN_RIGHT, va("progs %i ms", time_after_game - time_before_game));
+#if 0
+	UI_DrawString(x, y + 10 * 0, XALIGN_RIGHT, va("MAP: %s", sv.configstrings[CS_MODELS + 1]));
+	UI_DrawString(x, y + 10 * 2, XALIGN_RIGHT, va("SV: frame %i time %i", sv.framenum, sv.time));
+	UI_DrawString(x, y + 10 * 3, XALIGN_RIGHT, va("GAME: frame %i time %f", sv.gameFrame, sv.gameTime));
+	UI_DrawString(x, y + 10 * 5, XALIGN_RIGHT, va("ENTS: %i/%i", sv.num_edicts, sv.max_edicts));
+
+	UI_DrawString(x, y + 10 * 7, XALIGN_RIGHT, va("SV %i ms", time_between - time_before));
+	UI_DrawString(x, y + 10 * 8, XALIGN_RIGHT, va("PROGS %i ms", time_after_game - time_before_game));
 
 	UI_DrawString(x, y + 10 * 13, XALIGN_RIGHT, "-- profile --");
 	PR_Profile(x, y + 10 * 14);
+#endif
 }
 #endif /*DEDICATED_ONLY*/
 #endif /*_DEBUG*/
@@ -307,7 +314,7 @@ void SVC_DirectConnect (void)
 
 	adr = net_from;
 
-//	Com_DPrintf (DP_SV, "SVC_DirectConnect ()\n");
+	Com_DPrintf (DP_SV, "SVC_DirectConnect ()\n");
 
 	version = atoi(Cmd_Argv(1));
 	if (version != PROTOCOL_VERSION)

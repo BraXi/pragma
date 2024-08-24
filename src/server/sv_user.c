@@ -89,7 +89,7 @@ void SV_New_f (void)
 		playernum = sv_client - svs.clients;
 	MSG_WriteShort (&sv_client->netchan.message, playernum);
 
-	// send full levelname
+	// send full level name
 	MSG_WriteString (&sv_client->netchan.message, sv.configstrings[CS_NAME]);
 
 	//
@@ -119,7 +119,7 @@ void SV_Configstrings_f (void)
 {
 	int			start;
 
-	Com_DPrintf (DP_SV, "Configstrings() from %s\n", sv_client->name);
+	//Com_DPrintf (DP_SV, "Configstrings() from %s\n", sv_client->name);
 
 	if (sv_client->state != cs_connected)
 	{
@@ -136,6 +136,8 @@ void SV_Configstrings_f (void)
 	}
 	
 	start = atoi(Cmd_Argv(2));
+
+	Com_DPrintf(DP_SV, "Client '%s' requested configstrings starting from %i.\n", sv_client->name, start);
 
 	if(dedicated->value && start == 0)
 		Com_Printf("[%s] client '%s' requested configstrings.\n", GetTimeStamp(false), sv_client->name);
@@ -156,6 +158,7 @@ void SV_Configstrings_f (void)
 
 	if (start == MAX_CONFIGSTRINGS)
 	{
+		Com_DPrintf(DP_SV, "Client '%s' beginning baselines.\n", sv_client->name);
 		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
 		MSG_WriteString (&sv_client->netchan.message, va("cmd baselines %i 0\n",svs.spawncount) );
 	}
@@ -177,8 +180,6 @@ void SV_Baselines_f (void)
 	entity_state_t	nullstate;
 	entity_state_t	*base;
 
-	Com_DPrintf (DP_SV, "Baselines() from %s\n", sv_client->name);
-
 	if (sv_client->state != cs_connected)
 	{
 		Com_Printf ("baselines not valid -- already spawned\n");
@@ -194,6 +195,8 @@ void SV_Baselines_f (void)
 	}
 	
 	start = (int)strtol(Cmd_Argv(2), (char**)NULL, 10); //yquake
+
+	Com_DPrintf(DP_SV, "Client '%s' requested baselines starting from %i.\n", sv_client->name, start);
 
 	if(dedicated->value && start == 0)
 		Com_Printf("[%s] client '%s' requested baselines.\n", GetTimeStamp(false), sv_client->name);
@@ -215,6 +218,7 @@ void SV_Baselines_f (void)
 	// send next command
 	if (start == MAX_GENTITIES)
 	{
+		Com_DPrintf(DP_SV, "Client '%s' beginning precache.\n", sv_client->name);
 		MSG_WriteByte (&sv_client->netchan.message, SVC_STUFFTEXT);
 		MSG_WriteString (&sv_client->netchan.message, va("precache %i\n", svs.spawncount) );
 	}
@@ -235,12 +239,12 @@ void SV_Begin_f (void)
 	int i;
 	gentity_t* ent = NULL;
 
-//	Com_DPrintf (DP_SV, "Begin() from %s\n", sv_client->name);
+	Com_DPrintf (DP_SV, "Client `%s` at sv_begin()\n", sv_client->name);
 
 	// handle the case of a level changing while a client was connecting
 	if ((int)strtol(Cmd_Argv(1), (char**)NULL, 10) != svs.spawncount) // yquake2
 	{
-		Com_Printf ("SV_Begin_f from different level\n");
+		Com_Printf("SV_Begin_f from different level\n");
 		SV_New_f ();
 		return;
 	}

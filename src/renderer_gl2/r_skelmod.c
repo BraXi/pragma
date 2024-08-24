@@ -63,7 +63,8 @@ void CalcBoneMatrix(const smdl_data_t* pModelData, smdl_seq_t* pBone, qboolean b
 
 	if (bNormalizeQuat)
 	{
-		// quaternion must be normalized before conversion to matrix
+		// quaternion must be normalized before conversion to matrix its 
+		// normalized for every exact frame, but not for "inbetweens" during slerp
 		Quat_Normalize(&pBone->q);
 	}
 
@@ -182,9 +183,6 @@ static void R_SkeletonForFrame(int frame)
 
 	pModelData = pCurrentRefEnt->model->smdl;
 	seq = anim->seqences[framee];
-
-//	for (i = 0; i < model->hdr.numbones; i++)
-//		Mat4MakeIdentity(FinalBonesMat[i]);
 
 	for (i = 0; i < pModelData->hdr.numbones; i++)
 	{

@@ -407,7 +407,6 @@ void R_RenderFrame(refdef_t* fd, qboolean onlyortho);
 
 
 void	R_DrawImage(int x, int y, char* name);
-void	R_DrawSingleChar(int x, int y, int c, int charSize);
 void	R_DrawTileClear(int x, int y, int w, int h, char* name);
 void	R_DrawFill(int x, int y, int w, int h);
 
@@ -464,7 +463,6 @@ refexport_t GetRefAPI(refimport_t rimp)
 	re.GetImageSize = R_GetImageSize;
 	re.DrawImage = R_DrawImage;
 	re.DrawStretchImage = R_DrawStretchImage;
-	re.DrawSingleChar = R_DrawSingleChar;
 	re.DrawTileClear = R_DrawTileClear;
 	re.DrawFill = R_DrawFill;
 	re.SetColor = RR_SetColor;
@@ -477,9 +475,8 @@ refexport_t GetRefAPI(refimport_t rimp)
 	re.TagIndexForName = R_TagIndexForName;
 	re.LerpTag = R_LerpTag;
 
-	// braxi -- newer replacements
-	re.DrawString = R_DrawString;
-	re._DrawString = R_DrawStringOld;
+	re.DrawString = R_DrawString; // DEPRECATED
+	re._DrawString = R_DrawStringOld; // DEPRECATED
 	re.DrawStretchedImage = R_DrawStretchedImage;
 	re.NewDrawFill = R_NewDrawFill;
 

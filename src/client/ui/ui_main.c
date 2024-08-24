@@ -479,28 +479,3 @@ void UI_Shutdown()
 	Cmd_RemoveCommand("ui_closeall");
 	Cmd_RemoveCommand("ui_list");
 }
-
-
-void UI_DrawString(int x, int y, UI_AlignX alignx, char* string)
-{
-	int ofs_x = 0;
-
-	// align text
-	int strX = (strlen(string) * CHAR_SIZEX);
-	if (alignx == XALIGN_CENTER)
-	{
-		ofs_x -= (strX / 2);
-	}
-	else if (alignx == XALIGN_RIGHT)
-	{
-		ofs_x -= ((strlen(string) * CHAR_SIZEX));
-	}
-
-	// draw string
-	while (*string)
-	{
-		re.DrawSingleChar(ofs_x + x, y, *string, 8);
-		x += CHAR_SIZEX;
-		string++;
-	}
-}

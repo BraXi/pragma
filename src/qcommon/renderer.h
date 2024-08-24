@@ -189,8 +189,11 @@ typedef struct
 	//
 	// video mode and refresh state management entry points
 	//
+
 	void	(*BeginFrame)(float camera_separation);
+
 	void	(*EndFrame) (void);
+
 	void	(*RenderFrame) (refdef_t* fd, qboolean onlyortho);
 
 	// when window focus changes
@@ -209,20 +212,26 @@ typedef struct
 	// an implicit "pics/" prepended to the name. (a pic name that starts with a
 	// slash will not use the "pics/" prefix or the ".tga" postfix)
 	void	(*BeginRegistration)(const char *map);
+
 	void	(*EndRegistration)();
 
 	struct model_s *(*RegisterModel) (char *name);
+
 	struct image_s *(*RegisterSkin) (char *name);
+
 	struct image_s *(*RegisterPic) (char *name);
 
 	void	(*SetSky) (char *name, float rotate, vec3_t axis, vec3_t color);
 
-	void	(*GetImageSize) (int *w, int *h, char *name);	// will return 0 0 if not found
+	// will return 0 0 if not found
+	void	(*GetImageSize) (int *w, int *h, char *name);	
+
 	void	(*DrawImage) (int x, int y, char *name);
+
 	void	(*DrawStretchImage) (int x, int y, int w, int h, char *name);
-	void	(*DrawSingleChar) (int x, int y, int c, int charSize);
 
 	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
+
 	void	(*DrawFill) (int x, int y, int w, int h);
 
 	int		(*FindFont)(char* name);

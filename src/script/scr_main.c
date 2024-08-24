@@ -708,6 +708,8 @@ void Scr_Shutdown()
 }
 
 #ifndef DEDICATED_ONLY
+
+#if 0
 typedef enum
 {
 	XALIGN_NONE = 0,
@@ -765,4 +767,5 @@ void PR_Profile(int x, int y)
 		UI_DrawString(x, y+10*i, XALIGN_RIGHT, str[i]);
 }
 
+#endif
 #endif

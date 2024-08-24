@@ -124,56 +124,6 @@ void R_LoadFonts()
 	R_LoadFontBFF("arial");
 }
 
-
-
-/*
-================
-R_DrawSingleChar
-
-Draws one 8*8 graphics character with 0 being transparent.
-It can be clipped to the top of the screen to allow the console to be
-smoothly scrolled off.
-================
-*/
-void R_DrawSingleChar(int x, int y, int num, int charSize)
-{
-	int				row, col;
-	float			frow, fcol, size;
-
-	num &= 255;
-	
-	if ( (num&127) == 32 )
-		return;		// space
-
-	if (y <= -charSize)
-		return;			// totally off screen
-
-	row = num>>4;
-	col = num>>4;
-
-	frow = row*0.0625;
-	fcol = col*0.0625;
-	size = 0.0625;
-
-	ClearVertexBuffer();
-	PushVert(x, y, 0);
-	SetTexCoords(fcol, frow);
-	PushVert(x + charSize, y, 0);
-	SetTexCoords(fcol + size, frow);
-	PushVert(x + charSize, y + charSize, 0);
-	SetTexCoords(fcol + size, frow + size);
-	PushVert(x, y, 0);
-	SetTexCoords(fcol, frow);
-	PushVert(x + charSize, y + charSize, 0);
-	SetTexCoords(fcol + size, frow + size);
-	PushVert(x, y + charSize, 0);
-	SetTexCoords(fcol, frow + size);
-
-	R_UpdateVertexBuffer(&vb_gui, guiVerts, guiVertCount, V_UV);
-	R_MultiTextureBind(TMU_DIFFUSE, font_current->image->texnum);
-	R_DrawVertexBuffer(&vb_gui, 0, 0);
-}
-
 /*
 =============
 Draw_FindPic

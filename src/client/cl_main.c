@@ -63,7 +63,7 @@ client_state_t	cl;
 
 clentity_t		cl_entities[MAX_GENTITIES];
 
-entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES];
+entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES]; // entity states in current frame_t
 
 extern void CL_Precache_f(void); //cl_download.c
 
@@ -169,12 +169,12 @@ void CL_Record_f (void)
 	//
 	Com_sprintf (name, sizeof(name), "%s/demos/%s.demo", FS_Gamedir(), Cmd_Argv(1));
 
-	Com_Printf ("recording to %s.\n", name);
+	Com_Printf ("Recording demo to %s.\n", name);
 	FS_CreatePath (name);
 	cls.demofile = fopen (name, "wb");
 	if (!cls.demofile)
 	{
-		Com_Printf ("ERROR: couldn't open.\n");
+		Com_Printf ("ERROR: Couldn't open demo file for writing.\n");
 		return;
 	}
 	cls.demorecording = true;
@@ -192,12 +192,12 @@ void CL_Record_f (void)
 	MSG_WriteLong (&buf, PROTOCOL_VERSION);
 	MSG_WriteLong (&buf, 0x10000 + cl.servercount);
 	MSG_WriteByte (&buf, 1);	// demos are always attract loops
-	MSG_WriteString (&buf, cl.gamedir);
-	MSG_WriteShort (&buf, cl.playernum);
+	MSG_WriteString (&buf, cl.gamedir); // write game dir
+	MSG_WriteShort (&buf, cl.playernum); // write player number
 
-	MSG_WriteString (&buf, cl.configstrings[CS_NAME]);
+	MSG_WriteString (&buf, cl.configstrings[CS_NAME]); // write proper level name
 
-	// configstrings
+	// write all configstrings
 	for (i = 0; i < MAX_CONFIGSTRINGS; i++)
 	{
 		if (cl.configstrings[i][0])
@@ -217,7 +217,7 @@ void CL_Record_f (void)
 
 	}
 
-	// baselines
+	// write baselines
 	memset (&nullstate, 0, sizeof(nullstate));
 	for(i = 0; i < MAX_GENTITIES; i++)
 	{
@@ -537,6 +537,8 @@ void CL_ClearState ()
 {
 	S_StopAllSounds ();
 	CL_ShutdownClientGame();
+
+	// FIXME this should restart GUI progs
 
 // wipe the entire cl structure
 	memset (&cl, 0, sizeof(cl));

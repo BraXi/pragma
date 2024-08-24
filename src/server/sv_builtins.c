@@ -329,6 +329,7 @@ void PFSV_setangles(void)
 		for (i = 0; i < 3; i++)
 		{
 			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->v.angles[i]);
+			ent->v.pm_delta_angles[i] = ent->client->ps.pmove.delta_angles[i];
 			ent->v.viewangles[i] = ent->v.angles[i];
 		}
 	}
@@ -2253,7 +2254,6 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_loadglobal, PF_SV, "loadglobal", "float(float idx)");
 
 	// navigation 
-	// TODO -- share with cgame
 	Scr_DefineBuiltin(PFSV_nav_addpathnode, PF_SV, "nav_addpathnode", "float(vector p)");
 	Scr_DefineBuiltin(PFSV_nav_linkpathnode, PF_SV, "nav_linkpathnode", "void(float n, float lt)");
 	Scr_DefineBuiltin(PFSV_nav_getnearestnode, PF_SV, "nav_getnearestnode", "float(vector p)");

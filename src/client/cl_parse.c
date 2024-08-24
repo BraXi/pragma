@@ -97,7 +97,7 @@ void CL_ParseServerData (void)
 	char	*str;
 	int		i;
 	
-	Com_DPrintf (DP_NET, "Serverdata packet received.\n");
+	Com_DPrintf (DP_NET, "Client received server data packet.\n");
 
 //
 // wipe the client_state_t struct, shutdown cgame
@@ -110,7 +110,7 @@ void CL_ParseServerData (void)
 	cls.serverProtocol = i;
 
 	if (i != PROTOCOL_VERSION)
-		Com_Error (ERR_DROP,"Server is diferent version");
+		Com_Error(ERR_DROP, "Server is diferent version.");
 
 	cl.servercount = MSG_ReadLong (&net_message);
 	cl.attractloop = MSG_ReadByte (&net_message);
@@ -130,7 +130,8 @@ void CL_ParseServerData (void)
 	str = MSG_ReadString (&net_message);
 
 	if (cl.playernum == -1)
-	{	// playing a cinematic or showing a pic, not a level
+	{	
+		// playing a cinematic or showing a pic, not a level
 		SCR_PlayCinematic (str);
 	}
 	else
@@ -143,6 +144,7 @@ void CL_ParseServerData (void)
 		cl.refresh_prepped = false;
 	}
 	
+	// FIXME this should restart GUI progs
 	// initialize client game
 	CG_InitClientGame();
 }

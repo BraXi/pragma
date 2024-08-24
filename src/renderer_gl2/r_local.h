@@ -430,7 +430,6 @@ void R_LoadFonts();
 void R_GetImageSize (int *w, int *h, char *name);
 void R_DrawImage (int x, int y, char *name);
 void R_DrawStretchImage (int x, int y, int w, int h, char *name);
-void R_DrawSingleChar (int x, int y, int c, int charSize);
 void R_DrawTileClear (int x, int y, int w, int h, char *name);
 void R_DrawFill (int x, int y, int w, int h);
 

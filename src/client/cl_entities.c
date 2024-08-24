@@ -12,6 +12,8 @@ See the attached GNU General Public License v2 for more details.
 
 #include "client.h"
 
+static char* etypes[] = { "ET_GENERAL", "ET_PLAYER","ET_PATHNODE", "ET_ACTOR" };
+
 void CG_AddFlashLightToEntity(clentity_t* cent, rentity_t* refent);
 void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops);
 void CG_PartFX_DiminishingTrail(vec3_t start, vec3_t end, clentity_t* old, int flags);
@@ -261,7 +263,6 @@ static inline void CL_EntityAddMiscEffects(clentity_t* clent, entity_state_t* st
 CL_AddPacketEntities
 ===============
 */
-static char *etypes[] = { "ET_GENERAL", "ET_PLAYER","ET_PATHNODE", "ET_ACTOR" };
 void CL_AddPacketEntities(frame_t* frame)
 {
 	clentity_t		*clent;		// currently parsed client entity
@@ -422,8 +423,6 @@ void CL_CalcViewValues()
 	if ((cl_predict->value) && !(cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
 	{	
 		// use predicted values
-		
-
 		backlerp = 1.0 - lerp;
 		for(i = 0; i < 3; i++)
 		{
@@ -533,7 +532,7 @@ void CL_AddEntities()
 	// calculate view first so the heat beam has the right values for the vieworg, and can lock the beam to the gun
 	CL_CalcViewValues();
 
-	CL_AddPacketEntities (&cl.frame);
+	CL_AddPacketEntities(&cl.frame);
 	CG_AddEntities();
 }
 
@@ -564,14 +563,15 @@ CL_FireEntityEvents
 */
 void CL_FireEntityEvents(frame_t* frame)
 {
-	entity_state_t* s1;
-	int					pnum, num;
+	entity_state_t* ent_state;
+	int	pnum, ent_num;
 
 	for (pnum = 0; pnum < frame->num_entities; pnum++)
 	{
-		num = (frame->parse_entities + pnum) & (MAX_PARSE_ENTITIES - 1);
-		s1 = &cl_parse_entities[num];
-		if (s1->event)
-			CG_EntityEvent(s1);
+		ent_num = (frame->parse_entities + pnum) & (MAX_PARSE_ENTITIES - 1);
+		ent_state = &cl_parse_entities[ent_num];
+
+		if (ent_state->event)
+			CG_EntityEvent(ent_state);
 	}
 }

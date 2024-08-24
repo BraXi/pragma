@@ -91,7 +91,7 @@ Called when:
 */
 void CL_ShutdownClientGame()
 {
-	Com_Printf("------ ShutdownClientGame ------\n");
+	Com_Printf("------ Shutdown Client Game ------\n");
 	CG_ClearState();
 	cg_allow_drawcalls = false;
 	cg.qcvm_active = false;
@@ -145,10 +145,7 @@ Create client game instance of progs vm and allocate entities for it
 void CG_InitClientGame()
 {
 	Com_Printf("------- Client Game Init -------\n");
-	
-	//
-	// create cgame instance of progs vm and allocate entities for it
-	//
+
 	Scr_CreateScriptVM(VM_CLGAME, MAX_CLIENT_ENTITIES, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
 	Scr_BindVM(VM_CLGAME); // so we can get proper entity size and ptrs
 
@@ -158,7 +155,7 @@ void CG_InitClientGame()
 	cg.localEntities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
 	cg.script_globals = Scr_GetGlobals();
 
-	Com_Printf("Client game VM spawned.\n");
+	Com_Printf("Spawned client game programs.\n");
 }
 
 /*
@@ -184,14 +181,14 @@ It is the last moment to finish initialization before client is let into the gam
 */
 void CG_BeginGame()
 {
+	Com_DPrintf(DP_CGAME, "CG_BeginGame()\n");
+
 	// call main() to setup things before entities are spawned
 	CG_UpdateScriptGlobals();
 	Scr_Execute(VM_CLGAME, cg.script_globals->CG_Main, __FUNCTION__);
 
 	// spawn local entities
 	//CG_SpawnEntities(cl.configstrings[CS_MODELS + 1], CM_EntityString());
-
-//	Com_Printf("CG_BeginGame\n");
 }
 
 /*
@@ -211,10 +208,8 @@ void CG_ParseCommandFromServer()
 	cmd = (float)MSG_ReadByte(&net_message);
 
 	Scr_BindVM(VM_CLGAME);
-
 	Scr_AddFloat(0, cmd);
 	Scr_Execute(VM_CLGAME, cg.script_globals->CG_ParseCommandFromServer, __FUNCTION__);
-
 	Scr_BindVM(VM_NONE);
 }
 

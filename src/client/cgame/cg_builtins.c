@@ -258,23 +258,27 @@ drawstring( vector xy_align, float fontSize, vector color, float alpha, string t
 */
 static void PFCG_drawstring(void)
 {
+	vec4_t color;
+	float* xy_align;
+	float fontSize;
+	int fontId = 0; // FIXME
+	char* string;
+
 	if (!CG_CanDrawCall())
 	{
 //		Scr_RunError("call to 'drawstring' outside of rendering phase\n");
 		return;
 	}
 
-	float color[4];
 
-	float* xy_align = Scr_GetParmVector(0);
-	float fontSize = Scr_GetParmFloat(1);
+	xy_align = Scr_GetParmVector(0);
+	fontSize = Scr_GetParmFloat(1);
 
 	Scr_GetParmVector2(2, &color[0], &color[1], &color[2]);
 	color[3] = Scr_GetParmFloat(3);
+	string = Scr_VarString(4);
 
-	char* string = Scr_VarString(4);
-
-	re._DrawString(string, xy_align[0], xy_align[1], fontSize, xy_align[2], color);
+	re.NewDrawString(xy_align[0], xy_align[1], xy_align[2], fontId, fontSize, color, string);
 }
 
 /*

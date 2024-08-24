@@ -365,7 +365,6 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 	}
 
 	ent->client->ps.viewmodel_frame = (int)ent->v.viewmodel_frame;
-
 	ent->client->ps.viewmodel[0] = (int)ent->v.viewmodel;
 	ent->client->ps.viewmodel[1] = (int)ent->v.viewmodel2;
 
