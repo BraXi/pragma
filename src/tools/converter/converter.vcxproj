@@ -72,15 +72,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\..\build</OutDir>
+    <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\..\..\build\</OutDir>
+    <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>prtool_$(Platform)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\..\..\build\</OutDir>
+    <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>prtool_$(Platform)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -139,7 +147,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\qcommon\mathlib.c" />
+    <ClCompile Include="..\tools_shared.cpp" />
     <ClCompile Include="converter.cpp" />
+    <ClCompile Include="models.cpp" />
+    <ClCompile Include="pak.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\tools_shared.h" />
+    <ClInclude Include="converter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

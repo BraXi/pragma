@@ -5,10 +5,33 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{c08490d2-58cd-438b-84dc-a22724ee1e45}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="converter.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="models.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
+    <ClCompile Include="pak.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tools_shared.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\qcommon\mathlib.c">
+      <Filter>shared</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\tools_shared.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="converter.h">
+      <Filter>Pliki źródłowe</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

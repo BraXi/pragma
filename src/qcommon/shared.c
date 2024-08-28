@@ -286,7 +286,6 @@ void Swap_Init (void)
 		_BigFloat = FloatNoSwap;
 		_LittleFloat = FloatSwap;
 	}
-
 }
 
 

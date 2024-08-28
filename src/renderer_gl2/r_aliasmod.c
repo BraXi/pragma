@@ -376,7 +376,6 @@ void Mod_LoadAliasMD3(model_t* mod, void* buffer)
 
 		// find the next surface
 		surf = (md3Surface_t*)((byte*)surf + surf->ofsEnd);
-
 	}
 
 	mod->type = MOD_ALIAS;

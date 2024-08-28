@@ -38,9 +38,9 @@ MOD_ALIAS is MD3
 // limits
 #define	MD3_MAX_TRIANGLES	8192	// per surface
 #define MD3_MAX_VERTS		4096	// per surface
-#define MD3_MAX_SHADERS		256		// per surface (???)
+#define MD3_MAX_SHADERS		256		// per model
 #define MD3_MAX_FRAMES		1024	// per model
-#define	MD3_MAX_SURFACES	8		// per model, braxi -- was 32, changed to 8 to fit into network's hidePartBits
+#define	MD3_MAX_SURFACES	32		// per model
 #define MD3_MAX_TAGS		16		// per frame
 #define MD3_MAX_NAME		64		// max tag and skin names len, this was MAX_QPATH
 
