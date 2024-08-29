@@ -175,7 +175,7 @@ static bool AddTexturesUsedInBSP(const char* filename)
 	f = Com_OpenReadFile(filename, false);
 	if (!f)
 	{
-		Com_Warning("BSP %s is missing", filename);
+		Com_Warning("BSP %s is missing.", filename);
 		return false;
 	}
 
@@ -240,11 +240,8 @@ static bool AddTexturesUsedInBSP(const char* filename)
 	for (i = 0; i < numTexInfos; i++)
 	{
 		snprintf(texturename, sizeof(texturename), "textures/%s.tga", pTexInfos[i].texture);
-		//Com_Printf("%s\n", texturename);
-
 		asset = AssetForName(texturename, ASSET_TEXTURE);
 	}
-
 	free(pTexInfos);
 	fclose(f);
 	return true;

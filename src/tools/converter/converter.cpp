@@ -115,9 +115,9 @@ int main(int argc, char** argv)
 		Com_Printf("Options: \n");
 		Com_Printf("   prtool -convert file.qc : Convert single asset defined in control file (SMD to MOD/ANM).\n");
 		Com_Printf("   -pack filelist.txt : Build PAK archive, will automaticaly find and pack dependencies.\n");
-		Com_Printf("   -extract data.pak outdir : Extract PAK archive into directory.\n");
-		Com_Printf("   -info file.ext : Print informations about BSP, PAK, MD3, TGA, MOD or ANM file.\n");
-		Com_Printf("   -decompile file.ext : Convert MOD or ANM file back into SMD(s) and write QC control file.\n\n");
+		//Com_Printf("   -extract data.pak outdir : Extract PAK archive into directory.\n");
+		//Com_Printf("   -info file.ext : Print informations about BSP, PAK, MD3, TGA, MOD or ANM file.\n");
+		//Com_Printf("   -decompile file.ext : Convert MOD or ANM file back into SMD(s) and write QC control file.\n\n");
 		Com_Exit(1);
 	}
 
