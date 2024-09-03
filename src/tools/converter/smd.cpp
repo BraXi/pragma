@@ -178,9 +178,9 @@ static void SMD_ParseNodes()
 		return;
 	}
 
-	if (strlen(name) >= MAX_QPATH)
+	if (strlen(name) >= 32) //if (strlen(name) >= MAX_QPATH)
 	{
-		SMD_ParseErrorAtLine("Bone %i (%s) has name longer than %i characters.", pRawSMD->numbones, name, MAX_QPATH);
+		SMD_ParseErrorAtLine("Bone %i (%s) has name longer than %i characters.", pRawSMD->numbones, name, 32);
 		return;
 	}
 

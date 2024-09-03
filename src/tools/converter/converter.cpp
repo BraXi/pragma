@@ -20,6 +20,7 @@ typedef struct assetdef_s
 	char outName[MAX_QPATH];
 
 	std::vector<sourcedata_t*> vSources;
+	panim_event_t* pEvents;
 
 	unsigned int flags;
 	int fps;
@@ -49,6 +50,7 @@ static void Cmd_Model();		// $model name
 static void Cmd_Animation();	// $animation name
 static void Cmd_AddMesh();		// $mesh partname sourcefile.smd
 static void Cmd_Source();		// $source file.ext
+static void Cmd_Event();		// $event framenumber "event string"
 static void Cmd_FPS();			// $fps integer
 //static void Cmd_Frames();		// $frames firstframe lastframe
 
@@ -59,6 +61,7 @@ static command_t commands[] =
 	{"animation", Cmd_Animation, 1},
 	{"mesh", Cmd_AddMesh, 2},
 	{"source", Cmd_Source, 1},
+	{"event", Cmd_Event, 2},
 	{"fps", Cmd_FPS, 1}//,
 	//{"frames", Cmd_Frames, 2}
 };
@@ -151,7 +154,7 @@ static void Cmd_AddMesh()
 
 	if (pAsset->type != ASSET_MODEL)
 	{
-		Com_Error("[line %i] $%s can only be set for models.", qc_line, Com_GetArg(0));
+		Com_Error("[line %i] %s can only be set for models.", qc_line, Com_GetArg(0));
 		return;
 	}
 
@@ -223,7 +226,7 @@ static void Cmd_Source()
 
 	if (pAsset->vSources.size())
 	{
-		Com_Warning("[line %i] skipping redefinition of $%s.", qc_line, Com_GetArg(0));
+		Com_Warning("[line %i] skipping redefinition of %s.", qc_line, Com_GetArg(0));
 		return;
 	}
 
@@ -257,6 +260,56 @@ static void Cmd_Source()
 
 /*
 =================
+Cmd_Event
+$event framenumber "event string"
+=================
+*/
+static void Cmd_Event()
+{
+	int framenum;
+	int numframes;
+	char* eventstr;
+
+	if (pAsset->type != ASSET_ANIMATION)
+	{
+		Com_Error("[line %i] %s can only be set for animations.", qc_line, Com_GetArg(0));
+		return;
+	}
+
+	if (!pAsset->vSources.size())
+	{
+		Com_Error("[line %i] %s must be after $source.", qc_line, Com_GetArg(0));
+		return;
+	}
+
+	framenum = atoi(Com_GetArg(1));
+	eventstr = Com_GetArg(2);
+
+	numframes = pAsset->vSources[0]->pData->numframes;
+
+	if (framenum < 0 || framenum >= numframes)
+	{
+		Com_Warning("[line %i] %s for a frame (%i) which doesn't exist.", qc_line, Com_GetArg(0), framenum);
+		return;
+	}
+
+	if (strlen(eventstr) >= PMOD_MAX_EVENTSTRING)
+	{
+		Com_Warning("[line %i] $%s has too long event string.", qc_line, Com_GetArg(0));
+	}
+
+	if (pAsset->pEvents == NULL)
+	{
+		pAsset->pEvents = (panim_event_t*)Com_SafeMalloc(numframes * sizeof(panim_event_s), __FUNCTION__);
+	}
+
+
+	strncpy(pAsset->pEvents[framenum].str, eventstr, sizeof(char)*PMOD_MAX_EVENTSTRING);
+	Com_Printf("   ... event at %i : '%s'\n", framenum, pAsset->pEvents[framenum].str);
+}
+
+/*
+=================
 Cmd_FPS
 $fps integer between min/max fps
 =================
@@ -278,9 +331,8 @@ static void Cmd_FPS()
 	else
 	{
 		pAsset->fps = fps;
-		Com_Printf("Play rate set to %i frames per second.\n", pAsset->fps);
+		Com_Printf("   ... %i frames per second\n", pAsset->fps);
 	}
-	
 }
 
 /*
@@ -377,31 +429,27 @@ WriteAnimation
 */
 static void WriteAnimation(assetdef_t* def)
 {
-	FILE* f;
-	int i, j;
 	char filename[MAXPATH];
+	int i, j;
+	FILE* f;
+	long outsize = 0;
+
 	smddata_t* pData;
+	panim_event_t *pEvent;
 	panim_header_t header;
 	panim_bone_t bone;
 	panim_bonetrans_t trans;
-	smd_bone_t* srcbone;
-	smd_bonetransform_t* srctrans;
-	long outsize = 0;
+	//panim_event_t ev;
 
 	if (!def->vSources.size())
 	{	
-		pData = LoadSMD(SMD_ANIMATION, def->outName, def->name);
-		if (!pData)
-		{
-			Com_Warning("Cannot open source file `%s`.", def->name);
-			return;
-		}
+		Com_Warning("No source file for asset.\n");
+		return;
 	}
-	else
-		pData = def->vSources[0]->pData; // anims have a single source
+	
+	pData = def->vSources[0]->pData; // anims have a single source
 
-
-	snprintf(filename, sizeof(filename), "%s/%s.%s", g_devdir, def->name, ANIMATION_EXT);
+	snprintf(filename, sizeof(filename), "%s/modelanims/%s.%s", g_devdir, def->name, ANIMATION_EXT);
 	f = Com_OpenWriteFile(filename, false);
 	if (!f)
 	{
@@ -425,10 +473,10 @@ static void WriteAnimation(assetdef_t* def)
 	// write bones
 	for (i = 0; i < pData->numbones; i++)
 	{
-		srcbone = pData->vBones[i];
+		smd_bone_t* srcbone = pData->vBones[i];
 
 		memset(&bone, 0, sizeof(panim_bone_s));
-		strcpy(bone.name, srcbone->name);
+		strncpy(bone.name, srcbone->name, sizeof(bone.name));
 		bone.number = Com_EndianLong(srcbone->index);
 		bone.parentIndex = Com_EndianLong(srcbone->parent);
 
@@ -439,7 +487,7 @@ static void WriteAnimation(assetdef_t* def)
 	// write transformations
 	for (i = 0; i < pData->numbones * pData->numframes; i++)
 	{
-		srctrans = pData->vBoneTransforms[i];
+		smd_bonetransform_t* srctrans = pData->vBoneTransforms[i];
 		memset(&trans, 0, sizeof(panim_bonetrans_s));
 
 		trans.bone = Com_EndianLong(srctrans->bone);
@@ -451,6 +499,16 @@ static void WriteAnimation(assetdef_t* def)
 
 		outsize += sizeof(panim_bonetrans_t);
 		Com_SafeWrite(f, &trans, sizeof(trans));
+	}
+
+	// write events
+	if (def->pEvents != NULL)
+	{	
+		for (i = 0; i < pData->numframes; i++)
+		{
+			Com_SafeWrite(f, &def->pEvents[i], sizeof(panim_event_t));
+			outsize += sizeof(panim_event_t);
+		}
 	}
 
 	Com_Printf("   ... wrote '%s' (%i bytes).\n", filename, outsize);

@@ -33,18 +33,18 @@ ANIMATION
 [panim_event_s] * numFrames
 */
 
-#define PMODEL_IDENT		(('D'<<24)+('O'<<16)+('M'<<8)+'P') // little-endian "PMOD"
+#define PMODEL_IDENT		(('D'<<24)+('M'<<16)+('R'<<8)+'P') // little-endian "PRMD"
 #define PMODEL_VERSION		1
 
-#define PANIM_IDENT			(('M'<<24)+('N'<<16)+('A'<<8)+'P') // little-endian "PANM"
-#define PANIM_VERSION		1
+#define PANIM_IDENT			(('N'<<24)+('A'<<16)+('R'<<8)+'P') // little-endian "PRAN"
+#define PANIM_VERSION		2
 
 // common
 #define PMOD_MAX_SURFNAME 64 // MAX_QPATH
 #define PMOD_MAX_MATNAME 64 // MAX_QPATH
-#define PMOD_MAX_BONENAME 64 // MAX_QPATH
-#define PMOD_MAX_HITPARTNAME 64 // MAX_QPATH
-#define PMOD_MAX_EVENTSTRING 60 // fit into 64b
+#define PMOD_MAX_BONENAME 32
+#define PMOD_MAX_HITPARTNAME 32
+#define PMOD_MAX_EVENTSTRING 64 // MAX_QPATH
 
 
 typedef struct pmodel_bone_s
@@ -119,7 +119,6 @@ typedef struct panim_bonetrans_s
 typedef struct panim_event_s
 {
 	char str[PMOD_MAX_EVENTSTRING];
-	float value;
 } panim_event_t;
 
 typedef struct panim_header_s
@@ -129,8 +128,6 @@ typedef struct panim_header_s
 
 	uint32_t flags;
 	uint32_t rate;
-
-	vec3_t mins, maxs;
 
 	uint32_t numBones;
 	uint32_t numFrames;
