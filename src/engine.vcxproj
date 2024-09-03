@@ -39,6 +39,7 @@
     <ClInclude Include="qcommon\crc.h" />
     <ClInclude Include="qcommon\mathlib.h" />
     <ClInclude Include="qcommon\mod_md3.h" />
+    <ClInclude Include="qcommon\mod_pragma.h" />
     <ClInclude Include="qcommon\mod_smdl.h" />
     <ClInclude Include="qcommon\qcommon.h" />
     <ClInclude Include="qcommon\qfiles.h" />

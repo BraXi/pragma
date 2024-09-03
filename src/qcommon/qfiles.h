@@ -51,6 +51,7 @@ typedef enum { LOD_HIGH, LOD_MEDIUM, LOD_LOW, NUM_LODS } lod_t;
 
 #include "mod_smdl.h"
 #include "mod_md3.h" // md3s are cheap to animate but consume much more memory
+#include "mod_pragma.h"
 
 /*
 ==============================================================================

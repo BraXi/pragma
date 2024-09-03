@@ -328,6 +328,9 @@
     <ClInclude Include="qcommon\qfiles.h">
       <Filter>common\inc</Filter>
     </ClInclude>
+    <ClInclude Include="qcommon\mod_pragma.h">
+      <Filter>common\inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="client">

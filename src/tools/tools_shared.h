@@ -1,3 +1,13 @@
+/*
+prtool, part of pragma
+Copyright (C) 2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+
+See the attached GNU General Public License v2 for more details.
+*/
+
 #pragma once
 
 #ifdef _WIN32
@@ -18,7 +28,7 @@ typedef unsigned char byte;
 
 #ifdef _WIN32
 	#include <windows.h>
-	extern HANDLE consoleHandle;
+	//extern HANDLE hConsole;
 	#define CON_COL_WHITE	""
 	#define CON_COL_GREEN	""
 	#define CON_COL_RED		""
@@ -47,8 +57,10 @@ extern void Com_Exit(const int code);
 
 extern int GetNumWarnings();
 
+extern void Com_HappyPrintf(const char* text, ...);
 extern void Com_Printf(const char* text, ...);
 extern void Com_Warning(const char* text, ...);
+extern void Com_Error2(const char* text, ...);
 extern void Com_Error(const char* text, ...);
 
 extern FILE* Com_OpenReadFile(const char* filename, const int crash);
@@ -68,3 +80,5 @@ extern void Com_Tokenize(char* text);
 extern int Com_EndianLong(int val);
 extern short Com_EndianShort(short val);
 extern float Com_EndianFloat(float val);
+
+extern int Com_stricmp(const char* s1, const char* s2);

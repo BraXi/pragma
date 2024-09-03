@@ -150,12 +150,14 @@
     <ClCompile Include="..\..\qcommon\mathlib.c" />
     <ClCompile Include="..\tools_shared.cpp" />
     <ClCompile Include="converter.cpp" />
+    <ClCompile Include="prtool.cpp" />
     <ClCompile Include="models.cpp" />
     <ClCompile Include="pak.cpp" />
+    <ClCompile Include="smd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tools_shared.h" />
-    <ClInclude Include="converter.h" />
+    <ClInclude Include="prtool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

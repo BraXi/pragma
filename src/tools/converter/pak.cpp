@@ -1,19 +1,16 @@
-#include "converter.h"
+/*
+prtool, part of pragma
+Copyright (C) 2024 BraXi.
 
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
 
-bool AddTexturesUsedInBSP(const char* filename);
+See the attached GNU General Public License v2 for more details.
+*/
 
-static char pakname[MAXPATH]; // PAK to create
-static dpackfile_t pakFiles[MAX_FILES_IN_PACK], *pPakFile;
-static FILE* pakFileHandle;
-static int numFilesInPak;
-static unsigned int pakFilesSize;
+#include "prtool.h"
 
-
-static int numMissingFiles = 0;
-static char missingFileNames[MAX_FILES_IN_PACK][56];
-
-typedef enum 
+typedef enum
 {
 	ASSET_RAWFILE, // anything
 	ASSET_MODEL, // .md3, .smd, .mod, .anm + images
@@ -23,11 +20,10 @@ typedef enum
 	ASSET_TEXTURE, // .tga
 	ASSET_IMAGE, // .tga
 	ASSET_FONT, // .bff
-
 	NUM_ASSET_TYPES
 } AssetType;
 
-const char *assetTypeNames[] = {"rawfile", "model", "gui", "shader", "world", "texture", "image", "font"};
+const char* assetTypeNames[] = { "rawfile", "model", "gui", "shader", "world", "texture", "image", "font" };
 
 typedef struct xasset_s
 {
@@ -37,9 +33,16 @@ typedef struct xasset_s
 	model_t* model;
 } xasset_t;
 
+static char pakname[MAXPATH]; // PAK to create
+static dpackfile_t pakFiles[MAX_FILES_IN_PACK], *pPakFile;
+static FILE* pakFileHandle;
+static int numFilesInPak;
+static unsigned int pakFilesSize;
 static xasset_t assetList[MAX_FILES_IN_PACK];
 static int numAssetsTotal = 0;
 static int numAssetsByType[NUM_ASSET_TYPES];
+static int numMissingFiles = 0;
+static char missingFileNames[MAX_FILES_IN_PACK][56];
 
 static xasset_t *AssetForName(const char* name, const AssetType type)
 {
@@ -96,25 +99,24 @@ static xasset_t *AssetForName(const char* name, const AssetType type)
 
 static char tempfilename[MAXPATH];
 
-static bool AddRawFile(char* name)
+static void AddRawFile()
 {
-	xasset_t* asset = AssetForName(name, ASSET_RAWFILE);
-	return (asset != NULL);
+	xasset_t* asset = AssetForName(Com_GetArg(1), ASSET_RAWFILE);
 }
 
-static bool AddModel(char* name)
+static void AddModel()
 {
 	// adds model and its textures
 	xasset_t* asset_mod, *asset_tex;
 
-	asset_mod = AssetForName(name, ASSET_MODEL);
+	asset_mod = AssetForName(Com_GetArg(1), ASSET_MODEL);
 	if (!asset_mod)
-		return false;
+		return;
 
 	if (!asset_mod->model)
 	{
-		snprintf(tempfilename, sizeof(tempfilename), "%s/%s", g_devdir, name);
-		asset_mod->model = Mod_LoadModel(name, tempfilename);
+		snprintf(tempfilename, sizeof(tempfilename), "%s/%s", g_devdir, Com_GetArg(1));
+		asset_mod->model = LoadModel(Com_GetArg(1), tempfilename);
 		if (asset_mod->model && asset_mod->model->type != MOD_BAD)
 		{
 			for (int i = 0; i < asset_mod->model->numTextures; i++)
@@ -127,33 +129,30 @@ static bool AddModel(char* name)
 			asset_mod->isok = false;
 		}
 	}
-	return true;
 }
 
-static bool AddGUI(char* name)
+static void AddGUI()
 {
-	snprintf(tempfilename, sizeof(tempfilename), "guis/%s.gui", name);
+	snprintf(tempfilename, sizeof(tempfilename), "guis/%s.gui", Com_GetArg(1));
 	xasset_t *asset = AssetForName(tempfilename, ASSET_GUI);
-	return (asset != NULL);
 }
 
-static bool AddShader(char* name)
+static void AddShader()
 {
 	xasset_t* asset1, *asset2;
 
-	snprintf(tempfilename, sizeof(tempfilename), "shaders/%s.fp", name);
+	snprintf(tempfilename, sizeof(tempfilename), "shaders/%s.fp", Com_GetArg(1));
 	asset1 = AssetForName(tempfilename, ASSET_SHADER);
 	if (!asset1 || !asset1->isok)
-		return false;
+		return;
 
-	snprintf(tempfilename, sizeof(tempfilename), "shaders/%s.vp", name);
+	snprintf(tempfilename, sizeof(tempfilename), "shaders/%s.vp", Com_GetArg(1));
 	asset2 = AssetForName(tempfilename, ASSET_SHADER);
 	if (!asset2 || !asset2->isok)
 	{
 		asset1->isok = false; // invalidate FB because were missing VP anyway
-		return false;
+		return;
 	}
-	return true;
 }
 
 static bool AddTexturesUsedInBSP(const char* filename)
@@ -247,70 +246,60 @@ static bool AddTexturesUsedInBSP(const char* filename)
 	return true;
 }
 
-static bool AddBSP(char* name)
+static void AddBSP()
 {
 	xasset_t* asset_bsp;
 
-	snprintf(tempfilename, sizeof(tempfilename), "%s/%s", g_devdir, name);
-	asset_bsp = AssetForName(name, ASSET_BSP);
+	snprintf(tempfilename, sizeof(tempfilename), "%s/%s", g_devdir, Com_GetArg(1));
+	asset_bsp = AssetForName(Com_GetArg(1), ASSET_BSP);
 	//if (!asset_bsp || !asset_bsp->isok)
 	//	return false;
 
 	AddTexturesUsedInBSP(tempfilename);
-	return true;
 }
 
-static bool AddTexture(char* name)
+static void AddTexture()
 {
-	snprintf(tempfilename, sizeof(tempfilename), "textures/%s.tga", name);
+	snprintf(tempfilename, sizeof(tempfilename), "textures/%s.tga", Com_GetArg(1));
 	xasset_t* asset = AssetForName(tempfilename, ASSET_TEXTURE);
-	return (asset != NULL);
 }
 
-static bool AddImage(char* name)
+static void AddImage()
 {
-	xasset_t* asset = AssetForName(name, ASSET_IMAGE);
-	return (asset != NULL);
+	xasset_t* asset = AssetForName(Com_GetArg(1), ASSET_IMAGE);
 }
 
-static bool AddFont(char* name)
+static void AddFont()
 {
-	snprintf(tempfilename, sizeof(tempfilename), "fonts/%s.bff", name);
+	snprintf(tempfilename, sizeof(tempfilename), "fonts/%s.bff", Com_GetArg(1));
 	xasset_t* asset = AssetForName(tempfilename, ASSET_FONT);
-	return (asset != NULL);
 }
 
-static bool AddSkyTextures(char* name)
+static void AddSkyTextures()
 {
 	xasset_t* sky[6];
 	static const char* sky_tex_prefix[6] = { "rt", "bk", "lf", "ft", "up", "dn" };
 	for (int i = 0; i < 6; i++)
 	{
-		snprintf(tempfilename, sizeof(tempfilename), "textures/sky/%s_%s.tga", name, sky_tex_prefix[i]);
+		snprintf(tempfilename, sizeof(tempfilename), "textures/sky/%s_%s.tga", Com_GetArg(1), sky_tex_prefix[i]);
 		sky[i] = AssetForName(tempfilename, ASSET_TEXTURE);
 	}
-	return true;
 }
 
-typedef bool (*pakcommand_t) (char* value);
-typedef struct
+static command_t commands[] =
 {
-	const char* name;
-	pakcommand_t func;
-} action_t;
-
-static action_t actions[] =
-{
-	{"file", AddRawFile},
-	{"model", AddModel},
-	{"gui", AddGUI},
-	{"shader", AddShader},
-	{"world", AddBSP},
-	{"texture", AddTexture},
-	{"image", AddImage},
-	{"font", AddFont},
-	{"sky", AddSkyTextures}
+	{"file", AddRawFile, 2},
+	{"model", AddModel, 2},
+	{"gui", AddGUI, 2},
+	{"shader", AddShader, 2},
+	{"world", AddBSP, 2},
+	{"texture", AddTexture, 2},
+	{"image", AddImage, 2},
+	{"font", AddFont, 2},
+	{"sky", AddSkyTextures, 2}
 };
+static const int numCommands = sizeof(commands) / sizeof(command_t);
+
 /*
 =================
 Pak_ParseFileList
@@ -322,7 +311,7 @@ int Pak_ParseFileList(const char* fileName)
 	static char line[MAXLINELEN];
 	FILE* f = NULL;
 	int i, line_num = 0;
-	char *key, *value;
+	char *key;
 	int numEntries = 0;
 
 	f = Com_OpenReadFile(fileName, true);
@@ -350,7 +339,6 @@ int Pak_ParseFileList(const char* fileName)
 		}
 
 		key = Com_GetArg(0);
-		value = Com_GetArg(1);
 
 		if (!key || key && key[0] == 0)
 			continue;
@@ -360,16 +348,16 @@ int Pak_ParseFileList(const char* fileName)
 			if(pakname[0] != 0)
 				Com_Error("[line %i] redefinition of $pakname", line_num);
 
-			strncpy(pakname, value, sizeof(pakname));
+			strncpy(pakname, Com_GetArg(1), sizeof(pakname));
 		}
 		else if(key[0] == '$')
 		{
-			for (i = 0; i < NUM_ASSET_TYPES+1 /*sky hack*/; i++)
+			for (i = 0; i < numCommands; i++)
 			{
-				if (!strcmp(actions[i].name, key+1))
+				if (!strcmp(commands[i].name, key+1))
 				{
 					numEntries++;
-					actions[i].func(value);
+					commands[i].pFunc();
 					break;
 				}
 			}
@@ -489,7 +477,7 @@ static void Pak_WritePak()
 		if (numAssetsByType[i] == 0)
 			continue;
 
-		Com_Printf("   %4i %s%s\n", numAssetsByType[i], assetTypeNames[i], (numAssetsByType[i] > 1 ? "s" : ""));
+		Com_HappyPrintf("   %4i %s%s\n", numAssetsByType[i], assetTypeNames[i], (numAssetsByType[i] > 1 ? "s" : ""));
 	}
 
 	if (numMissingFiles > 0)

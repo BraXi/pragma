@@ -1,12 +1,19 @@
+/*
+prtool, part of pragma
+Copyright (C) 2024 BraXi.
 
-#include "converter.h"
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
 
-#include "../../qcommon/mod_md3.h"
+See the attached GNU General Public License v2 for more details.
+*/
 
+#include "prtool.h"
+//#include "../../qcommon/mod_md3.h"
 
-static void Mod_LoadMD3(model_t* outModel, void* data);
+static void LoadMD3(model_t* outModel, void* data);
 
-model_t* Mod_LoadModel(const char *modelname, const char *filename)
+model_t* LoadModel(const char *modelname, const char *filename)
 {
 	long fileLen;
 	void* pData = NULL;
@@ -36,13 +43,13 @@ model_t* Mod_LoadModel(const char *modelname, const char *filename)
 	switch (Com_EndianLong(*(unsigned*)pData))
 	{
 	case MD3_IDENT:
-		Mod_LoadMD3(pModel, pData);
+		LoadMD3(pModel, pData);
 		break;
 	}
 
 	if (pModel->type == MOD_BAD)
 	{
-		Com_Warning("\"%s\" is not a model.", filename);
+		Com_Warning("%s is not a model.", filename);
 		free(pData);
 		//free(pModel);
 		return NULL;
@@ -52,7 +59,7 @@ model_t* Mod_LoadModel(const char *modelname, const char *filename)
 }
 
 
-static void Mod_LoadMD3(model_t* outModel, void* pModelData)
+static void LoadMD3(model_t* outModel, void* pModelData)
 {
 	md3Header_t* mod;
 	md3Frame_t* frame;

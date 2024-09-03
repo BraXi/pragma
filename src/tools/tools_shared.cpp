@@ -1,7 +1,43 @@
+/*
+prtool, part of pragma
+Copyright (C) 2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+
+See the attached GNU General Public License v2 for more details.
+*/
+
 #include "tools_shared.h"
 
 #ifdef _WIN32
-	extern HANDLE consoleHandle;
+static HANDLE hConsole = NULL;
+static WORD w_initialTextColor; // this is the console color
+
+void InitConsole() 
+{
+	CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+	WORD attrib;
+	static bool coninit = false;
+
+	if (coninit)
+		return;
+
+	coninit = true;
+
+	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	if (!GetConsoleScreenBufferInfo(hConsole, &consoleInfo))
+	{
+#if _DEBUG
+		Com_Warning("!GetConsoleScreenBufferInfo");
+#endif
+		return;
+	}
+
+	attrib = consoleInfo.wAttributes;
+	w_initialTextColor = consoleInfo.wAttributes & 0x0F;
+}
 #endif
 
 static int numWarnings = 0;
@@ -29,6 +65,10 @@ void* Com_SafeMalloc(const size_t size, const char *sWhere)
 
 void Com_Exit(const int code)
 {
+#ifdef _WIN32
+	if(hConsole)
+		SetConsoleTextAttribute(hConsole, w_initialTextColor);
+#endif
 	printf(CON_COL_WHITE);
 	exit(1);
 }
@@ -36,6 +76,23 @@ void Com_Exit(const int code)
 int GetNumWarnings()
 {
 	return numWarnings;
+}
+
+void Com_HappyPrintf(const char* text, ...) // because green means happy mkay? don't ask further
+{
+	va_list argptr;
+	static char msg[MAXPRINTMSG];
+
+	va_start(argptr, text);
+	vsnprintf(msg, sizeof(msg), text, argptr);
+	va_end(argptr);
+
+#ifdef _WIN32
+	InitConsole();
+	if (hConsole)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+#endif
+	printf(CON_COL_GREEN"%s", msg);
 }
 
 void Com_Printf(const char* text, ...)
@@ -47,6 +104,11 @@ void Com_Printf(const char* text, ...)
 	vsnprintf(msg, sizeof(msg), text, argptr);
 	va_end(argptr);
 
+#ifdef _WIN32
+	InitConsole();
+	if (hConsole)
+		SetConsoleTextAttribute(hConsole, w_initialTextColor);
+#endif
 	printf(CON_COL_WHITE"%s", msg);
 }
 
@@ -59,9 +121,34 @@ void Com_Warning(const char* text, ...)
 	vsnprintf(msg, sizeof(msg), text, argptr);
 	va_end(argptr);
 
-	printf("%sWARNING: %s\n", CON_COL_YELLOW, msg);
+#ifdef _WIN32
+	InitConsole();
+	if (hConsole)
+		SetConsoleTextAttribute(hConsole, (FOREGROUND_RED | FOREGROUND_GREEN));
+#endif
+
+	printf(CON_COL_YELLOW"Warning: %s\n", msg);
 
 	numWarnings++;
+}
+
+void Com_Error2(const char* text, ...)
+{
+	va_list argptr;
+	static char msg[MAXPRINTMSG];
+
+	va_start(argptr, text);
+	vsnprintf(msg, sizeof(msg), text, argptr);
+	va_end(argptr);
+
+#ifdef _WIN32
+	InitConsole();
+	if (hConsole)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
+#endif
+	printf(CON_COL_RED"Error: %s\n", msg);
+
+//	Com_Exit(1);
 }
 
 void Com_Error(const char* text, ...)
@@ -73,7 +160,13 @@ void Com_Error(const char* text, ...)
 	vsnprintf(msg, sizeof(msg), text, argptr);
 	va_end(argptr);
 
-	printf("%sERROR: %s\n", CON_COL_RED, msg);
+#ifdef _WIN32
+	InitConsole();
+	if (hConsole)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
+#endif
+	printf(CON_COL_RED"Fatal Error: %s\n", msg);
+
 	Com_Exit(1);
 }
 
@@ -366,4 +459,13 @@ float Com_EndianFloat(float val)
 		dat2.b[3] = dat1.b[0];
 		return dat2.f;
 	}
+}
+
+int Com_stricmp(const char* s1, const char* s2)
+{
+#if defined(_WIN32)
+	return _stricmp(s1, s2);
+#else
+	return strcasecmp(s1, s2);
+#endif
 }
