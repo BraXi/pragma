@@ -113,7 +113,7 @@ typedef struct panim_bonetrans_s
 	int32_t bone;
 	vec3_t origin;
 	vec3_t rotation;
-	float quat[4]; // for engine use
+	//float quat[4]; // for engine use
 } panim_bonetrans_t;
 
 typedef struct panim_event_s

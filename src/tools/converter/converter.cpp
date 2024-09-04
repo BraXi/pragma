@@ -19,6 +19,11 @@ typedef struct assetdef_s
 	char name[MAX_QPATH];
 	char outName[MAX_QPATH];
 
+	int numBones;
+	int numVertexes;
+	int numSurfaces;
+	int numParts;
+
 	std::vector<sourcedata_t*> vSources;
 	panim_event_t* pEvents;
 
@@ -52,6 +57,7 @@ static void Cmd_AddMesh();		// $mesh partname sourcefile.smd
 static void Cmd_Source();		// $source file.ext
 static void Cmd_Event();		// $event framenumber "event string"
 static void Cmd_FPS();			// $fps integer
+static void Cmd_HitBox();		// $hitbox bonename hitname minsx minsy minsz maxsx maxsy maxsz
 //static void Cmd_Frames();		// $frames firstframe lastframe
 
 static command_t commands[] =
@@ -62,6 +68,7 @@ static command_t commands[] =
 	{"mesh", Cmd_AddMesh, 2},
 	{"source", Cmd_Source, 1},
 	{"event", Cmd_Event, 2},
+	{"hitbox", Cmd_Event, 8},
 	{"fps", Cmd_FPS, 1}//,
 	//{"frames", Cmd_Frames, 2}
 };
@@ -199,13 +206,23 @@ static void Cmd_AddMesh()
 		return;
 	}
 
-	Com_Printf("Part %i \"%s\" is %s (%i surface%s, %i triangles)\n", pAsset->vSources.size(), name, filename, srcdata->pData->numsurfaces, srcdata->pData->numsurfaces == 1 ? "" : "s", (srcdata->pData->numverts / 3));
+	Com_Printf("Part \"%s\" : %s (%i surface%s, %i vertexes, %i triangles)\n", /*pAsset->vSources.size(),*/ name, filename, srcdata->pData->numsurfaces, srcdata->pData->numsurfaces == 1 ? "" : "s", srcdata->pData->numverts, (srcdata->pData->numverts / 3));
 	for (i = 0; i < (unsigned int)srcdata->pData->numsurfaces; i++)
 	{
 		Com_Printf("   ... %s:%i : \"%s\".\n", srcdata->name, i, srcdata->pData->vSurfaces[i]->texture);
 	}
 
+	if (!pAsset->vSources.size())
+	{
+		// first part defines how many bones the model will have
+		pAsset->numBones = srcdata->pData->numbones;
+	}
+
 	pAsset->vSources.push_back(srcdata);
+
+	pAsset->numVertexes += srcdata->pData->numverts;
+	pAsset->numSurfaces += srcdata->pData->numsurfaces;
+	pAsset->numParts = (uint32_t)pAsset->vSources.size();
 }
 
 
@@ -310,6 +327,39 @@ static void Cmd_Event()
 
 /*
 =================
+Cmd_HitBox
+// $hitbox bonename hitname minsx minsy minsz maxsx maxsy maxsz
+=================
+*/
+static void Cmd_HitBox()
+{
+	int numbones;
+	char* bonename;
+	char* hitname;
+	vec3_t mins, maxs;
+
+	if (pAsset->type != ASSET_MODEL)
+	{
+		Com_Error("[line %i] %s can only be set for models.", qc_line, Com_GetArg(0));
+		return;
+	}
+
+	if (!pAsset->vSources.size())
+	{
+		Com_Error("[line %i] %s must be after $source.", qc_line, Com_GetArg(0));
+		return;
+	}
+
+	bonename = Com_GetArg(1);
+	hitname = Com_GetArg(2);
+
+	numbones = pAsset->vSources[0]->pData->numbones;
+
+}
+
+
+/*
+=================
 Cmd_FPS
 $fps integer between min/max fps
 =================
@@ -386,6 +436,13 @@ static void LoadAssetsFromControlFile(const char* fileName)
 	fclose(qcFileHandle);
 }
 
+
+#define SAFE_FREE(x) \
+	if (x) { \
+		free(x); \
+		x = NULL; }
+
+
 /*
 =================
 WriteModel
@@ -396,8 +453,12 @@ static void WriteModel(assetdef_t* def)
 	char filename[MAXPATH];
 	FILE* f;
 	smddata_t* pData = NULL;
+	long elementsize, outsize = 0;
+	int i, j, k, nextfirst;
+	
 	pmodel_header_t header;
 	pmodel_bone_t bone;
+	panim_bonetrans_t skel;
 	pmodel_vertex_t vert;
 	pmodel_surface_t surf;
 	pmodel_part_t part;
@@ -406,18 +467,138 @@ static void WriteModel(assetdef_t* def)
 	f = Com_OpenWriteFile(filename, false);
 	if (!f)
 	{
-		if (pData)
-			free(pData);
 		Com_Warning("Cannot open %s for writing.", filename);
 		return;
 	}
 
+	// write header
 	memset(&header, 0, sizeof(pmodel_header_s));
 	header.ident = Com_EndianLong(PMODEL_IDENT);
 	header.version = Com_EndianLong(PMODEL_VERSION);
+	//header.mins = { 0 };
+	//header.maxs = { 0 };
+	header.flags = Com_EndianLong(def->flags);
+	header.numBones = Com_EndianLong(def->numBones);
+	header.numVertexes = Com_EndianLong(def->numVertexes);
+	header.numSurfaces = Com_EndianLong(def->numSurfaces);
+	header.numParts = Com_EndianLong(def->numParts);
 
 	Com_SafeWrite(f, &header, sizeof(header));
+	outsize += sizeof(header);
 
+
+	// use first part of a model for bones and skeleton, all remaining parts match them
+	pData = def->vSources[0]->pData; // MAIN PART
+	elementsize = sizeof(panim_bone_s);
+	for (i = 0; i < pData->numbones; i++)
+	{
+		smd_bone_t* srcbone = pData->vBones[i];
+
+		memset(&bone, 0, elementsize);
+		bone.number = Com_EndianLong(srcbone->index);
+		bone.parentIndex = Com_EndianLong(srcbone->parent);
+		strncpy(bone.name, srcbone->name, sizeof(bone.name));
+
+		//bone.partname[PMOD_MAX_HITPARTNAME]; // head, arm_upper, torso_lower, hand_left etc..
+
+		for (j = 0; j < 3; j++)
+		{
+			bone.mins[j] = Com_EndianFloat(bone.mins[j]);
+			bone.maxs[j] = Com_EndianFloat(bone.maxs[j]);
+		}
+
+		Com_SafeWrite(f, &bone, elementsize);
+		outsize += elementsize;
+	}
+
+	// write skeleton
+	elementsize = sizeof(panim_bonetrans_s);
+	for (i = 0; i < pData->numbones; i++)
+	{
+		smd_bonetransform_t* srcskel = pData->vBoneTransforms[i];
+
+		memset(&skel, 0, elementsize);
+		skel.bone = Com_EndianLong(srcskel->bone);
+
+		for (j = 0; j < 3; j++)
+		{
+			skel.origin[j] = Com_EndianFloat(srcskel->position[j]);
+			skel.rotation[j] = Com_EndianFloat(srcskel->rotation[j]);
+		}
+
+		Com_SafeWrite(f, &skel, elementsize);
+		outsize += elementsize;
+	}
+
+	// write vertexes from all parts
+	elementsize = sizeof(pmodel_vertex_s);
+	for (i = 0; i < (int)def->vSources.size(); i++)
+	{
+		pData = def->vSources[i]->pData;
+
+		for (j = 0; j < pData->numverts; j++) // for each vert in part
+		{
+			smd_vert_t* srcvert = pData->vVerts[j];
+			memset(&vert, 0, elementsize);
+
+			for (k = 0; k < 3; k++)
+			{
+				vert.xyz[k] = Com_EndianFloat(srcvert->xyz[k]);
+				vert.normal[k] = Com_EndianFloat(srcvert->normal[k]);
+			}
+
+			vert.uv[0] = Com_EndianFloat(srcvert->uv[0]);
+			vert.uv[1] = Com_EndianFloat(srcvert->uv[1]);
+
+			vert.boneId = Com_EndianLong(srcvert->bone);
+
+			Com_SafeWrite(f, &vert, elementsize);
+			outsize += elementsize;
+		}
+	}
+
+	// write surfaces from all parts, gotta recalculate firstvert indexes
+	nextfirst = 0;
+	elementsize = sizeof(pmodel_surface_s);
+	for (i = 0; i < (int)def->vSources.size(); i++)
+	{
+		pData = def->vSources[i]->pData;
+
+		for (j = 0; j < pData->numsurfaces; j++) 
+		{		
+			smd_surface_t* srcsurf = pData->vSurfaces[j];
+			memset(&surf, 0, elementsize);
+			surf.firstVert = Com_EndianLong(nextfirst + srcsurf->firstvert);
+			surf.numVerts = Com_EndianLong(srcsurf->numverts);
+			strncpy(surf.material, srcsurf->texture, sizeof(surf.material));
+
+			nextfirst += srcsurf->numverts;
+
+			Com_SafeWrite(f, &surf, elementsize);
+			outsize += elementsize;		
+		}
+	}
+
+	// write parts
+	nextfirst = 0;
+	elementsize = sizeof(pmodel_part_s);
+	for (i = 0; i < (int)def->vSources.size(); i++)
+	{
+		pData = def->vSources[i]->pData;
+		memset(&part, 0, elementsize);
+
+		//char name[PMOD_MAX_SURFNAME];
+		strncpy(part.name, def->vSources[i]->name, sizeof(part.name));
+		part.firstSurf = Com_EndianLong(nextfirst);
+		part.numSurfs = Com_EndianLong(pData->numsurfaces);
+		
+		nextfirst += pData->numsurfaces;
+
+		Com_SafeWrite(f, &part, elementsize);
+		outsize += elementsize;
+	}
+
+	Com_Printf("   ... written '%s' (%i bytes).\n", filename, outsize);
 	fclose(f);
 }
 
@@ -435,7 +616,6 @@ static void WriteAnimation(assetdef_t* def)
 	long outsize = 0;
 
 	smddata_t* pData;
-	panim_event_t *pEvent;
 	panim_header_t header;
 	panim_bone_t bone;
 	panim_bonetrans_t trans;
@@ -443,7 +623,7 @@ static void WriteAnimation(assetdef_t* def)
 
 	if (!def->vSources.size())
 	{	
-		Com_Warning("No source file for asset.\n");
+		Com_Warning("No source file loaded for asset '%s'.\n", def->name);
 		return;
 	}
 	
@@ -511,7 +691,7 @@ static void WriteAnimation(assetdef_t* def)
 		}
 	}
 
-	Com_Printf("   ... wrote '%s' (%i bytes).\n", filename, outsize);
+	Com_Printf("   ... written '%s' (%i bytes).\n", filename, outsize);
 	fclose(f);
 }
 
@@ -524,7 +704,7 @@ static void ConvertAsset(assetdef_t *def)
 {
 	if (def->type == ASSET_BAD)
 	{
-		Com_Error("def->type == ASSET_BAD");
+		Com_Error("assetdef->type == ASSET_BAD");
 		return;
 	}
 

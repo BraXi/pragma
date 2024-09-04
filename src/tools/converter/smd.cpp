@@ -23,7 +23,7 @@ static smd_surface_t* pSurface = NULL; // surface we're building
 /*
 =================
 FreeSMD
-Frees all smddata_t
+Frees smddata_t
 =================
 */
 void FreeSMD(smddata_t* pData)
@@ -32,7 +32,7 @@ void FreeSMD(smddata_t* pData)
 
 	if (!pData)
 	{
-		Com_Warning("Tried to free() after free(), nasty");
+		//Com_Warning("Tried to free() after free(), nasty");
 		return;
 	}
 
@@ -60,6 +60,7 @@ void FreeSMD(smddata_t* pData)
 			free(pData->vSurfaces[i]);
 	}
 
+	//memset(pData, 0, sizeof(smddata_t));
 	free(pData);
 	//pRawSMD = NULL;
 }
