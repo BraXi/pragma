@@ -48,7 +48,7 @@ typedef struct svmodel_s
 
 	cmodel_t		*bmodel;	// MOD_BRUSH, allocated and freed by cmodel
 	alias_data_t	*alias;		// MOD_ALIAS
-	smdl_data_t		*mesh;		// MOD_SKEL
+	pmodel_header_t	*mesh;		// MOD_NEWFORMAT
 
 	// common
 	int				numFrames;

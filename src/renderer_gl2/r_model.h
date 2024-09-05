@@ -234,22 +234,21 @@ typedef struct model_s
 	int			lightdatasize;
 
 	//
-	// MOD_ALIAS & MOD_SMDL
+	// MOD_ALIAS & MOD_NEWFORMAT
 	//
-	int			cullDist;	// don't draw if farther than this
+	int			cullDist;	// don't draw if camera is farther than this
 
 	// MOD_NEWFORMAT
 	pmodel_header_t* newmod;
 	mat4_t *inverseBoneMatrix;
 
-	md3Header_t* alias;	// MOD_ALIAS
-	smdl_data_t* smdl; // MOD_SKEL
+	// MOD_ALIAS
+	md3Header_t* alias;	
+	image_t* images[MD3_MAX_SURFACES]; // MD3_MAX_SHADERS ??
 
-	// SMDL_MAX_SURFACES == MD3_MAX_SURFACES == max textures, todo: make it less confusing?
-	vertexbuffer_t* vb[SMDL_MAX_SURFACES]; // smdls are always at 0
-	image_t		*images[SMDL_MAX_SURFACES];
-
-
+	// common for all models
+	vertexbuffer_t* vb[MD3_MAX_SURFACES];
+	
 	int			extradatasize;
 	void		*extradata;
 } model_t;

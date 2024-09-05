@@ -531,9 +531,6 @@ unsigned int _GetBSPElementSize(bspDataType type, qboolean extendedbsp)
 	return ret;
 }
 
-qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
-smdl_anim_t* Com_AnimationForName(char* name, qboolean crash);
-
 /*
 ==============
 VID_LoadRefresh
@@ -583,9 +580,6 @@ qboolean VID_LoadRefresh( char *name )
 	ri.Glob_HunkAlloc = Hunk_Alloc;
 	ri.Glob_HunkEnd = Hunk_End;
 	ri.Glob_HunkFree = Hunk_Free;
-
-	ri.LoadAnimOrModel = Com_LoadAnimOrModel;
-	ri.AnimationForName = Com_AnimationForName;
 
 	ri.GetBSPLimit = _GetBSPLimit;
 	ri.GetBSPElementSize = _GetBSPElementSize;

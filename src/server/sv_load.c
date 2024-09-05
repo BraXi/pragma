@@ -13,10 +13,8 @@ See the attached GNU General Public License v2 for more details.
 #include "server.h"
 
 qboolean ModelDef_LoadFile(char* filename, modeldef_t* def);
-qboolean Com_LoadAnimOrModel(SMDL_Type loadType, smdl_data_t* out, char* name, int fileLength, void* buffer);
 
 static void SV_LoadMD3(svmodel_t* out, void* buffer);
-static void SV_LoadSkelModel(svmodel_t* mod, int filelen, void* buffer, char* name);
 static svmodel_t* SV_LoadModel(char* name, qboolean crash);
 
 static qboolean SV_FileExists(char* name, qboolean crash);
@@ -337,12 +335,10 @@ static svmodel_t* SV_LoadModel(char* name, qboolean crash)
 	case MD3_IDENT:
 		SV_LoadMD3(model, buf);
 		break;
-	case SMDL_IDENT:
+	case PMODEL_IDENT:
 		FS_FreeFile(buf);
 		Com_Error(ERR_FATAL, "unimplemented in %s", __FUNCTION__);
-		break;
 	default:
-		SV_LoadSkelModel(model, fileLen, buf, model->name);
 		break;
 	}
 
@@ -495,53 +491,6 @@ static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 
 /*
 =================
-SV_LoadSkelModel
-=================
-*/
-static void SV_LoadSkelModel(svmodel_t* mod, int filelen, void* buffer, char* name)
-{
-	qboolean	loaded = false;
-	//smdl_surf_t	*surf;
-	//char texturename[MAX_QPATH];
-
-	if (mod->extradata != NULL)
-	{
-		Com_Error(ERR_FATAL, "mod->extradata not NULL");
-	}
-
-	mod->extradata = Hunk_Begin(1024 * 32, "smdl (server)"); //32k should be sufficient?
-	mod->mesh = Hunk_Alloc(sizeof(smdl_data_t));
-
-	loaded = Com_LoadAnimOrModel(SMDL_MODEL_NO_TRIS, mod->mesh, name, filelen, buffer); // server doesn't need tris data
-	if (!loaded)
-	{
-		Hunk_Free(mod->extradata);
-		mod->extradata = NULL;
-		return;
-	}
-
-	mod->extradatasize = Hunk_End();
-
-	//surf = mod->mesh->surfaces[0];
-	//for (int i = 0; i < mod->mesh->hdr.numsurfaces; i++)
-	//{
-		// SMD models have no surface names, and we can not use texture
-		// names because they may repeat, instead rename textures to surfaces
-		//Com_sprintf(surf->texture, sizeof(texturename), "surf_%i", 1+i); 
-	//}
-
-	mod->type = MOD_SKEL;
-	mod->numTags = mod->mesh->hdr.numbones;
-	mod->numSurfaces = mod->mesh->hdr.numsurfaces;
-	mod->numFrames = 1;
-
-//	VectorCopy(mod->mesh->hdr.mins, mod->mins);
-//	VectorCopy(mod->mesh->hdr.maxs, mod->maxs);
-}
-
-
-/*
-=================
 SV_ModelSurfIndexForName
 =================
 */
@@ -556,24 +505,10 @@ int SV_ModelSurfIndexForName(int modelindex, char* surfaceName)
 		return -1;
 	}
 
-	if (mod->type == MOD_SKEL)
-	{
-		if (mod->mesh == NULL)
-			Com_Error(ERR_DROP, "%s: SMDL but mod->mesh is NULL\n", __FUNCTION__);
-
-		for (index = 0; index < mod->numSurfaces; index++)
-		{
-			smdl_surf_t* surf = mod->mesh->surfaces[index];
-			if (!Q_stricmp(surf->texture, surfaceName))
-			{
-				return index;
-			}
-		}
-	}
-	else if (mod->type == MOD_ALIAS)
+	if (mod->type == MOD_ALIAS)
 	{
 		if (mod->alias == NULL)
-			Com_Error(ERR_DROP, "%s: MD3 but mod->mesh is NULL\n", __FUNCTION__);
+			Com_Error(ERR_DROP, "%s: wrong alias model\n", __FUNCTION__);
 		
 		for (index = 0; index < mod->numSurfaces; index++)
 		{
@@ -582,6 +517,10 @@ int SV_ModelSurfIndexForName(int modelindex, char* surfaceName)
 				return index;
 			}
 		}
+	}
+	else
+	{
+		Com_Error(ERR_DROP, "%s: model type unimplemented\n", __FUNCTION__);
 	}
 	return -1;
 }
@@ -606,19 +545,10 @@ int SV_TagIndexForName(int modelindex, char* tagName)
 		return -1; //doesn't get here
 	}
 
-	if (mod->type == MOD_SKEL)
+	if (mod->type == MOD_NEWFORMAT)
 	{
-		if (mod->mesh == NULL)
-			Com_Error(ERR_DROP, "%s: SMDL but mod->mesh is NULL\n", __FUNCTION__);
-
-		smdl_bone_t* tag = mod->mesh->bones[0];
-		for (index = 0; index < mod->numTags; index++, tag++)
-		{
-			if (!strcmp(mod->alias->tagNames[index], tagName))
-			{
-				return index; // found it
-			}
-		}
+		Com_Printf("%s: unimplemented model format\n", __FUNCTION__);
+		return -1;
 	}
 	else if (mod->type == MOD_ALIAS)
 	{
@@ -663,21 +593,10 @@ orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
 	else if (frame < 0)
 		frame = 0;
 
-	if (mod->type == MOD_SKEL)
+	if (mod->type == MOD_NEWFORMAT)
 	{
-		if (mod->mesh == NULL)
-			Com_Error(ERR_DROP, "%s: SMDL but mod->mesh is NULL\n", __FUNCTION__);
-
-		Com_Printf("SMDL unimplemented in %s\n", __FUNCTION__);
+		Com_Printf("unimplemented model format in %s\n", __FUNCTION__);
 		return NULL;
-		//smdl_bone_t* tag = mod->mesh->bones[0];
-		//for (index = 0; index < mod->numTags; index++, tag++)
-		//{
-		//	if (!strcmp(mod->alias->tagNames[index], tagName))
-		//	{
-		//		return tag;
-		//	}
-		//}
 	}
 	else if (mod->type == MOD_ALIAS)
 	{

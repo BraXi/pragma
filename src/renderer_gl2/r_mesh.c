@@ -57,7 +57,7 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 			return false;
 	}
 
-	if (ent->model->type == MOD_ALIAS || ent->model->type == MOD_SKEL)
+	if (ent->model->type == MOD_ALIAS || ent->model->type == MOD_NEWFORMAT)
 	{
 		if ((ent->renderfx & RF_SCALE) && ent->scale != 1.0f && ent->scale > 0.0f)
 			scale = ent->scale; // adjust radius if the model was scaled
@@ -220,14 +220,9 @@ void R_DrawEntityModel(rentity_t* ent)
 		R_DrawAliasModel(ent, lerp);
 		break;
 
-	case MOD_SKEL:
-		R_DrawSkelModel(ent /*, lerp*/);
-		break;
-
 	case MOD_NEWFORMAT:
 		R_DrawNewModel(ent);
 		break;
-	
 
 	default:
 		ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);

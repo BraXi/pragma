@@ -176,15 +176,9 @@ model_t* R_ModelForName(char* name, qboolean crash)
 		break;
 
 	default:
-		//pLoadModel->extradata for SMDLs is allocated by kernel
-		Mod_LoadSkelModel(mod, buf);
-		if(mod->type == MOD_BAD)
-			ri.Error(ERR_DROP, "R_ModelForName: file %s is not a vaild model", mod->name);
+			ri.Error(ERR_DROP, "R_ModelForName:%s is not a model", mod->name);
 		break;
 	}
-
-	if(mod->type != MOD_SKEL) // skel models have memory shared with EXE and their extradatasize is set in Mod_LoadSkelModel
-		pLoadModel->extradatasize = Hunk_End();
 
 	ri.FreeFile(buf);
 
@@ -212,15 +206,7 @@ void R_FreeModel(model_t* mod)
 
 	if (mod->extradata)
 	{
-		if (mod->type == MOD_SKEL)
-		{
-			// because skel models are allocated by EXE
-			ri.Glob_HunkFree(mod->extradata);
-		}
-		else
-		{
-			Hunk_Free(mod->extradata);
-		}
+		Hunk_Free(mod->extradata);
 	}
 
 	memset(mod, 0, sizeof(*mod));
@@ -305,37 +291,6 @@ static void R_TouchAliasModel(model_t* mod)
 	}
 }
 
-static void R_TouchSkelModel(model_t* mod)
-{
-	smdl_surf_t* surf;
-	int i;
-	char texturename[MAX_QPATH];
-
-	if (!mod->smdl)
-	{
-		ri.Printf(PRINT_LOW, "%s: !mod->smdl\n", __FUNCTION__);
-		return;
-	}
-
-	surf = mod->smdl->surfaces[0];
-	for (i = 0; i < mod->smdl->hdr.numsurfaces; i++)
-	{
-		if (surf->texture[0] == '$')
-		{
-			mod->images[i] = R_FindTexture(surf->texture, it_model, true);
-		}
-		else
-		{
-			Com_sprintf(texturename, sizeof(texturename), "modelskins/%s", surf->texture);
-			mod->images[i] = R_FindTexture(texturename, it_model, true);
-		}
-		if (!mod->images[i])
-			mod->images[i] = r_texture_missing;
-
-		surf->texnum = mod->images[i]->texnum;
-	}
-}
-
 static void R_TouchBrushModel(model_t* mod)
 {
 	// textures are loaded only once, just bump their registration sequence
@@ -381,10 +336,6 @@ struct model_s* R_RegisterModel(char* name)
 	else if (mod->type == MOD_ALIAS)
 	{
 		R_TouchAliasModel(mod);
-	}
-	else if (mod->type == MOD_SKEL)
-	{
-		R_TouchSkelModel(mod);
 	}
 	else if (mod->type == MOD_NEWFORMAT)
 	{
@@ -470,7 +421,7 @@ void Cmd_modellist_f(void)
 
 		if (mod->type == MOD_BRUSH)
 			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mods[mod->type], mod->name, mod->extradatasize/1024);
-		else if (mod->type == MOD_SKEL || mod->type == MOD_NEWFORMAT)
+		else if (mod->type == MOD_NEWFORMAT)
 			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mods[mod->type], mod->name, mod->extradatasize / 1024);
 		else
 			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d kb]\n", i, mods[mod->type], mod->name, mod->numframes, mod->extradatasize/1024);

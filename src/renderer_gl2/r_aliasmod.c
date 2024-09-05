@@ -620,7 +620,7 @@ void R_DrawAliasModel(rentity_t* ent, float animlerp)
 		rperf.alias_drawcalls++;
 }
 
-qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex)
+qboolean R_LerpTag(orientation_t* tag, struct model_s* model, int startFrame, int endFrame, float frac, int tagIndex)
 {
 	return MD3_LerpTag(tag, model, startFrame, endFrame, frac, tagIndex);
 }
