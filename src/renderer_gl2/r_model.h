@@ -240,6 +240,7 @@ typedef struct model_s
 
 	// MOD_NEWFORMAT
 	pmodel_header_t* newmod;
+	mat4_t *inverseBoneMatrix;
 
 	md3Header_t* alias;	// MOD_ALIAS
 	smdl_data_t* smdl; // MOD_SKEL

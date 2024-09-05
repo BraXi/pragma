@@ -99,11 +99,11 @@ void CalcBoneMatrix(const smdl_data_t* pModelData, smdl_seq_t* pBone, qboolean b
 
 /*
 =================
-CalcInverseBindPoseMatrixForModel
+CalcInverseMatrixForModel
 Calculate and invert matrices for bind pose skeleton
 =================
 */
-static void CalcInverseBindPoseMatrixForModel(smdl_data_t* pModelData)
+static void CalcInverseMatrixForModel(smdl_data_t* pModelData)
 {
 	smdl_seq_t* pSeq;
 	mat4_t* pInvBindBonePatrix;
@@ -126,7 +126,6 @@ static void CalcInverseBindPoseMatrixForModel(smdl_data_t* pModelData)
 	for (i = 0; i < pModelData->hdr.numbones; i++)
 		Mat4Invert(pInvBindBonePatrix[i], pInvBindBonePatrix[i]);
 }
-
 
 /*
 =================
@@ -430,7 +429,7 @@ void Mod_LoadSkelModel(model_t* mod, void* buffer)
 		}
 	}
 
-	CalcInverseBindPoseMatrixForModel(model);
+	CalcInverseMatrixForModel(model);
 }
 
 

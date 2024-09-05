@@ -34,7 +34,7 @@ ANIMATION
 */
 
 #define PMODEL_IDENT		(('D'<<24)+('M'<<16)+('R'<<8)+'P') // little-endian "PRMD"
-#define PMODEL_VERSION		2
+#define PMODEL_VERSION		3
 
 #define PANIM_IDENT			(('N'<<24)+('A'<<16)+('R'<<8)+'P') // little-endian "PRAN"
 #define PANIM_VERSION		2
@@ -120,7 +120,7 @@ typedef struct panim_bonetrans_s
 	int32_t bone;
 	vec3_t origin;
 	vec3_t rotation;
-	//float quat[4]; // for engine use
+	quat_t quat; // for engine use
 } panim_bonetrans_t;
 
 typedef struct panim_event_s

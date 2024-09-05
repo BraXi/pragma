@@ -21,6 +21,8 @@ void R_DrawNewModel(rentity_t* ent);
 void R_DrawSkelModel(rentity_t* ent); // r_smdl.c
 void R_DrawAliasModel(rentity_t* ent, float animlerp); // r_aliasmod.c
 
+qboolean r_pendingflip = false;
+
 /*
 =================
 R_EntityShouldRender
@@ -144,29 +146,30 @@ void R_SetEntityShadeLight(rentity_t* ent)
 
 static void R_EntityAnim(rentity_t* ent, char* func)
 {
-	// check if animation is correct
-	if ((ent->frame >= ent->model->numframes) || (ent->frame < 0))
+	// check if frames are correct but only for alias and bsp models
+	// skeletal models use bone matrices passed from kernel to animate
+	if (ent->model && ent->model->type != MOD_NEWFORMAT)
 	{
-		ri.Printf(PRINT_DEVELOPER, "%s: no such frame %d in '%s'\n", func, ent->frame, ent->model->name);
-		ent->frame = 0;
-		ent->oldframe = 0;
-	}
+		if ((ent->frame >= ent->model->numframes) || (ent->frame < 0))
+		{
+			ri.Printf(PRINT_DEVELOPER, "%s: no such frame %d in '%s'\n", func, ent->frame, ent->model->name);
+			ent->frame = 0;
+			ent->oldframe = 0;
+		}
 
-	if ((ent->oldframe >= ent->model->numframes) || (ent->oldframe < 0))
-	{
-		ri.Printf(PRINT_DEVELOPER, "%s: no such oldframe %d in '%s'\n", func, ent->frame, ent->model->name);
-		ent->frame = 0;
-		ent->oldframe = 0;
+		if ((ent->oldframe >= ent->model->numframes) || (ent->oldframe < 0))
+		{
+			ri.Printf(PRINT_DEVELOPER, "%s: no such oldframe %d in '%s'\n", func, ent->frame, ent->model->name);
+			ent->frame = 0;
+			ent->oldframe = 0;
+		}
 	}
-
 	// decide if we should lerp
 	if (!r_lerpmodels->value || ent->renderfx & RF_NOANIMLERP)
 		ent->animbacklerp = 0.0f;
 }
 
-qboolean r_pendingflip = false;
-
-void 6(rentity_t* ent)
+void R_DrawEntityModel(rentity_t* ent)
 {
 	float		lerp;
 
@@ -222,7 +225,6 @@ void 6(rentity_t* ent)
 		break;
 
 	case MOD_NEWFORMAT:
-		//R_DrawSkelModel(ent /*, lerp*/);
 		R_DrawNewModel(ent);
 		break;
 	

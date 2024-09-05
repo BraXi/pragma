@@ -346,8 +346,7 @@ static void R_TouchBrushModel(model_t* mod)
 
 static void R_TouchNewModel(model_t* mod)
 {
-
-	if (!mod->smdl)
+	if (!mod->newmod)
 	{
 		ri.Printf(PRINT_LOW, "%s: !mod->newmod\n", __FUNCTION__);
 		return;

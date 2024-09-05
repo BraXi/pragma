@@ -255,7 +255,7 @@ Mostly effects that were previously in trails code but shouldn't be
 */
 static inline void CL_EntityAddMiscEffects(clentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
-	// unused currently
+	CG_AddFlashLightToEntity(clent, &refent);
 }
 
 /*
@@ -316,18 +316,6 @@ void CL_AddPacketEntities(frame_t* frame)
 		rent.model = cl.model_draw[state->modelindex];
 //		rent.renderfx = state->renderFlags; // set later on
 
-
-#if 0
-		//
-		// add dynamic light
-		//
-		if (state->effects & RF_LIGHT)
-		{
-			V_AddLight(rent.origin, state->lightIntensity, state->lightColor[0], state->lightColor[1], state->lightColor[2]);
-		}
-#endif
-
-		CG_AddFlashLightToEntity(clent, &rent);
 
 		//
 		// if entity has no model just skip at this point

@@ -112,7 +112,7 @@ static proginfo_t proginfo[] =
 	{GLPROG_SKY,			"sky"},
 	{GLPROG_ALIAS,			"model_alias"},
 	{GLPROG_SMDL_ANIMATED,	"model_skel_animated"},
-	{GLPROG_SMDL_ANIMATED,	"model_skel_rigid"},
+	{GLPROG_SMDL_RIGID,		"model_skel_rigid"},
 	{GLPROG_PARTICLE,		"particle"},
 	{GLPROG_GUI,			"gui",				PF_ORTHO},
 	{GLPROG_POSTFX,			"postfx",			PF_ORTHO},

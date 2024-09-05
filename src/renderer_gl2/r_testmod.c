@@ -20,6 +20,7 @@ mat4_t* finalBonesMat;
 // should be part of com_model_t
 mat4_t* invertedBonesMat;
 
+static void CalcInverseMatrixForModel(model_t* pModel);
 
 /*
 =================
@@ -27,7 +28,7 @@ R_GetModelBonesPtr
 Returns pointer to bones array of a model.
 =================
 */
-pmodel_bone_t* R_GetModelBonesPtr(model_t* mod)
+pmodel_bone_t* R_GetModelBonesPtr(const model_t* mod)
 {
 	if (!mod || mod->type != MOD_NEWFORMAT)
 		return NULL;
@@ -40,7 +41,7 @@ R_GetModelSkeletonPtr
 Returns pointer to bone transformations for reference skeleton
 =================
 */
-panim_bonetrans_t* R_GetModelSkeletonPtr(model_t* mod)
+panim_bonetrans_t* R_GetModelSkeletonPtr(const model_t* mod)
 {
 	if (!mod || mod->type != MOD_NEWFORMAT)
 		return NULL;
@@ -53,7 +54,7 @@ R_GetModelVertexesPtr
 Returns pointer to vertex array.
 =================
 */
-pmodel_vertex_t* R_GetModelVertexesPtr(model_t* mod)
+pmodel_vertex_t* R_GetModelVertexesPtr(const model_t* mod)
 {
 	if (!mod || mod->type != MOD_NEWFORMAT)
 		return NULL;
@@ -66,7 +67,7 @@ R_GetModelSurfacesPtr
 Returns pointer to surfaces
 =================
 */
-pmodel_surface_t* R_GetModelSurfacesPtr(model_t* mod)
+pmodel_surface_t* R_GetModelSurfacesPtr(const model_t* mod)
 {
 	if (!mod || mod->type != MOD_NEWFORMAT)
 		return NULL;
@@ -79,20 +80,27 @@ R_GetModelPartsPtr
 Returns pointer to parts
 =================
 */
-pmodel_part_t* R_GetModelPartsPtr(model_t* mod)
+pmodel_part_t* R_GetModelPartsPtr(const model_t* mod)
 {
 	if (!mod || mod->type != MOD_NEWFORMAT)
 		return NULL;
 	return (pmodel_part_t*)((byte*)mod->newmod + mod->newmod->ofs_parts);
 }
 
-int Mod_GetNumVerts(model_t* mod)
+int Mod_GetNumVerts(const model_t* mod)
 {
 	if (!mod || mod->type != MOD_NEWFORMAT)
 		return 0;
 	return (int)mod->newmod->numVertexes;
 }
 
+
+int Mod_GetNumBones(const model_t* mod)
+{
+	if (!mod || mod->type != MOD_NEWFORMAT)
+		return 0;
+	return (int)mod->newmod->numBones;
+}
 
 
 
@@ -311,6 +319,8 @@ void R_LoadNewModel(model_t* mod, void* buffer)
 //#ifdef PRAGMA_RENDERER
 	mod->numframes = 1;
 
+	CalcInverseMatrixForModel(mod);
+
 	// load textures
 	Mod_LoadNewModelTextures(mod);
 
@@ -318,6 +328,96 @@ void R_LoadNewModel(model_t* mod, void* buffer)
 	R_UploadNewModelTris(mod);
 //#endif
 }
+
+/*
+=================
+CalcBoneMatrix
+Calculate matrix for a given bone frame and store result in bones matrix array
+=================
+*/
+static void CalcBoneMatrix(const model_t* pModel, panim_bonetrans_t* pTrans, const qboolean bNormalizeQuat, mat4_t* pMatrix)
+{
+	pmodel_bone_t* boneinfo;
+	int i, j, k;
+	int selfIdx, parentIdx;
+	mat4_t tempMatrix;
+
+	selfIdx = pTrans->bone; // index to transitioning bone
+	boneinfo = R_GetModelBonesPtr(pModel) + pTrans->bone;
+	parentIdx = boneinfo->parentIndex;
+
+	if (bNormalizeQuat)
+	{
+		// quaternion must be normalized before conversion to matrix its 
+		// normalized for every exact frame, but not for "inbetweens" during slerp
+		Quat_Normalize(&pTrans->quat);
+	}
+
+	//Mat4MakeIdentity(tempMatrix);
+
+	// create matrix from quaternion
+	Quat_ToMat4(pTrans->quat, tempMatrix);
+
+	tempMatrix[12] = pTrans->origin[0];
+	tempMatrix[13] = pTrans->origin[1];
+	tempMatrix[14] = pTrans->origin[2];
+
+	if (parentIdx == -1)
+	{
+		// root bone
+		memcpy(pMatrix[selfIdx], tempMatrix, sizeof(mat4_t));
+	}
+	else
+	{
+		// child bone
+		memset(pMatrix[selfIdx], 0, sizeof(mat4_t));
+		for (i = 0; i < 4; i++)
+		{
+			for (j = 0; j < 4; j++)
+			{
+				for (k = 0; k < 4; k++)
+				{
+					pMatrix[selfIdx][i + j * 4] += pMatrix[parentIdx][i + k * 4] * tempMatrix[k + j * 4];
+				}
+			}
+		}
+	}
+}
+
+/*
+=================
+CalcInverseMatrixForModel
+Calculate and invert matrix for skeleton
+=================
+*/
+static void CalcInverseMatrixForModel(model_t* pModel)
+{
+	panim_bonetrans_t* bonetrans;
+	mat4_t* invBoneMatrix;
+	int i, numbones;
+
+	if (pModel->inverseBoneMatrix)
+	{
+		return; // inverse bone matrix already created
+	}
+
+	numbones = Mod_GetNumBones(pModel);
+	pModel->inverseBoneMatrix = invBoneMatrix = ri.MemAlloc(sizeof(mat4_t) * numbones);
+
+	for (i = 0; i < numbones; i++)
+		Mat4MakeIdentity(invBoneMatrix[i]);
+
+	bonetrans = R_GetModelSkeletonPtr(pModel);
+	for (i = 0; i < numbones; i++, bonetrans++)
+	{
+		Quat_FromAngles(bonetrans->rotation, &bonetrans->quat);
+		CalcBoneMatrix(pModel, bonetrans, true, invBoneMatrix);
+	}
+
+	for (i = 0; i < numbones; i++)
+		Mat4Invert(invBoneMatrix[i], invBoneMatrix[i]);
+}
+
 
 
 extern vec3_t	model_shadevector;
@@ -334,7 +434,7 @@ void R_DrawNewModel(rentity_t* ent)
 	int numAttribs;
 
 	static int va_attrib[4];
-	//static qboolean vaAtrribsChecked = false;
+	static qboolean vaAtrribsChecked = false;
 
 	if (ent == NULL || ent->model == NULL || ent->model->newmod == NULL)
 	{
@@ -358,6 +458,8 @@ void R_DrawNewModel(rentity_t* ent)
 	// FIXME: this should be done only once at startup and when program changes from GLPROG_SMDL_ANIMATED
 	//if (!vaAtrribsChecked)
 	{
+		vaAtrribsChecked = true;
+
 		va_attrib[0] = R_GetProgAttribLoc(VALOC_POS);
 		va_attrib[1] = R_GetProgAttribLoc(VALOC_NORMAL);
 		va_attrib[2] = R_GetProgAttribLoc(VALOC_TEXCOORD);
@@ -430,7 +532,7 @@ void R_DrawNewModel(rentity_t* ent)
 		glVertexAttribPointer(va_attrib[3], 1, GL_INT, GL_FALSE, sizeof(pmodel_vertex_t), (void*)offsetof(pmodel_vertex_t, boneId));
 	}
 
-	//glDisable(GL_CULL_FACE); // FIXME: cull order is BACK for skel models
+	glDisable(GL_CULL_FACE); // FIXME: cull order is BACK for skel models
 	
 	part = R_GetModelPartsPtr(ent->model);
 	for (i = 0; i < hdr->numParts; i++, part++)
@@ -438,7 +540,6 @@ void R_DrawNewModel(rentity_t* ent)
 		if ((ent->hiddenPartsBits & (1 << i)))
 			continue; // part of the model is hidden
 
-		
 		surf = R_GetModelSurfacesPtr(ent->model) + part->firstSurf;
 		for (int j = 0; j < part->numSurfs; j++, surf++)
 		{
@@ -449,6 +550,7 @@ void R_DrawNewModel(rentity_t* ent)
 				rperf.alias_tris += surf->numVerts / 3;
 		}
 	}
+	glEnable(GL_CULL_FACE); // FIXME: cull order is BACK for skel models
 
 	for (i = 0; i < numAttribs; i++)
 		glDisableVertexAttribArray(va_attrib[i]);
