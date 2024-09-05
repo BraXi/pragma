@@ -41,6 +41,8 @@ extern void Mod_LoadAliasMD3(model_t* mod, void* buffer);
 extern void Mod_LoadSkelModel(model_t* mod, void* buffer);
 extern void R_LoadNewModel(model_t* mod, void* buffer);
 
+extern void Mod_LoadNewModelTextures(model_t* mod);;
+
 void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf);
 
 void R_LightMap_CreateForSurface(msurface_t* surf);
@@ -341,6 +343,20 @@ static void R_TouchBrushModel(model_t* mod)
 		mod->texinfo[i].image->registration_sequence = registration_sequence;
 }
 
+
+static void R_TouchNewModel(model_t* mod)
+{
+
+	if (!mod->smdl)
+	{
+		ri.Printf(PRINT_LOW, "%s: !mod->newmod\n", __FUNCTION__);
+		return;
+	}
+
+	Mod_LoadNewModelTextures(mod);
+}
+
+
 /*
 ================
 R_RegisterModel
@@ -359,7 +375,11 @@ struct model_s* R_RegisterModel(char* name)
 
 	mod->registration_sequence = registration_sequence;
 
-	if (mod->type == MOD_ALIAS)
+	if (mod->type == MOD_BRUSH)
+	{
+		R_TouchBrushModel(mod);
+	}
+	else if (mod->type == MOD_ALIAS)
 	{
 		R_TouchAliasModel(mod);
 	}
@@ -367,12 +387,16 @@ struct model_s* R_RegisterModel(char* name)
 	{
 		R_TouchSkelModel(mod);
 	}
-	else if (mod->type == MOD_BRUSH)
+	else if (mod->type == MOD_NEWFORMAT)
 	{
-		R_TouchBrushModel(mod);
+		R_TouchNewModel(mod);
 	}
-	//else
-		//ri.Printf(PRINT_LOW, "%s: unknown mod->type\n", __FUNCTION__);
+#ifdef _DEBUG
+	else
+	{
+		ri.Printf(PRINT_LOW, "%s: unknown type %i\n", __FUNCTION__, mod->type);
+	}
+#endif
 
 	return mod;
 }

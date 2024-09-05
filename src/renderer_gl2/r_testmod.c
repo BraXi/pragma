@@ -96,7 +96,7 @@ void Mod_LoadNewModelTextures(model_t* mod)
 	image_t* tex;
 	char texname[MAX_QPATH];
 
-	if (!mod || mod->type != MOD_NEWFORMAT)
+	if (!mod || mod->type != MOD_NEWFORMAT || mod->newmod == NULL)
 		return;
 
 	surf = R_GetModelSurfacesPtr(mod);
