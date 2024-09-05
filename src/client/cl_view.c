@@ -230,8 +230,13 @@ void V_TestModel(void)
 		testmodel->modified = false;
 		memset(&tm, 0, sizeof(tm));
 
-		for (int i = 0; i < 3; i++)
-			tm.origin[i] = cl.refdef.view.origin[i] + cl.v_forward[i] * 96 - cl.v_up[i] * 30;
+		//for (int i = 0; i < 3; i++)
+		//	tm.origin[i] = cl.refdef.view.origin[i] + cl.v_forward[i] * 96 - cl.v_up[i] * 10;
+
+		for (int i = 0; i < 2; i++)
+			tm.origin[i] = cl.refdef.view.origin[i] + cl.v_forward[i] * 96;
+
+		tm.origin[2] = cl.refdef.view.origin[2] - 60.0f; // HARDCODED view height
 
 		tm.angles[1] = cl.refdef.view.angles[1];
 
