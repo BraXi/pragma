@@ -297,7 +297,7 @@ static void V_TestLights()
 		dl->color[0] = ((i%6)+1) & 1;
 		dl->color[1] = (((i%6)+1) & 2)>>1;
 		dl->color[2] = (((i%6)+1) & 4)>>2;
-		dl->intensity = 200;
+		dl->intensity = 64;
 	}
 }
 
