@@ -34,7 +34,7 @@ ANIMATION
 */
 
 #define PMODEL_IDENT		(('D'<<24)+('M'<<16)+('R'<<8)+'P') // little-endian "PRMD"
-#define PMODEL_VERSION		1
+#define PMODEL_VERSION		2
 
 #define PANIM_IDENT			(('N'<<24)+('A'<<16)+('R'<<8)+'P') // little-endian "PRAN"
 #define PANIM_VERSION		2
@@ -99,6 +99,13 @@ typedef struct pmodel_header_s
 	uint32_t numVertexes;
 	uint32_t numSurfaces;
 	uint32_t numParts;
+
+	uint32_t ofs_bones;
+	uint32_t ofs_skeleton;
+	uint32_t ofs_vertexes;
+	uint32_t ofs_surfaces;
+	uint32_t ofs_parts;
+	uint32_t ofs_end;
 } pmodel_header_t;
 
 typedef struct panim_bone_s

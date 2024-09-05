@@ -489,7 +489,7 @@ static void WriteModel(assetdef_t* def)
 
 	// use first part of a model for bones and skeleton, all remaining parts match them
 	pData = def->vSources[0]->pData; // MAIN PART
-	elementsize = sizeof(panim_bone_s);
+	elementsize = sizeof(pmodel_bone_t);
 	for (i = 0; i < pData->numbones; i++)
 	{
 		smd_bone_t* srcbone = pData->vBones[i];
@@ -512,7 +512,7 @@ static void WriteModel(assetdef_t* def)
 	}
 
 	// write skeleton
-	elementsize = sizeof(panim_bonetrans_s);
+	elementsize = sizeof(panim_bonetrans_t);
 	for (i = 0; i < pData->numbones; i++)
 	{
 		smd_bonetransform_t* srcskel = pData->vBoneTransforms[i];
@@ -531,7 +531,7 @@ static void WriteModel(assetdef_t* def)
 	}
 
 	// write vertexes from all parts
-	elementsize = sizeof(pmodel_vertex_s);
+	elementsize = sizeof(pmodel_vertex_t);
 	for (i = 0; i < (int)def->vSources.size(); i++)
 	{
 		pData = def->vSources[i]->pData;
@@ -559,7 +559,7 @@ static void WriteModel(assetdef_t* def)
 
 	// write surfaces from all parts, gotta recalculate firstvert indexes
 	nextfirst = 0;
-	elementsize = sizeof(pmodel_surface_s);
+	elementsize = sizeof(pmodel_surface_t);
 	for (i = 0; i < (int)def->vSources.size(); i++)
 	{
 		pData = def->vSources[i]->pData;
@@ -581,7 +581,7 @@ static void WriteModel(assetdef_t* def)
 
 	// write parts
 	nextfirst = 0;
-	elementsize = sizeof(pmodel_part_s);
+	elementsize = sizeof(pmodel_part_t);
 	for (i = 0; i < (int)def->vSources.size(); i++)
 	{
 		pData = def->vSources[i]->pData;

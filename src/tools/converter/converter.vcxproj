@@ -72,8 +72,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\build</OutDir>
+    <OutDir>..\..\..\build\</OutDir>
     <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>prtool</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

@@ -16,6 +16,8 @@ See the attached GNU General Public License v2 for more details.
 vec3_t	model_shadevector;
 vec3_t	model_shadelight;
 
+void R_DrawNewModel(rentity_t* ent);
+
 void R_DrawSkelModel(rentity_t* ent); // r_smdl.c
 void R_DrawAliasModel(rentity_t* ent, float animlerp); // r_aliasmod.c
 
@@ -225,6 +227,12 @@ void R_DrawEntityModel(rentity_t* ent)
 	case MOD_SKEL:
 		R_DrawSkelModel(ent /*, lerp*/);
 		break;
+
+	case MOD_NEWFORMAT:
+		//R_DrawSkelModel(ent /*, lerp*/);
+		R_DrawNewModel(ent);
+		break;
+	
 
 	default:
 		ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);

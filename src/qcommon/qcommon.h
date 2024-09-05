@@ -106,7 +106,7 @@ typedef struct
 
 //============================================================================
 
-typedef enum { MOD_BAD, MOD_BRUSH, MOD_ALIAS, MOD_SKEL } modtype_t;
+typedef enum { MOD_BAD, MOD_BRUSH, MOD_ALIAS, MOD_SKEL, MOD_NEWFORMAT } modtype_t;
 
 //============================================================================
 typedef enum { DPRIMITIVE_LINE, DPRIMITIVE_POINT, DPRIMITIVE_BOX, DPRIMITIVE_TEXT } dprimitive_t;

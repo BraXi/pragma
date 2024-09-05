@@ -24,6 +24,7 @@ static int bspx_lumps_offset = 0;
 static byte mod_novis[MAX_MAP_LEAFS_QBSP/8];
 static byte *mod_base = NULL;
 
+#define RD_MAX_PMOD_HUNKSIZE	0x400000 // 4 MB
 #define RD_MAX_SMDL_HUNKSIZE	0x400000 // 4 MB
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
 #define RD_MAX_BSP_HUNKSIZE		0x1000000 // 16 MB
@@ -38,6 +39,7 @@ static model_t	r_inlineModels[RD_MAX_MODELS]; // the inline "*" brush models fro
 extern void Mod_LoadBSP(model_t* mod, void* buffer);
 extern void Mod_LoadAliasMD3(model_t* mod, void* buffer);
 extern void Mod_LoadSkelModel(model_t* mod, void* buffer);
+extern void R_LoadNewModel(model_t* mod, void* buffer);
 
 void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf);
 
@@ -149,6 +151,11 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	//
 	switch (LittleLong(*(unsigned*)buf))
 	{
+	case PMODEL_IDENT: /* Pragma's own model format */
+		pLoadModel->extradata = Hunk_Begin(RD_MAX_PMOD_HUNKSIZE, "Model (Renderer)");
+		R_LoadNewModel(mod, buf);
+		break;
+
 	case MD3_IDENT: /* Quake3 .md3 model */
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_MD3_HUNKSIZE, "Alias Model (Renderer)");
 		Mod_LoadAliasMD3(mod, buf);
@@ -194,7 +201,11 @@ void R_FreeModel(model_t* mod)
 {
 	for (int i = 0; i < MD3_MAX_SURFACES; i++)
 	{
-		R_FreeVertexBuffer(mod->vb[i]);
+		if (mod->vb[i])
+		{
+			R_FreeVertexBuffer(mod->vb[i]);
+			mod->vb[i] = NULL;
+		}
 	}
 
 	if (mod->extradata)
@@ -425,7 +436,7 @@ void Cmd_modellist_f(void)
 	model_t* mod;
 	int		total;
 
-	static char *mods[] = { "BAD", "BSP", "ALIAS", "SMDL"};
+	static char *mods[] = { "BAD", "BSP", "ALIAS", "SMDL", "PRMDL"};
 
 	total = 0;
 	ri.Printf(PRINT_ALL, "Loaded models:\n");
@@ -436,8 +447,8 @@ void Cmd_modellist_f(void)
 
 		if (mod->type == MOD_BRUSH)
 			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mods[mod->type], mod->name, mod->extradatasize/1024);
-		else if (mod->type == MOD_SKEL)
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d bones, %d kb]\n", i, mods[mod->type], mod->name, mod->smdl->hdr.numbones, mod->extradatasize / 1024);
+		else if (mod->type == MOD_SKEL || mod->type == MOD_NEWFORMAT)
+			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mods[mod->type], mod->name, mod->extradatasize / 1024);
 		else
 			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d kb]\n", i, mods[mod->type], mod->name, mod->numframes, mod->extradatasize/1024);
 		total += mod->extradatasize;
