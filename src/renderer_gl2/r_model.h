@@ -238,7 +238,8 @@ typedef struct model_s
 	//
 	int			cullDist;	// don't draw if farther than this
 
-	pmodel_header_t* newmod;	// MOD_NEWFORMAT
+	// MOD_NEWFORMAT
+	pmodel_header_t* newmod;
 
 	md3Header_t* alias;	// MOD_ALIAS
 	smdl_data_t* smdl; // MOD_SKEL

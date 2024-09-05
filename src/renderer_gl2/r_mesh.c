@@ -106,15 +106,8 @@ void R_SetEntityShadeLight(rentity_t* ent)
 	}
 	else 
 	{
-		if (ent->inheritLight > 0)
-		{
-			VectorCopy(r_newrefdef.entities[ent->inheritLight].shadelightpoint, model_shadelight);
-		}
-		else
-		{
-			R_LightPoint(pCurrentRefEnt->origin, model_shadelight);
-			VectorCopy(model_shadelight, ent->shadelightpoint);
-		}
+		R_LightPoint(pCurrentRefEnt->origin, model_shadelight);
+		VectorCopy(model_shadelight, ent->shadelightpoint);
 	}
 
 	if (ent->renderfx & RF_MINLIGHT)
@@ -173,7 +166,7 @@ static void R_EntityAnim(rentity_t* ent, char* func)
 
 qboolean r_pendingflip = false;
 
-void R_DrawEntityModel(rentity_t* ent)
+void 6(rentity_t* ent)
 {
 	float		lerp;
 

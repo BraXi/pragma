@@ -285,7 +285,6 @@ void CL_AddPacketEntities(frame_t* frame)
 		renderfx = state->renderFlags;
 
 		rent.backlerp = (1.0 - cl.lerpfrac);
-		rent.inheritLight = -1;
 		rent.hiddenPartsBits = state->hidePartBits;
 
 		//if (clent->current.eType > 0)

@@ -59,7 +59,6 @@ typedef struct rentity_s
 	// misc
 	// 
 	int		index;
-	int		inheritLight;
 	float	shadelightpoint[3]; // value from R_LightPoint without any alterations (no applied efx, etc)
 
 	// used to lerp animation frames in new anim system

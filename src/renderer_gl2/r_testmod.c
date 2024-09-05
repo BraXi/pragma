@@ -14,6 +14,13 @@ See the attached GNU General Public License v2 for more details.
 extern int modelFileLength;
 extern model_t* pLoadModel;
 
+// shoud be part of rentity cache
+mat4_t* finalBonesMat;
+
+// should be part of com_model_t
+mat4_t* invertedBonesMat;
+
+
 /*
 =================
 R_GetModelBonesPtr
@@ -228,11 +235,9 @@ void R_LoadNewModel(model_t* mod, void* buffer)
 
 	if (pHdr->ofs_end > modelFileLength)
 	{
-		//ri.Error(ERR_DROP, "%s: model '%s' is corrupt.\n", __FUNCTION__, mod->name);
-		//return;
+		ri.Error(ERR_DROP, "%s: model '%s' is corrupt.\n", __FUNCTION__, mod->name);
+		return;
 	}
-
-	mod->numframes = 1;
 
 	// allocate model
 	mod->extradatasize = modelFileLength+1;
@@ -304,6 +309,8 @@ void R_LoadNewModel(model_t* mod, void* buffer)
 	}
 
 //#ifdef PRAGMA_RENDERER
+	mod->numframes = 1;
+
 	// load textures
 	Mod_LoadNewModelTextures(mod);
 
@@ -323,9 +330,11 @@ void R_DrawNewModel(rentity_t* ent)
 	pmodel_part_t* part;
 	pmodel_surface_t* surf;
 	int i;
+	qboolean isAnimated = false;
+	int numAttribs;
 
 	static int va_attrib[4];
-	static qboolean vaAtrribsChecked = false;
+	//static qboolean vaAtrribsChecked = false;
 
 	if (ent == NULL || ent->model == NULL || ent->model->newmod == NULL)
 	{
@@ -341,18 +350,29 @@ void R_DrawNewModel(rentity_t* ent)
 		return;
 	}
 
-	R_BindProgram(GLPROG_SMDL_ANIMATED);
+
+	R_BindProgram(isAnimated == true ? GLPROG_SMDL_ANIMATED : GLPROG_SMDL_RIGID);
+
 	glBindBuffer(GL_ARRAY_BUFFER, ent->model->vb[0]->vboBuf);
 
 	// FIXME: this should be done only once at startup and when program changes from GLPROG_SMDL_ANIMATED
-	if (!vaAtrribsChecked)
+	//if (!vaAtrribsChecked)
 	{
 		va_attrib[0] = R_GetProgAttribLoc(VALOC_POS);
 		va_attrib[1] = R_GetProgAttribLoc(VALOC_NORMAL);
 		va_attrib[2] = R_GetProgAttribLoc(VALOC_TEXCOORD);
-		//va_attrib[3] = R_GetProgAttribLoc(VALOC_BONEID);
 
-		for (i = 0; i < 3; i++)
+		if (isAnimated)
+		{
+			va_attrib[3] = R_GetProgAttribLoc(VALOC_BONEID);
+			numAttribs = 4;
+		}
+		else
+		{
+			numAttribs = 3;
+		}
+
+		for (i = 0; i < numAttribs; i++)
 		{
 			if (va_attrib[i] == -1)
 			{
@@ -385,9 +405,12 @@ void R_DrawNewModel(rentity_t* ent)
 	//
 	// setup skeleton
 	//
-	//R_SkeletonForFrame(ent->frame);
-	//R_ProgUniformMatrix4fv(LOC_BONES, SMDL_MAX_BONES, FinalBonesMat[0]);
-
+	
+	if (isAnimated && finalBonesMat != NULL)
+	{	
+		//R_SkeletonForFrame(ent->frame);
+		R_ProgUniformMatrix4fv(LOC_BONES, hdr->numBones /*SMDL_MAX_BONES*/, finalBonesMat[0]);
+	}
 
 	//
 	// draw the model
@@ -401,16 +424,14 @@ void R_DrawNewModel(rentity_t* ent)
 	glEnableVertexAttribArray(va_attrib[2]);
 	glVertexAttribPointer(va_attrib[2], 2, GL_FLOAT, GL_FALSE, sizeof(pmodel_vertex_t), (void*)offsetof(pmodel_vertex_t, uv));
 
-	//glEnableVertexAttribArray(va_attrib[3]);
-	//glVertexAttribPointer(va_attrib[3], 1, GL_INT, GL_FALSE, sizeof(pmodel_vertex_t), (void*)offsetof(pmodel_vertex_t, boneId));
+	if (isAnimated)
+	{
+		glEnableVertexAttribArray(va_attrib[3]);
+		glVertexAttribPointer(va_attrib[3], 1, GL_INT, GL_FALSE, sizeof(pmodel_vertex_t), (void*)offsetof(pmodel_vertex_t, boneId));
+	}
 
-	glDisable(GL_CULL_FACE); // FIXME: cull order is BACK for skel models
+	//glDisable(GL_CULL_FACE); // FIXME: cull order is BACK for skel models
 	
-
-#if 0
-	R_MultiTextureBind(TMU_DIFFUSE, r_texture_missing->texnum);
-	glDrawArrays(GL_TRIANGLES, 0, ent->model->newmod->numVertexes);
-#else
 	part = R_GetModelPartsPtr(ent->model);
 	for (i = 0; i < hdr->numParts; i++, part++)
 	{
@@ -428,12 +449,9 @@ void R_DrawNewModel(rentity_t* ent)
 				rperf.alias_tris += surf->numVerts / 3;
 		}
 	}
-#endif
 
-	glDisableVertexAttribArray(va_attrib[0]);
-	glDisableVertexAttribArray(va_attrib[1]);
-	glDisableVertexAttribArray(va_attrib[2]);
-	//glDisableVertexAttribArray(va_attrib[3]);
+	for (i = 0; i < numAttribs; i++)
+		glDisableVertexAttribArray(va_attrib[i]);
 
 	if (r_pendingflip)
 	{
@@ -444,7 +462,6 @@ void R_DrawNewModel(rentity_t* ent)
 	if (pCurrentRefEnt->renderfx & RF_VIEW_MODEL)
 		R_SendDynamicLightsToCurrentProgram(false);
 
-	glEnable(GL_CULL_FACE);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	R_UnbindProgram(GLPROG_SMDL_ANIMATED);
 
