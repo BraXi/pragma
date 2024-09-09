@@ -14,8 +14,8 @@ See the attached GNU General Public License v2 for more details.
 #include <assert.h>
 #include <float.h>
 
-#include "..\client\client.h"
-#include "winquake.h"
+#include "client/client.h"
+#include "../qcommon/pragma_windows.h"
 
 // Structure containing functions exported from refresh DLL
 refexport_t	re;

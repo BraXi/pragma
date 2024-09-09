@@ -12,7 +12,7 @@ See the attached GNU General Public License v2 for more details.
 #pragma once
 
 #include "shared.h"
-#include "../script/scriptvm.h"
+#include "../engine/script/scriptvm.h"
 
 //============================================================================
 

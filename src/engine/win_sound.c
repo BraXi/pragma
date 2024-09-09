@@ -10,9 +10,9 @@ See the attached GNU General Public License v2 for more details.
 
 #include <float.h>
 
-#include "../client/client.h"
-#include "../client/snd_loc.h"
-#include "winquake.h"
+#include "client/client.h"
+#include "client/snd_loc.h"
+#include "../qcommon/pragma_windows.h"
 
 #define iDirectSoundCreate(a,b,c)	pDirectSoundCreate(a,b,c)
 

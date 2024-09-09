@@ -13,7 +13,7 @@ See the attached GNU General Public License v2 for more details.
 
 //define	PARANOID			// speed sapping error checking
 
-#include "../qcommon/qcommon.h"
+#include "../../qcommon/qcommon.h"
 
 #include "sv_game.h"
 

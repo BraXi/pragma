@@ -16,7 +16,7 @@ See the attached GNU General Public License v2 for more details.
 #ifdef DEDICATED_ONLY
 	#include <windows.h>
 #else
-	#include "winquake.h"
+	#include "pragma_windows.h"
 #endif
 
 #include <errno.h>

@@ -11,7 +11,7 @@ See the attached GNU General Public License v2 for more details.
 // q_shared.h -- included first by ALL program modules
 #pragma once
 
-#include "../pragma_config.h"
+#include "../engine/pragma_config.h"
 
 #include <stdint.h>
 

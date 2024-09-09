@@ -8,14 +8,21 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+//
+// MAIN CONFIGURATION FILE FOR ENGINE
+//
+
+
 #pragma once
 
 #ifndef PRAGMA_CONFIG_INCLUDED 
 #define PRAGMA_CONFIG_INCLUDED 1
 
-#define FIX_SQB 1 // "stupid quake bug" fix
+// Enable "stupid quake bug" fix
+#define FIX_SQB 1 
 
-#define NEW_GUI 1 //new gui
+// Include new gui system
+#define NEW_GUI 1
 
 // net protocol will use floats for coordinates instead of shorts, this applies to pmove too
 // this also fixes some of pmove issues like dragging players motion towards 0,0,0 and higher jumps
@@ -25,7 +32,7 @@ See the attached GNU General Public License v2 for more details.
 // protocol can use shorts when modelindex or soundindex exceed byte
 #define PROTOCOL_EXTENDED_ASSETS 1
 
-// main engine directory to load assets from, the default 'game'
+// main engine directory to load assets from (the default 'game' directory)
 #define	BASEDIRNAME	"main" 
 
 // experimental -- use GLFW for windows and input instead of windows api [not implemented yet]

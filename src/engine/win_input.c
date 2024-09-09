@@ -11,8 +11,8 @@ See the attached GNU General Public License v2 for more details.
 // win_input.c -- windows 95 mouse code
 // 02/21/97 JCB Added extended DirectInput code to support external controllers.
 
-#include "../client/client.h"
-#include "winquake.h"
+#include "client/client.h"
+#include "../qcommon/pragma_windows.h"
 
 extern	unsigned	sys_msg_time;
 

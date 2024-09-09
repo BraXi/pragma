@@ -16,8 +16,8 @@ the general idea here is to load assets once and for good because both server an
 */
 
 #include "qcommon.h"
-#include "../server/server.h" // so we know server state
-#include "../client/client.h" // same, for renderer
+#include "../engine/server/server.h"
+#include "../engine/client/client.h" // same, for renderer
 
 #include "model_cache.h"
 

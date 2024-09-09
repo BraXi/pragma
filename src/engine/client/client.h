@@ -18,7 +18,7 @@ See the attached GNU General Public License v2 for more details.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../qcommon/renderer.h"
+#include "../../qcommon/renderer.h"
 
 #include "vid.h"
 #include "screen.h"
