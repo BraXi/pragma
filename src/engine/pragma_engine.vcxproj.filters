@@ -2,21 +2,17 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\common\crc.c" />
-    <ClCompile Include="..\common\shared_windows.c" />
     <ClCompile Include="md4.c" />
     <ClCompile Include="message.c" />
     <ClCompile Include="model_cache.c" />
     <ClCompile Include="model_def.c" />
     <ClCompile Include="pragma.c" />
-    <ClCompile Include="..\common\mathlib.c" />
     <ClCompile Include="astar_navigation.c" />
     <ClCompile Include="cmd.c" />
     <ClCompile Include="cmodel.c" />
     <ClCompile Include="cvar.c" />
     <ClCompile Include="filesystem.c" />
     <ClCompile Include="net_chan.c" />
-    <ClCompile Include="net_msg.c" />
-    <ClCompile Include="..\common\shared.c" />
     <ClCompile Include="network_windows.c" />
     <ClCompile Include="main_windows.c" />
     <ClCompile Include="sizebuf.c" />
@@ -201,6 +197,15 @@
     <ClCompile Include="script\scr_utils.c">
       <Filter>QCVM</Filter>
     </ClCompile>
+    <ClCompile Include="..\common\mathlib.c">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\shared.c">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\shared_windows.c">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\crc.h" />
@@ -213,8 +218,6 @@
     <ClInclude Include="network.h" />
     <ClInclude Include="net_chan.h" />
     <ClInclude Include="pragma.h" />
-    <ClInclude Include="..\common\mathlib.h" />
-    <ClInclude Include="..\common\shared.h" />
     <ClInclude Include="pragma_config.h" />
     <ClInclude Include="protocol.h" />
     <ClInclude Include="usercmd.h" />
@@ -316,6 +319,12 @@
     </ClInclude>
     <ClInclude Include="client\screen.h">
       <Filter>Client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mathlib.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\shared.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

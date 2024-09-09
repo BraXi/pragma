@@ -21,18 +21,19 @@ See the attached GNU General Public License v2 for more details.
 // what renderer DLL to use by default
 #define DEFAULT_RENDERER "gl2"
 
+// main engine directory to load assets from (the default 'game' directory)
+#define	BASEDIRNAME	"main" 
 
 // define this to dissalow any data but the pak0.pak matching checksum below
-//#define	NO_ADDONS 
+//#define NO_ADDONS 
 
 // if a packfile directory differs from this, it is assumed to be hacked
 #define	PAK0_CHECKSUM	0x40e614e0
 
-
-// Enable "stupid quake bug" fix
+// Enable fix for "stupid quake bug"
 #define FIX_SQB 1 
 
-// Include new gui system
+// Include new GUI system
 #define NEW_GUI 1
 
 // net protocol will use floats for coordinates instead of shorts, this applies to pmove too
@@ -40,12 +41,14 @@ See the attached GNU General Public License v2 for more details.
 // all entities can move beyond +/- 4096qu boundary, 
 #define PROTOCOL_FLOAT_COORDS 1
 
+// See protocol.h for MORE!
+
 // protocol can use shorts when modelindex or soundindex exceed byte
 #define PROTOCOL_EXTENDED_ASSETS 1
 
-#define	MAX_CLIENTS			32		// absolute limit of maxclients
+#define	MAX_CLIENTS			12		// absolute limit of maxclients, technicaly it can go up to 256...
 #define	MAX_GENTITIES		2048	// must change protocol to increase more
-#define	MAX_LIGHTSTYLES		256
+#define	MAX_LIGHTSTYLES		256		// number of light style slots
 
 #ifdef PROTOCOL_EXTENDED_ASSETS
 #	define	MAX_MODELS			1024	// these can be sent over the net as shorts
@@ -58,12 +61,6 @@ See the attached GNU General Public License v2 for more details.
 #define	MAX_ITEMS			256
 #define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
 
-
-// main engine directory to load assets from (the default 'game' directory)
-#define	BASEDIRNAME	"main" 
-
-// experimental -- use GLFW for windows and input instead of windows api [not implemented yet]
-#define USE_GLFW 0
 
 // experimental -- variable server fps
 #define SERVER_FPS 10		// quake 2
@@ -84,10 +81,13 @@ See the attached GNU General Public License v2 for more details.
 #endif
 
 // version string
-#define PRAGMA_VERSION "0.29" 
+#define PRAGMA_VERSION "0.32" 
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
 // version history:
+// 0.32 - 08.09.2024 -- source tree cleanup
+// 0.31 - 03.09.2024 -- prtool and pragma's own model/anim formats
+// 0.30 - xx.xx.2024 -- skeletal models
 // 0.29 - xx.xx.2024 -- lighting overhaul
 // 0.28 - 22.03.2024 -- BSPX, QBISM, DECOUPLEDLM, LMSHIFT
 // 0.27 - 02.03.2024 -- experimental renderer

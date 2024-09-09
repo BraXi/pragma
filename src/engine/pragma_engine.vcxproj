@@ -123,7 +123,6 @@
     <ClCompile Include="cvar.c" />
     <ClCompile Include="filesystem.c" />
     <ClCompile Include="net_chan.c" />
-    <ClCompile Include="net_msg.c" />
     <ClCompile Include="..\common\shared.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_debug.c" />
