@@ -11,7 +11,7 @@ See the attached GNU General Public License v2 for more details.
 // navigation.c - implementation of A* pathfinding alghoritm 
 // https://en.wikipedia.org/wiki/A*_search_algorithm
 
-#include "../qcommon/qcommon.h"
+#include "pragma.h"
 
 //#define DEBUG_PATHFINDING 1
 

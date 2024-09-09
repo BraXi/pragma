@@ -189,7 +189,7 @@ static void CL_DownloadMapTextures(float allowDownload, char* fileDir, char* fil
 	// confirm existance of textures, download any that don't exist
 	if (precache_check == TEXTURE_CNT + 1)
 	{
-		// from qcommon/cmodel.c
+		// from common/cmodel.c
 		extern int			cm_world.numSurfaceInfos;
 		extern mapsurface_t	cm_world.surfaceInfos[];
 

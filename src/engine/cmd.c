@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 
 // cmd.c -- Quake script command processing module
 
-#include "../qcommon/qcommon.h"
+#include "pragma.h"
 
 void Cmd_ForwardToServer (void);
 

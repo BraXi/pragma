@@ -15,7 +15,7 @@ See the attached GNU General Public License v2 for more details.
 #include <float.h>
 
 #include "client.h"
-#include "../../qcommon/pragma_windows.h"
+#include "../../common/pragma_windows.h"
 
 // Structure containing functions exported from refresh DLL
 refexport_t	re;
@@ -661,7 +661,7 @@ void VID_CheckChanges (void)
 		if ( !VID_LoadRefresh( name ) )
 		{
 			if ( strcmp (r_renderer->string, DEFAULT_RENDERER) == 0 )
-				Com_Error (ERR_FATAL, "Couldn't start %s renderer!", r_renderer->string);
+				Com_Error (ERR_FATAL, "Pragma encountered fatal error during initialization.\nFailed to initialize renderer (%s).\n", r_renderer->string);
 			Cvar_Set( "r_renderer", DEFAULT_RENDERER);
 
 			/*

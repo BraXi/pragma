@@ -9,7 +9,7 @@ See the attached GNU General Public License v2 for more details.
 */
 
 // common.c -- misc functions used in client and server
-#include "qcommon.h"
+#include "pragma.h"
 #include <setjmp.h>
 
 #define	MAXPRINTMSG	4096

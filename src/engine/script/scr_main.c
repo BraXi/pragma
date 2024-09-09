@@ -9,7 +9,7 @@ See the attached GNU General Public License v2 for more details.
 */
 // scr_main.c
 
-#include "../../qcommon/qcommon.h"
+#include "../pragma.h"
 #include "script_internals.h"
 
 cvar_t* vm_runaway;

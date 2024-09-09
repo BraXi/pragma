@@ -23,7 +23,7 @@ See the attached GNU General Public License v2 for more details.
 #endif
 
 #include <math.h>
-#include "../qcommon/renderer.h"
+#include "../common/renderer.h"
 #include "win_qgl.h"
 
 #define	REF_VERSION	"0.5-next"

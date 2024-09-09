@@ -25,7 +25,7 @@ See the attached GNU General Public License v2 for more details.
 #include <windows.h>
 #include "r_local.h"
 #include "win_glw.h"
-#include "../qcommon/pragma_windows.h"
+#include "../common/pragma_windows.h"
 
 qboolean GLimp_InitGL (void);
 

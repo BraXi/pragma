@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 
 // scr_debug.c
 
-#include "../../qcommon/qcommon.h"
+#include "../pragma.h"
 #include "script_internals.h"
 
 

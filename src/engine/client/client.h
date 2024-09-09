@@ -18,7 +18,7 @@ See the attached GNU General Public License v2 for more details.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../qcommon/renderer.h"
+#include "../../common/renderer.h"
 
 #include "vid.h"
 #include "screen.h"
@@ -27,10 +27,10 @@ See the attached GNU General Public License v2 for more details.
 #include "keys.h"
 #include "console.h"
 
-#include "./cgame/cgame.h"
+#include "cgame/client_game.h"
 
 #ifdef NEW_GUI
-	#include "./ui/gui.h"
+	#include "ui/gui.h"
 #endif
 
 //=============================================================================

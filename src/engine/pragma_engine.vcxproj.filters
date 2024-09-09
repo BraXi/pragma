@@ -167,18 +167,6 @@
     <ClCompile Include="server\sv_write.c">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="..\qcommon\common.c">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\qcommon\crc.c">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\qcommon\mathlib.c">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\qcommon\md4.c">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="script\scr_builtins_math.c">
       <Filter>QCVM</Filter>
     </ClCompile>
@@ -197,12 +185,6 @@
     <ClCompile Include="script\scr_exec.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="..\qcommon\shared.c">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\qcommon\shared_windows.c">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="client\input_windows.c">
       <Filter>Client</Filter>
     </ClCompile>
@@ -213,9 +195,22 @@
     <ClCompile Include="sizebuf.c" />
     <ClCompile Include="message.c" />
     <ClCompile Include="usercmd.c" />
+    <ClCompile Include="pragma.c" />
+    <ClCompile Include="..\common\crc.c" />
+    <ClCompile Include="..\common\mathlib.c">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\shared_windows.c">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\shared.c">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="md4.c">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pragma_config.h" />
     <ClInclude Include="filesystem.h" />
     <ClInclude Include="cmodel.h" />
     <ClInclude Include="cvar.h" />
@@ -225,9 +220,6 @@
     <ClInclude Include="net_chan.h" />
     <ClInclude Include="model_cache.h" />
     <ClInclude Include="client\cgame\cg_local.h">
-      <Filter>Client\Client Game</Filter>
-    </ClInclude>
-    <ClInclude Include="client\cgame\cgame.h">
       <Filter>Client\Client Game</Filter>
     </ClInclude>
     <ClInclude Include="client\client.h">
@@ -272,39 +264,6 @@
     <ClInclude Include="server\server.h">
       <Filter>Server</Filter>
     </ClInclude>
-    <ClInclude Include="..\qcommon\anorms.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\crc.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\mathlib.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\fileformats\md3.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\fileformats\pak.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\fileformats\bsp.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\fileformats\pmodel.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\pragma_files.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\qcommon.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\pragma_windows.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\renderer.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="client\cgame\progdefs_client.h">
       <Filter>QCVM</Filter>
     </ClInclude>
@@ -326,17 +285,49 @@
     <ClInclude Include="script\script_internals.h">
       <Filter>QCVM</Filter>
     </ClInclude>
-    <ClInclude Include="..\qcommon\shared.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\fileformats\smdl.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\qcommon\cvar_public.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="message.h" />
     <ClInclude Include="usercmd.h" />
+    <ClInclude Include="pragma.h" />
+    <ClInclude Include="..\common\crc.h" />
+    <ClInclude Include="client\cgame\client_game.h" />
+    <ClInclude Include="..\common\pragma.h" />
+    <ClInclude Include="..\common\mathlib.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\pragma_files.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\pragma_windows.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\shared.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\anorms.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\cvar_public.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\bsp.h">
+      <Filter>Common\files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\md3.h">
+      <Filter>Common\files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\pak.h">
+      <Filter>Common\files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\pmodel.h">
+      <Filter>Common\files</Filter>
+    </ClInclude>
+    <ClInclude Include="pragma_config.h" />
+    <ClInclude Include="..\common\renderer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\smdl.h">
+      <Filter>Common\files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="pragma.rc" />

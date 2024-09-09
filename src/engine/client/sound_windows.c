@@ -12,7 +12,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "client.h"
 #include "snd_loc.h"
-#include "../../qcommon/pragma_windows.h"
+#include "../../common/pragma_windows.h"
 
 #define iDirectSoundCreate(a,b,c)	pDirectSoundCreate(a,b,c)
 

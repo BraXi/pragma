@@ -24,7 +24,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 
 #pragma once
-#include "../qcommon/qcommon.h"
+#ifndef _PRAGMA_RENDERER_H_
+#define _PRAGMA_RENDERER_H_
+
+#include "../engine/pragma.h"
 
 #define	MAX_DLIGHTS				32		// was 32
 #define	MAX_VISIBLE_ENTITIES	1024	// max entities a renderer can process, was 128 [previously MAX_ENTITIES]
@@ -294,3 +297,5 @@ typedef struct
 
 // this is the only function actually exported at the linker level
 typedef	refexport_t	(*GetRefAPI_t) (refimport_t);
+
+#endif /*_PRAGMA_RENDERER_H_*/

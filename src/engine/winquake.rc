@@ -67,7 +67,7 @@ STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | WS_POPUP |
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_CLIENTEDGE
 FONT 16, "Times New Roman", 0, 0, 0x1
 BEGIN
-    CTEXT           "Starting QW...",IDC_STATIC,4,6,54,8
+    CTEXT           "Starting Pragma...",IDC_STATIC,4,6,54,8
 END
 
 
@@ -78,7 +78,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING1             "WinQuake"
+    IDS_STRING1             "Pragma"
 END
 
 #endif    // English (U.S.) resources

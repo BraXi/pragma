@@ -15,7 +15,7 @@ the general idea here is to load assets once and for good because both server an
 
 */
 
-#include "../qcommon/qcommon.h"
+#include "pragma.h"
 #include "server/server.h"
 #include "client/client.h" // same, for renderer
 

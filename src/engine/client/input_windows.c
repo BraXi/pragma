@@ -12,7 +12,7 @@ See the attached GNU General Public License v2 for more details.
 // 02/21/97 JCB Added extended DirectInput code to support external controllers.
 
 #include "client.h"
-#include "../../qcommon/pragma_windows.h"
+#include "../../common/pragma_windows.h"
 
 extern	unsigned	sys_msg_time;
 

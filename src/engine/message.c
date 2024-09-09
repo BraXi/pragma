@@ -8,11 +8,11 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-#include "../qcommon/qcommon.h"
+#include "pragma.h"
 
 vec3_t	bytedirs[NUM_VERTEX_NORMALS] =
 {
-#include "../qcommon/anorms.h"
+#include "../common/anorms.h"
 };
 
 //

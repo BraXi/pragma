@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 
 // see crc.h
 
-#include "qcommon.h"
+#include "../engine/pragma.h"
 
 
 #define CRC_INIT_VALUE	0xffff

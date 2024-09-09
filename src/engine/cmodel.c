@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 
 // cmodel.c -- BSP model loading, collision handling
 
-#include "../qcommon/qcommon.h"
+#include "pragma.h"
 
 qboolean bExtendedBSP = false;
 

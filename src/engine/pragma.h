@@ -8,10 +8,10 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-// qcommon.h -- definitions common between client and server, but not game.dll
+// pragma.h -- definitions common between client and server, but not game.dll
 #pragma once
 
-#include "shared.h"
+#include "../common/shared.h"
 
 //============================================================================
 
@@ -62,6 +62,21 @@ extern qboolean print_time;
 
 //============================================================================
 
+#include "../common/crc.h"
+#include "../common/pragma_files.h"
+#include "script/scriptvm.h"
+#include "protocol.h"
+#include "cmd.h"
+#include "cvar.h"
+#include "sizebuf.h"
+#include "network.h"
+#include "net_chan.h"
+#include "cmodel.h"
+#include "filesystem.h"
+#include "message.h"
+#include "usercmd.h"
+
+//============================================================================
 typedef enum memtag_s
 {
 	TAG_NONE,
@@ -124,15 +139,6 @@ typedef struct debugline_s
 //============================================================================
 
 
-#include "../engine/sizebuf.h"
-#include "../engine/message.h"
-#include "../engine/usercmd.h"
-
-
-
-
-
-//============================================================================
 
 extern	qboolean		bigendien;
 
@@ -160,25 +166,7 @@ char *CopyString (char *in);
 
 void Info_Print (char *s);
 
-#include "crc.h"
 
-#include "pragma_files.h"
-
-#include "../engine/script/scriptvm.h"
-
-#include "../engine/protocol.h"
-
-#include "../engine/cmd.h"
-
-#include "../engine/cvar.h"
-
-#include "../engine/network.h"
-
-#include "../engine/net_chan.h"
-
-#include "../engine/cmodel.h"
-
-#include "../engine/filesystem.h"
 
 
 /*
@@ -217,7 +205,7 @@ void		Com_SetServerState (int state);
 unsigned	Com_BlockChecksum (void *buffer, int length);
 byte		COM_BlockSequenceCRCByte (byte *base, int length, int sequence);
 
-float	frand(void);	// 0 ti 1
+float	frand(void);	// 0 to 1
 float	crand(void);	// -1 to 1
 
 extern	cvar_t	*developer;

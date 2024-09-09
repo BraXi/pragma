@@ -166,9 +166,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\platform\winquake.h" />
-    <ClInclude Include="..\qcommon\mathlib.h" />
-    <ClInclude Include="..\qcommon\shared.h" />
-    <ClInclude Include="..\qcommon\renderer.h" />
+    <ClInclude Include="..\common\mathlib.h" />
+    <ClInclude Include="..\common\shared.h" />
+    <ClInclude Include="..\common\renderer.h" />
     <ClInclude Include="include\glad\glad_21.h" />
     <ClInclude Include="win_glw.h" />
     <ClInclude Include="r_local.h" />
@@ -177,9 +177,9 @@
     <ClInclude Include="warpsin.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\qcommon\mathlib.c" />
-    <ClCompile Include="..\qcommon\shared.c" />
-    <ClCompile Include="..\qcommon\shared_windows.c" />
+    <ClCompile Include="..\common\mathlib.c" />
+    <ClCompile Include="..\common\shared.c" />
+    <ClCompile Include="..\common\shared_windows.c" />
     <ClCompile Include="glad_gl21.c" />
     <ClCompile Include="r_lightmap.c" />
     <ClCompile Include="r_shadow.c" />

@@ -10,12 +10,12 @@ See the attached GNU General Public License v2 for more details.
 
 // sys_win.h
 
-#include "../qcommon/qcommon.h"
+#include "pragma.h"
 
 #ifdef DEDICATED_ONLY
 	#include <windows.h>
 #else
-	#include "../qcommon/pragma_windows.h"
+	#include "../common/pragma_windows.h"
 	#include "resource.h"
 #endif
 

@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 
 // cvar.c -- dynamic variable tracking
 
-#include "qcommon.h"
+#include "pragma.h"
 
 cvar_t	*cvar_vars;
 

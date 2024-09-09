@@ -11,7 +11,7 @@ See the attached GNU General Public License v2 for more details.
 // net_wins.c
 
 #include <winsock.h>
-#include "../qcommon/qcommon.h"
+#include "pragma.h"
 
 #define	MAX_LOOPBACK	4
 

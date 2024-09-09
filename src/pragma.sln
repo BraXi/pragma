@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.33801.447
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pragma_engine", "engine\pragma_engine.vcxproj", "{A8E87A57-9F0A-4C40-82CF-531407B7843E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pragma_renderer", "renderer\pragma_renderer.vcxproj", "{5629A810-5D8D-410C-B8A2-E4A0CDE15AF4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pragma_renderer", "renderer_dll\pragma_renderer.vcxproj", "{5629A810-5D8D-410C-B8A2-E4A0CDE15AF4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
