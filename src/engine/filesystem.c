@@ -8,13 +8,8 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-#include "qcommon.h"
+#include "../qcommon/qcommon.h"
 
-// define this to dissalow any data but the demo pak file
-//#define	NO_ADDONS 
-
-// if a packfile directory differs from this, it is assumed to be hacked
-#define	PAK0_CHECKSUM	0x40e614e0
 
 /*
 =============================================================================
@@ -65,8 +60,8 @@ typedef struct searchpath_s
 	struct searchpath_s *next;
 } searchpath_t;
 
-searchpath_t	*fs_searchpaths;
-searchpath_t	*fs_base_searchpaths;	// without gamedirs
+static searchpath_t	*fs_searchpaths;
+static searchpath_t	*fs_base_searchpaths;	// without gamedirs
 
 
 /*

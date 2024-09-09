@@ -19,6 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\qcommon\cmd_public.h" />
+    <ClInclude Include="..\qcommon\crc.h" />
+    <ClInclude Include="..\qcommon\cvar_public.h" />
+    <ClInclude Include="..\qcommon\fileformats\bsp.h" />
+    <ClInclude Include="..\qcommon\fileformats\md3.h" />
+    <ClInclude Include="..\qcommon\fileformats\pak.h" />
+    <ClInclude Include="..\qcommon\fileformats\pmodel.h" />
+    <ClInclude Include="..\qcommon\fileformats\smdl.h" />
+    <ClInclude Include="..\qcommon\pragma_files.h" />
+    <ClInclude Include="..\qcommon\pragma_windows.h" />
+    <ClInclude Include="..\qcommon\renderer.h" />
     <ClInclude Include="client\cgame\cgame.h" />
     <ClInclude Include="client\cgame\cg_local.h" />
     <ClInclude Include="client\cgame\progdefs_client.h" />
@@ -34,17 +45,19 @@
     <ClInclude Include="client\ui\gui.h" />
     <ClInclude Include="client\ui\ui_local.h" />
     <ClInclude Include="client\vid.h" />
+    <ClInclude Include="cmd.h" />
+    <ClInclude Include="cmodel.h" />
+    <ClInclude Include="cvar.h" />
+    <ClInclude Include="filesystem.h" />
+    <ClInclude Include="model_cache.h" />
+    <ClInclude Include="network.h" />
+    <ClInclude Include="net_chan.h" />
     <ClInclude Include="pragma_config.h" />
     <ClInclude Include="..\qcommon\anorms.h" />
-    <ClInclude Include="..\qcommon\crc.h" />
     <ClInclude Include="..\qcommon\mathlib.h" />
-    <ClInclude Include="..\qcommon\model_cache.h" />
-    <ClInclude Include="..\qcommon\mod_md3.h" />
-    <ClInclude Include="..\qcommon\mod_pragma.h" />
-    <ClInclude Include="..\qcommon\mod_smdl.h" />
     <ClInclude Include="..\qcommon\qcommon.h" />
-    <ClInclude Include="..\qcommon\qfiles.h" />
     <ClInclude Include="..\qcommon\shared.h" />
+    <ClInclude Include="protocol.h" />
     <ClInclude Include="script\progdefs_server.h" />
     <ClInclude Include="script\progdefs_ui.h" />
     <ClInclude Include="script\qc_opcodes.h" />
@@ -55,6 +68,8 @@
     <ClInclude Include="server\sv_game.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\qcommon\crc.c" />
+    <ClCompile Include="..\qcommon\md4.c" />
     <ClCompile Include="..\qcommon\shared_windows.c" />
     <ClCompile Include="client\cgame\cg_builtins.c" />
     <ClCompile Include="client\cgame\cg_dlights.c" />
@@ -85,28 +100,29 @@
     <ClCompile Include="client\fx\fx_load.c" />
     <ClCompile Include="client\fx\fx_main.c" />
     <ClCompile Include="client\fx\fx_play.c" />
+    <ClCompile Include="client\input_windows.c" />
     <ClCompile Include="client\snd_dma.c" />
     <ClCompile Include="client\snd_mem.c" />
     <ClCompile Include="client\snd_mix.c" />
+    <ClCompile Include="client\sound_windows.c" />
     <ClCompile Include="client\ui\ui_action.c" />
     <ClCompile Include="client\ui\ui_builtins.c" />
+    <ClCompile Include="client\ui\ui_centermsg.c" />
     <ClCompile Include="client\ui\ui_load.c" />
     <ClCompile Include="client\ui\ui_main.c" />
+    <ClCompile Include="model_cache.c" />
+    <ClCompile Include="model_def.c" />
     <ClCompile Include="script\scr_builtins_shared.c" />
     <ClCompile Include="..\qcommon\mathlib.c" />
-    <ClCompile Include="..\qcommon\model_def.c" />
-    <ClCompile Include="..\qcommon\astar_navigation.c" />
+    <ClCompile Include="astar_navigation.c" />
     <ClCompile Include="cmd.c" />
     <ClCompile Include="cmodel.c" />
     <ClCompile Include="..\qcommon\common.c" />
-    <ClCompile Include="..\qcommon\crc.c" />
-    <ClCompile Include="..\qcommon\cvar.c" />
-    <ClCompile Include="..\qcommon\filesystem.c" />
-    <ClCompile Include="..\qcommon\md4.c" />
+    <ClCompile Include="cvar.c" />
+    <ClCompile Include="filesystem.c" />
     <ClCompile Include="net_chan.c" />
     <ClCompile Include="net_msg.c" />
     <ClCompile Include="..\qcommon\shared.c" />
-    <ClCompile Include="..\qcommon\model_cache.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_debug.c" />
     <ClCompile Include="script\scr_exec.c" />
@@ -126,11 +142,9 @@
     <ClCompile Include="server\sv_send.c" />
     <ClCompile Include="server\sv_user.c" />
     <ClCompile Include="server\sv_world.c" />
-    <ClCompile Include="win_input.c" />
-    <ClCompile Include="win_net.c" />
-    <ClCompile Include="win_sound.c" />
-    <ClCompile Include="win_main.c" />
-    <ClCompile Include="vid_dll.c" />
+    <ClCompile Include="network_windows.c" />
+    <ClCompile Include="main_windows.c" />
+    <ClCompile Include="client/vid_dll.c" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="pragma.ico" />

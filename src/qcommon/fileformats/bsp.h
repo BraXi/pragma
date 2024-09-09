@@ -8,62 +8,25 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-//
-// qfiles.h: quake file formats
-// This file must be identical in the quake and utils directories
-//
-
-/*
-========================================================================
-
-The .pak files are just a linear collapse of a directory tree
-
-========================================================================
-*/
-
-#define IDPAKHEADER		(('K'<<24)+('C'<<16)+('A'<<8)+'P')
-
-typedef struct
-{
-	char	name[56];
-	int32_t		filepos, filelen;
-} dpackfile_t;
-
-typedef struct
-{
-	int32_t		ident;		// == IDPAKHEADER
-	int32_t		dirofs;
-	int32_t		dirlen;
-} dpackheader_t;
-
-#define	MAX_FILES_IN_PACK	4096
-
-
-/*
-========================================================================
-
- MODELS
-
-========================================================================
-*/
-
-typedef enum { LOD_HIGH, LOD_MEDIUM, LOD_LOW, NUM_LODS } lod_t;
-
-#include "mod_smdl.h"
-#include "mod_md3.h" // md3s are cheap to animate but consume much more memory
-#include "mod_pragma.h"
-
 /*
 ==============================================================================
 
   .BSP file format
+  
+  Quake2 BSP
+  QBISM BSP 
+  
+  BSPX DECOUPLED_LM
+
+  CONTENT FLAGS
+  SURFACE FLAGS
 
 ==============================================================================
 */
 
-// key / value pair sizes
-#define	MAX_KEY		32
-#define	MAX_VALUE	1024
+
+#ifndef _PRAGMA_BSP_H_
+#define _PRAGMA_BSP_H_
 
 typedef enum
 {
@@ -73,13 +36,47 @@ typedef enum
 	BSP_PORTALS, BSP_EDGES, BSP_SURFEDGES, BSP_LIGHTING, BSP_VISIBILITY, BSP_NUM_DATATYPES
 } bspDataType;
 
-//
-// REGULAR QUAKE2 BSP FORMAT
-//
-#define BSP_IDENT		(('P'<<24)+('S'<<16)+('B'<<8)+'I') // little-endian "IBSP"
+
+// ==============================================================================
+// BSPX extensions
+// ==============================================================================
+
+#define BSPX_IDENT		(('X'<<24)+('P'<<16)+('S'<<8)+'B') // little-endian "BSPX"
+
+typedef struct
+{
+	int32_t ident;		// BSPX_IDENT
+	int32_t numlumps;	// bspx_lump_t[numlumps]
+} bspx_header_t;
+
+
+typedef struct
+{
+	char		name[24];	// up to 23 chars, zero-padded
+	int32_t		fileofs;	// from file start
+	int32_t		filelen;
+} bspx_lump_t;
+
+typedef struct /* BSPX DECOUPLED LIGHTMAPS */
+{
+	uint16_t	width;
+	uint16_t	height;
+	int32_t		lightofs;		// start of numstyles (from face struct) * (width * height) samples
+	float	vecs[2][4];		// this is a world -> lightmap space transformation matrix
+} bspx_decoupledlm_t;
+
+
+// ==============================================================================
+// .BSP
+// ==============================================================================
+
+#define QBISM_IDENT		('Q' | ('B' << 8) | ('S' << 16) | ('P' << 24))
+#define BSP_IDENT		(('P'<<24)+('S'<<16)+('B'<<8)+'I')	// little-endian "IBSP"
 #define BSP_VERSION	38
 
-// upper design bounds
+#define	MAX_LIGHTMAPS_PER_SURFACE	4 // lightstyles per surface
+
+// regular q2 bsp limits
 // leaffaces, leafbrushes, planes, and verts are still bounded by 16 bit short limits
 #define	MAX_MAP_MODELS		1024
 #define	MAX_MAP_BRUSHES		8192
@@ -104,11 +101,7 @@ typedef enum
 #define	MAX_MAP_VISIBILITY	0x100000
 
 
-//
-// QBISM EXTENDED QUAKE2 BSP FORMAT
-//
-#define QBISM_IDENT				 ('Q' | ('B' << 8) | ('S' << 16) | ('P' << 24))
-
+// qbism bsp limits
 #define MAX_MAP_MODELS_QBSP      131072
 #define MAX_MAP_BRUSHES_QBSP     1048576
 #define MAX_MAP_ENTITIES_QBSP    131072
@@ -128,38 +121,6 @@ typedef enum
 #define MAX_MAP_LIGHTING_QBSP    54525952
 #define MAX_MAP_VISIBILITY_QBSP  0x8000000
 
-//=============================================================================
-
-// BSPX extensions to BSP
-#define BSPX_IDENT		(('X'<<24)+('P'<<16)+('S'<<8)+'B') // little-endian "BSPX"
-
-typedef struct
-{
-	uint16_t	width;
-	uint16_t	height;
-	int32_t		lightofs;		// start of numstyles (from face struct) * (width * height) samples
-	float	vecs[2][4];		// this is a world -> lightmap space transformation matrix
-} bspx_decoupledlm_t;
-
-typedef struct
-{
-	char	name[24];	// up to 23 chars, zero-padded
-	int32_t		fileofs;	// from file start
-	int32_t		filelen;
-} bspx_lump_t;
-
-typedef struct
-{
-	int32_t ident;		// BSPX_IDENT
-	int32_t numlumps;	// bspx_lump_t[numlumps]
-} bspx_header_t;
-
-//=============================================================================
-
-typedef struct
-{
-	int32_t		fileofs, filelen;
-} lump_t;
 
 // standard lumps
 #define	LUMP_ENTITIES		0
@@ -183,55 +144,11 @@ typedef struct
 #define	LUMP_AREAPORTALS	18
 #define	HEADER_LUMPS		19
 
-typedef struct
-{
-	int32_t			ident;
-	int32_t			version;
-	lump_t		lumps[HEADER_LUMPS];
-} dbsp_header_t;
-
-typedef struct
-{
-	float		mins[3], maxs[3];
-	float		origin[3];		// for sounds or lights
-	int32_t		headnode;
-	int32_t		firstface, numfaces;	// inlineModels just draw faces
-										// without walking the bsp tree
-} dbsp_model_t;
-
-
-typedef struct
-{
-	float	point[3];
-} dbsp_vertex_t;
-
-
-// 0-2 are axial planes
-#define	PLANE_X			0
-#define	PLANE_Y			1
-#define	PLANE_Z			2
-
-// 3-5 are non-axial planes snapped to the nearest
-#define	PLANE_ANYX		3
-#define	PLANE_ANYY		4
-#define	PLANE_ANYZ		5
-
-// planes (x&~1) and (x&~1)+1 are always opposites
-
-typedef struct
-{
-	float	normal[3];
-	float	dist;
-	int32_t	type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
-} dbsp_plane_t;
-
 
 // contents flags are seperate bits
 // a given brush can contribute multiple content bits
 // multiple brushes can be in a single leaf
-
 // these definitions also need to be in shared.h!
-
 // lower bits are stronger, and will eat weaker brushes completely
 #define	CONTENTS_NONE			-1
 #define	CONTENTS_EMPTY			0		// air
@@ -267,6 +184,11 @@ typedef struct
 #define	CONTENTS_LADDER			0x20000000	// player can climb it
 #define	CONTENTS_PLAYER			0x40000000	// player, should never be on a brush, only in game
 
+
+//
+// Surface Flags
+//
+
 #define	SURF_LIGHT		0x1		// value will hold the light strength
 #define	SURF_SLICK		0x2		// effects game physics
 #define	SURF_SKY		0x4		// don't draw, but add to skybox
@@ -278,13 +200,63 @@ typedef struct
 #define	SURF_HINT		0x100	// make a primary bsp splitter
 #define	SURF_SKIP		0x200	// completely ignore, allowing non-closed brushes
 
-// ericw_tools additional surface flags
+// ericw_tools additional flags
 #define SURF_ALPHATEST	(1 << 25) // alpha test flag
 #define SURF_N64_UV		(1 << 28) // N64 UV and surface flag hack
 #define SURF_SCROLLX	(1 << 29) // slow x scroll
 #define SURF_SCROLLY	(1 << 30) // slow y scroll
 #define SURF_SCROLLFLIP	(1 << 31) // flip scroll directon
 
+// 0-2 are axial planes
+#define	PLANE_X			0
+#define	PLANE_Y			1
+#define	PLANE_Z			2
+
+// 3-5 are non-axial planes snapped to the nearest
+#define	PLANE_ANYX		3
+#define	PLANE_ANYY		4
+#define	PLANE_ANYZ		5
+
+// the visibility lump consists of a header with a count, then
+// byte offsets for the PVS and PHS of each cluster, then the raw
+// compressed bit vectors
+#define	DVIS_PVS	0
+#define	DVIS_PHS	1
+#define	DVIS_NUM	2
+
+typedef struct
+{
+	int32_t		fileofs, filelen;
+} lump_t;
+
+typedef struct
+{
+	int32_t			ident;
+	int32_t			version;
+	lump_t		lumps[HEADER_LUMPS];
+} dbsp_header_t;
+
+typedef struct
+{
+	float		mins[3], maxs[3];
+	float		origin[3];		// for sounds or lights
+	int32_t		headnode;
+	int32_t		firstface, numfaces;	// inlineModels just draw faces
+										// without walking the bsp tree
+} dbsp_model_t;
+
+
+typedef struct
+{
+	float	point[3];
+} dbsp_vertex_t;
+
+typedef struct
+{
+	float	normal[3];
+	float	dist;
+	int32_t	type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
+} dbsp_plane_t;
 
 typedef struct
 {
@@ -306,7 +278,6 @@ typedef struct
 	uint32_t numfaces; // counting both sides
 } dbsp_node_ext_t;	// QBISM BSP
 
-
 typedef struct texinfo_s
 {
 	float		vecs[2][4];		// [s/t][xyz offset]
@@ -315,7 +286,6 @@ typedef struct texinfo_s
 	char		texture[32];	// texture name (textures/*.tga)
 	int32_t		nexttexinfo;	// for animations, -1 = end of chain
 } dbsp_texinfo_t;
-
 
 // note that edge 0 is never used, because negative edge nums are used for
 // counterclockwise use of the edge in a face
@@ -329,8 +299,6 @@ typedef struct
 	uint32_t v[2]; // vertex numbers
 } dbsp_edge_ext_t; // QBISM BSP
 
-
-#define	MAX_LIGHTMAPS_PER_SURFACE	4 // this is also max lightstyles for surf
 typedef struct
 {
 	uint16_t	planenum;
@@ -340,7 +308,7 @@ typedef struct
 	int16_t		numedges;
 	int16_t		texinfo;
 
-// lighting info
+	// lighting info
 	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
 	int32_t			lightofs;		// start of [numstyles*surfsize] samples
 } dbsp_face_t;
@@ -358,7 +326,6 @@ typedef struct
 	byte		styles[MAX_LIGHTMAPS_PER_SURFACE];
 	int32_t			lightofs; // start of [numstyles*surfsize] samples
 } dbsp_face_ext_t; // QBISM BSP
-
 
 typedef struct
 {
@@ -394,7 +361,6 @@ typedef struct
 	uint32_t	numleafbrushes;
 } dbsp_leaf_ext_t; // QBISM BSP
 
-
 typedef struct
 {
 	uint16_t	planenum;		// facing out of the leaf
@@ -413,17 +379,6 @@ typedef struct
 	int32_t			numsides;
 	int32_t			contents;
 } dbrush_t;
-
-//#define	ANGLE_UP	-1 // braxi -- unused
-//#define	ANGLE_DOWN	-2 // braxi -- unused
-
-
-// the visibility lump consists of a header with a count, then
-// byte offsets for the PVS and PHS of each cluster, then the raw
-// compressed bit vectors
-#define	DVIS_PVS	0
-#define	DVIS_PHS	1
-#define	DVIS_NUM	2
 
 typedef struct
 {
@@ -445,3 +400,6 @@ typedef struct
 	int32_t		numareaportals;
 	int32_t		firstareaportal;
 } dbsp_area_t;
+
+
+#endif /*_PRAGMA_BSP_H_*/

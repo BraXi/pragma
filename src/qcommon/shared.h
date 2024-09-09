@@ -36,10 +36,8 @@ See the attached GNU General Public License v2 for more details.
 
 #define C_ONLY 1
 
-
 typedef unsigned char 		byte;
 typedef enum {false, true}	qboolean;
-
 
 #ifndef NULL
 #define NULL ((void *)0)
@@ -60,7 +58,6 @@ char* _strlwr(char* x);
 #define	PITCH				0		// up / down
 #define	YAW					1		// left / right
 #define	ROLL				2		// fall over
-#define	ROTATEALL			3		// 3 axis
 
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
 #define	MAX_STRING_TOKENS	80		// max tokens resulting from Cmd_TokenizeString
@@ -69,32 +66,12 @@ char* _strlwr(char* x);
 #define	MAX_QPATH			64		// max length of a quake game pathname
 #define	MAX_OSPATH			128		// max length of a filesystem pathname
 
-//
-// per-level limits
-//
-#define	MAX_CLIENTS			32		// absolute limit, [braxi -- was 256]
-#define	MAX_GENTITIES		2048	// must change protocol to increase more
-#define	MAX_LIGHTSTYLES		256
-
-#ifdef PROTOCOL_EXTENDED_ASSETS
-	#define	MAX_MODELS			1024	// these can be sent over the net as shorts
-	#define	MAX_SOUNDS			1024	// so theoretical limit is 32768 for each
-#else
-	#define	MAX_MODELS			256		// these are sent over the net as bytes
-	#define	MAX_SOUNDS			256		// so they cannot be higher than 255
-#endif
-#define	MAX_IMAGES			256
-#define	MAX_ITEMS			256
-#define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
-
 
 // game print flags
 #define	PRINT_LOW			0		// pickup messages
 #define	PRINT_MEDIUM		1		// death messages
 #define	PRINT_HIGH			2		// critical messages
 #define	PRINT_CHAT			3		// chat messages
-
-
 
 #define	ERR_FATAL			0		// exit the entire game with a popup window
 #define	ERR_DROP			1		// print to console and disconnect from game
@@ -250,39 +227,7 @@ void Sys_Error (char *error, ...);
 void Com_Printf (char *msg, ...);
 
 
-/*
-==========================================================
-
-CVARS (console variables)
-
-==========================================================
-*/
-
-#ifndef CVAR
-#define	CVAR
-
-#define	CVAR_ARCHIVE	1	// set to cause it to be saved to vars.rc
-#define	CVAR_USERINFO	2	// added to userinfo  when changed
-#define	CVAR_SERVERINFO	4	// added to serverinfo when changed
-#define	CVAR_NOSET		8	// don't allow change from console at all,
-							// but can be set from the command line
-#define	CVAR_LATCH		16	// save changes until server restart
-#define	CVAR_CHEAT		32	// set only when cheats are enabled, unused yet
-
-// nothing outside the Cvar_*() functions should modify these fields!
-typedef struct cvar_s
-{
-	char		*name;
-	char		*description; // can be NULL
-	char		*string;
-	char		*latched_string;	// for CVAR_LATCH vars
-	int			flags;
-	qboolean	modified;	// set each time the cvar is changed
-	float		value;
-	struct cvar_s *next;
-} cvar_t;
-
-#endif		// CVAR
+#include "cvar_public.h"
 
 /*
 ==============================================================
@@ -747,6 +692,4 @@ typedef struct
 } player_state_t;
 
 
-// ==================
-#define DEFAULT_RENDERER "gl2"
-// ==================
+

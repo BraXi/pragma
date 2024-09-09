@@ -18,6 +18,17 @@ See the attached GNU General Public License v2 for more details.
 #ifndef PRAGMA_CONFIG_INCLUDED 
 #define PRAGMA_CONFIG_INCLUDED 1
 
+// what renderer DLL to use by default
+#define DEFAULT_RENDERER "gl2"
+
+
+// define this to dissalow any data but the pak0.pak matching checksum below
+//#define	NO_ADDONS 
+
+// if a packfile directory differs from this, it is assumed to be hacked
+#define	PAK0_CHECKSUM	0x40e614e0
+
+
 // Enable "stupid quake bug" fix
 #define FIX_SQB 1 
 
@@ -31,6 +42,22 @@ See the attached GNU General Public License v2 for more details.
 
 // protocol can use shorts when modelindex or soundindex exceed byte
 #define PROTOCOL_EXTENDED_ASSETS 1
+
+#define	MAX_CLIENTS			32		// absolute limit of maxclients
+#define	MAX_GENTITIES		2048	// must change protocol to increase more
+#define	MAX_LIGHTSTYLES		256
+
+#ifdef PROTOCOL_EXTENDED_ASSETS
+#	define	MAX_MODELS			1024	// these can be sent over the net as shorts
+#	define	MAX_SOUNDS			1024	// so theoretical limit is 32768 for each
+#else
+#	define	MAX_MODELS			256		// these are sent over the net as bytes
+#	define	MAX_SOUNDS			256		// so they cannot be higher than 255
+#endif
+#define	MAX_IMAGES			256
+#define	MAX_ITEMS			256
+#define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
+
 
 // main engine directory to load assets from (the default 'game' directory)
 #define	BASEDIRNAME	"main" 
