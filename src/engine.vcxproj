@@ -38,6 +38,7 @@
     <ClInclude Include="qcommon\anorms.h" />
     <ClInclude Include="qcommon\crc.h" />
     <ClInclude Include="qcommon\mathlib.h" />
+    <ClInclude Include="qcommon\model_cache.h" />
     <ClInclude Include="qcommon\mod_md3.h" />
     <ClInclude Include="qcommon\mod_pragma.h" />
     <ClInclude Include="qcommon\mod_smdl.h" />
@@ -104,7 +105,7 @@
     <ClCompile Include="qcommon\net_chan.c" />
     <ClCompile Include="qcommon\net_msg.c" />
     <ClCompile Include="qcommon\shared.c" />
-    <ClCompile Include="qcommon\com_model.c" />
+    <ClCompile Include="qcommon\model_cache.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_debug.c" />
     <ClCompile Include="script\scr_exec.c" />

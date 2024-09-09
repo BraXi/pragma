@@ -32,9 +32,9 @@ static int		hunkcount; // TODO 64BIT ..
 static byte		*membase;
 static int		hunkmaxsize;
 static int		cursize;
-static char		*allocname;
+static const char *allocname;
 
-void *Hunk_Begin (int maxsize, char *name)
+void *Hunk_Begin (const int maxsize, const char *name)
 {
 	// reserve a huge chunk of memory, but don't commit any yet
 	cursize = 0;

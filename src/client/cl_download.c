@@ -260,7 +260,8 @@ void CL_RequestNextDownload(void)
 
 	if (map_checksum != atoi(cl.configstrings[CS_CHECKSUM_MAP]))
 	{
-		Com_Error(ERR_DROP, "Local map version differs from server: %i != '%s'\n", map_checksum, cl.configstrings[CS_CHECKSUM_MAP]);
+		//Com_Error(ERR_DROP, "Local map '%s' differs from server: %i != '%s'\n", mapFileName, map_checksum, cl.configstrings[CS_CHECKSUM_MAP]);
+		Com_Error(ERR_DROP, "Map '%s' differs from server.\n", mapFileName);
 		return;
 	}
 

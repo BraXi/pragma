@@ -88,7 +88,7 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	int		i;
 
 	if (!name[0])
-		ri.Error(ERR_DROP, "%s: alled with NULL name.\n", __FUNCTION__);
+		ri.Error(ERR_DROP, "%s: called with NULL name.\n", __FUNCTION__);
 
 	//
 	// inline models are grabbed only from worldmodel
@@ -97,7 +97,7 @@ model_t* R_ModelForName(char* name, qboolean crash)
 	{
 		i = atoi(name + 1);
 		if (i < 1 || !r_worldmodel || i >= r_worldmodel->numInlineModels)
-			ri.Error(ERR_DROP, "%s: bad inline model number %i.\n", __FUNCTION__);
+			ri.Error(ERR_DROP, "%s: bad inline model number %i.\n", __FUNCTION__, i);
 		return &r_inlineModels[i];
 	}
 

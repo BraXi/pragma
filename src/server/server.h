@@ -126,7 +126,7 @@ typedef enum
 					// connection for a couple seconds
 	cs_connected,	// has been assigned to a client_t, but not in game yet
 	cs_spawned		// client is fully in game
-} client_state_t;
+} client_status_t;
 
 typedef struct
 {
@@ -141,7 +141,7 @@ typedef struct
 
 typedef struct client_s
 {
-	client_state_t	state;
+	client_status_t	state;
 
 	char			userinfo[MAX_INFO_STRING];		// name, etc
 

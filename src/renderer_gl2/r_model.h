@@ -265,7 +265,7 @@ byte	*Mod_BSP_ClusterPVS (int cluster, model_t *model);
 
 void	Cmd_modellist_f (void);
 
-void	*Hunk_Begin (int maxsize, char *name);
+//void	*Hunk_Begin (const int maxsize, const char *name);
 void	*Hunk_Alloc (int size);
 int		Hunk_End (void);
 void	Hunk_Free (void *base);

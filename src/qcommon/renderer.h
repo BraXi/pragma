@@ -282,7 +282,7 @@ typedef struct
 	qboolean	(*Vid_GetModeInfo)( int *width, int *height, int mode );
 	void		(*Vid_NewWindow)( int width, int height );
 
-	void	*(*Glob_HunkBegin)(int maxsize, char* name);
+	void	*(*Glob_HunkBegin)(const int maxsize, const char* name);
 	void	*(*Glob_HunkAlloc)(int size);
 	int		(*Glob_HunkEnd)(void);
 	void	(*Glob_HunkFree)(void* base);

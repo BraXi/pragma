@@ -732,7 +732,7 @@ CM_InlineModel
 Returns the inline model by name
 ==================
 */
-cmodel_t* CM_InlineModel(char* name)
+cmodel_t* CM_InlineModel(const char* name)
 {
 	int		num;
 

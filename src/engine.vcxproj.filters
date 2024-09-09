@@ -226,7 +226,7 @@
     <ClCompile Include="client\cgame\cg_entities.c">
       <Filter>client\cgame</Filter>
     </ClCompile>
-    <ClCompile Include="qcommon\com_model.c">
+    <ClCompile Include="qcommon\model_cache.c">
       <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
@@ -330,6 +330,9 @@
     </ClInclude>
     <ClInclude Include="qcommon\mod_pragma.h">
       <Filter>common\inc</Filter>
+    </ClInclude>
+    <ClInclude Include="qcommon\model_cache.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

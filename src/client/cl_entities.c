@@ -255,7 +255,7 @@ Mostly effects that were previously in trails code but shouldn't be
 */
 static inline void CL_EntityAddMiscEffects(clentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
-	CG_AddFlashLightToEntity(clent, &refent);
+	CG_AddFlashLightToEntity(clent, refent);
 }
 
 /*

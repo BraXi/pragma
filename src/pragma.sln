@@ -9,8 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pragma_renderer", "renderer
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pragma_dedsv", "pragma_server.vcxproj", "{0CA27754-F257-489E-B808-16610454DE81}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "converter", "tools\converter\converter.vcxproj", "{E2651D63-6F27-40A1-9035-A6E1AB90722F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -43,14 +41,6 @@ Global
 		{0CA27754-F257-489E-B808-16610454DE81}.Release|x64.Build.0 = Release|x64
 		{0CA27754-F257-489E-B808-16610454DE81}.Release|x86.ActiveCfg = Release|Win32
 		{0CA27754-F257-489E-B808-16610454DE81}.Release|x86.Build.0 = Release|Win32
-		{E2651D63-6F27-40A1-9035-A6E1AB90722F}.Debug|x64.ActiveCfg = Debug|x64
-		{E2651D63-6F27-40A1-9035-A6E1AB90722F}.Debug|x64.Build.0 = Debug|x64
-		{E2651D63-6F27-40A1-9035-A6E1AB90722F}.Debug|x86.ActiveCfg = Debug|Win32
-		{E2651D63-6F27-40A1-9035-A6E1AB90722F}.Debug|x86.Build.0 = Debug|Win32
-		{E2651D63-6F27-40A1-9035-A6E1AB90722F}.Release|x64.ActiveCfg = Release|x64
-		{E2651D63-6F27-40A1-9035-A6E1AB90722F}.Release|x64.Build.0 = Release|x64
-		{E2651D63-6F27-40A1-9035-A6E1AB90722F}.Release|x86.ActiveCfg = Release|Win32
-		{E2651D63-6F27-40A1-9035-A6E1AB90722F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

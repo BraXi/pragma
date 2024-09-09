@@ -179,7 +179,7 @@ void Com_PageInMemory (byte *buffer, int size);
 //=============================================
 
 // portable case insensitive compare
-int Q_stricmp (char *s1, char *s2);
+int Q_stricmp (const char *s1, const char *s2);
 int Q_strcasecmp (char *s1, char *s2);
 int Q_strncasecmp (char *s1, char *s2, int n);
 
@@ -225,7 +225,7 @@ int		Sys_Milliseconds (void);
 void	Sys_Mkdir (char *path);
 
 // large block stack allocation routines
-void	*Hunk_Begin (int maxsize, char *name);
+void	*Hunk_Begin (const int maxsize, const char *name);
 void	*Hunk_Alloc (int size);
 void	Hunk_Free (void *buf);
 int		Hunk_End (void);
