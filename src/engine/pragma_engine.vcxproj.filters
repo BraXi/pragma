@@ -1,130 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="network_windows.c" />
-    <ClCompile Include="main_windows.c" />
+    <ClCompile Include="..\common\crc.c" />
+    <ClCompile Include="..\common\shared_windows.c" />
+    <ClCompile Include="md4.c" />
+    <ClCompile Include="message.c" />
+    <ClCompile Include="model_cache.c" />
+    <ClCompile Include="model_def.c" />
+    <ClCompile Include="pragma.c" />
+    <ClCompile Include="..\common\mathlib.c" />
+    <ClCompile Include="astar_navigation.c" />
     <ClCompile Include="cmd.c" />
     <ClCompile Include="cmodel.c" />
-    <ClCompile Include="net_chan.c" />
-    <ClCompile Include="net_msg.c" />
-    <ClCompile Include="astar_navigation.c" />
     <ClCompile Include="cvar.c" />
     <ClCompile Include="filesystem.c" />
-    <ClCompile Include="model_cache.c" />
-    <ClCompile Include="client\cgame\cg_builtins.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_dlights.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_entities.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_flash.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_events.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_lightstyles.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_main.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_model.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_oldfx.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_particles.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_temp_entities.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_tempents.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_weapon.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_world.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_cinematic.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_console.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_download.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_entities.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_graph.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_input.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_keys.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_main.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_parse.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_predict.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_screen.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_view.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client/vid_dll.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_dma.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_mem.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\snd_mix.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\fx\fx_load.c">
-      <Filter>Client\FX</Filter>
-    </ClCompile>
-    <ClCompile Include="client\fx\fx_main.c">
-      <Filter>Client\FX</Filter>
-    </ClCompile>
-    <ClCompile Include="client\fx\fx_play.c">
-      <Filter>Client\FX</Filter>
-    </ClCompile>
-    <ClCompile Include="client\ui\ui_centermsg.c">
-      <Filter>Client\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="client\ui\ui_action.c">
-      <Filter>Client\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="client\ui\ui_builtins.c">
-      <Filter>Client\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="client\ui\ui_load.c">
-      <Filter>Client\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="client\ui\ui_main.c">
-      <Filter>Client\GUI</Filter>
-    </ClCompile>
+    <ClCompile Include="net_chan.c" />
+    <ClCompile Include="net_msg.c" />
+    <ClCompile Include="..\common\shared.c" />
+    <ClCompile Include="network_windows.c" />
+    <ClCompile Include="main_windows.c" />
+    <ClCompile Include="sizebuf.c" />
+    <ClCompile Include="usercmd.c" />
     <ClCompile Include="server\sv_ai.c">
       <Filter>Server</Filter>
     </ClCompile>
@@ -167,6 +63,126 @@
     <ClCompile Include="server\sv_write.c">
       <Filter>Server</Filter>
     </ClCompile>
+    <ClCompile Include="client\cgame\cg_builtins.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_dlights.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_entities.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_events.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_flash.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_lightstyles.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_main.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_model.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_oldfx.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_particles.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_temp_entities.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_tempents.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_weapon.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_world.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\fx\fx_load.c">
+      <Filter>Client\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="client\fx\fx_main.c">
+      <Filter>Client\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="client\fx\fx_play.c">
+      <Filter>Client\FX</Filter>
+    </ClCompile>
+    <ClCompile Include="client\ui\ui_action.c">
+      <Filter>Client\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="client\ui\ui_centermsg.c">
+      <Filter>Client\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="client\ui\ui_builtins.c">
+      <Filter>Client\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="client\ui\ui_load.c">
+      <Filter>Client\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="client\ui\ui_main.c">
+      <Filter>Client\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_cinematic.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_console.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_download.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_entities.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_graph.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_input.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_keys.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_main.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_parse.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_predict.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_screen.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_view.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\input_windows.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\sound_windows.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\snd_mix.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\snd_mem.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\snd_dma.c">
+      <Filter>Client</Filter>
+    </ClCompile>
+    <ClCompile Include="client/vid_dll.c">
+      <Filter>Client</Filter>
+    </ClCompile>
     <ClCompile Include="script\scr_builtins_math.c">
       <Filter>QCVM</Filter>
     </ClCompile>
@@ -176,59 +192,63 @@
     <ClCompile Include="script\scr_debug.c">
       <Filter>QCVM</Filter>
     </ClCompile>
+    <ClCompile Include="script\scr_exec.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
     <ClCompile Include="script\scr_main.c">
       <Filter>QCVM</Filter>
     </ClCompile>
     <ClCompile Include="script\scr_utils.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_exec.c">
-      <Filter>QCVM</Filter>
-    </ClCompile>
-    <ClCompile Include="client\input_windows.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\sound_windows.c">
-      <Filter>Client</Filter>
-    </ClCompile>
-    <ClCompile Include="model_def.c" />
-    <ClCompile Include="sizebuf.c" />
-    <ClCompile Include="message.c" />
-    <ClCompile Include="usercmd.c" />
-    <ClCompile Include="pragma.c" />
-    <ClCompile Include="..\common\crc.c" />
-    <ClCompile Include="..\common\mathlib.c">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\shared_windows.c">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\shared.c">
-      <Filter>Common</Filter>
-    </ClCompile>
-    <ClCompile Include="md4.c">
-      <Filter>Common</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="filesystem.h" />
+    <ClInclude Include="..\common\crc.h" />
+    <ClInclude Include="cmd.h" />
     <ClInclude Include="cmodel.h" />
     <ClInclude Include="cvar.h" />
-    <ClInclude Include="cmd.h" />
-    <ClInclude Include="protocol.h" />
+    <ClInclude Include="filesystem.h" />
+    <ClInclude Include="message.h" />
+    <ClInclude Include="model_cache.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="net_chan.h" />
-    <ClInclude Include="model_cache.h" />
+    <ClInclude Include="pragma.h" />
+    <ClInclude Include="..\common\mathlib.h" />
+    <ClInclude Include="..\common\shared.h" />
+    <ClInclude Include="pragma_config.h" />
+    <ClInclude Include="protocol.h" />
+    <ClInclude Include="usercmd.h" />
+    <ClInclude Include="server\sv_game.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="server\server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\anorms.h">
+      <Filter>Common</Filter>
+    </ClInclude>
     <ClInclude Include="client\cgame\cg_local.h">
       <Filter>Client\Client Game</Filter>
+    </ClInclude>
+    <ClInclude Include="client\fx\effects.h">
+      <Filter>Client\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="client\fx\fx_local.h">
+      <Filter>Client\FX</Filter>
+    </ClInclude>
+    <ClInclude Include="client\ui\gui.h">
+      <Filter>Client\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="client\ui\ui_local.h">
+      <Filter>Client\GUI</Filter>
     </ClInclude>
     <ClInclude Include="client\client.h">
       <Filter>Client</Filter>
     </ClInclude>
-    <ClInclude Include="client\console.h">
-      <Filter>Client</Filter>
+    <ClInclude Include="client\cgame\client_game.h">
+      <Filter>Client\Client Game</Filter>
     </ClInclude>
-    <ClInclude Include="client\vid.h">
+    <ClInclude Include="client\console.h">
       <Filter>Client</Filter>
     </ClInclude>
     <ClInclude Include="client\input.h">
@@ -237,32 +257,53 @@
     <ClInclude Include="client\keys.h">
       <Filter>Client</Filter>
     </ClInclude>
-    <ClInclude Include="client\screen.h">
+    <ClInclude Include="client\sound.h">
       <Filter>Client</Filter>
     </ClInclude>
     <ClInclude Include="client\snd_loc.h">
       <Filter>Client</Filter>
     </ClInclude>
-    <ClInclude Include="client\sound.h">
+    <ClInclude Include="client\vid.h">
       <Filter>Client</Filter>
     </ClInclude>
-    <ClInclude Include="client\fx\fx_local.h">
-      <Filter>Client\FX</Filter>
+    <ClInclude Include="..\common\cvar_public.h">
+      <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="client\ui\gui.h">
-      <Filter>Client\FX</Filter>
+    <ClInclude Include="..\common\pragma_files.h">
+      <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="client\fx\effects.h">
-      <Filter>Client\FX</Filter>
+    <ClInclude Include="..\common\pragma_windows.h">
+      <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="client\ui\ui_local.h">
-      <Filter>Client\GUI</Filter>
+    <ClInclude Include="..\common\renderer.h">
+      <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="server\sv_game.h">
-      <Filter>Server</Filter>
+    <ClInclude Include="..\common\fileformats\bsp.h">
+      <Filter>QCVM\File Formats</Filter>
     </ClInclude>
-    <ClInclude Include="server\server.h">
-      <Filter>Server</Filter>
+    <ClInclude Include="..\common\fileformats\md3.h">
+      <Filter>QCVM\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\pak.h">
+      <Filter>QCVM\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\pmodel.h">
+      <Filter>QCVM\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\smdl.h">
+      <Filter>QCVM\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="script\qc_opcodes.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="script\qc_opnames.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="script\script_internals.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="script\scriptvm.h">
+      <Filter>QCVM</Filter>
     </ClInclude>
     <ClInclude Include="client\cgame\progdefs_client.h">
       <Filter>QCVM</Filter>
@@ -273,60 +314,8 @@
     <ClInclude Include="script\progdefs_ui.h">
       <Filter>QCVM</Filter>
     </ClInclude>
-    <ClInclude Include="script\qc_opcodes.h">
-      <Filter>QCVM</Filter>
-    </ClInclude>
-    <ClInclude Include="script\qc_opnames.h">
-      <Filter>QCVM</Filter>
-    </ClInclude>
-    <ClInclude Include="script\scriptvm.h">
-      <Filter>QCVM</Filter>
-    </ClInclude>
-    <ClInclude Include="script\script_internals.h">
-      <Filter>QCVM</Filter>
-    </ClInclude>
-    <ClInclude Include="message.h" />
-    <ClInclude Include="usercmd.h" />
-    <ClInclude Include="pragma.h" />
-    <ClInclude Include="..\common\crc.h" />
-    <ClInclude Include="client\cgame\client_game.h" />
-    <ClInclude Include="..\common\pragma.h" />
-    <ClInclude Include="..\common\mathlib.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\pragma_files.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\pragma_windows.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\shared.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\anorms.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\cvar_public.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\fileformats\bsp.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\fileformats\md3.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\fileformats\pak.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\fileformats\pmodel.h">
-      <Filter>Common\files</Filter>
-    </ClInclude>
-    <ClInclude Include="pragma_config.h" />
-    <ClInclude Include="..\common\renderer.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\fileformats\smdl.h">
-      <Filter>Common\files</Filter>
+    <ClInclude Include="client\screen.h">
+      <Filter>Client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -337,28 +326,28 @@
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Client">
-      <UniqueIdentifier>{229f15be-b2c6-4a3b-a200-515506853b65}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Client\Client Game">
-      <UniqueIdentifier>{b50b812e-a01c-471c-9069-c5b6cc302bfe}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Client\FX">
-      <UniqueIdentifier>{3cf5dc94-e370-407c-9fb8-801f83a28772}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Client\GUI">
-      <UniqueIdentifier>{02dfe961-8bb2-4bb0-bd3d-f921ed2c767c}</UniqueIdentifier>
+      <UniqueIdentifier>{c5aea17d-da4a-4255-bdde-4754e5508737}</UniqueIdentifier>
     </Filter>
     <Filter Include="Server">
-      <UniqueIdentifier>{2792abfe-9f2a-4859-9c42-7ce127983644}</UniqueIdentifier>
+      <UniqueIdentifier>{da8e5b5d-f030-4266-b8bc-e6b2fdbc6d76}</UniqueIdentifier>
     </Filter>
     <Filter Include="Common">
-      <UniqueIdentifier>{8122a98b-170e-4d17-86e1-1ba853f9b1f9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Common\files">
-      <UniqueIdentifier>{0df4290c-c52a-4b18-af4d-cd3e1596c448}</UniqueIdentifier>
+      <UniqueIdentifier>{d51c5f0a-b961-42f4-8ef7-d8860e9fe7f2}</UniqueIdentifier>
     </Filter>
     <Filter Include="QCVM">
-      <UniqueIdentifier>{46b74e1a-4205-4689-bad5-6fce2ce30cfa}</UniqueIdentifier>
+      <UniqueIdentifier>{8f1d6b83-cec6-403e-b3a8-c3950a0e82a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client\Client Game">
+      <UniqueIdentifier>{a4852901-1df6-4336-b0da-f6f3cabba07a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client\FX">
+      <UniqueIdentifier>{d23f99f3-fbd3-43b9-a285-abca425aedf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client\GUI">
+      <UniqueIdentifier>{a6d0833b-ce91-4759-8fce-f26ba289128f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QCVM\File Formats">
+      <UniqueIdentifier>{87710d39-a80c-4ea4-ad15-187203329dd9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

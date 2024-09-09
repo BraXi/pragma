@@ -55,7 +55,6 @@
     <ClInclude Include="pragma.h" />
     <ClInclude Include="..\common\anorms.h" />
     <ClInclude Include="..\common\mathlib.h" />
-    <ClInclude Include="..\common\pragma.h" />
     <ClInclude Include="..\common\shared.h" />
     <ClInclude Include="pragma_config.h" />
     <ClInclude Include="protocol.h" />
