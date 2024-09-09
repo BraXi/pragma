@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\qcommon\cmd_public.h" />
     <ClInclude Include="..\qcommon\crc.h" />
     <ClInclude Include="..\qcommon\cvar_public.h" />
     <ClInclude Include="..\qcommon\fileformats\bsp.h" />
@@ -49,6 +48,7 @@
     <ClInclude Include="cmodel.h" />
     <ClInclude Include="cvar.h" />
     <ClInclude Include="filesystem.h" />
+    <ClInclude Include="message.h" />
     <ClInclude Include="model_cache.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="net_chan.h" />
@@ -66,6 +66,7 @@
     <ClInclude Include="script\script_internals.h" />
     <ClInclude Include="server\server.h" />
     <ClInclude Include="server\sv_game.h" />
+    <ClInclude Include="usercmd.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\qcommon\crc.c" />
@@ -110,6 +111,7 @@
     <ClCompile Include="client\ui\ui_centermsg.c" />
     <ClCompile Include="client\ui\ui_load.c" />
     <ClCompile Include="client\ui\ui_main.c" />
+    <ClCompile Include="message.c" />
     <ClCompile Include="model_cache.c" />
     <ClCompile Include="model_def.c" />
     <ClCompile Include="script\scr_builtins_shared.c" />
@@ -145,6 +147,8 @@
     <ClCompile Include="network_windows.c" />
     <ClCompile Include="main_windows.c" />
     <ClCompile Include="client/vid_dll.c" />
+    <ClCompile Include="sizebuf.c" />
+    <ClCompile Include="usercmd.c" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="pragma.ico" />

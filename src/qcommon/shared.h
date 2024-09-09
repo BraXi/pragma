@@ -8,7 +8,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 	
-// q_shared.h -- included first by ALL program modules
+// shared.h -- included first by ALL program modules
 #pragma once
 
 #include "../engine/pragma_config.h"

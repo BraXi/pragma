@@ -124,108 +124,13 @@ typedef struct debugline_s
 //============================================================================
 
 
-//============================================================================
-
-typedef struct sizebuf_s
-{
-	qboolean	allowoverflow;	// if false, do a Com_Error
-	qboolean	overflowed;		// set to true if the buffer size failed
-	byte	*data;
-	int		maxsize;
-	int		cursize;
-	int		readcount;
-} sizebuf_t;
-
-void SZ_Init (sizebuf_t *buf, byte *data, int length);
-void SZ_Clear (sizebuf_t *buf);
-void *SZ_GetSpace (sizebuf_t *buf, int length);
-void SZ_Write (sizebuf_t *buf, void *data, int length);
-void SZ_Print (sizebuf_t *buf, char *data);	// strcats onto the sizebuf
-
-//============================================================================
-
-struct usercmd_s;
-struct entity_state_s;
-
-#if PROTOCOL_FLOAT_COORDS == 1
-static inline int MSG_PackSolid32(const vec3_t mins, const vec3_t maxs)
-{
-	// Q2PRO code
-	int x = maxs[0];
-	int y = maxs[1];
-	int zd = -mins[2];
-	int zu = maxs[2] + 32;
-
-	clamp(x, 1, 255);
-	clamp(y, 1, 255);
-	clamp(zd, 0, 255);
-	clamp(zu, 0, 255);
-
-	return MakeLittleLong(x, y, zd, zu);
-}
-
-static inline void MSG_UnpackSolid32(int packedsolid, vec3_t mins, vec3_t maxs)
-{
-	// Q2PRO code
-	int x = packedsolid & 255;
-	int y = (packedsolid >> 8) & 255;
-	int zd = (packedsolid >> 16) & 255;
-	int zu = ((packedsolid >> 24) & 255) - 32;
-
-	VectorSet(mins, -x, -y, -zd);
-	VectorSet(maxs, x, y, zu);
-}
-#else
-static inline void MSG_UnpackSolid16(int packedsolid, vec3_t bmins, vec3_t bmaxs)
-{
-	int		x, zd, zu;
-	// encoded bbox
-	x = 8 * ((int)packedsolid & 31);
-	zd = 8 * (((int)packedsolid >> 5) & 31);
-	zu = 8 * (((int)packedsolid >> 10) & 63) - 32;
-
-	bmins[0] = bmins[1] = -x;
-	bmaxs[0] = bmaxs[1] = x;
-	bmins[2] = -zd;
-	bmaxs[2] = zu;
-}
-#endif
-
-void MSG_WriteChar (sizebuf_t *sb, int c);
-void MSG_WriteByte (sizebuf_t *sb, int c);
-void MSG_WriteShort (sizebuf_t *sb, int c);
-void MSG_WriteLong (sizebuf_t *sb, int c);
-void MSG_WriteFloat (sizebuf_t *sb, float f);
-void MSG_WriteString (sizebuf_t *sb, char *s);
-void MSG_WriteCoord (sizebuf_t *sb, float f);
-void MSG_WritePos (sizebuf_t *sb, vec3_t pos);
-void MSG_WriteAngle (sizebuf_t *sb, float f);
-void MSG_WriteAngle16 (sizebuf_t *sb, float f);
-void MSG_WriteDeltaUsercmd (sizebuf_t *sb, struct usercmd_s *from, struct usercmd_s *cmd);
-void MSG_WriteDeltaEntity (struct entity_state_s *from, struct entity_state_s *to, sizebuf_t *msg, qboolean force, qboolean newentity);
-void MSG_WriteDir (sizebuf_t *sb, vec3_t vector);
+#include "../engine/sizebuf.h"
+#include "../engine/message.h"
+#include "../engine/usercmd.h"
 
 
 
-void	MSG_BeginReading (sizebuf_t *sb);
 
-int		MSG_ReadChar (sizebuf_t *sb);
-int		MSG_ReadByte (sizebuf_t *sb);
-int		MSG_ReadShort (sizebuf_t *sb);
-int		MSG_ReadLong (sizebuf_t *sb);
-float	MSG_ReadFloat (sizebuf_t *sb);
-char	*MSG_ReadString (sizebuf_t *sb);
-char	*MSG_ReadStringLine (sizebuf_t *sb);
-
-float	MSG_ReadCoord (sizebuf_t *sb);
-void	MSG_ReadPos (sizebuf_t *sb, vec3_t pos);
-float	MSG_ReadAngle (sizebuf_t *sb);
-float	MSG_ReadAngle16 (sizebuf_t *sb);
-void	MSG_ReadDeltaUsercmd (sizebuf_t *sb, struct usercmd_s *from, struct usercmd_s *cmd);
-
-void	MSG_ReadDir (sizebuf_t *sb, vec3_t vector);
-
-void	MSG_ReadData (sizebuf_t *sb, void *buffer, int size);
 
 //============================================================================
 
@@ -342,8 +247,8 @@ void Qcommon_Init (int argc, char **argv);
 void Qcommon_Frame (int msec);
 void Qcommon_Shutdown (void);
 
-#define MD2_NUMVERTEXNORMALS	162
-extern	vec3_t	bytedirs[MD2_NUMVERTEXNORMALS];
+#define NUM_VERTEX_NORMALS	162
+extern	vec3_t	bytedirs[NUM_VERTEX_NORMALS];
 
 #ifndef DEDICATED_ONLY
 // this is in the client code, but can be used for debugging from server

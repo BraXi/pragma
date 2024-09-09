@@ -210,6 +210,9 @@
       <Filter>Client</Filter>
     </ClCompile>
     <ClCompile Include="model_def.c" />
+    <ClCompile Include="sizebuf.c" />
+    <ClCompile Include="message.c" />
+    <ClCompile Include="usercmd.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pragma_config.h" />
@@ -329,12 +332,11 @@
     <ClInclude Include="..\qcommon\fileformats\smdl.h">
       <Filter>Common\files</Filter>
     </ClInclude>
-    <ClInclude Include="..\qcommon\cmd_public.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="..\qcommon\cvar_public.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="message.h" />
+    <ClInclude Include="usercmd.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="pragma.rc" />
