@@ -443,8 +443,7 @@ static void SMD_ParseTriangles()
 	pNewVert->uv[0] = (float)atof(Com_GetArg(7));
 	pNewVert->uv[1] = (float)atof(Com_GetArg(8));
 
-	// FIXME: need AddPointToBounds in tools
-	//AddPointToBounds(pNewVert->xyz, pRawSMD->mins, pRawSMD->maxs);
+	AddPointToBounds(pNewVert->xyz, pRawSMD->mins, pRawSMD->maxs);
 
 	pRawSMD->vVerts[pRawSMD->numverts] = pNewVert;
 	pSurface->numverts++;
@@ -506,6 +505,7 @@ smddata_t *LoadSMD(const smdtype_t expect, const char *name, const char* filenam
 	strncpy(data->name, name, sizeof(data->name));
 	pRawSMD = data;
 
+	ClearBounds(data->mins, data->maxs);
 	//Com_Printf("Loading %s: %s\n", SmdTypeAsStr(data->type), name);
 
 	while (fgets(line, sizeof(line), f) != NULL)

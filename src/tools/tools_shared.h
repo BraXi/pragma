@@ -49,7 +49,7 @@ typedef unsigned char byte;
 #define	MAXLINELEN	512		// maximum length of a single line
 #define MAXPATH 512			// maximum path length in prtool
 
-#include "../qcommon/mathlib.h"
+#include "../common/mathlib.h"
 
 extern void* Com_SafeMalloc(const size_t size, const char* sWhere);
 
@@ -82,3 +82,8 @@ extern short Com_EndianShort(short val);
 extern float Com_EndianFloat(float val);
 
 extern int Com_stricmp(const char* s1, const char* s2);
+
+
+extern void ClearBounds(vec3_t mins, vec3_t maxs);
+extern void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs);
+extern float RadiusFromBounds(vec3_t mins, vec3_t maxs);;

@@ -1,10 +1,25 @@
 /*
+pragma
+Copyright (C) 2023-2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+
+See the attached GNU General Public License v2 for more details.
+*/
+
+/*
 ==============================================================
 
 MATHLIB
 
 ==============================================================
 */
+
+#ifndef _PRAGMA_MATHLIB_H_
+#define _PRAGMA_MATHLIB_H_
+
+#pragma once
 
 typedef float vec_t;
 typedef vec_t vec2_t[2];
@@ -108,7 +123,7 @@ void MakeNormalVectors(vec3_t forward, vec3_t right, vec3_t up);
 
 void ClearBounds(vec3_t mins, vec3_t maxs);
 void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs);
-
+float RadiusFromBounds(vec3_t mins, vec3_t maxs);
 void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross);
 vec_t VectorNormalize(vec3_t v);		// returns vector length
 vec_t VectorNormalize2(vec3_t v, vec3_t out);
@@ -174,4 +189,5 @@ void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal);
 void PerpendicularVector(vec3_t dst, const vec3_t src);
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees);
 
-float RadiusFromBounds(vec3_t mins, vec3_t maxs);
+
+#endif /*_PRAGMA_MATHLIB_H_*/

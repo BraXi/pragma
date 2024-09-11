@@ -9,6 +9,7 @@ See the attached GNU General Public License v2 for more details.
 */
 
 #include "tools_shared.h"
+#include <math.h>
 
 #ifdef _WIN32
 static HANDLE hConsole = NULL;
@@ -468,4 +469,67 @@ int Com_stricmp(const char* s1, const char* s2)
 #else
 	return strcasecmp(s1, s2);
 #endif
+}
+
+
+vec_t VectorLength(vec3_t v)
+{
+	int		i;
+	float	length;
+
+	length = 0;
+	for (i = 0; i < 3; i++)
+		length += v[i] * v[i];
+	length = (float)sqrt(length);
+
+	return length;
+}
+
+/*
+===============
+ClearBounds
+===============
+*/
+void ClearBounds(vec3_t mins, vec3_t maxs)
+{
+	mins[0] = mins[1] = mins[2] = 99999.0f;
+	maxs[0] = maxs[1] = maxs[2] = -99999.0f;
+}
+
+/*
+===============
+AddPointToBounds
+===============
+*/
+void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs)
+{
+	int		i;
+	vec_t	val;
+
+	for (i = 0; i < 3; i++)
+	{
+		val = v[i];
+		if (val < mins[i])
+			mins[i] = val;
+		if (val > maxs[i])
+			maxs[i] = val;
+	}
+}
+
+/*
+=================
+RadiusFromBounds
+=================
+*/
+float RadiusFromBounds(vec3_t mins, vec3_t maxs)
+{
+	int		i;
+	vec3_t	corner;
+
+	for (i = 0; i < 3; i++)
+	{
+		corner[i] = (float)(fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]));
+	}
+
+	return VectorLength(corner);
 }

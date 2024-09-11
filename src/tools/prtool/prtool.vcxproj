@@ -24,6 +24,7 @@
     <ProjectGuid>{e2651d63-6f27-40a1-9035-a6e1ab90722f}</ProjectGuid>
     <RootNamespace>converter</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>pragma_tool</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -78,6 +79,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>..\..\..\build\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -148,7 +151,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\qcommon\mathlib.c" />
     <ClCompile Include="..\tools_shared.cpp" />
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="prtool.cpp" />
@@ -157,8 +159,11 @@
     <ClCompile Include="smd.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\common\mathlib.h" />
+    <ClInclude Include="..\..\common\pragma_files.h" />
     <ClInclude Include="..\tools_shared.h" />
     <ClInclude Include="prtool.h" />
+    <ClInclude Include="smd.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

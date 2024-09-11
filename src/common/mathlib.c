@@ -1,3 +1,13 @@
+/*
+pragma
+Copyright (C) 2023-2024 BraXi.
+
+Quake 2 Engine 'Id Tech 2'
+Copyright (C) 1997-2001 Id Software, Inc.
+
+See the attached GNU General Public License v2 for more details.
+*/
+
 #include "shared.h"
 
 #define USE_SSE
@@ -453,8 +463,8 @@ ClearBounds
 */
 void ClearBounds(vec3_t mins, vec3_t maxs)
 {
-	mins[0] = mins[1] = mins[2] = 99999;
-	maxs[0] = maxs[1] = maxs[2] = -99999;
+	mins[0] = mins[1] = mins[2] = 99999.0f;
+	maxs[0] = maxs[1] = maxs[2] = -99999.0f;
 }
 
 /*
@@ -475,6 +485,24 @@ void AddPointToBounds(vec3_t v, vec3_t mins, vec3_t maxs)
 		if (val > maxs[i])
 			maxs[i] = val;
 	}
+}
+
+/*
+=================
+RadiusFromBounds
+=================
+*/
+float RadiusFromBounds(vec3_t mins, vec3_t maxs)
+{
+	int		i;
+	vec3_t	corner;
+
+	for (i = 0; i < 3; i++)
+	{
+		corner[i] = fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]);
+	}
+
+	return VectorLength(corner);
 }
 
 /*
@@ -953,24 +981,6 @@ void MatrixMultiply(mat3x3_t in1, mat3x3_t in2, mat3x3_t out)
 		in1[2][2] * in2[2][1];
 	out[2][2] = in1[2][0] * in2[0][2] + in1[2][1] * in2[1][2] +
 		in1[2][2] * in2[2][2];
-}
-
-/*
-=================
-RadiusFromBounds
-=================
-*/
-float RadiusFromBounds(vec3_t mins, vec3_t maxs)
-{
-	int		i;
-	vec3_t	corner;
-
-	for (i = 0; i < 3; i++)
-	{
-		corner[i] = fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]);
-	}
-
-	return VectorLength(corner);
 }
 
 mat4_t mat4_identity =	{1, 0, 0, 0,

@@ -471,24 +471,30 @@ static void WriteModel(assetdef_t* def)
 		return;
 	}
 
+	pData = def->vSources[0]->pData; // MAIN PART
+
 	// write header
 	memset(&header, 0, sizeof(pmodel_header_s));
 	header.ident = Com_EndianLong(PMODEL_IDENT);
 	header.version = Com_EndianLong(PMODEL_VERSION);
-	//header.mins = { 0 };
-	//header.maxs = { 0 };
 	header.flags = Com_EndianLong(def->flags);
 	header.numBones = Com_EndianLong(def->numBones);
 	header.numVertexes = Com_EndianLong(def->numVertexes);
 	header.numSurfaces = Com_EndianLong(def->numSurfaces);
 	header.numParts = Com_EndianLong(def->numParts);
 
+	for (i = 0; i < 3; i++)
+	{
+		header.mins[i] = Com_EndianFloat(pData->mins[i]);
+		header.maxs[i] = Com_EndianFloat(pData->maxs[i]);
+	}
+	//header.radius = Com_EndianFloat(RadiusFromBounds(pData->mins, pData->maxs));
+
 	Com_SafeWrite(f, &header, sizeof(header));
 	outsize += sizeof(header);
 
 
 	// use first part of a model for bones and skeleton, all remaining parts match them
-	pData = def->vSources[0]->pData; // MAIN PART
 	elementsize = sizeof(pmodel_bone_t);
 	for (i = 0; i < pData->numbones; i++)
 	{
