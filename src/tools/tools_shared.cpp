@@ -358,7 +358,13 @@ skipwhite:
 
 void Com_Tokenize(char* text)
 {
-	memset(com_argv, 0, sizeof(char*) * MAX_ARGS);
+	// clear the args from the last string
+	for (int i = 0; i < com_argc; i++)
+		free(com_argc[i]);
+
+	//cmd_argc = 0;
+	com_args[0] = 0;
+
 
 	com_argc = 0;
 	com_args = NULL;
@@ -390,7 +396,7 @@ void Com_Tokenize(char* text)
 
 		if (com_argc < MAX_ARGS)
 		{
-			com_argv[com_argc] = new char[strlen(com_token) + 1];
+			com_argv[com_argc] = (char*)malloc(strlen(com_token) + 1);
 			strcpy(com_argv[com_argc], com_token);
 			com_argc++;
 		}
