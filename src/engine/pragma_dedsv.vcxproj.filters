@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="pragma_config.h" />
+    <ClInclude Include="..\common\anorms.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mathlib.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\pragma_files.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\bsp.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\md3.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\pak.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\pmodel.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\fileformats\smdl.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="script\progdefs_server.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="script\progdefs_ui.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="script\qc_opcodes.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="script\qc_opnames.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="script\script_internals.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="script\scriptvm.h">
+      <Filter>QCVM</Filter>
+    </ClInclude>
+    <ClInclude Include="client\cgame\progdefs_client.h">
+      <Filter>Stubs</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd.h" />
+    <ClInclude Include="cmodel.h" />
+    <ClInclude Include="cvar.h" />
+    <ClInclude Include="filesystem.h" />
+    <ClInclude Include="message.h" />
+    <ClInclude Include="model_cache.h" />
+    <ClInclude Include="net_chan.h" />
+    <ClInclude Include="network.h" />
+    <ClInclude Include="pragma.h" />
+    <ClInclude Include="protocol.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="sizebuf.h" />
+    <ClInclude Include="usercmd.h" />
+    <ClInclude Include="server\sv_game.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="server\server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\crc.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\common\mathlib.c">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scr_builtins_math.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scr_builtins_shared.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scr_debug.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scr_exec.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scr_main.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
+    <ClCompile Include="script\scr_utils.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_builtins.c">
+      <Filter>Stubs</Filter>
+    </ClCompile>
+    <ClCompile Include="client\ui\ui_builtins.c">
+      <Filter>Stubs</Filter>
+    </ClCompile>
+    <ClCompile Include="astar_navigation.c" />
+    <ClCompile Include="cmd.c" />
+    <ClCompile Include="cmodel.c" />
+    <ClCompile Include="cvar.c" />
+    <ClCompile Include="filesystem.c" />
+    <ClCompile Include="main_windows.c" />
+    <ClCompile Include="md4.c" />
+    <ClCompile Include="message.c" />
+    <ClCompile Include="model_cache.c" />
+    <ClCompile Include="model_def.c" />
+    <ClCompile Include="net_chan.c" />
+    <ClCompile Include="network_windows.c" />
+    <ClCompile Include="pragma.c" />
+    <ClCompile Include="sizebuf.c" />
+    <ClCompile Include="usercmd.c" />
+    <ClCompile Include="server\sv_ai.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_builtins.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_ccmds.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_devtools.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_gentity.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_load.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_init.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_main.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_physics.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_script.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_send.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_user.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_world.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_write.c">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\shared.c">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\shared_windows.c" />
+    <ClCompile Include="..\common\crc.c">
+      <Filter>Common</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{b3f86a80-90f9-481d-816e-060cd224876e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Stubs">
+      <UniqueIdentifier>{d39fc3f7-de40-41f0-863e-81a78bee7c5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QCVM">
+      <UniqueIdentifier>{13af8ed3-e60e-4a46-80bd-861a6f6db94f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{eb2d25a4-ed06-41e0-8501-a21e2ff39434}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
