@@ -190,7 +190,6 @@ char* Scr_GetParmString(unsigned int parm)
 /*
 ============
 Scr_GetParmVector
-
 Returns param as a vector
 ============
 */
@@ -203,8 +202,7 @@ float* Scr_GetParmVector(unsigned int parm)
 /*
 ============
 Scr_GetParmVector2
-
-Returns param as a vector
+Returns param as a vector and stores them into three floats
 ============
 */
 void Scr_GetParmVector2(unsigned int parm, float *x, float *y, float *z)
@@ -261,6 +259,9 @@ Returns int to script
 void Scr_ReturnInt(int val)
 {
 	G_FLOAT(OFS_RETURN) = val;
+
+	// this should be G_INT? i remember there was some problem with it, making this a commit to test later
+	//G_INT(OFS_RETURN) = val; 
 }
 
 /*
