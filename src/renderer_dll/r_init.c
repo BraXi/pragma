@@ -105,7 +105,7 @@ void R_RegisterCvarsAndCommands(void)
 	
 	gl_driver = ri.Cvar_Get("gl_driver", "opengl32", CVAR_ARCHIVE, NULL);
 	
-	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_NEAREST_MIPMAP_NEAREST", CVAR_ARCHIVE, NULL);
+	r_texturemode = ri.Cvar_Get("r_texturemode", "GL_LINEAR_MIPMAP_LINEAR", CVAR_ARCHIVE, NULL);
 	r_texturealphamode = ri.Cvar_Get("r_texturealphamode", "default", CVAR_ARCHIVE, NULL);
 	r_texturesolidmode = ri.Cvar_Get("r_texturesolidmode", "default", CVAR_ARCHIVE, NULL);
 
