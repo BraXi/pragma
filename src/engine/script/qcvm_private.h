@@ -145,11 +145,11 @@ typedef struct qcvm_s
 	int				progsSize;
 	dprograms_t		*progs;
 
-	dfunction_t		*functions;
-	char			*strings;		// ofset to first string
-	ddef_t			*globalDefs;
-	ddef_t			*fieldDefs;	
-	dstatement_t	*statements;
+	dfunction_t		*pFunctions;
+	char			*pStrings;		// ofset to first string
+	ddef_t			*pGlobalDefs;
+	ddef_t			*pFieldDefs;	
+	dstatement_t	*pStatements;
 
 //	sv_globalvars_t	*globals_struct;
 	unsigned int	num_entities;		// number of allocated entities
@@ -157,9 +157,9 @@ typedef struct qcvm_s
 	int				entity_size;		// size of single entity
 	int				offsetToEntVars;	// *ptr + ofs = ent->v
 
-	void			*globals_struct;	// sv_globalvars_t
+	void			*pGlobalsStruct;	// sv_globalvars_t
 
-	float			*globals;
+	float			*pGlobals;
 
 	unsigned short	crc;			// crc checksum of entire progs file
 
@@ -205,12 +205,12 @@ void CheckScriptVM(const char* func);
 dfunction_t* Scr_FindFunction(const char* name);
 
 
-#define	G_INT(o)			(*(int32_t *)&active_qcvm->globals[o])
-#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int32_t *)&active_qcvm->globals[o]))
-#define	G_FLOAT(o)			(active_qcvm->globals[o])
-#define	G_STRING(o)			(active_qcvm->strings + *(scr_string_t *)&active_qcvm->globals[o])
-#define	G_VECTOR(o)			(&active_qcvm->globals[o])
-#define	RETURN_EDICT(e)		(((int32_t *)active_qcvm->globals)[OFS_RETURN] = ENT_TO_VM(e))
+#define	G_INT(o)			(*(int32_t *)&active_qcvm->pGlobals[o])
+#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int32_t *)&active_qcvm->pGlobals[o]))
+#define	G_FLOAT(o)			(active_qcvm->pGlobals[o])
+#define	G_STRING(o)			(active_qcvm->pStrings + *(scr_string_t *)&active_qcvm->pGlobals[o])
+#define	G_VECTOR(o)			(&active_qcvm->pGlobals[o])
+#define	RETURN_EDICT(e)		(((int32_t *)active_qcvm->pGlobals)[OFS_RETURN] = ENT_TO_VM(e))
 
 
 #endif /*_PRAGMA_QCVM_PRIVATE_H_*/

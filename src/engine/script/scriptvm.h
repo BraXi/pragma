@@ -66,9 +66,9 @@ typedef union eval_s
 
 typedef struct
 {
-	uint16_t	type;		// if DEF_SAVEGLOBGAL bit is set the variable needs to be saved in savegames
-	uint16_t	ofs;
-	int32_t		s_name;
+	unsigned short	type;		// if DEF_SAVEGLOBGAL bit is set the variable needs to be saved in savegames
+	unsigned short	ofs;
+	int		s_name;
 } ddef_t;
 
 

@@ -63,7 +63,7 @@ scr_func_t Scr_FindFunctionIndex(const char* funcname)
 	}
 		
 	if((f = Scr_FindFunction(funcname)) != NULL)
-		return (scr_func_t)(f - active_qcvm->functions);
+		return (scr_func_t)(f - active_qcvm->pFunctions);
 
 	return -1;
 }
@@ -71,13 +71,13 @@ scr_func_t Scr_FindFunctionIndex(const char* funcname)
 /*
 ============
 Scr_GetString
-Returns string from program
+Returns string from active program
 ============
 */
 char* Scr_GetString(int str)
 {
 	CheckScriptVM(__FUNCTION__);
-	return active_qcvm->strings + str;
+	return active_qcvm->pStrings + str;
 }
 
 /*
@@ -89,7 +89,7 @@ Sets string in program
 int Scr_SetString(char* str)
 {
 	CheckScriptVM(__FUNCTION__);
-	return (str - active_qcvm->strings);
+	return (str - active_qcvm->pStrings);
 }
 
 /*
@@ -234,7 +234,7 @@ Grabs returned float from script
 float Scr_GetReturnFloat()
 {
 	CheckScriptVM(__FUNCTION__);
-	return active_qcvm->globals[OFS_RETURN];
+	return active_qcvm->pGlobals[OFS_RETURN];
 }
 
 /*
@@ -265,8 +265,7 @@ void Scr_ReturnFloat(float val)
 
 /*
 ============
-Scr_ReturnFloat
-
+Scr_ReturnInt
 Returns int to script
 ============
 */
@@ -289,7 +288,7 @@ Returns string to script
 void Scr_ReturnString(char* str)
 {
 	CheckScriptVM(__FUNCTION__);
-	G_INT(OFS_RETURN) = (str - active_qcvm->strings);
+	G_INT(OFS_RETURN) = (str - active_qcvm->pStrings);
 }
 
 /*

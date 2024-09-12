@@ -22,10 +22,13 @@ int scr_numBuiltins = 0;
 
 const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 {
-	{VM_NONE, NULL, 0, "shared"},
-	{VM_SVGAME, "progs/svgame.dat", 49005, "svgame"},
-	{VM_CLGAME, "progs/cgame.dat", 15591, "clgame"},
-	{VM_GUI, "progs/gui.dat", 0, "gui"}
+	// type, file name, CRC of defs, internal name
+
+	{VM_NONE, NULL, 0, "shared"}, // dummy for shared builtins
+
+	{VM_SVGAME, "progs/svgame.dat", 49005, "server game"},
+	{VM_CLGAME, "progs/cgame.dat", 15591, "client game"},
+	{VM_GUI, "progs/gui.dat", 0, "user interface"}
 };
 
 void Cmd_PrintVMEntity_f(void);
@@ -37,10 +40,10 @@ extern void SV_InitScriptBuiltins();
 
 /*
 ============
-Scr_VMName
+Scr_GetScriptName
 ============
 */
-static const char* Scr_VMName(vmType_t vm)
+const char* Scr_GetScriptName(vmType_t vm)
 {
 	return vmDefs[vm].name;
 }
@@ -58,7 +61,7 @@ ddef_t* ScrInternal_GlobalAtOfs(int ofs)
 	CheckScriptVM(__FUNCTION__);
 	for (i = 0; i < active_qcvm->progs->numGlobalDefs; i++)
 	{
-		def = &active_qcvm->globalDefs[i];
+		def = &active_qcvm->pGlobalDefs[i];
 		if (def->ofs == ofs)
 			return def;
 	}
@@ -78,7 +81,7 @@ ddef_t* ScrInternal_FieldAtOfs(int ofs)
 	CheckScriptVM(__FUNCTION__);
 	for (i = 0; i < active_qcvm->progs->numFieldDefs; i++)
 	{
-		def = &active_qcvm->fieldDefs[i];
+		def = &active_qcvm->pFieldDefs[i];
 		if (def->ofs == ofs)
 			return def;
 	}
@@ -99,7 +102,7 @@ ddef_t* Scr_FindEntityField(char* name)
 	CheckScriptVM(__FUNCTION__);
 	for (i = 0; i < active_qcvm->progs->numFieldDefs; i++)
 	{
-		def = &active_qcvm->fieldDefs[i];
+		def = &active_qcvm->pFieldDefs[i];
 		if (!strcmp(Scr_GetString(def->s_name), name))
 		{
 			return def;
@@ -129,7 +132,7 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 	switch (key->type & ~DEF_SAVEGLOBAL)
 	{
 	case ev_string:
-		*(scr_string_t*)d = COM_NewString(s, memtag) - active_qcvm->strings;
+		*(scr_string_t*)d = COM_NewString(s, memtag) - active_qcvm->pStrings;
 		break;
 
 	case ev_float:
@@ -173,7 +176,7 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 		func = Scr_FindFunctionIndex(s);
 		if (func == -1)
 		{
-			Com_Error(ERR_FATAL, "Can't find function %s\n", s);
+			Com_Error(ERR_FATAL, "Can't find function '%s' in %s program.\n", s, Scr_GetScriptName(active_qcvm->progsType));
 			return false;
 		}
 		*(scr_func_t*)d = func;
@@ -200,7 +203,7 @@ ddef_t* Scr_FindGlobal(char* name)
 	CheckScriptVM(__FUNCTION__);
 	for (i = 0; i < active_qcvm->progs->numGlobalDefs; i++)
 	{
-		def = &active_qcvm->globalDefs[i];
+		def = &active_qcvm->pGlobalDefs[i];
 		if (!strcmp(Scr_GetString(def->s_name), name))
 			return def;
 	}
@@ -222,7 +225,7 @@ dfunction_t* Scr_FindFunction(const char* name)
 	CheckScriptVM(__FUNCTION__);
 	for (i = 0; i < active_qcvm->progs->numFunctions; i++)
 	{
-		func = &active_qcvm->functions[i];
+		func = &active_qcvm->pFunctions[i];
 		if (!strcmp(Scr_GetString(func->s_name), name))
 			return func;
 	}
@@ -294,7 +297,7 @@ void Scr_LoadProgram(qcvm_t *vm, char* filename)
 		Com_Error(ERR_FATAL, "%s with NULL QCVM.\n", __FUNCTION__);
 
 	if(vm->progs)
-		Com_Error(ERR_FATAL, "Tried to load second instance of %s QCVM.\n", __FUNCTION__, Scr_VMName(vm->progsType));
+		Com_Error(ERR_FATAL, "Tried to load second instance of %s QCVM.\n", __FUNCTION__, Scr_GetScriptName(vm->progsType));
 
 	// load file
 	len = FS_LoadFile(filename, (void**)&raw);
@@ -309,7 +312,7 @@ void Scr_LoadProgram(qcvm_t *vm, char* filename)
 	active_qcvm = vm; // just in case..
 
 	// byte swap the header
-	for (i = 0; i < sizeof(*vm->progs) / sizeof(int); i++)
+	for (i = 0; i < sizeof(*vm->progs) / sizeof(int32_t); i++)
 		((int*)vm->progs)[i] = LittleLong(((int*)vm->progs)[i]);
 
 	if (vm->progs->version != PROG_VERSION)
@@ -335,56 +338,57 @@ void Scr_LoadProgram(qcvm_t *vm, char* filename)
 	}
 
 	// cast the data from progs
-	vm->functions = (dfunction_t*)((byte*)vm->progs + vm->progs->ofs_functions);
+	vm->pFunctions = (dfunction_t*)((byte*)vm->progs + vm->progs->ofs_functions);
 
-	vm->strings = (char*)vm->progs + vm->progs->ofs_strings;
+	vm->pStrings = (char*)vm->progs + vm->progs->ofs_strings;
 	if ((vm->progs->ofs_strings + vm->progs->numstrings) >= len)
 		Com_Error(ERR_FATAL, "Strings in %s program are corrupt.\n", filename);
 
-	vm->globalDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_globaldefs);
-	vm->fieldDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_fielddefs);
-	vm->statements = (dstatement_t*)((byte*)vm->progs + vm->progs->ofs_statements);
-	vm->globals_struct =((byte*)vm->progs + vm->progs->ofs_globals);	
-	vm->globals = (float*)vm->globals_struct;
-	vm->entity_size = vm->entity_size + (vm->progs->entityfields * 4);
+	vm->pGlobalDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_globaldefs);
+	vm->pFieldDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_fielddefs);
+	vm->pStatements = (dstatement_t*)((byte*)vm->progs + vm->progs->ofs_statements);
+	vm->pGlobalsStruct =((byte*)vm->progs + vm->progs->ofs_globals);	
+	vm->pGlobals = (float*)vm->pGlobalsStruct;
+	vm->entity_size = vm->entity_size + (vm->progs->entityfields * sizeof(int32_t));
+	//vm->entity_size = vm->entity_size + (vm->progs->entityfields * 4);
 
 	// byte swap all the data
 	for (i = 0; i < vm->progs->numStatements; i++)
 	{
-		vm->statements[i].op = LittleShort(vm->statements[i].op);
-		vm->statements[i].a = LittleShort(vm->statements[i].a);
-		vm->statements[i].b = LittleShort(vm->statements[i].b);
-		vm->statements[i].c = LittleShort(vm->statements[i].c);
+		vm->pStatements[i].op = LittleShort(vm->pStatements[i].op);
+		vm->pStatements[i].a = LittleShort(vm->pStatements[i].a);
+		vm->pStatements[i].b = LittleShort(vm->pStatements[i].b);
+		vm->pStatements[i].c = LittleShort(vm->pStatements[i].c);
 	}
 	for (i = 0; i < vm->progs->numFunctions; i++)
 	{
-		vm->functions[i].first_statement = LittleLong(vm->functions[i].first_statement);
-		vm->functions[i].parm_start = LittleLong(vm->functions[i].parm_start);
-		vm->functions[i].s_name = LittleLong(vm->functions[i].s_name);
-		vm->functions[i].s_file = LittleLong(vm->functions[i].s_file);
-		vm->functions[i].numparms = LittleLong(vm->functions[i].numparms);
-		vm->functions[i].locals = LittleLong(vm->functions[i].locals);
+		vm->pFunctions[i].first_statement = LittleLong(vm->pFunctions[i].first_statement);
+		vm->pFunctions[i].parm_start = LittleLong(vm->pFunctions[i].parm_start);
+		vm->pFunctions[i].s_name = LittleLong(vm->pFunctions[i].s_name);
+		vm->pFunctions[i].s_file = LittleLong(vm->pFunctions[i].s_file);
+		vm->pFunctions[i].numparms = LittleLong(vm->pFunctions[i].numparms);
+		vm->pFunctions[i].locals = LittleLong(vm->pFunctions[i].locals);
 	}
 
 	for (i = 0; i < vm->progs->numGlobalDefs; i++)
 	{
-		vm->globalDefs[i].type = LittleShort(vm->globalDefs[i].type);
-		vm->globalDefs[i].ofs = LittleShort(vm->globalDefs[i].ofs);
-		vm->globalDefs[i].s_name = LittleLong(vm->globalDefs[i].s_name);
+		vm->pGlobalDefs[i].type = LittleShort(vm->pGlobalDefs[i].type);
+		vm->pGlobalDefs[i].ofs = LittleShort(vm->pGlobalDefs[i].ofs);
+		vm->pGlobalDefs[i].s_name = LittleLong(vm->pGlobalDefs[i].s_name);
 	}
 
 	for (i = 0; i < vm->progs->numFieldDefs; i++)
 	{
-		vm->fieldDefs[i].type = LittleShort(vm->fieldDefs[i].type);
-		if (vm->fieldDefs[i].type & DEF_SAVEGLOBAL)
+		vm->pFieldDefs[i].type = LittleShort(vm->pFieldDefs[i].type);
+		if (vm->pFieldDefs[i].type & DEF_SAVEGLOBAL)
 			Com_Error(ERR_FATAL, "pr_fielddefs[%i].type & DEF_SAVEGLOBAL\n", i);
 
-		vm->fieldDefs[i].ofs = LittleShort(vm->fieldDefs[i].ofs);
-		vm->fieldDefs[i].s_name = LittleLong(vm->fieldDefs[i].s_name);
+		vm->pFieldDefs[i].ofs = LittleShort(vm->pFieldDefs[i].ofs);
+		vm->pFieldDefs[i].s_name = LittleLong(vm->pFieldDefs[i].s_name);
 	}
 
 	for (i = 0; i < vm->progs->numGlobals; i++)
-		((int*)vm->globals)[i] = LittleLong(((int32_t*)vm->globals)[i]);
+		((int*)vm->pGlobals)[i] = LittleLong(((int32_t*)vm->pGlobals)[i]);
 }
 
 /*
@@ -409,7 +413,7 @@ static void Scr_OpenLogFileForVM(qcvm_t *vm)
 	if (!developer->value)
 		return;
 
-	sprintf(name, "%s/%s.log", FS_Gamedir(), Scr_VMName(vm->progsType));
+	sprintf(name, "%s/%s.log", FS_Gamedir(), Scr_GetScriptName(vm->progsType));
 
 	vm->logfile = fopen(name, "w");
 	if (!vm->logfile)
@@ -435,11 +439,11 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 	Scr_FreeScriptVM(vmType);
 
 //	if (qcvm[progsType] != NULL)
-//		Com_Error(ERR_FATAL, "Tried to create second instance of %s script VM\n", Scr_VMName(progsType));
+//		Com_Error(ERR_FATAL, "Tried to create second instance of %s script VM\n", Scr_GetScriptName(progsType));
 
 	qcvm[vmType] = Z_Malloc(sizeof(qcvm_t));
 	if (qcvm == NULL)
-		Com_Error(ERR_FATAL, "Couldn't allocate %s VM.\n", Scr_VMName(vmType));
+		Com_Error(ERR_FATAL, "Couldn't allocate %s VM.\n", Scr_GetScriptName(vmType));
 
 	qcvm_t* vm = qcvm[vmType];
 	vm = qcvm[vmType];
@@ -455,19 +459,19 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 	// allocate entities
 	vm->entities = (vm_entity_t*)Z_Malloc(vm->num_entities * vm->entity_size);
 	if (vm->entities == NULL)
-		Com_Error(ERR_FATAL, "Couldn't allocate entities for %s VM.\n", Scr_VMName(vmType));
+		Com_Error(ERR_FATAL, "Couldn't allocate entities for %s VM.\n", Scr_GetScriptName(vmType));
 
 	// open devlog
 	Scr_OpenLogFileForVM(vm);
 
-	Com_Printf("Spawned %s QCVM from file \"%s\".\n", Scr_VMName(vm->progsType), vmDefs[vmType].filename);
+	Com_Printf("Spawned %s QCVM from file \"%s\".\n", Scr_GetScriptName(vm->progsType), vmDefs[vmType].filename);
 
 	// print statistics
 	if (developer->value)
 	{
 		dprograms_t* progs = vm->progs;
 		Com_Printf("-------------------------------------\n");
-		Com_Printf("%s QCVM: '%s'\n", Scr_VMName(vm->progsType), vmDefs[vmType].filename);
+		Com_Printf("%s QCVM: '%s'\n", Scr_GetScriptName(vm->progsType), vmDefs[vmType].filename);
 		Com_Printf("          Functions: %i\n", progs->numFunctions);
 		Com_Printf("         Statements: %i\n", progs->numStatements);
 		Com_Printf("         GlobalDefs: %i\n", progs->numGlobalDefs);
@@ -518,7 +522,7 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 	qcvm[vmtype] = NULL;
 
 	Scr_BindVM(VM_NONE);
-	Com_Printf("Freed %s script...\n", Scr_VMName(vmtype));
+	Com_Printf("Freed %s script...\n", Scr_GetScriptName(vmtype));
 }
 
 #if 0
@@ -530,9 +534,9 @@ void Cmd_Script_PrintFunctions(void)
 
 	for (int i = scr_numBuiltins; i < vm->progs->numFunctions; i++) // unsafe start
 	{
-		char* srcFile = ScrInternal_String(vm->functions[i].s_file);
-		char* funcName = ScrInternal_String(vm->functions[i].s_name);
-		int numParms = (vm->functions[i].numparms);
+		char* srcFile = ScrInternal_String(vm->pFunctions[i].s_file);
+		char* funcName = ScrInternal_String(vm->pFunctions[i].s_name);
+		int numParms = (vm->pFunctions[i].numparms);
 		if (numParms)
 			printf("#%i %s:%s(#%i)\n", i, srcFile, funcName, numParms);
 		else
@@ -578,7 +582,7 @@ Scr_GetGlobals
 void* Scr_GetGlobals()
 {
 	CheckScriptVM(__FUNCTION__);
-	return active_qcvm->globals_struct;
+	return active_qcvm->pGlobalsStruct;
 }
 
 /*
@@ -740,7 +744,7 @@ void PR_Profile(int x, int y)
 			best = NULL;
 			for (i = 0; i < active_qcvm->progs->numFunctions; i++)
 			{
-				f = &active_qcvm->functions[i];
+				f = &active_qcvm->pFunctions[i];
 				if (f->profile > max)
 				{
 					max = f->profile;

@@ -106,7 +106,7 @@ void Scr_RunError(char* error, ...)
 	Com_Printf("\nError : %s\n\n", string);
 	
 	Com_Printf("Last statement:\n");
-	Scr_PrintStatement(active_qcvm->statements + active_qcvm->xstatement);
+	Scr_PrintStatement(active_qcvm->pStatements + active_qcvm->xstatement);
 
 	Com_Printf("\nStack Trace: \n");
 	Scr_StackTrace();
@@ -165,7 +165,7 @@ int ScrInternal_EnterFunction(dfunction_t* f)
 #endif
 
 	for (i = 0; i < c; i++)
-		active_qcvm->localstack[active_qcvm->localstack_used + i] = ((int*)active_qcvm->globals)[f->parm_start + i];
+		active_qcvm->localstack[active_qcvm->localstack_used + i] = ((int*)active_qcvm->pGlobals)[f->parm_start + i];
 	active_qcvm->localstack_used += c;
 
 
@@ -175,7 +175,7 @@ int ScrInternal_EnterFunction(dfunction_t* f)
 	{
 		for (j = 0; j < f->parm_size[i]; j++)
 		{
-			((int*)active_qcvm->globals)[o] = ((int*)active_qcvm->globals)[OFS_PARM0 + i * 3 + j];
+			((int*)active_qcvm->pGlobals)[o] = ((int*)active_qcvm->pGlobals)[OFS_PARM0 + i * 3 + j];
 			o++;
 		}
 	}
@@ -207,7 +207,7 @@ int ScrInternal_LeaveFunction()
 		Scr_RunError("Locals script stack underflow.");
 
 	for (i = 0; i < c; i++)
-		((int*)active_qcvm->globals)[active_qcvm->xfunction->parm_start + i] = active_qcvm->localstack[active_qcvm->localstack_used + i];
+		((int*)active_qcvm->pGlobals)[active_qcvm->xfunction->parm_start + i] = active_qcvm->localstack[active_qcvm->localstack_used + i];
 
 	// up stack
 	active_qcvm->stackDepth--;
@@ -249,19 +249,19 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 		// this is such a mess
 		if (vm->progsType == VM_SVGAME)
 		{
-			sv_globalvars_t *g = (sv_globalvars_t*)vm->globals_struct;
+			sv_globalvars_t *g = (sv_globalvars_t*)vm->pGlobalsStruct;
 			if (g->self)
 				Scr_PrintEntityFields(VM_TO_ENT(g->self));
 		}
 		else if (vm->progsType == VM_CLGAME)
 		{
-			cl_globalvars_t* g = (cl_globalvars_t*)vm->globals_struct;
+			cl_globalvars_t* g = (cl_globalvars_t*)vm->pGlobalsStruct;
 			if (g->self)
 				Scr_PrintEntityFields(VM_TO_ENT(g->self));
 		}
 		else if (vm->progsType == VM_GUI)
 		{
-			ui_globalvars_t* g = (ui_globalvars_t*)vm->globals_struct;
+			ui_globalvars_t* g = (ui_globalvars_t*)vm->pGlobalsStruct;
 			if (g->self)
 				Scr_PrintEntityFields(VM_TO_ENT(g->self));
 		}
@@ -269,7 +269,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 		return;
 	}
 
-	f = &vm->functions[fnum];
+	f = &vm->pFunctions[fnum];
 
 	vm->runawayCounter = (int)vm_runaway->value;
 	vm->traceEnabled = false;
@@ -285,10 +285,10 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 	{
 		s++;	// next statement
 
-		st = &vm->statements[s];
-		a = (eval_t*)&vm->globals[st->a];
-		b = (eval_t*)&vm->globals[st->b];
-		c = (eval_t*)&vm->globals[st->c];
+		st = &vm->pStatements[s];
+		a = (eval_t*)&vm->pGlobals[st->a];
+		b = (eval_t*)&vm->pGlobals[st->b];
+		c = (eval_t*)&vm->pGlobals[st->c];
 
 		if (!--vm->runawayCounter)
 		{
@@ -615,7 +615,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			c->_float = !a->vector[0] && !a->vector[1] && !a->vector[2];
 			break;
 		case OP_NOT_S: // not string
-			c->_float = !a->string || !vm->strings[a->string];
+			c->_float = !a->string || !vm->pStrings[a->string];
 			break;
 		case OP_NOT_FNC: // not function
 			c->_float = !a->function;
@@ -781,7 +781,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			if (!a->function)
 				Scr_RunError("Call to undefined function.");
 
-			newf = &vm->functions[a->function];
+			newf = &vm->pFunctions[a->function];
 
 			if (newf->first_statement < 0)
 			{	
@@ -805,9 +805,9 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 		case OP_DONE:
 		case OP_RETURN:
-			vm->globals[OFS_RETURN] = vm->globals[st->a];
-			vm->globals[OFS_RETURN + 1] = vm->globals[st->a + 1];
-			vm->globals[OFS_RETURN + 2] = vm->globals[st->a + 2];
+			vm->pGlobals[OFS_RETURN] = vm->pGlobals[st->a];
+			vm->pGlobals[OFS_RETURN + 1] = vm->pGlobals[st->a + 1];
+			vm->pGlobals[OFS_RETURN + 2] = vm->pGlobals[st->a + 2];
 
 			s = ScrInternal_LeaveFunction();
 			if (vm->stackDepth == exitdepth)
@@ -886,7 +886,7 @@ void Scr_PrintEntityFields(vm_entity_t* ent)
 
 	for (i = 1; i < active_qcvm->progs->numFieldDefs; i++)
 	{
-		d = &active_qcvm->fieldDefs[i];
+		d = &active_qcvm->pFieldDefs[i];
 		name = Scr_GetString(d->s_name);
 		if (name[strlen(name) - 2] == '_')
 			continue;	// skip _x, _y, _z vars

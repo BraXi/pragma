@@ -79,7 +79,7 @@ char* Scr_ValueString(etype_t type, eval_t* val)
 		sprintf(line, "entity %i", (int)NUM_FOR_ENT(VM_TO_ENT(val->edict)));
 		break;
 	case ev_function:
-		f = active_qcvm->functions + val->function;
+		f = active_qcvm->pFunctions + val->function;
 		sprintf(line, "%s()", Scr_GetString(f->s_name));
 		break;
 	case ev_field:
@@ -136,7 +136,7 @@ char* Scr_ValueStringDeveloper(etype_t type, eval_t* val)
 		sprintf(line, "%i [entity]", (int)NUM_FOR_ENT(VM_TO_ENT(val->edict)));
 		break;
 	case ev_function:
-		f = active_qcvm->functions + val->function;
+		f = active_qcvm->pFunctions + val->function;
 		sprintf(line, "%s [function]", Scr_GetString(f->s_name));
 		break;
 	case ev_field:
@@ -190,7 +190,7 @@ char* Scr_UglyValueString(etype_t type, eval_t* val)
 		//sprintf(line, "%i", NUM_FOR_EDICT(PROG_TO_GENT(val->edict))); // braxi -- fixme
 		break;
 	case ev_function:
-		f = active_qcvm->functions + val->function;
+		f = active_qcvm->pFunctions + val->function;
 		sprintf(line, "%s", Scr_GetString(f->s_name));
 		break;
 	case ev_field:
@@ -236,7 +236,7 @@ char* Scr_GlobalString(int ofs)
 
 	CheckScriptVM(__FUNCTION__);
 
-	val = (void*)&active_qcvm->globals[ofs];
+	val = (void*)&active_qcvm->pGlobals[ofs];
 	def = ScrInternal_GlobalAtOfs(ofs);
 	if (!def)
 	{

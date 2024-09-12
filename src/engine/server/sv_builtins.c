@@ -459,25 +459,25 @@ setsize(player, '-16 16 0', '16 16 56');
 void PFSV_setsize(void)
 {
 	gentity_t* ent;
-	float* min, * max;
+	float* mins, * maxs;
 
 	ent = Scr_GetParmEntity(0);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
 
-	min = Scr_GetParmVector(1);
-	max = Scr_GetParmVector(2);
+	mins = Scr_GetParmVector(1);
+	maxs = Scr_GetParmVector(2);
 
-	VectorCopy(min, ent->v.mins);
-	VectorCopy(max, ent->v.maxs);
-	VectorSubtract(max, min, ent->v.size);
+	VectorCopy(mins, ent->v.mins);
+	VectorCopy(maxs, ent->v.maxs);
+	VectorSubtract(maxs, mins, ent->v.size);
 
 	if (ent->client)
 	{
 		// if entity is a player, set pmove bbox too
-		VectorCopy(min, ent->client->ps.pmove.mins);
-		VectorCopy(max, ent->client->ps.pmove.maxs);
+		VectorCopy(mins, ent->client->ps.pmove.mins);
+		VectorCopy(maxs, ent->client->ps.pmove.maxs);
 	}
 
 	SV_LinkEdict(ent);
