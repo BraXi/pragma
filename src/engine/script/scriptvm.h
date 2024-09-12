@@ -106,7 +106,7 @@ eval_t* Scr_GetEntityFieldValue(vm_entity_t* ent, char* field); // FIXME
 
 void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcstring);
 
-scr_func_t Scr_FindFunction(char* funcname);
+scr_func_t Scr_FindFunctionIndex(const char* funcname);
 
 int Scr_SetString(char* str);
 

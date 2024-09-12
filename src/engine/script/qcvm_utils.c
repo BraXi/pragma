@@ -7,19 +7,22 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 See the attached GNU General Public License v2 for more details.
 */
-// scr_utils.c
+
 
 #include "../server/server.h"
 #include "qcvm_private.h"
 
+// number of temporary strings for Scr_VarString()
+#define NUM_TEMP_VARSTRINGS 12
 
+ // current temp string in Scr_VarString()
+static int qcvm_vstr = 0;
 
 
 /*
 ============
 Scr_DefineBuiltin
-
-Adds new builtin method
+Adds new builtin function
 ============
 */
 void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcstring)
@@ -32,7 +35,7 @@ void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcs
 	}
 
 	if (scr_numBuiltins == (SCRIPTVM_MAXBUILTINS - 1))
-		Com_Error(ERR_FATAL, "increase pr_maxbuiltins (%i)\n", SCRIPTVM_MAXBUILTINS);
+		Com_Error(ERR_FATAL, "Too manu builtins, increase SCRIPTVM_MAXBUILTINS\n");
 
 	func = &scr_builtins[scr_numBuiltins];
 	func->execon = type;
@@ -42,23 +45,24 @@ void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcs
 	scr_numBuiltins++;
 }
 
-dfunction_t* ScrInternal_FindFunction(char* name);
+
 
 /*
 ============
-Scr_FindFunction
-
-Finds function in progs and returns its number (for execution), returns -1 when not found
+Scr_FindFunctionIndex
+Finds function in progs and returns its number (for execution), returns -1 when function was not found.
 ============
 */
-scr_func_t Scr_FindFunction(char* funcname)
+scr_func_t Scr_FindFunctionIndex(const char* funcname)
 {
 	dfunction_t* f = NULL;
 
-	if (!funcname)
+	if (!funcname || !funcname[0])
+	{
 		return -1;
-
-	if((f = ScrInternal_FindFunction(funcname)) != NULL)
+	}
+		
+	if((f = Scr_FindFunction(funcname)) != NULL)
 		return (scr_func_t)(f - active_qcvm->functions);
 
 	return -1;
@@ -67,11 +71,10 @@ scr_func_t Scr_FindFunction(char* funcname)
 /*
 ============
 Scr_GetString
-
-Returns string from script
+Returns string from program
 ============
 */
-char* Scr_GetString(int32_t str)
+char* Scr_GetString(int str)
 {
 	return active_qcvm->strings + str;
 }
@@ -79,8 +82,7 @@ char* Scr_GetString(int32_t str)
 /*
 ============
 Scr_SetString
-
-Sets string in script
+Sets string in program
 ============
 */
 int Scr_SetString(char* str)
@@ -91,20 +93,18 @@ int Scr_SetString(char* str)
 /*
 ============
 ScrInternal_GetParmOffset
-
 Returns the correct offset for param number
 ============
 */
 static int ScrInternal_GetParmOffset(unsigned int parm)
 {
 	int ofs = OFS_PARM0 + (parm * 3);
+
 	if (ofs > OFS_PARM7 )//|| parm < OFS_PARM0)
 		Com_Error(ERR_FATAL, "ScrInternal_GetParmOffset: parm %i is out of range [0,7]\n", parm);
+
 	return ofs;
 }
-
-#define TEMP_VARSTRINGS 8
-static int vstr = 0;
 
 /*
 ============
@@ -113,23 +113,23 @@ Scr_VarString
 */
 char* Scr_VarString(int first)
 {
-	static char out[TEMP_VARSTRINGS][256];
+	static char out[NUM_TEMP_VARSTRINGS][256];
 	int		i, param;
 
-	vstr++;
-	if (vstr >= TEMP_VARSTRINGS)
-		vstr = 0;
+	qcvm_vstr++;
+	if (qcvm_vstr >= NUM_TEMP_VARSTRINGS)
+		qcvm_vstr = 0;
 
-	out[vstr][0] = 0;
+	out[qcvm_vstr][0] = 0;
 
 	for (i = first; i < Scr_NumArgs(); i++)
 	{
 		param = ScrInternal_GetParmOffset(i);
-		strcat(out[vstr], G_STRING(param));
+		strcat(out[qcvm_vstr], G_STRING(param));
 	}
 
 
-	return out[vstr];
+	return out[qcvm_vstr];
 }
 
 /*
@@ -300,7 +300,7 @@ Add entity to call args
 void Scr_AddEntity(unsigned int parm, vm_entity_t* ed)
 {
 	int ofs = ScrInternal_GetParmOffset(parm);
-	G_INT(ofs) = GENT_TO_PROG(ed);
+	G_INT(ofs) = ENT_TO_VM(ed);
 }
 
 

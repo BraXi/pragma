@@ -170,7 +170,7 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 		break;
 
 	case ev_function:
-		func = Scr_FindFunction(s);
+		func = Scr_FindFunctionIndex(s);
 		if (func == -1)
 		{
 			Com_Error(ERR_FATAL, "Can't find function %s\n", s);
@@ -210,12 +210,11 @@ ddef_t* Scr_FindGlobal(char* name)
 
 /*
 ============
-Scr_FindFunction
-
+Scr_FindFunctionIndex
 Finds a function with specified name in active qcvm or NULL if not found
 ============
 */
-dfunction_t* ScrInternal_FindFunction(char* name)
+dfunction_t* Scr_FindFunction(const char* name)
 {
 	dfunction_t* func;
 	int				i;

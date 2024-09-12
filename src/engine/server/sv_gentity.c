@@ -263,7 +263,7 @@ void SV_CallSpawnForEntity(gentity_t* ent)
 
 	// find spawn fuction in progs
 	sprintf(spawnFuncName, "SP_%s", classname);
-	spawnfunc = Scr_FindFunction(spawnFuncName);
+	spawnfunc = Scr_FindFunctionIndex(spawnFuncName);
 	if (spawnfunc == -1 && ent != sv.edicts)
 	{
 		Com_DPrintf( DP_SV, "SV_CallSpawnForEntity: unknown classname '%s'\n", classname);

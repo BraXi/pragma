@@ -199,8 +199,10 @@ extern int			scr_numBuiltins;
 extern qcvm_t		*active_qcvm;
 extern const qcvmdef_t vmDefs[NUM_SCRIPT_VMS];
 
-extern void Scr_InitSharedBuiltins();
-extern void CheckScriptVM(const char* func);
+void Scr_InitSharedBuiltins();
+void CheckScriptVM(const char* func);
+
+dfunction_t* Scr_FindFunction(const char* name);
 
 
 #define	G_INT(o)			(*(int32_t *)&active_qcvm->globals[o])

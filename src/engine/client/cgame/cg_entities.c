@@ -153,7 +153,7 @@ static void CG_CallSpawnForEntity(clentity_t* ent)
 
 	// find spawn fuction in progs
 	sprintf(spawnFuncName, "SP_%s", classname);
-	spawnfunc = Scr_FindFunction(spawnFuncName);
+	spawnfunc = Scr_FindFunctionIndex(spawnFuncName);
 	if (spawnfunc == -1 && ent != cg.localEntities)
 	{
 		//		Com_DPrintf(DP_CGAME, "%s: unknown classname '%s'\n", __FUNCTION__, classname);
