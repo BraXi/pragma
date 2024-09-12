@@ -51,11 +51,14 @@ jobs:
       with:
         name: pragma-debug-win-${{env.BUILD_PLATFORM}}
         path: |
-            build/engine.exe
-            build/engine.pdb
+            build/pragma.exe
+            build/pragma.pdb
             build/pragma_server.exe
             build/pragma_server.pdb           
-            build/renderer_ogl1.dll
-            build/renderer_ogl1.pdb
+            build/pragma_renderer_gl2_x86.dll
+            build/pragma_renderer_gl2_x86.pdb
+            build/prtool.exe
+            build/prtool.pdb  
+            build/prtool.qc
             build/main/dummy.txt
             readme.txt
