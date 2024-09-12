@@ -1197,8 +1197,8 @@ void Qcommon_Init (int argc, char **argv)
 
 	printf("\n\n");
 
-	printf("running %i ticks per second\n", SERVER_FPS);
-	printf("protocol version is %i\n\n", PROTOCOL_VERSION);
+	printf("Server runs game at %i ticks per second.\n", SERVER_FPS);
+	printf("Protocol version is: %i.\n\n", PROTOCOL_VERSION);
 #endif
 
 	if (setjmp (abortframe) )

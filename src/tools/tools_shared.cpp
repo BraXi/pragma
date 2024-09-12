@@ -360,10 +360,7 @@ void Com_Tokenize(char* text)
 {
 	// clear the args from the last string
 	for (int i = 0; i < com_argc; i++)
-		free(com_argc[i]);
-
-	//cmd_argc = 0;
-	com_args[0] = 0;
+		free(com_argv[i]);
 
 
 	com_argc = 0;

@@ -803,7 +803,7 @@ void Com_LoadAliasModel(cached_model_t* mod, void* buffer, const int filelen)
 		_strlwr(surf->name);
 
 		// strip off a trailing _1 or _2
-		j = strlen(surf->name);
+		j = (int)strlen(surf->name);
 		if (j > 2 && surf->name[j - 2] == '_')
 		{
 			surf->name[j - 2] = 0;

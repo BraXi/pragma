@@ -7,10 +7,10 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 See the attached GNU General Public License v2 for more details.
 */
-// scr_main.c
+
 
 #include "../pragma.h"
-#include "script_internals.h"
+#include "qcvm_private.h"
 
 cvar_t* vm_runaway;
 
@@ -27,9 +27,6 @@ const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 	{VM_CLGAME, "progs/cgame.dat", 15591, "clgame"},
 	{VM_GUI, "progs/gui.dat", 0, "gui"}
 };
-
-
-#define	G_INT(o)	(*(int *)&active_qcvm->globals[o])
 
 void Cmd_PrintVMEntity_f(void);
 void Cmd_PrintAllVMEntities_f(void);
@@ -91,7 +88,6 @@ ddef_t* ScrInternal_FieldAtOfs(int ofs)
 /*
 ============
 Scr_FindEntityField
-
 Returns ddef for an entity field matching name in active qcvm
 ============
 */
@@ -104,7 +100,7 @@ ddef_t* Scr_FindEntityField(char* name)
 	for (i = 0; i < active_qcvm->progs->numFieldDefs; i++)
 	{
 		def = &active_qcvm->fieldDefs[i];
-		if (!strcmp(ScrInternal_String(def->s_name), name))
+		if (!strcmp(Scr_GetString(def->s_name), name))
 		{
 			return def;
 		}
@@ -193,7 +189,7 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 ============
 Scr_FindGlobal
 
-Returns ddef for a glibal variable in active qcvm
+Returns ddef for a global variable in active qcvm
 ============
 */
 ddef_t* Scr_FindGlobal(char* name)
@@ -205,7 +201,7 @@ ddef_t* Scr_FindGlobal(char* name)
 	for (i = 0; i < active_qcvm->progs->numGlobalDefs; i++)
 	{
 		def = &active_qcvm->globalDefs[i];
-		if (!strcmp(ScrInternal_String(def->s_name), name))
+		if (!strcmp(Scr_GetString(def->s_name), name))
 			return def;
 	}
 	return NULL;
@@ -228,7 +224,7 @@ dfunction_t* ScrInternal_FindFunction(char* name)
 	for (i = 0; i < active_qcvm->progs->numFunctions; i++)
 	{
 		func = &active_qcvm->functions[i];
-		if (!strcmp(ScrInternal_String(func->s_name), name))
+		if (!strcmp(Scr_GetString(func->s_name), name))
 			return func;
 	}
 	return NULL;
@@ -296,16 +292,16 @@ void Scr_LoadProgram(qcvm_t *vm, char* filename)
 	byte	*raw;
 
 	if (!vm)
-		Com_Error(ERR_FATAL, "%s: called but the vm is NULL\n", __FUNCTION__);
+		Com_Error(ERR_FATAL, "%s with NULL QCVM.\n", __FUNCTION__);
 
 	if(vm->progs)
-		Com_Error(ERR_FATAL, "%s: tried to load second instance of %s script\n", __FUNCTION__, Scr_VMName(vm->progsType));
+		Com_Error(ERR_FATAL, "Tried to load second instance of %s QCVM.\n", __FUNCTION__, Scr_VMName(vm->progsType));
 
 	// load file
 	len = FS_LoadFile(filename, (void**)&raw);
 	if (!len || len == -1)
 	{
-		Com_Error(ERR_FATAL, "%s: couldn't load \"%s\"\n", __FUNCTION__, filename);
+		Com_Error(ERR_FATAL, "Could not load \"%s\".\n", filename);
 		return;
 	}
 
@@ -341,7 +337,11 @@ void Scr_LoadProgram(qcvm_t *vm, char* filename)
 
 	// cast the data from progs
 	vm->functions = (dfunction_t*)((byte*)vm->progs + vm->progs->ofs_functions);
+
 	vm->strings = (char*)vm->progs + vm->progs->ofs_strings;
+	if ((vm->progs->ofs_strings + vm->progs->numstrings) >= len)
+		Com_Error(ERR_FATAL, "Strings in %s program are corrupt.\n", filename);
+
 	vm->globalDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_globaldefs);
 	vm->fieldDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_fielddefs);
 	vm->statements = (dstatement_t*)((byte*)vm->progs + vm->progs->ofs_statements);
@@ -447,8 +447,8 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 	vm->progsType = vmType;
 
 	vm->num_entities = numEntities;
-	vm->offsetToEntVars = entvarOfs;
-	vm->entity_size = entitySize; // invaild now, will be set properly in loadprogs
+	vm->offsetToEntVars = (int)entvarOfs;
+	vm->entity_size = (int)entitySize; // invaild now, will be set properly in loadprogs
 
 	// load progs from file
 	Scr_LoadProgram(vm, vmDefs[vmType].filename);
@@ -590,7 +590,7 @@ Scr_GetEntitySize
 int Scr_GetEntitySize()
 {
 	CheckScriptVM(__FUNCTION__);
-	return (int)active_qcvm->entity_size;
+	return active_qcvm->entity_size;
 }
 
 /*
@@ -624,7 +624,7 @@ Scr_GetEntityFieldsSize
 int Scr_GetEntityFieldsSize()
 {
 	CheckScriptVM(__FUNCTION__);
-	return (active_qcvm->progs->entityfields * 4);
+	return (active_qcvm->progs->entityfields * sizeof(int32_t));
 }
 
 /*
@@ -665,6 +665,7 @@ void Scr_PreInitVMs()
 		qcvm[type] = NULL;
 
 	scr_numBuiltins = 0;
+
 	Scr_InitSharedBuiltins();
 	CG_InitScriptBuiltins();
 	UI_InitScriptBuiltins();
@@ -675,7 +676,6 @@ void Scr_PreInitVMs()
 	// add developer comands
 	Cmd_AddCommand("vm_printent", Cmd_PrintVMEntity_f);
 	Cmd_AddCommand("vm_printents", Cmd_PrintAllVMEntities_f);
-//	Cmd_AddCommand("vm_reload", cmd_vm_reload_f);
 	Cmd_AddCommand("vm_generatedefs", Cmd_VM_GenerateDefs_f);
 }
 
@@ -692,6 +692,7 @@ void Scr_Shutdown()
 
 	Cmd_RemoveCommand("vm_printent");
 	Cmd_RemoveCommand("vm_printents");
+	Cmd_RemoveCommand("vm_generatedefs");
 
 	if (scr_builtins)
 	{

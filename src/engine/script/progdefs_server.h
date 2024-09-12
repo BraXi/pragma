@@ -8,13 +8,10 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+#ifndef _PRAGMA_PROGDEFS_SERVER_H_
+#define _PRAGMA_PROGDEFS_SERVER_H_
 
-#ifndef scr_func_t
-	typedef int32_t scr_func_t;
-	typedef int32_t scr_entity_t;
-	typedef int32_t scr_string_t;
-#endif
-
+#pragma once
 
 // prog globals
 typedef struct sv_globalvars_s
@@ -156,3 +153,5 @@ typedef struct sv_entvars_s
 	vec3_t		pm_delta_angles;	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
 } sv_entvars_t;
+
+#endif

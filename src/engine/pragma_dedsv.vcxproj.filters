@@ -38,7 +38,7 @@
     <ClInclude Include="script\qc_opnames.h">
       <Filter>QCVM</Filter>
     </ClInclude>
-    <ClInclude Include="script\script_internals.h">
+    <ClInclude Include="script\qcvm_private.h">
       <Filter>QCVM</Filter>
     </ClInclude>
     <ClInclude Include="script\scriptvm.h">
@@ -69,6 +69,9 @@
     <ClInclude Include="..\common\crc.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\shared.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\mathlib.c">
@@ -80,16 +83,16 @@
     <ClCompile Include="script\scr_builtins_shared.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_debug.c">
+    <ClCompile Include="script\qcvm_debug.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_exec.c">
+    <ClCompile Include="script\qcvm_exec.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_main.c">
+    <ClCompile Include="script\qcvm_main.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_utils.c">
+    <ClCompile Include="script\qcvm_utils.c">
       <Filter>QCVM</Filter>
     </ClCompile>
     <ClCompile Include="client\cgame\cg_builtins.c">

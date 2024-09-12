@@ -11,7 +11,7 @@ See the attached GNU General Public License v2 for more details.
 // scr_execution.c
 
 #include "../pragma.h"
-#include "script_internals.h"
+#include "qcvm_private.h"
 
 extern ddef_t* ScrInternal_GlobalAtOfs(int ofs);
 extern ddef_t* Scr_FindEntityField(char* name);
@@ -282,7 +282,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 		if (!--vm->runawayCounter)
 		{
-			Scr_RunError("runaway loop error in function %s (%s)", ScrInternal_String(f->s_name), vmDefs[vm->progsType].filename);
+			Scr_RunError("runaway loop error in function %s (%s)", Scr_GetString(f->s_name), vmDefs[vm->progsType].filename);
 		}
 
 		vm->xfunction->profile++;
@@ -625,8 +625,8 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		case OP_EQ_S: // == string
-			char * ta = ScrInternal_String(a->string);
-			char * tb = ScrInternal_String(b->string);
+			char * ta = Scr_GetString(a->string);
+			char * tb = Scr_GetString(b->string);
 			c->_float = !strcmp(ta, tb);
 			break;
 
@@ -649,7 +649,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		case OP_NE_S: // not equal string
-			c->_float = strcmp(ScrInternal_String(a->string), ScrInternal_String(b->string));
+			c->_float = strcmp(Scr_GetString(a->string), Scr_GetString(b->string));
 			break;
 
 		case OP_NE_E: // not equal int

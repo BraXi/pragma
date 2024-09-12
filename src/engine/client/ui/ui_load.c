@@ -13,7 +13,7 @@ See the attached GNU General Public License v2 for more details.
 #pragma once
 
 #include "../client.h"
-#include "../../script/script_internals.h"
+#include "../../script/qcvm_private.h"
 #include "../../script/scriptvm.h"
 
 #include "ui_local.h"

@@ -7,6 +7,10 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 See the attached GNU General Public License v2 for more details.
 */
+
+#ifndef _PRAGMA_QCVM_H_
+#define _PRAGMA_QCVM_H_
+
 #pragma once
 
 #define VM_DEFAULT_RUNAWAY 500000	// number of instructions a single program can execute before it throws infinite loop error
@@ -22,14 +26,13 @@ extern cvar_t* vm_runaway;
 
 typedef byte vm_entity_t;
 
-// FIXME -- move server and client stuff out of here
-//typedef struct gentity_s gentity_t;
-#include "progdefs_server.h" 
-//typedef struct rentity_s rentity_t;
-#include "../client/cgame/progdefs_client.h" 
-//typedef struct rentity_s rentity_t;
-#include "progdefs_ui.h" 
+typedef int32_t scr_func_t;
+typedef int32_t scr_entity_t;
+typedef int32_t scr_string_t;
 
+#include "../client/cgame/progdefs_client.h" 
+#include "progdefs_server.h" 
+#include "progdefs_ui.h" 
 
 // used to define in which VM a builtin can be used
 // THESE MUST MATCH vmType_t
@@ -61,19 +64,26 @@ typedef union eval_s
 	scr_entity_t	edict;
 } eval_t;
 
+typedef struct
+{
+	uint16_t	type;		// if DEF_SAVEGLOBGAL bit is set the variable needs to be saved in savegames
+	uint16_t	ofs;
+	int32_t		s_name;
+} ddef_t;
 
-extern void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs);
-extern void Scr_FreeScriptVM(vmType_t vmType);
-extern qboolean Scr_IsVMLoaded(vmType_t vmtype);
-extern void Scr_BindVM(vmType_t vmType);
-extern int Scr_GetEntitySize();
-extern vm_entity_t* Scr_GetEntityPtr();
-extern void* Scr_GetGlobals();
-extern int Scr_GetEntityFieldsSize();
-extern unsigned Scr_GetProgsCRC(vmType_t vmType);
 
-extern void Scr_PreInitVMs();
-extern void Scr_Shutdown();
+void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entitySize, size_t entvarOfs);
+void Scr_FreeScriptVM(vmType_t vmType);
+qboolean Scr_IsVMLoaded(vmType_t vmtype);
+void Scr_BindVM(vmType_t vmType);
+int Scr_GetEntitySize();
+vm_entity_t* Scr_GetEntityPtr();
+void* Scr_GetGlobals();
+int Scr_GetEntityFieldsSize();
+unsigned Scr_GetProgsCRC(vmType_t vmType);
+
+void Scr_PreInitVMs();
+void Scr_Shutdown();
 
 // scr_debug.c
 
@@ -81,40 +91,49 @@ void Scr_StackTrace();
 
 // scr_exec.c
 
-extern void Scr_RunError(char* error, ...);
-extern void Scr_Execute(vmType_t vm, scr_func_t fnum, char* callFromFuncName);
-extern int Scr_NumArgs();
-extern char *Scr_BuiltinFuncName();
-extern eval_t* Scr_GetEntityFieldValue(vm_entity_t* ent, char* field); // FIXME 
+void Scr_RunError(char* error, ...);
+
+void Scr_Execute(vmType_t vm, scr_func_t fnum, char* callFromFuncName);
+
+int Scr_NumArgs();
+
+char *Scr_BuiltinFuncName();
+
+eval_t* Scr_GetEntityFieldValue(vm_entity_t* ent, char* field); // FIXME 
 
 
 // scr_utils.c
-extern void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcstring);
-extern scr_func_t Scr_FindFunction(char* funcname);
-extern int Scr_SetString(char* str);
-extern char* Scr_GetString(int num);
-extern char* Scr_VarString(int first);
 
-extern vm_entity_t* Scr_GetParmEntity(unsigned int parm);
-extern float Scr_GetParmFloat(unsigned int parm);
-extern int Scr_GetParmInt(unsigned int parm);
-extern char* Scr_GetParmString(unsigned int parm);
-extern float* Scr_GetParmVector(unsigned int parm);
-extern void Scr_GetParmVector2(unsigned int parm, float* x, float* y, float* z);
+void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcstring);
 
-extern float Scr_GetReturnFloat();
+scr_func_t Scr_FindFunction(char* funcname);
 
-extern void Scr_ReturnEntity(void *ed);
-extern void Scr_ReturnFloat(float val);
-extern void Scr_ReturnInt(int val);
-extern void Scr_ReturnString(char* str);
-extern void Scr_ReturnVector(float* val);
+int Scr_SetString(char* str);
 
-extern void Scr_AddEntity(unsigned int parm, vm_entity_t* ed);
-extern void Scr_AddFloat(unsigned int parm, float val);
-extern void Scr_AddInt(unsigned int parm, int val);
-extern void Scr_AddString(unsigned int parm, char* str);
-extern void Scr_AddVector(unsigned int parm, float* vec);
+char* Scr_GetString(int num);
+
+char* Scr_VarString(int first);
+
+vm_entity_t* Scr_GetParmEntity(unsigned int parm);
+float Scr_GetParmFloat(unsigned int parm);
+int Scr_GetParmInt(unsigned int parm);
+char* Scr_GetParmString(unsigned int parm);
+float* Scr_GetParmVector(unsigned int parm);
+void Scr_GetParmVector2(unsigned int parm, float* x, float* y, float* z);
+
+float Scr_GetReturnFloat();
+
+void Scr_ReturnEntity(void *ed);
+void Scr_ReturnFloat(float val);
+void Scr_ReturnInt(int val);
+void Scr_ReturnString(char* str);
+void Scr_ReturnVector(float* val);
+
+void Scr_AddEntity(unsigned int parm, vm_entity_t* ed);
+void Scr_AddFloat(unsigned int parm, float val);
+void Scr_AddInt(unsigned int parm, int val);
+void Scr_AddString(unsigned int parm, char* str);
+void Scr_AddVector(unsigned int parm, float* vec);
 
 
 //
@@ -135,3 +154,5 @@ extern void Scr_AddVector(unsigned int parm, float* vec);
 
 // get entity index
 #define NUM_FOR_ENT(ent)	( ((vm_entity_t*)(ent)- Scr_GetEntityPtr()) / Scr_GetEntitySize())
+
+#endif /*_PRAGMA_QCVM_H_*/

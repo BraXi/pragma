@@ -9,6 +9,10 @@ See the attached GNU General Public License v2 for more details.
 */
 	
 // shared.h -- included first by ALL program modules
+
+#ifndef _PRAGMA_SHARED_H_
+#define _PRAGMA_SHARED_H_
+
 #pragma once
 
 #include "../engine/pragma_config.h"
@@ -690,6 +694,8 @@ typedef struct
 
 	short		stats[MAX_STATS];		// fast status bar updates
 } player_state_t;
+
+#endif /*_PRAGMA_SHARED_H_*/
 
 
 

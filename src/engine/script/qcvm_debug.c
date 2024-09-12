@@ -11,7 +11,7 @@ See the attached GNU General Public License v2 for more details.
 // scr_debug.c
 
 #include "../pragma.h"
-#include "script_internals.h"
+#include "qcvm_private.h"
 
 
 static int type_size[9] = 
@@ -73,18 +73,18 @@ char* Scr_ValueString(etype_t type, eval_t* val)
 	switch (type)
 	{
 	case ev_string:
-		sprintf(line, "%s", ScrInternal_String(val->string));
+		sprintf(line, "%s", Scr_GetString(val->string));
 		break;
 	case ev_entity:
 		sprintf(line, "entity %i", (int)NUM_FOR_ENT(VM_TO_ENT(val->edict)));
 		break;
 	case ev_function:
 		f = active_qcvm->functions + val->function;
-		sprintf(line, "%s()", ScrInternal_String(f->s_name));
+		sprintf(line, "%s()", Scr_GetString(f->s_name));
 		break;
 	case ev_field:
 		def = ScrInternal_FieldAtOfs(val->_int);
-		sprintf(line, ".%s", ScrInternal_String(def->s_name));
+		sprintf(line, ".%s", Scr_GetString(def->s_name));
 		break;
 	case ev_void:
 		sprintf(line, "*void*");
@@ -130,18 +130,18 @@ char* Scr_ValueStringDeveloper(etype_t type, eval_t* val)
 	switch (type)
 	{
 	case ev_string:
-		sprintf(line, "'%s' [string]", ScrInternal_String(val->string));
+		sprintf(line, "'%s' [string]", Scr_GetString(val->string));
 		break;
 	case ev_entity:
 		sprintf(line, "%i [entity]", (int)NUM_FOR_ENT(VM_TO_ENT(val->edict)));
 		break;
 	case ev_function:
 		f = active_qcvm->functions + val->function;
-		sprintf(line, "%s [function]", ScrInternal_String(f->s_name));
+		sprintf(line, "%s [function]", Scr_GetString(f->s_name));
 		break;
 	case ev_field:
 		def = ScrInternal_FieldAtOfs(val->_int);
-		sprintf(line, "%s [field]", ScrInternal_String(def->s_name));
+		sprintf(line, "%s [field]", Scr_GetString(def->s_name));
 		break;
 	case ev_void:
 		sprintf(line, "*void*");
@@ -184,18 +184,18 @@ char* Scr_UglyValueString(etype_t type, eval_t* val)
 	switch (type)
 	{
 	case ev_string:
-		sprintf(line, "%s", ScrInternal_String(val->string));
+		sprintf(line, "%s", Scr_GetString(val->string));
 		break;
 	case ev_entity:
 		//sprintf(line, "%i", NUM_FOR_EDICT(PROG_TO_GENT(val->edict))); // braxi -- fixme
 		break;
 	case ev_function:
 		f = active_qcvm->functions + val->function;
-		sprintf(line, "%s", ScrInternal_String(f->s_name));
+		sprintf(line, "%s", Scr_GetString(f->s_name));
 		break;
 	case ev_field:
 		def = ScrInternal_FieldAtOfs(val->_int);
-		sprintf(line, "%s", ScrInternal_String(def->s_name));
+		sprintf(line, "%s", Scr_GetString(def->s_name));
 		break;
 	case ev_void:
 		sprintf(line, "void");
@@ -245,7 +245,7 @@ char* Scr_GlobalString(int ofs)
 	else
 	{
 		s = Scr_ValueString(def->type, val);
-		sprintf(line, "%i(%s)%s", ofs, ScrInternal_String(def->s_name), s);
+		sprintf(line, "%i(%s)%s", ofs, Scr_GetString(def->s_name), s);
 	}
 
 	i = (int)strlen(line);
@@ -267,7 +267,7 @@ char* Scr_GlobalStringNoContents(int ofs)
 	if (!def)
 		sprintf(line, "%i(???)", ofs);
 	else
-		sprintf(line, "%i(%s)", ofs, ScrInternal_String(def->s_name));
+		sprintf(line, "%i(%s)", ofs, Scr_GetString(def->s_name));
 
 	i = (int)strlen(line);
 	for (; i < 20; i++)
@@ -356,7 +356,7 @@ void Scr_StackTrace()
 				Com_Printf("%i: <NO FUNCTION>\n", i);
 		}
 		else
-			Com_Printf("%i: %s : %s\n", i, ScrInternal_String(f->s_file), ScrInternal_String(f->s_name));
+			Com_Printf("%i: %s : %s\n", i, Scr_GetString(f->s_file), Scr_GetString(f->s_name));
 	}
 }
 

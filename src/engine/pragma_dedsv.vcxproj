@@ -28,6 +28,7 @@
     <ClInclude Include="..\common\fileformats\smdl.h" />
     <ClInclude Include="..\common\mathlib.h" />
     <ClInclude Include="..\common\pragma_files.h" />
+    <ClInclude Include="..\common\shared.h" />
     <ClInclude Include="client\cgame\progdefs_client.h" />
     <ClInclude Include="cmd.h" />
     <ClInclude Include="cmodel.h" />
@@ -46,7 +47,7 @@
     <ClInclude Include="script\qc_opcodes.h" />
     <ClInclude Include="script\qc_opnames.h" />
     <ClInclude Include="script\scriptvm.h" />
-    <ClInclude Include="script\script_internals.h" />
+    <ClInclude Include="script\qcvm_private.h" />
     <ClInclude Include="server\server.h" />
     <ClInclude Include="server\sv_game.h" />
     <ClInclude Include="sizebuf.h" />
@@ -74,10 +75,10 @@
     <ClCompile Include="pragma.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_builtins_shared.c" />
-    <ClCompile Include="script\scr_debug.c" />
-    <ClCompile Include="script\scr_exec.c" />
-    <ClCompile Include="script\scr_main.c" />
-    <ClCompile Include="script\scr_utils.c" />
+    <ClCompile Include="script\qcvm_debug.c" />
+    <ClCompile Include="script\qcvm_exec.c" />
+    <ClCompile Include="script\qcvm_main.c" />
+    <ClCompile Include="script\qcvm_utils.c" />
     <ClCompile Include="server\sv_ai.c" />
     <ClCompile Include="server\sv_builtins.c" />
     <ClCompile Include="server\sv_ccmds.c" />

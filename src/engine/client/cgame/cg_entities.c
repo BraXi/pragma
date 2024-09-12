@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "../client.h"
 #include "cg_local.h"
-#include "../../script/script_internals.h" // for ddef_t
+#include "../../script/qcvm_private.h" // for ddef_t
 
 extern ddef_t* Scr_FindEntityField(char* name); // scr_main.c
 extern qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag); // scr_main.c

@@ -8,7 +8,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 #include "../pragma.h"
-#include "script_internals.h"
+#include "qcvm_private.h"
 
 extern void Scr_InitMathBuiltins();
 

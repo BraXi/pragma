@@ -8,7 +8,12 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+#ifndef _PRAGMA_QCVM_PRIVATE_H_
+#define _PRAGMA_QCVM_PRIVATE_H_
+
 #pragma once
+
+#include "scriptvm.h" // in case..
 
 typedef enum 
 { 
@@ -50,6 +55,8 @@ etype_t;
 #define	OFS_PARM7			25
 #define	RESERVED_OFS		28
 
+#define	MAX_PARMS		8
+
 #define	DEF_SAVEGLOBAL	(1<<15)
 
 enum
@@ -59,7 +66,7 @@ enum
 
 // =============================================================
 
-#define	MAX_PARMS		8
+
 
 typedef struct
 {
@@ -74,19 +81,11 @@ typedef struct
 } dfunction_t;
 
 
-
 typedef struct statement_s
 {
 	uint16_t	op;
 	int16_t	a, b, c;
 } dstatement_t;
-
-typedef struct
-{
-	uint16_t	type;		// if DEF_SAVEGLOBGAL bit is set the variable needs to be saved in savegames
-	uint16_t	ofs;
-	int32_t		s_name;
-} ddef_t;
 
 
 typedef struct
@@ -155,8 +154,8 @@ typedef struct qcvm_s
 //	sv_globalvars_t	*globals_struct;
 	unsigned int	num_entities;		// number of allocated entities
 	vm_entity_t		*entities;
-	unsigned int	entity_size;		// size of single entity
-	unsigned int			offsetToEntVars;	// *ptr + ofs = ent->v
+	int				entity_size;		// size of single entity
+	int				offsetToEntVars;	// *ptr + ofs = ent->v
 
 	void			*globals_struct;	// sv_globalvars_t
 
@@ -200,6 +199,16 @@ extern int			scr_numBuiltins;
 extern qcvm_t		*active_qcvm;
 extern const qcvmdef_t vmDefs[NUM_SCRIPT_VMS];
 
-extern char* ScrInternal_String(int str);
 extern void Scr_InitSharedBuiltins();
 extern void CheckScriptVM(const char* func);
+
+
+#define	G_INT(o)			(*(int32_t *)&active_qcvm->globals[o])
+#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int32_t *)&active_qcvm->globals[o]))
+#define	G_FLOAT(o)			(active_qcvm->globals[o])
+#define	G_STRING(o)			(active_qcvm->strings + *(scr_string_t *)&active_qcvm->globals[o])
+#define	G_VECTOR(o)			(&active_qcvm->globals[o])
+#define	RETURN_EDICT(e)		(((int32_t *)active_qcvm->globals)[OFS_RETURN] = ENT_TO_VM(e))
+
+
+#endif /*_PRAGMA_QCVM_PRIVATE_H_*/

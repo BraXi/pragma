@@ -10,7 +10,7 @@ See the attached GNU General Public License v2 for more details.
 // sv_gentity.c
 
 #include "server.h"
-#include "../script/script_internals.h"
+#include "../script/qcvm_private.h" // HAAAACK
 
 extern ddef_t* Scr_FindEntityField(char* name); //scr_main.c
 extern qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag); //scr_main.c

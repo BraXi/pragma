@@ -10,14 +10,9 @@ See the attached GNU General Public License v2 for more details.
 // scr_utils.c
 
 #include "../server/server.h"
-#include "script_internals.h"
+#include "qcvm_private.h"
 
-#define	G_INT(o)			(*(int32_t *)&active_qcvm->globals[o])
-#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int32_t *)&active_qcvm->globals[o]))
-#define	G_FLOAT(o)			(active_qcvm->globals[o])
-#define	G_STRING(o)			(active_qcvm->strings + *(scr_string_t *)&active_qcvm->globals[o])
-#define	G_VECTOR(o)			(&active_qcvm->globals[o])
-#define	RETURN_EDICT(e)		(((int32_t *)active_qcvm->globals)[OFS_RETURN] = ENT_TO_VM(e))
+
 
 
 /*
@@ -67,18 +62,6 @@ scr_func_t Scr_FindFunction(char* funcname)
 		return (scr_func_t)(f - active_qcvm->functions);
 
 	return -1;
-}
-
-/*
-============
-ScrInternal_String
-
-Returns string from script
-============
-*/
-char* ScrInternal_String(int str)
-{
-	return active_qcvm->strings + str;
 }
 
 /*

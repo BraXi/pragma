@@ -8,12 +8,17 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+#ifndef _PRAGMA_PROGDEFS_GUI_H_
+#define _PRAGMA_PROGDEFS_GUI_H_
+
+#pragma once
+
 #ifndef scr_func_t
-typedef int32_t scr_func_t;
-typedef int32_t scr_int_t;
-//	typedef vec3_t scr_vec_t;
-typedef int32_t scr_entity_t;
-typedef int32_t scr_string_t;
+	typedef int32_t scr_func_t;
+	typedef int32_t scr_int_t;
+	//	typedef vec3_t scr_vec_t;
+	typedef int32_t scr_entity_t;
+	typedef int32_t scr_string_t;
 #endif
 
 typedef struct ui_globalvars_s
@@ -57,3 +62,5 @@ typedef struct ui_itemvars_s
 	vec3_t		color;
 	float		alpha;
 } ui_itemvars_t;
+
+#endif /*_PRAGMA_PROGDEFS_GUI_H_*/

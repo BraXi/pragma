@@ -185,16 +185,16 @@
     <ClCompile Include="script\scr_builtins_shared.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_debug.c">
+    <ClCompile Include="script\qcvm_debug.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_exec.c">
+    <ClCompile Include="script\qcvm_exec.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_main.c">
+    <ClCompile Include="script\qcvm_main.c">
       <Filter>QCVM</Filter>
     </ClCompile>
-    <ClCompile Include="script\scr_utils.c">
+    <ClCompile Include="script\qcvm_utils.c">
       <Filter>QCVM</Filter>
     </ClCompile>
     <ClCompile Include="..\common\mathlib.c">
@@ -282,19 +282,19 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\common\fileformats\bsp.h">
-      <Filter>QCVM\File Formats</Filter>
+      <Filter>Common\File Formats</Filter>
     </ClInclude>
     <ClInclude Include="..\common\fileformats\md3.h">
-      <Filter>QCVM\File Formats</Filter>
+      <Filter>Common\File Formats</Filter>
     </ClInclude>
     <ClInclude Include="..\common\fileformats\pak.h">
-      <Filter>QCVM\File Formats</Filter>
+      <Filter>Common\File Formats</Filter>
     </ClInclude>
     <ClInclude Include="..\common\fileformats\pmodel.h">
-      <Filter>QCVM\File Formats</Filter>
+      <Filter>Common\File Formats</Filter>
     </ClInclude>
     <ClInclude Include="..\common\fileformats\smdl.h">
-      <Filter>QCVM\File Formats</Filter>
+      <Filter>Common\File Formats</Filter>
     </ClInclude>
     <ClInclude Include="script\qc_opcodes.h">
       <Filter>QCVM</Filter>
@@ -302,7 +302,7 @@
     <ClInclude Include="script\qc_opnames.h">
       <Filter>QCVM</Filter>
     </ClInclude>
-    <ClInclude Include="script\script_internals.h">
+    <ClInclude Include="script\qcvm_private.h">
       <Filter>QCVM</Filter>
     </ClInclude>
     <ClInclude Include="script\scriptvm.h">
@@ -355,7 +355,7 @@
     <Filter Include="Client\GUI">
       <UniqueIdentifier>{a6d0833b-ce91-4759-8fce-f26ba289128f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="QCVM\File Formats">
+    <Filter Include="Common\File Formats">
       <UniqueIdentifier>{87710d39-a80c-4ea4-ad15-187203329dd9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

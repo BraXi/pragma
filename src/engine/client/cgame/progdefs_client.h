@@ -8,6 +8,10 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+#ifndef _PRAGMA_PROGDEFS_CLIENT_H_
+#define _PRAGMA_PROGDEFS_CLIENT_H_
+
+#pragma once
 
 #ifndef scr_func_t
 	typedef int32_t scr_func_t;
@@ -83,3 +87,5 @@ typedef struct cl_entvars_s
 
 	float			fullbright;
 } cl_entvars_t;
+
+#endif /*_PRAGMA_PROGDEFS_CLIENT_H_*/

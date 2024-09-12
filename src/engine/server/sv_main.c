@@ -795,7 +795,7 @@ void SV_SetConfigString(int index, char *valueString)
 	}
 
 	if (!valueString || valueString == NULL)
-		valueString = "";
+		valueString = "\0";
 
 	// change the string in sv
 	strncpy(sv.configstrings[index], valueString, sizeof(sv.configstrings[index]));
