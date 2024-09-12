@@ -45,7 +45,7 @@ This must always generate an error
 */
 void PF_none(void)
 {
-	Scr_RunError("wrong builtin call\n");
+	Scr_RunError("Wrong builtin!");
 }
 
 /*
@@ -185,7 +185,7 @@ void PF_localcmd(void)
 	str = Scr_GetParmString(0);
 	if (!str || !strlen(str))
 	{
-		Scr_RunError("localcmd(): empty string\n");
+		Scr_RunError("%s() with empty string.", Scr_BuiltinFuncName());
 		return;
 	}
 	Cbuf_AddText(str);
@@ -225,7 +225,7 @@ void PF_argv(void)
 
 	if (arg < 0 || arg >= Cmd_Argc())
 	{
-		Scr_RunError("argv(%i): out of range [0,%i(argc)]\n", arg, Cmd_Argc());
+		Scr_RunError("%s(%i): out of range [0,%i(argc)]\n", Scr_BuiltinFuncName() ,arg, Cmd_Argc());
 		Scr_ReturnString(retstr_none); // not really needed
 	}
 	Scr_ReturnString(Cmd_Argv(arg));
@@ -252,7 +252,7 @@ void PF_cvar(void)
 	str = Scr_GetParmString(0);
 	if (!str || !strlen(str))
 	{
-		Scr_RunError("cvar(): without name\n");
+		Scr_RunError("cvar() without name.");
 		return;
 	}
 
@@ -286,7 +286,7 @@ void PF_cvarstring(void)
 	str = Scr_GetParmString(0);
 	if (!str || !strlen(str))
 	{
-		Scr_RunError("cvarstring(): without name\n");
+		Scr_RunError("cvarstring() without name.");
 		return;
 	}
 
@@ -319,7 +319,7 @@ void PF_cvarset(void)
 	str = Scr_GetParmString(0);
 	if (!str || !strlen(str))
 	{
-		Scr_RunError("cvarset(): without name\n");
+		Scr_RunError("cvarset() without name.");
 		return;
 	}
 
@@ -331,7 +331,7 @@ void PF_cvarset(void)
 
 /*
 =================
-PF_cvarset
+PF_cvarforceset
 
 void cvarforceset(string, string)
 =================
@@ -343,7 +343,7 @@ void PF_cvarforceset(void)
 	str = Scr_GetParmString(0);
 	if (!str || !strlen(str))
 	{
-		Scr_RunError("cvarforceset(): empty name\n");
+		Scr_RunError("cvarforceset() with empty name.");
 		return;
 	}
 
@@ -475,7 +475,7 @@ void PF_vtos(void)
 {
 	float* vec = Scr_GetParmVector(0);
 	char* string_temp = progstring();
-	sprintf(string_temp, "%.3f %.3f %.3f", vec[0], vec[1], vec[2]);
+	sprintf(string_temp, "%.2f %.2f %.2f", vec[0], vec[1], vec[2]);
 	Scr_ReturnString(string_temp);
 }
 

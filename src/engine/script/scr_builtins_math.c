@@ -25,7 +25,7 @@ void PF_fabs(void)
 
 	if (Scr_NumArgs() != 1)
 	{
-		Scr_RunError("called with %i arguments\n", Scr_NumArgs());
+		Scr_RunError("Called with %i arguments\n", Scr_NumArgs());
 		return;
 	}
 
@@ -296,7 +296,7 @@ void PF_randomint(void)
 	in = (int)Scr_GetParmFloat(0);
 	if (in <= 0)
 	{
-		Scr_RunError("randomint(%i) must be called with number greater than 0\n", in);
+		Scr_RunError("randomint(%i) must be given number greater than 0.\n", in);
 		return;
 	}
 

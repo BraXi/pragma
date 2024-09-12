@@ -8,14 +8,18 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-// scr_execution.c
+// qcvm_exec.c - execution of qc programs
+
+#define QCVM_DEBUG_LEVEL 0 // set to 1 to enable a lot of prints
 
 #include "../pragma.h"
 #include "qcvm_private.h"
 
-extern ddef_t* ScrInternal_GlobalAtOfs(int ofs);
-extern ddef_t* Scr_FindEntityField(char* name);
-extern void Scr_PrintEntityFields(vm_entity_t* ent);
+ddef_t* ScrInternal_GlobalAtOfs(int ofs);
+ddef_t* Scr_FindEntityField(char* name);
+void Scr_PrintEntityFields(vm_entity_t* ent);
+
+extern char* qcvm_op_names[];
 
 char* Scr_ValueString(etype_t type, eval_t* val);
 char* Scr_ValueStringDeveloper(etype_t type, eval_t* val);
@@ -23,7 +27,7 @@ char* Scr_ValueStringDeveloper(etype_t type, eval_t* val);
 #define ENTVARSOFFSET(ent) (int*)(&ent[0] + active_qcvm->offsetToEntVars)
 
 
-#define QCVMDEBUGLEVEL 0
+
 
 /*
 ============
@@ -96,7 +100,7 @@ void Scr_RunError(char* error, ...)
 	va_end(argptr);
 
 	CheckScriptVM(__FUNCTION__);
-	Com_Printf("\n\n******** SCRIPT RUNTIME ERROR ********\n\n", vmDefs[active_qcvm->progsType].filename);
+	Com_Printf("\n\n******** SCRIPT RUNTIME ERROR ********\n\n");
 	
 	Com_Printf("Progs : %s (%d crc)\n", vmDefs[active_qcvm->progsType].filename, active_qcvm->crc);
 	Com_Printf("\nError : %s\n\n", string);
@@ -126,6 +130,7 @@ Returns argc of currently entered function
 */
 int Scr_NumArgs()
 {
+	CheckScriptVM(__FUNCTION__);
 	return active_qcvm->argc;
 }
 
@@ -147,16 +152,16 @@ int ScrInternal_EnterFunction(dfunction_t* f)
 
 	active_qcvm->stackDepth++;
 	if (active_qcvm->stackDepth >= SCR_MAX_STACK_DEPTH)
-		Scr_RunError("%s qcvm: stack overflow\n", vmDefs[active_qcvm->progsType].name);
+		Scr_RunError("Script execution stack overflow.");
 
 
 	// save off any locals that the new function steps on
 	c = f->locals;
 	if (active_qcvm->localstack_used + c > SCR_LOCALSTACK_SIZE)
-		Scr_RunError("%s qcvm: locals stack overflow\n", vmDefs[active_qcvm->progsType].name);
+		Scr_RunError("Locals stack overflow.", vmDefs[active_qcvm->progsType].name);
 
-#if QCVMDEBUGLEVEL > 1
-	printf("[%s:#%i] enter %s:%s (%i parms)\n", vmDefs[active_qcvm->progsType].name, active_qcvm->stackDepth, COM_SkipPath(Scr_GetString(f->s_file)), Scr_GetString(f->s_name),f->numparms);
+#if QCVM_DEBUG_LEVEL > 1
+	printf("[%s:#%i] Enter %s:%s - %i parms.\n", vmDefs[active_qcvm->progsType].name, active_qcvm->stackDepth, COM_SkipPath(Scr_GetString(f->s_file)), Scr_GetString(f->s_name),f->numparms);
 #endif
 
 	for (i = 0; i < c; i++)
@@ -192,22 +197,22 @@ int ScrInternal_LeaveFunction()
 
 	if (active_qcvm->stackDepth <= 0)
 	{
-		Scr_RunError("script stack underflow in %s\n", vmDefs[active_qcvm->progsType].filename);
+		Scr_RunError("Script stack underflow.");
 	}
 
 	// restore locals from the stack
 	c = active_qcvm->xfunction->locals;
 	active_qcvm->localstack_used -= c;
 	if (active_qcvm->localstack_used < 0)
-		Scr_RunError("locals stack underflow in %s\n", vmDefs[active_qcvm->progsType].filename);
+		Scr_RunError("Locals script stack underflow.");
 
 	for (i = 0; i < c; i++)
 		((int*)active_qcvm->globals)[active_qcvm->xfunction->parm_start + i] = active_qcvm->localstack[active_qcvm->localstack_used + i];
 
 	// up stack
 	active_qcvm->stackDepth--;
-#if QCVMDEBUGLEVEL > 1
-	printf("[%s:#%i] leave %s:%s()\n", vmDefs[active_qcvm->progsType].name, active_qcvm->stackDepth, COM_SkipPath(Scr_GetString(active_qcvm->xfunction->s_file)), Scr_GetString(active_qcvm->xfunction->s_name));
+#if QCVM_DEBUG_LEVEL > 1
+	printf("[%s:#%i] Leave %s:%s()\n", vmDefs[active_qcvm->progsType].name, active_qcvm->stackDepth, COM_SkipPath(Scr_GetString(active_qcvm->xfunction->s_file)), Scr_GetString(active_qcvm->xfunction->s_name));
 #endif
 	active_qcvm->xfunction = active_qcvm->stack[active_qcvm->stackDepth].f;
 	return active_qcvm->stack[active_qcvm->stackDepth].s;
@@ -221,7 +226,6 @@ Execute script program
 ====================
 */
 
-extern char* qcvm_op_names[];
 void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 {
 	eval_t			*a, *b, *c, *ptr;
@@ -242,20 +246,26 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 	vm->callFromFuncName = callFromFuncName;
 	if (!fnum || fnum >= vm->progs->numFunctions)
 	{
+		// this is such a mess
 		if (vm->progsType == VM_SVGAME)
 		{
-			sv_globalvars_t *g = vm->globals_struct;
+			sv_globalvars_t *g = (sv_globalvars_t*)vm->globals_struct;
 			if (g->self)
 				Scr_PrintEntityFields(VM_TO_ENT(g->self));
 		}
 		else if (vm->progsType == VM_CLGAME)
 		{
-			cl_globalvars_t* g = vm->globals_struct;
+			cl_globalvars_t* g = (cl_globalvars_t*)vm->globals_struct;
 			if (g->self)
 				Scr_PrintEntityFields(VM_TO_ENT(g->self));
 		}
-
-		Scr_RunError("%s: incorrect function index %i in %s, from %s\n", __FUNCTION__, fnum, vmDefs[vm->progsType].filename, callFromFuncName);
+		else if (vm->progsType == VM_GUI)
+		{
+			ui_globalvars_t* g = (ui_globalvars_t*)vm->globals_struct;
+			if (g->self)
+				Scr_PrintEntityFields(VM_TO_ENT(g->self));
+		}
+		Scr_RunError("Incorrect function index %i in %s from %s.", fnum, vmDefs[vm->progsType].filename, callFromFuncName);
 		return;
 	}
 
@@ -282,7 +292,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 		if (!--vm->runawayCounter)
 		{
-			Scr_RunError("runaway loop error in function %s (%s)", Scr_GetString(f->s_name), vmDefs[vm->progsType].filename);
+			Scr_RunError("Infinite loop in function %s (%s).", Scr_GetString(f->s_name), vmDefs[vm->progsType].filename);
 		}
 
 		vm->xfunction->profile++;
@@ -351,7 +361,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 		case OP_LOADP_FTOI:
 		case OP_LOADA_I:
 		case OP_LOADP_I:
-			Scr_RunError("Unsupported FTEQC opcode %s in %s", qcvm_op_names[st->op], vmDefs[vm->progsType].filename);
+			Scr_RunError("Unsupported FTEQC opcode %s in %s.", qcvm_op_names[st->op], vmDefs[vm->progsType].filename);
 			break;
 
 		case OP_MUL_I:
@@ -361,8 +371,8 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 		case OP_DIV_I:
 			if (b->_int == 0)
 			{
-				Scr_RunError("division by zero in %s", vmDefs[vm->progsType].filename);
-//				c->_int = 0;
+				Scr_RunError("Integer division by zero in %s.", vmDefs[vm->progsType].filename);
+//				c->_int = 0; // commented out for no mercy, hahaha. fix your code
 			}
 			else
 				c->_int = a->_int / b->_int;
@@ -717,7 +727,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			if (ent == vm->entities && (vm->progsType == VM_SVGAME && Com_IsServerActive()))
 			{
 				//Scr_StackTrace();
-				Scr_RunError("tried to modify worldspawn entity fields which are read only\n");
+				Scr_RunError("Worldspawn entity fields are read only.");
 			}
 			c->_int = (byte*)(ENTVARSOFFSET(ent) + b->_int) - (byte*)vm->entities;
 			break;
@@ -769,7 +779,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 		case OP_CALL8:
 			vm->argc = st->op - OP_CALL0; //sets the number of arguments a function takes
 			if (!a->function)
-				Scr_RunError("%s: NULL function in %s\n", __FUNCTION__, vmDefs[vm->progsType].filename);
+				Scr_RunError("Call to undefined function.");
 
 			newf = &vm->functions[a->function];
 
@@ -778,10 +788,10 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 				// negative statements are built in functions
 				i = -newf->first_statement;
 				if (i >= scr_numBuiltins)
-					Scr_RunError("%s: unknown builtin function (funcnum = %i) in %s\n", __FUNCTION__, i, vmDefs[vm->progsType].filename);
+					Scr_RunError("Unknown builtin function index %i", i);
 
 				if(scr_builtins[i].execon != PF_ALL && vm->progsType != scr_builtins[i].execon)
-					Scr_RunError("%s: call to '%s' builtin in %s VM not allowed\n", __FUNCTION__, scr_builtins[i].name, vmDefs[vm->progsType].name);
+					Scr_RunError("Call to '%s' builtin in %s is not allowed.", scr_builtins[i].name, vmDefs[vm->progsType].name);
 
 				vm->currentBuiltinFunc = &scr_builtins[i]; // development aid
 				scr_builtins[i].func();
@@ -826,9 +836,9 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 		default:
 			if(st->op > 0 && st->op < 269)
-				Scr_RunError("%s: unknown opcode %i [%s] in %s\n", __FUNCTION__, st->op, qcvm_op_names[st->op], vmDefs[vm->progsType].filename);
+				Scr_RunError("Unknown program opcode %i [%s].", st->op, qcvm_op_names[st->op]);
 			else
-				Scr_RunError("%s: unknown opcode %i in %s\n", __FUNCTION__, st->op, vmDefs[vm->progsType].filename);
+				Scr_RunError("Unknown program opcode %i.\n", st->op);
 		}
 	}
 

@@ -125,7 +125,7 @@ void PFCG_getconfigstring(void) // shared with gui
 	int idx = Scr_GetParmInt(0);
 	if ( idx < 0 || idx >= MAX_CONFIGSTRINGS)
 	{
-		Scr_RunError("getconfigstring(): %i out of range\n", idx);
+		Scr_RunError("%s(): configstring index %i is out of range.", Scr_BuiltinFuncName(), idx);
 		return;
 	}
 	Scr_ReturnString(cl.configstrings[idx]);
@@ -144,7 +144,7 @@ void PFCG_getclientname(void)
 	int idx = Scr_GetParmInt(0);
 	if (idx < 0 || idx >= MAX_CLIENTS)
 	{
-		Scr_RunError("getclientname(): %i out of range\n", idx);
+		Scr_RunError("%s(): client index %i is out of range.", Scr_BuiltinFuncName(), idx);
 		return;
 	}
 	Scr_ReturnString(cl.configstrings[CS_CLIENTS+idx]);
@@ -470,7 +470,7 @@ void PFCG_setmodel(void)
 	name = Scr_GetParmString(1);
 	if (!name || !name[0])
 	{
-		Scr_RunError("setmodel(): empty model name for entity %i\n", NUM_FOR_ENT(ent));
+		Scr_RunError("%s(): empty model name for entity %i", Scr_BuiltinFuncName(), NUM_FOR_ENT(ent));
 		return;
 	}
 
