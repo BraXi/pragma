@@ -43,10 +43,25 @@
 | `stuff`        | contains dev textures and netradiant gamepack |
 
 
-# Build instructions:
+
+# Building from source
 
 ## Windows
-Open `pragma.sln` in either Visual Studio 2019 or Visual Studio 2022, set target to `x86` and build all projects including `engine`, `pragma_server` and `renderer_gl2`, if everything went fine three binaries  `engine.exe`, `pragma_server.exe` and `renderer_ogl2.dll` will be created in `/build` directory.
+
+| Project | Description | Outfile |
+|---------|-------------|-----|
+| `pragma_engine` | Full engine binary including server and client modules (aka. full game) | pragma.exe |
+| `pragma_dedsv` | A dedicated pragma server (console app) | pragma_server.exe |
+| `pragma_renderer` | The OpenGL2 renderer for pragma (mandatory for `pragma_engine` to run) | pragma_renderer_gl2_x86.dll |
+| `pragma_tool` | A convenient utility to build PAKs and convert models and animations (console app)  | prtool.exe |
+
+Open included Visual Studio 2019 solution file `src/pragma.sln`, set target to `x86` and build all projects, everything should compile out of the box without additional configuration and the binaries will be copied to `../build` directory.
+
+You can configure many aspects of engine in its configuration file `src/engine/pragma_config.h`, but only if you know what you're doing.
+
+The `x64` builds will compile too, but there's currently issue plaguing QCVM resulting in crashes.
+
+To create up-to-date QC includes - launch pragma, open console with `~` key and type `\vm_generatedefs`. This will generate headers for gui, server and client modules for your QC programs.
 
 ## Linux
 Only the dedicated server can be built on this platform via `gcc` and I've only tested it under Ubuntu 22.4.
