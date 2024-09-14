@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Win32 Debug
+name: Release 64bit
 
 on:
   push:
@@ -20,8 +20,8 @@ env:
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
   # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  BUILD_CONFIGURATION: Debug
-  BUILD_PLATFORM: x86
+  BUILD_CONFIGURATION: Release
+  BUILD_PLATFORM: x64
 
 permissions:
   contents: read
@@ -49,16 +49,12 @@ jobs:
     - name: Generate MSBuild archives
       uses: actions/upload-artifact@v3
       with:
-        name: pragma-debug-win-${{env.BUILD_PLATFORM}}
+        name: pragma-release-win-${{env.BUILD_PLATFORM}}
         path: |
-            build/pragma.exe
-            build/pragma.pdb
-            build/pragma_server.exe
-            build/pragma_server.pdb           
-            build/pragma_renderer_gl2_x86.dll
-            build/pragma_renderer_gl2_x86.pdb
-            build/prtool.exe
-            build/prtool.pdb  
+            build/pragma_x64.exe
+            build/pragma_server_x64.exe         
+            build/pragma_renderer_gl2_x64.dll
+            build/prtool.exe 
             build/prtool.qc
             build/main/dummy.txt
             readme.txt
