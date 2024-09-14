@@ -225,13 +225,13 @@ static void PFCG_trace(void)
 
 	if (trace.surface)
 	{
-		cg.script_globals->trace_surface_name = Scr_SetString(trace.surface->name);
+		cg.script_globals->trace_surface_name = Scr_SetTempString(trace.surface->name);
 		cg.script_globals->trace_surface_flags = trace.surface->flags;
 		cg.script_globals->trace_surface_value = trace.surface->value;
 	}
 	else
 	{
-		cg.script_globals->trace_surface_name = Scr_SetString("");
+		cg.script_globals->trace_surface_name = Scr_SetTempString("");
 		cg.script_globals->trace_surface_flags = 0;
 		cg.script_globals->trace_surface_value = 0;
 	}

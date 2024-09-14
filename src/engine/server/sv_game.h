@@ -124,16 +124,16 @@ extern void Scr_Event_Impact(gentity_t* self, trace_t* trace);
 extern void Scr_Event_Blocked(gentity_t* self, gentity_t* other);
 extern void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurface_t* surf);
 
-extern void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint);
+extern void SV_SpawnEntities(const char* mapname, char* entities, const char* spawnpoint);
 
 //
 // sv_gentity.c
 //
-extern void SV_AttachModel(gentity_t* self, char* tagname, char* model);
-extern void SV_DetachModel(gentity_t* self, char* model);
+extern void SV_AttachModel(gentity_t* self, const char* tagname, const char* model);
+extern void SV_DetachModel(gentity_t* self, const char* model);
 extern void SV_DetachAllModels(gentity_t* self);
-extern void SV_HideEntitySurface(gentity_t* self, char* surfaceName);
-extern void SV_ShowEntitySurface(gentity_t* self, char* surfaceName);
+extern void SV_HideEntitySurface(gentity_t* self, const char* surfaceName);
+extern void SV_ShowEntitySurface(gentity_t* self, const char* surfaceName);
 extern qboolean SV_EntityCanBeDrawn(gentity_t* self);
 
 extern void ClientUserinfoChanged(gentity_t* ent, char* userinfo);
@@ -142,7 +142,7 @@ extern void ClientCommand(gentity_t* ent);
 extern void SV_RunWorldFrame(void);
 
 // savegames stubs
-extern void WriteGame(char* filename, qboolean autosave);
-extern void ReadGame(char* filename);
-extern void WriteLevel(char* filename);
-extern void ReadLevel(char* filename);
+extern void WriteGame(const char* filename, qboolean autosave);
+extern void ReadGame(const char* filename);
+extern void WriteLevel(const char* filename);
+extern void ReadLevel(const char* filename);

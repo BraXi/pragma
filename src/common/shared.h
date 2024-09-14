@@ -144,8 +144,8 @@ extern char* GetTimeStamp(qboolean full);
 
 char *COM_SkipPath (char *pathname);
 void COM_StripExtension (char *in, char *out);
-void COM_FileBase (char *in, char *out);
-void COM_FilePath (char *in, char *out);
+void COM_FileBase (const char *in, char *out);
+void COM_FilePath (const char *in, char *out);
 void COM_DefaultExtension (char *path, char *extension);
 
 char *COM_Parse (char **data_p); // data is an in/out parm, returns a parsed out token
@@ -155,7 +155,7 @@ char* COM_TokenGetArg(int arg);
 char* COM_TokenArgs();
 
 
-void Com_sprintf (char *dest, int size, char *fmt, ...);
+void Com_sprintf (char *dest, int size, const char *fmt, ...);
 
 void Com_PageInMemory (byte *buffer, int size);
 
@@ -189,10 +189,10 @@ char	*va(char *format, ...);
 #define	MAX_INFO_VALUE		64
 #define	MAX_INFO_STRING		512
 
-char *Info_ValueForKey (char *s, char *key);
-void Info_RemoveKey (char *s, char *key);
-void Info_SetValueForKey (char *s, char *key, char *value);
-qboolean Info_Validate (char *s);
+const char *Info_ValueForKey (const char *s, const char *key);
+void Info_RemoveKey (char *s, const char *key);
+void Info_SetValueForKey (char *s, const char *key, const char *value);
+qboolean Info_Validate (const char *s);
 
 /*
 ==============================================================
@@ -205,7 +205,7 @@ SYSTEM SPECIFIC
 extern	int	curtime;		// time returned by last Sys_Milliseconds, FIXME: 64BIT
 
 int		Sys_Milliseconds (void);
-void	Sys_Mkdir (char *path);
+void	Sys_Mkdir (const char *path);
 
 // large block stack allocation routines
 void	*Hunk_Begin (const int maxsize, const char *name);
@@ -223,7 +223,7 @@ int		Hunk_End (void);
 /*
 ** pass in an attribute mask of things you wish to REJECT
 */
-char	*Sys_FindFirst (char *path, unsigned musthave, unsigned canthave );
+char	*Sys_FindFirst (const char *path, unsigned musthave, unsigned canthave );
 char	*Sys_FindNext ( unsigned musthave, unsigned canthave );
 void	Sys_FindClose (void);
 

@@ -384,7 +384,7 @@ SV_SpawnEntities
 Creates a server's entity / program execution context by parsing textual entity definitions out of an ent file.
 ==============
 */
-void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint)
+void SV_SpawnEntities(const char* mapname, char* entities, const char* spawnpoint)
 {
 	gentity_t	*ent;
 	int			inhibit, discard, total;
@@ -441,7 +441,7 @@ void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 SV_AttachModel
 ==============
 */
-void SV_AttachModel(gentity_t *self, char* tagname, char *model)
+void SV_AttachModel(gentity_t *self, const char* tagname, const char *model)
 {
 	int i, tag;
 	ent_model_t* attachInfo;
@@ -516,7 +516,7 @@ void SV_AttachModel(gentity_t *self, char* tagname, char *model)
 SV_DetachModel
 ==============
 */
-void SV_DetachModel(gentity_t* self, char* model)
+void SV_DetachModel(gentity_t* self, const char* model)
 {
 	int i;
 	ent_model_t* attachInfo;
@@ -571,7 +571,7 @@ void SV_DetachAllModels(gentity_t* self)
 SV_HideEntitySurface
 ==============
 */
-void SV_HideEntitySurface(gentity_t* self, char* surfaceName)
+void SV_HideEntitySurface(gentity_t* self, const char* surfaceName)
 {
 	int surf;
 	svmodel_t* svmod;
@@ -612,7 +612,7 @@ SV_ShowEntitySurface
 NULL surfaceName will show all parts
 ==============
 */
-void SV_ShowEntitySurface(gentity_t* self, char* surfaceName)
+void SV_ShowEntitySurface(gentity_t* self, const char* surfaceName)
 {
 	int surf;
 

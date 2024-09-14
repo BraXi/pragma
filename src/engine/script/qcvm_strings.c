@@ -100,7 +100,7 @@ Sets temporary string in script (the string will be overwritten later),
 used for builtins that return strings such as vtos(), ftos(), argv() etc..
 ============
 */
-int Scr_SetTempString(char* str)
+int Scr_SetTempString(const char* str)
 {
 	int strindex;
 
@@ -120,7 +120,7 @@ Scr_SetString
 Sets persistant string in program
 ============
 */
-int Scr_SetString(char* str)
+int Scr_SetString(const char* str)
 {
 	int strindex;
 
@@ -153,7 +153,7 @@ int Scr_SetString(char* str)
 	pr_stringTable[strindex] = str;
 
 #ifdef _DEBUG
-	Com_Printf("New string '%s' (%i strings, strtable for %i)\n", str, str, pr_numStringsInTable, pr_stringTableSize);
+	Com_Printf("New string '%s' (%i strings, strtable for %i)\n", str, pr_numStringsInTable, pr_stringTableSize);
 #endif
 	return -1 - strindex;
 }
@@ -269,8 +269,8 @@ const char* Scr_VarString(int first)
 	for (i = first; i < Scr_NumArgs(); i++)
 	{
 		//strcat(str[varstring], Scr_GetParmString(i));
-		len = Q_strlcat(str, Scr_GetParmString(i), sizeof(str));
-		if (len >= sizeof(str))
+		len = Q_strlcat(str, Scr_GetParmString(i), sizeof(pr_tempStrings[0]));
+		if (len >= sizeof(pr_tempStrings[0]))
 		{
 			Com_Printf("%s: string truncated.\n", __FUNCTION__);
 			return str;

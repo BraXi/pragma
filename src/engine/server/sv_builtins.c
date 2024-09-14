@@ -28,7 +28,7 @@ See the attached GNU General Public License v2 for more details.
 		return; }
 
 
-static void CheckEmptyString(char* s)  // definitely need to make it a shared code...
+static void CheckEmptyString(const char* s)  // definitely need to make it a shared code...
 {
 	if (s[0] <= ' ')
 		Scr_RunError("Bad string");
@@ -50,7 +50,7 @@ index precache_model(string)
 */
 void PFSV_precache_model(void)
 {
-	char* name = Scr_GetParmString(0);
+	const char* name = Scr_GetParmString(0);
 	CheckEmptyString(name);
 	Scr_ReturnFloat(SV_ModelIndex(name));
 }
@@ -62,7 +62,7 @@ index precache_sound(string)
 */
 void PFSV_precache_sound(void)
 {
-	char* name = Scr_GetParmString(0);
+	const char* name = Scr_GetParmString(0);
 	CheckEmptyString(name);
 	Scr_ReturnFloat(SV_SoundIndex(name));
 }
@@ -74,7 +74,7 @@ index precache_image(string)
 */
 void PFSV_precache_image(void)
 {
-	char* name = Scr_GetParmString(0);
+	const char* name = Scr_GetParmString(0);
 	CheckEmptyString(name);
 	Scr_ReturnFloat(SV_ImageIndex(name));
 }
@@ -347,7 +347,7 @@ setmodel(player, "models/characters/paula.md3");
 void PFSV_setmodel(void)
 {
 	gentity_t* ent;
-	char* name;
+	const char* name;
 	int modelindex;
 
 	ent = Scr_GetParmEntity(0);
@@ -403,7 +403,7 @@ setbrushmodel(pusher, "*2");
 void PFSV_setbrushmodel(void)
 {
 	gentity_t* ent;
-	char* name;
+	const char* name;
 	svmodel_t* mod;
 
 	ent = Scr_GetParmEntity(0);
@@ -539,8 +539,8 @@ attach(self, "tag_head", "models/heads/test.md3");
 void PFSV_attach(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
-	char *tagname = Scr_GetParmString(1);
-	char* model = Scr_GetParmString(2);
+	const char *tagname = Scr_GetParmString(1);
+	const char* model = Scr_GetParmString(2);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -561,7 +561,7 @@ detach(self, "models/heads/test.md3");
 void PFSV_detach(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
-	char* model = Scr_GetParmString(1);
+	const char* model = Scr_GetParmString(1);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -603,7 +603,7 @@ hidepart(self, "head");
 void PFSV_hidepart(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
-	char* part = Scr_GetParmString(1); 
+	const char* part = Scr_GetParmString(1);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -625,7 +625,7 @@ showpart(self, "head");
 void PFSV_showpart(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
-	char* part = Scr_GetParmString(1);
+	const char* part = Scr_GetParmString(1);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
@@ -684,13 +684,13 @@ static void CopyTraceToProgs(trace_t trace)
 
 	if (trace.surface)
 	{
-		sv.script_globals->trace_surface_name = Scr_SetString(trace.surface->name);
+		sv.script_globals->trace_surface_name = Scr_SetTempString(trace.surface->name);
 		sv.script_globals->trace_surface_flags = trace.surface->flags;
 		sv.script_globals->trace_surface_value = trace.surface->value;
 	}
 	else
 	{
-		sv.script_globals->trace_surface_name = Scr_SetString("");
+		sv.script_globals->trace_surface_name = Scr_SetTempString("");
 		sv.script_globals->trace_surface_flags = 0;
 		sv.script_globals->trace_surface_value = 0;
 	}
@@ -950,7 +950,7 @@ configstring(CS_SKY, "cloudynight");
 void PFSV_configstring(void)
 {
 	int	index = (int)Scr_GetParmFloat(0);
-	char *val = Scr_GetParmString(1);
+	const char *val = Scr_GetParmString(1);
 
 	SV_SetConfigString(index, val);
 }
@@ -969,7 +969,7 @@ lightstyle(0, "aamm");
 void PFSV_lightstyle(void)
 {
 	int style = (int)Scr_GetParmFloat(0);
-	char *val = Scr_GetParmString(1);
+	const char *val = Scr_GetParmString(1);
 
 	if (style < 0 || style >= MAX_LIGHTSTYLES)
 	{
@@ -1089,7 +1089,7 @@ stuffcmd(player, "echo redirecting to another server; wait 10; disconnect; wait 
 void PFSV_stuffcmd(void)
 {
 	gentity_t	*ent;
-	char		*cmd;
+	const char	*cmd;
 	int			entnum;
 
 	ent = Scr_GetParmEntity(0);
@@ -1126,7 +1126,7 @@ cprint(player, PRINT_HIGH, "Picked up big pack of ammo!");
 void PFSV_sprint(void)
 {
 	gentity_t	*ent;
-	char		*msg;
+	const char	*msg;
 	int			entnum, printlevel;
 
 	ent = Scr_GetParmEntity(0);
@@ -1172,7 +1172,7 @@ centerprint(world, "hello", " world!"); // center printed to everyone on the ser
 void PFSV_centerprint(void)
 {
 	gentity_t	*ent;
-	char		*msg;
+	const char	*msg;
 	int			entnum;
 
 	ent = Scr_GetParmEntity(0);
@@ -1456,8 +1456,8 @@ float bMapExists = changemap("c0e1", false); // and this will clear all persista
 */
 void PFSV_changemap(void)
 {
-	char	*nextmap;
-	char	expanded[MAX_QPATH];
+	const char *nextmap;
+	char expanded[MAX_QPATH];
 
 	nextmap = Scr_GetParmString(0);
 
@@ -1497,7 +1497,7 @@ kickclient(player, "inactivity"); // "player was kicked from server due to inact
 void PFSV_kickclient(void)
 {
 	gentity_t* ent;
-	char* reason;
+	const char* reason;
 
 	ent = Scr_GetParmEntity(0);
 	reason = Scr_GetParmString(1);
@@ -1813,13 +1813,13 @@ For listen servers only the host will see the lines.
 drawtext(self.origin, '1 1 1', 2.0, false, 0.1, self.classname);
 =================
 */
-void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, char* text);
+void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, const char* text);
 void PFSV_drawstring(void)
 {
 	float	*pos, *color;
 	float	fontsize, drawtime;
 	qboolean depthtested;
-	char	*str;
+	const char *str;
 
 	if (dedicated->value)
 		return;
@@ -2022,11 +2022,11 @@ float has_flash = tagexists(self, "tag_flash");
 void PFSV_tagexists(void)
 {
 	gentity_t* ent;
-	char* tagName;
+	const char* tagName;
 	svmodel_t* model;
 	orientation_t* tag;
 
-	ent = Scr_GetParmString(0);
+	ent = Scr_GetParmEntity(0);
 	tagName = Scr_GetParmString(1);
 
 	if (!ent->inuse)
@@ -2062,7 +2062,7 @@ vector head_ = gettagorigin(self, "tag_head");
 void PFSV_gettagorigin(void)
 {
 	gentity_t *ent;
-	char *tagName;
+	const char *tagName;
 	svmodel_t *model;
 	orientation_t* tag;
 
@@ -2109,7 +2109,7 @@ vector looking_at = gettagangles(self, "tag_head");
 void PFSV_gettagangles(void)
 {
 	gentity_t* ent;
-	char* tagName;
+	const char* tagName;
 	svmodel_t* model;
 	orientation_t* tag;
 	vec3_t out;

@@ -276,7 +276,7 @@ void UI_Draw()
 
 		current_gui = ui.guis[i];
 
-		ui.script_globals->currentGuiName = Scr_SetString(current_gui->name);
+		ui.script_globals->currentGuiName = Scr_SetTempString(current_gui->name);
 
 		for (j = 0; j < current_gui->numItems; j++)
 		{

@@ -18,10 +18,10 @@ See the attached GNU General Public License v2 for more details.
 
 gentity_t	*sv_entity;	// currently run entity
 
-void WriteGame(char* filename, qboolean autosave) {}
-void ReadGame(char* filename) {}
-void WriteLevel(char* filename) {}
-void ReadLevel(char* filename) {}
+void WriteGame(const char* filename, qboolean autosave) {}
+void ReadGame(const char* filename) {}
+void WriteLevel(const char* filename) {}
+void ReadLevel(const char* filename) {}
 
 
 void Scr_ClientBeginServerFrame(gentity_t* self);

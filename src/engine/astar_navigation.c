@@ -334,7 +334,7 @@ Nav_DebugDrawNodes
 extern void SV_AddDebugLine(vec3_t p1, vec3_t p2, vec3_t color, float thickness, float drawtime, qboolean depthtested);
 extern void SV_AddDebugPoint(vec3_t pos, vec3_t color, float thickness, float drawtime, qboolean depthtested);
 extern void SV_AddDebugBox(vec3_t pos, vec3_t p1, vec3_t p2, vec3_t color, float thickness, float drawtime, qboolean depthtested);
-extern void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, char* text);
+extern void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, const char* text);
 #endif
 static void Nav_DebugDrawNodes()
 {

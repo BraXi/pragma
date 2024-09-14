@@ -181,7 +181,7 @@ Changing levels will NOT cause this to be called again, but loadgames will.
 */
 qboolean Scr_ClientConnect(gentity_t* ent, char* userinfo)
 {
-	char* value;
+	const char* value;
 	qboolean allowed;
 
 	// check for a password
@@ -479,7 +479,7 @@ The game can override any of the settings in place (forcing skins or names, etc)
 */
 void ClientUserinfoChanged(gentity_t* ent, char* userinfo)
 {
-	char* s;
+	const char* s;
 	// check for malformed or illegal info strings
 	if (!Info_Validate(userinfo))
 	{

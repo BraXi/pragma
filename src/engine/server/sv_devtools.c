@@ -135,7 +135,7 @@ void SV_AddDebugBox(vec3_t pos, vec3_t p1, vec3_t p2, vec3_t color, float thickn
 SV_AddDebugString
 =================
 */
-void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, char* text)
+void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, const char* text)
 {
 #if 1
 	if (!sv_debugPrimitives || !developer->value || dedicated->value > 0)

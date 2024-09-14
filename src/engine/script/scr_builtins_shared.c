@@ -397,7 +397,7 @@ float strlen(string)
 */
 void PF_strlen(void)
 {
-	char* str;
+	const char* str;
 	size_t len;
 
 	str = Scr_GetParmString(0);
@@ -420,7 +420,7 @@ string letter_b = strat(str,1); // letter_b == b
 */
 void PF_strat(void)
 {
-	char* str;
+	const char* str;
 	size_t len;
 	int at;
 
@@ -450,7 +450,7 @@ float strstr(string a,string b)
 */
 void PF_strstr(void)
 {
-	char* str1, *str2;
+	const char* str1, *str2;
 	
 	str1 = Scr_GetParmString(0);
 	str2 = Scr_GetParmString(1);
@@ -489,7 +489,7 @@ logprint(true, self.name, " killed ", other.name, "\n" );
 */
 void PF_logprint(void)
 {
-	char	*str;
+	const char	*str;
 	qboolean timestamp;
 
 	timestamp = Scr_GetParmFloat(0) > 0 ? true : false;
@@ -523,7 +523,7 @@ float crc_checksum = crcfile("models/player.md3");
 void PF_crcfile(void)
 {
 	unsigned short checksum;
-	char* str;
+	const char* str;
 	str = Scr_GetParmString(0);
 
 	if (strlen(str) <= 0)

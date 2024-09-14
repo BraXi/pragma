@@ -106,7 +106,7 @@ void FS_CreatePath(const char *path)
 {
 	char	*ofs;
 	
-	for (ofs = path+1 ; *ofs ; ofs++)
+	for (ofs = (char*)(path+1) ; *ofs ; ofs++)
 	{
 		if (*ofs == '/')
 		{	// create the directory
@@ -442,7 +442,7 @@ Loads the header and directory, adding the files at the beginning
 of the list so they override previous pack files.
 =================
 */
-pack_t *FS_LoadPackFile (char *packfile)
+pack_t *FS_LoadPackFile (const char *packfile)
 {
 	dpackheader_t	header;
 	int				i;

@@ -108,8 +108,8 @@ void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcs
 
 scr_func_t Scr_FindFunctionIndex(const char* funcname);
 
-int Scr_SetTempString(char* str);
-int Scr_SetString(char* str);
+int Scr_SetTempString(const char* str);
+int Scr_SetString(const char* str);
 const char* Scr_GetString(int num);
 const char* Scr_VarString(int first);
 

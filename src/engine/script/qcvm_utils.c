@@ -233,7 +233,7 @@ Returns string to script
 void Scr_ReturnString(char* str)
 {
 	CheckScriptVM(__FUNCTION__);
-	G_INT(OFS_RETURN) = Scr_SetString(str);//(str - active_qcvm->pStrings);
+	G_INT(OFS_RETURN) = Scr_SetTempString(str); //Scr_SetString(str);
 }
 
 /*
@@ -307,7 +307,7 @@ void Scr_AddString(unsigned int parm, char* str)
 {
 	int ofs = ScrInternal_GetParmOffset(parm);
 	CheckScriptVM(__FUNCTION__);
-	G_INT(ofs) = Scr_SetString(str);
+	G_INT(ofs) = Scr_SetTempString(str); //Scr_SetString(str);
 }
 
 

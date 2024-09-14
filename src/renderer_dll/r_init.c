@@ -75,7 +75,7 @@ void R_RegisterCvarsAndCommands(void)
 {
 	r_test = ri.Cvar_Get("r_test", "0", 0, NULL);
 
-	r_lefthand = ri.Cvar_Get("cl_hand", "1", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
+	r_lefthand = ri.Cvar_Get("cl_hand", "0", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0, NULL);
 
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT, "Skip all lighting (development tool).");

@@ -109,11 +109,11 @@ char *COM_FileExtension (char *in)
 COM_FileBase
 ============
 */
-void COM_FileBase (char *in, char *out)
+void COM_FileBase (const char *in, char *out)
 {
 	char *s, *s2;
 	
-	s = in + strlen(in) - 1;
+	s = (char*)(in + strlen(in) - 1);
 	
 	while (s != in && *s != '.')
 		s--;
@@ -138,11 +138,11 @@ COM_FilePath
 Returns the path up to, but not including the last /
 ============
 */
-void COM_FilePath (char *in, char *out)
+void COM_FilePath (const char *in, char *out)
 {
 	char *s;
 	
-	s = in + strlen(in) - 1;
+	s = (char*)(in + strlen(in) - 1);
 	
 	while (s != in && *s != '/')
 		s--;
@@ -575,7 +575,7 @@ int Q_strcasecmp (const char *s1, const char *s2)
 
 
 
-void Com_sprintf (char *dest, int size, char *fmt, ...)
+void Com_sprintf (char *dest, int size, const char *fmt, ...)
 {
 	int		len;
 	va_list		argptr;
@@ -605,7 +605,7 @@ Searches the string for the given
 key and returns the associated value, or an empty string.
 ===============
 */
-char *Info_ValueForKey (char *s, char *key)
+const char *Info_ValueForKey (const char *s, const char *key)
 {
 	char	pkey[512];
 	static	char value[2][512];	// use two buffers so compares
@@ -647,7 +647,7 @@ char *Info_ValueForKey (char *s, char *key)
 	}
 }
 
-void Info_RemoveKey (char *s, char *key)
+void Info_RemoveKey (char *s, const char *key)
 {
 	char	*start;
 	char	pkey[512];
@@ -705,7 +705,7 @@ Some characters are illegal in info strings because they
 can mess up the server's parsing
 ==================
 */
-qboolean Info_Validate (char *s)
+qboolean Info_Validate (const char *s)
 {
 	if (strstr (s, "\""))
 		return false;
@@ -714,7 +714,7 @@ qboolean Info_Validate (char *s)
 	return true;
 }
 
-void Info_SetValueForKey (char *s, char *key, char *value)
+void Info_SetValueForKey (char *s, const char *key, const char *value)
 {
 	char	newi[MAX_INFO_STRING], *v;
 	int		c;

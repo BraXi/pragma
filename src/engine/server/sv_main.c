@@ -786,7 +786,7 @@ void SV_RunGameFrame (void)
 SV_SetConfigString
 ================
 */
-void SV_SetConfigString(int index, char *valueString)
+void SV_SetConfigString(int index, const char *valueString)
 {
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
 	{
@@ -987,7 +987,7 @@ Pull specific info from a newly changed userinfo string into a more C friendly f
 
 void SV_UserinfoChanged (client_t *cl)
 {
-	char	*val;
+	const char	*val;
 	int		i;
 
 	// call prog code to allow overrides

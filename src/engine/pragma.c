@@ -1125,7 +1125,7 @@ byte	COM_BlockSequenceCRCByte (byte *base, int length, int sequence)
 CRC_ChecksumFile
 ================
 */
-unsigned short CRC_ChecksumFile(char* name, qboolean fatal)
+unsigned short CRC_ChecksumFile(const char* name, qboolean fatal)
 {
 	int length;
 	byte* buf;
