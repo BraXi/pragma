@@ -1,7 +1,11 @@
-### pragma - the improved IdTech2 engine derived from Quake II aimed at standalone projects.
+### pragma - Heavily modified Q2's IdTech2 engine aimed at standalone projects.
 
 
-[![Build Status](https://github.com/BraXi/pragma/actions/workflows/msbuild.yml/badge.svg)](https://github.com/BraXi/pragma/actions/workflows/msbuild.yml) [![Build Status](https://github.com/BraXi/pragma/actions/workflows/msbuild-release-x86.yml/badge.svg)](https://github.com/BraXi/pragma/actions/workflows/msbuild-release-x86.yml)
+[![Build Status](https://github.com/BraXi/pragma/actions/workflows/msbuild-debug-x86.yml/badge.svg)](https://github.com/BraXi/pragma/actions/workflows/msbuild-debug-x86.yml)
+[![Build Status](https://github.com/BraXi/pragma/actions/workflows/msbuild-release-x86.yml/badge.svg)](https://github.com/BraXi/pragma/actions/workflows/msbuild-release-x86.yml)
+[![Build Status](https://github.com/BraXi/pragma/actions/workflows/msbuild-debug-x64.yml/badge.svg)](https://github.com/BraXi/pragma/actions/workflows/msbuild-debug-x64.yml)
+[![Build Status](https://github.com/BraXi/pragma/actions/workflows/msbuild-release-x64.yml/badge.svg)](https://github.com/BraXi/pragma/actions/workflows/msbuild-release-64.yml)
+
 
 > #1 YOU CANNOT PLAY QUAKE 2 WITH IT. \
 > #2 Things change and break _quite often_ \
