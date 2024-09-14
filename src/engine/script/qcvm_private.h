@@ -122,6 +122,18 @@ typedef struct
 	int32_t		numGlobals;
 
 	int32_t		entityfields;
+
+	//debug / version 7 extensions
+	unsigned int		ofsfiles;	//non list format. no comp
+	unsigned int		ofslinenums;	//numstatements big	//comp 64
+	unsigned int		ofsbodylessfuncs;	//no comp
+	unsigned int		numbodylessfuncs;
+
+	unsigned int	ofs_types;	//comp 128
+	unsigned int	numtypes;
+	unsigned int	blockscompressed;
+
+	int	secondaryversion;
 } dprograms_t;
 
 
@@ -205,12 +217,13 @@ void CheckScriptVM(const char* func);
 dfunction_t* Scr_FindFunction(const char* name);
 
 
-#define	G_INT(o)			(*(int32_t *)&active_qcvm->pGlobals[o])
-#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int32_t *)&active_qcvm->pGlobals[o]))
+#define	G_INT(o)			(*(int *)&active_qcvm->pGlobals[o])
+#define	G_ENTITY(o)			((vm_entity_t *)((byte *)active_qcvm->entities + *(int *)&active_qcvm->pGlobals[o]))
 #define	G_FLOAT(o)			(active_qcvm->pGlobals[o])
-#define	G_STRING(o)			(active_qcvm->pStrings + *(scr_string_t *)&active_qcvm->pGlobals[o])
+//#define	G_STRING(o)			(Scr_GetString((scr_string_t)active_qcvm->pGlobals[o])) //(active_qcvm->pStrings + *(int *)&active_qcvm->pGlobals[o])
+#define G_STRING(o)			(Scr_GetString(*(scr_string_t*)&active_qcvm->pGlobals[o]))
 #define	G_VECTOR(o)			(&active_qcvm->pGlobals[o])
-#define	RETURN_EDICT(e)		(((int32_t *)active_qcvm->pGlobals)[OFS_RETURN] = ENT_TO_VM(e))
+#define	RETURN_EDICT(e)		(((int *)active_qcvm->pGlobals)[OFS_RETURN] = ENT_TO_VM(e))
 
 
 #endif /*_PRAGMA_QCVM_PRIVATE_H_*/

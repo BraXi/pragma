@@ -120,7 +120,7 @@ Finds the spawn function for the entity and calls it
 static void CG_CallSpawnForEntity(clentity_t* ent)
 {
 	clentity_t* oldSelf, * oldOther;
-	char* classname;
+	const char* classname;
 	scr_func_t	spawnfunc;
 
 	static char spawnFuncName[64];

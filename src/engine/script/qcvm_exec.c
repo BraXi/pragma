@@ -143,7 +143,7 @@ Returns the new program statement counter
 */
 int ScrInternal_EnterFunction(dfunction_t* f)
 {
-	int		i, j, c, o;
+	int	i, j, c, o;
 
 	CheckScriptVM(__FUNCTION__);
 
@@ -234,16 +234,17 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 	dfunction_t		*f, *newf;
 	qcvm_t			*vm;
 	vm_entity_t		*ent;
+	const char* str_a;
+	const char* str_b;
 
 	if (fnum == -1)
 		return;
 
 	Scr_BindVM(vmtype);
-	CheckScriptVM(__FUNCTION__);
 
 	vm = active_qcvm;
-
 	vm->callFromFuncName = callFromFuncName;
+
 	if (!fnum || fnum >= vm->progs->numFunctions)
 	{
 		// this is such a mess
@@ -300,8 +301,13 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 
 		if (vm->traceEnabled)
 		{
+
+#if QCVM_DEBUG_LEVEL > 0
+			printf("OP: %s\n", qcvm_op_names[st->op]);
+#endif
 			Scr_PrintStatement(st);
 			int addr[] = { st->a, st->b, st->c };
+			static const char *stnames[] = { "st->a", "st->b", "st->c" };
 			ddef_t* def;
 			for (i = 0; i != 3; i++)
 			{
@@ -309,7 +315,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 				{
 					def = ScrInternal_GlobalAtOfs(addr[i]);
 					if (def)
-						Com_Printf("%s\n", Scr_GetString(def->s_name));
+						Com_Printf("%s = %s\n", stnames[i], Scr_GetString(def->s_name));
 				}
 			}
 		}
@@ -327,7 +333,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			c->vector[2] = a->vector[2] + b->vector[2];
 			break;
 
-/* FTEQC: begin int */
+			/* FTEQC: begin int */
 		case OP_ADD_I: // int + int
 			c->_int = a->_int + b->_int;
 			break;
@@ -372,7 +378,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			if (b->_int == 0)
 			{
 				Scr_RunError("Integer division by zero in %s.", vmDefs[vm->progsType].filename);
-//				c->_int = 0; // commented out for no mercy, hahaha. fix your code
+				//c->_int = 0; // commented out for no mercy, hahaha. fix your code
 			}
 			else
 				c->_int = a->_int / b->_int;
@@ -535,7 +541,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 		case OP_NE_FI:
 			c->_int = (a->_float != b->_int);
 			break;
-/* FTEQC: end int */
+			/* FTEQC: end int */
 
 		case OP_SUB_F: // - float
 			c->_float = a->_float - b->_float;
@@ -619,7 +625,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			break;
 		case OP_NOT_FNC: // not function
 			c->_float = !a->function;
-			break; 
+			break;
 		case OP_NOT_ENT: // not entity
 			c->_float = (VM_TO_ENT(a->edict) == vm->entities);
 			break;
@@ -635,9 +641,9 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		case OP_EQ_S: // == string
-			char * ta = Scr_GetString(a->string);
-			char * tb = Scr_GetString(b->string);
-			c->_float = !strcmp(ta, tb);
+			str_a = Scr_GetString(a->string);
+			str_b = Scr_GetString(b->string);
+			c->_float = !strcmp(str_a, str_b);
 			break;
 
 		case OP_EQ_E: // equal int
@@ -659,7 +665,9 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			break;
 
 		case OP_NE_S: // not equal string
-			c->_float = strcmp(Scr_GetString(a->string), Scr_GetString(b->string));
+			str_a = Scr_GetString(a->string);
+			str_b = Scr_GetString(b->string);
+			c->_float = strcmp(str_a, str_b);
 			break;
 
 		case OP_NE_E: // not equal int
@@ -793,6 +801,10 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 				if(scr_builtins[i].execon != PF_ALL && vm->progsType != scr_builtins[i].execon)
 					Scr_RunError("Call to '%s' builtin in %s is not allowed.", scr_builtins[i].name, vmDefs[vm->progsType].name);
 
+
+#if QCVM_DEBUG_LEVEL > 0
+				printf("BUILTIN: %s (%i args)\n", scr_builtins[i].name, vm->argc);
+#endif
 				vm->currentBuiltinFunc = &scr_builtins[i]; // development aid
 				scr_builtins[i].func();
 				vm->currentBuiltinFunc = NULL;
@@ -873,7 +885,7 @@ void Scr_PrintEntityFields(vm_entity_t* ent)
 	ddef_t* d;
 	int* v;
 	int		i, j;
-	char* name;
+	const char* name;
 	int		type;
 
 //	if (!ent->inuse)

@@ -206,6 +206,9 @@
     <ClCompile Include="..\common\shared_windows.c">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="script\qcvm_strings.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\crc.h" />

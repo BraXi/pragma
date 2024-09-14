@@ -111,6 +111,104 @@ ddef_t* Scr_FindEntityField(char* name)
 	return NULL;
 }
 
+#if 1
+scr_string_t Scr_AllocString(int size, char** ptr);
+
+static scr_string_t Scr_NewString(const char* string)
+{
+	char* new_p;
+	int		i, l;
+	scr_string_t num;
+
+	l = (int)strlen(string) + 1;
+	num = Scr_AllocString(l, &new_p);
+
+	for (i = 0; i < l; i++)
+	{
+		if (string[i] == '\\' && i < l - 1)
+		{
+			i++;
+			if (string[i] == 'n')
+				*new_p++ = '\n';
+			else
+				*new_p++ = '\\';
+		}
+		else
+			*new_p++ = string[i];
+	}
+
+	return num;
+}
+
+qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
+{
+	int		i;
+	char	string[128];
+	ddef_t* def;
+	char* v, * w;
+	void* d;
+	scr_func_t func;
+
+	d = (void*)((int*)base + key->ofs);
+
+	switch (key->type & ~DEF_SAVEGLOBAL)
+	{
+	case ev_string:
+		*(scr_string_t*)d = Scr_NewString(s);
+		break;
+
+	case ev_float:
+		*(float*)d = atof(s);
+		break;
+
+	case ev_integer:
+		*(int*)d = atoi(s);
+		break;
+
+	case ev_vector:
+		strcpy(string, s);
+		v = string;
+		w = string;
+		for (i = 0; i < 3; i++)
+		{
+			while (*v && *v != ' ')
+				v++;
+			*v = 0;
+			((float*)d)[i] = atof(w);
+			w = v = v + 1;
+		}
+		break;
+
+	case ev_entity:
+		*(int*)d = ENT_TO_VM(ENT_FOR_NUM(atoi(s)));
+		break;
+
+	case ev_field:
+		def = Scr_FindEntityField(s);
+		if (!def)
+		{
+			return false;
+		}
+		*(int*)d = G_INT(def->ofs);
+		break;
+
+	case ev_function:
+		func = Scr_FindFunctionIndex(s);
+		if (func == -1)
+		{
+			Com_Error(ERR_FATAL, "Can't find function '%s' in %s QCVM.\n", s, Scr_GetScriptName(active_qcvm->progsType));
+			return false;
+		}
+		*(scr_func_t*)d = func;
+		break;
+
+	default:
+		break;
+	}
+	return true;
+}
+
+#else
 /*
 =============
 Scr_ParseEpair
@@ -187,6 +285,7 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 	}
 	return true;
 }
+#endif
 
 /*
 ============
@@ -280,7 +379,7 @@ void Scr_GenerateBuiltinsDefs(char *filename, pb_t execon)
 	Com_Printf("Generated QC header: %s (%i builtins)\n", filename, count);
 }
 
-
+extern char** pr_stringTable;
 /*
 ===============
 Scr_LoadProgram
@@ -347,10 +446,26 @@ void Scr_LoadProgram(qcvm_t *vm, char* filename)
 	vm->pGlobalDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_globaldefs);
 	vm->pFieldDefs = (ddef_t*)((byte*)vm->progs + vm->progs->ofs_fielddefs);
 	vm->pStatements = (dstatement_t*)((byte*)vm->progs + vm->progs->ofs_statements);
-	vm->pGlobalsStruct =((byte*)vm->progs + vm->progs->ofs_globals);	
+	vm->pGlobalsStruct = ((byte*)vm->progs + vm->progs->ofs_globals);	
 	vm->pGlobals = (float*)vm->pGlobalsStruct;
 	vm->entity_size = vm->entity_size + (vm->progs->entityfields * sizeof(int32_t));
+
+	// [QSS] round off to next highest whole word address (esp for Alpha)
+	// this ensures that pointers in the engine data area are always
+	// properly aligned
+	vm->entity_size += sizeof(void*) - 1;
+	vm->entity_size &= ~(sizeof(void*) - 1);
+
 	//vm->entity_size = vm->entity_size + (vm->progs->entityfields * 4);
+	
+	static qboolean strinit = false;
+
+	if(!strinit)
+	{
+		strinit = true;
+		pr_stringTable = NULL;
+		Scr_SetString("");
+	}
 
 	// byte swap all the data
 	for (i = 0; i < vm->progs->numStatements; i++)
@@ -477,6 +592,7 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 		Com_Printf("         GlobalDefs: %i\n", progs->numGlobalDefs);
 		Com_Printf("            Globals: %i\n", progs->numGlobals);
 		Com_Printf("      Entity fields: %i\n", progs->numFieldDefs);
+		Com_Printf("     Strings length: %i\n", progs->numstrings);
 		Com_Printf(" Allocated entities: %i, %i bytes\n", vm->num_entities, vm->num_entities * Scr_GetEntitySize());
 		Com_Printf("        Entity size: %i bytes\n", Scr_GetEntitySize());
 		Com_Printf("\n");

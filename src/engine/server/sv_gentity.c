@@ -226,7 +226,7 @@ Finds the spawn function for the entity and calls it
 void SV_CallSpawnForEntity(gentity_t* ent)
 {
 	gentity_t	*oldSelf, *oldOther;
-	char		*classname;
+	const char	*classname;
 	scr_func_t	spawnfunc;
 
 	static char spawnFuncName[64];
@@ -390,6 +390,8 @@ void SV_SpawnEntities(char* mapname, char* entities, char* spawnpoint)
 	int			inhibit, discard, total;
 	char		*com_token;
 	int			i;
+
+	Scr_BindVM(VM_SVGAME);
 
 	ent = NULL;
 	inhibit = discard = total = 0;

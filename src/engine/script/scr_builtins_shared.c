@@ -14,8 +14,8 @@ extern void Scr_InitMathBuiltins();
 
 static char* retstr_none = "none"; // the 'none' string
 
-static char pr_temp_string[MAX_PARMS][128];
-static int pr_temp_string_num = -1;
+static char pr_temp_string[12][256];
+static int pr_temp_string_num = 0;
 
 /*
 =================
@@ -27,14 +27,12 @@ FIXME someday
 */
 static char* progstring()
 {
-	if (pr_temp_string_num == -1)
-		memset(&pr_temp_string, sizeof(pr_temp_string), 0);
-
-	pr_temp_string_num++;
-	if (pr_temp_string_num >= MAX_PARMS)
+	if (pr_temp_string_num >= 12)
 		pr_temp_string_num = 0;
 
-	return pr_temp_string[pr_temp_string_num];
+	memset(pr_temp_string[pr_temp_string_num], sizeof(pr_temp_string[0]), 0);
+	pr_temp_string_num++;
+	return pr_temp_string[pr_temp_string_num-1];
 }
 
 /*
@@ -180,7 +178,7 @@ localcmd("gamemap test2");
 */
 void PF_localcmd(void)
 {
-	char* str;
+	const char* str;
 		
 	str = Scr_GetParmString(0);
 	if (!str || !strlen(str))
@@ -236,17 +234,15 @@ void PF_argv(void)
 /*
 =================
 PF_cvar
-
 returns the value of a cvar as a float
 
 float cvar(string cvarname)
-
 float cheatsenabled = cvar("sv_cheats");
 =================
 */
 void PF_cvar(void)
 {
-	char* str;
+	const char* str;
 	cvar_t* cvar;
 
 	str = Scr_GetParmString(0);
@@ -280,7 +276,7 @@ string message = cvarstring("motd");
 */
 void PF_cvarstring(void)
 {
-	char* str;
+	const char* str;
 	cvar_t* cvar;
 
 	str = Scr_GetParmString(0);
@@ -314,7 +310,7 @@ cvarset("motd", "welcome to ", sv_hostname, " server!");
 */
 void PF_cvarset(void)
 {
-	char *str, *value;
+	const char *str, *value;
 
 	str = Scr_GetParmString(0);
 	if (!str || !strlen(str))
@@ -338,7 +334,7 @@ void cvarforceset(string, string)
 */
 void PF_cvarforceset(void)
 {
-	char* str, * value;
+	const char* str, * value;
 
 	str = Scr_GetParmString(0);
 	if (!str || !strlen(str))
@@ -364,15 +360,17 @@ string ftos(float)
 void PF_ftos(void)
 {
 	float	v;
-	char* string_temp = progstring();
+	char* tempstr;
+	
+	tempstr = progstring();
 	v = Scr_GetParmFloat(0);
-	if (v == (int)v)
-		sprintf(string_temp, "%d", (int)v);
-	else
-		sprintf(string_temp, "%f", v);
-//		sprintf(string_temp, "%5.1f", v);
 
-	Scr_ReturnString(string_temp);
+	if (v == (int)v)
+		sprintf(tempstr, "%d", (int)v);
+	else
+		sprintf(tempstr, "%f", v);
+
+	Scr_ReturnString(tempstr); // G_INT(OFS_RETURN) = (str - active_qcvm->pStrings);
 }
 
 /*
@@ -385,7 +383,7 @@ float stof(string)
 */
 void PF_stof(void)
 {
-	char* str = Scr_GetParmString(0);
+	const char* str = Scr_GetParmString(0);
 	Scr_ReturnFloat( (float)atof(str) );
 }
 

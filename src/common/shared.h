@@ -28,6 +28,8 @@ See the attached GNU General Public License v2 for more details.
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
 #pragma warning(disable : 4305)		// truncation from const double to float
+
+#pragma warning(disable : 4996)		
 #endif
 
 #include <assert.h>
@@ -161,8 +163,8 @@ void Com_PageInMemory (byte *buffer, int size);
 
 // portable case insensitive compare
 int Q_stricmp (const char *s1, const char *s2);
-int Q_strcasecmp (char *s1, char *s2);
-int Q_strncasecmp (char *s1, char *s2, int n);
+int Q_strcasecmp (const char *s1, const char *s2);
+int Q_strncasecmp (const char *s1, const char *s2, int n);
 
 //=============================================
 
@@ -563,7 +565,7 @@ enum
 //
 #define	CS_NAME				0		// level name is set in worldspawn's 'message' key
 
-#define	CS_SKY				1		// name of sky image without _<size> postfix
+#define	CS_SKY				1		// name of sky image without _<side> postfix
 #define	CS_SKYAXIS			2		// %f %f %f XYZ format
 #define	CS_SKYROTATE		3		// boolean. does the sky rotate? 
 #define	CS_SKYCOLOR			4		// %f %f %f RGB format

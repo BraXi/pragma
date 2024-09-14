@@ -102,7 +102,7 @@ FS_CreatePath
 Creates any directories needed to store the given filename
 ============
 */
-void	FS_CreatePath (char *path)
+void FS_CreatePath(const char *path)
 {
 	char	*ofs;
 	
@@ -164,7 +164,7 @@ a seperate file.
 */
 int file_from_pak = 0;
 #ifndef NO_ADDONS
-int FS_FOpenFile (char *filename, FILE **file)
+int FS_FOpenFile (const char *filename, FILE **file)
 {
 	searchpath_t	*search;
 	char			netpath[MAX_OSPATH];
@@ -350,7 +350,7 @@ Filename are reletive to the quake search path
 a null buffer will just return the file length without loading
 ============
 */
-int FS_LoadFile (char *path, void **buffer)
+int FS_LoadFile (const char *path, void **buffer)
 {
 	FILE	*h;
 	byte	*buf;
@@ -403,7 +403,7 @@ allocated buffer will be filed with file contents, null terminated
 use Z_Free or FS_FreeFile to cleanup buffer
 =============
 */
-int FS_LoadTextFile(char* filename, char** buffer)
+int FS_LoadTextFile(const char* filename, char** buffer)
 {
 	int		len;
 	byte	* buf;
@@ -582,7 +582,7 @@ FS_SetGamedir
 Sets the gamedir and path to a different directory.
 ================
 */
-void FS_SetGamedir (char *dir)
+void FS_SetGamedir (const char *dir)
 {
 	searchpath_t	*next;
 
@@ -808,7 +808,7 @@ FS_NextPath
 Allows enumerating all of the directories in the search path
 ================
 */
-char *FS_NextPath (char *prevpath)
+char *FS_NextPath (const char *prevpath)
 {
 	searchpath_t	*s;
 	char			*prev;

@@ -165,6 +165,9 @@
     <ClCompile Include="..\common\crc.c">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="script\qcvm_strings.c">
+      <Filter>QCVM</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

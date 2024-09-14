@@ -63,7 +63,7 @@ static void PFGUI_drawimage(void)
 	rect[3] = Scr_GetParmFloat(3);
 	Scr_GetParmVector2(4, &color[0], &color[1], &color[2]);
 	color[3] = Scr_GetParmFloat(5);
-	char* pic = Scr_GetParmString(6);
+	const char* pic = Scr_GetParmString(6);
 	re.DrawStretchedImage(rect, color, pic);
 }
 
@@ -173,7 +173,7 @@ float fontId = findfont(string fontname)
 */
 static void PFGUI_FindFont(void)
 {
-	char* arg = Scr_GetParmString(0);
+	const char* arg = Scr_GetParmString(0);
 	Scr_ReturnFloat(re.FindFont(arg));
 }
 
@@ -200,7 +200,7 @@ float width = gettextwidth(float fontId, string text)
 static void PFGUI_GetTextWidth(void)
 {
 	int font = Scr_GetParmFloat(0);
-	char *str = Scr_GetParmString(1);
+	const char *str = Scr_GetParmString(1);
 	Scr_ReturnFloat(re.GetTextWidth(font, str));
 }
 
@@ -235,7 +235,7 @@ addaction( "hide", action_hideitem );
 */
 static void PFGUI_addaction(void)
 {
-	char* name = Scr_GetParmString(0);
+	const char* name = Scr_GetParmString(0);
 	UI_AddAction(name, NULL, Scr_GetParmInt(1));
 }
 

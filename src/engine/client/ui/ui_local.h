@@ -82,7 +82,7 @@ extern void UI_LoadGuisFromFile(char* name);
 //
 // ui_actions.c
 //
-void UI_AddAction(char* cmd_name, xcommand_t function, scr_func_t progfunc);
+void UI_AddAction(const char* cmd_name, xcommand_t function, scr_func_t progfunc);
 void UI_RemoveActions();
 void UI_ExecuteAction(char* actionstring);
 void UI_InitActions();

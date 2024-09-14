@@ -92,7 +92,7 @@ void CG_LightStyleFromConfigString(int index)
 
 	config = cl.configstrings[index + CS_LIGHTS];
 
-	len = strlen(config);
+	len = (int)strlen(config);
 	if (len >= MAX_QPATH)
 		Com_Error(ERR_DROP, "%s: style %i is too long", __FUNCTION__, index);
 

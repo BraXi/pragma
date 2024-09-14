@@ -458,7 +458,7 @@ void COM_TokenizeString(char* text)
 			strcpy(parser_args, text);
 
 			// strip off any trailing whitespace
-			l = strlen(parser_args) - 1;
+			l = (int)strlen(parser_args) - 1;
 			for (; l >= 0; l--)
 				if (parser_args[l] <= ' ')
 					parser_args[l] = 0;
@@ -473,8 +473,13 @@ void COM_TokenizeString(char* text)
 		if (parser_argc < MAX_STRING_TOKENS)
 		{
 			parser_argv[parser_argc] = malloc(strlen(token) + 1);
-			strcpy(parser_argv[parser_argc], token);
-			parser_argc++;
+			if (parser_argv[parser_argc])
+			{
+				//FIXME !!!
+				strcpy(parser_argv[parser_argc], token);
+				parser_argc++;
+			}
+
 		}
 	}
 
@@ -537,7 +542,7 @@ int Q_stricmp (const char *s1, const char *s2)
 }
 
 
-int Q_strncasecmp (char *s1, char *s2, int n)
+int Q_strncasecmp (const char *s1, const char *s2, int n)
 {
 	int		c1, c2;
 	
@@ -563,7 +568,7 @@ int Q_strncasecmp (char *s1, char *s2, int n)
 	return 0;		// strings are equal
 }
 
-int Q_strcasecmp (char *s1, char *s2)
+int Q_strcasecmp (const char *s1, const char *s2)
 {
 	return Q_strncasecmp (s1, s2, 99999);
 }
@@ -581,7 +586,7 @@ void Com_sprintf (char *dest, int size, char *fmt, ...)
 	va_end (argptr);
 	if (len >= size)
 		Com_Printf ("Com_sprintf: overflow of %i in %i\n", len, size);
-	strncpy (dest, bigbuffer, size-1);
+	strncpy (dest, bigbuffer, (size_t)(size-1));
 }
 
 /*

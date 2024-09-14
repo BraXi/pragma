@@ -255,10 +255,10 @@ void CopyFile (char *src, char *dst)
 
 	while (1)
 	{
-		l = fread (buffer, 1, sizeof(buffer), f1);
+		l = (int)fread (buffer, (size_t)1, sizeof(buffer), f1);
 		if (!l)
 			break;
-		fwrite (buffer, 1, l, f2);
+		fwrite (buffer, (size_t)1, (size_t)l, f2);
 	}
 
 	fclose (f1);
@@ -855,7 +855,7 @@ void SV_Status_f (void)
 		}
 
 		Com_Printf ("%s", cl->name);
-		l = 16 - strlen(cl->name);
+		l = 16 - (int)strlen(cl->name);
 		for (j=0 ; j<l ; j++)
 			Com_Printf (" ");
 
@@ -863,7 +863,7 @@ void SV_Status_f (void)
 
 		s = NET_AdrToString ( cl->netchan.remote_address);
 		Com_Printf ("%s", s);
-		l = 22 - strlen(s);
+		l = 22 - (int)strlen(s);
 		for (j=0 ; j<l ; j++)
 			Com_Printf (" ");
 		

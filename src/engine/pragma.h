@@ -20,15 +20,15 @@ extern qboolean print_time;
 #ifdef _WIN32
 	#ifdef DEDICATED_ONLY
 		#ifndef _DEBUG
-			#define BUILDSTRING "WIN RELEASE DEDSV"
+			#define BUILDSTRING "Win Release DEDSV"
 		#else
-			#define BUILDSTRING "WIN DEBUG DEDSV"
+			#define BUILDSTRING "Win Debug DEDSV"
 		#endif
 	#else
 		#ifndef _DEBUG
-			#define BUILDSTRING "WIN RELEASE"
+			#define BUILDSTRING "Win Release"
 		#else
-			#define BUILDSTRING "WIN DEBUG"
+			#define BUILDSTRING "Win Debug"
 		#endif
 	#endif
 #elif defined(__linux__)
@@ -161,7 +161,7 @@ void COM_AddParm (char *parm);
 void COM_Init (void);
 void COM_InitArgv (int argc, char **argv);
 
-char *CopyString (char *in);
+char *CopyString (const char *in);
 
 
 void Info_Print (char *s);

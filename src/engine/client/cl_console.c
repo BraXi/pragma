@@ -419,7 +419,7 @@ void Con_CenteredPrint (char *text)
 	int		l;
 	char	buffer[1024];
 
-	l = strlen(text);
+	l = (int)strlen(text);
 	l = (con.linewidth-l)/2;
 	if (l < 0)
 		l = 0;
@@ -621,7 +621,7 @@ void Con_DrawConsole (float frac)
 	char			*text;
 	int				row;
 	int				lines;
-	char			version[64];
+	char			version[96];
 	char tb[256];
 
 #if 0
@@ -653,7 +653,7 @@ void Con_DrawConsole (float frac)
 	SCR_AddDirtyPoint (0,0);
 	SCR_AddDirtyPoint (viddef.width-1,lines-1);
 
-	Com_sprintf (version, sizeof(version), "PRAGMA %s (%s)", PRAGMA_VERSION, PRAGMA_TIMESTAMP);
+	Com_sprintf (version, sizeof(version), "Pragma %s (%s %s %s)", PRAGMA_VERSION, CPUSTRING, BUILDSTRING, PRAGMA_TIMESTAMP);
 	re.NewDrawString(viddef.width - 5 , lines - 14, 2, con_font, con_fontscale, col_orange, version);
 
 	// draw the text

@@ -12,6 +12,11 @@ See the attached GNU General Public License v2 for more details.
 // 
 // NOTE: this file is not included in DEDICATED_ONLY binary !
 
+#ifndef _PRAGMA_WINDOWS_H_
+#define _PRAGMA_WINDOWS_H_
+
+#pragma once
+
 #pragma warning( disable : 4229 )  // mgraph gets this
 
 #include <windows.h>
@@ -34,3 +39,5 @@ void IN_MouseEvent (int mstate);
 
 extern int		window_center_x, window_center_y;
 extern RECT		window_rect;
+
+#endif /*_PRAGMA_WINDOWS_H_*/

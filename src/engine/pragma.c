@@ -102,6 +102,7 @@ void Com_Printf(char* fmt, ...)
 	vsprintf(msg, fmt, argptr);
 	va_end(argptr);
 
+	printf(msg);
 #if 0
 	if (dedicated != NULL && dedicated->value > 0 && print_time == true)
 	{
@@ -113,7 +114,7 @@ void Com_Printf(char* fmt, ...)
 
 	if (rd_target)
 	{
-		if ((strlen (msg) + strlen(rd_buffer)) > (rd_buffersize - 1))
+		if (((int)strlen (msg) + (int)strlen(rd_buffer)) > (rd_buffersize - 1))
 		{
 			rd_flush(rd_target, rd_buffer);
 			*rd_buffer = 0;
@@ -722,7 +723,7 @@ int	memsearch (byte *start, int count, int search)
 }
 
 
-char *CopyString (char *in)
+char *CopyString (const char *in)
 {
 	char	*out;
 	

@@ -12,12 +12,6 @@ See the attached GNU General Public License v2 for more details.
 #include "../server/server.h"
 #include "qcvm_private.h"
 
-// number of temporary strings for Scr_VarString()
-#define NUM_TEMP_VARSTRINGS 12
-
- // current temp string in Scr_VarString()
-static int qcvm_vstr = 0;
-
 
 /*
 ============
@@ -68,29 +62,7 @@ scr_func_t Scr_FindFunctionIndex(const char* funcname)
 	return -1;
 }
 
-/*
-============
-Scr_GetString
-Returns string from active program
-============
-*/
-char* Scr_GetString(int str)
-{
-	CheckScriptVM(__FUNCTION__);
-	return active_qcvm->pStrings + str;
-}
 
-/*
-============
-Scr_SetString
-Sets string in program
-============
-*/
-int Scr_SetString(char* str)
-{
-	CheckScriptVM(__FUNCTION__);
-	return (str - active_qcvm->pStrings);
-}
 
 /*
 ============
@@ -98,7 +70,7 @@ ScrInternal_GetParmOffset
 Returns the correct offset for param number
 ============
 */
-static int ScrInternal_GetParmOffset(unsigned int parm)
+int ScrInternal_GetParmOffset(unsigned int parm)
 {
 	int ofs = OFS_PARM0 + (parm * 3);
 
@@ -106,34 +78,6 @@ static int ScrInternal_GetParmOffset(unsigned int parm)
 		Com_Error(ERR_FATAL, "ScrInternal_GetParmOffset: parm %i is out of range [0,7]\n", parm);
 
 	return ofs;
-}
-
-/*
-============
-Scr_VarString
-============
-*/
-char* Scr_VarString(int first)
-{
-	static char out[NUM_TEMP_VARSTRINGS][256];
-	int		i, param;
-
-	//CheckScriptVM(__FUNCTION__); //moved to scr_numargs
-
-	qcvm_vstr++;
-	if (qcvm_vstr >= NUM_TEMP_VARSTRINGS)
-		qcvm_vstr = 0;
-
-	out[qcvm_vstr][0] = 0;
-
-	for (i = first; i < Scr_NumArgs(); i++)
-	{
-		param = ScrInternal_GetParmOffset(i);
-		strcat(out[qcvm_vstr], G_STRING(param));
-	}
-
-
-	return out[qcvm_vstr];
 }
 
 /*
@@ -189,11 +133,12 @@ Scr_GetParmString
 Returns param as a string
 ============
 */
-char* Scr_GetParmString(unsigned int parm)
+const char* Scr_GetParmString(unsigned int parm)
 {
 	int32_t ofs = ScrInternal_GetParmOffset(parm);
 	CheckScriptVM(__FUNCTION__);
-	return G_STRING(ofs);
+	const char* str = G_STRING(ofs);
+	return str;
 }
 
 /*
@@ -288,7 +233,7 @@ Returns string to script
 void Scr_ReturnString(char* str)
 {
 	CheckScriptVM(__FUNCTION__);
-	G_INT(OFS_RETURN) = (str - active_qcvm->pStrings);
+	G_INT(OFS_RETURN) = Scr_SetString(str);//(str - active_qcvm->pStrings);
 }
 
 /*

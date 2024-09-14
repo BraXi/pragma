@@ -21,7 +21,7 @@ See the attached GNU General Public License v2 for more details.
 extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 extern struct sfx_t* CG_FindOrRegisterSound(char* filename);
 
-static void CheckEmptyString(char* s) // definitely need to make it a shared code...
+static void CheckEmptyString(const char* s) // definitely need to make it a shared code...
 {
 	if(s[0] <= ' ')
 		Scr_RunError("Bad string");
@@ -65,7 +65,7 @@ float precache_model(string filename)
 static void PFCG_modelindex(void)
 {
 	float loaded;
-	char* filename = Scr_GetParmString(0);
+	const char* filename = Scr_GetParmString(0);
 	CheckEmptyString(filename);
 
 	loaded = (re.RegisterModel(filename) != NULL ? 1.0f : 0.0f);
@@ -85,7 +85,7 @@ float precache_sound(string filename)
 static void PFCG_precache_sound(void)
 {
 	float loaded;
-	char* filename = Scr_GetParmString(0);
+	const char* filename = Scr_GetParmString(0);
 	CheckEmptyString(filename);
 
 	loaded = (CG_FindOrRegisterSound(filename) != NULL ? 1.0f : 0.0f);
@@ -105,7 +105,7 @@ float precache_image(string filename)
 void PFCG_precache_image(void)
 {
 	float loaded;
-	char* filename = Scr_GetParmString(0);
+	const char* filename = Scr_GetParmString(0);
 	CheckEmptyString(filename);
 
 	loaded = (re.RegisterPic(filename) != NULL ? 1.0f : 0.0f);
@@ -262,7 +262,7 @@ static void PFCG_drawstring(void)
 	float* xy_align;
 	float fontSize;
 	int fontId = 0; // FIXME
-	char* string;
+	const char* string;
 
 	if (!CG_CanDrawCall())
 	{
@@ -291,6 +291,7 @@ drawimage( float x, float y, float w, float h, vector color, float alpha, string
 static void PFCG_drawimage(void)
 {
 	float rect[4], color[4];
+	const char* picname;
 
 	if (!CG_CanDrawCall())
 	{
@@ -306,8 +307,8 @@ static void PFCG_drawimage(void)
 	Scr_GetParmVector2(4, &color[0], &color[1], &color[2]);
 	color[3] = Scr_GetParmFloat(5);
 
-	char* pic = Scr_GetParmString(6);
-	re.DrawStretchedImage(rect, color, pic);
+	picname = Scr_GetParmString(6);
+	re.DrawStretchedImage(rect, color, picname);
 }
 
 /*
@@ -350,7 +351,7 @@ void localsound( string filename, float volume );
 void PFCG_localsound(void)
 {
 	struct sfx_t* sfx;
-	char* filename;
+	const char* filename;
 	float volume;
 
 	filename = Scr_GetParmString(0);
@@ -379,7 +380,7 @@ playsound( vec3_origin, localplayernum+1, "player/pain1.wav", CHAN_BODY, 1.0, AT
 */
 static void PFCG_playsound(void)
 {
-	char* filename;
+	const char* filename;
 
 	float	*pos;
 	int		entNum;
@@ -419,7 +420,7 @@ addcommand( "respawn", cmd_respawn );
 */
 static void PFCG_addcommand(void)
 {
-	char* name = Scr_GetParmString(0);
+	const char* name = Scr_GetParmString(0);
 	Cmd_AddCommandCG(name, Scr_GetParmInt(1));
 }
 
@@ -434,7 +435,7 @@ returns the key name for bind
 */
 void PFCG_getbindkey(void)
 {
-	char* binding = Scr_GetParmString(0);
+	const char* binding = Scr_GetParmString(0);
 	char* key;
 
 	key = "unbound";
@@ -453,7 +454,7 @@ void PFCG_getbindkey(void)
 void PFCG_setmodel(void)
 {
 	clentity_t* ent;
-	char* name;
+	const char* name;
 	int modelindex = 0;
 
 	ent = Scr_GetParmEntity(0);

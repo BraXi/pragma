@@ -108,16 +108,15 @@ void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcs
 
 scr_func_t Scr_FindFunctionIndex(const char* funcname);
 
+int Scr_SetTempString(char* str);
 int Scr_SetString(char* str);
-
-char* Scr_GetString(int num);
-
-char* Scr_VarString(int first);
+const char* Scr_GetString(int num);
+const char* Scr_VarString(int first);
 
 vm_entity_t* Scr_GetParmEntity(unsigned int parm);
 float Scr_GetParmFloat(unsigned int parm);
 int Scr_GetParmInt(unsigned int parm);
-char* Scr_GetParmString(unsigned int parm);
+const char* Scr_GetParmString(unsigned int parm);
 float* Scr_GetParmVector(unsigned int parm);
 void Scr_GetParmVector2(unsigned int parm, float* x, float* y, float* z);
 

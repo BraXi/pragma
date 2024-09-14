@@ -12,20 +12,20 @@ See the attached GNU General Public License v2 for more details.
 
 #include "server.h"
 
-qboolean ModelDef_LoadFile(char* filename, modeldef_t* def);
+qboolean ModelDef_LoadFile(const char* filename, modeldef_t* def);
 
 static void SV_LoadMD3(svmodel_t* out, void* buffer);
-static svmodel_t* SV_LoadModel(char* name, qboolean crash);
+static svmodel_t* SV_LoadModel(const char* name, qboolean crash);
 
-static qboolean SV_FileExists(char* name, qboolean crash);
-static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char* func);
+static qboolean SV_FileExists(const char* name, qboolean crash);
+static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const char* func);
 /*
 ================
 SV_ModelIndex
 Find model index, load model if not present.
 ================
 */
-int SV_ModelIndex(char* name)
+int SV_ModelIndex(const char* name)
 {
 	return SV_FindOrCreateAssetIndex(name, CS_MODELS, MAX_MODELS, __FUNCTION__);
 }
@@ -36,7 +36,7 @@ SV_SoundIndex
 Find sound index.
 ================
 */
-int SV_SoundIndex(char* name)
+int SV_SoundIndex(const char* name)
 {
 	return SV_FindOrCreateAssetIndex(name, CS_SOUNDS, MAX_SOUNDS, __FUNCTION__);
 }
@@ -47,7 +47,7 @@ SV_ImageIndex
 Find image index.
 ================
 */
-int SV_ImageIndex(char* name)
+int SV_ImageIndex(const char* name)
 {
 	return SV_FindOrCreateAssetIndex(name, CS_IMAGES, MAX_IMAGES, __FUNCTION__);
 }
@@ -80,7 +80,7 @@ SV_ModelForName
 Returns svmodel
 ================
 */
-svmodel_t* SV_ModelForName(char *name)
+svmodel_t* SV_ModelForName(const char *name)
 {
 	svmodel_t* model;
 	model = &sv.models[0];
@@ -101,7 +101,7 @@ SV_FindOrCreateAssetIndex
 Used to load or find server assets (currently only loads only th important MD3 info).
 ================
 */
-static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char* func)
+static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const char* func)
 {
 	static char fullname[MAX_QPATH];
 	int		index;
@@ -172,7 +172,7 @@ static int SV_FindOrCreateAssetIndex(char* name, int start, int max, const char*
 SV_FileExists
 =================
 */
-static qboolean SV_FileExists(char* name, qboolean crash)
+static qboolean SV_FileExists(const char* name, qboolean crash)
 {
 	int	fileLen;
 
@@ -276,7 +276,7 @@ void SV_FreeModels()
 SV_LoadModel
 =================
 */
-static svmodel_t* SV_LoadModel(char* name, qboolean crash)
+static svmodel_t* SV_LoadModel(const char* name, qboolean crash)
 {
 	svmodel_t	*model;
 	unsigned	*buf;
@@ -473,7 +473,7 @@ static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 		_strlwr(surf->name);
 
 		// strip off a trailing _1 or _2
-		j = strlen(surf->name);
+		j = (int)strlen(surf->name);
 		if (j > 2 && surf->name[j - 2] == '_')
 		{
 			surf->name[j - 2] = 0;
@@ -494,7 +494,7 @@ static void SV_LoadMD3(svmodel_t* mod, void* buffer)
 SV_ModelSurfIndexForName
 =================
 */
-int SV_ModelSurfIndexForName(int modelindex, char* surfaceName)
+int SV_ModelSurfIndexForName(int modelindex, const char* surfaceName)
 {
 	svmodel_t* mod;
 	int index;
@@ -533,7 +533,7 @@ SV_TagIndexForName
 returns index of a tag or -1 if not found
 =================
 */
-int SV_TagIndexForName(int modelindex, char* tagName)
+int SV_TagIndexForName(int modelindex, const char* tagName)
 {
 	svmodel_t* mod;
 	int index;
@@ -575,7 +575,7 @@ SV_GetTag
 returns orientation_t of a tag for a given frame or NULL if not found
 =================
 */
-orientation_t* SV_GetTag(int modelindex, int frame, char* tagName)
+orientation_t* SV_GetTag(int modelindex, int frame, const char* tagName)
 {
 	svmodel_t* mod;
 	int index;
@@ -661,7 +661,7 @@ void AngleVectors2(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 
 
 orientation_t out;
-orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, char* tagName)
+orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, const char* tagName)
 {
 	orientation_t	*tag;
 	orientation_t    parent;
@@ -703,7 +703,7 @@ orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int 
 SV_PositionTagOnEntity
 =================
 */
-orientation_t* SV_PositionTagOnEntity(gentity_t* ent, char* tagName)
+orientation_t* SV_PositionTagOnEntity(gentity_t* ent, const char* tagName)
 {
 	orientation_t* tag;
 	tag = SV_PositionTag(ent->v.origin, ent->v.angles, (int)ent->v.modelindex, (int)ent->v.animFrame, tagName);

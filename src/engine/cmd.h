@@ -41,7 +41,7 @@ then searches for a command or variable that matches the first token.
 void Cbuf_Init(void);
 // allocates an initial text buffer that will grow as needed
 
-void Cbuf_AddText(char* text);
+void Cbuf_AddText(const char* text);
 // as new commands are generated from the console or keybindings,
 // the text is added to the end of the command buffer.
 

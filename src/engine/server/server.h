@@ -259,17 +259,17 @@ extern	gentity_t	*sv_entity;
 //
 // sv_load.c
 //
-int SV_ModelIndex(char* name);
-int SV_SoundIndex(char* name);
-int SV_ImageIndex(char* name);
+int SV_ModelIndex(const char* name);
+int SV_SoundIndex(const char* name);
+int SV_ImageIndex(const char* name);
 void SV_FreeModels();
 svmodel_t* SV_ModelForNum(unsigned int index);
-svmodel_t* SV_ModelForName(char *name);
-int SV_ModelSurfIndexForName(int modelindex, char* surfaceName);
-int SV_TagIndexForName(int modelindex, char* tagName);
-orientation_t* SV_GetTag(int modelindex, int frame, char* tagName);
-orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, char* tagName);
-orientation_t* SV_PositionTagOnEntity(gentity_t* ent, char* tagName);
+svmodel_t* SV_ModelForName(const char *name);
+int SV_ModelSurfIndexForName(int modelindex, const char* surfaceName);
+int SV_TagIndexForName(int modelindex, const char* tagName);
+orientation_t* SV_GetTag(int modelindex, int frame, const char* tagName);
+orientation_t* SV_PositionTag(vec3_t origin, vec3_t angles, int modelindex, int animframe, const char* tagName);
+orientation_t* SV_PositionTagOnEntity(gentity_t* ent, const char* tagName);
 
 
 //

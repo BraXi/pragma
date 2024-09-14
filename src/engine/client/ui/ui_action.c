@@ -20,7 +20,7 @@ See the attached GNU General Public License v2 for more details.
 #define MAX_UI_ACTIONS	32
 typedef struct ui_action_s
 {
-	char			*name;
+	const char		*name;
 	xcommand_t		function; // when command is declared in C
 	scr_func_t		progsFunc; // when command is declared in QC
 } ui_action_t;
@@ -37,7 +37,7 @@ UI_AddAction
 GUI progs can declare their own actions too
 ============
 */
-void UI_AddAction(char* cmd_name, xcommand_t function, scr_func_t progfunc)
+void UI_AddAction(const char* cmd_name, xcommand_t function, scr_func_t progfunc)
 {
 	int i;
 	ui_action_t* cmd;

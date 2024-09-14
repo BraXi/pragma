@@ -336,7 +336,7 @@ static void Cmd_HitBox()
 	int numbones;
 	char* bonename;
 	char* hitname;
-	vec3_t mins, maxs;
+	//vec3_t mins, maxs;
 
 	if (pAsset->type != ASSET_MODEL)
 	{

@@ -525,7 +525,7 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame, qboolea
 		Com_Printf("[%s] *** server is changing map to '%s' ***\n", GetTimeStamp(true), level);
 	}
 
-	l = strlen(level);
+	l = (int)strlen(level);
 	if (l > 4 && !strcmp (level+l-4, ".cin") )
 	{
 #ifndef DEDICATED_ONLY

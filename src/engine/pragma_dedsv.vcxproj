@@ -73,6 +73,7 @@
     <ClCompile Include="network_windows.c" />
     <ClCompile Include="net_chan.c" />
     <ClCompile Include="pragma.c" />
+    <ClCompile Include="script\qcvm_strings.c" />
     <ClCompile Include="script\scr_builtins_math.c" />
     <ClCompile Include="script\scr_builtins_shared.c" />
     <ClCompile Include="script\qcvm_debug.c" />
