@@ -267,7 +267,7 @@ void Scr_ClientDisconnect(gentity_t* self)
 //	memset(&self->v, 0, Scr_GetEntityFieldsSize());
 	SV_InitEntity(self); // clear ALL fields, but mark it as unused
 	self->inuse = false;
-	self->v.classname = Scr_SetString("disconnected");
+	self->v.classname = sv.cstr.disconnected;
 	self->client->pers.connected = false;
 }
 

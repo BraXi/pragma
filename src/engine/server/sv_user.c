@@ -271,7 +271,7 @@ void SV_Begin_f (void)
 		// a spawn point will completely reinitialize the entity except for 
 		// the persistant data that was initialized at ClientConnect() time
 		SV_InitEntity(ent);
-		ent->v.classname = Scr_SetString("player");
+		ent->v.classname = sv.cstr.player;
 		Scr_ClientBegin(ent);
 		SV_LinkEdict(ent);
 	}

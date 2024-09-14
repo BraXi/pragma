@@ -110,7 +110,7 @@ We actually do it twice, once when QCVM initializes and later to enforce it if a
 static void SV_SetWorldEntityFields()
 {
 	gentity_t* world = &sv.edicts[ENTITYNUM_WORLD];
-	world->v.classname = Scr_SetString("worldspawn");
+	world->v.classname = sv.cstr.worldspawn;
 	world->v.model = Scr_SetString(sv.configstrings[CS_MODELS + 1]); // set model name
 	world->v.modelindex = 1; // world model MUST always be index 1	
 	world->v.movetype = MOVETYPE_PUSH;
@@ -141,24 +141,35 @@ static void SV_InitGameProgs()
 
 /*
 ================
+SV_CreateConstStrings
+================
+*/
+static void SV_CreateConstStrings()
+{
+	Scr_BindVM(VM_SVGAME);
+	sv.cstr.free = Scr_NewString("free");
+	sv.cstr.no_class = Scr_NewString("no_class");
+	sv.cstr.player = Scr_NewString("player");
+	sv.cstr.disconnected = Scr_NewString("disconnected");
+	sv.cstr.worldspawn = Scr_NewString("worldspawn");
+}
+
+/*
+================
 SV_SpawnServer
-
-Change the server to a new map, taking all connected
-clients along with it.
-
+Change the server to a new map, taking all connected clients along with it.
 ================
 */
 void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
 {
 	int			i;
-	unsigned	checksum_map, checksum_cgprogs;
+	unsigned	checksum_map, checksum_cgprogs, checksum_guiprogs;
 	gentity_t	*ent;
 
 	if (attractloop)
 		Cvar_Set ("paused", "0");
 
-	Com_Printf ("------- Server Initialization -------\n");
-	Com_Printf ("Spawning %s server on a map `%s`, %i spawncount.\n", (dedicated->value > 0.0f ? "dedicated" : "local"), mapname, svs.spawncount);
+	Com_Printf ("------- Server Initialization -------\n");	
 
 	if (sv.demofile)
 		fclose (sv.demofile);
@@ -191,7 +202,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 		svs.client_entities = Z_Malloc(sizeof(entity_state_t) * svs.num_client_entities);
 	}
 	// leave slots at start for clients only
-	for (i=0 ; i<sv_maxclients->value ; i++)
+	for (i = 0; i < sv_maxclients->value; i++)
 	{
 		// needs to reconnect
 		if (svs.clients[i].state > cs_connected)
@@ -203,7 +214,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	strcpy (sv.configstrings[CS_NAME], mapname);
 
 	//
-	// initialize server models, sv.models[1] is world model, followed by all inline models and md3s
+	// initialize server models, sv.models[1] is world model, followed by all inline models and the rest
 	//
 	sv.models[0].type = MOD_BAD;
 	strcpy(sv.models[0].name, "none");
@@ -225,17 +236,20 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	}
 
 	//
-	// we want to do a CRC checksums for currently loaded map and client-game progs
+	// we want to do a CRC checksums for currently loaded map and client programs
 	// to validate that the client is using exactly _the same data_ as the server and simulation is identical
 	// TODO: server checksums should be private and the server should ask client to send them nicely to compare
 	// otherwise, a malicious client can just slap an "is matching!" response and connect with different files loaded
 	//
 	checksum_cgprogs = CRC_ChecksumFile("progs/cgame.dat", true);
+	checksum_guiprogs = CRC_ChecksumFile("progs/gui.dat", true);
 
 	Com_sprintf(sv.configstrings[CS_CHECKSUM_MAP], sizeof(sv.configstrings[CS_CHECKSUM_MAP]), "%i", checksum_map);
 	Com_sprintf(sv.configstrings[CS_CHECKSUM_CGPROGS], sizeof(sv.configstrings[CS_CHECKSUM_CGPROGS]), "%i", checksum_cgprogs);
+	Com_sprintf(sv.configstrings[CS_CHECKSUM_GUIPROGS], sizeof(sv.configstrings[CS_CHECKSUM_GUIPROGS]), "%i", checksum_guiprogs);
 
-	Com_Printf("client-game progs crc: %d\n", checksum_cgprogs);
+	Com_Printf("client progs crc: %d\n", checksum_cgprogs);
+	Com_Printf("gui progs crc: %d\n", checksum_guiprogs);
 
 
 	//
@@ -247,6 +261,8 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	// create qcvm for svgame progs
 	//
 	SV_InitGameProgs();
+
+	SV_CreateConstStrings();
 
 	for (i = 0; i < sv_maxclients->value; i++)
 	{
@@ -317,10 +333,10 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 
 	if (dedicated->value)
 	{
-		Com_Printf( "[%s] finished spawning server on map %s (%i max clients).\n", GetTimeStamp(false), sv.configstrings[CS_MODELS + 1], (int)sv_maxclients->value);
+		Com_Printf( "[%s] ", GetTimeStamp(false));
 	}
-	else
-		Com_Printf("spawned server on map %s.\n", sv.configstrings[CS_MODELS + 1]);
+
+	Com_Printf("Spawed %s server on map `%s` for %i players.\n", (dedicated->value > 0.0f ? "dedicated" : "local"), mapname, (int)sv_maxclients->value);
 
 	Com_Printf ("-------------------------------------\n");
 }

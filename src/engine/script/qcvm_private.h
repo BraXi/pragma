@@ -149,7 +149,18 @@ typedef struct
 	dfunction_t		*f;
 } prstack_t;
 
+#define PR_TEMP_STRINGS 32 // number of temporary string buffers
+#define	PR_TEMP_STRING_LEN 512 // length of a temporary string buffer
 
+typedef struct qcvm_strings_s
+{
+	const char** stringTable;
+	int stringTableSize;
+	int numStringsInTable;
+
+	char tempStrings[PR_TEMP_STRINGS][PR_TEMP_STRING_LEN];
+	int numTempStrings;
+}qcvm_strings_t;
 
 typedef struct qcvm_s
 {
@@ -196,6 +207,9 @@ typedef struct qcvm_s
 	builtin_t		*currentBuiltinFunc; // development aid
 
 	FILE			*logfile;
+
+
+	qcvm_strings_t	strTable;
 }qcvm_t;
 
 typedef struct

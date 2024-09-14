@@ -866,7 +866,7 @@ void *Z_TagMalloc (int size, memtag_t tag)
 
 	if (!z)
 	{
-		Com_Error(ERR_FATAL, "Z_Malloc: failed on allocation of %i bytes", size);
+		Com_Error(ERR_FATAL, "Z_TagMalloc: failed on allocation of %i bytes", size);
 		return NULL; //msvc..
 	}
 

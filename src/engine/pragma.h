@@ -80,15 +80,33 @@ extern qboolean print_time;
 typedef enum memtag_s
 {
 	TAG_NONE,
-	TAG_GUI = 100,
 	TAG_FX,
 	TAG_NAV_NODES,
+
 	TAG_SERVER_GAME,
 	TAG_CLIENT_GAME,
+	TAG_GUI,
+
+	TAG_QCVM_MEMORY, // dummy, used to offset
+	
+	TAG_QCVM1,
+	TAG_QCVM2,
+	TAG_QCVM3,
 
 	NUM_MEMORY_TAGS
 } memtag_t;
 
+/*
+// script virtual machines
+typedef enum
+{
+	VM_NONE,	// no program execution at all
+	VM_SVGAME,	// server game
+	VM_CLGAME,	// client game
+	VM_GUI,		// gui
+	NUM_SCRIPT_VMS
+} vmType_t;
+*/
 
 //============================================================================
 

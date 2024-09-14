@@ -573,6 +573,37 @@ int Q_strcasecmp (const char *s1, const char *s2)
 	return Q_strncasecmp (s1, s2, 99999);
 }
 
+size_t Q_strlcat(char* dst, const char* src, size_t dsize)
+{
+	// from https://github.com/libressl/openbsd/blob/master/src/lib/libc/string/strlcat.c
+	const char* odst = dst;
+	const char* osrc = src;
+	size_t n = dsize;
+	size_t dlen;
+
+	/* Find the end of dst and adjust bytes left but don't go past end. */
+	while (n-- != 0 && *dst != '\0')
+		dst++;
+
+	dlen = dst - odst;
+	n = dsize - dlen;
+
+	if (n-- == 0)
+		return(dlen + strlen(src));
+
+	while (*src != '\0')
+	{
+		if (n != 0)
+		{
+			*dst++ = *src;
+			n--;
+		}
+		src++;
+	}
+	*dst = '\0';
+
+	return(dlen + (src - osrc));	/* count does not include NULL */
+}
 
 
 void Com_sprintf (char *dest, int size, const char *fmt, ...)

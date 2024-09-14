@@ -47,10 +47,10 @@ for debugging
 */
 void CheckScriptVM(const char *func)
 {
-#ifdef SCRIPTVM_PARANOID
+//#ifdef SCRIPTVM_PARANOID
 	if (active_qcvm == NULL)
 		Com_Error(ERR_FATAL, "Script VM is NULL in %s\n", func);
-#endif
+//#endif
 }
 
 /*

@@ -101,17 +101,20 @@ char *Scr_BuiltinFuncName();
 
 eval_t* Scr_GetEntityFieldValue(vm_entity_t* ent, char* field); // FIXME 
 
+// qcvm_strings.c
+
+int Scr_SetTempString(const char* str);
+int Scr_SetString(const char* str);
+const char* Scr_GetString(int num);
+const char* Scr_VarString(int first);
+scr_string_t Scr_NewString(const char* string);
+
 
 // scr_utils.c
 
 void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcstring);
 
 scr_func_t Scr_FindFunctionIndex(const char* funcname);
-
-int Scr_SetTempString(const char* str);
-int Scr_SetString(const char* str);
-const char* Scr_GetString(int num);
-const char* Scr_VarString(int first);
 
 vm_entity_t* Scr_GetParmEntity(unsigned int parm);
 float Scr_GetParmFloat(unsigned int parm);

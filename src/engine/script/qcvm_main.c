@@ -111,35 +111,14 @@ ddef_t* Scr_FindEntityField(char* name)
 	return NULL;
 }
 
-#if 1
-scr_string_t Scr_AllocString(int size, char** ptr);
+/*
+=============
+Scr_ParseEpair
 
-static scr_string_t Scr_NewString(const char* string)
-{
-	char* new_p;
-	int		i, l;
-	scr_string_t num;
-
-	l = (int)strlen(string) + 1;
-	num = Scr_AllocString(l, &new_p);
-
-	for (i = 0; i < l; i++)
-	{
-		if (string[i] == '\\' && i < l - 1)
-		{
-			i++;
-			if (string[i] == 'n')
-				*new_p++ = '\n';
-			else
-				*new_p++ = '\\';
-		}
-		else
-			*new_p++ = string[i];
-	}
-
-	return num;
-}
-
+Can parse either fields or globals, returns false if error
+MUST BIND VM BEFORE USE!
+=============
+*/
 qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 {
 	int		i;
@@ -148,6 +127,8 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 	char* v, * w;
 	void* d;
 	scr_func_t func;
+
+	CheckScriptVM(__FUNCTION__);
 
 	d = (void*)((int*)base + key->ofs);
 
@@ -208,14 +189,7 @@ qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 	return true;
 }
 
-#else
-/*
-=============
-Scr_ParseEpair
-
-Can parse either fields or globals, MUST BIND VM BEFORE USE! returns false if error
-=============
-*/
+#if 0
 qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag)
 {
 	int		i;
@@ -379,7 +353,6 @@ void Scr_GenerateBuiltinsDefs(char *filename, pb_t execon)
 	Com_Printf("Generated QC header: %s (%i builtins)\n", filename, count);
 }
 
-extern char** pr_stringTable;
 /*
 ===============
 Scr_LoadProgram
@@ -450,22 +423,12 @@ void Scr_LoadProgram(qcvm_t *vm, char* filename)
 	vm->pGlobals = (float*)vm->pGlobalsStruct;
 	vm->entity_size = vm->entity_size + (vm->progs->entityfields * sizeof(int32_t));
 
-	// [QSS] round off to next highest whole word address (esp for Alpha)
+	// [QuakeSpasm] round off to next highest whole word address (esp for Alpha)
 	// this ensures that pointers in the engine data area are always
 	// properly aligned
 	vm->entity_size += sizeof(void*) - 1;
 	vm->entity_size &= ~(sizeof(void*) - 1);
 
-	//vm->entity_size = vm->entity_size + (vm->progs->entityfields * 4);
-	
-	static qboolean strinit = false;
-
-	if(!strinit)
-	{
-		strinit = true;
-		pr_stringTable = NULL;
-		Scr_SetString("");
-	}
 
 	// byte swap all the data
 	for (i = 0; i < vm->progs->numStatements; i++)
@@ -534,7 +497,7 @@ static void Scr_OpenLogFileForVM(qcvm_t *vm)
 	if (!vm->logfile)
 		return;
 
-	Com_Printf("opened logfile: %s\n", name);
+	Com_Printf("Opened log file: %s\n", name);
 
 	fprintf(vm->logfile, "---- opened logfile %s ----\n", GetTimeStamp(true));
 	fflush(active_qcvm->logfile);
@@ -568,16 +531,19 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 	vm->offsetToEntVars = (int)entvarOfs;
 	vm->entity_size = (int)entitySize; // invaild now, will be set properly in loadprogs
 
-	// load progs from file
+	// load programs from file
 	Scr_LoadProgram(vm, vmDefs[vmType].filename);
 
 	// allocate entities
 	vm->entities = (vm_entity_t*)Z_Malloc(vm->num_entities * vm->entity_size);
-	if (vm->entities == NULL)
-		Com_Error(ERR_FATAL, "Couldn't allocate entities for %s VM.\n", Scr_GetScriptName(vmType));
 
 	// open devlog
 	Scr_OpenLogFileForVM(vm);
+
+	// allocate string tables and create temporary string buffers
+	Scr_BindVM(vmType);
+	vm->strTable.stringTable = NULL;
+	Scr_SetString("");
 
 	Com_Printf("Spawned %s QCVM from file \"%s\".\n", Scr_GetScriptName(vm->progsType), vmDefs[vmType].filename);
 
@@ -600,6 +566,8 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 		Com_Printf("      Programs size: %i bytes (%iKb)\n", vm->progsSize, vm->progsSize / 1024);
 		Com_Printf("-------------------------------------\n");
 	}
+
+	Scr_BindVM(VM_NONE);
 }
 
 /*
@@ -615,6 +583,15 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 
 	if (!vm)
 		return;
+
+	if(vm->progsType != VM_NONE)
+		Z_FreeTags(TAG_QCVM_MEMORY + vm->progsType);
+
+	if (vm->strTable.stringTable != NULL)
+	{
+		free((void*)vm->strTable.stringTable);
+		vm->strTable.stringTable = NULL;
+	}
 
 	if (vm->entities)
 		Z_Free(vm->entities);

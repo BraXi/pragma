@@ -32,7 +32,7 @@ void SV_InitEntity(gentity_t* ent)
 
 	ent->s.number = NUM_FOR_EDICT(ent);
 
-	ent->v.classname = Scr_SetString("no_class");
+	ent->v.classname = sv.cstr.no_class;
 	ent->v.gravity = 1.0;
 	ent->v.groundentity_num = ENTITYNUM_NULL;
 
@@ -136,7 +136,7 @@ void SV_FreeEntity(gentity_t* self)
 
 	memset(self, 0, Scr_GetEntitySize());
 
-	self->v.classname = Scr_SetString("freed");
+	self->v.classname = sv.cstr.free;
 	self->freetime = sv.gameTime;
 	self->inuse = false;
 }

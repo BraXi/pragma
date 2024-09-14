@@ -95,6 +95,8 @@ void CL_ShutdownClientGame()
 	CG_ClearState();
 	cg_allow_drawcalls = false;
 	cg.qcvm_active = false;
+
+	Z_FreeTags(TAG_CLIENT_GAME);
 	Scr_FreeScriptVM(VM_CLGAME);
 
 	// free the map but not when server is running

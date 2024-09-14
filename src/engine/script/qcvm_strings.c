@@ -8,21 +8,13 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+//quakespasm inspired
 
 #include "../server/server.h"
 #include "qcvm_private.h"
 
-size_t Q_strlcat(char* dst, const char* src, size_t dsize);
 
-const char** pr_stringTable = NULL;
-static int pr_stringTableSize = 0;
-static int pr_numStringsInTable = 0;
-
-#define PR_TEMP_STRINGS 32 // number of temporary string buffers
-#define	PR_TEMP_STRING_LEN 512 // length of a temporary string buffer
-static char pr_tempStrings[PR_TEMP_STRINGS][PR_TEMP_STRING_LEN];
-static int pr_numTempStrings = 0;
-
+static qcvm_strings_t* pVMStr = NULL;
 
 /*
 ============
@@ -33,13 +25,14 @@ static void Scr_MapTempStringsToStringTable()
 {
 	int strindex;
 
-	pr_numTempStrings = 0;
+	pVMStr->numTempStrings = 0;
 	for (strindex = 0; strindex < PR_TEMP_STRINGS; strindex++)
 	{
-		pr_numStringsInTable++;
-		pr_stringTable[strindex] = pr_tempStrings[strindex];
+		pVMStr->stringTable[strindex] = pVMStr->tempStrings[strindex];
+		pVMStr->numStringsInTable++;
 	}
 }
+
 
 /*
 ============
@@ -50,16 +43,19 @@ Reserves first few slots for the temporary strings mambo jambo.
 */
 static void Scr_CreateStringTable()
 {
-	pr_stringTableSize += 128;
+	CheckScriptVM(__FUNCTION__);
+	pVMStr = &active_qcvm->strTable;
+
+	pVMStr->stringTableSize += 128;
 
 	// if no string table was initialized, create one
-	if (pr_stringTable == NULL)
+	if (pVMStr->stringTable == NULL)
 	{
-		pr_numStringsInTable = 0;
-		pr_stringTableSize += PR_TEMP_STRINGS; // add some space for tempstrings
+		pVMStr->numStringsInTable = 0;
+		pVMStr->stringTableSize += PR_TEMP_STRINGS; // add some space for tempstrings
 
-		pr_stringTable = (const char**)malloc(pr_stringTableSize * sizeof(char*));
-		if (pr_stringTable == NULL)
+		pVMStr->stringTable = (const char**)malloc(pVMStr->stringTableSize * sizeof(char*));
+		if (pVMStr->stringTable == NULL)
 		{
 			Com_Error(ERR_FATAL, "Could not allocate space for string table.\n");
 			return;
@@ -70,14 +66,14 @@ static void Scr_CreateStringTable()
 	}
 
 	// if the table exists -- expand it
-	void* ptr = (void*)pr_stringTable;
-	pr_stringTable = (const char**)realloc(ptr, pr_stringTableSize * sizeof(char*));
-	if (pr_stringTable == NULL)
+	void* ptr = (void*)pVMStr->stringTable;
+	pVMStr->stringTable = (const char**)realloc(ptr, pVMStr->stringTableSize * sizeof(char*));
+	if (pVMStr->stringTable == NULL)
 	{
 		Com_Error(ERR_FATAL, "Could not expand string table.\n");
 	}
 
-	Com_Printf("Scr_AllocStringTable: %d string slots.\n", pr_stringTableSize);
+	Com_Printf("Scr_AllocStringTable: %d string slots.\n", pVMStr->stringTableSize);
 }
 
 /*
@@ -104,12 +100,15 @@ int Scr_SetTempString(const char* str)
 {
 	int strindex;
 
-	if (pr_numTempStrings >= PR_TEMP_STRINGS)
-		pr_numTempStrings = 0;
+	CheckScriptVM(__FUNCTION__);
+	pVMStr = &active_qcvm->strTable;
 
-	strindex = pr_numTempStrings;
-	pr_stringTable[strindex] = str;
-	pr_numTempStrings++;
+	if (pVMStr->numTempStrings >= PR_TEMP_STRINGS)
+		pVMStr->numTempStrings = 0;
+
+	strindex = pVMStr->numTempStrings;
+	pVMStr->stringTable[strindex] = str;
+	pVMStr->numTempStrings++;
 
 	return -1 - strindex;
 }
@@ -125,6 +124,7 @@ int Scr_SetString(const char* str)
 	int strindex;
 
 	CheckScriptVM(__FUNCTION__);
+	pVMStr = &active_qcvm->strTable;
 
 	if (!str)
 		return 0;
@@ -137,23 +137,23 @@ int Scr_SetString(const char* str)
 	}
 
 	// negative str addresses are remapped to string table
-	for (strindex = 0; strindex < pr_numStringsInTable; strindex++)
+	for (strindex = 0; strindex < pVMStr->numStringsInTable; strindex++)
 	{
-		if (pr_stringTable[strindex] == str)
+		if (pVMStr->stringTable[strindex] == str)
 			return -1 - strindex;
 	}
 
-	if (strindex >= pr_stringTableSize)
+	if (strindex >= pVMStr->stringTableSize)
 	{
 		// string table is at full capacity, allocate space for more entries
 		Scr_CreateStringTable();
 	}
 
-	pr_numStringsInTable++;
-	pr_stringTable[strindex] = str;
+	pVMStr->numStringsInTable++;
+	pVMStr->stringTable[strindex] = str;
 
 #ifdef _DEBUG
-	Com_Printf("New string '%s' (%i strings, strtable for %i)\n", str, pr_numStringsInTable, pr_stringTableSize);
+	Com_Printf("New string '%s' (%i strings, strtable for %i)\n", str, pVMStr->numStringsInTable, pVMStr->stringTableSize);
 #endif
 	return -1 - strindex;
 }
@@ -166,65 +166,27 @@ Returns string from active script
 */
 const char* Scr_GetString(int num)
 {
-	//CheckScriptVM(__FUNCTION__); // done in Scr_GetProgStringsSize()
+	CheckScriptVM(__FUNCTION__);
+	pVMStr = &active_qcvm->strTable;
+
 	if (num >= 0 && num < Scr_GetProgStringsSize())
 	{
 		return active_qcvm->pStrings + num;
 	}
-	else if (num < 0 && num >= -pr_numStringsInTable)
+	else if (num < 0 && num >= -pVMStr->numStringsInTable)
 	{
-		if (!pr_stringTable[-1 - num])
+		if (!pVMStr->stringTable[-1 - num])
 		{
-			Com_Printf("PR_GetString: attempt to get a non-existant string %d\n", num);
+			Com_Error(ERR_FATAL, "%s: non-existant string %d in strings table.\n", __FUNCTION__, num);
 			return "";
 		}
-		return pr_stringTable[-1 - num];
+		return pVMStr->stringTable[-1 - num];
 	}
 	else
 	{
-		Com_Printf("PR_GetString: invalid string offset %d\n", num);
+		Com_Error(ERR_FATAL, "%s: invalid string offset %d.\n", __FUNCTION__, num);
 		return "";
 	}
-}
-
-/*
-============
-Scr_AllocString
-Allocates a new string
-============
-*/
-scr_string_t Scr_AllocString(int size, char** ptr)
-{
-	scr_string_t strindex;
-
-	if (!size)
-		return 0;
-
-	for (strindex = 0; strindex < pr_numStringsInTable; strindex++)
-	{
-		if (!pr_stringTable[strindex])
-			break;
-	}
-
-	if (strindex >= pr_stringTableSize)
-	{
-		Scr_CreateStringTable();
-	}
-
-	pr_numStringsInTable++;
-
-	pr_stringTable[strindex] = (char*)malloc(size);
-	if (pr_stringTable[strindex] == NULL)
-	{
-		Com_Error(ERR_FATAL, "%s !malloc.\n", __FUNCTION__);
-	}
-
-	if (ptr)
-	{
-		*ptr = (char*)pr_stringTable[strindex];
-	}
-
-	return -1 - strindex;
 }
 
 
@@ -242,8 +204,8 @@ static char* Scr_GrabTempStringBuffer()
 	if (current_tempstr >= PR_TEMP_STRINGS)
 		current_tempstr = 0;
 
-	strbuf = pr_tempStrings[current_tempstr];
-	memset(strbuf, 0, sizeof(pr_tempStrings[0]));
+	strbuf = pVMStr->tempStrings[current_tempstr];
+	memset(strbuf, 0, sizeof(pVMStr->tempStrings[0]));
 	current_tempstr++;
 
 	return strbuf;
@@ -261,6 +223,9 @@ const char* Scr_VarString(int first)
 	int	i;
 	size_t len;
 
+	CheckScriptVM(__FUNCTION__);
+	pVMStr = &active_qcvm->strTable;
+
 	str = Scr_GrabTempStringBuffer();
 
 	if (first >= Scr_NumArgs() || first < 0)
@@ -269,8 +234,8 @@ const char* Scr_VarString(int first)
 	for (i = first; i < Scr_NumArgs(); i++)
 	{
 		//strcat(str[varstring], Scr_GetParmString(i));
-		len = Q_strlcat(str, Scr_GetParmString(i), sizeof(pr_tempStrings[0]));
-		if (len >= sizeof(pr_tempStrings[0]))
+		len = Q_strlcat(str, Scr_GetParmString(i), sizeof(pVMStr->tempStrings[0]));
+		if (len >= sizeof(pVMStr->tempStrings[0]))
 		{
 			Com_Printf("%s: string truncated.\n", __FUNCTION__);
 			return str;
@@ -280,34 +245,73 @@ const char* Scr_VarString(int first)
 	return str;
 }
 
-size_t Q_strlcat(char* dst, const char* src, size_t dsize)
+/*
+============
+Scr_AllocString
+Allocates a new string and puts it in string table.
+============
+*/
+scr_string_t Scr_AllocString(int size, char** ptr)
 {
-	// from https://github.com/libressl/openbsd/blob/master/src/lib/libc/string/strlcat.c
-	const char* odst = dst;
-	const char* osrc = src;
-	size_t n = dsize;
-	size_t dlen;
+	scr_string_t strindex;
 
-	/* Find the end of dst and adjust bytes left but don't go past end. */
-	while (n-- != 0 && *dst != '\0')
-		dst++;
+	if (!size)
+		return 0;
 
-	dlen = dst - odst;
-	n = dsize - dlen;
+	CheckScriptVM(__FUNCTION__);
+	pVMStr = &active_qcvm->strTable;
 
-	if (n-- == 0)
-		return(dlen + strlen(src));
-
-	while (*src != '\0') 
+	for (strindex = 0; strindex < pVMStr->numStringsInTable; strindex++)
 	{
-		if (n != 0) 
-		{
-			*dst++ = *src;
-			n--;
-		}
-		src++;
+		if (!pVMStr->stringTable[strindex])
+			break;
 	}
-	*dst = '\0';
 
-	return(dlen + (src - osrc));	/* count does not include NULL */
+	if (strindex >= pVMStr->stringTableSize)
+	{
+		Scr_CreateStringTable();
+	}
+
+	pVMStr->stringTable[strindex] = (char*)Z_TagMalloc(size, (TAG_QCVM_MEMORY + active_qcvm->progsType));
+	pVMStr->numStringsInTable++;
+
+	if (ptr)
+	{
+		*ptr = (char*)pVMStr->stringTable[strindex];
+	}
+
+	return -1 - strindex;
+}
+
+
+/*
+============
+Scr_NewString
+Creates new constant string in active qcvm.
+============
+*/
+scr_string_t Scr_NewString(const char* string)
+{
+	char* new_p;
+	int		i, l;
+	scr_string_t num;
+
+	l = (int)strlen(string) + 1;
+	num = Scr_AllocString(l, &new_p);
+
+	for (i = 0; i < l; i++)
+	{
+		if (string[i] == '\\' && i < l - 1)
+		{
+			i++;
+			if (string[i] == 'n')
+				*new_p++ = '\n';
+			else
+				*new_p++ = '\\';
+		}
+		else
+			*new_p++ = string[i];
+	}
+
+	return num;
 }

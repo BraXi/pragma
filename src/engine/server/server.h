@@ -70,6 +70,15 @@ typedef enum
 	ss_pic
 } server_state_t;
 
+typedef struct server_strings_s
+{
+	scr_string_t free;
+	scr_string_t no_class;
+	scr_string_t player;
+	scr_string_t disconnected;
+	scr_string_t worldspawn;
+} server_strings_t;
+
 // some qc commands are only valid before the server has finished
 // initializing (precache commands, static sounds / objects, etc)
 // when cvar `sv_nolateloading` is set to 1
@@ -95,6 +104,8 @@ typedef struct
 	int					max_edicts;				// [sv_maxentities->value]
 	int					entity_size;			// retrieved from progs
 	int					num_edicts;				// number of _active_ entities
+
+	server_strings_t	cstr;					// string constants
 
 	// these two are diferent from server's because simulation can be paused, server cannot be
 	int					gameFrame;				

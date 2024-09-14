@@ -165,6 +165,7 @@ void Com_PageInMemory (byte *buffer, int size);
 int Q_stricmp (const char *s1, const char *s2);
 int Q_strcasecmp (const char *s1, const char *s2);
 int Q_strncasecmp (const char *s1, const char *s2, int n);
+size_t Q_strlcat(char* dst, const char* src, size_t dsize);
 
 //=============================================
 
@@ -576,9 +577,10 @@ enum
 
 #define	CS_CHECKSUM_MAP		31		
 #define	CS_CHECKSUM_CGPROGS 32
-#define	CS_CHEATS_ENABLED	33
+#define	CS_CHECKSUM_GUIPROGS 33
+#define	CS_CHEATS_ENABLED	34
 
-#define	CS_MODELS			34
+#define	CS_MODELS			35
 #define	CS_SOUNDS			(CS_MODELS+MAX_MODELS)
 #define	CS_IMAGES			(CS_SOUNDS+MAX_SOUNDS)
 #define	CS_LIGHTS			(CS_IMAGES+MAX_IMAGES)
