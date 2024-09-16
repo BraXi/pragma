@@ -452,12 +452,7 @@ void CL_InitInput (void)
 	Cmd_AddCommand ("-button" #bit, IN_Button##bit##Up);
 	LIST_BUTTONS
 	#undef X
-	// reki -- 28-12-23 Still have to add aliases for the old commands, this should probably be in the config file instead.
-	Cbuf_AddText ("alias +attack +button0\nalias -attack -button0\n");
-	Cbuf_AddText ("alias +use +button1\nalias -use -button1\n");
-	Cbuf_AddText ("alias +reload +button2\nalias -reload -button2\n");
-	Cbuf_AddText ("alias +melee +button3\nalias -melee -button3\n");
-	
+
 	Cmd_AddCommand ("impulse", IN_Impulse);
 	
 	Cmd_AddCommand ("+klook", IN_KLookDown);
