@@ -8,13 +8,16 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-//
-// console
-//
+// cl_console.h
+
+#ifndef _PRAGMA_CL_CONSOLE_H_
+#define _PRAGMA_CL_CONSOLE_H_
+
+#pragma once
 
 #define	NUM_CON_TIMES 8
+#define CON_TEXTSIZE 32768
 
-#define		CON_TEXTSIZE	32768
 typedef struct
 {
 	qboolean	initialized;
@@ -37,14 +40,16 @@ typedef struct
 								// for transparent notify lines
 } console_t;
 
-extern	console_t	con;
+extern console_t con;
 
 void Con_CheckResize (void);
 void Con_Init (void);
 void Con_DrawConsole (float frac);
 void Con_Print (char *txt);
-void Con_CenteredPrint (char *text);
+//void Con_CenteredPrint (char *text);
 void Con_Clear_f (void);
 void Con_DrawNotify (void);
 void Con_ClearNotify (void);
 void Con_ToggleConsole_f (void);
+
+#endif /*_PRAGMA_CL_CONSOLE_H_*/

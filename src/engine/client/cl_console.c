@@ -408,7 +408,7 @@ void Con_Print (char *txt)
 	}
 }
 
-
+#if 0 // unused
 /*
 ==============
 Con_CenteredPrint
@@ -428,6 +428,7 @@ void Con_CenteredPrint (char *text)
 	strcat (buffer, "\n");
 	Con_Print (buffer);
 }
+#endif
 
 /*
 ==============================================================================
@@ -555,7 +556,7 @@ void Con_DrawNotify (void)
 	if (cls.state != CS_ACTIVE)
 		return;
 
-	v = viddef.height - ((viddef.height / 5));
+	v = viddef.height - ((viddef.height / 4));
 	for (i= con.current-NUM_CON_TIMES+1 ; i<=con.current ; i++)
 	{
 		if (i < 0)

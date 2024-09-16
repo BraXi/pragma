@@ -286,7 +286,7 @@ extern	cvar_t	*m_yaw;
 extern	cvar_t	*m_forward;
 extern	cvar_t	*m_side;
 
-extern	cvar_t	*freelook;
+extern	cvar_t	*cl_freelook;
 
 extern	cvar_t	*cl_paused;
 extern	cvar_t	*cl_timedemo;

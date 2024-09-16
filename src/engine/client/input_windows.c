@@ -35,29 +35,36 @@ cvar_t	*m_filter;
 
 qboolean	mlooking;
 
-void IN_MLookDown (void) { mlooking = true; }
-void IN_MLookUp (void) {
-mlooking = false;
-if (!freelook->value && lookspring->value)
-		IN_CenterView ();
+void IN_MLookDown (void) 
+{ 
+	mlooking = true; 
 }
 
-int			mouse_buttons;
-int			mouse_oldbuttonstate;
-POINT		current_pos;
-int			mouse_x, mouse_y, old_mouse_x, old_mouse_y, mx_accum, my_accum;
 
-int			old_x, old_y;
+void IN_MLookUp (void) 
+{
+	mlooking = false;
+	if (!cl_freelook->value && lookspring->value)
+			IN_CenterView ();
+}
 
-qboolean	mouseactive;	// false when not focus app
+static int mouse_buttons;
+static int mouse_oldbuttonstate;
+static int mouse_x, mouse_y, old_mouse_x, old_mouse_y, mx_accum, my_accum;
+static POINT current_pos;
 
-qboolean	restore_spi;
-qboolean	mouseinitialized;
-int		originalmouseparms[3], newmouseparms[3] = {0, 0, 1};
-qboolean	mouseparmsvalid;
 
-int			window_center_x, window_center_y;
-RECT		window_rect;
+static int originalmouseparms[3];
+static int newmouseparms[3] = { 0, 0, 1 };;
+
+static qboolean bMouseActive;	// false when not focus app
+static qboolean bRestoreMouseSPI;
+static qboolean bMouseInitialized;
+static qboolean	bMouseParamsValid;
+
+static int window_center_x, window_center_y;
+static int window_center_x_old, window_center_y_old;
+static RECT window_rect;
 
 
 /*
@@ -69,27 +76,33 @@ Called when the window gains focus or changes in some way
 */
 void IN_ActivateMouse (void)
 {
-	int		width, height;
+	int width, height;
 
-	if (!mouseinitialized)
-		return;
-	if (!in_mouse->value)
+	if (!bMouseInitialized)
 	{
-		mouseactive = false;
 		return;
 	}
-	if (mouseactive)
+
+	if (!in_mouse->value)
+	{
+		bMouseActive = false;
 		return;
+	}
 
-	mouseactive = true;
+	if (bMouseActive)
+	{
+		return;
+	}
 
-	if (mouseparmsvalid)
-		restore_spi = SystemParametersInfo (SPI_SETMOUSE, 0, newmouseparms, 0);
+	bMouseActive = true;
 
-	width = GetSystemMetrics (SM_CXSCREEN);
-	height = GetSystemMetrics (SM_CYSCREEN);
+	if (bMouseParamsValid)
+		bRestoreMouseSPI = SystemParametersInfo(SPI_SETMOUSE, 0, newmouseparms, 0);
 
-	GetWindowRect ( cl_hwnd, &window_rect);
+	width = GetSystemMetrics(SM_CXSCREEN);
+	height = GetSystemMetrics(SM_CYSCREEN);
+
+	GetWindowRect(cl_hwnd, &window_rect);
 	if (window_rect.left < 0)
 		window_rect.left = 0;
 	if (window_rect.top < 0)
@@ -104,8 +117,8 @@ void IN_ActivateMouse (void)
 
 	SetCursorPos (window_center_x, window_center_y);
 
-	old_x = window_center_x;
-	old_y = window_center_y;
+	window_center_x_old = window_center_x;
+	window_center_y_old = window_center_y;
 
 	SetCapture ( cl_hwnd );
 	ClipCursor (&window_rect);
@@ -123,18 +136,27 @@ Called when the window loses focus
 */
 void IN_DeactivateMouse (void)
 {
-	if (!mouseinitialized)
+	if (!bMouseInitialized)
+	{
 		return;
-	if (!mouseactive)
+	}
+
+	if (!bMouseActive)
+	{
 		return;
+	}
 
-	if (restore_spi)
-		SystemParametersInfo (SPI_SETMOUSE, 0, originalmouseparms, 0);
+	if (bRestoreMouseSPI)
+	{
+		SystemParametersInfo(SPI_SETMOUSE, 0, originalmouseparms, 0);
+	}
 
-	mouseactive = false;
+	bMouseActive = false;
 
 	ClipCursor (NULL);
 	ReleaseCapture ();
+
+	// evil..
 	while (ShowCursor (TRUE) < 0)
 		;
 }
@@ -154,8 +176,8 @@ void IN_StartupMouse (void)
 	if ( !cv->value ) 
 		return; 
 
-	mouseinitialized = true;
-	mouseparmsvalid = SystemParametersInfo (SPI_GETMOUSE, 0, originalmouseparms, 0);
+	bMouseInitialized = true;
+	bMouseParamsValid = SystemParametersInfo (SPI_GETMOUSE, 0, originalmouseparms, 0);
 	mouse_buttons = 3;
 }
 
@@ -164,24 +186,22 @@ void IN_StartupMouse (void)
 IN_MouseEvent
 ===========
 */
-void IN_MouseEvent (int mstate)
+void IN_MouseEvent(int mstate)
 {
 	int		i;
 
-	if (!mouseinitialized)
+	if (!bMouseInitialized)
 		return;
 
 // perform button actions
-	for (i=0 ; i<mouse_buttons ; i++)
+	for (i = 0 ; i < mouse_buttons; i++)
 	{
-		if ( (mstate & (1<<i)) &&
-			!(mouse_oldbuttonstate & (1<<i)) )
+		if ( (mstate & (1<<i)) && !(mouse_oldbuttonstate & (1<<i)) )
 		{
 			Key_Event (K_MOUSE1 + i, true, sys_msg_time);
 		}
 
-		if ( !(mstate & (1<<i)) &&
-			(mouse_oldbuttonstate & (1<<i)) )
+		if ( !(mstate & (1<<i)) && (mouse_oldbuttonstate & (1<<i)) )
 		{
 				Key_Event (K_MOUSE1 + i, false, sys_msg_time);
 		}
@@ -200,12 +220,16 @@ void IN_MouseMove (usercmd_t *cmd)
 {
 	int		mx, my;
 
-	if (!mouseactive)
+	if (!bMouseActive)
+	{
 		return;
+	}
 
 	// find mouse movement
 	if (!GetCursorPos (&current_pos))
+	{
 		return;
+	}
 
 	mx = current_pos.x - window_center_x;
 	my = current_pos.y - window_center_y;
@@ -238,7 +262,7 @@ void IN_MouseMove (usercmd_t *cmd)
 	else
 		cl.viewangles[YAW] -= m_yaw->value * mouse_x;
 
-	if ( (mlooking || freelook->value) && !(in_strafe.state & 1))
+	if ( (mlooking || cl_freelook->value) && !(in_strafe.state & 1))
 	{
 		cl.viewangles[PITCH] += m_pitch->value * mouse_y;
 	}
@@ -309,7 +333,7 @@ between a deactivate and an activate.
 void IN_Activate (qboolean active)
 {
 	in_appactive = active;
-	mouseactive = !active;		// force a new window check or turn off
+	bMouseActive = !active;		// force a new window check or turn off
 }
 
 
@@ -322,7 +346,7 @@ Called every frame, even if not generating commands
 */
 void IN_Frame (void)
 {
-	if (!mouseinitialized)
+	if (!bMouseInitialized)
 		return;
 
 	if (!in_mouse || !in_appactive)

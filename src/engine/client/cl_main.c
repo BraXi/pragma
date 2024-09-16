@@ -12,7 +12,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "client.h"
 
-cvar_t	*freelook;
+cvar_t	*cl_freelook;
 
 cvar_t	*rcon_client_password;
 cvar_t	*rcon_address;
@@ -1099,7 +1099,7 @@ void CL_InitLocal (void)
 	cl_anglespeedkey = Cvar_Get ("cl_anglespeedkey", "1.5", 0, NULL);
 
 	cl_run = Cvar_Get ("cl_run", "0", CVAR_ARCHIVE, NULL);
-	freelook = Cvar_Get( "freelook", "1", CVAR_ARCHIVE, NULL);
+	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE, NULL);
 	lookspring = Cvar_Get ("lookspring", "0", CVAR_ARCHIVE, NULL);
 	lookstrafe = Cvar_Get ("lookstrafe", "0", CVAR_ARCHIVE, NULL);
 	sensitivity = Cvar_Get ("sensitivity", "3", CVAR_ARCHIVE, NULL);
