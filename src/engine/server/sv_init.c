@@ -142,15 +142,16 @@ static void SV_InitGameProgs()
 /*
 ================
 SV_CreateConstStrings
+Create constant strings which are frequently used in C code for progs
 ================
 */
 static void SV_CreateConstStrings()
 {
 	Scr_BindVM(VM_SVGAME);
-	sv.cstr.free = Scr_NewString("free");
-	sv.cstr.no_class = Scr_NewString("no_class");
-	sv.cstr.player = Scr_NewString("player");
-	sv.cstr.disconnected = Scr_NewString("disconnected");
+	sv.cstr.free = Scr_NewString("free"); // when ent is freed
+	sv.cstr.no_class = Scr_NewString("no_class"); // when ent is spawned
+	sv.cstr.player = Scr_NewString("player"); 
+	sv.cstr.disconnected = Scr_NewString("disconnected"); // when player disconnects
 	sv.cstr.worldspawn = Scr_NewString("worldspawn");
 }
 
@@ -171,10 +172,16 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 
 	Com_Printf ("------- Server Initialization -------\n");	
 
+	// close demo recording
 	if (sv.demofile)
-		fclose (sv.demofile);
+	{
+		fclose(sv.demofile);
+	}
 
-	svs.spawncount++;		// any partially connected client will be restarted
+	// any partially connected client will be restarted
+	svs.spawncount++;
+
+	// server is "dead" now
 	sv.state = ss_dead;
 	Com_SetServerState (sv.state);
 
@@ -183,14 +190,16 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	//
 	Z_FreeTags(TAG_SERVER_GAME);
 	SV_FreeModels();
-	memset (&sv, 0, sizeof(sv));
 
 	svs.realtime = 0;
-	sv.loadgame = loadgame;
-	sv.attractloop = attractloop;
-	sv.time = 1000;
 
-	// save bsp name for levels that don't set message key properly
+	memset(&sv, 0, sizeof(sv));
+	sv.loadgame = loadgame; //is this a saved game restore?
+	sv.attractloop = attractloop; // is this attract loop?
+	sv.time = 1000; // 1 second into the "game"
+
+	// save bsp name for maps that don't set message key properly
+	// this will be later set properly in script (hopefuly)
 	strcpy (sv.configstrings[CS_NAME], mapname);
 
 	SZ_Init (&sv.multicast, sv.multicast_buf, sizeof(sv.multicast_buf));
@@ -201,17 +210,18 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 		svs.num_client_entities = sv_maxclients->value * UPDATE_BACKUP * 64;
 		svs.client_entities = Z_Malloc(sizeof(entity_state_t) * svs.num_client_entities);
 	}
-	// leave slots at start for clients only
+	
+	// force all clients to reconnect
 	for (i = 0; i < sv_maxclients->value; i++)
 	{
-		// needs to reconnect
+		
 		if (svs.clients[i].state > cs_connected)
 			svs.clients[i].state = cs_connected;
 		svs.clients[i].lastframe = -1;
 	}
 
-	strcpy (sv.mapname, mapname);
-	strcpy (sv.configstrings[CS_NAME], mapname);
+	strncpy(sv.mapname, mapname, sizeof(sv.mapname));
+	SV_SetConfigString(CS_NAME, mapname);
 
 	//
 	// initialize server models, sv.models[1] is world model, followed by all inline models and the rest
@@ -229,9 +239,8 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	}
 	else
 	{
-		Com_sprintf (sv.configstrings[CS_MODELS+1],sizeof(sv.configstrings[CS_MODELS+1]), "maps/%s.bsp", mapname);
+		SV_SetConfigString(CS_MODELS + 1, va("maps/%s.bsp", mapname));
 		strcpy(sv.models[MODELINDEX_WORLD].name, sv.configstrings[CS_MODELS + 1]);
-
 		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap (sv.models[1].name, false, &checksum_map);
 	}
 
@@ -244,9 +253,9 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	checksum_cgprogs = CRC_ChecksumFile("progs/cgame.dat", true);
 	checksum_guiprogs = CRC_ChecksumFile("progs/gui.dat", true);
 
-	Com_sprintf(sv.configstrings[CS_CHECKSUM_MAP], sizeof(sv.configstrings[CS_CHECKSUM_MAP]), "%i", checksum_map);
-	Com_sprintf(sv.configstrings[CS_CHECKSUM_CGPROGS], sizeof(sv.configstrings[CS_CHECKSUM_CGPROGS]), "%i", checksum_cgprogs);
-	Com_sprintf(sv.configstrings[CS_CHECKSUM_GUIPROGS], sizeof(sv.configstrings[CS_CHECKSUM_GUIPROGS]), "%i", checksum_guiprogs);
+	SV_SetConfigString(CS_CHECKSUM_MAP, va("%i", checksum_map));
+	SV_SetConfigString(CS_CHECKSUM_CGPROGS, va("%i", checksum_cgprogs));
+	SV_SetConfigString(CS_CHECKSUM_GUIPROGS, va("%i", checksum_guiprogs));
 
 	Com_Printf("client progs crc: %d\n", checksum_cgprogs);
 	Com_Printf("gui progs crc: %d\n", checksum_guiprogs);
@@ -275,16 +284,15 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	//
 	// clear physics interaction links
 	//
-	Nav_Init();
 	SV_ClearWorld ();
 	
-	// brushmodels
+	// set up brush models
 	for (i = 1; i < CM_NumInlineModels() ; i++)
 	{
-		Com_sprintf(sv.configstrings[CS_MODELS+1+i], sizeof(sv.configstrings[CS_MODELS+1+i]), "*%i", i);
+		SV_SetConfigString((CS_MODELS + 1 + i), va("*%i", i));
 
-		sv.models[sv.num_models].type = MOD_BRUSH;
 		strcpy(sv.models[sv.num_models].name, sv.configstrings[CS_MODELS + 1 + i]);
+		sv.models[sv.num_models].type = MOD_BRUSH;
 		sv.models[sv.num_models].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS+1+i]);
 
 		sv.num_models++;
@@ -314,7 +322,8 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	// give it a frame so the entities can spawn and drop to floor
 	SV_RunWorldFrame();
 
-	// link pathnodes
+	// create paths for AI
+	Nav_Init();
 	SV_LinkAllPathNodes(); 
 
 	// one more frame to settle everything
@@ -550,7 +559,7 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame, qboolea
 		SV_BroadcastCommand ("changing\n");
 		SV_SpawnServer (level, spawnpoint, ss_cinematic, attractloop, loadgame);
 	}
-	else if (l > 4 && !strcmp (level+l-4, ".demo") )
+	else if (l > 4 && !strcmp (level+l-4, ".pdm") )
 	{
 #ifndef DEDICATED_ONLY
 		SCR_BeginLoadingPlaque ();			// for local system

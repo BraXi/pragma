@@ -616,7 +616,7 @@ void SV_Map_f (void)
 	char	*map;
 	char	expanded[MAX_QPATH];
 
-	// if not a image, demo, or cinematic, check to make sure the level exists
+	// if not image, demo, or cinematic, check to make sure the level exists
 	map = Cmd_Argv(1);
 	if (!strstr (map, "."))
 	{
@@ -946,7 +946,7 @@ void SV_DumpUser_f (void)
 {
 	if (Cmd_Argc() != 2)
 	{
-		Com_Printf ("Usage: info <userid>\n");
+		Com_Printf ("Usage: dumpuser <userid>\n");
 		return;
 	}
 
@@ -965,7 +965,7 @@ void SV_DumpUser_f (void)
 SV_ServerRecord_f
 
 Begins server demo recording.  Every entity and every message will be
-recorded, but no playerinfo will be stored.  Primarily for demo merging.
+recorded, but no playerinfo will be stored. Primarily for demo merging.
 ==============
 */
 void SV_ServerRecord_f (void)
@@ -997,9 +997,9 @@ void SV_ServerRecord_f (void)
 	//
 	// open the demo file
 	//
-	Com_sprintf (name, sizeof(name), "%s/demos/%s.demo", FS_Gamedir(), Cmd_Argv(1));
+	Com_sprintf (name, sizeof(name), "%s/demos/%s.pdm", FS_Gamedir(), Cmd_Argv(1));
 
-	Com_Printf ("recording to %s.\n", name);
+	Com_Printf ("Recording server demo to `%s`.\n", name);
 	FS_CreatePath (name);
 	svs.demofile = fopen (name, "wb");
 	if (!svs.demofile)
@@ -1024,8 +1024,7 @@ void SV_ServerRecord_f (void)
 	MSG_WriteByte (&buf, SVC_SERVERDATA);
 	MSG_WriteLong (&buf, PROTOCOL_VERSION);
 	MSG_WriteLong (&buf, svs.spawncount);
-	// 2 means server demo
-	MSG_WriteByte (&buf, 2);	// demos are always attract loops
+	MSG_WriteByte (&buf, 2);	// demos are always attract loops -- 2 means server demo
 	MSG_WriteString (&buf, Cvar_VariableString ("gamedir"));
 	MSG_WriteShort (&buf, -1);
 	// send full levelname
@@ -1040,7 +1039,6 @@ void SV_ServerRecord_f (void)
 			MSG_WriteString(&buf, sv.configstrings[i]);
 		}
 	}
-
 	// write it to the demo file
 	Com_DPrintf (DP_SV, "signon message length: %i\n", buf.cursize);
 	len = LittleLong (buf.cursize);

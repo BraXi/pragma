@@ -176,7 +176,13 @@ void IN_Button##bit##Up(void) { KeyUp(&in_button##bit); }
 LIST_BUTTONS
 #undef X
 
-void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
+void IN_Impulse (void) 
+{
+	in_impulse = atoi(Cmd_Argv(1));
+
+	if (in_impulse > 255 || in_impulse < 0)
+		in_impulse = 0; // cause they're sent as a byte
+}
 
 /*
 ===============
@@ -272,8 +278,6 @@ void CL_AdjustAngles (void)
 /*
 ================
 CL_BaseMove
-
-Send the intended movement message to the server
 ================
 */
 void CL_BaseMove (usercmd_t *cmd)
@@ -409,28 +413,40 @@ void CL_InitInput (void)
 
 	Cmd_AddCommand ("+moveup",IN_UpDown);
 	Cmd_AddCommand ("-moveup",IN_UpUp);
+
 	Cmd_AddCommand ("+movedown",IN_DownDown);
 	Cmd_AddCommand ("-movedown",IN_DownUp);
+
 	Cmd_AddCommand ("+left",IN_LeftDown);
 	Cmd_AddCommand ("-left",IN_LeftUp);
+
 	Cmd_AddCommand ("+right",IN_RightDown);
 	Cmd_AddCommand ("-right",IN_RightUp);
+
 	Cmd_AddCommand ("+forward",IN_ForwardDown);
 	Cmd_AddCommand ("-forward",IN_ForwardUp);
+
 	Cmd_AddCommand ("+back",IN_BackDown);
 	Cmd_AddCommand ("-back",IN_BackUp);
+
 	Cmd_AddCommand ("+lookup", IN_LookupDown);
 	Cmd_AddCommand ("-lookup", IN_LookupUp);
+
 	Cmd_AddCommand ("+lookdown", IN_LookdownDown);
 	Cmd_AddCommand ("-lookdown", IN_LookdownUp);
+
 	Cmd_AddCommand ("+strafe", IN_StrafeDown);
 	Cmd_AddCommand ("-strafe", IN_StrafeUp);
+
 	Cmd_AddCommand ("+moveleft", IN_MoveleftDown);
 	Cmd_AddCommand ("-moveleft", IN_MoveleftUp);
+
 	Cmd_AddCommand ("+moveright", IN_MoverightDown);
 	Cmd_AddCommand ("-moveright", IN_MoverightUp);
+
 	Cmd_AddCommand ("+speed", IN_SpeedDown);
 	Cmd_AddCommand ("-speed", IN_SpeedUp);
+
 	#define X(bit) 	\
 	Cmd_AddCommand ("+button" #bit, IN_Button##bit##Down); \
 	Cmd_AddCommand ("-button" #bit, IN_Button##bit##Up);
@@ -441,7 +457,9 @@ void CL_InitInput (void)
 	Cbuf_AddText ("alias +use +button1\nalias -use -button1\n");
 	Cbuf_AddText ("alias +reload +button2\nalias -reload -button2\n");
 	Cbuf_AddText ("alias +melee +button3\nalias -melee -button3\n");
+	
 	Cmd_AddCommand ("impulse", IN_Impulse);
+	
 	Cmd_AddCommand ("+klook", IN_KLookDown);
 	Cmd_AddCommand ("-klook", IN_KLookUp);
 
@@ -453,6 +471,8 @@ void CL_InitInput (void)
 /*
 =================
 CL_SendCmd
+
+Send the intended movement message to the server
 =================
 */
 void CL_SendCmd (void)

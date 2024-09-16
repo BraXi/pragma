@@ -167,7 +167,7 @@ void CL_Record_f (void)
 	//
 	// open the demo file
 	//
-	Com_sprintf (name, sizeof(name), "%s/demos/%s.demo", FS_Gamedir(), Cmd_Argv(1));
+	Com_sprintf (name, sizeof(name), "%s/demos/%s.pdm", FS_Gamedir(), Cmd_Argv(1));
 
 	Com_Printf ("Recording demo to %s.\n", name);
 	FS_CreatePath (name);

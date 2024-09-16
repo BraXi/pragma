@@ -790,7 +790,7 @@ void SV_SetConfigString(int index, const char *valueString)
 {
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
 	{
-		Com_Error(ERR_DROP, "configstring(): bad index %i\n", index);
+		Com_Error(ERR_DROP, "SV_SetConfigString(): bad index %i\n", index);
 		return;
 	}
 
@@ -800,7 +800,7 @@ void SV_SetConfigString(int index, const char *valueString)
 	// change the string in sv
 	strncpy(sv.configstrings[index], valueString, sizeof(sv.configstrings[index]));
 
-	if (sv.state != ss_loading)
+	if (sv.state != ss_loading && sv.state != ss_dead)
 	{
 		SZ_Clear(&sv.multicast);
 		MSG_WriteChar(&sv.multicast, SVC_CONFIGSTRING);
@@ -1128,39 +1128,59 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 	if (svs.clients)
 		SV_FinalMessage (finalmsg, reconnect);
 
-
 	if (dedicated->value)
 		Com_Printf("[%s] %s\n", GetTimeStamp(true), finalmsg);
 
 	Master_Shutdown ();
 
-	// free current level
-	if (sv.demofile)
-		fclose (sv.demofile);
-
-	// free svgame qcvm
+	// Free svgame QCVM
 	Scr_FreeScriptVM(VM_SVGAME);
-
-	// wipe per level data
-	if (svs.gclients)
-		Z_Free(svs.gclients);
-
 	Z_FreeTags(TAG_SERVER_GAME);
 	SV_FreeModels();
-	memset (&sv, 0, sizeof(sv));
+
+	// close sv demo
+	if (sv.demofile)
+	{
+		fclose(sv.demofile);
+		sv.demofile = NULL;
+	}
+
+	// wipe per level server data
+	memset(&sv, 0, sizeof(sv));
 	 
 	Nav_Shutdown();
 
 	SV_FreeDevTools();
 	Com_SetServerState (sv.state);
 
+	//
 	// free server static data
+	//
+	if (svs.gclients)
+	{
+		Z_Free(svs.gclients);
+		svs.gclients = NULL;
+	}
+
 	if (svs.clients)
-		Z_Free (svs.clients);
+	{
+		Z_Free(svs.clients);
+		svs.clients = NULL;
+	}
+
 	if (svs.client_entities)
-		Z_Free (svs.client_entities);
+	{
+		Z_Free(svs.client_entities);
+		svs.client_entities = NULL;
+	}
+
+	// close another sv sdemo?
 	if (svs.demofile)
-		fclose (svs.demofile);
+	{
+		fclose(svs.demofile);
+		svs.demofile = NULL;
+	}
+
 	memset (&svs, 0, sizeof(svs));
 }
 

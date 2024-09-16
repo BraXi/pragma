@@ -371,7 +371,10 @@ void SV_BeginDownload_f(void)
 
 
 	if (sv_client->download)
-		FS_FreeFile (sv_client->download);
+	{
+		FS_FreeFile(sv_client->download);
+		sv_client->download = NULL;
+	}
 
 	sv_client->downloadsize = FS_LoadFile (name, (void **)&sv_client->download);
 	sv_client->downloadcount = offset;
@@ -384,10 +387,10 @@ void SV_BeginDownload_f(void)
 	// special check for maps, if it came from a pak file, don't allow download  ZOID
 	if (!sv_client->download || (strncmp(name, "maps/", 5) == 0 && file_from_pak))
 	{
-		Com_DPrintf (DP_SV, "Couldn't download %s to %s\n", name, sv_client->name);
-
 		if (dedicated->value)
 			Com_Printf("[%s] client '%s' requested wrong download '%s'\n", GetTimeStamp(false), sv_client->name, name);
+		else
+			Com_DPrintf(DP_SV, "Couldn't download %s to %s\n", name, sv_client->name);
 
 		if (sv_client->download) 
 		{
@@ -445,14 +448,19 @@ void SV_Nextserver (void)
 {
 	char	*v;
 
-	//ZOID, ss_pic can be nextserver'd in coop mode
+	// ss_pic can be nextserver'd in coop mode
+	// can't nextserver while playing a normal game
 	if (sv.state == ss_game || (sv.state == ss_pic && !Cvar_VariableValue("coop")))
-		return;		// can't nextserver while playing a normal game
+		return;		
 
-	svs.spawncount++;	// make sure another doesn't sneak in
-	v = Cvar_VariableString ("nextserver");
+	// make sure another incrementation of svs.spawncount doesn't sneak in !!
+	svs.spawncount++;	
+
+	v = Cvar_VariableString("nextserver");
 	if (!v[0])
-		Cbuf_AddText ("killserver\n");
+	{
+		Cbuf_AddText("killserver\n");
+	}
 	else
 	{
 		Cbuf_AddText (v);
@@ -465,16 +473,16 @@ void SV_Nextserver (void)
 ==================
 SV_Nextserver_f
 
-A cinematic has completed or been aborted by a client, so move
-to the next server
+A cinematic has completed or been aborted by a client, so move to the next server
 ==================
 */
 void SV_Nextserver_f (void)
 {
 	if ((int)strtol(Cmd_Argv(1), (char**)NULL, 10) != svs.spawncount) //yquake2
 	{
+		// leftover from last server
 		Com_DPrintf (DP_SV, "Nextserver() from wrong level, from %s\n", sv_client->name);
-		return;		// leftover from last server
+		return;
 	}
 
 	Com_DPrintf (DP_SV, "Nextserver() from %s\n", sv_client->name);

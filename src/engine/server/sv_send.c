@@ -480,6 +480,7 @@ void SV_DemoCompleted (void)
 		fclose (sv.demofile);
 		sv.demofile = NULL;
 	}
+	Com_Printf("Demo completed.\n");
 	SV_Nextserver ();
 }
 
@@ -510,6 +511,9 @@ qboolean SV_RateDrop (client_t *c)
 
 	if (total > c->rate)
 	{
+#ifdef _DEBUG
+		Com_Printf("SV_RateDrop: rate dropped `%s` - reached %i (%i max)\n", c->name, total, c->rate);
+#endif
 		c->surpressCount++;
 		c->message_size[sv.framenum % RATE_MESSAGES] = 0;
 		return true;
@@ -554,8 +558,9 @@ void SV_SendClientMessages (void)
 				return;
 			}
 			if (msglen > MAX_MSGLEN)
-				Com_Error (ERR_DROP, "SV_SendClientMessages: msglen > MAX_MSGLEN");
-			r = fread (msgbuf, msglen, 1, sv.demofile);
+				Com_Error (ERR_DROP, "SV_SendClientMessages: msglen (%i) overflow in DEMO!", msglen);
+
+			r = fread (msgbuf, (size_t)msglen, (size_t)1, sv.demofile);
 			if (r != 1)
 			{
 				SV_DemoCompleted ();
@@ -565,10 +570,11 @@ void SV_SendClientMessages (void)
 	}
 
 	// send a message to each connected client
-	for (i=0, c = svs.clients ; i<sv_maxclients->value; i++, c++)
+	for (i = 0, c = svs.clients; i < sv_maxclients->value; i++, c++)
 	{
 		if (!c->state)
 			continue;
+
 		// if the reliable message overflowed, drop the client
 		if (c->netchan.message.overflowed)
 		{
@@ -578,11 +584,11 @@ void SV_SendClientMessages (void)
 			SV_DropClient (c);
 		}
 
-		if (sv.state == ss_cinematic 
-			|| sv.state == ss_demo 
-			|| sv.state == ss_pic
-			)
-			Netchan_Transmit (&c->netchan, msglen, msgbuf);
+
+		if (sv.state == ss_cinematic || sv.state == ss_demo || sv.state == ss_pic)
+		{
+			Netchan_Transmit(&c->netchan, msglen, msgbuf);
+		}
 		else if (c->state == cs_spawned)
 		{
 			// don't overrun bandwidth
