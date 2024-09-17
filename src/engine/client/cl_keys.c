@@ -246,7 +246,7 @@ void Key_Console (int key)
 
 			i = (int)strlen( cbd );
 			if ( i + key_linepos >= MAXCMDLINE)
-				i= MAXCMDLINE - key_linepos;
+				i = MAXCMDLINE - key_linepos;
 
 			if ( i > 0 )
 			{
@@ -269,8 +269,10 @@ void Key_Console (int key)
 		}
 	}
 
+	// execute command on enter
 	if ( key == K_ENTER || key == K_KP_ENTER )
-	{	// backslash text are commands, else chat
+	{	
+		// backslash text are commands, else chat
 		if (key_lines[edit_line][1] == '\\' || key_lines[edit_line][1] == '/')
 			Cbuf_AddText (key_lines[edit_line]+2);	// skip the >
 		else
@@ -443,14 +445,14 @@ the K_* names are matched up.
 */
 int Key_StringToKeynum (char *str)
 {
-	keyname_t	*kn;
+	keyname_t *kn;
 	
 	if (!str || !str[0])
 		return -1;
 	if (!str[1])
 		return str[0];
 
-	for (kn=keynames ; kn->name ; kn++)
+	for (kn = keynames; kn->name; kn++)
 	{
 		if (!Q_strcasecmp(str,kn->name))
 			return kn->keynum;
@@ -469,19 +471,20 @@ FIXME: handle quote special (general escape sequence?)
 */
 char *Key_KeynumToString (int keynum)
 {
-	keyname_t	*kn;	
+	keyname_t *kn;	
 	static	char	tinystr[2];
 	
 	if (keynum == -1)
 		return "<KEY NOT FOUND>";
 	if (keynum > 32 && keynum < 127)
-	{	// printable ascii
+	{	
+		// printable ascii
 		tinystr[0] = keynum;
 		tinystr[1] = 0;
 		return tinystr;
 	}
 	
-	for (kn=keynames ; kn->name ; kn++)
+	for (kn = keynames; kn->name; kn++)
 		if (keynum == kn->keynum)
 			return kn->name;
 
@@ -502,15 +505,15 @@ void Key_SetBinding (int keynum, char *binding)
 	if (keynum == -1)
 		return;
 
-// free old bindings
+	// free old bindings
 	if (keybindings[keynum])
 	{
 		Z_Free (keybindings[keynum]);
 		keybindings[keynum] = NULL;
 	}
 			
-// allocate memory for new binding
-	l = (int)strlen (binding);
+	// allocate memory for new binding
+	l = (int)strlen(binding);
 	new = Z_Malloc (l+1);
 	strcpy (new, binding);
 	new[l] = 0;
@@ -533,7 +536,7 @@ void Key_Unbind_f (void)
 	}
 	
 	b = Key_StringToKeynum (Cmd_Argv(1));
-	if (b==-1)
+	if (b == -1)
 	{
 		Com_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
 		return;
@@ -546,7 +549,7 @@ void Key_Unbindall_f (void)
 {
 	int		i;
 	
-	for (i=0 ; i<256 ; i++)
+	for (i = 0; i < 256; i++)
 		if (keybindings[i])
 			Key_SetBinding (i, "");
 }
@@ -587,7 +590,7 @@ void Key_Bind_f (void)
 	
 // copy the rest of the command line
 	cmd[0] = 0;		// start out with a null string
-	for (i=2 ; i< c ; i++)
+	for (i = 2; i < c ; i++)
 	{
 		strcat (cmd, Cmd_Argv(i));
 		if (i != (c-1))
@@ -606,11 +609,15 @@ Writes lines containing "bind key value"
 */
 void Key_WriteBindings (FILE *f)
 {
-	int		i;
+	int i;
 
-	for (i=0 ; i<256 ; i++)
+	for (i = 0; i < 256; i++)
+	{
 		if (keybindings[i] && keybindings[i][0])
-			fprintf (f, "bind %s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
+		{
+			fprintf(f, "bind %s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
+		}
+	}
 }
 
 
@@ -624,9 +631,13 @@ void Key_Bindlist_f (void)
 {
 	int		i;
 
-	for (i=0 ; i<256 ; i++)
+	for (i = 0; i < 256; i++)
+	{
 		if (keybindings[i] && keybindings[i][0])
-			Com_Printf ("%s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
+		{
+			Com_Printf("%s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
+		}
+	}
 }
 
 
@@ -639,7 +650,7 @@ void Key_Init (void)
 {
 	int		i;
 
-	for (i=0 ; i<32 ; i++)
+	for (i = 0 ; i < 32; i++)
 	{
 		key_lines[i][0] = ']';
 		key_lines[i][1] = 0;
@@ -649,8 +660,9 @@ void Key_Init (void)
 //
 // init ascii characters in console mode
 //
-	for (i=32 ; i<128 ; i++)
+	for (i = 32; i < 128; i++)
 		consolekeys[i] = true;
+
 	consolekeys[K_ENTER] = true;
 	consolekeys[K_KP_ENTER] = true;
 	consolekeys[K_TAB] = true;
@@ -683,10 +695,12 @@ void Key_Init (void)
 	consolekeys['`'] = false;
 	consolekeys['~'] = false;
 
-	for (i=0 ; i<256 ; i++)
+	for (i = 0; i < 256 ; i++)
 		keyshift[i] = i;
-	for (i='a' ; i<='z' ; i++)
+
+	for (i= 'a'; i <= 'z'; i++)
 		keyshift[i] = i - 'a' + 'A';
+
 	keyshift['1'] = '!';
 	keyshift['2'] = '@';
 	keyshift['3'] = '#';
@@ -710,16 +724,16 @@ void Key_Init (void)
 	keyshift['\\'] = '|';
 
 	menubound[K_ESCAPE] = true;
-	for (i=0 ; i<12 ; i++)
+	for (i = 0; i < 12 ; i++) // magic numbers yay
 		menubound[K_F1+i] = true;
 
-//
-// register our functions
-//
-	Cmd_AddCommand ("bind",Key_Bind_f);
-	Cmd_AddCommand ("unbind",Key_Unbind_f);
-	Cmd_AddCommand ("unbindall",Key_Unbindall_f);
-	Cmd_AddCommand ("bindlist",Key_Bindlist_f);
+	//
+	// register our functions
+	//
+	Cmd_AddCommand("bind", Key_Bind_f);
+	Cmd_AddCommand("unbind", Key_Unbind_f);
+	Cmd_AddCommand("unbindall", Key_Unbindall_f);
+	Cmd_AddCommand("bindlist", Key_Bindlist_f);
 }
 
 /*
@@ -747,7 +761,6 @@ void Key_Event (int key, qboolean down, unsigned time)
 	if (down)
 	{
 		key_repeats[key]++;
-#if 1
 		if (key != K_BACKSPACE 
 			&& key != K_PAUSE 
 			&& key != K_PGUP 
@@ -755,8 +768,9 @@ void Key_Event (int key, qboolean down, unsigned time)
 			&& key != K_PGDN
 			&& key != K_KP_PGDN
 			&& key_repeats[key] > 1)
-			return;	// ignore most autorepeats
-#endif		
+			return;	// ignore some autorepeats
+
+
 #if 0	// braxi -- no unknown bind spam
 		if (key >= 200 && !keybindings[key]) 
 			Com_Printf ("%s is unbound, hit F4 to set.\n", Key_KeynumToString (key) );
@@ -821,13 +835,13 @@ void Key_Event (int key, qboolean down, unsigned time)
 			anykeydown = 0;
 	}
 
-//
-// key up events only generate commands if the game key binding is
-// a button command (leading + sign).  These will occur even in console mode,
-// to keep the character from continuing an action started before a console
-// switch.  Button commands include the kenum as a parameter, so multiple
-// downs can be matched with ups
-//
+	//
+	// key up events only generate commands if the game key binding is
+	// a button command (leading + sign).  These will occur even in console mode,
+	// to keep the character from continuing an action started before a console
+	// switch.  Button commands include the kenum as a parameter, so multiple
+	// downs can be matched with ups
+	//
 	if (!down)
 	{
 		kb = keybindings[key];
@@ -848,9 +862,9 @@ void Key_Event (int key, qboolean down, unsigned time)
 		return;
 	}
 
-//
-// if not a consolekey, send to the interpreter no matter what mode is
-//
+	//
+	// if not a consolekey, send to the interpreter no matter what mode is
+	//
 	if ( (cls.key_dest == key_menu && menubound[key])
 	|| (cls.key_dest == key_console && !consolekeys[key])
 	|| (cls.key_dest == key_game && ( cls.state == CS_ACTIVE || !consolekeys[key] ) ) )
@@ -905,9 +919,9 @@ void Key_ClearStates (void)
 {
 	int		i;
 
-	anykeydown = false;
+	anykeydown = 0;
 
-	for (i=0 ; i<256 ; i++)
+	for (i = 0 ; i < 256; i++)
 	{
 		if ( keydown[i] || key_repeats[i] )
 			Key_Event( i, false, 0 );
