@@ -81,7 +81,7 @@ R_ModelForName
 Loads in a model for the given name
 ==================
 */
-model_t* R_ModelForName(char* name, qboolean crash)
+model_t* R_ModelForName(const char* name, qboolean crash)
 {
 	model_t* mod;
 	unsigned* buf;
@@ -319,7 +319,7 @@ Loads a model and associated textures
 bumps the registration_sequence for model and textures they use
 ================
 */
-struct model_s* R_RegisterModel(char* name)
+struct model_s* R_RegisterModel(const char* name)
 {
 	model_t* mod;
 
@@ -450,22 +450,31 @@ Mod_BSP_PointInLeaf
 mleaf_t *Mod_BSP_PointInLeaf(vec3_t p, model_t *model)
 {
 	mnode_t		*node;
-	float		d;
+	float		dot;
 	cplane_t	*plane;
 	
 	if (!model)
-		ri.Error (ERR_DROP, "%s: no model", __FUNCTION__);
+	{
+		ri.Error(ERR_DROP, "%s: no model", __FUNCTION__);
+		return NULL; // never reached
+	}
+
 	if (!model->nodes)
+	{
 		ri.Error(ERR_DROP, "%s: model without nodes", __FUNCTION__);
+		return NULL; // never reached
+	}
 
 	node = model->nodes;
 	while (1)
 	{
 		if (node->contents != -1)
 			return (mleaf_t *)node;
+
 		plane = node->plane;
-		d = DotProduct (p,plane->normal) - plane->dist;
-		if (d > 0)
+
+		dot = DotProduct (p,plane->normal) - plane->dist;
+		if (dot > 0)
 			node = node->children[0];
 		else
 			node = node->children[1];

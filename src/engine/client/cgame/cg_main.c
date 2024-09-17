@@ -285,7 +285,7 @@ CG_FindOrRegisterSound
 Returns sfx or NULL if sound file cannot be found or cannot be loaded
 ====================
 */
-struct sfx_t* CG_FindOrRegisterSound(char *filename)
+struct sfx_t* CG_FindOrRegisterSound(const char *filename)
 {
 	struct sfx_t* sfx;
 	sfx = S_RegisterSound(filename);

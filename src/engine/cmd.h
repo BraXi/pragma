@@ -45,12 +45,12 @@ void Cbuf_AddText(const char* text);
 // as new commands are generated from the console or keybindings,
 // the text is added to the end of the command buffer.
 
-void Cbuf_InsertText(char* text);
+void Cbuf_InsertText(const char* text);
 // when a command wants to issue other commands immediately, the text is
 // inserted at the beginning of the buffer, before any remaining unexecuted
 // commands.
 
-void Cbuf_ExecuteText(int exec_when, char* text);
+void Cbuf_ExecuteText(int exec_when, const char* text);
 // this can be used in place of either Cbuf_AddText or Cbuf_InsertText
 
 void Cbuf_AddEarlyCommands(qboolean clear);
@@ -78,20 +78,20 @@ typedef void (*xcommand_t) (void);
 
 void	Cmd_Init(void);
 
-void	Cmd_AddCommand(char* cmd_name, xcommand_t function);
-void	Cmd_AddCommandCG(char* cmd_name, scr_func_t function);
+void	Cmd_AddCommand(const char* cmd_name, xcommand_t function);
+void	Cmd_AddCommandCG(const char* cmd_name, scr_func_t function);
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory
 // if function is NULL, the command will be forwarded to the server
 // as a clc_stringcmd instead of executed locally
-void	Cmd_RemoveCommand(char* cmd_name);
+void	Cmd_RemoveCommand(const char* cmd_name);
 void	Cmd_RemoveClientGameCommands();
 
-qboolean Cmd_Exists(char* cmd_name);
+qboolean Cmd_Exists(const char* cmd_name);
 // used by the cvar code to check for cvar / command name overlap
 
-char* Cmd_CompleteCommand(char* partial);
+const char* Cmd_CompleteCommand(const char* partial);
 // attempts to match a partial command for automatic command line completion
 // returns NULL if nothing fits
 

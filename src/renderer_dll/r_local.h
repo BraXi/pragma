@@ -428,10 +428,10 @@ void R_RenderDlights(void); // development aid
 //===================================================================
 
 void R_LoadFonts();
-void R_GetImageSize (int *w, int *h, char *name);
-void R_DrawImage (int x, int y, char *name);
-void R_DrawStretchImage (int x, int y, int w, int h, char *name);
-void R_DrawTileClear (int x, int y, int w, int h, char *name);
+void R_GetImageSize (int *w, int *h, const char *name);
+void R_DrawImage (int x, int y, const char *name);
+void R_DrawStretchImage (int x, int y, int w, int h, const char *name);
+void R_DrawTileClear (int x, int y, int w, int h, const char *name);
 void R_DrawFill (int x, int y, int w, int h);
 
 
@@ -439,14 +439,14 @@ void R_DrawFill (int x, int y, int w, int h);
 // r_image.c
 //===================================================================
 
-struct image_s* R_RegisterSkin(char* name);
+struct image_s* R_RegisterSkin(const char* name);
 void R_EnableMultiTexture();
 void R_DisableMultiTexture();
 void R_SelectTextureUnit(unsigned int textureMappingUnit);
 void R_BindTexture(int texnum);
 void R_MultiTextureBind(unsigned int tmu, int texnum);
-image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_t type, int bits);
-image_t	*R_FindTexture(char *name, texType_t type, qboolean load);
+image_t *R_LoadTexture(const char *name, byte *pixels, int width, int height, texType_t type, int bits);
+image_t	*R_FindTexture(const char *name, texType_t type, qboolean load);
 void R_SetTextureMode(char *string);
 void R_TextureList_f(void);
 void R_InitTextures();

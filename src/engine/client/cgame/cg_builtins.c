@@ -19,7 +19,7 @@ See the attached GNU General Public License v2 for more details.
 #include "cg_local.h"
 
 extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
-extern struct sfx_t* CG_FindOrRegisterSound(char* filename);
+extern struct sfx_t* CG_FindOrRegisterSound(const char* filename);
 
 static void CheckEmptyString(const char* s) // definitely need to make it a shared code...
 {

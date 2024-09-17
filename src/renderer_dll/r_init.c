@@ -398,30 +398,29 @@ void R_Shutdown(void)
 void R_BeginRegistration(const char* map);
 void R_EndRegistration();
 
-struct model_s* R_RegisterModel(char* name);
-struct image_s* R_RegisterSkin(char* name);
-struct image_s* R_RegisterPic(char* name);
+struct model_s* R_RegisterModel(const char* name);
+struct image_s* R_RegisterPic(const char* name);
 
-void R_SetSky(char* name, float rotate, vec3_t axis, vec3_t color);
+void R_SetSky(const char* name, float rotate, vec3_t axis, vec3_t color);
 void R_RenderFrame(refdef_t* fd, qboolean onlyortho);
 
 
-void	R_DrawImage(int x, int y, char* name);
-void	R_DrawTileClear(int x, int y, int w, int h, char* name);
+void	R_DrawImage(int x, int y, const char* name);
+void	R_DrawTileClear(int x, int y, int w, int h, const char* name);
 void	R_DrawFill(int x, int y, int w, int h);
 
 void	R_DrawString(float x, float y, int alignx, int charSize, int fontId, vec4_t color, const char* str);
-void	R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
-void	R_DrawStretchedImage(rect_t rect, rgba_t color, char* pic);
+void	R_DrawStringOld(const char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+void	R_DrawStretchedImage(rect_t rect, rgba_t color, const char* pic);
 void	R_NewDrawFill(rect_t rect, rgba_t color);
 
-int R_FindFont(char* name);
+int R_FindFont(const char* name);
 int R_GetFontHeight(int fontId);
-int R_GetTextWidth(int fontId, char* text);
-void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+int R_GetTextWidth(int fontId, const char* text);
+void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, const char* text);
 
 int R_TagIndexForName(struct model_s* model, const char* tagName);
-qboolean R_LerpTag(orientation_t* tag, struct model_t* model, int startFrame, int endFrame, float frac, int tagIndex);
+qboolean R_LerpTag(orientation_t* tag, struct model_s* model, int startFrame, int endFrame, float frac, int tagIndex);
 
 static void	RR_SetColor(float r, float g, float b, float a)
 {

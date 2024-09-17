@@ -129,7 +129,7 @@ void R_LoadFonts()
 Draw_FindPic
 =============
 */
-image_t	*R_RegisterPic(char *name)
+image_t	*R_RegisterPic(const char *name)
 {
 	image_t *image;
 	char	fullname[MAX_QPATH];
@@ -150,7 +150,7 @@ image_t	*R_RegisterPic(char *name)
 R_GetImageSize
 =============
 */
-void R_GetImageSize (int *w, int *h, char *name)
+void R_GetImageSize (int *w, int *h, const char *name)
 {
 	image_t *image;
 
@@ -173,7 +173,7 @@ R_DrawStretchImage
 Draw stretched image
 =============
 */
-void R_DrawStretchImage (int x, int y, int w, int h, char * name)
+void R_DrawStretchImage (int x, int y, int w, int h, const char * name)
 {
 	image_t *image;
 
@@ -214,7 +214,7 @@ R_DrawImage
 Draw image at given coords
 =============
 */
-void R_DrawImage(int x, int y, char *name)
+void R_DrawImage(int x, int y, const char *name)
 {
 	image_t *image;
 
@@ -252,7 +252,7 @@ R_DrawTileClear
 This repeats a 64*64 tile graphic to fill the screen around a sized down refresh window.
 =============
 */
-void R_DrawTileClear (int x, int y, int w, int h, char *name)
+void R_DrawTileClear (int x, int y, int w, int h, const char *name)
 {
 	image_t	*image;
 
@@ -452,7 +452,7 @@ R_DrawStringOld
 DEPRECATED
 ===============
 */
-void R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx, rgba_t color)
+void R_DrawStringOld(const char* string, float x, float y, float fontSize, int alignx, rgba_t color)
 {
 	float CHAR_SIZEX = 8 * fontSize;
 	float CHAR_SIZEY = 8 * fontSize;
@@ -589,7 +589,7 @@ R_DrawStretchedImage
 DEPRECATED
 ===============
 */
-void R_DrawStretchedImage(rect_t pos, rgba_t color, char* pic)
+void R_DrawStretchedImage(rect_t pos, rgba_t color, const char* pic)
 {
 	image_t* gl;
 

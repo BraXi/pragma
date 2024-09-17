@@ -138,7 +138,7 @@ UIActionBuf_AddText
 Adds action command text at the end of the buffer
 ============
 */
-static void UIActionBuf_AddText(char* text)
+static void UIActionBuf_AddText(const char* text)
 {
 	int		l;
 
@@ -146,10 +146,10 @@ static void UIActionBuf_AddText(char* text)
 
 	if (uiaction_text.cursize + l >= uiaction_text.maxsize)
 	{
-		Com_Printf("Cbuf_AddText: overflow\n");
+		Com_Printf("UIActionBuf_AddText: overflow\n");
 		return;
 	}
-	SZ_Write(&uiaction_text, text, strlen(text));
+	SZ_Write(&uiaction_text, (char*)text, strlen(text));
 }
 
 /*
@@ -157,7 +157,7 @@ static void UIActionBuf_AddText(char* text)
 UI_ExecuteAction
 ============
 */
-void UI_ExecuteAction(char *actionstring)
+void UI_ExecuteAction(const char *actionstring)
 {
 	int		i;
 	char	* text;

@@ -19,7 +19,7 @@ int		gl_tex_alpha_format = 4;
 int		gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
 int		gl_filter_max = GL_LINEAR;
 
-static void R_LoadTGA(char* name, byte** pic, int* width, int* height);
+static void R_LoadTGA(const char* name, byte** pic, int* width, int* height);
 
 static mte = false;
 
@@ -417,7 +417,7 @@ R_LoadTexture
 This is also used as an entry point for the generated code textures
 ================
 */
-image_t *R_LoadTexture(char *name, byte *pixels, int width, int height, texType_t type, int bits)
+image_t *R_LoadTexture(const char *name, byte *pixels, int width, int height, texType_t type, int bits)
 {
 	image_t* image = R_AllocTexture();
 
@@ -466,7 +466,7 @@ R_FindTexture
 Finds or loads the given image
 ===============
 */
-image_t	*R_FindTexture(char *name, texType_t type, qboolean load)
+image_t	*R_FindTexture(const char *name, texType_t type, qboolean load)
 {
 	image_t	*image;
 	int		i, len;
@@ -534,7 +534,7 @@ image_t	*R_FindTexture(char *name, texType_t type, qboolean load)
 R_RegisterSkin
 ===============
 */
-struct image_s *R_RegisterSkin (char *name)
+struct image_s *R_RegisterSkin (const char *name)
 {
 	return R_FindTexture (name, it_model, true);
 }
@@ -642,7 +642,7 @@ typedef struct _TargaHeader {
 R_LoadTGA
 =============
 */
-static void R_LoadTGA(char* name, byte** pic, int* width, int* height)
+static void R_LoadTGA(const char* name, byte** pic, int* width, int* height)
 {
 	int		columns, rows, numPixels;
 	byte* pixbuf;

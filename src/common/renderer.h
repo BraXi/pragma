@@ -172,7 +172,7 @@ typedef struct
 } refdef_t;
 
 
-#define	API_VERSION		('B'+'X'+'I'+'7')
+#define	API_VERSION		8
 
 //
 // these are the functions exported by the refresh module
@@ -217,34 +217,34 @@ typedef struct
 
 	void	(*EndRegistration)();
 
-	struct model_s *(*RegisterModel) (char *name);
+	struct model_s *(*RegisterModel) (const char *name);
 
-	struct image_s *(*RegisterSkin) (char *name);
+	struct image_s *(*RegisterSkin) (const char *name);
 
-	struct image_s *(*RegisterPic) (char *name);
+	struct image_s *(*RegisterPic) (const char *name);
 
-	void	(*SetSky) (char *name, float rotate, vec3_t axis, vec3_t color);
+	void	(*SetSky) (const char *name, float rotate, vec3_t axis, vec3_t color);
 
 	// will return 0 0 if not found
-	void	(*GetImageSize) (int *w, int *h, char *name);	
+	void	(*GetImageSize) (int *w, int *h, const char *name);	
 
-	void	(*DrawImage) (int x, int y, char *name);
+	void	(*DrawImage) (int x, int y, const char *name);
 
-	void	(*DrawStretchImage) (int x, int y, int w, int h, char *name);
+	void	(*DrawStretchImage) (int x, int y, int w, int h, const char *name);
 
-	void	(*DrawTileClear) (int x, int y, int w, int h, char *name);
+	void	(*DrawTileClear) (int x, int y, int w, int h, const char *name);
 
 	void	(*DrawFill) (int x, int y, int w, int h);
 
-	int		(*FindFont)(char* name);
+	int		(*FindFont)(const char* name);
 	int		(*GetFontHeight)(int fontId);
-	int		(*GetTextWidth)(int fontId, char* text);
-	void	(*NewDrawString)(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+	int		(*GetTextWidth)(int fontId, const char* text);
+	void	(*NewDrawString)(int x, int y, int alignX, int fontId, float scale, vec4_t color, const char* text);
 
 	void	(*DrawString)(float x, float y, int alignx, int charSize, int fontId, vec4_t color, const char* str);
 
-	void	(*_DrawString)(char* string, float x, float y, float fontSize, int alignx, rgba_t color); //deprecated
-	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, char* pic);
+	void	(*_DrawString)(const char* string, float x, float y, float fontSize, int alignx, rgba_t color); //deprecated
+	void	(*DrawStretchedImage)(rect_t rect, rgba_t color, const char* pic);
 	void	(*NewDrawFill) (rect_t rect, rgba_t color);
 
 	void	(*SetColor)(float r, float g, float b, float a);
@@ -264,8 +264,8 @@ typedef struct
 	void	*(*MemAlloc)(int size);
 	void	(*MemFree)(void *ptr);
 
-	void	(*AddCommand) (char *name, void(*cmd)(void));
-	void	(*RemoveCommand) (char *name);
+	void	(*AddCommand) (const char *name, void(*cmd)(void));
+	void	(*RemoveCommand) (const char *name);
 	int		(*Cmd_Argc) (void);
 	char	*(*Cmd_Argv) (int i);
 	void	(*Cmd_ExecuteText) (int exec_when, char *text);
@@ -273,14 +273,14 @@ typedef struct
 	// files will be memory mapped read only the returned buffer may be part of a larger pak file,
 	// or a discrete file from anywhere in the quake search path  a -1 return means the file does not exist
 	// NULL can be passed for buf to just determine existance
-	int		(*LoadFile) (char *name, void **buf);
-	int		(*LoadTextFile)(char* filename, char** buffer);
+	int		(*LoadFile) (const char *name, void **buf);
+	int		(*LoadTextFile)(const char* filename, char** buffer);
 	void	(*FreeFile) (void *buf);
 	char	*(*GetGameDir) (void);
 
-	cvar_t	*(*Cvar_Get) (char *name, char *value, int flags, char *desc);
-	cvar_t	*(*Cvar_Set)( char *name, char *value );
-	void	 (*Cvar_SetValue)( char *name, float value );
+	cvar_t	*(*Cvar_Get) (const char *name, const char *value, int flags, char *desc);
+	cvar_t	*(*Cvar_Set)(const char *name, const char *value );
+	void	 (*Cvar_SetValue)(const char *name, float value );
 
 	qboolean	(*Vid_GetModeInfo)( int *width, int *height, int mode );
 	void		(*Vid_NewWindow)( int width, int height );

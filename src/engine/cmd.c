@@ -102,7 +102,7 @@ Adds a \n to the text
 FIXME: actually change the command buffer to do less copying
 ============
 */
-void Cbuf_InsertText (char *text)
+void Cbuf_InsertText (const char *text)
 {
 	char	*temp;
 	int		templen;
@@ -159,12 +159,12 @@ void Cbuf_InsertFromDefer (void)
 Cbuf_ExecuteText
 ============
 */
-void Cbuf_ExecuteText (int exec_when, char *text)
+void Cbuf_ExecuteText (int exec_when, const char *text)
 {
 	switch (exec_when)
 	{
 	case EXEC_NOW:
-		Cmd_ExecuteString (text);
+		Cmd_ExecuteString ((char*)text);
 		break;
 	case EXEC_INSERT:
 		Cbuf_InsertText (text);
@@ -476,7 +476,7 @@ void Cmd_Alias_f (void)
 typedef struct cmd_function_s
 {
 	struct cmd_function_s	*next;
-	char					*name;
+	const char				*name;
 	xcommand_t				function; // when command is declared in C
 	scr_func_t				prfunction; // when command is declared in QC
 } cmd_function_t;
@@ -529,7 +529,7 @@ char		*Cmd_Args (void)
 Cmd_MacroExpandString
 ======================
 */
-char *Cmd_MacroExpandString (char *text)
+char *Cmd_MacroExpandString(const char *text)
 {
 	int		i, j, count, len;
 	qboolean	inquote;
@@ -539,7 +539,7 @@ char *Cmd_MacroExpandString (char *text)
 	char	*token, *start;
 
 	inquote = false;
-	scan = text;
+	scan = (char*)text;
 
 	len = (int)strlen (scan);
 	if (len >= MAX_STRING_CHARS)
@@ -678,19 +678,19 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 Cmd_AddCommand
 ============
 */
-void Cmd_AddCommand (char *cmd_name, xcommand_t function)
+void Cmd_AddCommand(const char *cmd_name, xcommand_t function)
 {
 	cmd_function_t	*cmd;
 	
-// fail if the command is a variable name
+	// fail if the command is a variable name
 	if (Cvar_VariableString(cmd_name)[0])
 	{
 		Com_Printf ("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;
 	}
 	
-// fail if the command already exists
-	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
+	// fail if the command already exists
+	for (cmd = cmd_functions; cmd ; cmd=cmd->next)
 	{
 		if (!strcmp (cmd_name, cmd->name))
 		{
@@ -712,7 +712,7 @@ void Cmd_AddCommand (char *cmd_name, xcommand_t function)
 Cmd_AddCommandCG
 ============
 */
-void Cmd_AddCommandCG(char* cmd_name, scr_func_t function)
+void Cmd_AddCommandCG(const char* cmd_name, scr_func_t function)
 {
 	cmd_function_t* cmd;
 
@@ -745,7 +745,7 @@ void Cmd_AddCommandCG(char* cmd_name, scr_func_t function)
 Cmd_RemoveCommand
 ============
 */
-void	Cmd_RemoveCommand (char *cmd_name)
+void Cmd_RemoveCommand(const char *cmd_name)
 {
 	cmd_function_t	*cmd, **back;
 
@@ -801,7 +801,7 @@ void Cmd_RemoveClientGameCommands()
 Cmd_Exists
 ============
 */
-qboolean	Cmd_Exists (char *cmd_name)
+qboolean Cmd_Exists (const char *cmd_name)
 {
 	cmd_function_t	*cmd;
 
@@ -821,7 +821,7 @@ qboolean	Cmd_Exists (char *cmd_name)
 Cmd_CompleteCommand
 ============
 */
-char *Cmd_CompleteCommand (char *partial)
+const char *Cmd_CompleteCommand(const char *partial)
 {
 	cmd_function_t	*cmd;
 	int				len;
@@ -832,7 +832,7 @@ char *Cmd_CompleteCommand (char *partial)
 	if (!len)
 		return NULL;
 		
-// check for exact match
+	// check for exact match
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 		if (!strcmp (partial,cmd->name))
 			return cmd->name;
@@ -840,7 +840,7 @@ char *Cmd_CompleteCommand (char *partial)
 		if (!strcmp (partial, a->name))
 			return a->name;
 
-// check for partial match
+	// check for partial match
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next)
 		if (!strncmp (partial,cmd->name, len))
 			return cmd->name;
@@ -860,7 +860,7 @@ A complete command line has been parsed, so try to execute it
 FIXME: lookupnoadd the token to speed search?
 ============
 */
-void Cmd_ExecuteString (char *text)
+void Cmd_ExecuteString(char *text)
 {	
 	cmd_function_t	*cmd;
 	cmdalias_t		*a;

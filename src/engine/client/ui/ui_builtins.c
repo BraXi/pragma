@@ -43,7 +43,7 @@ static void PFGUI_drawstring(void)
 	float fontSize = Scr_GetParmFloat(1);
 	Scr_GetParmVector2(2, &color[0], &color[1], &color[2]);
 	color[3] = Scr_GetParmFloat(3);
-	char* string = Scr_VarString(4);
+	const char* string = Scr_VarString(4);
 	re._DrawString(string, xy_align[0], xy_align[1], fontSize, xy_align[2], color);
 }
 
@@ -219,7 +219,7 @@ static void PFGUI_DrawText(void)
 	float scale = Scr_GetParmFloat(2);
 	Scr_GetParmVector2(3, &color[0], &color[1], &color[2]);
 	color[3] = Scr_GetParmFloat(4);
-	char* text = Scr_VarString(5); //Scr_GetParmString(5);
+	const char* text = Scr_VarString(5); //Scr_GetParmString(5);
 
 	re.NewDrawString(xya[0], xya[1], xya[2], fontId, scale, color, text);
 }
@@ -253,7 +253,7 @@ execaction( "hide self; show popup\n" );
 static void PFGUI_execaction(void)
 {
 	//char* action = Scr_GetParmString(0);
-	char* action = Scr_VarString(0);
+	const char* action = Scr_VarString(0);
 	UI_ExecuteAction(action);
 }
 
