@@ -564,7 +564,7 @@ void R_ClearSkyBox()
 {
 	int		i;
 
-	for (i=0 ; i<6 ; i++)
+	for (i = 0; i < 6; i++)
 	{
 		skymins[0][i] = skymins[1][i] = 99999;
 		skymaxs[0][i] = skymaxs[1][i] = -99999;

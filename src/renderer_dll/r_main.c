@@ -576,14 +576,14 @@ void R_RenderView (refdef_t *fd)
 	R_World_MarkLeaves ();	// done here so we know if we're in water
 	
 	gl_state.bDrawingTransparents = false;
-	gl_state.bTraversedBSP = false;
+	gl_state.bTraversedBSP = false; // force a BSP traverse to build up surface chains
 
 	R_TraverseWorldBSP();
 
 	R_ProfileAtStage(STAGE_SETUP);
 
 	//
-	// SHADOW MAP PASS    !!!ASSUMES ONLY FLASHLIGHT IS CASTING SHADOW!!!
+	// SHADOW MAP PASS    !!!ASSUMES ONLY FLASHLIGHT IN FIRST PERSON IS CASTING SHADOW!!!
 	// 
 	// Bind shadowmap FBO and render only to the depth buffer
 	// Traverse BSP to build surfaces

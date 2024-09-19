@@ -14,17 +14,17 @@ vec3_t shadow_origin, shadow_angles;
 
 void R_SetupProjection(unsigned int width, unsigned int height, float fov_y, float znear, float zfar, vec3_t origin, vec3_t angles);
 
-static unsigned int shadowMapSize[2];
+static unsigned int shadowMapSize[2] = { 0,0 };
 
-static GLuint m_fbo = 0;
+static GLuint r_shadow_fbo = 0;
 GLuint r_texture_shadow_id = 0;
 
 void R_DestroyShadowMapFBO()
 {
-    if (m_fbo != 0) 
+    if (r_shadow_fbo != 0) 
     {
-        glDeleteFramebuffers(1, &m_fbo);
-        m_fbo = 0;
+        glDeleteFramebuffers(1, &r_shadow_fbo);
+        r_shadow_fbo = 0;
     }
 
     if (r_texture_shadow_id != 0) 
@@ -36,13 +36,20 @@ void R_DestroyShadowMapFBO()
 
 qboolean R_InitShadowMap(unsigned int width, unsigned int height)
 {
-    if (m_fbo)
+    if (shadowMapSize[0] != width || shadowMapSize[1] != height)
+    {
+        // force a rebuild when screen dimensions change
+        R_DestroyShadowMapFBO();
+    }
+    else if (r_shadow_fbo)
+    {
         return true;
+    }
 
     shadowMapSize[0] = width;
     shadowMapSize[1] = height;
 
-    glGenFramebuffers(1, &m_fbo);
+    glGenFramebuffers(1, &r_shadow_fbo);
 
     glGenTextures(1, &r_texture_shadow_id);
     glBindTexture(GL_TEXTURE_2D, r_texture_shadow_id);
@@ -52,7 +59,7 @@ qboolean R_InitShadowMap(unsigned int width, unsigned int height)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, r_shadow_fbo);
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, r_texture_shadow_id, 0);
 
     glDrawBuffer(GL_NONE);
@@ -60,11 +67,13 @@ qboolean R_InitShadowMap(unsigned int width, unsigned int height)
     GLenum Status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (Status != GL_FRAMEBUFFER_COMPLETE) 
     {
-        ri.Error(ERR_FATAL, "FBO error (0x%x)\n", Status);
+        ri.Error(ERR_FATAL, "Shadow FBO error (0x%x)\n", Status);
         return false;
     }
 
+#ifdef _DEBUG
     ri.Printf(PRINT_LOW, "r_texture_shadow_id = %i\n", r_texture_shadow_id);
+#endif
 
     return true;
 }
@@ -78,7 +87,7 @@ void R_BeginShadowMapPass()
     R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
     //R_MultiTextureBind(TMU_SHADOWMAP, r_texture_shadow_id);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, r_shadow_fbo);
     glViewport(0, 0, shadowMapSize[0], shadowMapSize[1]); 
     glClear(GL_DEPTH_BUFFER_BIT);
 

@@ -88,7 +88,7 @@ void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 	if (surf->flags & SURF_PLANEBACK)
 	{
 		// if for some reason the normal sticks to the back of 
-		// the plane, invert it so it'surf usable for the shader
+		// the plane, invert it so it's usable for the shader
 		for (i = 0; i < 3; ++i)
 			normal[i] = -normal[i];
 	}
@@ -233,7 +233,7 @@ static void R_BuildVertexBufferForWorld()
 	if (ongpusize != bufsize)
 	{
 		R_DestroyWorldVertexBuffer();
-		ri.Error(ERR_FATAL, "failed to allocate vertex buffer for gfx_world (probably out of VRAM)\n");
+		ri.Error(ERR_FATAL, "Failed t create vertex buffer for gfx_world (probably out of VRAM)\n");
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1126,6 +1126,9 @@ void R_TraverseWorldBSP()
 
 	if (gl_state.bTraversedBSP)
 		return;
+
+	// moved here from fix vis problems 
+	VectorCopy(r_newrefdef.view.origin, modelorg); 
 
 	// clear skybox
 	R_ClearSkyBox();
