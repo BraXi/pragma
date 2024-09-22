@@ -585,7 +585,6 @@ Mod_BSP_LoadLightMaps
 */
 static void Mod_BSP_LoadLightMaps(lump_t *l)
 {
-	int count = 0;
 	if (!l->filelen)
 	{
 		pLoadModel->lightdatasize = -1;
@@ -763,12 +762,20 @@ static void Mod_BSP_LoadTexinfo(lump_t *l)
 		else
 		    out->next = NULL;
 
+		//ri.Printf(PRINT_ALL, "%5i %s flags: %i\n", i, in->texture, out->flags);
+		if (out->flags & SURF_SKY || out->flags & SURF_NODRAW || out->flags & SURF_SKIP)
+		{
+			// don't load textures for NODRAW, SKIP and SKY (its read from worldspawn key)
+			out->image = r_texture_missing;
+			continue;
+		}
+
 		// load up texture
 		Com_sprintf(name, sizeof(name), "textures/%s.tga", in->texture);
 		out->image = R_FindTexture(name, it_texture, true);
 		if (!out->image)
 		{
-			ri.Printf(PRINT_ALL, "%s: couldn't load '%s'\n", __FUNCTION__, name);
+			ri.Printf(PRINT_ALL, "%s: Missing texture '%s'.\n", __FUNCTION__, name);
 			out->image = r_texture_missing;
 		}
 
