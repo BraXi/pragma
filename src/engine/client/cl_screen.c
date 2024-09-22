@@ -940,7 +940,7 @@ void SCR_UpdateScreen (void)
 		//
 
 		re.SetColor(1, 1, 1, 1);
-		CG_DrawGUI();
+		//CG_DrawGUI();
 
 		re.SetColor(1, 1, 1, 1);
 		UI_Draw();
@@ -963,8 +963,8 @@ void SCR_UpdateScreen (void)
 	}
 
 #if 1
-	float col[4] = { 0.1,0.0,0.45,0.8};
-	re.NewDrawString(viddef.width - 5 , viddef.height - (re.GetFontHeight(0)*0.25), 2, 0, 0.25f, col, va("pragma %s prealpha build %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP));
+	float col[4] = { 0.9,1.0,0.90,0.6};
+	re.NewDrawString(viddef.width - 5 , viddef.height - (re.GetFontHeight(0)*0.25), 2, 0, 0.25f, col, va("PRAGMA %s PREALPHA BUILD %s", PRAGMA_VERSION, PRAGMA_TIMESTAMP));
 	SCR_DrawFPS();
 #endif
 

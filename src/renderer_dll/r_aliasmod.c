@@ -583,6 +583,7 @@ void R_DrawAliasModel(rentity_t* ent, float animlerp)
 	if (ent->renderfx & RF_VIEW_MODEL)
 		R_SendDynamicLightsToCurrentProgram(true);
 
+	//glDisable(GL_CULL_FACE);
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{
 		surfverts = ent->model->vb[surf]->numVerts / pModel->numFrames;
@@ -607,6 +608,7 @@ void R_DrawAliasModel(rentity_t* ent, float animlerp)
 		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
 	}
 
+	//glEnable(GL_CULL_FACE);
 	if (r_pendingflip)
 	{
 		Mat4Scale(r_projection_matrix, -1, 1, 1);

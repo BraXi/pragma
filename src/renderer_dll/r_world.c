@@ -97,7 +97,12 @@ void R_BuildPolygonFromSurface(model_t* mod, msurface_t* surf)
 	if (surf->texinfo->flags & SURF_TRANS66)
 		alpha = 0.66f;
 	else if (surf->texinfo->flags & SURF_TRANS33)
-		alpha = 0.33;
+		alpha = 0.33f;
+
+	if (surf->texinfo->flags & SURF_ALPHATEST)
+	{
+		alpha = 1.0f;
+	}
 
 	for (i = 0; i < lnumverts; i++)
 	{
@@ -598,10 +603,15 @@ static void R_DrawBrushModel_Internal()
 	// light bmodel
 	R_World_LightInlineModel();
 
+	// test
+	//glEnable(GL_POLYGON_OFFSET_FILL);
+	//glPolygonOffset(-0.1f, -1.0f);
+
 	//
 	// draw brushmodel
 	//
 	R_World_BeginRendering();
+
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], alpha);
 
 	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
@@ -614,14 +624,16 @@ static void R_DrawBrushModel_Internal()
 		// draw the polygon
 		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
-			if (psurf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66))
+			if (psurf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66 | SURF_ALPHATEST))
 			{
 				// add to the translucent chain
 				psurf->texturechain = r_alpha_surfaces;
 				r_alpha_surfaces = psurf;
 			}
 			else
+			{
 				R_World_NewDrawSurface(psurf, true);
+			}
 		}
 	}
 	R_World_DrawAndFlushBufferedGeo();
@@ -630,6 +642,10 @@ static void R_DrawBrushModel_Internal()
 		R_Blend(false);
 
 	R_World_EndRendering();
+
+	// test
+	//glDisable(GL_POLYGON_OFFSET_FILL);
+	//glPolygonOffset(0.0f, 0.0f);
 }
 
 
@@ -971,6 +987,11 @@ static void R_World_RecursiveNode(mnode_t* node)
 		if ((surf->flags & SURF_PLANEBACK) != sidebit)
 			continue;		// wrong side
 
+		if (surf->texinfo->flags & SURF_NODRAW)
+		{
+			continue; // don't bother with nodraws..
+		}
+
 		if (surf->texinfo->flags & SURF_SKY)
 		{
 			//
@@ -978,7 +999,7 @@ static void R_World_RecursiveNode(mnode_t* node)
 			//
 			R_AddSkySurface(surf);
 		}
-		else if (surf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66))
+		else if (surf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66 | SURF_ALPHATEST))
 		{
 			//
 			// add surface to the translucent chain

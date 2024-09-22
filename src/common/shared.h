@@ -272,20 +272,20 @@ COLLISION DETECTION
 #define	CONTENTS_LADDER			0x20000000
 
 // surface flags
-#define	SURF_LIGHT		0x1		// value will hold the light strength
-#define	SURF_SLICK		0x2		// effects game physics
-#define	SURF_SKY		0x4		// don't draw, but add to skybox
-#define	SURF_WARP		0x8		// turbulent water warp
-#define	SURF_TRANS33	0x10	// 33% alpha
-#define	SURF_TRANS66	0x20	// 66% alpha
-#define	SURF_FLOWING	0x40	// scroll towards S coord
-#define	SURF_NODRAW		0x80	// don't bother referencing the texture
-#define	SURF_HINT		0x100	// make a primary bsp splitter
-#define	SURF_SKIP		0x200	// completely ignore, allowing non-closed brushes
+#define	SURF_LIGHT		(1 << 0) /*1*/		// value will hold the light strength
+#define	SURF_SLICK		(1 << 1) /*2*/		// effects game physics
+#define	SURF_SKY		(1 << 2) /*4*/		// don't draw, but add to skybox
+#define	SURF_WARP		(1 << 3) /*8*/		// turbulent water warp
+#define	SURF_TRANS33	(1 << 4) /*16*/		// 33% alpha
+#define	SURF_TRANS66	(1 << 5) /*32*/		// 66% alpha
+#define	SURF_FLOWING	(1 << 6) /*64*/ 	// scroll towards S coord
+#define	SURF_NODRAW		(1 << 7) /*128*/ 	// don't bother referencing the texture
+#define	SURF_HINT		(1 << 8) /*256*/	// make a primary bsp splitter
+#define	SURF_SKIP		(1 << 9) /*256*/	// completely ignore, allowing non-closed brushes
 
 // ericw_tools additional surface flags
 #define SURF_ALPHATEST	(1 << 25) // alpha test flag
-#define SURF_N64_UV		(1 << 28) // N64 UV and surface flag hack
+//#define SURF_N64_UV	(1 << 28) // N64 UV and surface flag hack UNUSED
 #define SURF_SCROLLX	(1 << 29) // slow x scroll
 #define SURF_SCROLLY	(1 << 30) // slow y scroll
 #define SURF_SCROLLFLIP	(1 << 31) // flip scroll directon

@@ -230,6 +230,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	strcpy(sv.models[0].name, "none");
 
 	sv.models[MODELINDEX_WORLD].type = MOD_BRUSH;
+	sv.models[MODELINDEX_WORLD].modelindex = 1;
 	sv.num_models = 2; // because modelindex 0 is no model
 
 	if (serverstate != ss_game)
@@ -294,6 +295,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 		strcpy(sv.models[sv.num_models].name, sv.configstrings[CS_MODELS + 1 + i]);
 		sv.models[sv.num_models].type = MOD_BRUSH;
 		sv.models[sv.num_models].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS+1+i]);
+		sv.models[sv.num_models].modelindex = sv.num_models;
 
 		sv.num_models++;
 	}
