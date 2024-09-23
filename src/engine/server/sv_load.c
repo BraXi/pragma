@@ -59,14 +59,14 @@ SV_ModelForNum
 Returns svmodel for index
 ================
 */
-svmodel_t* SV_ModelForNum(unsigned int index)
+svmodel_t* SV_ModelForNum(int index)
 {
 	svmodel_t* mod;
 
-	if (index < 0 || index > sv.num_models) 
+	if (index > sv.num_models) 
 	{
-		Com_Error(ERR_DROP, "SV_ModelForNum: index %i out of range [0,%i]\n", index, sv.num_models);
-		return NULL; // silence warning
+		Com_Error(ERR_DROP, "SV_ModelForNum: wrong index %i\n", index);
+		return NULL; 
 	}
 
 	mod = &sv.models[index];
@@ -75,23 +75,38 @@ svmodel_t* SV_ModelForNum(unsigned int index)
 
 /*
 ================
-SV_ModelForName
+SV_ModelIndexForName
 
-Returns svmodel
+returns model index for name
 ================
 */
-svmodel_t* SV_ModelForName(const char *name)
+int SV_ModelIndexForName(const char *name)
 {
-	svmodel_t* model;
-	model = &sv.models[0];
-	for (int i = 0; i < sv.num_models; i++, model++)
+	svmodel_t* mod;
+	int num;
+
+	if (name[0] == '*')
 	{
-		if (!model->name[0] || model->type == MOD_BAD)
-			continue;
-		if (!strcmp(model->name, name))
-			return model;
+		num = atoi(name + 1);
+
+		if (num >= CM_NumInlineModels() || num < 1)
+		{
+			SV_Error("%s: bad inline model %i\n", __FUNCTION__, num);
+		}
+
+		return (0 - num);
 	}
-	return NULL;
+
+	//model = &sv.models[0];
+	for (mod = sv.models, num = 0; num < sv.num_models; num++, mod++)
+	{
+		if (!mod->name[0] || mod->type == MOD_BAD)
+			continue;
+		if (!strcmp(mod->name, name))
+			return mod->modelindex;
+	}
+
+	return 0;
 }
 
 /*
@@ -108,6 +123,11 @@ static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const
 
 	if (!name || !name[0])
 		return 0;
+
+	if (start == CS_MODELS && name[0] == '*')
+	{
+		SV_Error("fix me!");
+	}
 
 	//
 	//  return early if asset has been indexed

@@ -727,22 +727,30 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 
 /*
 ==================
-CM_InlineModel
+CM_InlineModelNum
+Returns the inline model by number
+==================
+*/
+cmodel_t* CM_InlineModelNum(int index)
+{
+	if (index < 1 || index >= map_numInlineModels)
+		Com_Error(ERR_DROP, "CM_InlineModel: bad number %i", index);
 
+	return &map_inlineModels[index];
+}
+
+/*
+==================
+CM_InlineModel
 Returns the inline model by name
 ==================
 */
 cmodel_t* CM_InlineModel(const char* name)
 {
-	int		num;
-
 	if (!name || name[0] != '*')
 		Com_Error(ERR_DROP, "CM_InlineModel: bad name");
-	num = atoi(name + 1);
-	if (num < 1 || num >= map_numInlineModels)
-		Com_Error(ERR_DROP, "CM_InlineModel: bad number %i, (numcmodels=%i)", num, map_numInlineModels);
 
-	return &map_inlineModels[num];
+	return CM_InlineModelNum(atoi(name + 1));
 }
 
 /*

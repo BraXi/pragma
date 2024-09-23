@@ -725,17 +725,19 @@ typedef struct
 
 /*
 ================
-SV_EntityHasInlineModel
+SV_IsBrushModel
 ================
 */
-static qboolean SV_EntityHasInlineModel(gentity_t* ent)
+static qboolean SV_IsBrushModel(int modelindex)
 {
-	// note: modelindex is offset by one in server code thats why I do <= check
-	// in SV 1 is world, 2 is first "brush model", etc.. but in CM 0 is world and brush models follow
-	if ((int)ent->v.modelindex <= CM_NumInlineModels() && (int)ent->v.modelindex > 0)
-		return true;
-	return false;	
+	if (modelindex == 1)
+		return true; // world
+
+	if (modelindex < 0 && modelindex >= (0 - CM_NumInlineModels()))
+		return true; // bmodels are negative
+	return false;
 }
+
 
 /*
 ================
@@ -756,16 +758,17 @@ int SV_HullForEntity(gentity_t* ent)
 	cmodel_t* model;
 
 	// decide which clipping hull to use
-	if (!SV_EntityHasInlineModel(ent) && ent->v.solid == SOLID_BSP)
+	if (!SV_IsBrushModel((int)ent->v.modelindex) && ent->v.solid == SOLID_BSP)
 	{
 		Scr_RunError("entity %s (%i) at [%i %i %i] has SOLID_BSP set but doesn't use inline model\n", Scr_GetString(ent->v.classname),
 			NUM_FOR_EDICT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 		return -1;
 	}
 
-	if (SV_EntityHasInlineModel(ent) && (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER))
+	if (SV_IsBrushModel((int)ent->v.modelindex) && (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER))
 	{
-		model = sv.models[(int)ent->v.modelindex].bmodel;
+		model = CM_InlineModelNum( 0 - ent->v.modelindex );
+		//model = sv.models[(int)ent->v.modelindex].bmodel;
 		if (!model)
 		{
 			Scr_RunError("entity %s (%i) at [%i %i %i] has no bsp model - this should never happen!\n", Scr_GetString(ent->v.classname),

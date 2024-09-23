@@ -95,8 +95,9 @@ typedef struct
 
 	char				mapname[MAX_QPATH];		// BSP map name, or cinematic name
 
-	svmodel_t			models[MAX_MODELS];		// md3, smdl, brushmodels
+	svmodel_t			models[MAX_MODELS];		// md3, smdl
 	int					num_models;
+	int					numBrushModels;
 
 	qboolean			qcvm_active;
 	sv_globalvars_t*	script_globals;			// qcvm globals
@@ -274,8 +275,8 @@ int SV_ModelIndex(const char* name);
 int SV_SoundIndex(const char* name);
 int SV_ImageIndex(const char* name);
 void SV_FreeModels();
-svmodel_t* SV_ModelForNum(unsigned int index);
-svmodel_t* SV_ModelForName(const char *name);
+svmodel_t* SV_ModelForNum(int index);
+int SV_ModelIndexForName(const char *name);
 int SV_ModelSurfIndexForName(int modelindex, const char* surfaceName);
 int SV_TagIndexForName(int modelindex, const char* tagName);
 orientation_t* SV_GetTag(int modelindex, int frame, const char* tagName);
