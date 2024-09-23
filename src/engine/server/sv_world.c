@@ -725,22 +725,6 @@ typedef struct
 
 /*
 ================
-SV_IsBrushModel
-================
-*/
-static qboolean SV_IsBrushModel(int modelindex)
-{
-	if (modelindex == 1)
-		return true; // world
-
-	if (modelindex < 0 && modelindex >= (0 - CM_NumInlineModels()))
-		return true; // bmodels are negative
-	return false;
-}
-
-
-/*
-================
 SV_HullForEntity
 
 Returns a headnode that can be used for testing or clipping an object of mins/maxs size.

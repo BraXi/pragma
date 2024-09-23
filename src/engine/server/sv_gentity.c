@@ -462,13 +462,6 @@ void SV_AttachModel(gentity_t *self, const char* tagname, const char *model)
 		return;
 	}
 
-	// FIXME: BMODELS-LOVE
-	//if (svmod->numTags == 0)
-	//{
-	//	Com_DPrintf(DP_GAME, "WARNING: entity %s has model without tags\n", Scr_GetString(self->v.classname));
-	//	return;
-	//}
-
 	modindex = SV_ModelIndexForName(model);
 	if (modindex == 0)
 	{
@@ -476,7 +469,7 @@ void SV_AttachModel(gentity_t *self, const char* tagname, const char *model)
 		return;
 	}
 
-	if(modindex < 0) //if (svmod->type == MOD_BRUSH)
+	if(SV_IsBrushModel(modindex))
 	{
 		Com_Error(ERR_DROP, "Can not attach brushmodels!\n");
 		return;

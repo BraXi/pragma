@@ -226,16 +226,19 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	//
 	// initialize server models, sv.models[1] is BSP, other models follow, inline models are addressed with negative indexes and are not part of model list
 	//
-	sv.models[0].type = MOD_BAD;
-	strcpy(sv.models[0].name, "none");
+	strcpy(sv.models[MODELINDEX_BAD].name, "none");
+	sv.models[MODELINDEX_BAD].type = MOD_BAD;
+	sv.models[MODELINDEX_BAD].modelindex = 0;
 
 	sv.models[MODELINDEX_WORLD].type = MOD_BRUSH;
 	sv.models[MODELINDEX_WORLD].modelindex = 1;
-	sv.num_models = 2; // because modelindex 0 is no model
+
+	sv.numModels = 2; // because modelindex 0 is no model
 
 	if (serverstate != ss_game)
 	{
 		// no real map -- cinematic server
+		SV_SetConfigString(CS_MODELS + 1, "");
 		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap ("", false, &checksum_map);	
 	}
 	else
@@ -251,12 +254,12 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	{
 		SV_SetConfigString((CS_MODELS + 1 + i), va("*%i", i));
 
-		strcpy(sv.models[sv.num_models].name, sv.configstrings[CS_MODELS + 1 + i]);
-		sv.models[sv.num_models].type = MOD_BRUSH;
-		sv.models[sv.num_models].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS + 1 + i]);
-		sv.models[sv.num_models].modelindex = sv.num_models;
+		strcpy(sv.models[sv.numModels].name, sv.configstrings[CS_MODELS + 1 + i]);
+		sv.models[sv.numModels].type = MOD_BRUSH;
+		sv.models[sv.numModels].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS + 1 + i]);
+		sv.models[sv.numModels].modelindex = sv.numModels;
 
-		sv.num_models++;
+		sv.numModels++;
 	}
 #endif
 

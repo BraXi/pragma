@@ -10,6 +10,10 @@ See the attached GNU General Public License v2 for more details.
 
 // server.h
 
+#ifndef _PRAGMA_SERVER_H_
+#define _PRAGMA_SERVER_H_
+
+#pragma once
 
 //define	PARANOID			// speed sapping error checking
 
@@ -19,6 +23,7 @@ See the attached GNU General Public License v2 for more details.
 
 //=============================================================================
 
+#define MODELINDEX_BAD 0
 #define MODELINDEX_WORLD 1
 
 
@@ -96,7 +101,7 @@ typedef struct
 	char				mapname[MAX_QPATH];		// BSP map name, or cinematic name
 
 	svmodel_t			models[MAX_MODELS];		// md3, smdl
-	int					num_models;
+	int					numModels;
 	int					numBrushModels;
 
 	qboolean			qcvm_active;
@@ -277,6 +282,8 @@ int SV_ImageIndex(const char* name);
 void SV_FreeModels();
 svmodel_t* SV_ModelForNum(int index);
 int SV_ModelIndexForName(const char *name);
+qboolean SV_IsBrushModel(int modelindex);
+
 int SV_ModelSurfIndexForName(int modelindex, const char* surfaceName);
 int SV_TagIndexForName(int modelindex, const char* tagName);
 orientation_t* SV_GetTag(int modelindex, int frame, const char* tagName);
@@ -426,3 +433,4 @@ trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *
 
 // passedict is explicitly excluded from clipping checks (normally NULL)
 
+#endif /*_PRAGMA_SERVER_H_*/
