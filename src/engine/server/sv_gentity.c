@@ -681,3 +681,90 @@ qboolean SV_EntityCanBeDrawn(gentity_t* self)
 
 	return true; // visible
 }
+
+
+/*
+=================
+SV_SetEntityModel
+=================
+*/
+void SV_SetEntityModel(gentity_t *ent, const char *modelName)
+{
+	int modIndex;
+
+	if (!modelName || !modelName[0])
+	{
+		SV_Error("Empty model name.\n");
+		return;
+	}
+
+	if (modelName[0] == '*')
+	{
+		SV_Error("%s for inline model on entity %i\n", __FUNCTION__, NUM_FOR_EDICT(ent));
+		return;
+	}
+
+	modIndex = SV_ModelIndex(modelName);
+	if (modIndex == (int)ent->v.modelindex)
+		return;
+
+	// make all surfaces visible when model change
+	SV_ShowEntitySurface(ent, NULL);
+	SV_DetachAllModels(ent);
+
+	ent->v.model = Scr_SetString(modelName);
+	ent->v.modelindex = modIndex;
+
+	if (ent->v.solid == SOLID_BSP)
+	{
+		// keep this as error
+		SV_Error("%s set model on a SOLID_BSP entity %i\n", __FUNCTION__, NUM_FOR_EDICT(ent));
+
+		//Com_Printf("%s set external model on a SOLID_BSP entity %i, solidity changed to SOLID_NOT.\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
+		//ent->v.solid = SOLID_NOT;
+		//SV_LinkEdict(ent);
+	}
+}
+
+
+
+/*
+=================
+SV_SetEntityBrushModel
+=================
+*/
+void SV_SetEntityBrushModel(gentity_t* ent, const char* modelName)
+{
+	svmodel_t* mod;
+
+	if (!modelName || !modelName[0])
+	{
+		SV_Error("Empty brush model name.\n");
+		return;
+	}
+
+	mod = SV_ModelForName(modelName);
+	if (modelName[0] != '*' || mod->type != MOD_BRUSH || mod->bmodel == NULL)
+	{
+		SV_Error("%s with non brush model on entity %i\n", __FUNCTION__, NUM_FOR_EDICT(ent));
+		return;
+	}
+
+	if (mod->modelindex == (int)ent->v.modelindex)
+		return;
+
+	SV_ShowEntitySurface(ent, NULL);
+	SV_DetachAllModels(ent); // inline models have no tags anyway
+
+	ent->v.model = Scr_SetString(modelName);
+	ent->v.modelindex = mod->modelindex;
+
+	// inline models should always have their YAW set properly
+	if (ent->v.angles[YAW] == 0.0f)
+		ent->v.angles[YAW] = 360.0f;
+
+	// update mins and maxs and relink
+	VectorCopy(mod->bmodel->mins, ent->v.mins);
+	VectorCopy(mod->bmodel->maxs, ent->v.maxs);
+	SV_LinkEdict(ent);
+}

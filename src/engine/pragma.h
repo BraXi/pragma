@@ -303,6 +303,8 @@ void SV_Init (void);
 void SV_Shutdown (char *finalmsg, qboolean reconnect);
 void SV_Frame (int msec);
 
+void SV_Error(const char* error_str, ...);
+
 qboolean Com_IsServerActive();
 
 #ifndef DEDICATED_ONLY
