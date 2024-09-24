@@ -35,10 +35,6 @@ See the attached GNU General Public License v2 for more details.
 // Include new GUI system
 #define NEW_GUI 1
 
-// net protocol will use floats for coordinates instead of shorts, this applies to pmove too
-// this also fixes some of pmove issues like dragging players motion towards 0,0,0 and higher jumps
-// all entities can move beyond +/- 4096qu boundary, 
-#define PROTOCOL_FLOAT_COORDS 1
 
 // See protocol.h for MORE!
 

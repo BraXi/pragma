@@ -95,24 +95,14 @@ void MSG_WriteString(sizebuf_t* sb, const char* s)
 
 void MSG_WriteCoord(sizebuf_t* sb, float f)
 {
-#if PROTOCOL_FLOAT_COORDS == 1
 	MSG_WriteFloat(sb, f);
-#else
-	MSG_WriteShort(sb, (int)(f * 8));
-#endif
 }
 
 void MSG_WritePos(sizebuf_t* sb, vec3_t pos)
 {
-#if PROTOCOL_FLOAT_COORDS == 1
 	MSG_WriteFloat(sb, pos[0]);
 	MSG_WriteFloat(sb, pos[1]);
 	MSG_WriteFloat(sb, pos[2]);
-#else
-	MSG_WriteShort(sb, (int)(pos[0] * 8));
-	MSG_WriteShort(sb, (int)(pos[1] * 8));
-	MSG_WriteShort(sb, (int)(pos[2] * 8));
-#endif
 }
 
 void MSG_WriteAngle(sizebuf_t* sb, float f)
@@ -298,24 +288,14 @@ char* MSG_ReadStringLine(sizebuf_t* msg_read)
 
 float MSG_ReadCoord(sizebuf_t* msg_read)
 {
-#if PROTOCOL_FLOAT_COORDS == 1
 	return MSG_ReadFloat(msg_read);
-#else
-	return MSG_ReadShort(msg_read) * (1.0 / 8);
-#endif
 }
 
 void MSG_ReadPos(sizebuf_t* msg_read, vec3_t pos)
 {
-#if PROTOCOL_FLOAT_COORDS == 1
 	pos[0] = MSG_ReadFloat(msg_read);
 	pos[1] = MSG_ReadFloat(msg_read);
 	pos[2] = MSG_ReadFloat(msg_read);
-#else
-	pos[0] = MSG_ReadShort(msg_read) * (1.0 / 8);
-	pos[1] = MSG_ReadShort(msg_read) * (1.0 / 8);
-	pos[2] = MSG_ReadShort(msg_read) * (1.0 / 8);
-#endif
 }
 
 float MSG_ReadAngle(sizebuf_t* msg_read)
