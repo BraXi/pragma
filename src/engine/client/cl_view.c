@@ -327,7 +327,7 @@ void CL_SetSkyFromConfigstring(void)
 CL_LoadModelAtIndex
 =================
 */
-void CL_LoadModelAtIndex(const char* name, int index)
+static void CL_LoadModelAtIndex(const char* name, int index)
 {
 	cl.model_draw[index] = re.RegisterModel(name);
 
@@ -377,13 +377,22 @@ void CL_PrepRefresh (void)
 	CG_RegisterMedia ();
 
 
+	SCR_UpdateScreen();
+
 	// load models referenced by server
 	for (i = 1; i < MAX_MODELS && cl.configstrings[CS_MODELS+i][0]; i++)
 	{
-		SCR_UpdateScreen ();
+		//SCR_UpdateScreen ();
 		Sys_SendKeyEvents ();	// pump message loop
 		CL_LoadModelAtIndex(cl.configstrings[CS_MODELS + i], i);
+
+		if (i % 4 == 0)
+		{
+			SCR_UpdateScreen(); // less waiting for vsync, faster load times, win.
+		}
 	}
+
+	SCR_UpdateScreen();
 
 	// load inline models
 	for (i = 1; i < CM_NumInlineModels(); i++)
@@ -391,6 +400,8 @@ void CL_PrepRefresh (void)
 		cl.inlinemodel_draw[i] = re.RegisterModel(va("*%i", i));
 		cl.inlinemodel_clip[i] = CM_InlineModel(va("*%i", i));
 	}
+
+	SCR_UpdateScreen();
 
 	Com_Printf ("images\r", i); 
 	SCR_UpdateScreen ();

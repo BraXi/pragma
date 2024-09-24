@@ -288,7 +288,8 @@ void CL_ParseStartSoundPacket(void)
 	}
 
 	if (flags & SND_POS)
-	{	// positioned in space
+	{	
+		// positioned in space
 		MSG_ReadPos (&net_message, pos_v);
  
 		pos = pos_v;
@@ -662,7 +663,7 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	// looping sound
 	if (bits & U_LOOPSOUND)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
+#ifdef PROTO_SHORT_INDEXES
 		to->loopingSound = MSG_ReadShort(&net_message);
 #else
 		to->loopingSound = MSG_ReadByte(&net_message);

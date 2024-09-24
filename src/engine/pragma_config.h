@@ -12,10 +12,10 @@ See the attached GNU General Public License v2 for more details.
 // MAIN CONFIGURATION FILE FOR ENGINE
 //
 
-#pragma once
-
 #ifndef PRAGMA_CONFIG_INCLUDED 
 #define PRAGMA_CONFIG_INCLUDED 1
+
+#pragma once
 
 // what renderer DLL to use by default
 #define DEFAULT_RENDERER "gl2"
@@ -48,12 +48,12 @@ See the attached GNU General Public License v2 for more details.
 #define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
 
 
-#define	MAX_MODELS			512		// number of models (excluding inline models)
+#define	MAX_MODELS			512		// number of models (excluding inline models), always short
 #define	MAX_SOUNDS			512
 #define	MAX_IMAGES			256
 
-#if (MAX_SOUNDS > 256 || MAX_IMAGES > 256)
-#define PROTOCOL_EXTENDED_ASSETS 1
+#if (MAX_SOUNDS > 256)
+#define PROTO_SHORT_INDEXES 1
 #endif
 
 
