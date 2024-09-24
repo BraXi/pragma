@@ -26,7 +26,7 @@ static int CG_HullForEntity(entity_state_t* ent)
 	if (ent->packedSolid == PACKED_BSP)
 	{
 		// explicit hulls in the BSP model
-		model = cl.model_clip[ent->modelindex];
+		model = CL_GetClipModel(ent->modelindex);
 		if (!model)
 		{
 			Com_Error(ERR_DROP, "CG_HullForEntity: non BSP model for entity %i\n", ent->number);
@@ -36,11 +36,7 @@ static int CG_HullForEntity(entity_state_t* ent)
 	}
 
 	// extract bbox size
-#if PROTOCOL_FLOAT_COORDS == 1
 	MSG_UnpackSolid32(ent->packedSolid, bmins, bmaxs);
-#else
-	MSG_UnpackSolid16(ent->packedSolid, bmins, bmaxs);
-#endif
 
 	// create a temp hull from bounding box sizes
 	return CM_HeadnodeForBox(bmins, bmaxs);
@@ -153,7 +149,7 @@ int	CG_PointContents(vec3_t point)
 		if (ent->packedSolid != PACKED_BSP) // special value for bmodel
 			continue;
 
-		cmodel = cl.model_clip[(int)ent->modelindex];
+		cmodel = CL_GetClipModel((int)ent->modelindex);
 		if (!cmodel)
 			continue;
 

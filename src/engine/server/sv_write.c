@@ -235,24 +235,14 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	if (pflags & PS_M_ORIGIN)
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		for (i = 0; i < 3; i++)
 			MSG_WriteFloat(msg, ps->pmove.origin[i]);
-#else
-		for (i = 0; i < 3; i++)
-			MSG_WriteShort(msg, ps->pmove.origin[i]);
-#endif
 	}
 
 	if (pflags & PS_M_VELOCITY)
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		for (i = 0; i < 3; i++)
 			MSG_WriteFloat(msg, ps->pmove.velocity[i]);
-#else
-		for (i = 0; i < 3; i++)
-			MSG_WriteShort(msg, ps->pmove.velocity[i]);
-#endif
 	}
 
 	if (pflags & PS_M_TIME)
@@ -318,13 +308,8 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	if (pflags & PS_VIEWMODEL_INDEX)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		MSG_WriteShort(msg, ps->viewmodel[0]);
 		MSG_WriteShort(msg, ps->viewmodel[1]);
-#else
-		MSG_WriteByte(msg, ps->viewmodel[0]);
-		MSG_WriteByte(msg, ps->viewmodel[1]);
-#endif
 	}
 
 	if (pflags & PS_VIEWMODEL_PARAMS)
@@ -549,13 +534,8 @@ void SV_BuildClientFrame (client_t *client)
 	frame->senttime = svs.realtime; // save time for ping calculation later on
 
 	// find the client's PVS
-#if PROTOCOL_FLOAT_COORDS == 1
 	for (i = 0; i < 3; i++)
 		org[i] = clent->client->ps.pmove.origin[i] + clent->client->ps.viewoffset[i];
-#else
-	for (i = 0; i < 3; i++)
-		org[i] = clent->client->ps.pmove.origin[i] * 0.125 + clent->client->ps.viewoffset[i];
-#endif
 
 	leafnum = CM_PointLeafnum (org);
 	clientarea = CM_LeafArea (leafnum);
@@ -636,7 +616,7 @@ void SV_BuildClientFrame (client_t *client)
 		//
 		// ignore ents without visible models unless they have an effect, looping sound or event
 		//
-		//if (!ent->s.modelindex && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)	
+		//if (ent->s.modelindex == 0 && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)	
 		if (!SV_EntityCanBeDrawn(ent) && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)
 		{
 			SV_RestoreEntityStateAfterClient(ent);
@@ -704,7 +684,7 @@ void SV_BuildClientFrame (client_t *client)
 						}
 					}
 
-					if (!ent->s.modelindex)
+					if (ent->s.modelindex == 0)
 					{	// don't send sounds if they will be attenuated away
 						vec3_t	delta;
 						float	len;
@@ -777,7 +757,7 @@ void SV_RecordDemoMessage (void)
 		// ignore ents without visible models unless they have an effect
 		if (ent->inuse &&
 			ent->s.number && 
-			(ent->s.modelindex || ent->s.effects || ent->s.loopingSound || ent->s.event) && 
+			((int)ent->s.modelindex != 0 || ent->s.effects || ent->s.loopingSound || ent->s.event) && 
 			!((int)ent->v.svflags & SVF_NOCLIENT))
 			MSG_WriteDeltaEntity (&nostate, &ent->s, &buf, false, true);
 

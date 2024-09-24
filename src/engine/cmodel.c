@@ -673,7 +673,8 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 	length = FS_LoadFile (name, (void **)&buf);
 	if (!buf)
 	{
-		Com_Error(ERR_DROP, "Couldn't load BSP %s", name);
+		Com_Error(ERR_DROP, "Could not load BSP %s\n", name);
+		return NULL; //msvc
 	}
 
 	last_checksum = LittleLong (Com_BlockChecksum (buf, length));
@@ -727,22 +728,30 @@ cmodel_t *CM_LoadMap(char *name, qboolean clientload, unsigned *checksum)
 
 /*
 ==================
-CM_InlineModel
+CM_InlineModelNum
+Returns the inline model by number
+==================
+*/
+cmodel_t* CM_InlineModelNum(int index)
+{
+	if (index < 1 || index >= map_numInlineModels)
+		Com_Error(ERR_DROP, "CM_InlineModel: bad number %i", index);
 
+	return &map_inlineModels[index];
+}
+
+/*
+==================
+CM_InlineModel
 Returns the inline model by name
 ==================
 */
 cmodel_t* CM_InlineModel(const char* name)
 {
-	int		num;
-
 	if (!name || name[0] != '*')
 		Com_Error(ERR_DROP, "CM_InlineModel: bad name");
-	num = atoi(name + 1);
-	if (num < 1 || num >= map_numInlineModels)
-		Com_Error(ERR_DROP, "CM_InlineModel: bad number %i, (numcmodels=%i)", num, map_numInlineModels);
 
-	return &map_inlineModels[num];
+	return CM_InlineModelNum(atoi(name + 1));
 }
 
 /*
@@ -846,12 +855,13 @@ static void CM_InitBoxHull()
 {
 	int			i;
 	int			side;
-	cnode_t		*c;
-	cplane_t	*p;
-	cbrushside_t	*s;
+	cnode_t		*node;
+	cplane_t	*plane;
+	cbrushside_t	*brushSide;
 
 	box_headnode = map_numNodes;
 	box_planes = &map_planes[map_numPlanes];
+
 	if (map_numNodes + 6 > GetBSPLimit(BSP_NODES)
 		|| map_numBrushes + 1 > GetBSPLimit(BSP_BRUSHES)
 		|| map_numLeafBrushes + 1 > GetBSPLimit(BSP_LEAFBRUSHES)
@@ -876,31 +886,31 @@ static void CM_InitBoxHull()
 		side = i&1;
 
 		// brush sides
-		s = &map_brushSides[map_numBrushSides+i];
-		s->plane = map_planes + (map_numPlanes+i*2+side);
-		s->surface = &nullsurface;
+		brushSide = &map_brushSides[map_numBrushSides+i];
+		brushSide->plane = map_planes + (map_numPlanes+i*2+side);
+		brushSide->surface = &nullsurface;
 
 		// nodes
-		c = &map_nodes[box_headnode+i];
-		c->plane = map_planes + (map_numPlanes+i*2);
-		c->children[side] = -1 - emptyleaf;
+		node = &map_nodes[box_headnode+i];
+		node->plane = map_planes + (map_numPlanes+i*2);
+		node->children[side] = -1 - emptyleaf;
 		if (i != 5)
-			c->children[side^1] = box_headnode+i + 1;
+			node->children[side^1] = box_headnode+i + 1;
 		else
-			c->children[side^1] = -1 - map_numLeafs;
+			node->children[side^1] = -1 - map_numLeafs;
 
 		// planes
-		p = &box_planes[i*2];
-		p->type = i>>1;
-		p->signbits = 0;
-		VectorClear (p->normal);
-		p->normal[i>>1] = 1;
+		plane = &box_planes[i*2];
+		plane->type = i>>1;
+		plane->signbits = 0;
+		VectorClear (plane->normal);
+		plane->normal[i>>1] = 1;
 
-		p = &box_planes[i*2+1];
-		p->type = 3 + (i>>1);
-		p->signbits = 0;
-		VectorClear (p->normal);
-		p->normal[i>>1] = -1;
+		plane = &box_planes[i*2+1];
+		plane->type = 3 + (i>>1);
+		plane->signbits = 0;
+		VectorClear (plane->normal);
+		plane->normal[i>>1] = -1;
 	}	
 }
 
@@ -937,15 +947,15 @@ int	CM_HeadnodeForBox(vec3_t mins, vec3_t maxs)
 CM_PointLeafnum_r
 ==================
 */
-static int CM_PointLeafnum_r(vec3_t p, int num)
+static int CM_PointLeafnum_r(vec3_t p, int nodenum)
 {
 	float		d;
 	cnode_t		*node;
 	cplane_t	*plane;
 
-	while (num >= 0)
+	while (nodenum >= 0)
 	{
-		node = map_nodes + num;
+		node = map_nodes + nodenum;
 		plane = node->plane;
 		
 		if (plane->type < 3)
@@ -953,14 +963,14 @@ static int CM_PointLeafnum_r(vec3_t p, int num)
 		else
 			d = DotProduct (plane->normal, p) - plane->dist;
 		if (d < 0)
-			num = node->children[1];
+			nodenum = node->children[1];
 		else
-			num = node->children[0];
+			nodenum = node->children[0];
 	}
 
 	c_pointcontents++;		// optimize counter
 
-	return -1 - num;
+	return -1 - nodenum;
 }
 
 /*
@@ -1088,7 +1098,7 @@ CM_TransformedPointContents
 Handles offseting and rotation of the end points for moving and rotating entities
 ==================
 */
-int	CM_TransformedPointContents(vec3_t p, int headnode, vec3_t origin, vec3_t angles)
+int CM_TransformedPointContents(vec3_t p, int headnode, vec3_t origin, vec3_t angles)
 {
 	vec3_t		p_l;
 	vec3_t		temp;
@@ -1098,9 +1108,9 @@ int	CM_TransformedPointContents(vec3_t p, int headnode, vec3_t origin, vec3_t an
 	// subtract origin offset
 	VectorSubtract (p, origin, p_l);
 
-	// rotate start and end into the models frame of reference
-	if (headnode != box_headnode && 
-	(angles[0] || angles[1] || angles[2]) )
+	// rotate start and end into the models frame of reference unless its entity
+	//if (headnode != box_headnode && (angles[0] || angles[1] || angles[2]))
+	if (headnode != box_headnode && !VectorCompare(angles, vec3_origin))
 	{
 		AngleVectors (angles, forward, right, up);
 

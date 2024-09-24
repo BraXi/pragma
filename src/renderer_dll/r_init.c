@@ -441,6 +441,13 @@ refexport_t GetRefAPI(refimport_t rimp)
 
 	re.api_version = API_VERSION;
 
+	re.rentity_size = sizeof(rentity_t);
+	re.dlight_size = sizeof(dlight_t);
+	re.particle_size = sizeof(particle_t);
+	re.lightstyle_size = sizeof(lightstyle_t);
+	re.decal_size = sizeof(decal_t);
+	re.refdef_size = sizeof(refdef_t);
+
 	re.Init = R_Init;
 	re.Shutdown = R_Shutdown;
 

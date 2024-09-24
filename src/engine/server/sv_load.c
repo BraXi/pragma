@@ -27,6 +27,18 @@ Find model index, load model if not present.
 */
 int SV_ModelIndex(const char* name)
 {
+	int bmodelnum;
+
+	if (!name)
+		return 0;
+
+	// handle inline models explictly
+	if (name[0] == '*' && strlen(name) >= 2)
+	{
+		bmodelnum = atoi(name + 1);
+		return (0 - bmodelnum);
+	}
+
 	return SV_FindOrCreateAssetIndex(name, CS_MODELS, MAX_MODELS, __FUNCTION__);
 }
 
@@ -55,43 +67,79 @@ int SV_ImageIndex(const char* name)
 /*
 ================
 SV_ModelForNum
-
-Returns svmodel for index
+Returns server model for given index
+Brush models will default to the NOMODEL
 ================
 */
-svmodel_t* SV_ModelForNum(unsigned int index)
+svmodel_t* SV_ModelForNum(int index)
 {
 	svmodel_t* mod;
 
-	if (index < 0 || index > sv.num_models) 
+	if (SV_IsBrushModel(index))
 	{
-		Com_Error(ERR_DROP, "SV_ModelForNum: index %i out of range [0,%i]\n", index, sv.num_models);
-		return NULL; // silence warning
+		return &sv.models[0];
 	}
 
+	if (index > sv.numModels || index < 0) 
+	{
+		Com_Error(ERR_DROP, "SV_ModelForNum: wrong index %i\n", index);
+		return NULL; 
+	}
 	mod = &sv.models[index];
+
 	return mod;
 }
 
 /*
 ================
-SV_ModelForName
+SV_ModelIndexForName
 
-Returns svmodel
+returns model index for name
 ================
 */
-svmodel_t* SV_ModelForName(const char *name)
+int SV_ModelIndexForName(const char *name)
 {
-	svmodel_t* model;
-	model = &sv.models[0];
-	for (int i = 0; i < sv.num_models; i++, model++)
+	svmodel_t* mod;
+	int num;
+
+	if (name[0] == '*')
 	{
-		if (!model->name[0] || model->type == MOD_BAD)
-			continue;
-		if (!strcmp(model->name, name))
-			return model;
+		num = atoi(name + 1);
+
+		if (num >= CM_NumInlineModels() || num < 1)
+		{
+			SV_Error("%s: bad inline model %i\n", __FUNCTION__, num);
+		}
+
+		return (0 - num);
 	}
-	return NULL;
+
+	//model = &sv.models[0];
+	for (mod = sv.models, num = 0; num < sv.numModels; num++, mod++)
+	{
+		if (!mod->name[0] || mod->type == MOD_BAD)
+			continue;
+		if (!strcmp(mod->name, name))
+			return mod->modelindex;
+	}
+
+	return 0;
+}
+
+/*
+================
+SV_IsBrushModel
+================
+*/
+qboolean SV_IsBrushModel(int modelindex)
+{
+	if (modelindex == MODELINDEX_WORLD)
+		return true; // world
+
+	if (modelindex < 0 && modelindex >= (0 - CM_NumInlineModels()))
+		return true; // bmodels are indexed negative
+
+	return false;
 }
 
 /*
@@ -109,6 +157,11 @@ static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const
 	if (!name || !name[0])
 		return 0;
 
+	if (start == CS_MODELS && name[0] == '*')
+	{
+		SV_Error("Asset index for inline model!");
+	}
+
 	//
 	//  return early if asset has been indexed
 	//
@@ -120,13 +173,13 @@ static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const
 	// load asset
 	//
 	if (index == max)
-		Com_Error(ERR_DROP, "hit limit of %i assets (%s)", max, func);
+		SV_Error("Hit limit of %i assets (%s)", max, func);
 
 	//warn of late precaches or crash depending on sv_nolateloading
 	if (sv.state == ss_game)
 	{
 		if (sv_nolateloading->value > 0)
-			Com_Error(ERR_DROP, "%s: '%s' must be precached first (%s)\n", name, func);
+			SV_Error("Precache '%s' too late.\n", name);
 		else
 			Com_Printf("WARNING: '%s' not precached (%s)\n", name, func);
 	}
@@ -151,18 +204,8 @@ static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const
 			return 0;
 	}
 	
-	// update configstring
-
-	strncpy(sv.configstrings[start + index], name, sizeof(sv.configstrings[index]));
-
-	if (sv.state != ss_loading)
-	{	// send the update to everyone
-		SZ_Clear(&sv.multicast);
-		MSG_WriteChar(&sv.multicast, SVC_CONFIGSTRING);
-		MSG_WriteShort(&sv.multicast, start + index);
-		MSG_WriteString(&sv.multicast, name);
-		SV_Multicast(vec3_origin, MULTICAST_ALL_R);
-	}
+	// update configstring and send updates if necessary
+	SV_SetConfigString(start + index, name);
 
 	return index;
 }
@@ -254,8 +297,8 @@ void SV_FreeModels()
 {
 	svmodel_t* mod;
 
-	if(sv.num_models)
-		Com_Printf("Freeing %i models (server)...\n", sv.num_models);
+	if(sv.numModels)
+		Com_Printf("Freeing %i models (server)...\n", sv.numModels);
 
 	for (int i = 0; i < MAX_MODELS; i++)
 	{
@@ -266,7 +309,7 @@ void SV_FreeModels()
 		}
 		memset(&sv.models[i], 0, sizeof(svmodel_t));
 	}
-	sv.num_models = 0;
+	sv.numModels = 0;
 }
 
 
@@ -289,7 +332,7 @@ static svmodel_t* SV_LoadModel(const char* name, qboolean crash)
 		return NULL;
 	}
 
-	if (sv.num_models == MAX_MODELS)
+	if (sv.numModels == MAX_MODELS)
 	{
 		Com_Error(ERR_DROP, "SV_LoadModel: hit limit of %d models", MAX_MODELS);
 		return NULL; // shut up compiler
@@ -312,8 +355,8 @@ static svmodel_t* SV_LoadModel(const char* name, qboolean crash)
 //		if (model->type == MOD_BAD || !model->name[0])
 //			break;	// free spot
 //	}
-	model = &sv.models[sv.num_models];
-	model->modelindex = sv.num_models;
+	model = &sv.models[sv.numModels];
+	model->modelindex = sv.numModels;
 	
 	//
 	// load the file
@@ -347,13 +390,13 @@ static svmodel_t* SV_LoadModel(const char* name, qboolean crash)
 
 	if (model->type == MOD_BAD)
 	{
-		Com_Error(ERR_DROP, "'%s' is missing or bad", model->name);
+		Com_Error(ERR_DROP, "Could not precache model '%s'\n", model->name);
 		return NULL;
 	}
 
 
 	SV_LoadDefForModel(model);
-	sv.num_models++;
+	sv.numModels++;
 	return model;
 }
 
@@ -508,7 +551,10 @@ int SV_ModelSurfIndexForName(int modelindex, const char* surfaceName)
 	if (mod->type == MOD_ALIAS)
 	{
 		if (mod->alias == NULL)
+		{
 			Com_Error(ERR_DROP, "%s: wrong alias model\n", __FUNCTION__);
+			return -1; //msvc
+		}
 		
 		for (index = 0; index < mod->numSurfaces; index++)
 		{
@@ -545,15 +591,14 @@ int SV_TagIndexForName(int modelindex, const char* tagName)
 		return -1; //doesn't get here
 	}
 
-	if (mod->type == MOD_NEWFORMAT)
+
+	if (mod->type == MOD_ALIAS)
 	{
-		Com_Printf("%s: unimplemented model format\n", __FUNCTION__);
-		return -1;
-	}
-	else if (mod->type == MOD_ALIAS)
-	{
-		if(mod->alias == NULL)
+		if (mod->alias == NULL)
+		{
 			Com_Error(ERR_DROP, "%s: MD3 but mod->mesh is NULL\n", __FUNCTION__);
+			return -1; // msvc
+		}
 	
 		int frame = 0; // will I ever need this here? probably no.
 		orientation_t* tagdata = (orientation_t*)((byte*)mod->alias->tagFrames) + (frame * mod->numTags);
@@ -564,6 +609,11 @@ int SV_TagIndexForName(int modelindex, const char* tagName)
 				return index; // found it
 			}
 		}
+	}
+	else
+	{
+		Com_Printf("%s: unimplemented model format\n", __FUNCTION__);
+		return -1;
 	}
 	return -1;
 }
@@ -601,7 +651,10 @@ orientation_t* SV_GetTag(int modelindex, int frame, const char* tagName)
 	else if (mod->type == MOD_ALIAS)
 	{
 		if (mod->alias == NULL)
+		{
 			Com_Error(ERR_DROP, "%s: MD3 but mod->mesh is NULL\n", __FUNCTION__);
+			return NULL;
+		}
 
 		orientation_t* tagdata;
 		tagdata = (orientation_t*)((byte*)mod->alias->tagFrames) + (frame * mod->numTags);

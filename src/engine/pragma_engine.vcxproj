@@ -214,7 +214,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\build</OutDir>
+    <OutDir>..\..\build\</OutDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <TargetName>pragma</TargetName>
     <IntDir>$(SolutionDir)\_objs\$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>

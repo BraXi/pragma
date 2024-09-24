@@ -348,7 +348,6 @@ void PFSV_setmodel(void)
 {
 	gentity_t* ent;
 	const char* name;
-	int modelindex;
 
 	ent = Scr_GetParmEntity(0);
 	name = Scr_GetParmString(1);
@@ -356,40 +355,9 @@ void PFSV_setmodel(void)
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
 
-	if (!name || !name[0])
-	{
-		Scr_RunError("%s for entity %i with empty model name\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
-		return;
-	}
-
-	if (name[0] == '*')
-	{
-		Scr_RunError("%s tried to set inline model for entity %i\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
-		return;
-	}
-
-	//modelindex = SV_ModelForName(name)->modelindex; 
-	modelindex = SV_ModelIndex(name);
-	if (modelindex == (int)ent->v.modelindex)
-		return;
-
-	// make all surfaces visible when model change
-	SV_ShowEntitySurface(ent, NULL); 
-	SV_DetachAllModels(ent);
-
-	ent->v.model = Scr_SetString(name);
-	ent->v.modelindex = modelindex;
-
-	if (ent->v.solid == SOLID_BSP)
-	{
-		// keep this as error
-		Scr_RunError("%s set external model on a SOLID_BSP entity %i.\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
-
-		//Com_Printf("%s set external model on a SOLID_BSP entity %i, solidity changed to SOLID_NOT.\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
-		//ent->v.solid = SOLID_NOT;
-		//SV_LinkEdict(ent);
-	}
+	SV_SetEntityModel(ent, name);
 }
+
 
 /*
 =================
@@ -404,7 +372,6 @@ void PFSV_setbrushmodel(void)
 {
 	gentity_t* ent;
 	const char* name;
-	svmodel_t* mod;
 
 	ent = Scr_GetParmEntity(0);
 	name = Scr_GetParmString(1);
@@ -412,36 +379,7 @@ void PFSV_setbrushmodel(void)
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
 
-	if (!name || !name[0])
-	{
-		Scr_RunError("%s for entity %i with empty model name\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
-		return;
-	}
-
-	mod = SV_ModelForName(name);
-	if (name[0] != '*' || mod->type != MOD_BRUSH || mod->bmodel == NULL)
-	{
-		Scr_RunError("%s with external model for entity %i\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
-		return;
-	}
-
-	if (mod->modelindex == (int)ent->v.modelindex)
-		return;
-
-	SV_ShowEntitySurface(ent, NULL);
-	SV_DetachAllModels(ent); // inline models have no tags anyway
-
-	ent->v.model = Scr_SetString(name);
-	ent->v.modelindex = mod->modelindex;
-
-	// inline models should always have their YAW set properly
-	if(ent->v.angles[YAW] == 0.0f)
-		ent->v.angles[YAW] = 360.0f;
-
-	// update mins and maxs and relink
-	VectorCopy(mod->bmodel->mins, ent->v.mins);
-	VectorCopy(mod->bmodel->maxs, ent->v.maxs);
-	SV_LinkEdict(ent);
+	SV_SetEntityBrushModel(ent, name);
 }
 
 /*

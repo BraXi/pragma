@@ -163,7 +163,7 @@ void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parent
 	vec3_t			tempAxis[3];
 
 //	Com_Printf("old %i cur %i lerp %f\n", parent->oldframe, parent->frame, 1.0 - parent->animbacklerp);
-	re.LerpTag(&lerped, cl.model_draw[parentModel], parent->oldframe, parent->frame, 1.0 - parent->animbacklerp, tagIndex);
+	re.LerpTag(&lerped, CL_GetDrawModel(parentModel), parent->oldframe, parent->frame, 1.0 - parent->animbacklerp, tagIndex);
 
 	VectorCopy(parent->origin, entity->origin);
 	for (i = 0; i < 3; i++) 
@@ -208,7 +208,7 @@ static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t*
 		AxisClear(attachEnt.axis);
 		PositionRotatedEntityOnTag(&attachEnt, &r, clent->current.modelindex, (attachInfo->parentTag - 1));
 
-		attachEnt.model = cl.model_draw[state->attachments[i].modelindex];
+		attachEnt.model = CL_GetDrawModel(state->attachments[i].modelindex);
 		VectorAngles(attachEnt.axis[0], attachEnt.axis[2], angles);
 		VectorCopy(angles, attachEnt.angles);
 
@@ -313,14 +313,14 @@ void CL_AddPacketEntities(frame_t* frame)
 
 
 		rent.skinnum = state->skinnum;
-		rent.model = cl.model_draw[state->modelindex];
+		rent.model = CL_GetDrawModel(state->modelindex);
 //		rent.renderfx = state->renderFlags; // set later on
 
 
 		//
 		// if entity has no model just skip at this point
 		//
-		if (!state->modelindex)
+		if (state->modelindex == 0)
 			continue;
 
 		//
@@ -388,18 +388,10 @@ void CL_CalcViewValues()
 	ops = &oldframe->playerstate;
 
 	// see if the player entity was teleported this frame
-#if PROTOCOL_FLOAT_COORDS == 1
 	if (fabs((double)(ops->pmove.origin[0] - ps->pmove.origin[0])) > 256.0
 		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256.0
 		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256.0)
 		ops = ps;		// don't interpolate
-#else
-	if (fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256 * 8
-		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256 * 8
-		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256 * 8)
-		ops = ps;		// don't interpolate
-#endif
-
 
 	ent = &cl_entities[cl.playernum+1];
 	lerp = cl.lerpfrac;
@@ -424,14 +416,10 @@ void CL_CalcViewValues()
 			cl.refdef.view.origin[2] -= cl.predicted_step * (float)(SV_FRAMETIME_MSEC - delta) * 0.01f;
 	}
 	else
-	{	// just use interpolated values
-#if PROTOCOL_FLOAT_COORDS == 1
+	{	
+		// just use interpolated values
 		for(i = 0; i < 3; i++)
 			cl.refdef.view.origin[i] = ops->pmove.origin[i] + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] + ps->viewoffset[i] - (ops->pmove.origin[i] + ops->viewoffset[i]));
-#else
-		for(i = 0; i < 3; i++)
-			cl.refdef.vieworigin[i] = ops->pmove.origin[i] * 0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] * 0.125 + ps->viewoffset[i] - (ops->pmove.origin[i] * 0.125 + ops->viewoffset[i]));
-#endif
 	}
 
 

@@ -232,7 +232,6 @@ gentity_t	**area_list;
 int		area_count, area_maxcount;
 int		area_type;
 
-int SV_HullForEntity (gentity_t *ent);
 
 // ClearLink is used for new headnodes
 void ClearLink (link_t *l)
@@ -329,7 +328,6 @@ void SV_UnlinkEdict (gentity_t *ent)
 	ent->area.prev = ent->area.next = NULL;
 }
 
-#if PROTOCOL_FLOAT_COORDS == 1
 static int SV_PackSolid32(gentity_t* ent)
 {
 	// Q2PRO code
@@ -354,47 +352,6 @@ static int SV_PackSolid32(gentity_t* ent)
 
 	return packedsolid;
 }
-#else
-static int SV_PackSolid16(gentity_t* ent)
-{
-	int i, j, k;
-	int packedsolid;
-	// assume that x/y are equal and symetric
-	i = ent->v.maxs[0] / 8;
-	if (i < 1)
-		i = 1;
-	if (i > 31)
-		i = 31;
-
-	// z is not symetric
-	j = (-ent->v.mins[2]) / 8;
-	if (j < 1)
-		j = 1;
-	if (j > 31)
-		j = 31;
-
-	// and z maxs can be negative...
-	k = (ent->v.maxs[2] + 32) / 8;
-	if (k < 1)
-		k = 1;
-	if (k > 63)
-		k = 63;
-
-	packedsolid = (k << 10) | (j << 5) | i;
-
-	if (developer->value)
-	{
-		vec3_t mins, maxs;
-
-		MSG_UnpackSolid16(packedsolid, mins, maxs);
-
-		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
-			Com_Printf("%s: bad mins/maxs on entity %d\n", __FUNCTION__, NUM_FOR_EDICT(ent));
-	}
-
-	return packedsolid;
-}
-#endif
 
 /*
 ===============
@@ -435,11 +392,7 @@ void SV_LinkEdict (gentity_t *ent)
 		}
 		else
 		{
-#if PROTOCOL_FLOAT_COORDS == 1
 			ent->s.packedSolid = SV_PackSolid32(ent);
-#else
-			ent->s.packedSolid = SV_PackSolid16(ent);
-#endif
 		}
 		break;
 	case SOLID_BSP:
@@ -673,71 +626,6 @@ int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, i
 //===========================================================================
 
 /*
-=============
-SV_PointContents
-=============
-*/
-int SV_PointContents(vec3_t p)
-{
-	gentity_t	*touch[MAX_GENTITIES], *hit;
-	int			i, num;
-	int			contents, contents2;
-	int			headnode;
-	float		*angles;
-
-	// get base contents from world
-	contents = CM_PointContents (p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
-
-	// or in contents from all the other entities
-	num = SV_AreaEntities (p, p, touch, MAX_GENTITIES, AREA_SOLID);
-
-	for (i=0 ; i<num ; i++)
-	{
-		hit = touch[i];
-
-		// might intersect, so do an exact clip
-		headnode = SV_HullForEntity (hit);
-		angles = hit->v.angles;
-		if (hit->v.solid != SOLID_BSP)
-			angles = vec3_origin;	// boxes don't rotate
-
-		contents2 = CM_TransformedPointContents (p, headnode, hit->v.origin, hit->v.angles);
-
-		contents |= contents2;
-	}
-
-	return contents;
-}
-
-
-
-typedef struct
-{
-	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
-	float		*mins, *maxs;	// size of the moving object
-	vec3_t		mins2, maxs2;	// size when clipping against monsters
-	float		*start, *end;
-	trace_t		trace;
-	gentity_t		*passedict;
-	int			contentmask;
-} moveclip_t;
-
-
-/*
-================
-SV_EntityHasInlineModel
-================
-*/
-static qboolean SV_EntityHasInlineModel(gentity_t* ent)
-{
-	// note: modelindex is offset by one in server code thats why I do <= check
-	// in SV 1 is world, 2 is first "brush model", etc.. but in CM 0 is world and brush models follow
-	if ((int)ent->v.modelindex <= CM_NumInlineModels() && (int)ent->v.modelindex > 0)
-		return true;
-	return false;	
-}
-
-/*
 ================
 SV_HullForEntity
 
@@ -756,16 +644,17 @@ int SV_HullForEntity(gentity_t* ent)
 	cmodel_t* model;
 
 	// decide which clipping hull to use
-	if (!SV_EntityHasInlineModel(ent) && ent->v.solid == SOLID_BSP)
+	if (!SV_IsBrushModel((int)ent->v.modelindex) && ent->v.solid == SOLID_BSP)
 	{
 		Scr_RunError("entity %s (%i) at [%i %i %i] has SOLID_BSP set but doesn't use inline model\n", Scr_GetString(ent->v.classname),
 			NUM_FOR_EDICT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 		return -1;
 	}
 
-	if (SV_EntityHasInlineModel(ent) && (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER))
+	if (SV_IsBrushModel((int)ent->v.modelindex) && (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER))
 	{
-		model = sv.models[(int)ent->v.modelindex].bmodel;
+		model = CM_InlineModelNum(0 - ent->v.modelindex);
+		//model = sv.models[(int)ent->v.modelindex].bmodel;
 		if (!model)
 		{
 			Scr_RunError("entity %s (%i) at [%i %i %i] has no bsp model - this should never happen!\n", Scr_GetString(ent->v.classname),
@@ -777,8 +666,61 @@ int SV_HullForEntity(gentity_t* ent)
 	}
 
 	// create a temp hull from bounding box sizes
-	return CM_HeadnodeForBox (ent->v.mins, ent->v.maxs);
+	return CM_HeadnodeForBox(ent->v.mins, ent->v.maxs);
 }
+
+/*
+=============
+SV_PointContents
+=============
+*/
+int SV_PointContents(vec3_t p)
+{
+	gentity_t	*touch[MAX_GENTITIES], *pEnt;
+	int			i, num;
+	int			contents, contents_entity;
+	int			headnode;
+	float		*angles;
+
+	// get base contents from world
+	contents = CM_PointContents (p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
+
+	// or in contents from all the other entities
+	num = SV_AreaEntities (p, p, touch, MAX_GENTITIES, AREA_SOLID);
+
+	for (i = 0; i < num; i++)
+	{
+		pEnt = touch[i];
+
+		// might intersect, so do an exact clip
+		headnode = SV_HullForEntity(pEnt);
+		angles = pEnt->v.angles;
+
+		// brush models rotate, boxes don't
+		if (pEnt->v.solid != SOLID_BSP)
+		{
+			angles = vec3_origin;
+		}
+
+		contents_entity = CM_TransformedPointContents (p, headnode, pEnt->v.origin, pEnt->v.angles);
+		contents |= contents_entity;
+	}
+
+	return contents;
+}
+
+
+
+typedef struct
+{
+	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
+	float		*mins, *maxs;	// size of the moving object
+	vec3_t		mins2, maxs2;	// size when clipping against monsters
+	float		*start, *end;
+	trace_t		trace;
+	gentity_t		*passedict;
+	int			contentmask;
+} moveclip_t;
 
 
 //===========================================================================
@@ -833,6 +775,7 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 	for (i = 0; i < num; i++)
 	{
 		touch = touchlist[i];
+
 		if ((int)touch->v.solid == SOLID_NOT)
 			continue;
 
@@ -903,7 +846,7 @@ boxmaxs[0] = boxmaxs[1] = boxmaxs[2] = 9999;
 #else
 	int		i;
 	
-	for (i=0 ; i<3 ; i++)
+	for (i = 0; i < 3; i++)
 	{
 		if (end[i] > start[i])
 		{

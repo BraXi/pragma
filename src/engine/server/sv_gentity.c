@@ -201,7 +201,7 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 		if (!hit->inuse)
 			continue;
 
-		if (areatype == AREA_TRIGGERS && (int)hit->v.modelindex > 0)
+		if (areatype == AREA_TRIGGERS && (int)hit->v.modelindex != 0)
 		{
 			clip = SV_Clip(hit, ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent->v.clipmask);
 			if (clip.fraction == 1.0f)
@@ -445,7 +445,7 @@ void SV_AttachModel(gentity_t *self, const char* tagname, const char *model)
 {
 	int i, tag;
 	ent_model_t* attachInfo;
-	svmodel_t* svmod;
+	int modindex;
 
 	if (!self || !self->inuse)
 		return;
@@ -456,54 +456,49 @@ void SV_AttachModel(gentity_t *self, const char* tagname, const char *model)
 		return;
 	}
 
-	svmod = SV_ModelForNum((int)self->v.modelindex);
-	if (svmod == NULL || svmod->modelindex == 0)
+	if (self->v.modelindex == 0)
 	{
-		Com_DPrintf(DP_GAME, "WARNING: entity %s has no model\n", Scr_GetString(self->v.classname));
+		Com_DPrintf(DP_GAME, "Entity %s has no model but wants to attach one\n", Scr_GetString(self->v.classname));
 		return;
 	}
 
-	if (svmod->numTags == 0)
+	modindex = SV_ModelIndexForName(model);
+	if (modindex == 0)
 	{
-		Com_DPrintf(DP_GAME, "WARNING: entity %s has model without tags\n", Scr_GetString(self->v.classname));
+		Com_DPrintf(DP_GAME, "Can not attach not precached model '%s'\n", model);
 		return;
 	}
 
-	svmod = SV_ModelForName(model);
-	if (svmod == NULL)
+	if(SV_IsBrushModel(modindex))
 	{
-		Com_DPrintf(DP_GAME, "WARNING: cannot attach not precached model '%s'\n", model);
-		return;
-	}
-
-	if (svmod->type == MOD_BRUSH)
-	{
-		Com_Error(ERR_DROP, "cannot attach brushmodels!\n");
+		Com_Error(ERR_DROP, "Can not attach brushmodels!\n");
 		return;
 	}
 
 	tag = SV_TagIndexForName((int)self->v.modelindex, tagname);
 	if (tag == -1)
 	{
-		Com_DPrintf(DP_GAME, "WARNING: cannot attach '%s' to entity %s (missing `%s` tag)\n", model, Scr_GetString(self->v.classname), tagname);
+		Com_DPrintf(DP_GAME, "Can not attach '%s' to entity %s (missing `%s` tag)\n", model, Scr_GetString(self->v.classname), tagname);
 		return;
 	}
 
+#if 0
 	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
 	{
-		if (self->s.attachments[i].modelindex == svmod->modelindex)
+		if (self->s.attachments[i].modelindex == modindex)
 		{
 			Com_DPrintf(DP_GAME, "WARNING: '%s' already attached to entity %s\n", model, Scr_GetString(self->v.classname));
 			return;
 		}
 	}
+#endif
 
 	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
 	{
 		attachInfo = &self->s.attachments[i];
 		if (attachInfo->modelindex == 0)
 		{ 
-			attachInfo->modelindex = svmod->modelindex;
+			attachInfo->modelindex = modindex;
 			attachInfo->parentTag = tag + 1; // must offset tag by 1 for network
 			break;
 		}
@@ -520,16 +515,20 @@ void SV_DetachModel(gentity_t* self, const char* model)
 {
 	int i;
 	ent_model_t* attachInfo;
-	svmodel_t* svmod;
+	int modindex;
 
 	if (!self || !self->inuse || self == sv.edicts)
 		return;
 
-	svmod = SV_ModelForName(model);
+	modindex = SV_ModelIndexForName(model);
+	if (modindex == 0)
+		return;
+
 	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
 	{
 		attachInfo = &self->s.attachments[i];
-		if (attachInfo->modelindex != svmod->modelindex)
+		
+		if (attachInfo->modelindex != modindex)
 			continue;
 
 		attachInfo->modelindex = 0;
@@ -648,7 +647,7 @@ qboolean SV_EntityCanBeDrawn(gentity_t* self)
 	svmodel_t* svmod;
 	int i, hidden;
 
-	if ((int)self->v.modelindex <= 0)
+	if ((int)self->v.modelindex == 0)
 		return false; // no modelindex
 
 	svmod = SV_ModelForNum((int)self->v.modelindex);
@@ -680,4 +679,100 @@ qboolean SV_EntityCanBeDrawn(gentity_t* self)
 	}
 
 	return true; // visible
+}
+
+
+/*
+=================
+SV_SetEntityModel
+=================
+*/
+void SV_SetEntityModel(gentity_t *ent, const char *modelName)
+{
+	int modIndex;
+
+	if (!modelName || !modelName[0])
+	{
+		SV_Error("Empty model name.\n");
+		return;
+	}
+
+	if (modelName[0] == '*')
+	{
+		SV_Error("%s for inline model on entity %i\n", __FUNCTION__, NUM_FOR_EDICT(ent));
+		return;
+	}
+
+	modIndex = SV_ModelIndex(modelName);
+	if (modIndex == (int)ent->v.modelindex)
+		return;
+
+	// make all surfaces visible when model change
+	SV_ShowEntitySurface(ent, NULL);
+	SV_DetachAllModels(ent);
+
+	ent->v.model = Scr_SetString(modelName);
+	ent->v.modelindex = modIndex;
+
+	if (ent->v.solid == SOLID_BSP)
+	{
+		// keep this as error
+		SV_Error("%s set model on a SOLID_BSP entity %i\n", __FUNCTION__, NUM_FOR_EDICT(ent));
+
+		//Com_Printf("%s set external model on a SOLID_BSP entity %i, solidity changed to SOLID_NOT.\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
+		//ent->v.solid = SOLID_NOT;
+		//SV_LinkEdict(ent);
+	}
+}
+
+
+
+/*
+=================
+SV_SetEntityBrushModel
+=================
+*/
+void SV_SetEntityBrushModel(gentity_t* ent, const char* modelName)
+{
+	int mod;
+	cmodel_t* bmodel;
+
+	if (!modelName || !modelName[0])
+	{
+		SV_Error("Empty brush model name.\n");
+		return;
+	}
+
+	if (modelName[0] != '*')
+	{
+		SV_Error("%s brush model name\n", __FUNCTION__);
+		return;
+	}
+
+	mod = SV_ModelIndexForName(modelName);
+	if (mod == 0 || mod > 0)
+	{
+		SV_Error("%s with non brush model on entity %i\n", __FUNCTION__, NUM_FOR_EDICT(ent));
+		return;
+	}
+
+	if (mod == (int)ent->v.modelindex)
+		return;
+
+	SV_ShowEntitySurface(ent, NULL);
+	SV_DetachAllModels(ent); // inline models have no tags anyway
+
+	ent->v.model = Scr_SetString(modelName);
+	ent->v.modelindex = mod;
+
+	// inline models should always have their YAW set properly
+	if (ent->v.angles[YAW] == 0.0f)
+		ent->v.angles[YAW] = 360.0f;
+
+
+	// brush models have their mins and maxs updated and relink
+	bmodel = CM_InlineModel(modelName);
+	VectorCopy(bmodel->mins, ent->v.mins);
+	VectorCopy(bmodel->maxs, ent->v.maxs);
+	SV_LinkEdict(ent);
 }

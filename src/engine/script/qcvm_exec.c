@@ -38,9 +38,14 @@ Used for better error printing
 */
 char* Scr_BuiltinFuncName()
 {
-	CheckScriptVM(__FUNCTION__);
+	//CheckScriptVM(__FUNCTION__);
+
+	if(active_qcvm == NULL)
+		return "*none*";
+
 	if (active_qcvm->currentBuiltinFunc)
 		return active_qcvm->currentBuiltinFunc->name;
+
 	return "*none*";
 }
 

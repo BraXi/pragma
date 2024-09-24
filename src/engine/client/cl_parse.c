@@ -288,7 +288,8 @@ void CL_ParseStartSoundPacket(void)
 	}
 
 	if (flags & SND_POS)
-	{	// positioned in space
+	{	
+		// positioned in space
 		MSG_ReadPos (&net_message, pos_v);
  
 		pos = pos_v;
@@ -565,42 +566,27 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 		to->eType = MSG_ReadByte(&net_message);
 	}
 
-	// main model
-	if (bits & U_MODELINDEX_8)
-		to->modelindex = MSG_ReadByte(&net_message);
+	// model and part bits
 	if (bits & U_MODELINDEX_16)
+	{
 		to->modelindex = MSG_ReadShort(&net_message);
-
-	// hidden parts
-	if (bits & U_MODELINDEX_8 || bits & U_MODELINDEX_16)
 		to->hidePartBits = MSG_ReadByte(&net_message);
+	}
 
 	// attached models
 	if (bits & U_ATTACHMENT_1)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		to->attachments[0].modelindex = MSG_ReadShort(&net_message);
-#else
-		to->attachments[0].modelindex = MSG_ReadByte(&net_message);
-#endif
 		to->attachments[0].parentTag = MSG_ReadByte(&net_message);
 	}
 	if (bits & U_ATTACHMENT_2)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		to->attachments[1].modelindex = MSG_ReadShort(&net_message);
-#else
-		to->attachments[1].modelindex = MSG_ReadByte(&net_message);
-#endif
 		to->attachments[1].parentTag = MSG_ReadByte(&net_message);
 	}
 	if (bits & U_ATTACHMENT_3)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		to->attachments[2].modelindex = MSG_ReadShort(&net_message);
-#else
-		to->attachments[2].modelindex = MSG_ReadByte(&net_message);
-#endif
 		to->attachments[2].parentTag = MSG_ReadByte(&net_message);
 	}
 
@@ -677,7 +663,7 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	// looping sound
 	if (bits & U_LOOPSOUND)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
+#ifdef PROTO_SHORT_INDEXES
 		to->loopingSound = MSG_ReadShort(&net_message);
 #else
 		to->loopingSound = MSG_ReadByte(&net_message);
@@ -693,11 +679,7 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	// solid
 	if (bits & U_PACKEDSOLID)
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		to->packedSolid = MSG_ReadLong(&net_message);
-#else
-		to->packedSolid = MSG_ReadShort(&net_message);
-#endif
 	}
 }
 
@@ -921,24 +903,14 @@ void CL_ParsePlayerstate(frame_t* oldframe, frame_t* newframe)
 
 	if (flags & PS_M_ORIGIN)
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		for (i = 0; i < 3; i++)
 			state->pmove.origin[i] = MSG_ReadFloat(&net_message);
-#else
-		for (i = 0; i < 3; i++)
-			state->pmove.origin[i] = MSG_ReadShort(&net_message);
-#endif
 	}
 
 	if (flags & PS_M_VELOCITY)
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		for (i = 0; i < 3; i++)
 			state->pmove.velocity[i] = MSG_ReadFloat(&net_message);
-#else
-		for (i = 0; i < 3; i++)
-			state->pmove.velocity[i] = MSG_ReadShort(&net_message);
-#endif
 	}
 
 	if (flags & PS_M_TIME)
@@ -997,13 +969,8 @@ void CL_ParsePlayerstate(frame_t* oldframe, frame_t* newframe)
 
 	if (flags & PS_VIEWMODEL_INDEX)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		state->viewmodel[0] = MSG_ReadShort(&net_message);
 		state->viewmodel[1] = MSG_ReadShort(&net_message);
-#else
-		state->viewmodel[0] = MSG_ReadByte(&net_message);
-		state->viewmodel[1] = MSG_ReadByte(&net_message);
-#endif
 	}
 
 	if (flags & PS_VIEWMODEL_PARAMS)
@@ -1162,15 +1129,9 @@ void CL_ParseFrame(void)
 			cls.state = CS_ACTIVE;
 			cl.force_refdef = true;
 
-#if PROTOCOL_FLOAT_COORDS == 1
 			cl.predicted_origin[0] = cl.frame.playerstate.pmove.origin[0];
 			cl.predicted_origin[1] = cl.frame.playerstate.pmove.origin[1];
 			cl.predicted_origin[2] = cl.frame.playerstate.pmove.origin[2];
-#else
-			cl.predicted_origin[0] = cl.frame.playerstate.pmove.origin[0] * 0.125;
-			cl.predicted_origin[1] = cl.frame.playerstate.pmove.origin[1] * 0.125;
-			cl.predicted_origin[2] = cl.frame.playerstate.pmove.origin[2] * 0.125;
-#endif
 
 			VectorCopy(cl.frame.playerstate.viewangles, cl.predicted_angles);
 
