@@ -1098,7 +1098,7 @@ CM_TransformedPointContents
 Handles offseting and rotation of the end points for moving and rotating entities
 ==================
 */
-int	CM_TransformedPointContents(vec3_t p, int headnode, vec3_t origin, vec3_t angles)
+int CM_TransformedPointContents(vec3_t p, int headnode, vec3_t origin, vec3_t angles)
 {
 	vec3_t		p_l;
 	vec3_t		temp;
@@ -1108,9 +1108,9 @@ int	CM_TransformedPointContents(vec3_t p, int headnode, vec3_t origin, vec3_t an
 	// subtract origin offset
 	VectorSubtract (p, origin, p_l);
 
-	// rotate start and end into the models frame of reference
-	if (headnode != box_headnode && 
-	(angles[0] || angles[1] || angles[2]) )
+	// rotate start and end into the models frame of reference unless its entity
+	//if (headnode != box_headnode && (angles[0] || angles[1] || angles[2]))
+	if (headnode != box_headnode && !VectorCompare(angles, vec3_origin))
 	{
 		AngleVectors (angles, forward, right, up);
 

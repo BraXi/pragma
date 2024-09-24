@@ -232,7 +232,6 @@ gentity_t	**area_list;
 int		area_count, area_maxcount;
 int		area_type;
 
-int SV_HullForEntity (gentity_t *ent);
 
 // ClearLink is used for new headnodes
 void ClearLink (link_t *l)
@@ -627,57 +626,6 @@ int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, i
 //===========================================================================
 
 /*
-=============
-SV_PointContents
-=============
-*/
-int SV_PointContents(vec3_t p)
-{
-	gentity_t	*touch[MAX_GENTITIES], *hit;
-	int			i, num;
-	int			contents, contents2;
-	int			headnode;
-	float		*angles;
-
-	// get base contents from world
-	contents = CM_PointContents (p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
-
-	// or in contents from all the other entities
-	num = SV_AreaEntities (p, p, touch, MAX_GENTITIES, AREA_SOLID);
-
-	for (i=0 ; i<num ; i++)
-	{
-		hit = touch[i];
-
-		// might intersect, so do an exact clip
-		headnode = SV_HullForEntity (hit);
-		angles = hit->v.angles;
-		if (hit->v.solid != SOLID_BSP)
-			angles = vec3_origin;	// boxes don't rotate
-
-		contents2 = CM_TransformedPointContents (p, headnode, hit->v.origin, hit->v.angles);
-
-		contents |= contents2;
-	}
-
-	return contents;
-}
-
-
-
-typedef struct
-{
-	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
-	float		*mins, *maxs;	// size of the moving object
-	vec3_t		mins2, maxs2;	// size when clipping against monsters
-	float		*start, *end;
-	trace_t		trace;
-	gentity_t		*passedict;
-	int			contentmask;
-} moveclip_t;
-
-
-/*
 ================
 SV_HullForEntity
 
@@ -705,7 +653,7 @@ int SV_HullForEntity(gentity_t* ent)
 
 	if (SV_IsBrushModel((int)ent->v.modelindex) && (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER))
 	{
-		model = CM_InlineModelNum( 0 - ent->v.modelindex );
+		model = CM_InlineModelNum(0 - ent->v.modelindex);
 		//model = sv.models[(int)ent->v.modelindex].bmodel;
 		if (!model)
 		{
@@ -718,8 +666,61 @@ int SV_HullForEntity(gentity_t* ent)
 	}
 
 	// create a temp hull from bounding box sizes
-	return CM_HeadnodeForBox (ent->v.mins, ent->v.maxs);
+	return CM_HeadnodeForBox(ent->v.mins, ent->v.maxs);
 }
+
+/*
+=============
+SV_PointContents
+=============
+*/
+int SV_PointContents(vec3_t p)
+{
+	gentity_t	*touch[MAX_GENTITIES], *pEnt;
+	int			i, num;
+	int			contents, contents_entity;
+	int			headnode;
+	float		*angles;
+
+	// get base contents from world
+	contents = CM_PointContents (p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
+
+	// or in contents from all the other entities
+	num = SV_AreaEntities (p, p, touch, MAX_GENTITIES, AREA_SOLID);
+
+	for (i = 0; i < num; i++)
+	{
+		pEnt = touch[i];
+
+		// might intersect, so do an exact clip
+		headnode = SV_HullForEntity(pEnt);
+		angles = pEnt->v.angles;
+
+		// brush models rotate, boxes don't
+		if (pEnt->v.solid != SOLID_BSP)
+		{
+			angles = vec3_origin;
+		}
+
+		contents_entity = CM_TransformedPointContents (p, headnode, pEnt->v.origin, pEnt->v.angles);
+		contents |= contents_entity;
+	}
+
+	return contents;
+}
+
+
+
+typedef struct
+{
+	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
+	float		*mins, *maxs;	// size of the moving object
+	vec3_t		mins2, maxs2;	// size when clipping against monsters
+	float		*start, *end;
+	trace_t		trace;
+	gentity_t		*passedict;
+	int			contentmask;
+} moveclip_t;
 
 
 //===========================================================================
@@ -774,6 +775,7 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 	for (i = 0; i < num; i++)
 	{
 		touch = touchlist[i];
+
 		if ((int)touch->v.solid == SOLID_NOT)
 			continue;
 
@@ -844,7 +846,7 @@ boxmaxs[0] = boxmaxs[1] = boxmaxs[2] = 9999;
 #else
 	int		i;
 	
-	for (i=0 ; i<3 ; i++)
+	for (i = 0; i < 3; i++)
 	{
 		if (end[i] > start[i])
 		{
