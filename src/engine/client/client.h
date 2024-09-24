@@ -101,11 +101,7 @@ typedef struct
 	usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
 	int			cmd_time[CMD_BACKUP];	// time sent, for calculating pings
 
-#ifdef PROTOCOL_FLOAT_COORDS
 	float		predicted_origins[CMD_BACKUP][3];	// for debug comparing against server
-#else
-	short		predicted_origins[CMD_BACKUP][3];	// for debug comparing against server
-#endif
 
 	float		predicted_step;				// for stair up smoothing
 	unsigned	predicted_step_time;
@@ -158,16 +154,15 @@ typedef struct
 
 	char		configstrings[MAX_CONFIGSTRINGS][MAX_QPATH];
 
+	// inline models are derived from BSP
+	struct model_s* inlinemodel_draw[MAX_MODELS];
+	struct cmodel_s* inlinemodel_clip[MAX_MODELS];
+
 	//
-	// locally derived information from server state
-	// indexes must match server indexes
+	// locally derived information from server state indexes must match server indexes
 	//
 	struct model_s		*model_draw[MAX_MODELS];
 	struct cmodel_s		*model_clip[MAX_MODELS];
-
-	
-	struct model_s		*inlinemodel_draw[MAX_MODELS];
-	struct cmodel_s		*inlinemodel_clip[MAX_MODELS];
 
 	struct sfx_s		*sound_precache[MAX_SOUNDS];
 	struct image_s		*image_precache[MAX_IMAGES];

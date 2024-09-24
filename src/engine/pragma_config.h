@@ -12,7 +12,6 @@ See the attached GNU General Public License v2 for more details.
 // MAIN CONFIGURATION FILE FOR ENGINE
 //
 
-
 #pragma once
 
 #ifndef PRAGMA_CONFIG_INCLUDED 
@@ -44,22 +43,24 @@ See the attached GNU General Public License v2 for more details.
 // See protocol.h for MORE!
 
 // protocol can use shorts when modelindex or soundindex exceed byte
-#define PROTOCOL_EXTENDED_ASSETS 1
 
-#define	MAX_CLIENTS			12		// absolute limit of maxclients, technicaly it can go up to 256...
-#define	MAX_GENTITIES		2048	// must change protocol to increase more
-#define	MAX_LIGHTSTYLES		256		// number of light style slots
+#define	MAX_CLIENTS			12		// maximum number of client slots
+#define	MAX_GENTITIES		2048	// number of game entities
+#define	MAX_LIGHTSTYLES		256		// number of light styles
 
-#ifdef PROTOCOL_EXTENDED_ASSETS
-#	define	MAX_MODELS			1024	// these can be sent over the net as shorts
-#	define	MAX_SOUNDS			1024	// so theoretical limit is 32768 for each
-#else
-#	define	MAX_MODELS			256		// these are sent over the net as bytes
-#	define	MAX_SOUNDS			256		// so they cannot be higher than 255
-#endif
-#define	MAX_IMAGES			256
-#define	MAX_ITEMS			256
+#define	MAX_ITEMS			256 // general config strings
 #define MAX_GENERAL			(MAX_CLIENTS*2)	// general config strings
+
+
+#define	MAX_MODELS			512		// number of models (excluding inline models)
+#define	MAX_SOUNDS			512
+#define	MAX_IMAGES			256
+
+#if (MAX_SOUNDS > 256 || MAX_IMAGES > 256)
+#define PROTOCOL_EXTENDED_ASSETS 1
+#endif
+
+
 
 
 // experimental -- variable server fps
@@ -81,10 +82,12 @@ See the attached GNU General Public License v2 for more details.
 #endif
 
 // version string
-#define PRAGMA_VERSION "0.32" 
+#define PRAGMA_VERSION "0.34" 
 #define PRAGMA_TIMESTAMP (__DATE__ " " __TIME__)
 
 // version history:
+// 0.34 - 24.09.2024 -- inline models separated from external models
+// 0.33 - 22.09.2024 -- lots of fixes from over time
 // 0.32 - 08.09.2024 -- source tree cleanup
 // 0.31 - 03.09.2024 -- prtool and pragma's own model/anim formats
 // 0.30 - xx.xx.2024 -- skeletal models

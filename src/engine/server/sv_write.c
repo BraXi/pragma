@@ -235,24 +235,14 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	if (pflags & PS_M_ORIGIN)
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		for (i = 0; i < 3; i++)
 			MSG_WriteFloat(msg, ps->pmove.origin[i]);
-#else
-		for (i = 0; i < 3; i++)
-			MSG_WriteShort(msg, ps->pmove.origin[i]);
-#endif
 	}
 
 	if (pflags & PS_M_VELOCITY)
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		for (i = 0; i < 3; i++)
 			MSG_WriteFloat(msg, ps->pmove.velocity[i]);
-#else
-		for (i = 0; i < 3; i++)
-			MSG_WriteShort(msg, ps->pmove.velocity[i]);
-#endif
 	}
 
 	if (pflags & PS_M_TIME)
@@ -318,13 +308,8 @@ void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *to, size
 
 	if (pflags & PS_VIEWMODEL_INDEX)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		MSG_WriteShort(msg, ps->viewmodel[0]);
 		MSG_WriteShort(msg, ps->viewmodel[1]);
-#else
-		MSG_WriteByte(msg, ps->viewmodel[0]);
-		MSG_WriteByte(msg, ps->viewmodel[1]);
-#endif
 	}
 
 	if (pflags & PS_VIEWMODEL_PARAMS)
@@ -549,13 +534,8 @@ void SV_BuildClientFrame (client_t *client)
 	frame->senttime = svs.realtime; // save time for ping calculation later on
 
 	// find the client's PVS
-#if PROTOCOL_FLOAT_COORDS == 1
 	for (i = 0; i < 3; i++)
 		org[i] = clent->client->ps.pmove.origin[i] + clent->client->ps.viewoffset[i];
-#else
-	for (i = 0; i < 3; i++)
-		org[i] = clent->client->ps.pmove.origin[i] * 0.125 + clent->client->ps.viewoffset[i];
-#endif
 
 	leafnum = CM_PointLeafnum (org);
 	clientarea = CM_LeafArea (leafnum);

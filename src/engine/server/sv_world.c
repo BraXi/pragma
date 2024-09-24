@@ -329,7 +329,6 @@ void SV_UnlinkEdict (gentity_t *ent)
 	ent->area.prev = ent->area.next = NULL;
 }
 
-#if PROTOCOL_FLOAT_COORDS == 1
 static int SV_PackSolid32(gentity_t* ent)
 {
 	// Q2PRO code
@@ -354,47 +353,6 @@ static int SV_PackSolid32(gentity_t* ent)
 
 	return packedsolid;
 }
-#else
-static int SV_PackSolid16(gentity_t* ent)
-{
-	int i, j, k;
-	int packedsolid;
-	// assume that x/y are equal and symetric
-	i = ent->v.maxs[0] / 8;
-	if (i < 1)
-		i = 1;
-	if (i > 31)
-		i = 31;
-
-	// z is not symetric
-	j = (-ent->v.mins[2]) / 8;
-	if (j < 1)
-		j = 1;
-	if (j > 31)
-		j = 31;
-
-	// and z maxs can be negative...
-	k = (ent->v.maxs[2] + 32) / 8;
-	if (k < 1)
-		k = 1;
-	if (k > 63)
-		k = 63;
-
-	packedsolid = (k << 10) | (j << 5) | i;
-
-	if (developer->value)
-	{
-		vec3_t mins, maxs;
-
-		MSG_UnpackSolid16(packedsolid, mins, maxs);
-
-		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
-			Com_Printf("%s: bad mins/maxs on entity %d\n", __FUNCTION__, NUM_FOR_EDICT(ent));
-	}
-
-	return packedsolid;
-}
-#endif
 
 /*
 ===============
@@ -435,11 +393,7 @@ void SV_LinkEdict (gentity_t *ent)
 		}
 		else
 		{
-#if PROTOCOL_FLOAT_COORDS == 1
 			ent->s.packedSolid = SV_PackSolid32(ent);
-#else
-			ent->s.packedSolid = SV_PackSolid16(ent);
-#endif
 		}
 		break;
 	case SOLID_BSP:

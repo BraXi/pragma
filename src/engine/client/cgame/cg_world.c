@@ -36,11 +36,7 @@ static int CG_HullForEntity(entity_state_t* ent)
 	}
 
 	// extract bbox size
-#if PROTOCOL_FLOAT_COORDS == 1
 	MSG_UnpackSolid32(ent->packedSolid, bmins, bmaxs);
-#else
-	MSG_UnpackSolid16(ent->packedSolid, bmins, bmaxs);
-#endif
 
 	// create a temp hull from bounding box sizes
 	return CM_HeadnodeForBox(bmins, bmaxs);

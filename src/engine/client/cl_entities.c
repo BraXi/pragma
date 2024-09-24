@@ -388,18 +388,10 @@ void CL_CalcViewValues()
 	ops = &oldframe->playerstate;
 
 	// see if the player entity was teleported this frame
-#if PROTOCOL_FLOAT_COORDS == 1
 	if (fabs((double)(ops->pmove.origin[0] - ps->pmove.origin[0])) > 256.0
 		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256.0
 		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256.0)
 		ops = ps;		// don't interpolate
-#else
-	if (fabs(ops->pmove.origin[0] - ps->pmove.origin[0]) > 256 * 8
-		|| abs(ops->pmove.origin[1] - ps->pmove.origin[1]) > 256 * 8
-		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256 * 8)
-		ops = ps;		// don't interpolate
-#endif
-
 
 	ent = &cl_entities[cl.playernum+1];
 	lerp = cl.lerpfrac;
@@ -424,14 +416,10 @@ void CL_CalcViewValues()
 			cl.refdef.view.origin[2] -= cl.predicted_step * (float)(SV_FRAMETIME_MSEC - delta) * 0.01f;
 	}
 	else
-	{	// just use interpolated values
-#if PROTOCOL_FLOAT_COORDS == 1
+	{	
+		// just use interpolated values
 		for(i = 0; i < 3; i++)
 			cl.refdef.view.origin[i] = ops->pmove.origin[i] + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] + ps->viewoffset[i] - (ops->pmove.origin[i] + ops->viewoffset[i]));
-#else
-		for(i = 0; i < 3; i++)
-			cl.refdef.vieworigin[i] = ops->pmove.origin[i] * 0.125 + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] * 0.125 + ps->viewoffset[i] - (ops->pmove.origin[i] * 0.125 + ops->viewoffset[i]));
-#endif
 	}
 
 

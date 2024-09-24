@@ -47,13 +47,8 @@ void CL_CheckPredictionError (void)
 		VectorCopy (cl.frame.playerstate.pmove.origin, cl.predicted_origins[frame]);
 
 		// save for error itnerpolation
-#if PROTOCOL_FLOAT_COORDS == 1
 		for (i = 0; i < 3; i++)
 			cl.prediction_error[i] = delta[i];
-#else
-		for (i = 0; i < 3; i++)
-			cl.prediction_error[i] = delta[i] * 0.125;
-#endif
 	}
 }
 
@@ -98,12 +93,9 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 			angles = ent->angles;
 		}
 		else
-		{	// encoded bbox
-#if PROTOCOL_FLOAT_COORDS == 1
+		{	
+			// encoded bbox
 			MSG_UnpackSolid32(ent->packedSolid, bmins, bmaxs);
-#else
-			MSG_UnpackSolid16(ent->packedSolid, bmins, bmaxs);
-#endif
 
 			headnode = CM_HeadnodeForBox (bmins, bmaxs);
 			angles = vec3_origin;	// boxes don't rotate
@@ -275,23 +267,14 @@ void CL_PredictMovement (void)
 	step = pm.s.origin[2] - oldz;
 	if (step > 63 && step < 160 && (pm.s.pm_flags & PMF_ON_GROUND) )
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		cl.predicted_step = step;
-#else
-		cl.predicted_step = step * 0.125;
-#endif
 		
 		cl.predicted_step_time = cls.realtime - cls.frametime * 500;
 	}
 
 	// copy results out for rendering
-#if PROTOCOL_FLOAT_COORDS == 1
 	VectorCopy(pm.s.origin, cl.predicted_origin);
-#else
-	cl.predicted_origin[0] = pm.s.origin[0] * 0.125;
-	cl.predicted_origin[1] = pm.s.origin[1] * 0.125;
-	cl.predicted_origin[2] = pm.s.origin[2] * 0.125;
-#endif
+
 	//set view angles
 	VectorCopy (pm.viewangles, cl.predicted_angles);
 }

@@ -337,9 +337,6 @@ void MSG_ReadData(sizebuf_t* msg_read, void* data, int len)
 }
 
 
-
-
-#if PROTOCOL_FLOAT_COORDS == 1
 int MSG_PackSolid32(const vec3_t mins, const vec3_t maxs)
 {
 	// Q2PRO code
@@ -367,18 +364,3 @@ void MSG_UnpackSolid32(int packedsolid, vec3_t mins, vec3_t maxs)
 	VectorSet(mins, -x, -y, -zd);
 	VectorSet(maxs, x, y, zu);
 }
-#else
-void MSG_UnpackSolid16(int packedsolid, vec3_t bmins, vec3_t bmaxs)
-{
-	int		x, zd, zu;
-	// encoded bbox
-	x = 8 * ((int)packedsolid & 31);
-	zd = 8 * (((int)packedsolid >> 5) & 31);
-	zu = 8 * (((int)packedsolid >> 10) & 63) - 32;
-
-	bmins[0] = bmins[1] = -x;
-	bmaxs[0] = bmaxs[1] = x;
-	bmins[2] = -zd;
-	bmaxs[2] = zu;
-}
-#endif
