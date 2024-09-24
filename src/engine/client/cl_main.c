@@ -222,7 +222,7 @@ void CL_Record_f (void)
 	for(i = 0; i < MAX_GENTITIES; i++)
 	{
 		ent = &cl_entities[i].baseline;
-		if (!ent->modelindex)
+		if (ent->modelindex == 0)
 			continue;
 
 		if (buf.cursize + 64 > buf.maxsize)
@@ -1046,13 +1046,20 @@ void CL_PrintEnts_f(void)
 		printvec("old_origin", ent->old_origin);
 		printvec("angles", ent->angles);
 
-		if (ent->modelindex)
+		if (ent->modelindex > 0)
+			Com_Printf("modelindex: %i (%s)\n", ent->modelindex, cl.configstrings[CS_MODELS + ent->modelindex]);
+		else
+			Com_Printf("modelindex: %i\n", ent->modelindex);
+
+#if 0 // FIXME: BMODELS-LOVE
+		if (ent->modelindex != 0)
 		{
 			if(cl.configstrings[CS_MODELS + ent->modelindex][0] == '*')
 				Com_Printf("brush: '%s' (modelindex %i)\n", cl.configstrings[CS_MODELS + ent->modelindex], ent->modelindex);
 			else
 				Com_Printf("model: '%s' (frame %i, skinnum %i, modelindex %i)\n", cl.configstrings[CS_MODELS + ent->modelindex], ent->frame, ent->skinnum, ent->modelindex);
 		}
+#endif
 	}
 
 	Com_Printf("\nnum frame entities: %i\n", cl.frame.num_entities);
@@ -1514,3 +1521,34 @@ void CL_Shutdown(void)
 }
 
 
+struct model_s *CL_DrawModel(int modelindex)
+{
+	if (modelindex >= 0)
+	{
+		return cl.model_draw[modelindex];
+	}
+	else if (modelindex < 0)
+	{
+		return cl.inlinemodel_draw[abs(modelindex)];
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+cmodel_t* CL_ClipModel(int modelindex)
+{
+	if (modelindex >= 0)
+	{
+		return cl.model_clip[modelindex];
+	}
+	else if (modelindex < 0)
+	{
+		return cl.inlinemodel_clip[abs(modelindex)];
+	}
+	else
+	{
+		return NULL;
+	}
+}

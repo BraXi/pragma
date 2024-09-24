@@ -204,7 +204,7 @@ void CG_AddFlashLightToEntity(clentity_t *cent, rentity_t* parentEnt)
 	if (cent->current.number == cl.playernum + 1)
 		return; // dont draw world effect for local player
 
-	if (cent->current.modelindex && parentEnt->model)
+	if (cent->current.modelindex != 0 && parentEnt->model)
 	{
 		tag = re.TagIndexForName(parentEnt->model, "tag_light");
 		if (tag == -1)

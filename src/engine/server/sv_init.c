@@ -39,8 +39,10 @@ static void SV_CreateBaseline()
 		svent = EDICT_NUM(entnum);
 		if (!svent->inuse)
 			continue;
-		if (!svent->s.modelindex && !svent->s.loopingSound && !svent->s.effects)
+
+		if (svent->s.modelindex == 0 && !svent->s.loopingSound && !svent->s.effects)
 			continue;
+
 		svent->s.number = entnum;
 
 		//

@@ -163,7 +163,7 @@ void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parent
 	vec3_t			tempAxis[3];
 
 //	Com_Printf("old %i cur %i lerp %f\n", parent->oldframe, parent->frame, 1.0 - parent->animbacklerp);
-	re.LerpTag(&lerped, cl.model_draw[parentModel], parent->oldframe, parent->frame, 1.0 - parent->animbacklerp, tagIndex);
+	re.LerpTag(&lerped, CL_DrawModel(parentModel), parent->oldframe, parent->frame, 1.0 - parent->animbacklerp, tagIndex);
 
 	VectorCopy(parent->origin, entity->origin);
 	for (i = 0; i < 3; i++) 
@@ -208,7 +208,7 @@ static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t*
 		AxisClear(attachEnt.axis);
 		PositionRotatedEntityOnTag(&attachEnt, &r, clent->current.modelindex, (attachInfo->parentTag - 1));
 
-		attachEnt.model = cl.model_draw[state->attachments[i].modelindex];
+		attachEnt.model = CL_DrawModel(state->attachments[i].modelindex);
 		VectorAngles(attachEnt.axis[0], attachEnt.axis[2], angles);
 		VectorCopy(angles, attachEnt.angles);
 
@@ -313,14 +313,14 @@ void CL_AddPacketEntities(frame_t* frame)
 
 
 		rent.skinnum = state->skinnum;
-		rent.model = cl.model_draw[state->modelindex];
+		rent.model = CL_DrawModel(state->modelindex);
 //		rent.renderfx = state->renderFlags; // set later on
 
 
 		//
 		// if entity has no model just skip at this point
 		//
-		if (!state->modelindex)
+		if (state->modelindex == 0)
 			continue;
 
 		//

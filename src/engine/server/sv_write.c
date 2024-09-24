@@ -636,7 +636,7 @@ void SV_BuildClientFrame (client_t *client)
 		//
 		// ignore ents without visible models unless they have an effect, looping sound or event
 		//
-		//if (!ent->s.modelindex && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)	
+		//if (ent->s.modelindex == 0 && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)	
 		if (!SV_EntityCanBeDrawn(ent) && !ent->s.effects && !ent->s.loopingSound && !ent->s.event)
 		{
 			SV_RestoreEntityStateAfterClient(ent);
@@ -704,7 +704,7 @@ void SV_BuildClientFrame (client_t *client)
 						}
 					}
 
-					if (!ent->s.modelindex)
+					if (ent->s.modelindex == 0)
 					{	// don't send sounds if they will be attenuated away
 						vec3_t	delta;
 						float	len;
@@ -777,7 +777,7 @@ void SV_RecordDemoMessage (void)
 		// ignore ents without visible models unless they have an effect
 		if (ent->inuse &&
 			ent->s.number && 
-			(ent->s.modelindex || ent->s.effects || ent->s.loopingSound || ent->s.event) && 
+			((int)ent->s.modelindex != 0 || ent->s.effects || ent->s.loopingSound || ent->s.event) && 
 			!((int)ent->v.svflags & SVF_NOCLIENT))
 			MSG_WriteDeltaEntity (&nostate, &ent->s, &buf, false, true);
 

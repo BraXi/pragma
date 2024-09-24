@@ -322,7 +322,20 @@ void CL_SetSkyFromConfigstring(void)
 	re.SetSky(cl.configstrings[CS_SKY], skyrotate, skyaxis, skycolor);
 }
 
+/*
+=================
+CL_LoadModelAtIndex
+=================
+*/
+void CL_LoadModelAtIndex(const char* name, int index)
+{
+	cl.model_draw[index] = re.RegisterModel(name);
 
+	if (name[0] == '*')
+		cl.model_clip[index] = CM_InlineModel(name);
+	else
+		cl.model_clip[index] = NULL;
+}
 
 /*
 =================
@@ -333,24 +346,25 @@ Call before entering a new level, or after changing dlls
 */
 void CL_PrepRefresh (void)
 {
-	char		mapname[32]; // FIXME stack corruption with long map names "sewerjam1_doomshakalaka_full"
 	int			i;
-	char		name[MAX_QPATH];
-
+	char		mapname[MAX_QPATH];
 
 	if (!cl.configstrings[CS_MODELS+1][0])
-		return;		// no map loaded
+		return;	 // no map loaded
 
 	SCR_AddDirtyPoint (0, 0);
 	SCR_AddDirtyPoint (viddef.width-1, viddef.height-1);
 
-	// let the render dll load the map
-	strcpy (mapname, cl.configstrings[CS_MODELS+1] + 5);	// skip "maps/"
-	mapname[strlen(mapname)-4] = 0;		// cut off ".bsp"
+	// skip "maps/"
+	strcpy (mapname, cl.configstrings[CS_MODELS+1] + 5);	
 
-	// register models, pics, and skins
+	// cut off ".bsp"
+	mapname[strlen(mapname)-4] = 0;
+
+	// register models, pics, etc
 	Com_Printf ("Map: %s\r", mapname); 
 	SCR_UpdateScreen ();
+	// let the renderer dll load the map
 	re.BeginRegistration (mapname);
 	Com_Printf ("                                     \r");
 
@@ -359,27 +373,23 @@ void CL_PrepRefresh (void)
 	SCR_UpdateScreen ();
 	Com_Printf ("                                     \r");
 
+	// let cgame load its stuff (FIXME: its hardcoded in C)
 	CG_RegisterMedia ();
 
 
-	for (i=1 ; i < MAX_MODELS && cl.configstrings[CS_MODELS+i][0] ; i++)
+	// load models referenced by server
+	for (i = 1; i < MAX_MODELS && cl.configstrings[CS_MODELS+i][0]; i++)
 	{
-		strcpy (name, cl.configstrings[CS_MODELS+i]);
-		name[37] = 0;	// never go beyond one line
-		if (name[0] != '*')
-			Com_Printf ("%s\r", name); 
 		SCR_UpdateScreen ();
 		Sys_SendKeyEvents ();	// pump message loop
+		CL_LoadModelAtIndex(cl.configstrings[CS_MODELS + i], i);
+	}
 
-		char* n = cl.configstrings[CS_MODELS + i];
-		cl.model_draw[i] = re.RegisterModel (n);
-		if (name[0] == '*')
-			cl.model_clip[i] = CM_InlineModel (n);
-		else
-			cl.model_clip[i] = NULL;
-
-		if (name[0] != '*')
-			Com_Printf ("                                     \r");
+	// load inline models
+	for (i = 1; i < CM_NumInlineModels(); i++)
+	{
+		cl.inlinemodel_draw[i] = re.RegisterModel(va("*%i", i));
+		cl.inlinemodel_clip[i] = CM_InlineModel(va("*%i", i));
 	}
 
 	Com_Printf ("images\r", i); 

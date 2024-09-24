@@ -201,7 +201,7 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 		if (!hit->inuse)
 			continue;
 
-		if (areatype == AREA_TRIGGERS && (int)hit->v.modelindex > 0)
+		if (areatype == AREA_TRIGGERS && (int)hit->v.modelindex != 0)
 		{
 			clip = SV_Clip(hit, ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent->v.clipmask);
 			if (clip.fraction == 1.0f)
@@ -647,7 +647,7 @@ qboolean SV_EntityCanBeDrawn(gentity_t* self)
 	svmodel_t* svmod;
 	int i, hidden;
 
-	if ((int)self->v.modelindex <= 0)
+	if ((int)self->v.modelindex == 0)
 		return false; // no modelindex
 
 	svmod = SV_ModelForNum((int)self->v.modelindex);

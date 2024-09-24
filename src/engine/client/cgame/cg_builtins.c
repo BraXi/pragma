@@ -51,6 +51,8 @@ static int CG_ModelIndex(char* name/*, qboolean fromServer*/)
 	for (index = 1; index < MAX_MODELS && cl.configstrings[CS_MODELS + index][0]; index++)
 		if (!strcmp(cl.configstrings[CS_MODELS + index], name))
 			return index;
+
+	// Fixme: BMODELS-LOVE
 }
 
 /*

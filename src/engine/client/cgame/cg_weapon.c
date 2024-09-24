@@ -36,7 +36,7 @@ void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops)
 	if (gun_model && CL_CheatsAllowed())
 		viewmodel.model = gun_model; // development tool
 	else
-		viewmodel.model = cl.model_draw[ps->viewmodel[0]];
+		viewmodel.model = CL_DrawModel(ps->viewmodel[0]);
 
 	if (!viewmodel.model)
 		return;
@@ -89,7 +89,7 @@ void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops)
 	// second viewmodel is arms so just copy all params to it
 	if (ps->viewmodel[1])
 	{
-		viewmodel.model = cl.model_draw[ps->viewmodel[1]];
+		viewmodel.model = CL_DrawModel(ps->viewmodel[1]);
 		V_AddEntity(&viewmodel);
 	}
 }

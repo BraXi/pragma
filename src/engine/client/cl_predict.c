@@ -89,8 +89,9 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 			continue;
 
 		if (ent->packedSolid == PACKED_BSP)
-		{	// special value for bmodel
-			cmodel = cl.model_clip[(int)ent->modelindex];
+		{	
+			// special value for bmodel
+			cmodel = CL_ClipModel((int)ent->modelindex);
 			if (!cmodel)
 				continue;
 			headnode = cmodel->headnode;

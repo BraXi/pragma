@@ -27,6 +27,18 @@ Find model index, load model if not present.
 */
 int SV_ModelIndex(const char* name)
 {
+	int bmodelnum;
+
+	if (!name)
+		return 0;
+
+	// handle inline models explictly
+	if (name[0] == '*' && strlen(name) >= 2)
+	{
+		bmodelnum = atoi(name + 1);
+		return (0 - bmodelnum);
+	}
+
 	return SV_FindOrCreateAssetIndex(name, CS_MODELS, MAX_MODELS, __FUNCTION__);
 }
 
@@ -125,7 +137,8 @@ qboolean SV_IsBrushModel(int modelindex)
 		return true; // world
 
 	if (modelindex < 0 && modelindex >= (0 - CM_NumInlineModels()))
-		return true; // bmodels are negative
+		return true; // bmodels are indexed negative
+
 	return false;
 }
 
@@ -146,7 +159,7 @@ static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const
 
 	if (start == CS_MODELS && name[0] == '*')
 	{
-		SV_Error("fix me!");
+		SV_Error("Asset index for inline model!");
 	}
 
 	//
@@ -160,13 +173,13 @@ static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const
 	// load asset
 	//
 	if (index == max)
-		Com_Error(ERR_DROP, "hit limit of %i assets (%s)", max, func);
+		SV_Error("Hit limit of %i assets (%s)", max, func);
 
 	//warn of late precaches or crash depending on sv_nolateloading
 	if (sv.state == ss_game)
 	{
 		if (sv_nolateloading->value > 0)
-			Com_Error(ERR_DROP, "%s: '%s' must be precached first (%s)\n", name, func);
+			SV_Error("Precache '%s' too late.\n", name);
 		else
 			Com_Printf("WARNING: '%s' not precached (%s)\n", name, func);
 	}
@@ -191,8 +204,9 @@ static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const
 			return 0;
 	}
 	
-	// update configstring and send updates when needed
+	// update configstring and send updates if necessary
 	SV_SetConfigString(start + index, name);
+
 	return index;
 }
 
@@ -376,7 +390,7 @@ static svmodel_t* SV_LoadModel(const char* name, qboolean crash)
 
 	if (model->type == MOD_BAD)
 	{
-		Com_Error(ERR_DROP, "'%s' is missing or bad", model->name);
+		Com_Error(ERR_DROP, "Could not precache model '%s'\n", model->name);
 		return NULL;
 	}
 
@@ -537,7 +551,10 @@ int SV_ModelSurfIndexForName(int modelindex, const char* surfaceName)
 	if (mod->type == MOD_ALIAS)
 	{
 		if (mod->alias == NULL)
+		{
 			Com_Error(ERR_DROP, "%s: wrong alias model\n", __FUNCTION__);
+			return -1; //msvc
+		}
 		
 		for (index = 0; index < mod->numSurfaces; index++)
 		{
@@ -574,15 +591,14 @@ int SV_TagIndexForName(int modelindex, const char* tagName)
 		return -1; //doesn't get here
 	}
 
-	if (mod->type == MOD_NEWFORMAT)
+
+	if (mod->type == MOD_ALIAS)
 	{
-		Com_Printf("%s: unimplemented model format\n", __FUNCTION__);
-		return -1;
-	}
-	else if (mod->type == MOD_ALIAS)
-	{
-		if(mod->alias == NULL)
+		if (mod->alias == NULL)
+		{
 			Com_Error(ERR_DROP, "%s: MD3 but mod->mesh is NULL\n", __FUNCTION__);
+			return -1; // msvc
+		}
 	
 		int frame = 0; // will I ever need this here? probably no.
 		orientation_t* tagdata = (orientation_t*)((byte*)mod->alias->tagFrames) + (frame * mod->numTags);
@@ -593,6 +609,11 @@ int SV_TagIndexForName(int modelindex, const char* tagName)
 				return index; // found it
 			}
 		}
+	}
+	else
+	{
+		Com_Printf("%s: unimplemented model format\n", __FUNCTION__);
+		return -1;
 	}
 	return -1;
 }
@@ -630,7 +651,10 @@ orientation_t* SV_GetTag(int modelindex, int frame, const char* tagName)
 	else if (mod->type == MOD_ALIAS)
 	{
 		if (mod->alias == NULL)
+		{
 			Com_Error(ERR_DROP, "%s: MD3 but mod->mesh is NULL\n", __FUNCTION__);
+			return NULL;
+		}
 
 		orientation_t* tagdata;
 		tagdata = (orientation_t*)((byte*)mod->alias->tagFrames) + (frame * mod->numTags);

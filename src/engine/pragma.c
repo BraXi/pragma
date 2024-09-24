@@ -380,10 +380,7 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 	// main model
 	if (to->modelindex != from->modelindex || to->hidePartBits != from->hidePartBits)
 	{
-		if (to->modelindex > 255)
-			bits |= U_MODELINDEX_16; // short
-		else
-			bits |= U_MODELINDEX_8; // byte	
+		bits |= U_MODELINDEX_16; // short
 	}
 
 	// attached models
@@ -464,8 +461,6 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 		MSG_WriteByte(msg, to->eType);
 
 	// main model
-	if (bits & U_MODELINDEX_8)
-		MSG_WriteByte(msg, to->modelindex);
 	if (bits & U_MODELINDEX_16)
 		MSG_WriteShort(msg, to->modelindex);
 
