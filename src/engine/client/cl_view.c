@@ -329,6 +329,12 @@ CL_LoadModelAtIndex
 */
 static void CL_LoadModelAtIndex(const char* name, int index)
 {
+	if (index >= MAX_MODELS || index < 1) // because 0 is reserved for no model
+	{
+		Com_Error(ERR_DROP, "%s Bad model index %i.", __FUNCTION__, index);
+		return;
+	}
+
 	cl.model_draw[index] = re.RegisterModel(name);
 
 	if (name[0] == '*')

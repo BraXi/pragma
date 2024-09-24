@@ -55,6 +55,7 @@ extern void CL_FireEntityEvents(frame_t* frame);
 
 extern void CL_ParsePlayFX();
 extern void CL_ParsePlayFXOnTag();
+extern void CL_SetSkyFromConfigstring();
 /*
 ======================
 CL_RegisterSounds
@@ -144,7 +145,7 @@ void CL_ParseServerData (void)
 		cl.refresh_prepped = false;
 	}
 	
-	// FIXME this should restart GUI progs
+	// FIXME: this should restart GUI progs
 	// initialize client game
 	CG_InitClientGame();
 }
@@ -174,53 +175,67 @@ void CL_ParseBaseline (void)
 CL_ParseConfigString
 ================
 */
-extern void CL_SetSkyFromConfigstring();
 void CL_ParseConfigString (void)
 {
-	int		i;
-	char	*s;
+	int		csIndex, assetIndex;
+	char	*newConfigString;
 
-	i = MSG_ReadShort (&net_message);
-	if (i < 0 || i >= MAX_CONFIGSTRINGS)
+	csIndex = MSG_ReadShort(&net_message);
+	if (csIndex < 0 || csIndex >= MAX_CONFIGSTRINGS)
 	{
-		Com_Error(ERR_DROP, "configstring > MAX_CONFIGSTRINGS");
-		return; //silence compiler warning
+		Com_Error(ERR_DROP, "Bad config string index %i.\n", csIndex);
+		return;
 	}
 
-	s = MSG_ReadString(&net_message);
-	strcpy (cl.configstrings[i], s);
+	// set configstring for client
+	newConfigString = MSG_ReadString(&net_message);
+	if (strlen(newConfigString) >= MAX_QPATH)
+	{
+		Com_Error(ERR_DROP, "Config string %i too long.\n", csIndex);
+		return;
+	}
+	strncpy(cl.configstrings[csIndex], newConfigString, sizeof(cl.configstrings[csIndex]));
 
 	// do something apropriate 
-
-	if (i >= CS_LIGHTS && i < CS_LIGHTS + MAX_LIGHTSTYLES)
+	if (csIndex >= CS_LIGHTS && csIndex < CS_LIGHTS + MAX_LIGHTSTYLES)
 	{
-		CG_LightStyleFromConfigString(i - CS_LIGHTS);
+		CG_LightStyleFromConfigString(csIndex - CS_LIGHTS);
 	}
-	else if (i >= CS_SKY && i < CS_HUD)
+	else if (csIndex >= CS_SKY && csIndex < CS_HUD)
 	{
 		if (cl.refresh_prepped)
 			CL_SetSkyFromConfigstring();
 	}
-	else if (i >= CS_MODELS && i < CS_MODELS+MAX_MODELS)
+	else if (csIndex >= CS_MODELS && csIndex < CS_MODELS+MAX_MODELS)
+	{
+		assetIndex = (csIndex - CS_MODELS);
+
+		if (cl.refresh_prepped)
+		{
+			cl.model_draw[assetIndex] = re.RegisterModel (cl.configstrings[csIndex]);
+
+			// inline models are handled somewhere else, but leaving this here for modders
+			if (cl.configstrings[csIndex][0] == '*') 
+				cl.model_clip[assetIndex] = CM_InlineModel (cl.configstrings[csIndex]);
+			else
+				cl.model_clip[assetIndex] = NULL;
+		}
+	}
+	else if (csIndex >= CS_SOUNDS && csIndex < CS_SOUNDS+MAX_SOUNDS)
+	{
+		if (cl.refresh_prepped) // no refresh == no sound
+		{
+			assetIndex = (csIndex - CS_SOUNDS);
+			cl.sound_precache[assetIndex] = S_RegisterSound(cl.configstrings[csIndex]);
+		}
+	}
+	else if (csIndex >= CS_IMAGES && csIndex < CS_IMAGES+MAX_IMAGES)
 	{
 		if (cl.refresh_prepped)
 		{
-			cl.model_draw[i-CS_MODELS] = re.RegisterModel (cl.configstrings[i]);
-			if (cl.configstrings[i][0] == '*')
-				cl.model_clip[i-CS_MODELS] = CM_InlineModel (cl.configstrings[i]);
-			else
-				cl.model_clip[i-CS_MODELS] = NULL;
+			assetIndex = (csIndex - CS_IMAGES);
+			cl.image_precache[assetIndex] = re.RegisterPic(cl.configstrings[csIndex]);
 		}
-	}
-	else if (i >= CS_SOUNDS && i < CS_SOUNDS+MAX_MODELS)
-	{
-		if (cl.refresh_prepped)
-			cl.sound_precache[i-CS_SOUNDS] = S_RegisterSound (cl.configstrings[i]);
-	}
-	else if (i >= CS_IMAGES && i < CS_IMAGES+MAX_MODELS)
-	{
-		if (cl.refresh_prepped)
-			cl.image_precache[i-CS_IMAGES] = re.RegisterPic (cl.configstrings[i]);
 	}
 }
 

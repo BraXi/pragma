@@ -1532,6 +1532,13 @@ struct model_s *CL_GetDrawModel(int modelindex)
 	int realindex;
 	if (modelindex >= 0)
 	{
+		if (modelindex >= MAX_MODELS || modelindex < 1)
+		{
+			// modelindex 0 is reserved for no model
+			Com_Error(ERR_DROP, "%s Bad model index %i.\n", __FUNCTION__, modelindex);
+			return NULL;
+		}
+
 		return cl.model_draw[modelindex];
 	}
 	else if (modelindex < 0)
@@ -1539,7 +1546,7 @@ struct model_s *CL_GetDrawModel(int modelindex)
 		realindex = abs(modelindex);
 		if (realindex >= CM_NumInlineModels())
 		{
-			Com_Error(ERR_DROP, "%s bad inline model index (%i)\n", __FUNCTION__, modelindex);
+			Com_Error(ERR_DROP, "%s Bad inline model index %i.\n", __FUNCTION__, modelindex);
 		}
 		return cl.inlinemodel_draw[realindex];
 	}
@@ -1561,6 +1568,13 @@ cmodel_t* CL_GetClipModel(int modelindex)
 
 	if (modelindex >= 0)
 	{
+		if (modelindex >= MAX_MODELS || modelindex < 1) 
+		{
+			// modelindex 0 is reserved for no model
+			Com_Error(ERR_DROP, "%s Bad model index %i.", __FUNCTION__, modelindex);
+			return NULL;
+		}
+
 		return cl.model_clip[modelindex];
 	}
 	else if (modelindex < 0)
@@ -1568,8 +1582,10 @@ cmodel_t* CL_GetClipModel(int modelindex)
 		realindex = abs(modelindex);
 		if (realindex >= CM_NumInlineModels())
 		{
-			Com_Error(ERR_DROP, "%s bad inline model index (%i)\n", __FUNCTION__, modelindex);
+			Com_Error(ERR_DROP, "%s Bad inline model index %i.\n", __FUNCTION__, modelindex);
+			return NULL;
 		}
+
 		return cl.inlinemodel_clip[realindex];
 	}
 	else
