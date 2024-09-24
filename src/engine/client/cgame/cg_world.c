@@ -26,7 +26,7 @@ static int CG_HullForEntity(entity_state_t* ent)
 	if (ent->packedSolid == PACKED_BSP)
 	{
 		// explicit hulls in the BSP model
-		model = CL_ClipModel(ent->modelindex);
+		model = CL_GetClipModel(ent->modelindex);
 		if (!model)
 		{
 			Com_Error(ERR_DROP, "CG_HullForEntity: non BSP model for entity %i\n", ent->number);
@@ -153,7 +153,7 @@ int	CG_PointContents(vec3_t point)
 		if (ent->packedSolid != PACKED_BSP) // special value for bmodel
 			continue;
 
-		cmodel = CL_ClipModel((int)ent->modelindex);
+		cmodel = CL_GetClipModel((int)ent->modelindex);
 		if (!cmodel)
 			continue;
 

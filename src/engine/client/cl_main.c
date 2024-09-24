@@ -1521,15 +1521,27 @@ void CL_Shutdown(void)
 }
 
 
-struct model_s *CL_DrawModel(int modelindex)
+/*
+===============
+CL_GetDrawModel
+Returns the pointer to drawable model.
+===============
+*/
+struct model_s *CL_GetDrawModel(int modelindex)
 {
+	int realindex;
 	if (modelindex >= 0)
 	{
 		return cl.model_draw[modelindex];
 	}
 	else if (modelindex < 0)
 	{
-		return cl.inlinemodel_draw[abs(modelindex)];
+		realindex = abs(modelindex);
+		if (realindex >= CM_NumInlineModels())
+		{
+			Com_Error(ERR_DROP, "%s bad inline model index (%i)\n", __FUNCTION__, modelindex);
+		}
+		return cl.inlinemodel_draw[realindex];
 	}
 	else
 	{
@@ -1537,15 +1549,28 @@ struct model_s *CL_DrawModel(int modelindex)
 	}
 }
 
-cmodel_t* CL_ClipModel(int modelindex)
+/*
+===============
+CL_GetClipModel
+Returns inline clip model for collision.
+===============
+*/
+cmodel_t* CL_GetClipModel(int modelindex)
 {
+	int realindex;
+
 	if (modelindex >= 0)
 	{
 		return cl.model_clip[modelindex];
 	}
 	else if (modelindex < 0)
 	{
-		return cl.inlinemodel_clip[abs(modelindex)];
+		realindex = abs(modelindex);
+		if (realindex >= CM_NumInlineModels())
+		{
+			Com_Error(ERR_DROP, "%s bad inline model index (%i)\n", __FUNCTION__, modelindex);
+		}
+		return cl.inlinemodel_clip[realindex];
 	}
 	else
 	{

@@ -298,8 +298,8 @@ void CL_Frame (int msec);
 void Con_Print (char *text);
 void SCR_BeginLoadingPlaque (void);
 
-struct model_s* CL_DrawModel(int modelindex);
-cmodel_t* CL_ClipModel(int modelindex);
+struct model_s* CL_GetDrawModel(int modelindex);
+cmodel_t* CL_GetClipModel(int modelindex);
 #endif
 
 void SV_Init (void);

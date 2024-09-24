@@ -91,7 +91,7 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 		if (ent->packedSolid == PACKED_BSP)
 		{	
 			// special value for bmodel
-			cmodel = CL_ClipModel((int)ent->modelindex);
+			cmodel = CL_GetClipModel((int)ent->modelindex);
 			if (!cmodel)
 				continue;
 			headnode = cmodel->headnode;
