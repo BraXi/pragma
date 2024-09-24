@@ -585,14 +585,28 @@ qboolean VID_LoadRefresh( char *name )
 	ri.GetBSPElementSize = _GetBSPElementSize;
 
 	GetRefAPI = (GetRefAPI_t)GetProcAddress(reflib_library, "GetRefAPI");
-	if ( (GetRefAPI) == 0 )
-		Com_Error( ERR_FATAL, "GetProcAddress failed on %s", name );
+	if ((GetRefAPI) == 0)
+	{
+		Com_Error(ERR_FATAL, "GetProcAddress failed on %s", name);
+		return false; //msvc
+	}
 
 	re = GetRefAPI(ri);
 	if (re.api_version != API_VERSION)
 	{
 		VID_FreeReflib ();
-		Com_Error (ERR_FATAL, "%s has incompatible api_version", name);
+		Com_Error (ERR_FATAL, "%s has incompatible api version.", name);
+	}
+
+	if (re.rentity_size != sizeof(rentity_t) ||
+		re.dlight_size != sizeof(dlight_t) ||
+		re.particle_size != sizeof(particle_t) ||
+		re.lightstyle_size != sizeof(lightstyle_t) ||
+		re.decal_size != sizeof(decal_t) ||
+		re.refdef_size != sizeof(refdef_t) )
+	{
+		VID_FreeReflib();
+		Com_Error(ERR_FATAL, "%s has incompatible data types.", name);
 	}
 
 	if ( re.Init( global_hInstance, MainWndProc ) == -1 )
