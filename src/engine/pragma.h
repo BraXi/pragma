@@ -297,11 +297,16 @@ void CL_Shutdown (void);
 void CL_Frame (int msec);
 void Con_Print (char *text);
 void SCR_BeginLoadingPlaque (void);
+
+struct model_s* CL_GetDrawModel(int modelindex);
+cmodel_t* CL_GetClipModel(int modelindex);
 #endif
 
 void SV_Init (void);
 void SV_Shutdown (char *finalmsg, qboolean reconnect);
 void SV_Frame (int msec);
+
+void SV_Error(const char* error_str, ...);
 
 qboolean Com_IsServerActive();
 

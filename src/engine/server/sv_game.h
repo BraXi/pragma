@@ -8,6 +8,11 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+#ifndef _PRAGMA_SV_GAME_H_
+#define _PRAGMA_SV_GAME_H_
+
+#pragma once
+
 #define MAX_PERS_FIELDS		64
 
 // link_t is only used for entity area links now
@@ -129,20 +134,26 @@ extern void SV_SpawnEntities(const char* mapname, char* entities, const char* sp
 //
 // sv_gentity.c
 //
-extern void SV_AttachModel(gentity_t* self, const char* tagname, const char* model);
-extern void SV_DetachModel(gentity_t* self, const char* model);
-extern void SV_DetachAllModels(gentity_t* self);
-extern void SV_HideEntitySurface(gentity_t* self, const char* surfaceName);
-extern void SV_ShowEntitySurface(gentity_t* self, const char* surfaceName);
-extern qboolean SV_EntityCanBeDrawn(gentity_t* self);
+void SV_AttachModel(gentity_t* self, const char* tagname, const char* model);
+void SV_DetachModel(gentity_t* self, const char* model);
+void SV_DetachAllModels(gentity_t* self);
+void SV_HideEntitySurface(gentity_t* self, const char* surfaceName);
+void SV_ShowEntitySurface(gentity_t* self, const char* surfaceName);
+qboolean SV_EntityCanBeDrawn(gentity_t* self);
 
-extern void ClientUserinfoChanged(gentity_t* ent, char* userinfo);
+void SV_SetEntityModel(gentity_t* ent, const char* modelName);
+void SV_SetEntityBrushModel(gentity_t* ent, const char* modelName);
 
-extern void ClientCommand(gentity_t* ent);
-extern void SV_RunWorldFrame(void);
+void ClientUserinfoChanged(gentity_t* ent, char* userinfo);
+
+void ClientCommand(gentity_t* ent);
+void SV_RunWorldFrame(void);
 
 // savegames stubs
-extern void WriteGame(const char* filename, qboolean autosave);
-extern void ReadGame(const char* filename);
-extern void WriteLevel(const char* filename);
-extern void ReadLevel(const char* filename);
+void WriteGame(const char* filename, qboolean autosave);
+void ReadGame(const char* filename);
+void WriteLevel(const char* filename);
+void ReadLevel(const char* filename);
+
+
+#endif /*_PRAGMA_SV_GAME_H_*/

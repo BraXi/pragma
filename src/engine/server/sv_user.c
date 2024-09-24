@@ -207,7 +207,7 @@ void SV_Baselines_f (void)
 	while ( sv_client->netchan.message.cursize <  MAX_MSGLEN/2 && start < MAX_GENTITIES)
 	{
 		base = &sv.baselines[start];
-		if (base->modelindex || base->loopingSound || base->effects)
+		if (base->modelindex != 0 || base->loopingSound || base->effects)
 		{
 			MSG_WriteByte (&sv_client->netchan.message, SVC_SPAWNBASELINE);
 			MSG_WriteDeltaEntity (&nullstate, base, &sv_client->netchan.message, true, true);

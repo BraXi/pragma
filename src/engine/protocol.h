@@ -25,13 +25,9 @@ the svc_strings[] array in cl_parse.c should mirror svc_ops_e enum
 #ifndef _PRAGMA_PROTOCOL_H_
 #define _PRAGMA_PROTOCOL_H_
 
-#define PROTOCOL_REVISION 4
+#define PROTOCOL_REVISION	5
+#define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION)
 
-#ifdef PROTOCOL_EXTENDED_ASSETS
-#	define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION)
-#else
-#	define	PROTOCOL_VERSION	('B'+'X'+PROTOCOL_REVISION+'X')
-#endif
 
 // copies of entity_state_t to keep buffered
 #define	UPDATE_BACKUP	16	
@@ -165,8 +161,8 @@ enum clc_ops_e
 // try to pack the common update flags into the first byte
 #define	U_ETYPE				(1<<0)		// entity type
 #define	U_ORIGIN_XY			(1<<1)		// current origin
-#define	U_ANGLE_Y			(1<<2)		// current angles
-#define	U_ANGLE_Z			(1<<3)		// current angles
+#define	U_ANGLE_X			(1<<2)		// current angles
+#define	U_ANGLE_Y			(1<<3)		// current angles
 #define	U_ANIMFRAME_8		(1<<4)		// anim frame is 0-255
 #define	U_EVENT_8			(1<<5)		// byte
 #define	U_REMOVE			(1<<6)		// REMOVE this entity, don't add it
@@ -175,10 +171,10 @@ enum clc_ops_e
 // second byte
 #define	U_NUMBER_16			(1<<8)		// NUMBER8 is implicit if not set
 #define	U_ORIGIN_Z			(1<<9)
-#define	U_ANGLE_X			(1<<10)
-#define	U_MODELINDEX_8		(1<<11)		// modelindex is 0-255
+#define	U_ANGLE_Z			(1<<10)
+#define	U_MODELINDEX_16		(1<<11)		// modelindex
 #define U_RENDERFLAGS_8		(1<<12)		// fullbright, etc
-#define U_MODELINDEX_16		(1<<13)		// when modelindex > 255
+#define U_FREE_FLAG			(1<<13)		
 #define	U_EFFECTS_8			(1<<14)		// effects - EF_ flags
 #define	U_MOREBITS_2		(1<<15)		// -- read one additional byte --
 
@@ -187,9 +183,9 @@ enum clc_ops_e
 #define	U_ANIMFRAME_16		(1<<17)		// animframe greater than 255
 #define	U_RENDERFLAGS_16	(1<<18)		// 8 + 16 = 32B
 #define	U_EFFECTS_16		(1<<19)		// effects - EF_ flags, 8 + 16 = 32
-#define	U_ATTACHMENT_1		(1<<20)		// 
-#define	U_ATTACHMENT_2		(1<<21)		// 
-#define	U_ATTACHMENT_3		(1<<22)		// 
+#define	U_ATTACHMENT_1		(1<<20)		// model attached to a tag
+#define	U_ATTACHMENT_2		(1<<21)		// model attached to a tag
+#define	U_ATTACHMENT_3		(1<<22)		// model attached to a tag
 #define	U_MOREBITS_3		(1<<23)		// -- read one additional byte --
 
 // fourth byte

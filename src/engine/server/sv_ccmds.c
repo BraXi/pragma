@@ -22,15 +22,14 @@ These commands can only be entered from stdin or by a remote operator datagram
 
 void SV_ModelList_f(void)
 {
-	svmodel_t	* mod;
-	int		i;
-	int nonbmodels = 0, usedsize = 0;
+	svmodel_t *mod;
+	int i, usedsize = 0;
 
-	static char *mods[] = { "BAD", "BSP", "ALIAS", "SMDL" };
+	static const char *mods[] = { "BAD", "BSP", "ALIAS", "SMDL" };
 
 	if (sv.state == ss_dead)
 	{
-		Com_Printf("server must be running for sv_modelindex");
+		Com_Printf("Server must be running for sv_modelindex.");
 		return;
 	}
 
@@ -43,36 +42,22 @@ void SV_ModelList_f(void)
 	for (int index = 1; index < start+MAX_MODELS && sv.configstrings[start + index][0]; index++)
 		Com_Printf("%i: %s\n", index, sv.configstrings[start + index]);
 #endif
-	Com_Printf("\nserver models:\n");
-	Com_Printf("==============\n");
 
-	for (i = MODELINDEX_WORLD, mod = &sv.models[MODELINDEX_WORLD]; i < sv.num_models; i++, mod++)
+	Com_Printf("\nModels referenced by server:\n");
+
+	for (i = MODELINDEX_WORLD, mod = &sv.models[MODELINDEX_WORLD]; i < sv.numModels; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;
 
-		if (mod->type != MOD_BRUSH && mod->type != MOD_BAD)
-		{
-			nonbmodels++;
-			if(mod->type == MOD_ALIAS)
-				Com_Printf("%i: %s '%s' (%i frames)\n", i, mods[mod->type], mod->name, mod->numFrames);
-			else
-				Com_Printf("%i: %s '%s' \n", i, mods[mod->type], mod->name);
+		Com_Printf("%4i: %s (%s)\n", i, mod->name, mods[mod->type]);
 
-			//Com_Printf("%i: %s '%s' [%i anims, %i frames, %i tags, %i skins]\n", i, mods[mod->type], mod->name, mod->def.numAnimations, mod->numFrames, mod->numTags, mod->def.numSkins);
-			usedsize += mod->extradatasize;
-		}
-		else
-			Com_Printf("%i: %s '%s'\n", i, mods[mod->type], mod->name);
+		usedsize += mod->extradatasize;
 	}
 
 
-
 	Com_Printf("\n");
-	Com_Printf("... %i brush models.\n... %i external models.\nUsing %iKB of memory for external models.\n", CM_NumInlineModels(), nonbmodels, usedsize/1024);
-
-	// minus the 'bad model'
-	Com_Printf("Server is using %i models (limit is %i).\n", sv.num_models-1, MAX_MODELS-1);
+	Com_Printf("Server references %i external models and %i inline models (Using %iKB of memory)\n", sv.numModels-1, CM_NumInlineModels(), usedsize/1024);
 }
 
 

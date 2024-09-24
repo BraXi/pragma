@@ -135,6 +135,14 @@ typedef struct
 	float		white;			// highest of rgb
 } lightstyle_t;
 
+
+typedef struct
+{
+	vec3_t origin, angles;
+	float alpha;
+	struct model_s* model;
+} decal_t;
+
 typedef struct rdCamParams_s
 {
 	float	origin[3];
@@ -181,6 +189,13 @@ typedef struct
 {
 	// if api_version is different, the dll cannot be used
 	int		api_version;
+
+	int		rentity_size;
+	int		dlight_size;
+	int		particle_size;
+	int		lightstyle_size;
+	int		decal_size;
+	int		refdef_size;
 
 	// called when the library is loaded
 	qboolean	(*Init) ( void *hinstance, void *wndproc );

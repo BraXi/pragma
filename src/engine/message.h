@@ -55,12 +55,8 @@ float	MSG_ReadAngle16(sizebuf_t* sb);
 void	MSG_ReadDir(sizebuf_t* sb, vec3_t vector);
 void	MSG_ReadData(sizebuf_t* sb, void* buffer, int size);
 
+int		MSG_PackSolid32(const vec3_t mins, const vec3_t maxs);
+void	MSG_UnpackSolid32(int packedsolid, vec3_t mins, vec3_t maxs);
 
-#if PROTOCOL_FLOAT_COORDS == 1
-	int MSG_PackSolid32(const vec3_t mins, const vec3_t maxs);
-	void MSG_UnpackSolid32(int packedsolid, vec3_t mins, vec3_t maxs);
-#else
-	void MSG_UnpackSolid16(int packedsolid, vec3_t bmins, vec3_t bmaxs);
-#endif
 
 #endif /*_PRAGMA_MESSAGE_H_*/

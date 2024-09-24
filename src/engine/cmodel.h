@@ -22,6 +22,7 @@ COLLISION MODEL
 
 void		CM_FreeMap();
 cmodel_t* CM_LoadMap(char* name, qboolean clientload, unsigned* checksum);
+cmodel_t* CM_InlineModelNum(int index);
 cmodel_t* CM_InlineModel(const char* name); // *1, *2, etc
 
 int			CM_NumClusters();

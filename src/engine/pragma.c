@@ -380,10 +380,7 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 	// main model
 	if (to->modelindex != from->modelindex || to->hidePartBits != from->hidePartBits)
 	{
-		if (to->modelindex > 255)
-			bits |= U_MODELINDEX_16; // short
-		else
-			bits |= U_MODELINDEX_8; // byte	
+		bits |= U_MODELINDEX_16;
 	}
 
 	// attached models
@@ -463,42 +460,27 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 	if (bits & U_ETYPE)
 		MSG_WriteByte(msg, to->eType);
 
-	// main model
-	if (bits & U_MODELINDEX_8)
-		MSG_WriteByte(msg, to->modelindex);
+	// model and part bits
 	if (bits & U_MODELINDEX_16)
+	{
 		MSG_WriteShort(msg, to->modelindex);
-
-	// hidden parts
-	if(bits & U_MODELINDEX_8 || bits & U_MODELINDEX_16)
 		MSG_WriteByte(msg, to->hidePartBits);
+	}
 
 	// attached models
 	if (bits & U_ATTACHMENT_1)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		MSG_WriteShort(msg, to->attachments[0].modelindex);
-#else
-		MSG_WriteByte(msg, to->attachments[0].modelindex);
-#endif
 		MSG_WriteByte(msg, to->attachments[0].parentTag);
 	}
 	if (bits & U_ATTACHMENT_2)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		MSG_WriteShort(msg, to->attachments[1].modelindex);
-#else
-		MSG_WriteByte(msg, to->attachments[1].modelindex);
-#endif
 		MSG_WriteByte(msg, to->attachments[1].parentTag);
 	}
 	if (bits & U_ATTACHMENT_3)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
 		MSG_WriteShort(msg, to->attachments[2].modelindex);
-#else
-		MSG_WriteByte(msg, to->attachments[2].modelindex);
-#endif
 		MSG_WriteByte(msg, to->attachments[2].parentTag);
 	}
 
@@ -595,7 +577,7 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 	// looping sound
 	if (bits & U_LOOPSOUND)
 	{
-#ifdef PROTOCOL_EXTENDED_ASSETS
+#if PROTO_SHORT_INDEXES
 		MSG_WriteShort(msg, to->loopingSound);
 #else
 		MSG_WriteByte(msg, to->loopingSound);
@@ -609,27 +591,12 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 	// solid
 	if (bits & U_PACKEDSOLID)
 	{
-#if PROTOCOL_FLOAT_COORDS == 1
 		MSG_WriteLong(msg, to->packedSolid);
-#else
-		MSG_WriteShort(msg, to->solid);
-#endif
 	}
 }
 
 
-//============================================================
-
-
-
-
-
-
 //===========================================================================
-
-
-
-//============================================================================
 
 
 /*

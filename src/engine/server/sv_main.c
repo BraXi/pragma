@@ -1184,3 +1184,41 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 	memset (&svs, 0, sizeof(svs));
 }
 
+
+/*
+================
+SV_Error
+An unrecoverable server error happened.
+================
+*/
+void SV_Error(const char* error_str, ...)
+{
+	qboolean error_in_qcvm;
+	va_list argptr;
+	static char msg[2048]; //MAXPRINTMSG, why so big?
+	static qboolean recursive;
+
+
+	if (recursive)
+	{
+		Sys_Error("Recursive server error after: %s", msg);
+	}
+
+	recursive = true;
+
+	va_start(argptr, error_str);
+	vsnprintf(msg, sizeof(msg), error_str, argptr);
+	va_end(argptr);
+
+	error_in_qcvm = (Scr_BuiltinFuncName()[0] == '*'); // FIXME: not the best way
+
+	if (error_in_qcvm)
+	{
+		Scr_RunError(msg);
+	}
+	else
+	{
+		Com_Error(ERR_DROP, msg);
+	}
+
+}

@@ -39,8 +39,10 @@ static void SV_CreateBaseline()
 		svent = EDICT_NUM(entnum);
 		if (!svent->inuse)
 			continue;
-		if (!svent->s.modelindex && !svent->s.loopingSound && !svent->s.effects)
+
+		if (svent->s.modelindex == 0 && !svent->s.loopingSound && !svent->s.effects)
 			continue;
+
 		svent->s.number = entnum;
 
 		//
@@ -224,18 +226,21 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	SV_SetConfigString(CS_NAME, mapname);
 
 	//
-	// initialize server models, sv.models[1] is world model, followed by all inline models and the rest
+	// initialize server models, sv.models[1] is BSP, other models follow, inline models are addressed with negative indexes and are not part of model list
 	//
-	sv.models[0].type = MOD_BAD;
-	strcpy(sv.models[0].name, "none");
+	strcpy(sv.models[MODELINDEX_BAD].name, "none");
+	sv.models[MODELINDEX_BAD].type = MOD_BAD;
+	sv.models[MODELINDEX_BAD].modelindex = 0;
 
 	sv.models[MODELINDEX_WORLD].type = MOD_BRUSH;
 	sv.models[MODELINDEX_WORLD].modelindex = 1;
-	sv.num_models = 2; // because modelindex 0 is no model
+
+	sv.numModels = 2; // because modelindex 0 is no model
 
 	if (serverstate != ss_game)
 	{
 		// no real map -- cinematic server
+		SV_SetConfigString(CS_MODELS + 1, "");
 		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap ("", false, &checksum_map);	
 	}
 	else
@@ -244,6 +249,21 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 		strcpy(sv.models[MODELINDEX_WORLD].name, sv.configstrings[CS_MODELS + 1]);
 		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap (sv.models[1].name, false, &checksum_map);
 	}
+
+#if 0
+	// set up brush models
+	for (i = 1; i < CM_NumInlineModels(); i++)
+	{
+		SV_SetConfigString((CS_MODELS + 1 + i), va("*%i", i));
+
+		strcpy(sv.models[sv.numModels].name, sv.configstrings[CS_MODELS + 1 + i]);
+		sv.models[sv.numModels].type = MOD_BRUSH;
+		sv.models[sv.numModels].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS + 1 + i]);
+		sv.models[sv.numModels].modelindex = sv.numModels;
+
+		sv.numModels++;
+	}
+#endif
 
 	//
 	// we want to do a CRC checksums for currently loaded map and client programs
@@ -257,6 +277,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	SV_SetConfigString(CS_CHECKSUM_MAP, va("%i", checksum_map));
 	SV_SetConfigString(CS_CHECKSUM_CGPROGS, va("%i", checksum_cgprogs));
 	SV_SetConfigString(CS_CHECKSUM_GUIPROGS, va("%i", checksum_guiprogs));
+	SV_SetConfigString(CS_CHEATS_ENABLED, va("%i", (int)sv_cheats->value));
 
 	Com_Printf("client progs crc: %d\n", checksum_cgprogs);
 	Com_Printf("gui progs crc: %d\n", checksum_guiprogs);
@@ -287,18 +308,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	//
 	SV_ClearWorld ();
 	
-	// set up brush models
-	for (i = 1; i < CM_NumInlineModels() ; i++)
-	{
-		SV_SetConfigString((CS_MODELS + 1 + i), va("*%i", i));
 
-		strcpy(sv.models[sv.num_models].name, sv.configstrings[CS_MODELS + 1 + i]);
-		sv.models[sv.num_models].type = MOD_BRUSH;
-		sv.models[sv.num_models].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS+1+i]);
-		sv.models[sv.num_models].modelindex = sv.num_models;
-
-		sv.num_models++;
-	}
 
 	//
 	// spawn the rest of the entities on the map
@@ -318,8 +328,6 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 
 	// call the main function in server progs
 	SV_ScriptMain();
-
-	Com_sprintf(sv.configstrings[CS_CHEATS_ENABLED], sizeof(sv.configstrings[CS_CHEATS_ENABLED]), "%i", (int)sv_cheats->value);
 
 	// give it a frame so the entities can spawn and drop to floor
 	SV_RunWorldFrame();

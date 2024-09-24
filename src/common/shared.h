@@ -330,7 +330,7 @@ typedef struct cmodel_s
 
 typedef struct csurface_s
 {
-	char		name[32]; // braxi -- was 16 (id's mistake)
+	char		name[32]; // braxi -- 32 to match qbsp
 	int			flags;
 	int			value;
 } csurface_t;
@@ -382,19 +382,12 @@ typedef struct
 {
 	pmtype_t	pm_type;
 
-#if PROTOCOL_FLOAT_COORDS == 1
 	vec3_t		origin;
 	vec3_t		velocity;
 
 	vec3_t		mins;
 	vec3_t		maxs;
-#else
-	short		origin[3];		// 12.3
-	short		velocity[3];	// 12.3
 
-	short		mins[3];	// 12.3
-	short		maxs[3];	// 12.3
-#endif
 
 	int			pm_flags; 		// ducked, jump_held, etc
 	byte		pm_time;		// each unit = 8 ms
