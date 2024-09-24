@@ -198,7 +198,9 @@ typedef struct /* BSPX DECOUPLED LIGHTMAPS */
 #define	SURF_FLOWING	(1 << 6) /*64*/ 	// scroll towards S coord
 #define	SURF_NODRAW		(1 << 7) /*128*/ 	// don't bother referencing the texture
 #define	SURF_HINT		(1 << 8) /*256*/	// make a primary bsp splitter
-#define	SURF_SKIP		(1 << 9) /*256*/	// completely ignore, allowing non-closed brushes
+#define	SURF_SKIP		(1 << 9) /*512*/	// completely ignore, allowing non-closed brushes
+
+#define	SURF_DECAL		(1 << 10) /*1024*/	// surface is decal
 
 // ericw_tools additional flags
 #define SURF_ALPHATEST	(1 << 25) // alpha test flag

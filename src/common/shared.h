@@ -330,7 +330,7 @@ typedef struct cmodel_s
 
 typedef struct csurface_s
 {
-	char		name[32]; // braxi -- was 16 (id's mistake)
+	char		name[32]; // braxi -- 32 to match qbsp
 	int			flags;
 	int			value;
 } csurface_t;
