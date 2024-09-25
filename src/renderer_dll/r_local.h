@@ -382,6 +382,7 @@ void R_DrawWorld();
 void R_World_MarkLeaves();
 void R_World_DrawAlphaSurfaces(); //old rendering path
 void R_DrawBrushModel(rentity_t* ent);
+void R_PreprocessBrushModelEntity(rentity_t* ent);
 
 
 //===================================================================

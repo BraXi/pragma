@@ -75,6 +75,9 @@ typedef struct rentity_s
 	// hidden = (hiddenPartsBits & (1 << modelSurfaceNum)
 	byte	hiddenPartsBits;
 
+	// is entity visible in this frame, must match r_framecount to draw
+	int		visibleFrame;
+
 	// index to skin entry
 	int		skinnum;				
 	

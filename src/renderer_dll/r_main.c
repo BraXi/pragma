@@ -220,7 +220,7 @@ void R_DrawEntitiesOnList(void)
 
 		if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
 		{
-			continue; // reject transparent
+			continue; // reject entities with transparency effect early
 		}
 
 		if (gl_state.bShadowMapPass)
@@ -239,17 +239,17 @@ void R_DrawEntitiesOnList(void)
 	gl_state.bDrawingTransparents = true;
 
 	// braxi -- line below commented out as we alphatest now
-	//R_WriteToDepthBuffer(GL_FALSE); // no z writes
+	R_WriteToDepthBuffer(GL_FALSE); // no z writes
 
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		pCurrentRefEnt = &r_newrefdef.entities[i];
 		pCurrentModel = pCurrentRefEnt->model;
 
-		if (!(pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
-		{
-			continue; // reject opaque
-		}
+		//if (!(pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
+		//{
+		//	continue; // reject opaque
+		//}
 		if (gl_state.bShadowMapPass)
 		{
 			if ((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) || (pCurrentRefEnt->renderfx & RF_NO_SHADOW))
@@ -263,7 +263,7 @@ void R_DrawEntitiesOnList(void)
 	gl_state.bDrawingTransparents = false;
 
 	// braxi -- line below commented out as we alphatest now
-	//R_WriteToDepthBuffer(GL_TRUE);// reenable z writing
+	R_WriteToDepthBuffer(GL_TRUE);// reenable z writing
 
 	R_UnbindProgram();
 }
@@ -554,6 +554,7 @@ void R_RenderView (refdef_t *fd)
 	if (!r_worldmodel && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 		ri.Error (ERR_DROP, "R_RenderView: NULL worldmodel");
 
+
 	// clear performance counters
 	rperf.brush_polys = 0;
 	rperf.brush_tris = 0;
@@ -605,6 +606,26 @@ void R_RenderView (refdef_t *fd)
 	// Skip lighting, particles, debug lines, and all the other things which shouldn't render to depth
 	//
 
+	if (r_drawentities->value)
+	{
+		rentity_t* ent = r_newrefdef.entities;
+		for (int i = 0; i < r_newrefdef.num_entities; i++, ent++)
+		{
+			if (ent->model)
+			{
+				switch (ent->model->type)
+				{
+				case MOD_BRUSH:
+					R_PreprocessBrushModelEntity(ent);
+					break;
+				default:
+					ent->visibleFrame = r_framecount;
+					break;
+				}
+			}
+		}
+	}
+		
 	if (r_test->value)
 	{
 		R_InitShadowMap(vid.width, vid.height);

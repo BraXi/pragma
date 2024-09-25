@@ -549,72 +549,55 @@ static void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
 
 /*
 =================
-R_BrushModel_MarkLights
+R_DrawBrushModel
 
-calculate dynamic lighting for brushmodel, adopts Spike's fix from QuakeSpasm
-note: assumes pCurrentRefEnt & pCurrentModel are properly set
+If bTransparentPass is true, only transparent bits will be drawn
 =================
 */
-void R_BrushModel_MarkLights()
-{
-	dlight_t	*light;
-	vec3_t		lightorg;
-	int			i;
-
-//	if (!pCurrentModel || pCurrentModel->type != MOD_BRUSH)
-//		return; // this can never happen
-
-	for (light = r_newrefdef.dlights, i = 0; i < r_newrefdef.num_dlights; i++, light++)
-	{
-		VectorSubtract(light->origin, pCurrentRefEnt->origin, lightorg);
-		R_MarkLights(light, lightorg, (1 << i), (pCurrentModel->nodes + pCurrentModel->firstnode));
-	}
-}
-
-/*
-=================
-R_DrawBrushModel_Internal
-
-This is a copy of R_DrawInlineBModel adapted for batching
-=================
-*/
-static void R_DrawBrushModel_Internal()
+void R_DrawBrushModel(rentity_t *ent)
 {
 	int			i;
 	msurface_t* psurf;
-	vec3_t		color;
+	vec4_t		colorOverride;
+	qboolean	bPolygonOffset = false;
 
-	float alpha = 1.0f;
+	if (ent->visibleFrame != r_framecount)
+		return; // not visible in this frame
 
-	// setup RF_COLOR and RF_TRANSLUCENT
-	if (pCurrentRefEnt->renderfx & RF_COLOR)
-		VectorCopy(pCurrentRefEnt->renderColor, color);
+#ifndef FIX_SQB
+	ent->angles[0] = -ent->angles[0];	// stupid quake bug
+	ent->angles[2] = -ent->angles[2];	// stupid quake bug
+#endif
+	R_RotateForEntity(ent);
+#ifndef FIX_SQB
+	ent->angles[0] = -ent->angles[0];	// stupid quake bug
+	ent->angles[2] = -ent->angles[2];	// stupid quake bug
+#endif
+
+	if (ent->renderfx & RF_COLOR)
+		VectorCopy(ent->renderColor, colorOverride); // note: vec3->vec4
 	else
-		VectorSet(color, 1.0f, 1.0f, 1.0f);
+		VectorSet(colorOverride, 1.0f, 1.0f, 1.0f); // note: vec3->vec4
 
-	if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
+	colorOverride[3] = 1.0f;
+
+	if (gl_state.bDrawingTransparents)
 	{
-		if (pCurrentRefEnt->alpha <= 0.05f)
-			return; // nothing to draw
-
 		R_Blend(true);
-		alpha = pCurrentRefEnt->alpha;
+		if(ent->renderfx & RF_TRANSLUCENT)
+			colorOverride[3] = ent->alpha;
 	}
-
-	// test
-	//glEnable(GL_POLYGON_OFFSET_FILL);
-	//glPolygonOffset(-0.1f, -1.0f);
 
 	R_World_BeginRendering();
 
-	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], alpha);
+	R_ProgUniform4f(LOC_COLOR4, colorOverride[0], colorOverride[1], colorOverride[2], colorOverride[3]);
 
 	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
 	for (i = 0; i < pCurrentModel->nummodelsurfaces; i++, psurf++)
 	{
 
 #ifdef BMODEL_CHECK_PLANE
-		// find which side of the node we are on, see BMODEL_CHECK_PLANE in R_DrawBrushModel
+		// find which side of the node we are on, see BMODEL_CHECK_PLANE in R_PreprocessBrushModelEntity
 		cplane_t* pplane = psurf->plane;
 		float dot = DotProduct(modelorg, pplane->normal) - pplane->dist;
 
@@ -622,89 +605,120 @@ static void R_DrawBrushModel_Internal()
 		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
 #endif
+			if ((psurf->texinfo->flags & (SURF_SKY | SURF_NODRAW | SURF_SKIP)))
+				continue;
 
-#if 0
-			if (psurf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66 | SURF_ALPHATEST))
+			if (psurf->texinfo->flags & SURF_DECAL)
 			{
-				// add to the translucent chain
-				psurf->texturechain = r_alpha_surfaces;
-				r_alpha_surfaces = psurf;
+				if (!bPolygonOffset)
+				{
+					glEnable(GL_POLYGON_OFFSET_FILL);
+					glPolygonOffset(-0.1f, -1.0f);
+					bPolygonOffset = true;
+				}
+			}
+			else if (bPolygonOffset)
+			{
+				glDisable(GL_POLYGON_OFFSET_FILL);
+				glPolygonOffset(0.0f, 0.0f);
+				bPolygonOffset = false;
+			}
+
+			if ((ent->renderfx & RF_TRANSLUCENT) && gl_state.bDrawingTransparents)
+			{
+				R_World_NewDrawSurface(psurf, true); // all surfaces are transparent
 			}
 			else
-#endif
-			//psurf->texinfo->flags = 0;
 			{
-				R_World_NewDrawSurface(psurf, true);
+				if (psurf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66 | SURF_DECAL | SURF_ALPHATEST))
+				{
+					if (gl_state.bDrawingTransparents)
+						R_World_NewDrawSurface(psurf, true);
+				}
+				else
+				{
+					R_World_NewDrawSurface(psurf, true);
 			}
+	}
 
 #ifdef BMODEL_CHECK_PLANE
 		}
 #endif
 	}
 	R_World_DrawAndFlushBufferedGeo();
-
 	R_World_EndRendering();
 
-	R_Blend(false);
+	if (bPolygonOffset)
+	{
+		glDisable(GL_POLYGON_OFFSET_FILL);
+		glPolygonOffset(0.0f, 0.0f);
+	}
 
-	// test
-	//glDisable(GL_POLYGON_OFFSET_FILL);
-	//glPolygonOffset(0.0f, 0.0f);
+	if(!gl_state.bDrawingTransparents)
+		R_Blend(false); // does nothing when blend is off
 }
 
 
 /*
 =================
-R_DrawBrushModel
+R_PreprocessBrushModelEntity
+Checks if entity is visible this frame and marks which dynamic lights impact this entity
 =================
 */
-void R_DrawBrushModel(rentity_t* ent)
+void R_PreprocessBrushModelEntity(rentity_t * ent)
 {
 	vec3_t		mins, maxs;
-	int			i;
 	qboolean	rotated;
-
+	dlight_t	*light;
+	vec3_t		lightorg;
+	int			i;
 
 #ifdef _DEBUG
-	if(!ent->model || ent->model->type != MOD_BRUSH)
+	if (!ent->model || ent->model->type != MOD_BRUSH)
 		return;
 #endif
 
-	if (pCurrentModel->nummodelsurfaces == 0)
-		return; // early out, no surfaces
+	if (ent->model->nummodelsurfaces == 0)
+		return; // nothing to draw, reject
 
-	if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
+	if ((ent->renderfx & RF_TRANSLUCENT) && ent->alpha <= 0.05f)
 	{
-		if (pCurrentRefEnt->alpha <= 0.05f)
-			return; // nothing to draw
+		return; // completly transparent, reject
 	}
-
-	// light bmodel
-	R_BrushModel_MarkLights();
-
-	pCurrentRefEnt = ent;
 
 	if (ent->angles[0] || ent->angles[1] || ent->angles[2])
 	{
 		rotated = true;
 		for (i = 0; i < 3; i++)
 		{
-			mins[i] = ent->origin[i] - pCurrentModel->radius;
-			maxs[i] = ent->origin[i] + pCurrentModel->radius;
+			mins[i] = ent->origin[i] - ent->model->radius;
+			maxs[i] = ent->origin[i] + ent->model->radius;
 		}
 	}
 	else
 	{
 		rotated = false;
-		VectorAdd(ent->origin, pCurrentModel->mins, mins);
-		VectorAdd(ent->origin, pCurrentModel->maxs, maxs);
+		VectorAdd(ent->origin, ent->model->mins, mins);
+		VectorAdd(ent->origin, ent->model->maxs, maxs);
 	}
 
 	if (R_CullBox(mins, maxs))
-		return;
+	{
+		return; // not in frustum, reject
+	}
+
+	// mark entitiy as visible this frame
+	ent->visibleFrame = r_framecount;
+
+	// mark which dynamic lights impact this model (not the best)
+	for (light = r_newrefdef.dlights, i = 0; i < r_newrefdef.num_dlights; i++, light++)
+	{
+		VectorSubtract(light->origin, ent->origin, lightorg);
+		R_MarkLights(light, lightorg, (1 << i), (ent->model->nodes + ent->model->firstnode));
+	}
 
 #ifdef BMODEL_CHECK_PLANE 
-	// when BMODEL_CHECK_PLANE, modelorg is used in R_DrawBrushModel_Internal
+	// when BMODEL_CHECK_PLANE, modelorg is used in R_DrawBrushModel
 	// to determine which side we're looking at and cull backfaces
 	VectorSubtract(r_newrefdef.view.origin, ent->origin, modelorg);
 	if (rotated)
@@ -719,18 +733,6 @@ void R_DrawBrushModel(rentity_t* ent)
 		modelorg[2] = DotProduct(temp, up);
 	}
 #endif
-
-#ifndef FIX_SQB
-	ent->angles[0] = -ent->angles[0];	// stupid quake bug
-	ent->angles[2] = -ent->angles[2];	// stupid quake bug
-#endif
-	R_RotateForEntity(ent);
-#ifndef FIX_SQB
-	ent->angles[0] = -ent->angles[0];	// stupid quake bug
-	ent->angles[2] = -ent->angles[2];	// stupid quake bug
-#endif
-
-	R_DrawBrushModel_Internal();
 }
 
 /*
