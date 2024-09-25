@@ -580,10 +580,11 @@ This is a copy of R_DrawInlineBModel adapted for batching
 static void R_DrawBrushModel_Internal()
 {
 	int			i;
-	cplane_t	*pplane;
+	//cplane_t	*pplane;
 	msurface_t* psurf;
 	vec3_t		color;
-	float		dot, alpha = 1.0f;
+	//float		dot;
+	float alpha = 1.0f;
 
 	// setup RF_COLOR and RF_TRANSLUCENT
 	if (pCurrentRefEnt->renderfx & RF_COLOR)
@@ -618,12 +619,13 @@ static void R_DrawBrushModel_Internal()
 	for (i = 0; i < pCurrentModel->nummodelsurfaces; i++, psurf++)
 	{
 		// find which side of the node we are on
-		pplane = psurf->plane;
-		dot = DotProduct(modelorg, pplane->normal) - pplane->dist;
+		//pplane = psurf->plane;
+		//dot = DotProduct(modelorg, pplane->normal) - pplane->dist;
 
 		// draw the polygon
-		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
-		{
+		//if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
+		//{
+#if 0
 			if (psurf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66 | SURF_ALPHATEST))
 			{
 				// add to the translucent chain
@@ -631,10 +633,12 @@ static void R_DrawBrushModel_Internal()
 				r_alpha_surfaces = psurf;
 			}
 			else
+#endif
+			//psurf->texinfo->flags = 0;
 			{
 				R_World_NewDrawSurface(psurf, true);
 			}
-		}
+		//}
 	}
 	R_World_DrawAndFlushBufferedGeo();
 

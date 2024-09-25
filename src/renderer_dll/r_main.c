@@ -165,24 +165,35 @@ static inline void R_DrawCurrentEntity()
 {
 	if (pCurrentRefEnt->renderfx & RF_BEAM)
 	{
-		R_DrawBeam(pCurrentRefEnt);
+		ri.Error(ERR_FATAL, "%s RF_BEAM", __FUNCTION__);
+		//R_DrawBeam(pCurrentRefEnt);
 	}
 	else
 	{
 		if (!pCurrentModel)
 		{
-			R_DrawNullModel();
+			if (!r_defaultmodel)
+			{
+				ri.Error(ERR_FATAL, "%s !r_defaultmodel", __FUNCTION__);
+				return;
+			}
+
+			pCurrentModel = r_defaultmodel;
+			pCurrentRefEnt->model = r_defaultmodel;
+
+			pCurrentRefEnt->hiddenPartsBits = 0;
+			pCurrentRefEnt->frame = pCurrentRefEnt->oldframe = 0;
+			pCurrentRefEnt->renderfx = (RF_FULLBRIGHT | RF_GLOW);
+		}
+
+
+		if (pCurrentModel->type == MOD_BRUSH)
+		{
+			R_DrawBrushModel(pCurrentRefEnt);
 		}
 		else
 		{
-			if (pCurrentModel->type == MOD_BRUSH)
-			{
-				R_DrawBrushModel(pCurrentRefEnt);
-			}
-			else
-			{
-				R_DrawEntityModel(pCurrentRefEnt);
-			}
+			R_DrawEntityModel(pCurrentRefEnt);
 		}
 	}
 }

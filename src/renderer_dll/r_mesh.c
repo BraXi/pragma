@@ -102,26 +102,14 @@ void R_SetEntityShadeLight(rentity_t* ent)
 	{
 		VectorCopy(ent->renderColor, model_shadelight);
 	}
-	else if (pCurrentRefEnt->renderfx & RF_FULLBRIGHT || r_fullbright->value)
+	else if (ent->renderfx & RF_FULLBRIGHT || r_fullbright->value)
 	{
 		VectorSet(model_shadelight, 1.0f, 1.0f, 1.0f);
 	}
 	else 
 	{
-		R_LightPoint(pCurrentRefEnt->origin, model_shadelight);
+		R_LightPoint(ent->origin, model_shadelight);
 		VectorCopy(model_shadelight, ent->shadelightpoint);
-	}
-
-	if (ent->renderfx & RF_MINLIGHT)
-	{
-		for (i = 0; i < 3; i++)
-			if (model_shadelight[i] > 0.1)
-				break;
-
-		if (i == 3)
-		{
-			VectorSet(model_shadelight, 0.1f, 0.1f, 0.1f);
-		}
 	}
 
 	if (ent->renderfx & RF_GLOW)
@@ -133,6 +121,18 @@ void R_SetEntityShadeLight(rentity_t* ent)
 			model_shadelight[i] += scale;
 			if (model_shadelight[i] < min)
 				model_shadelight[i] = min;
+		}
+	}
+
+	if (ent->renderfx & RF_MINLIGHT)
+	{
+		for (i = 0; i < 3; i++)
+			if (model_shadelight[i] > 0.1)
+				break;
+
+		if (i == 3)
+		{
+			VectorSet(model_shadelight, 0.1f, 0.1f, 0.1f);
 		}
 	}
 

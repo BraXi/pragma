@@ -65,7 +65,6 @@ model_t* R_ModelForNum(int index)
 	// out of range gets the default model
 	if (index < 1 || index >= r_models_count)
 	{
-//		return &r_models[0];
 		return r_defaultmodel; // NULL
 	}
 
@@ -368,7 +367,7 @@ void R_BeginRegistration(const char *worldName)
 
 	Com_sprintf(fullname, sizeof(fullname), "maps/%s.bsp", worldName);
 
-	// explicitly free the old map if different, this guarantees that r_models[0] is the world map
+	// explicitly free the old map if different, this guarantees that r_worldmodel is the world map
 	// this also ensures we don't reload the map when restarting level
 	flushmap = ri.Cvar_Get("cm_flushmap", "0", 0, NULL);
 	if (r_worldmodel && (strcmp(r_worldmodel->name, fullname) || flushmap->value))
@@ -376,12 +375,13 @@ void R_BeginRegistration(const char *worldName)
 		R_FreeModel(r_worldmodel);
 		r_worldmodel = NULL;
 	}
-	// 
-//	if (strcmp(r_models[0].name, fullname) || flushmap->value)
-//		R_FreeModel(&r_models[0]);
 
 	r_worldmodel = R_ModelForName(fullname, true);
 	r_viewcluster = r_viewcluster2 = -1;
+
+	// load the default model
+	r_defaultmodel = R_ModelForName("models/dev/xyz.md3", true);
+	r_defaultmodel->registration_sequence = registration_sequence;
 }
 
 /*
