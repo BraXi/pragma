@@ -614,7 +614,7 @@ static void R_DrawBrushModel_Internal()
 	{
 
 #ifdef BMODEL_CHECK_PLANE
-		// find which side of the node we are on
+		// find which side of the node we are on, see BMODEL_CHECK_PLANE in R_DrawBrushModel
 		cplane_t* pplane = psurf->plane;
 		float dot = DotProduct(modelorg, pplane->normal) - pplane->dist;
 
