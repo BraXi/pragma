@@ -25,6 +25,8 @@ extern int registration_sequence; // experimental nature heh
 
 #define MAX_INDICES 16384 // build indices untill this
 
+//#define BMODEL_CHECK_PLANE // old "culling"
+
 // gfx world stores the current state for batching drawcalls, if any 
 // of them change we draw what we have so far and begin building indices again
 typedef struct gfx_world_s
@@ -547,13 +549,13 @@ static void R_World_NewDrawSurface(msurface_t* surf, qboolean lightmapped)
 
 /*
 =================
-R_World_LightInlineModel
+R_BrushModel_MarkLights
 
 calculate dynamic lighting for brushmodel, adopts Spike's fix from QuakeSpasm
 note: assumes pCurrentRefEnt & pCurrentModel are properly set
 =================
 */
-void R_World_LightInlineModel()
+void R_BrushModel_MarkLights()
 {
 	dlight_t	*light;
 	vec3_t		lightorg;
@@ -562,8 +564,7 @@ void R_World_LightInlineModel()
 //	if (!pCurrentModel || pCurrentModel->type != MOD_BRUSH)
 //		return; // this can never happen
 
-	light = r_newrefdef.dlights;
-	for (i = 0; i < r_newrefdef.num_dlights; i++, light++)
+	for (light = r_newrefdef.dlights, i = 0; i < r_newrefdef.num_dlights; i++, light++)
 	{
 		VectorSubtract(light->origin, pCurrentRefEnt->origin, lightorg);
 		R_MarkLights(light, lightorg, (1 << i), (pCurrentModel->nodes + pCurrentModel->firstnode));
@@ -580,10 +581,9 @@ This is a copy of R_DrawInlineBModel adapted for batching
 static void R_DrawBrushModel_Internal()
 {
 	int			i;
-	//cplane_t	*pplane;
 	msurface_t* psurf;
 	vec3_t		color;
-	//float		dot;
+
 	float alpha = 1.0f;
 
 	// setup RF_COLOR and RF_TRANSLUCENT
@@ -592,25 +592,19 @@ static void R_DrawBrushModel_Internal()
 	else
 		VectorSet(color, 1.0f, 1.0f, 1.0f);
 
-	if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT) && pCurrentRefEnt->alpha != 1.0f)
+	if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
 	{
-		if (pCurrentRefEnt->alpha <= 0.0f)
-			return; // completly gone
+		if (pCurrentRefEnt->alpha <= 0.05f)
+			return; // nothing to draw
 
 		R_Blend(true);
 		alpha = pCurrentRefEnt->alpha;
 	}
 
-	// light bmodel
-	R_World_LightInlineModel();
-
 	// test
 	//glEnable(GL_POLYGON_OFFSET_FILL);
 	//glPolygonOffset(-0.1f, -1.0f);
 
-	//
-	// draw brushmodel
-	//
 	R_World_BeginRendering();
 
 	R_ProgUniform4f(LOC_COLOR4, color[0], color[1], color[2], alpha);
@@ -618,13 +612,17 @@ static void R_DrawBrushModel_Internal()
 	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
 	for (i = 0; i < pCurrentModel->nummodelsurfaces; i++, psurf++)
 	{
+
+#ifdef BMODEL_CHECK_PLANE
 		// find which side of the node we are on
-		//pplane = psurf->plane;
-		//dot = DotProduct(modelorg, pplane->normal) - pplane->dist;
+		cplane_t* pplane = psurf->plane;
+		float dot = DotProduct(modelorg, pplane->normal) - pplane->dist;
 
 		// draw the polygon
-		//if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
-		//{
+		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
+		{
+#endif
+
 #if 0
 			if (psurf->texinfo->flags & (SURF_TRANS33 | SURF_TRANS66 | SURF_ALPHATEST))
 			{
@@ -638,14 +636,16 @@ static void R_DrawBrushModel_Internal()
 			{
 				R_World_NewDrawSurface(psurf, true);
 			}
-		//}
+
+#ifdef BMODEL_CHECK_PLANE
+		}
+#endif
 	}
 	R_World_DrawAndFlushBufferedGeo();
 
-	if (alpha != 1.0f)
-		R_Blend(false);
-
 	R_World_EndRendering();
+
+	R_Blend(false);
 
 	// test
 	//glDisable(GL_POLYGON_OFFSET_FILL);
@@ -658,58 +658,76 @@ static void R_DrawBrushModel_Internal()
 R_DrawBrushModel
 =================
 */
-void R_DrawBrushModel(rentity_t* e)
+void R_DrawBrushModel(rentity_t* ent)
 {
 	vec3_t		mins, maxs;
 	int			i;
 	qboolean	rotated;
 
-	if (pCurrentModel->nummodelsurfaces == 0)
+
+#ifdef _DEBUG
+	if(!ent->model || ent->model->type != MOD_BRUSH)
 		return;
+#endif
 
-	pCurrentRefEnt = e;
+	if (pCurrentModel->nummodelsurfaces == 0)
+		return; // early out, no surfaces
 
-	if (e->angles[0] || e->angles[1] || e->angles[2])
+	if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
+	{
+		if (pCurrentRefEnt->alpha <= 0.05f)
+			return; // nothing to draw
+	}
+
+	// light bmodel
+	R_BrushModel_MarkLights();
+
+	pCurrentRefEnt = ent;
+
+	if (ent->angles[0] || ent->angles[1] || ent->angles[2])
 	{
 		rotated = true;
 		for (i = 0; i < 3; i++)
 		{
-			mins[i] = e->origin[i] - pCurrentModel->radius;
-			maxs[i] = e->origin[i] + pCurrentModel->radius;
+			mins[i] = ent->origin[i] - pCurrentModel->radius;
+			maxs[i] = ent->origin[i] + pCurrentModel->radius;
 		}
 	}
 	else
 	{
 		rotated = false;
-		VectorAdd(e->origin, pCurrentModel->mins, mins);
-		VectorAdd(e->origin, pCurrentModel->maxs, maxs);
+		VectorAdd(ent->origin, pCurrentModel->mins, mins);
+		VectorAdd(ent->origin, pCurrentModel->maxs, maxs);
 	}
 
 	if (R_CullBox(mins, maxs))
 		return;
 
-
-	VectorSubtract(r_newrefdef.view.origin, e->origin, modelorg);
+#ifdef BMODEL_CHECK_PLANE 
+	// when BMODEL_CHECK_PLANE, modelorg is used in R_DrawBrushModel_Internal
+	// to determine which side we're looking at and cull backfaces
+	VectorSubtract(r_newrefdef.view.origin, ent->origin, modelorg);
 	if (rotated)
 	{
 		vec3_t	temp;
 		vec3_t	forward, right, up;
 
 		VectorCopy(modelorg, temp);
-		AngleVectors(e->angles, forward, right, up);
+		AngleVectors(ent->angles, forward, right, up);
 		modelorg[0] = DotProduct(temp, forward);
 		modelorg[1] = -DotProduct(temp, right);
 		modelorg[2] = DotProduct(temp, up);
 	}
+#endif
 
 #ifndef FIX_SQB
-	e->angles[0] = -e->angles[0];	// stupid quake bug
-	e->angles[2] = -e->angles[2];	// stupid quake bug
+	ent->angles[0] = -ent->angles[0];	// stupid quake bug
+	ent->angles[2] = -ent->angles[2];	// stupid quake bug
 #endif
-	R_RotateForEntity(e);
+	R_RotateForEntity(ent);
 #ifndef FIX_SQB
-	e->angles[0] = -e->angles[0];	// stupid quake bug
-	e->angles[2] = -e->angles[2];	// stupid quake bug
+	ent->angles[0] = -ent->angles[0];	// stupid quake bug
+	ent->angles[2] = -ent->angles[2];	// stupid quake bug
 #endif
 
 	R_DrawBrushModel_Internal();

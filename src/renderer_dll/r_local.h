@@ -381,7 +381,7 @@ void R_TraverseWorldBSP();
 void R_DrawWorld();
 void R_World_MarkLeaves();
 void R_World_DrawAlphaSurfaces(); //old rendering path
-void R_DrawBrushModel(rentity_t* e);
+void R_DrawBrushModel(rentity_t* ent);
 
 
 //===================================================================
