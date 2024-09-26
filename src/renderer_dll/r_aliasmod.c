@@ -550,7 +550,7 @@ void R_DrawAliasModel(rentity_t* ent, float animlerp)
 	pModel = ent->model->alias;
 	if (pModel == NULL)
 	{
-		Com_Printf("R_DrawAliasModel: '%s' has no model\n", ent->model->name);
+		Com_Error(ERR_DROP, "R_DrawAliasModel: NULL model\n");
 		return;
 	}
 

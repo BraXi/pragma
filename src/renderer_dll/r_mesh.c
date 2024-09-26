@@ -174,7 +174,7 @@ void R_PreProcessModelEntity(rentity_t* ent)
 		ent->renderfx = (RF_GLOW);
 	}
 
-	if (pCurrentRefEnt->renderfx & RF_BEAM)
+	if (ent->renderfx & RF_BEAM)
 	{
 		// assume beams are always visible
 		ent->visibleFrame = r_framecount;
