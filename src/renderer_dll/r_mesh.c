@@ -191,7 +191,7 @@ void R_PreProcessModelEntity(rentity_t* ent)
 			scale = ent->scale; // adjust radius if the model was scaled
 		}
 
-		if (ent->angles[0] || ent->angles[1] || ent->angles[2] || scale != 1.0)
+		if (!VectorCompare(ent->angles, vec3_origin) || scale != 1.0)
 		{
 			for (i = 0; i < 3; i++)
 			{
