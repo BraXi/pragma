@@ -306,6 +306,7 @@ extern	cvar_t	*r_norefresh;
 extern	cvar_t	*r_lefthand;
 extern	cvar_t	*r_drawentities;
 extern	cvar_t	*r_drawworld;
+extern	cvar_t	*r_drawdecals;
 extern	cvar_t	*r_speeds;
 extern	cvar_t	*r_fullbright;
 extern	cvar_t	*r_novis;

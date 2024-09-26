@@ -116,47 +116,6 @@ void R_RotateForEntity (rentity_t *e)
 
 
 /*
-=============
-R_DrawNullModel
-
-Draw the default model
-=============
-*/
-static void R_DrawNullModel (void)
-{
-#if 0 //TODO need to do something here
-	vec3_t	shadelight;
-	int		i;
-
-	if (pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
-		VectorSet(model_shadelight, 1.0f, 1.0f, 1.0f);
-	else
-		R_LightPoint (pCurrentRefEnt->origin, shadelight);
-
-	R_RotateForEntity (pCurrentRefEnt);
-
-	glDisable (GL_TEXTURE_2D);
-	glColor3fv (shadelight);
-
-	glBegin (GL_TRIANGLE_FAN);
-	glVertex3f (0, 0, -16);
-	for (i=0 ; i<=4 ; i++)
-		glVertex3f (16*cos(i*M_PI/2), 16*sin(i*M_PI/2), 0);
-	glEnd ();
-
-	glBegin (GL_TRIANGLE_FAN);
-	glVertex3f (0, 0, 16);
-	for (i=4 ; i>=0 ; i--)
-		glVertex3f (16*cos(i*M_PI/2), 16*sin(i*M_PI/2), 0);
-	glEnd ();
-
-	glColor3f (1,1,1);
-	glEnable (GL_TEXTURE_2D);
-#endif
-}
-
-
-/*
 =================
 R_DrawCurrentEntity
 =================
@@ -183,9 +142,8 @@ static inline void R_DrawCurrentEntity()
 
 			pCurrentRefEnt->hiddenPartsBits = 0;
 			pCurrentRefEnt->frame = pCurrentRefEnt->oldframe = 0;
-			pCurrentRefEnt->renderfx = (RF_FULLBRIGHT | RF_GLOW);
+			pCurrentRefEnt->renderfx = (RF_GLOW);
 		}
-
 
 		if (pCurrentModel->type == MOD_BRUSH)
 		{

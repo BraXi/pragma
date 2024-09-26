@@ -36,46 +36,53 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 	vec3_t mins, maxs, v;
 	float scale = 1.0f;
 
-	if (!ent->model) // this shouldn't really happen at this point!
-		return false;
-
-	if (ent->alpha <= 0.01f && (ent->renderfx & RF_TRANSLUCENT))
+	if (!ent->model)
 	{
-		ri.Printf(PRINT_LOW, "%s: %f alpha!\n", __FUNCTION__, ent->alpha);
-		return false;
+		return false; // entity has no model, reject
 	}
+
+	if (ent->alpha <= 0.05f && (ent->renderfx & RF_TRANSLUCENT))
+	{
+		return false; // completly transparent, reject
+	}
+
 	if (ent->renderfx & RF_VIEW_MODEL)
 	{
-		// don't cull viwmodels unless its centered
+		// reject view models when hand 2
 		return r_lefthand->value == 2 ? false : true;
 	}
-	else if(pCurrentModel->cullDist > 0.0f)
+	else if(ent->model->cullDist > 0.0f) 
 	{
-		// cull objects based on distance TODO: account for scale or na?
-		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); // FIXME: doesn't account for FOV
-		if (VectorLength(v) > pCurrentModel->cullDist)
-			return false;
+		// cull objects based on distance, but only if they're not a view model
+		// FIXME: doesn't account for FOV
+		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); 
+		if (VectorLength(v) > ent->model->cullDist)
+			return false; // entity is too far, reject
 	}
 
 	if (ent->model->type == MOD_ALIAS || ent->model->type == MOD_NEWFORMAT)
 	{
-		if ((ent->renderfx & RF_SCALE) && ent->scale != 1.0f && ent->scale > 0.0f)
+		if (ent->renderfx & RF_SCALE)
+		{
+			if (ent->scale <= 0.1f)
+				return false; // model is too tiny, reject
+
 			scale = ent->scale; // adjust radius if the model was scaled
+		}
 
 		if (ent->angles[0] || ent->angles[1] || ent->angles[2] || scale != 1.0)
 		{
 			for (i = 0; i < 3; i++)
 			{
-				mins[i] = ent->origin[i] - (pCurrentModel->radius * scale);
-				maxs[i] = ent->origin[i] + (pCurrentModel->radius * scale);
+				mins[i] = ent->origin[i] - (ent->model->radius * scale);
+				maxs[i] = ent->origin[i] + (ent->model->radius * scale);
 			}
 		}
 		else
 		{
-			VectorAdd(ent->origin, pCurrentModel->mins, mins);
-			VectorAdd(ent->origin, pCurrentModel->maxs, maxs);
+			VectorAdd(ent->origin, ent->model->mins, mins);
+			VectorAdd(ent->origin, ent->model->maxs, maxs);
 		}
-
 
 		if (R_CullBox(mins, maxs))
 			return false;
@@ -114,7 +121,7 @@ void R_SetEntityShadeLight(rentity_t* ent)
 
 	if (ent->renderfx & RF_GLOW)
 	{
-		scale = 0.1 * sin(r_newrefdef.time * 7.0);
+		scale = 1.0f * sin(r_newrefdef.time * 7.0);
 		for (i = 0; i < 3; i++)
 		{
 			min = model_shadelight[i] * 0.8;
@@ -144,7 +151,7 @@ void R_SetEntityShadeLight(rentity_t* ent)
 	VectorNormalize(model_shadevector);
 }
 
-static void R_EntityAnim(rentity_t* ent, char* func)
+static float R_EntityAnim(rentity_t* ent)
 {
 	// check if frames are correct but only for alias and bsp models
 	// skeletal models use bone matrices passed from kernel to animate
@@ -152,14 +159,14 @@ static void R_EntityAnim(rentity_t* ent, char* func)
 	{
 		if ((ent->frame >= ent->model->numframes) || (ent->frame < 0))
 		{
-			ri.Printf(PRINT_DEVELOPER, "%s: no such frame %d in '%s'\n", func, ent->frame, ent->model->name);
+			ri.Printf(PRINT_DEVELOPER, "No such frame %d in '%s'\n", ent->frame, ent->model->name);
 			ent->frame = 0;
 			ent->oldframe = 0;
 		}
 
 		if ((ent->oldframe >= ent->model->numframes) || (ent->oldframe < 0))
 		{
-			ri.Printf(PRINT_DEVELOPER, "%s: no such oldframe %d in '%s'\n", func, ent->frame, ent->model->name);
+			ri.Printf(PRINT_DEVELOPER, "No such oldframe %d in '%s'\n", ent->frame, ent->model->name);
 			ent->frame = 0;
 			ent->oldframe = 0;
 		}
@@ -167,19 +174,15 @@ static void R_EntityAnim(rentity_t* ent, char* func)
 	// decide if we should lerp
 	if (!r_lerpmodels->value || ent->renderfx & RF_NOANIMLERP)
 		ent->animbacklerp = 0.0f;
+
+	return 1.0f - ent->animbacklerp;
 }
 
 void R_DrawEntityModel(rentity_t* ent)
 {
-	float		lerp;
-
 	// don't bother if we're not visible
 	if (!R_EntityShouldRender(ent))
 		return;
-
-	// check if the animation is correct and set lerp
-	R_EntityAnim(ent, __FUNCTION__);
-	lerp = 1.0 - ent->animbacklerp;
 
 	// setup lighting
 	R_SetEntityShadeLight(ent);
@@ -217,7 +220,7 @@ void R_DrawEntityModel(rentity_t* ent)
 	switch (ent->model->type)
 	{
 	case MOD_ALIAS:
-		R_DrawAliasModel(ent, lerp);
+		R_DrawAliasModel(ent, R_EntityAnim(ent));
 		break;
 
 	case MOD_NEWFORMAT:
@@ -229,14 +232,14 @@ void R_DrawEntityModel(rentity_t* ent)
 	}
 
 	// restore transparency
-	if (pCurrentRefEnt->renderfx & RF_TRANSLUCENT)
+	if (ent->renderfx & RF_TRANSLUCENT)
 		R_Blend(false);
 
 	// remove depth hack
-	if (pCurrentRefEnt->renderfx & RF_DEPTHHACK)
+	if (ent->renderfx & RF_DEPTHHACK)
 		glDepthRange(gldepthmin, gldepthmax);
 
-	if ((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
+	if ((ent->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
 	{ 
 		//scale unset by whatever consumed pendingflip. 
 		r_pendingflip = false;

@@ -18,6 +18,7 @@ cvar_t* r_test;
 cvar_t* r_norefresh;
 cvar_t* r_drawentities;
 cvar_t* r_drawworld;
+cvar_t* r_drawdecals;
 cvar_t* r_speeds;
 cvar_t* r_fullbright;
 cvar_t* r_novis;
@@ -82,6 +83,7 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT, "Draw entities (development tool).");
 	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT, "Draw world  (development tool).");
+	r_drawdecals = ri.Cvar_Get("r_drawdecals", "1", CVAR_CHEAT, "Draw decals  (development tool).");
 
 	r_speeds = ri.Cvar_Get("r_speeds", "0", 0, "Show performance counters - 1 in console, 2 detailed osd.");
 	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT, "Do not cull by VIS data.");

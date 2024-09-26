@@ -610,6 +610,9 @@ void R_DrawBrushModel(rentity_t *ent)
 
 			if (psurf->texinfo->flags & SURF_DECAL)
 			{
+				if (!r_drawdecals->value)
+					continue; // don't draw decals
+
 				if (!bPolygonOffset)
 				{
 					glEnable(GL_POLYGON_OFFSET_FILL);
