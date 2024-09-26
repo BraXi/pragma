@@ -493,14 +493,27 @@ r_newrefdef must be set before the first call
 */
 void R_RenderView (refdef_t *fd)
 {
+	int i;
+	rentity_t* ent;
+
 	if (r_norefresh->value)
 		return;
+
+	if (r_finish->value)
+		glFinish();
 
 	r_newrefdef = *fd;
 
 	if (!r_worldmodel && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 		ri.Error (ERR_DROP, "R_RenderView: NULL worldmodel");
 
+#ifdef _DEBUG
+	if (!r_defaultmodel)
+	{
+		ri.Error(ERR_FATAL, "r_defaultmodel is NULL");
+		return; // should theoreticaly never happen
+	}
+#endif
 
 	// clear performance counters
 	rperf.brush_polys = 0;
@@ -509,14 +522,11 @@ void R_RenderView (refdef_t *fd)
 	rperf.alias_tris = 0;
 	rperf.alias_drawcalls = 0;
 
-	for(int i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
+	for(i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
 		rperf.texture_binds[i] = 0;
 
 	R_StartProfiling();
 	R_PushDlights ();
-
-	if (r_finish->value)
-		glFinish ();
 
 	//
 	// set drawing parms
@@ -533,6 +543,44 @@ void R_RenderView (refdef_t *fd)
 	R_SetFrustum ();
 
 	R_World_MarkLeaves ();	// done here so we know if we're in water
+
+	// preprocess entities
+	if (r_drawentities->value)
+	{
+		ent = r_newrefdef.entities;
+		for (i = 0; i < r_newrefdef.num_entities; i++, ent++)
+		{
+			if (ent->model == NULL || !ent->model)
+			{
+				// If entity model is missing it will use r_defaultmodel 
+				// as a model, and a glowing effect if it isn't a BEAM.
+
+				ent->model = r_defaultmodel;
+				ent->hiddenPartsBits = 0;
+				ent->frame = pCurrentRefEnt->oldframe = 0;
+
+				if (!(ent->renderfx & RF_BEAM))
+				{
+					ent->renderfx = RF_GLOW;
+				}
+			}
+
+			switch (ent->model->type)
+			{
+			case MOD_BRUSH:
+				R_PreprocessBrushModelEntity(ent);
+				break;
+
+			case MOD_ALIAS:
+			case MOD_NEWFORMAT:
+				R_PreProcessModelEntity(ent);
+
+			default:
+				ent->visibleFrame = r_framecount;
+				break;
+			}
+		}
+	}
 	
 	gl_state.bDrawingTransparents = false;
 	gl_state.bTraversedBSP = false; // force a BSP traverse to build up surface chains
@@ -552,29 +600,6 @@ void R_RenderView (refdef_t *fd)
 	// Do not bind any textures except shadowmap
 	// Skip lighting, particles, debug lines, and all the other things which shouldn't render to depth
 	//
-
-	if (r_drawentities->value)
-	{
-		rentity_t* ent = r_newrefdef.entities;
-		for (int i = 0; i < r_newrefdef.num_entities; i++, ent++)
-		{
-			if (ent->model)
-			{
-				switch (ent->model->type)
-				{
-				case MOD_BRUSH:
-					R_PreprocessBrushModelEntity(ent);
-					break;
-				case MOD_ALIAS:
-				case MOD_NEWFORMAT:
-					R_PreProcessModelEntity(ent);
-				default:
-					ent->visibleFrame = r_framecount;
-					break;
-				}
-			}
-		}
-	}
 		
 	if (r_test->value)
 	{

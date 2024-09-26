@@ -550,12 +550,15 @@ void R_DrawAliasModel(rentity_t* ent, float animlerp)
 	pModel = ent->model->alias;
 	if (pModel == NULL)
 	{
-		Com_Error(ERR_DROP, "R_DrawAliasModel: NULL model\n");
+		ri.Error(ERR_DROP, "R_DrawAliasModel: NULL model.\n");
 		return;
 	}
 
 	if (!ent->model->vb[0])
-		return; // not uploaded to gpu
+	{
+		ri.Error(ERR_DROP, "R_DrawAliasModel: no verts.\n");
+		return;
+	}
 
 	R_BindProgram(GLPROG_ALIAS);
 

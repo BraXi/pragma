@@ -714,10 +714,13 @@ void R_PreprocessBrushModelEntity(rentity_t * ent)
 	ent->visibleFrame = r_framecount;
 
 	// mark which dynamic lights impact this model (not the best)
-	for (light = r_newrefdef.dlights, i = 0; i < r_newrefdef.num_dlights; i++, light++)
+	if (!r_fullbright->value)
 	{
-		VectorSubtract(light->origin, ent->origin, lightorg);
-		R_MarkLights(light, lightorg, (1 << i), (ent->model->nodes + ent->model->firstnode));
+		for (light = r_newrefdef.dlights, i = 0; i < r_newrefdef.num_dlights; i++, light++)
+		{
+			VectorSubtract(light->origin, ent->origin, lightorg);
+			R_MarkLights(light, lightorg, (1 << i), (ent->model->nodes + ent->model->firstnode));
+		}
 	}
 
 #ifdef BMODEL_CHECK_PLANE 

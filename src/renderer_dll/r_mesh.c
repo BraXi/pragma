@@ -122,8 +122,6 @@ R_PreProcessModelEntity
 
 Figure out if the entity should be rendered this frame,
 if so, set ambient light values, effects and validate animation.
-If entity model is missing it will use r_defaultmodel as a model and a glowing effect.
-
 Correct only for entities that have MOD_ALIAS or MOD_NEWFORMAT models.
 
 Notes: 
@@ -156,22 +154,6 @@ void R_PreProcessModelEntity(rentity_t* ent)
 		VectorSubtract(r_newrefdef.view.origin, ent->origin, v);
 		if (VectorLength(v) > ent->model->cullDist)
 			return; // entity is too far, reject
-	}
-
-	if (ent->model == NULL || !ent->model)
-	{
-		// if entity has no model use the default one and give it a glow effect
-#ifdef _DEBUG
-		if (!r_defaultmodel)
-		{
-			ri.Error(ERR_FATAL, "%s !r_defaultmodel", __FUNCTION__);
-			return; // should theoreticaly never happen
-		}
-#endif
-		ent->model = r_defaultmodel;
-		ent->hiddenPartsBits = 0;
-		ent->frame = pCurrentRefEnt->oldframe = 0;
-		ent->renderfx = (RF_GLOW);
 	}
 
 	if (ent->renderfx & RF_BEAM)
