@@ -93,7 +93,7 @@ typedef struct glpoly_s
 
 typedef struct msurface_s
 {
-	int			visframe;		// should be drawn when node is crossed
+	unsigned int visframe;		// should be drawn when node is crossed
 
 	cplane_t	*plane;
 	int			flags;
@@ -122,7 +122,7 @@ typedef struct msurface_s
 	short		lmshift;
 
 	// lighting info
-	int				dlightframe;
+	unsigned int	dlightframe;
 	unsigned int	dlightbits;
 
 	int			lightMapTextureNum;
@@ -133,9 +133,9 @@ typedef struct msurface_s
 
 typedef struct mnode_s
 {
-// common with leaf
+	// these 2 are common with mleaf_s
 	int			contents;		// -1, to differentiate from leafs
-	int			visframe;		// node needs to be traversed if current
+	unsigned int visframe;		// node needs to be traversed if current
 	
 	// for bounding box culling
 	vec3_t		mins, maxs;
@@ -154,9 +154,9 @@ typedef struct mnode_s
 
 typedef struct mleaf_s
 {
-// common with node
-	int			contents;		// wil be a negative contents number
-	int			visframe;		// node needs to be traversed if current
+	// these 2 are common with mnode_s
+	int	 contents;			// wil be a negative contents number
+	unsigned int visframe;	// node needs to be traversed if current
 
 	// for bounding box culling
 	vec3_t		mins, maxs;		

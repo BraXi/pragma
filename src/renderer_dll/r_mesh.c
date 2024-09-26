@@ -93,16 +93,16 @@ static qboolean R_EntityShouldRender(rentity_t* ent)
 
 /*
 =================
-R_SetEntityShadeLight
-
-get lighting information for entity
+R_SetEntityLighting
+Calculates ambient lighting color and direction for a given entity.
+Takes care of RF_COLOR, RF_FULLBRIGHT, RF_GLOW, RF_MINLIGHT effects.
 =================
 */
-void R_SetEntityShadeLight(rentity_t* ent)
+void R_SetEntityLighting(rentity_t* ent)
 {
 	float	scale;
 	float	min;
-	float	an;
+	float	yaw;
 	int		i;
 
 	if ((ent->renderfx & RF_COLOR))
@@ -116,7 +116,6 @@ void R_SetEntityShadeLight(rentity_t* ent)
 	else 
 	{
 		R_LightPoint(ent->origin, model_shadelight);
-		VectorCopy(model_shadelight, ent->shadelightpoint);
 	}
 
 	if (ent->renderfx & RF_GLOW)
@@ -131,6 +130,7 @@ void R_SetEntityShadeLight(rentity_t* ent)
 		}
 	}
 
+	// RF_MINLIGHT - don't let the model go completly dark
 	if (ent->renderfx & RF_MINLIGHT)
 	{
 		for (i = 0; i < 3; i++)
@@ -143,10 +143,14 @@ void R_SetEntityShadeLight(rentity_t* ent)
 		}
 	}
 
-	// this is uttery shit
-	an = ent->angles[1] / 180 * M_PI;
-	model_shadevector[0] = cos(-an);
-	model_shadevector[1] = sin(-an);
+	// FIXME: this is uttery shit and deserves a rework !!!
+	// 
+	// it should calculate ambient lighting by probing for nearby 
+	// light sources and find the one thats closest & strongest
+	//
+	yaw = ent->angles[1] / 180 * M_PI;
+	model_shadevector[0] = cos(-yaw);
+	model_shadevector[1] = sin(-yaw);
 	model_shadevector[2] = -1;
 	VectorNormalize(model_shadevector);
 }
@@ -185,7 +189,7 @@ void R_DrawEntityModel(rentity_t* ent)
 		return;
 
 	// setup lighting
-	R_SetEntityShadeLight(ent);
+	R_SetEntityLighting(ent);
 
 	// 1. transparency
 	if (ent->renderfx & RF_TRANSLUCENT)

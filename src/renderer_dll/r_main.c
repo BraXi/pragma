@@ -32,8 +32,8 @@ model_t		*pCurrentModel;
 
 cplane_t	frustum[4];
 
-int			r_visframecount;	// bumped when going to a new PVS
-int			r_framecount;		// used for dlight push checking
+unsigned int	r_visframecount = 0;	// bumped when going to a new PVS
+unsigned int	r_framecount = 0;		// used for dlight push checking
 
 rperfcounters_t rperf;
 

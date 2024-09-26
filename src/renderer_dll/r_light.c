@@ -12,7 +12,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-int	r_dlightframecount;
+unsigned int r_dlightframecount;
 
 #define	DLIGHT_CUTOFF	64
 

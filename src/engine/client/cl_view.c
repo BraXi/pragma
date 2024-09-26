@@ -71,7 +71,7 @@ void V_AddEntity(rentity_t* ent)
 		Com_DPrintf(DP_REND, "V_AddEntity: r_numentities >= MAX_VISIBLE_ENTITIES\n");
 		return;
 	}
-	ent->index = r_numentities;
+//	ent->index = r_numentities;
 	r_entities[r_numentities++] = *ent;
 }
 

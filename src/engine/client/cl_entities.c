@@ -192,7 +192,7 @@ static inline void CL_EntityAddAttachedModels(clentity_t* clent, entity_state_t*
 	rentity_t r;
 
 //	refent->frame = 0;
-	refent->skinnum = 0;
+//	refent->skinnum = 0;
 //	refent->renderfx = 0;
 	for (int i = 0; i < MAX_ATTACHED_MODELS; i++)
 	{
@@ -312,7 +312,7 @@ void CL_AddPacketEntities(frame_t* frame)
 		}
 
 
-		rent.skinnum = state->skinnum;
+//		rent.skinnum = state->skinnum;
 		rent.model = CL_GetDrawModel(state->modelindex);
 //		rent.renderfx = state->renderFlags; // set later on
 

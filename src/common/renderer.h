@@ -41,66 +41,40 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 typedef struct rentity_s
 {
-	// model opaque type outside refresh
-	struct model_s		*model;			
+	// pointer to model (model_s is only known to renderer) 
+	struct model_s	*model;			
 
 	//
-	// most recent data
+	// recent data
 	//
-	vec3_t				angles;
-	vec3_t				origin;		// also used as RF_BEAM's "from"
-	int					frame;			// also used as RF_BEAM's diameter
+	vec3_t		angles;
+	vec3_t		origin;
+	int			frame;
+	vec3_t		axis[3];	// used by kernel, not renderer
 
 	//
-	// previous data for lerping
+	// data for lerping
 	//
-	vec3_t				oldorigin;	// also used as RF_BEAM's "to"
-	int					oldframe;
+	vec3_t		oldorigin;
+	int			oldframe;
+	float		animbacklerp; 	// used to lerp animation frames smoothly, 0.0 = current, 1.0 = old	
+	float		backlerp;		// used to lerp origin smoothly, 0.0 = current, 1.0 = old (used by kernel, not renderer)
 
+	byte		hiddenPartsBits; // hidden = (hiddenPartsBits & (1 << modelSurfaceNumber)	
+
+	uint32_t	renderfx;	// RF_* effects
+	float		alpha;		// transparency (RF_TRANSLUCENT)
+	float		scale;		// model scale (RF_SCALE)
+	vec3_t		renderColor; // multiple color by this (RF_COLOR)
 
 	//
-	// misc
+	// private to renderer, TODO: make it _really_ private?
 	// 
-	int		index;
-	float	shadelightpoint[3]; // value from R_LightPoint without any alterations (no applied efx, etc)
-
-	// used to lerp animation frames in new anim system
-	// 0.0 = current, 1.0 = old
-	float	animbacklerp;			
-
-	// used to lerp origin and between old & current origin
-	// 0.0 = current, 1.0 = old
-	float	backlerp;				
-
-	// hidden = (hiddenPartsBits & (1 << modelSurfaceNum)
-	byte	hiddenPartsBits;
-
-	// is entity visible in this frame, must match r_framecount to draw
-	int		visibleFrame;
-
-	// index to skin entry
-	int		skinnum;				
 	
-	// index to lightstyles for flashing entities
-	int		lightstyle;	
+	unsigned int visibleFrame;	// draw entity if visibleFrame == r_framecount
 
-	// transparency, ignored when renderfx RF_TRANSLUCENT isn't set
-	float	alpha;
-
-	// scale, ignored when renderfx RF_SCALE isn't set, MD3 only
-	float	scale;	
-
-	// base texture color is multiplied by this, ignored when renderfx RF_COLOR isn't set, MD3 only
-	vec3_t	renderColor;
-	
-
-	struct image_s	*skin;			// NULL for inline skin
-
-	// RF flags
-	int		renderfx;
-
-
-	vec3_t		axis[3];
+	vec3_t		ambient_color;	// ambient light color
+	vec3_t		ambient_dir;	// ambient light direction
 } rentity_t;
 
 typedef enum

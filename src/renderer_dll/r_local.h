@@ -281,9 +281,10 @@ extern	model_t		*pCurrentModel;
 
 //====================================================
 
-extern	int			r_visframecount;
-extern	int			r_framecount;
-extern	cplane_t	frustum[4];
+extern unsigned int		r_visframecount;
+extern unsigned int		r_framecount;
+
+extern cplane_t	frustum[4];
 
 extern	float		gldepthmin, gldepthmax;
 
