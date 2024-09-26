@@ -499,7 +499,10 @@ void R_DrawNewModel(const rentity_t* ent, qboolean isAnimated)
 			glDrawArrays(GL_TRIANGLES, surf->firstVert, surf->numVerts);
 
 			if (r_speeds->value)
+			{
 				rperf.alias_tris += surf->numVerts / 3;
+				rperf.alias_drawcalls ++;
+			}
 		}
 	}
 	glEnable(GL_CULL_FACE); // FIXME: cull order is BACK for skel models
