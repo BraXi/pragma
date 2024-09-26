@@ -418,10 +418,6 @@ static void CalcInverseMatrixForModel(model_t* pModel)
 		Mat4Invert(invBoneMatrix[i], invBoneMatrix[i]);
 }
 
-
-
-extern vec3_t	model_shadevector;
-extern float	model_shadelight[3];
 extern qboolean r_pendingflip;
 
 void R_DrawNewModel(rentity_t* ent)
@@ -489,8 +485,8 @@ void R_DrawNewModel(rentity_t* ent)
 	// 
 	// setup common uniforms
 	//
-	R_ProgUniformVec3(LOC_AMBIENT_COLOR, model_shadelight);
-	R_ProgUniformVec3(LOC_AMBIENT_DIR, model_shadevector);
+	R_ProgUniformVec3(LOC_AMBIENT_COLOR, ent->ambient_color);
+	R_ProgUniformVec3(LOC_AMBIENT_DIR, ent->ambient_dir);
 	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
 
 	R_ProgUniform1f(LOC_PARM0, (r_fullbright->value || ent->renderfx & RF_FULLBRIGHT) ? 1.0f : 0.0f);

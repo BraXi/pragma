@@ -12,10 +12,6 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-// globals for model lighting
-vec3_t	model_shadevector;
-vec3_t	model_shadelight;
-
 void R_DrawNewModel(rentity_t* ent);
 
 void R_DrawSkelModel(rentity_t* ent); // r_smdl.c
@@ -23,82 +19,23 @@ void R_DrawAliasModel(rentity_t* ent, float animlerp); // r_aliasmod.c
 
 qboolean r_pendingflip = false;
 
-/*
-=================
-R_EntityShouldRender
-
-Decides whenever entity is visible and could be drawn
-=================
-*/
-static qboolean R_EntityShouldRender(rentity_t* ent)
-{
-	int i;
-	vec3_t mins, maxs, v;
-	float scale = 1.0f;
-
-	if (!ent->model)
-	{
-		return false; // entity has no model, reject
-	}
-
-	if (ent->alpha <= 0.05f && (ent->renderfx & RF_TRANSLUCENT))
-	{
-		return false; // completly transparent, reject
-	}
-
-	if (ent->renderfx & RF_VIEW_MODEL)
-	{
-		// reject view models when hand 2
-		return r_lefthand->value == 2 ? false : true;
-	}
-	else if(ent->model->cullDist > 0.0f) 
-	{
-		// cull objects based on distance, but only if they're not a view model
-		// FIXME: doesn't account for FOV
-		VectorSubtract(r_newrefdef.view.origin, ent->origin, v); 
-		if (VectorLength(v) > ent->model->cullDist)
-			return false; // entity is too far, reject
-	}
-
-	if (ent->model->type == MOD_ALIAS || ent->model->type == MOD_NEWFORMAT)
-	{
-		if (ent->renderfx & RF_SCALE)
-		{
-			if (ent->scale <= 0.1f)
-				return false; // model is too tiny, reject
-
-			scale = ent->scale; // adjust radius if the model was scaled
-		}
-
-		if (ent->angles[0] || ent->angles[1] || ent->angles[2] || scale != 1.0)
-		{
-			for (i = 0; i < 3; i++)
-			{
-				mins[i] = ent->origin[i] - (ent->model->radius * scale);
-				maxs[i] = ent->origin[i] + (ent->model->radius * scale);
-			}
-		}
-		else
-		{
-			VectorAdd(ent->origin, ent->model->mins, mins);
-			VectorAdd(ent->origin, ent->model->maxs, maxs);
-		}
-
-		if (R_CullBox(mins, maxs))
-			return false;
-	}
-
-	return true;
-}
 
 /*
 =================
-R_SetEntityLighting
-Calculates ambient lighting color and direction for a given entity.
+R_SetEntityAmbientLight
+
+Calculates ambient lighting color and direction for a given entity
+by adding effects and probing lightmap color beneath entity.
+
 Takes care of RF_COLOR, RF_FULLBRIGHT, RF_GLOW, RF_MINLIGHT effects.
+
+FIXME: this is uttery shit and deserves a rework !!!
+
+It should calculate ambient lighting by probing for nearby
+light sources and find the one thats closest & strongest!
 =================
 */
-void R_SetEntityLighting(rentity_t* ent)
+void R_SetEntityAmbientLight(rentity_t* ent)
 {
 	float	scale;
 	float	min;
@@ -107,15 +44,15 @@ void R_SetEntityLighting(rentity_t* ent)
 
 	if ((ent->renderfx & RF_COLOR))
 	{
-		VectorCopy(ent->renderColor, model_shadelight);
+		VectorCopy(ent->renderColor, ent->ambient_color);
 	}
 	else if (ent->renderfx & RF_FULLBRIGHT || r_fullbright->value)
 	{
-		VectorSet(model_shadelight, 1.0f, 1.0f, 1.0f);
+		VectorSet(ent->ambient_color, 1.0f, 1.0f, 1.0f);
 	}
 	else 
 	{
-		R_LightPoint(ent->origin, model_shadelight);
+		R_LightPoint(ent->origin, ent->ambient_color);
 	}
 
 	if (ent->renderfx & RF_GLOW)
@@ -123,10 +60,10 @@ void R_SetEntityLighting(rentity_t* ent)
 		scale = 1.0f * sin(r_newrefdef.time * 7.0);
 		for (i = 0; i < 3; i++)
 		{
-			min = model_shadelight[i] * 0.8;
-			model_shadelight[i] += scale;
-			if (model_shadelight[i] < min)
-				model_shadelight[i] = min;
+			min = ent->ambient_color[i] * 0.8;
+			ent->ambient_color[i] += scale;
+			if (ent->ambient_color[i] < min)
+				ent->ambient_color[i] = min;
 		}
 	}
 
@@ -134,31 +71,30 @@ void R_SetEntityLighting(rentity_t* ent)
 	if (ent->renderfx & RF_MINLIGHT)
 	{
 		for (i = 0; i < 3; i++)
-			if (model_shadelight[i] > 0.1)
+			if (ent->ambient_color[i] > 0.1)
 				break;
 
 		if (i == 3)
 		{
-			VectorSet(model_shadelight, 0.1f, 0.1f, 0.1f);
+			VectorSet(ent->ambient_color, 0.1f, 0.1f, 0.1f);
 		}
 	}
 
-	// FIXME: this is uttery shit and deserves a rework !!!
-	// 
-	// it should calculate ambient lighting by probing for nearby 
-	// light sources and find the one thats closest & strongest
-	//
 	yaw = ent->angles[1] / 180 * M_PI;
-	model_shadevector[0] = cos(-yaw);
-	model_shadevector[1] = sin(-yaw);
-	model_shadevector[2] = -1;
-	VectorNormalize(model_shadevector);
+	ent->ambient_dir[0] = cos(-yaw);
+	ent->ambient_dir[1] = sin(-yaw);
+	ent->ambient_dir[2] = -1;
+	VectorNormalize(ent->ambient_dir);
 }
 
-static float R_EntityAnim(rentity_t* ent)
+/*
+=================
+R_ValidateEntityAnimation
+Validate frame and oldframe, takes care of RF_NOANIMLERP effect.
+=================
+*/
+void R_ValidateEntityAnimation(rentity_t* ent)
 {
-	// check if frames are correct but only for alias and bsp models
-	// skeletal models use bone matrices passed from kernel to animate
 	if (ent->model && ent->model->type != MOD_NEWFORMAT)
 	{
 		if ((ent->frame >= ent->model->numframes) || (ent->frame < 0))
@@ -178,18 +114,112 @@ static float R_EntityAnim(rentity_t* ent)
 	// decide if we should lerp
 	if (!r_lerpmodels->value || ent->renderfx & RF_NOANIMLERP)
 		ent->animbacklerp = 0.0f;
-
-	return 1.0f - ent->animbacklerp;
 }
 
-void R_DrawEntityModel(rentity_t* ent)
-{
-	// don't bother if we're not visible
-	if (!R_EntityShouldRender(ent))
-		return;
+/*
+=================
+R_PreProcessModelEntity
 
-	// setup lighting
-	R_SetEntityLighting(ent);
+Figure out if the entity should be rendered this frame,
+if so, set ambient light values, effects and validate animation.
+If entity model is missing it will use r_defaultmodel as a model and a glowing effect.
+
+Correct only for entities that have MOD_ALIAS or MOD_NEWFORMAT models.
+
+Notes: 
+RF_VIEW_MODEL entities are never culled.
+RF_TRANSLUCENT entities with too low alpha are skipped.
+RF_SCALE with too small scale are skipped.
+Entities that are too far from camera are skipped.
+
+FIXME: Culling based on model's draw distance doesn't account for FOV !!
+=================
+*/
+void R_PreProcessModelEntity(rentity_t* ent)
+{
+	int i;
+	vec3_t mins, maxs, v;
+	float scale = 1.0f;
+
+	if (ent->alpha <= 0.05f && (ent->renderfx & RF_TRANSLUCENT))
+	{
+		return; // completly transparent, reject
+	}
+
+	if (ent->renderfx & RF_VIEW_MODEL && r_lefthand->value >= 2)
+	{
+		return; // player desires to not draw view model
+	}
+	else if (ent->model->cullDist > 0.0f)
+	{
+		// cull objects based on distance, but only if they're not a view model
+		VectorSubtract(r_newrefdef.view.origin, ent->origin, v);
+		if (VectorLength(v) > ent->model->cullDist)
+			return; // entity is too far, reject
+	}
+
+	if (ent->model == NULL || !ent->model)
+	{
+		// if entity has no model use the default one and give it a glow effect
+#ifdef _DEBUG
+		if (!r_defaultmodel)
+		{
+			ri.Error(ERR_FATAL, "%s !r_defaultmodel", __FUNCTION__);
+			return; // should theoreticaly never happen
+		}
+#endif
+		ent->model = r_defaultmodel;
+		ent->hiddenPartsBits = 0;
+		ent->frame = pCurrentRefEnt->oldframe = 0;
+		ent->renderfx = (RF_GLOW);
+	}
+
+	if (ent->model->type == MOD_ALIAS || ent->model->type == MOD_NEWFORMAT)
+	{
+		if (ent->renderfx & RF_SCALE)
+		{
+			if (ent->scale <= 0.1f)
+				return; // model is too tiny, reject
+
+			scale = ent->scale; // adjust radius if the model was scaled
+		}
+
+		if (ent->angles[0] || ent->angles[1] || ent->angles[2] || scale != 1.0)
+		{
+			for (i = 0; i < 3; i++)
+			{
+				mins[i] = ent->origin[i] - (ent->model->radius * scale);
+				maxs[i] = ent->origin[i] + (ent->model->radius * scale);
+			}
+		}
+		else
+		{
+			VectorAdd(ent->origin, ent->model->mins, mins);
+			VectorAdd(ent->origin, ent->model->maxs, maxs);
+		}
+
+		if (R_CullBox(mins, maxs))
+			return; // not in view frustum, reject
+	}
+
+	// entity is visible this frame!
+	ent->visibleFrame = r_framecount;
+
+	R_SetEntityAmbientLight(ent);
+	R_ValidateEntityAnimation(ent);
+}
+
+
+/*
+=================
+R_DrawModelEntity
+Draws an entity which has a regular model (not inline model).
+=================
+*/
+void R_DrawModelEntity(rentity_t* ent)
+{
+	if (ent->visibleFrame != r_framecount)
+		return; // not visible in this frame
 
 	// 1. transparency
 	if (ent->renderfx & RF_TRANSLUCENT)
@@ -224,7 +254,7 @@ void R_DrawEntityModel(rentity_t* ent)
 	switch (ent->model->type)
 	{
 	case MOD_ALIAS:
-		R_DrawAliasModel(ent, R_EntityAnim(ent));
+		R_DrawAliasModel(ent, (1.0f - ent->animbacklerp));
 		break;
 
 	case MOD_NEWFORMAT:
@@ -232,7 +262,7 @@ void R_DrawEntityModel(rentity_t* ent)
 		break;
 
 	default:
-		ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type %i", ent->model->type);
+		ri.Error(ERR_DROP, "R_DrawModelEntity: wrong model type %i", ent->model->type);
 	}
 
 	// restore transparency

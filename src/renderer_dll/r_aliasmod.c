@@ -20,8 +20,6 @@ See the attached GNU General Public License v2 for more details.
 
 extern model_t* R_ModelForNum(int index);
 extern int modelFileLength; // for in Mod_LoadAliasMD3
-extern vec3_t	model_shadevector;
-extern float	model_shadelight[3];
 
 extern qboolean r_pendingflip;
 
@@ -561,8 +559,8 @@ void R_DrawAliasModel(rentity_t* ent, float animlerp)
 
 	R_BindProgram(GLPROG_ALIAS);
 
-	R_ProgUniformVec3(LOC_AMBIENT_COLOR, model_shadelight);
-	R_ProgUniformVec3(LOC_AMBIENT_DIR, model_shadevector);
+	R_ProgUniformVec3(LOC_AMBIENT_COLOR, ent->ambient_color);
+	R_ProgUniformVec3(LOC_AMBIENT_DIR, ent->ambient_dir);
 	R_ProgUniform1f(LOC_LERPFRAC, animlerp);
 	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
 	if (r_pendingflip)

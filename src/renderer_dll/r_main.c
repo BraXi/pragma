@@ -39,9 +39,6 @@ rperfcounters_t rperf;
 
 static rgba_t	v_blend;			// final blending color
 
-extern vec3_t	model_shadevector;
-extern vec3_t	model_shadelight;
-
 //
 // view origin
 //
@@ -64,14 +61,16 @@ viddef_t	vid; // TODO get rid of this
 
 int		r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
-extern void R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
-extern void R_ClearFBO();
-extern void R_RenderToFBO(qboolean enable);
-extern void R_DrawDebugLines(void);
-extern void R_DrawEntityModel(rentity_t* ent);
+void R_DrawStringOld(char* string, float x, float y, float fontSize, int alignx, rgba_t color);
+void R_ClearFBO();
+void R_RenderToFBO(qboolean enable);
+void R_DrawDebugLines(void);
+void R_DrawModelEntity(rentity_t* ent);
 
-extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
-extern int R_GetFontHeight(int fontId);
+void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
+int R_GetFontHeight(int fontId);
+
+void R_PreProcessModelEntity(rentity_t* ent);
 
 /*
 =================
@@ -80,7 +79,7 @@ R_CullBox
 Returns true if the box is completely outside the frustom
 =================
 */
-qboolean R_CullBox (vec3_t mins, vec3_t maxs)
+qboolean R_CullBox(vec3_t mins, vec3_t maxs)
 {
 	int		i;
 
@@ -131,18 +130,8 @@ static inline void R_DrawCurrentEntity()
 	{
 		if (!pCurrentModel)
 		{
-			if (!r_defaultmodel)
-			{
-				ri.Error(ERR_FATAL, "%s !r_defaultmodel", __FUNCTION__);
-				return;
-			}
-
-			pCurrentModel = r_defaultmodel;
-			pCurrentRefEnt->model = r_defaultmodel;
-
-			pCurrentRefEnt->hiddenPartsBits = 0;
-			pCurrentRefEnt->frame = pCurrentRefEnt->oldframe = 0;
-			pCurrentRefEnt->renderfx = (RF_GLOW);
+			ri.Error(ERR_FATAL, "%s pCurrentModel == NULL", __FUNCTION__);
+			return; // should never happen
 		}
 
 		if (pCurrentModel->type == MOD_BRUSH)
@@ -151,7 +140,7 @@ static inline void R_DrawCurrentEntity()
 		}
 		else
 		{
-			R_DrawEntityModel(pCurrentRefEnt);
+			R_DrawModelEntity(pCurrentRefEnt);
 		}
 	}
 }
@@ -576,6 +565,9 @@ void R_RenderView (refdef_t *fd)
 				case MOD_BRUSH:
 					R_PreprocessBrushModelEntity(ent);
 					break;
+				case MOD_ALIAS:
+				case MOD_NEWFORMAT:
+					R_PreProcessModelEntity(ent);
 				default:
 					ent->visibleFrame = r_framecount;
 					break;
