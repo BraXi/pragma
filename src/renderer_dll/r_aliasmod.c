@@ -491,7 +491,7 @@ DrawVertexBuffer
 modified version of R_DrawVertexBuffer to account model animation
 ===============
 */
-static void DrawVertexBuffer(rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts )
+static void DrawVertexBuffer(const rentity_t *ent, vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts )
 {
 	int framesize;
 
@@ -540,87 +540,35 @@ R_DrawAliasModel
 Draws md3 model
 =================
 */
-void R_DrawAliasModel(rentity_t* ent, float animlerp)
+void R_DrawAliasModel(const rentity_t* ent)
 {
 	md3Header_t		*pModel = NULL;
 	md3Surface_t	*pSurface = NULL;
-	int				surf, surfverts;
-	qboolean		anythingToDraw = false;
+	int				surf, numSurfVerts;
 
 	pModel = ent->model->alias;
-	if (pModel == NULL)
-	{
-		ri.Error(ERR_DROP, "R_DrawAliasModel: NULL model.\n");
-		return;
-	}
-
-	if (!ent->model->vb[0])
-	{
-		ri.Error(ERR_DROP, "R_DrawAliasModel: no verts.\n");
-		return;
-	}
-
-	R_BindProgram(GLPROG_ALIAS);
-
-	R_ProgUniformVec3(LOC_AMBIENT_COLOR, ent->ambient_color);
-	R_ProgUniformVec3(LOC_AMBIENT_DIR, ent->ambient_dir);
-	R_ProgUniform1f(LOC_LERPFRAC, animlerp);
-	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
-	if (r_pendingflip)
-	{
-		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
-	}
-
-	if (r_fullbright->value || pCurrentRefEnt->renderfx & RF_FULLBRIGHT)
-		R_ProgUniform1f(LOC_PARM0, 1);
-	else
-		R_ProgUniform1f(LOC_PARM0, 0);
-
-	if (ent->renderfx & RF_TRANSLUCENT)
-		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, ent->alpha);
-	else
-		R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, 1);
-
-	if (ent->renderfx & RF_VIEW_MODEL)
-		R_SendDynamicLightsToCurrentProgram(true);
-
-	//glDisable(GL_CULL_FACE);
 	for (surf = 0; surf < pModel->numSurfaces; surf++)
 	{
-		surfverts = ent->model->vb[surf]->numVerts / pModel->numFrames;
+		numSurfVerts = ent->model->vb[surf]->numVerts / pModel->numFrames;
 
 		pSurface = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
 		if ((ent->hiddenPartsBits & (1 << surf)))
 		{
+			// discard hidden surfaces
 			pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
-			continue; // surface is hidden
+			continue; 
 		}
 
 		if (r_speeds->value)
 		{
-			rperf.alias_tris += surfverts / 3;
+			rperf.alias_tris += numSurfVerts / 3;
 		}
 
-		anythingToDraw = true;
-
 		R_MultiTextureBind(TMU_DIFFUSE, ent->model->images[surf]->texnum);
-		DrawVertexBuffer(ent, ent->model->vb[surf], 0, surfverts);
+		DrawVertexBuffer(ent, ent->model->vb[surf], 0, numSurfVerts);
 
 		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
 	}
-
-	//glEnable(GL_CULL_FACE);
-	if (r_pendingflip)
-	{
-		Mat4Scale(r_projection_matrix, -1, 1, 1);
-		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
-	}
-
-	if (ent->renderfx & RF_VIEW_MODEL)
-		R_SendDynamicLightsToCurrentProgram(false);
-
-	if (r_speeds->value && anythingToDraw)
-		rperf.alias_drawcalls++;
 }
 
 qboolean R_LerpTag(orientation_t* tag, struct model_s* model, int startFrame, int endFrame, float frac, int tagIndex)

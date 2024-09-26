@@ -12,10 +12,8 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-void R_DrawNewModel(rentity_t* ent);
-
-void R_DrawSkelModel(rentity_t* ent); // r_smdl.c
-void R_DrawAliasModel(rentity_t* ent, float animlerp); // r_aliasmod.c
+void R_DrawNewModel(const rentity_t* ent, qboolean isAnimated);
+void R_DrawAliasModel(const rentity_t* ent); // r_aliasmod.c
 
 qboolean r_pendingflip = false;
 
@@ -207,16 +205,10 @@ Draws an entity which has a regular model (not inline model).
 */
 void R_DrawModelEntity(rentity_t* ent)
 {
+	qboolean bAnimated = false;
+
 	if (ent->visibleFrame != r_framecount)
 		return; // not visible in this frame
-
-	// 1. transparency
-	if (ent->renderfx & RF_TRANSLUCENT)
-		R_Blend(true);
-
-	// hack the depth range to prevent view model from poking into walls
-	if (ent->renderfx & RF_DEPTHHACK)
-		glDepthRange(gldepthmin, gldepthmin + 0.3f * (gldepthmax - gldepthmin));
 
 	// move, rotate and scale
 #ifndef FIX_SQB
@@ -226,6 +218,25 @@ void R_DrawModelEntity(rentity_t* ent)
 #ifndef FIX_SQB
 	ent->angles[PITCH] = -ent->angles[PITCH]; // stupid quake bug
 #endif
+
+	// decide what program to use
+	if (ent->model->type == MOD_ALIAS)
+	{
+		R_BindProgram(GLPROG_ALIAS);
+		R_ProgUniform1f(LOC_LERPFRAC, (1.0f - ent->animbacklerp));
+	}
+	else if (ent->model->type == MOD_NEWFORMAT)
+	{
+		if(bAnimated)
+			R_BindProgram(GLPROG_SMDL_ANIMATED);
+		else
+			R_BindProgram(GLPROG_SMDL_RIGID);
+	}
+	else
+	{
+		ri.Error(ERR_DROP, "R_DrawModelEntity: wrong model type %i", ent->model->type);
+		return;
+	}
 
 	if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
 		Mat4Scale(r_local_matrix, ent->scale, ent->scale, ent->scale);
@@ -239,22 +250,44 @@ void R_DrawModelEntity(rentity_t* ent)
 		R_SetCullFace(GL_BACK);
 	}
 
-	// render model
+	// enable transparency
+	if (ent->renderfx & RF_TRANSLUCENT)
+		R_Blend(true);
+
+	// hack the depth range to prevent view model from poking into walls
+	if (ent->renderfx & RF_DEPTHHACK)
+		glDepthRange(gldepthmin, gldepthmin + 0.3f * (gldepthmax - gldepthmin));
+
+	// 
+	// setup common uniforms
+	//
+	R_ProgUniformVec3(LOC_AMBIENT_COLOR, ent->ambient_color);
+	R_ProgUniformVec3(LOC_AMBIENT_DIR, ent->ambient_dir);
+
+	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
+	if (r_pendingflip)
+	{
+		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
+	}
+
+	R_ProgUniform1f(LOC_PARM0, (r_fullbright->value || ent->renderfx & RF_FULLBRIGHT) ? 1.0f : 0.0f);
+	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, (ent->renderfx & RF_TRANSLUCENT) ? ent->alpha : 1.0f);
+	R_SendDynamicLightsToCurrentProgram((ent->renderfx & RF_VIEW_MODEL));
+
+	//
+	// render the model
+	//
 	switch (ent->model->type)
 	{
 	case MOD_ALIAS:
-		R_DrawAliasModel(ent, (1.0f - ent->animbacklerp));
+		R_DrawAliasModel(ent);
 		break;
-
 	case MOD_NEWFORMAT:
-		R_DrawNewModel(ent);
+		R_DrawNewModel(ent, bAnimated);
 		break;
-
-	default:
-		ri.Error(ERR_DROP, "R_DrawModelEntity: wrong model type %i", ent->model->type);
 	}
 
-	// restore transparency
+	// disable transparency
 	if (ent->renderfx & RF_TRANSLUCENT)
 		R_Blend(false);
 
@@ -262,12 +295,23 @@ void R_DrawModelEntity(rentity_t* ent)
 	if (ent->renderfx & RF_DEPTHHACK)
 		glDepthRange(gldepthmin, gldepthmax);
 
+	if (r_pendingflip)
+	{
+		Mat4Scale(r_projection_matrix, -1, 1, 1);
+		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
+	}
+
+	if (pCurrentRefEnt->renderfx & RF_VIEW_MODEL)
+		R_SendDynamicLightsToCurrentProgram(false);
+
 	if ((ent->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
 	{ 
 		//scale unset by whatever consumed pendingflip. 
 		r_pendingflip = false;
 		R_SetCullFace(GL_FRONT);
 	}
+
+	R_UnbindProgram();
 }
 
 

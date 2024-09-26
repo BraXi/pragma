@@ -574,6 +574,7 @@ void R_RenderView (refdef_t *fd)
 			case MOD_ALIAS:
 			case MOD_NEWFORMAT:
 				R_PreProcessModelEntity(ent);
+				break;
 
 			default:
 				ent->visibleFrame = r_framecount;

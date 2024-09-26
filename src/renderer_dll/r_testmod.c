@@ -418,43 +418,25 @@ static void CalcInverseMatrixForModel(model_t* pModel)
 		Mat4Invert(invBoneMatrix[i], invBoneMatrix[i]);
 }
 
-extern qboolean r_pendingflip;
-
-void R_DrawNewModel(rentity_t* ent)
+void R_DrawNewModel(const rentity_t* ent, qboolean isAnimated)
 {
 	pmodel_header_t* hdr;
 	pmodel_part_t* part;
 	pmodel_surface_t* surf;
 	int i;
-	qboolean isAnimated = false;
 	int numAttribs;
 
 	static int va_attrib[4];
 	static qboolean vaAtrribsChecked = false;
 
-	if (ent == NULL || ent->model == NULL || ent->model->newmod == NULL)
-	{
-		ri.Printf(PRINT_LOW, "%s: rentity has no model.\n", __FUNCTION__);
-		return;
-	}
-
 	hdr = ent->model->newmod;
-
-	if (ent->model->vb[0] == NULL || ent->model->vb[0]->vboBuf == 0)
-	{
-		ri.Printf(PRINT_LOW, "%s: mod has no vertex data.\n", __FUNCTION__);
-		return;
-	}
-
-
-	R_BindProgram(isAnimated == true ? GLPROG_SMDL_ANIMATED : GLPROG_SMDL_RIGID);
 
 	glBindBuffer(GL_ARRAY_BUFFER, ent->model->vb[0]->vboBuf);
 
 	// FIXME: this should be done only once at startup and when program changes from GLPROG_SMDL_ANIMATED
 	//if (!vaAtrribsChecked)
 	{
-		vaAtrribsChecked = true;
+	//	vaAtrribsChecked = true;
 
 		va_attrib[0] = R_GetProgAttribLoc(VALOC_POS);
 		va_attrib[1] = R_GetProgAttribLoc(VALOC_NORMAL);
@@ -482,37 +464,12 @@ void R_DrawNewModel(rentity_t* ent)
 		}
 	}
 
-	// 
-	// setup common uniforms
-	//
-	R_ProgUniformVec3(LOC_AMBIENT_COLOR, ent->ambient_color);
-	R_ProgUniformVec3(LOC_AMBIENT_DIR, ent->ambient_dir);
-	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
-
-	R_ProgUniform1f(LOC_PARM0, (r_fullbright->value || ent->renderfx & RF_FULLBRIGHT) ? 1.0f : 0.0f);
-	R_ProgUniform4f(LOC_COLOR4, 1, 1, 1, (ent->renderfx & RF_TRANSLUCENT) ? ent->alpha : 1.0f);
-
-	if (r_pendingflip)
-	{
-		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
-	}
-
-	if (ent->renderfx & RF_VIEW_MODEL)
-		R_SendDynamicLightsToCurrentProgram(true);
-
-	//
-	// setup skeleton
-	//
-	
 	if (isAnimated && finalBonesMat != NULL)
 	{	
 		//R_SkeletonForFrame(ent->frame);
 		R_ProgUniformMatrix4fv(LOC_BONES, hdr->numBones /*SMDL_MAX_BONES*/, finalBonesMat[0]);
 	}
 
-	//
-	// draw the model
-	//
 	glEnableVertexAttribArray(va_attrib[0]);
 	glVertexAttribPointer(va_attrib[0], 3, GL_FLOAT, GL_FALSE, sizeof(pmodel_vertex_t), NULL);
 
@@ -529,7 +486,6 @@ void R_DrawNewModel(rentity_t* ent)
 	}
 
 	glDisable(GL_CULL_FACE); // FIXME: cull order is BACK for skel models
-	
 	part = R_GetModelPartsPtr(ent->model);
 	for (i = 0; i < hdr->numParts; i++, part++)
 	{
@@ -551,18 +507,5 @@ void R_DrawNewModel(rentity_t* ent)
 	for (i = 0; i < numAttribs; i++)
 		glDisableVertexAttribArray(va_attrib[i]);
 
-	if (r_pendingflip)
-	{
-		Mat4Scale(r_projection_matrix, -1, 1, 1);
-		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
-	}
-
-	if (pCurrentRefEnt->renderfx & RF_VIEW_MODEL)
-		R_SendDynamicLightsToCurrentProgram(false);
-
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	R_UnbindProgram(GLPROG_SMDL_ANIMATED);
-
-	if (r_speeds->value)
-		rperf.alias_drawcalls++;
 }
