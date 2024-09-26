@@ -228,7 +228,7 @@ void R_DrawEntityModel(rentity_t* ent)
 		break;
 
 	default:
-		ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type: %s", ent->model->type);
+		ri.Error(ERR_DROP, "R_DrawEntityModel: wrong model type %i", ent->model->type);
 	}
 
 	// restore transparency
