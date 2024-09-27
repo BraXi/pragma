@@ -523,7 +523,7 @@ V_RenderView
 extern void SV_AddDebugPrimitives();
 void V_RenderView(float stereo_separation)
 {
-	extern int entitycmpfnc(const rentity_t*, const rentity_t*);
+//	extern int entitycmpfnc(const rentity_t*, const rentity_t*);
 
 	if (!cl.refresh_prepped) // still loading
 	{
@@ -632,7 +632,7 @@ void V_RenderView(float stereo_separation)
 		cl.refdef.view.flags = cl.frame.playerstate.rdflags;
 
 		// sort entities for better cache locality
-        qsort( cl.refdef.entities, cl.refdef.num_entities, sizeof( cl.refdef.entities[0] ), (int (*)(const void *, const void *))entitycmpfnc );
+        //qsort( cl.refdef.entities, cl.refdef.num_entities, sizeof( cl.refdef.entities[0] ), (int (*)(const void *, const void *))entitycmpfnc );
 	}
 
 	re.RenderFrame (&cl.refdef, false);

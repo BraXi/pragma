@@ -633,11 +633,7 @@ void SCR_Loading_f (void)
 	SCR_BeginLoadingPlaque ();
 }
 
-/*
-================
-SCR_TimeRefresh_f
-================
-*/
+#if 0
 int entitycmpfnc( const rentity_t *a, const rentity_t *b )
 {
 	/*
@@ -647,7 +643,13 @@ int entitycmpfnc( const rentity_t *a, const rentity_t *b )
 		return ( ( int ) a->model - ( int ) b->model );
 	}
 }
+#endif
 
+/*
+================
+SCR_TimeRefresh_f
+================
+*/
 void SCR_TimeRefresh_f (void)
 {
 	int		i;
