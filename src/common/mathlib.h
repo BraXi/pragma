@@ -110,8 +110,10 @@ int VectorCompare(vec3_t v1, vec3_t v2);
 int Vector4Compare(vec4_t v1, vec4_t v2);
 
 vec_t Vector2Length(vec2_t v);
-vec_t VectorLength(vec3_t v);
+vec_t VectorDistance(vec3_t p1, vec3_t p2);
 vec_t Vector4Length(vec4_t v);
+
+vec_t VectorLength(vec3_t v);
 
 // just in case you do't want to use the macros
 vec_t _DotProduct(vec3_t v1, vec3_t v2);

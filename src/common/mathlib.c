@@ -742,6 +742,13 @@ vec_t Vector4Length(vec4_t v)
 	return length;
 }
 
+vec_t VectorDistance(vec3_t p1, vec3_t p2)
+{
+	vec3_t vtemp;
+	VectorSubtract(p1, p2, vtemp);
+	return VectorLength(vtemp);
+}
+
 void VectorInverse(vec3_t v)
 {
 	v[0] = -v[0];

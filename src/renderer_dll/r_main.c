@@ -185,18 +185,20 @@ void R_DrawEntitiesOnList(void)
 	
 	gl_state.bDrawingTransparents = true;
 
-	// braxi -- line below commented out as we alphatest now
+
 	R_WriteToDepthBuffer(GL_FALSE); // no z writes
 
+	R_DepthTest(true);
+
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// draw from back to front
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
-		pCurrentRefEnt = &r_newrefdef.entities[i];
+		pCurrentRefEnt = &r_newrefdef.entities[(r_newrefdef.num_entities-1)-i];
 		pCurrentModel = pCurrentRefEnt->model;
 
-		//if (!(pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
-		//{
-		//	continue; // reject opaque
-		//}
 		if (gl_state.bShadowMapPass)
 		{
 			if ((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) || (pCurrentRefEnt->renderfx & RF_NO_SHADOW))
@@ -208,8 +210,8 @@ void R_DrawEntitiesOnList(void)
 
 	R_MultiTextureBind(TMU_DIFFUSE, r_texture_white->texnum);
 	gl_state.bDrawingTransparents = false;
-
-	// braxi -- line below commented out as we alphatest now
+	
+	R_DepthTest(false);
 	R_WriteToDepthBuffer(GL_TRUE);// reenable z writing
 
 	R_UnbindProgram();
@@ -483,7 +485,74 @@ void R_Clear (void)
 	glDepthRange (gldepthmin, gldepthmax);
 }
 
-//extern GLuint r_texture_shadow_id;
+int EntSortByDistance(const void* a, const void* b)
+{
+	rentity_t* ent1 = (rentity_t*)a;
+	rentity_t* ent2 = (rentity_t*)b;
+
+	float dist1 = VectorDistance(ent1->center_origin, r_newrefdef.view.origin);
+	float dist2 = VectorDistance(ent2->center_origin, r_newrefdef.view.origin);
+
+	if (dist1 < dist2)
+		return -1;
+	else if (dist1 > dist2)
+		return 1;
+	else
+		return 0; // distances are equal so the order doesn't matter
+}
+
+/*
+=============
+R_ProcessEntities
+=============
+*/
+static void R_ProcessEntities()
+{
+	int i;
+	rentity_t* ent;
+
+	if (!r_drawentities->value)
+		return;
+
+	ent = r_newrefdef.entities;
+	for (i = 0; i < r_newrefdef.num_entities; i++, ent++)
+	{
+		if (ent->model == NULL || !ent->model)
+		{
+			// If entity model is missing it will use r_defaultmodel 
+			// as a model, and a glowing effect if it isn't a BEAM.
+
+			ent->model = r_defaultmodel;
+			ent->hiddenPartsBits = 0;
+			ent->frame = ent->oldframe = 0;
+
+			if (!(ent->renderfx & RF_BEAM))
+			{
+				ent->renderfx = RF_GLOW;
+			}
+		}
+
+		switch (ent->model->type)
+		{
+		case MOD_BRUSH:
+			R_PreprocessBrushModelEntity(ent);
+			break;
+
+		case MOD_ALIAS:
+		case MOD_NEWFORMAT:
+			R_PreProcessModelEntity(ent);
+			break;
+
+		default:
+			ent->visibleFrame = r_framecount;
+			break;
+		}
+	}
+
+	// sort entities from closest to farthest
+	qsort(r_newrefdef.entities, r_newrefdef.num_entities, sizeof(r_newrefdef.entities[0]), (int (*)(const void*, const void*))EntSortByDistance);
+}
+
 /*
 ================
 R_RenderView
@@ -494,7 +563,6 @@ r_newrefdef must be set before the first call
 void R_RenderView (refdef_t *fd)
 {
 	int i;
-	rentity_t* ent;
 
 	if (r_norefresh->value)
 		return;
@@ -544,45 +612,8 @@ void R_RenderView (refdef_t *fd)
 
 	R_World_MarkLeaves ();	// done here so we know if we're in water
 
-	// preprocess entities
-	if (r_drawentities->value)
-	{
-		ent = r_newrefdef.entities;
-		for (i = 0; i < r_newrefdef.num_entities; i++, ent++)
-		{
-			if (ent->model == NULL || !ent->model)
-			{
-				// If entity model is missing it will use r_defaultmodel 
-				// as a model, and a glowing effect if it isn't a BEAM.
+	R_ProcessEntities();
 
-				ent->model = r_defaultmodel;
-				ent->hiddenPartsBits = 0;
-				ent->frame = pCurrentRefEnt->oldframe = 0;
-
-				if (!(ent->renderfx & RF_BEAM))
-				{
-					ent->renderfx = RF_GLOW;
-				}
-			}
-
-			switch (ent->model->type)
-			{
-			case MOD_BRUSH:
-				R_PreprocessBrushModelEntity(ent);
-				break;
-
-			case MOD_ALIAS:
-			case MOD_NEWFORMAT:
-				R_PreProcessModelEntity(ent);
-				break;
-
-			default:
-				ent->visibleFrame = r_framecount;
-				break;
-			}
-		}
-	}
-	
 	gl_state.bDrawingTransparents = false;
 	gl_state.bTraversedBSP = false; // force a BSP traverse to build up surface chains
 
@@ -615,6 +646,7 @@ void R_RenderView (refdef_t *fd)
 	}
 
 	R_ProfileAtStage(STAGE_SHADOWMAP);
+	gl_state.bShadowMapPass = false;
 
 	//
 	// FINAL PASS
@@ -648,7 +680,6 @@ void R_RenderView (refdef_t *fd)
 
 	R_RenderToFBO(false); // end rendering to fbo
 	
-	gl_state.bShadowMapPass = false;
 	R_SelectTextureUnit(0);
 	if (r_speeds->value == 1.0f)
 	{

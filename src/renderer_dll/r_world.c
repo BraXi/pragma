@@ -705,6 +705,9 @@ void R_PreprocessBrushModelEntity(rentity_t * ent)
 		VectorAdd(ent->origin, ent->model->maxs, maxs);
 	}
 
+	for (i = 0; i < 3; i++)
+		ent->center_origin[i] = ent->origin[i] + ((ent->model->mins[i] + ent->model->maxs[i]) / 2.0f);
+
 	if (R_CullBox(mins, maxs))
 	{
 		return; // not in frustum, reject

@@ -457,14 +457,14 @@ typedef struct
 #define	RF_VIEW_MODEL		4		// only draw through eyes
 #define	RF_FULLBRIGHT		8		// allways draw full intensity
 #define	RF_DEPTHHACK		16		// entity can not be occluded by other geometry
-#define	RF_TRANSLUCENT		32		// entity uses .renderAlpha
-#define	RF_NO_SHADOW		64		// entity doesn't cast dynamic shadow
+#define	RF_TRANSLUCENT		32		// entity is transparent and use .renderAlpha as their alpha
+#define	RF_NO_SHADOW		64		// entity doesn't cast dynamic shadows
 #define RF_BEAM				128
-#define	RF_COLOR			256		// entity uses .renderColor, was RF_CUSTOMSKIN
+#define	RF_COLOR			256		// entity uses .renderColor
 #define	RF_GLOW				512		// pulse lighting for bonus items
 #define RF_SCALE			1024	// entity model is scaled by .renderScale
 #define	RF_NOANIMLERP		2048	// animation is not smoothed (software q1 style)
-#define RF_UNUSED1			4096	// WAS light that substracts from world!
+#define RF_UNUSED1			4096
 #define RF_UNUSED2			8192
 
 // player_state_t->refdef flags

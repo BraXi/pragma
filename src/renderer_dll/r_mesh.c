@@ -185,9 +185,13 @@ void R_PreProcessModelEntity(rentity_t* ent)
 			VectorAdd(ent->origin, ent->model->maxs, maxs);
 		}
 
+		for (i = 0; i < 3; i++)
+			ent->center_origin[i] = ent->origin[i] + ((ent->model->mins[i] + ent->model->maxs[i]) / 2.0f);
+
 		if (R_CullBox(mins, maxs))
 			return; // not in view frustum, reject
 	}
+
 
 	// entity is visible this frame!
 	ent->visibleFrame = r_framecount;
@@ -280,7 +284,9 @@ void R_DrawModelEntity(rentity_t* ent)
 	switch (ent->model->type)
 	{
 	case MOD_ALIAS:
+		glDisable(GL_CULL_FACE);
 		R_DrawAliasModel(ent);
+		glEnable(GL_CULL_FACE);
 		break;
 	case MOD_NEWFORMAT:
 		R_DrawNewModel(ent, bAnimated);
