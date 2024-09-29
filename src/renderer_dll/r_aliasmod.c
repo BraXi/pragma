@@ -566,6 +566,9 @@ void R_DrawAliasModel(const rentity_t* ent)
 			rperf.model_drawcalls++;
 		}
 
+		if (!ent->model->images[surf])
+			return;
+
 		R_MultiTextureBind(TMU_DIFFUSE, ent->model->images[surf]->texnum);
 		DrawVertexBuffer(ent, ent->model->vb[surf], 0, numSurfVerts);
 

@@ -266,7 +266,7 @@ static void R_TouchAliasModel(model_t* mod)
 
 	int	i, j, nt = 0;
 
-	if (!mod || !mod->newmod)
+	if (!mod || !mod->alias)
 	{
 		return;
 	}
