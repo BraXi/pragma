@@ -554,7 +554,8 @@ void R_DrawAliasModel(const rentity_t* ent)
 		pSurface = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
 		if ((ent->hiddenPartsBits & (1 << surf)) || gl_state.bDrawingTransparents == false && (pSurface->flags & MSF_TRANSPARENT))
 		{
-			// discard hidden surfaces or transparent surfaces in opaque pass
+			// discard hidden surfaces
+			// ... and transparent surfaces when in in opaque pass
 			pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
 			continue; 
 		}
