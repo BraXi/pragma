@@ -795,7 +795,7 @@ void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 {
 
 	//
-	// render world into framebuffer
+	// render world and entities
 	//
 	if (!onlyortho)
 	{
@@ -815,20 +815,13 @@ void R_RenderFrame (refdef_t *fd, qboolean onlyortho)
 		// draw the frame buffer
 		R_DrawFBO(0, 0, r_newrefdef.width, r_newrefdef.height, true);
 
-		if (r_test->value)
+		if (r_test->value /* && (r_newrefdef.view.flags & RDF_FLASHLIGHT)*/)
 			R_DrawFBO(0, 0, r_newrefdef.width/3, r_newrefdef.height/3, false);
 	}
 
-	extern void R_DrawText(int x, int y, int alignX, int fontId, float scale, vec4_t color, char* text);
-
-	// begin GUI rendering
-
+	// draw perf counters
 	R_BindProgram(GLPROG_GUI);
 	R_DrawPerfCounters();
-
-	//vec4_t c = { 1,1,0,1 };
-	//R_DrawText(vid.width / 2, 200 + 64 * 1, 1, 0, 1.0, c, "01234567890\n!@#$%^&\n*()_+[{]}\|-=;:',<.>?");
-
 }
 
 /*

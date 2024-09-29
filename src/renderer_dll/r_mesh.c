@@ -21,11 +21,57 @@ void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t
 
 /*
 =================
+R_EntityCountVisibleParts
+Returns number of visible parts.
+=================
+*/
+static int R_EntityCountVisibleParts(const rentity_t* ent)
+{
+	int surf, numSurfaces, numVis;
+
+	if (!ent->model)
+		return 0;
+
+	if (ent->model->type == MOD_ALIAS)
+	{
+		numSurfaces = ent->model->alias->numSurfaces;
+	}
+	else if (ent->model->type == MOD_NEWFORMAT)
+	{
+		numSurfaces = ent->model->newmod->numSurfaces;
+	}
+	else
+	{
+#ifdef _DEBUG
+		ri.Printf(PRINT_HIGH, "%s: unknown model type\n", __FUNCTION__);
+#endif
+		return 0;
+	}
+
+#ifdef _DEBUG
+	if(numSurfaces > 8)
+		ri.Error(ERR_FATAL, "%s: numSurfaces > 8\n", __FUNCTION__);
+#endif
+
+	for (surf = 0, numVis = 0; surf < numSurfaces; surf++)
+	{
+		if ((ent->hiddenPartsBits & (1 << surf)))
+		{
+			continue;
+		}
+		numVis++;
+	}
+
+	return numVis;
+}
+
+/*
+=================
 R_ValidateEntityAnimation
 Validate frame and oldframe, takes care of RF_NOANIMLERP effect.
 =================
 */
-void R_ValidateEntityAnimation(rentity_t* ent)
+static void R_ValidateEntityAnimation(rentity_t* ent)
 {
 	if (ent->model && ent->model->type != MOD_NEWFORMAT)
 	{
@@ -71,8 +117,15 @@ void R_PreProcessModelEntity(rentity_t* ent)
 	vec3_t mins, maxs, v;
 	float scale = 1.0f;
 
+	if (R_EntityCountVisibleParts(ent) == 0)
+	{
+		rperf.ent_cull_nosurfs++;
+		return; // all parts are hidden so there's nothing to draw, reject
+	}
+
 	if (ent->alpha <= 0.05f && (ent->renderfx & RF_TRANSLUCENT))
 	{
+		rperf.ent_cull_alpha++;
 		return; // completly transparent, reject
 	}
 
@@ -85,7 +138,10 @@ void R_PreProcessModelEntity(rentity_t* ent)
 		// cull objects based on distance, but only if they're not a view model
 		VectorSubtract(r_newrefdef.view.origin, ent->origin, v);
 		if (VectorLength(v) > ent->model->cullDist)
+		{
+			rperf.ent_cull_distance++;
 			return; // entity is too far, reject
+		}
 	}
 
 	if (ent->renderfx & RF_BEAM)
@@ -123,9 +179,11 @@ void R_PreProcessModelEntity(rentity_t* ent)
 			ent->center_origin[i] = ent->origin[i] + ((ent->model->mins[i] + ent->model->maxs[i]) / 2.0f);
 
 		if (R_CullBox(mins, maxs))
+		{
+			rperf.ent_cull_frustum++;
 			return; // not in view frustum, reject
+		}
 	}
-
 
 	// entity is visible this frame!
 	ent->visibleFrame = r_framecount;

@@ -564,6 +564,11 @@ typedef struct /*per frame statistics*/
 	int model_drawcalls; // total draw calls (can be multiple per model)
 	int model_draw; // total models drawn
 
+	int ent_cull_nosurfs;		// ents rejected because all parts are hidden
+	int ent_cull_alpha;			// ents rejected due to transparency
+	int ent_cull_distance;		// ents too far from view
+	int ent_cull_frustum;		// ents not in frustum
+
 	int	texture_binds[MIN_TEXTURE_MAPPING_UNITS]; // number of texture binds per texture unit
 } rperfcounters_t;
 
