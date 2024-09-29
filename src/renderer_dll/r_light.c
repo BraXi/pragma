@@ -35,7 +35,6 @@ void R_SetEntityAmbientLight(rentity_t* ent)
 {
 	float	scale;
 	float	min;
-	float	yaw;
 	int		i;
 
 	if ((ent->renderfx & RF_COLOR))
@@ -79,13 +78,9 @@ void R_SetEntityAmbientLight(rentity_t* ent)
 		}
 	}
 
-	// calculate ambient light direction.. this is meeeeh
-	yaw = ent->angles[1] / 180 * M_PI;
-	ent->ambient_dir[0] = cos(-yaw);
-	ent->ambient_dir[1] = sin(-yaw);
-	ent->ambient_dir[2] = -1;
-
-
+	// set ambient light dir
+	// TODO: read sun settings from world
+	VectorSet(ent->ambient_dir, 0, 1, -1);
 	VectorNormalize(ent->ambient_dir);
 }
 

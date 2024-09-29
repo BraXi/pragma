@@ -74,7 +74,7 @@ typedef struct rentity_s
 	unsigned int visibleFrame;	// draw entity if visibleFrame == r_framecount
 
 	vec3_t		ambient_color;	// ambient light color (lightmap sample + effects)
-	vec3_t		ambient_dir;	// ambient light direction
+	vec3_t		ambient_dir;	// ambient light direction, normalized
 
 	vec3_t		center_origin; // center of entity derived from bbox
 } rentity_t;
