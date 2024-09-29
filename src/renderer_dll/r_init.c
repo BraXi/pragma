@@ -34,7 +34,7 @@ cvar_t* gl_driver;
 cvar_t* r_lightmap;
 cvar_t* r_mode;
 cvar_t* r_dynamic;
-cvar_t* r_modulate;
+cvar_t* r_ambientlightscale;
 cvar_t* r_nobind;
 cvar_t* r_picmip;
 cvar_t* r_showtris;
@@ -92,7 +92,8 @@ void R_RegisterCvarsAndCommands(void)
 
 	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT, "Smooth model animations.");
 
-	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_CHEAT, NULL);
+	r_ambientlightscale = ri.Cvar_Get("r_ambientlightscale", "1", CVAR_CHEAT, NULL);
+
 	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0, NULL);
 	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE, NULL);
 	r_lightmap = ri.Cvar_Get("r_lightmap", "0",CVAR_CHEAT, NULL);

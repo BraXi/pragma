@@ -17,73 +17,7 @@ void R_DrawAliasModel(const rentity_t* ent); // r_aliasmod.c
 
 qboolean r_pendingflip = false;
 
-
-/*
-=================
-R_SetEntityAmbientLight
-
-Calculates ambient lighting color and direction for a given entity
-by adding effects and probing lightmap color beneath entity.
-
-Takes care of RF_COLOR, RF_FULLBRIGHT, RF_GLOW, RF_MINLIGHT effects.
-
-FIXME: this is uttery shit and deserves a rework !!!
-
-It should calculate ambient lighting by probing for nearby
-light sources and find the one thats closest & strongest!
-=================
-*/
-void R_SetEntityAmbientLight(rentity_t* ent)
-{
-	float	scale;
-	float	min;
-	float	yaw;
-	int		i;
-
-	if ((ent->renderfx & RF_COLOR))
-	{
-		VectorCopy(ent->renderColor, ent->ambient_color);
-	}
-	else if (ent->renderfx & RF_FULLBRIGHT || r_fullbright->value)
-	{
-		VectorSet(ent->ambient_color, 1.0f, 1.0f, 1.0f);
-	}
-	else 
-	{
-		R_LightPoint(ent->origin, ent->ambient_color);
-	}
-
-	if (ent->renderfx & RF_GLOW)
-	{
-		scale = 1.0f * sin(r_newrefdef.time * 7.0);
-		for (i = 0; i < 3; i++)
-		{
-			min = ent->ambient_color[i] * 0.8;
-			ent->ambient_color[i] += scale;
-			if (ent->ambient_color[i] < min)
-				ent->ambient_color[i] = min;
-		}
-	}
-
-	// RF_MINLIGHT - don't let the model go completly dark
-	if (ent->renderfx & RF_MINLIGHT)
-	{
-		for (i = 0; i < 3; i++)
-			if (ent->ambient_color[i] > 0.1)
-				break;
-
-		if (i == 3)
-		{
-			VectorSet(ent->ambient_color, 0.1f, 0.1f, 0.1f);
-		}
-	}
-
-	yaw = ent->angles[1] / 180 * M_PI;
-	ent->ambient_dir[0] = cos(-yaw);
-	ent->ambient_dir[1] = sin(-yaw);
-	ent->ambient_dir[2] = -1;
-	VectorNormalize(ent->ambient_dir);
-}
+void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t color);
 
 /*
 =================
@@ -421,33 +355,12 @@ static void R_DrawWireBoundingBox(vec3_t mins, vec3_t maxs)
 		glVertex3f(maxs[0], maxs[1], maxs[2]);
 	glEnd();
 }
-/*
-=============
-R_DrawWireBox
-=============
-*/
-static void R_DrawWireBox(vec3_t mins, vec3_t maxs)
-{
-	glBegin(GL_QUAD_STRIP);
-	glVertex3f(mins[0], mins[1], mins[2]);
-	glVertex3f(mins[0], mins[1], maxs[2]);
-	glVertex3f(maxs[0], mins[1], mins[2]);
-	glVertex3f(maxs[0], mins[1], maxs[2]);
-	glVertex3f(maxs[0], maxs[1], mins[2]);
-	glVertex3f(maxs[0], maxs[1], maxs[2]);
-	glVertex3f(mins[0], maxs[1], mins[2]);
-	glVertex3f(mins[0], maxs[1], maxs[2]);
-	glVertex3f(mins[0], mins[1], mins[2]);
-	glVertex3f(mins[0], mins[1], maxs[2]);
-	glEnd();
-}
 
 /*
 =============
 R_DrawDebugLines
 =============
 */
-extern void R_DrawString3D(char* string, vec3_t pos, float fontSize, int alignx, vec3_t color);
 void R_DrawDebugLines(void)
 {
 	int		i;

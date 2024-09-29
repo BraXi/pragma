@@ -17,24 +17,77 @@ unsigned int r_dlightframecount;
 #define	DLIGHT_CUTOFF	64
 
 /*
-=============
-R_RenderDlights
-=============
+=================
+R_SetEntityAmbientLight
+
+Calculates ambient lighting color and direction for a given entity
+by adding effects and probing lightmap color beneath entity.
+
+Takes care of RF_COLOR, RF_FULLBRIGHT, RF_GLOW, RF_MINLIGHT effects.
+
+FIXME: this is uttery shit and deserves a rework !!!
+
+It should calculate ambient lighting by probing for nearby
+light sources and find the one thats closest & strongest!
+=================
 */
-void R_RenderDlights(void)
+void R_SetEntityAmbientLight(rentity_t* ent)
 {
-#if 0
+	float	scale;
+	float	min;
+	float	yaw;
 	int		i;
-	dlight_t* l;
 
-	l = r_newrefdef.dlights;
-	for (i = 0; i < r_newrefdef.num_dlights; i++, l++)
+	if ((ent->renderfx & RF_COLOR))
 	{
+		// entity has RF_COLOR, but fullbright is off
+		VectorCopy(ent->renderColor, ent->ambient_color);
 	}
-#endif
+	else if (ent->renderfx & RF_FULLBRIGHT || r_fullbright->value)
+	{
+		// entity is fullbright, but has no RF_COLOR
+		VectorSet(ent->ambient_color, 1.0f, 1.0f, 1.0f);
+	}
+	else
+	{
+		// entity has no fullbright and RF_COLOR
+		R_LightForPoint(ent->origin, ent->ambient_color);
+	}
+
+	if (ent->renderfx & RF_GLOW)
+	{
+		scale = 1.0f * sin(r_newrefdef.time * 7.0);
+		for (i = 0; i < 3; i++)
+		{
+			min = ent->ambient_color[i] * 0.8;
+			ent->ambient_color[i] += scale;
+			if (ent->ambient_color[i] < min)
+				ent->ambient_color[i] = min;
+		}
+	}
+
+	// RF_MINLIGHT - don't let the model go completly dark
+	if (ent->renderfx & RF_MINLIGHT)
+	{
+		for (i = 0; i < 3; i++)
+			if (ent->ambient_color[i] > 0.1)
+				break;
+
+		if (i == 3)
+		{
+			VectorSet(ent->ambient_color, 0.1f, 0.1f, 0.1f);
+		}
+	}
+
+	// calculate ambient light direction.. this is meeeeh
+	yaw = ent->angles[1] / 180 * M_PI;
+	ent->ambient_dir[0] = cos(-yaw);
+	ent->ambient_dir[1] = sin(-yaw);
+	ent->ambient_dir[2] = -1;
+
+
+	VectorNormalize(ent->ambient_dir);
 }
-
-
 
 /*
 =============
@@ -197,7 +250,7 @@ static vec3_t		pointcolor;
 static cplane_t		*lightplane;	// used as shadow plane
 static vec3_t		lightspot;
 
-static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
+static int R_RecursiveLightPoint(mnode_t *node, const vec3_t start, const vec3_t end)
 {
 	float		front, back, frac;
 	int			side, maps, r, i;
@@ -294,7 +347,7 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 				if (r_dynamic->value)
 				{
 					for (i = 0; i < 3; i++)
-						scale[i] = r_modulate->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
+						scale[i] = r_ambientlightscale->value * r_newrefdef.lightstyles[surf->styles[maps]].rgb[i];
 
 					pointcolor[0] += lightmap[0] * scale[0] * (1.0 / 255);
 					pointcolor[1] += lightmap[1] * scale[1] * (1.0 / 255);
@@ -302,9 +355,9 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 				}
 				else
 				{
-					pointcolor[0] += lightmap[0] * r_modulate->value * (1.0 / 255);
-					pointcolor[1] += lightmap[1] * r_modulate->value * (1.0 / 255);
-					pointcolor[2] += lightmap[2] * r_modulate->value * (1.0 / 255);
+					pointcolor[0] += lightmap[0] * r_ambientlightscale->value * (1.0 / 255);
+					pointcolor[1] += lightmap[1] * r_ambientlightscale->value * (1.0 / 255);
+					pointcolor[2] += lightmap[2] * r_ambientlightscale->value * (1.0 / 255);
 				}
 
 				lightmap += 3 * ((surf->extents[0] >> surf->lmshift) + 1) * ((surf->extents[1] >> surf->lmshift) + 1);
@@ -319,36 +372,42 @@ static int R_RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 
 /*
 ===============
-R_LightPoint
+R_LightForPoint
 
-Returns the lightmap pixel color under p
+Returns the lightmap pixel color beneath point
 ===============
 */
-void R_LightPoint(vec3_t p, vec3_t color)
+void R_LightForPoint(const vec3_t point, vec3_t outAmbient)
 {
 	vec3_t		end;
 	float		r;
 	
-	if (!r_worldmodel->lightdata || r_worldmodel->lightdatasize <= 0)
+	if ( (r_newrefdef.view.flags & RDF_NOWORLDMODEL) || !r_worldmodel->lightdata || r_worldmodel->lightdatasize <= 0)
 	{
-		VectorSet(color, 1.0f, 1.0f, 1.0f); // fullbright
+		VectorSet(outAmbient, 1.0f, 1.0f, 1.0f); // fullbright
 		return;
 	}
 	
-	end[0] = p[0];
-	end[1] = p[1];
-	end[2] = p[2] - 2048; // go this far down
+	end[0] = point[0];
+	end[1] = point[1];
+	end[2] = point[2] - 2048.0f; // go this far down
 
 	//
 	// find lightmap pixel color underneath p
 	//
-	r = R_RecursiveLightPoint (r_worldmodel->nodes, p, end);
+	r = R_RecursiveLightPoint (r_worldmodel->nodes, point, end);
 	
-	if (r == -1) // nothing was found
-		VectorCopy (vec3_origin, color);
+	if (r == -1)
+	{
+		// nothing was found, return white
+		VectorSet(outAmbient, 1.0f, 1.0f, 1.0f); 
+		//VectorCopy(vec3_origin, outAmbient);
+	}
 	else
-		VectorCopy (pointcolor, color);
+	{
+		VectorCopy(pointcolor, outAmbient);
+	}
 
-	// scale the light color with r_modulate cvar
-	VectorScale (color, r_modulate->value, color);
+	// scale the light color with r_ambientlightscale cvar
+	VectorScale (outAmbient, r_ambientlightscale->value, outAmbient);
 }

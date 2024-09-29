@@ -325,7 +325,7 @@ extern	cvar_t	*r_showtris;
 extern	cvar_t	*r_finish;
 extern	cvar_t	*r_clear;
 extern	cvar_t	*r_cull;
-extern	cvar_t	*r_modulate;
+extern	cvar_t	*r_ambientlightscale;
 extern	cvar_t	*r_drawbuffer;
 extern  cvar_t  *gl_driver;
 extern	cvar_t	*r_swapinterval;
@@ -414,10 +414,10 @@ void R_DrawBeam(rentity_t* e);
 //===================================================================
 
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
-void R_LightPoint(vec3_t p, vec3_t color);
+void R_LightForPoint(const vec3_t point, vec3_t outAmbient);
+void R_SetEntityAmbientLight(rentity_t* ent);
 void R_MarkDynamicLights(void);
 void R_SendDynamicLightsToCurrentProgram(qboolean bViewFlashLight);
-void R_RenderDlights(void); // development aid
 
 //===================================================================
 // shared.c

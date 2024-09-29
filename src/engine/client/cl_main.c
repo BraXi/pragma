@@ -1270,9 +1270,7 @@ cheatvar_t	cheatvars[] =
 
 	{"r_fullbright", "0"},
 	{"r_lightmap", "0"},
-	{"r_monolightmap", "0"},
-	{"r_saturatelighting", "0"},
-	{"r_modulate", "1"},
+	{"r_ambientlightscale", "1"},
 
 	{"r_nobind", "0"},
 	{"r_lockpvs", "0"},

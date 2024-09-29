@@ -586,8 +586,6 @@ r_newrefdef must be set before the first call
 */
 void R_RenderView (refdef_t *fd)
 {
-	int i;
-
 	if (r_norefresh->value)
 		return;
 
