@@ -155,17 +155,20 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 	case PMODEL_IDENT: /* Pragma's own model format */
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_PMOD_HUNKSIZE, "Model (Renderer)");
 		R_LoadNewModel(mod, buf);
+		//R_TouchNewModel(mod);
 		break;
 
 	case MD3_IDENT: /* Quake3 .md3 model */
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_MD3_HUNKSIZE, "Alias Model (Renderer)");
 		Mod_LoadAliasMD3(mod, buf);
+		//R_TouchAliasModel(mod); // load textures too
 		break;
 
 	case BSP_IDENT: /* Quake2 .bsp v38*/
 		bExtendedBSP = false;
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "World BSP (Renderer)");
 		Mod_LoadBSP(mod, buf);
+		//R_TouchBrushModel(mod);
 		break;
 
 	case QBISM_IDENT: /* Qbism extended BSP */
@@ -263,9 +266,8 @@ static void R_TouchAliasModel(model_t* mod)
 
 	int	i, j, nt = 0;
 
-	if (!mod->alias)
+	if (!mod || !mod->newmod)
 	{
-		ri.Printf(PRINT_LOW, "%s: !mod->alias\n", __FUNCTION__);
 		return;
 	}
 
@@ -304,9 +306,8 @@ static void R_TouchBrushModel(model_t* mod)
 
 static void R_TouchNewModel(model_t* mod)
 {
-	if (!mod->newmod)
+	if (!mod || !mod->newmod)
 	{
-		ri.Printf(PRINT_LOW, "%s: !mod->newmod\n", __FUNCTION__);
 		return;
 	}
 
