@@ -561,8 +561,8 @@ void R_DrawAliasModel(const rentity_t* ent)
 	
 		if (r_speeds->value)
 		{
-			rperf.alias_tris += numSurfVerts / 3;
-			rperf.alias_drawcalls++;
+			rperf.model_tris += numSurfVerts / 3;
+			rperf.model_drawcalls++;
 		}
 
 		R_MultiTextureBind(TMU_DIFFUSE, ent->model->images[surf]->texnum);
@@ -571,6 +571,7 @@ void R_DrawAliasModel(const rentity_t* ent)
 		pSurface = (md3Surface_t*)((byte*)pSurface + pSurface->ofsEnd);
 	}
 
+	rperf.model_draw++;
 }
 
 qboolean R_LerpTag(orientation_t* tag, struct model_s* model, int startFrame, int endFrame, float frac, int tagIndex)

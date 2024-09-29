@@ -19,6 +19,11 @@ static unsigned int shadowMapSize[2] = { 0,0 };
 static GLuint r_shadow_fbo = 0;
 GLuint r_texture_shadow_id = 0;
 
+/*
+================
+R_DestroyShadowMapFBO
+================
+*/
 void R_DestroyShadowMapFBO()
 {
     if (r_shadow_fbo != 0) 
@@ -34,10 +39,25 @@ void R_DestroyShadowMapFBO()
     }
 }
 
+/*
+================
+R_InitShadowMap
+
+(re)builds FBO for a shadow map.
+================
+*/
 qboolean R_InitShadowMap(unsigned int width, unsigned int height)
 {
+    GLenum status;
+
+
     if (shadowMapSize[0] != width || shadowMapSize[1] != height)
     {
+
+#ifdef _DEBUG
+        ri.Printf(PRINT_LOW, "Rebuilding shadow FBO for %ix%ipx frame buffer.\n", width, height);
+#endif
+
         // force a rebuild when screen dimensions change
         R_DestroyShadowMapFBO();
     }
@@ -64,10 +84,10 @@ qboolean R_InitShadowMap(unsigned int width, unsigned int height)
 
     glDrawBuffer(GL_NONE);
 
-    GLenum Status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (Status != GL_FRAMEBUFFER_COMPLETE) 
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
     {
-        ri.Error(ERR_FATAL, "Shadow FBO error (0x%x)\n", Status);
+        ri.Error(ERR_FATAL, "Shadow FBO error (0x%x)\n", status);
         return false;
     }
 
@@ -78,6 +98,13 @@ qboolean R_InitShadowMap(unsigned int width, unsigned int height)
     return true;
 }
 
+
+/*
+================
+R_BeginShadowMapPass
+Begins rendering into shadow FBO.
+================
+*/
 void R_BeginShadowMapPass()
 {
     R_SetupProjection(shadowMapSize[0], shadowMapSize[1], 30.0f, 1.0f, 2048.0f, r_newrefdef.view.origin, r_newrefdef.view.flashlight_angles);
@@ -94,12 +121,16 @@ void R_BeginShadowMapPass()
     gl_state.bShadowMapPass = true; // this also locks texture changes
 }
 
+/*
+================
+R_EndShadowMapPass
+================
+*/
 void R_EndShadowMapPass()
 {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     gl_state.bShadowMapPass = false;
 }
-
 
 void BindForReading()
 {

@@ -415,7 +415,7 @@ void R_DrawBeam(rentity_t* e);
 
 void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
 void R_LightPoint(vec3_t p, vec3_t color);
-void R_PushDlights(void);
+void R_MarkDynamicLights(void);
 void R_SendDynamicLightsToCurrentProgram(qboolean bViewFlashLight);
 void R_RenderDlights(void); // development aid
 
@@ -551,17 +551,20 @@ Live profiling (currently windows only) + counters
 ====================================================================
 */
 
-typedef struct
+typedef struct /*per frame statistics*/
 {
+	// brush models
 	int	brush_polys;
 	int brush_tris;
 	int brush_drawcalls;
 	int	brush_textures;
 
-	int alias_tris;
-	int alias_drawcalls;
+	// md3 and skel models
+	int model_tris; // total triangles
+	int model_drawcalls; // total draw calls (can be multiple per model)
+	int model_draw; // total models drawn
 
-	int	texture_binds[MIN_TEXTURE_MAPPING_UNITS];
+	int	texture_binds[MIN_TEXTURE_MAPPING_UNITS]; // number of texture binds per texture unit
 } rperfcounters_t;
 
 extern rperfcounters_t rperf;

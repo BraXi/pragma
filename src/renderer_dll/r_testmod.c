@@ -418,6 +418,13 @@ static void CalcInverseMatrixForModel(model_t* pModel)
 		Mat4Invert(invBoneMatrix[i], invBoneMatrix[i]);
 }
 
+/*
+=================
+R_DrawNewModel
+FIXME: cull order is BACK for skel models
+FIXME: vaAtrribsChecked should be checked only once at startup and when program changes
+=================
+*/
 void R_DrawNewModel(const rentity_t* ent, qboolean isAnimated)
 {
 	pmodel_header_t* hdr;
@@ -500,8 +507,8 @@ void R_DrawNewModel(const rentity_t* ent, qboolean isAnimated)
 
 			if (r_speeds->value)
 			{
-				rperf.alias_tris += surf->numVerts / 3;
-				rperf.alias_drawcalls ++;
+				rperf.model_tris += surf->numVerts / 3;
+				rperf.model_drawcalls ++;
 			}
 		}
 	}
@@ -510,5 +517,7 @@ void R_DrawNewModel(const rentity_t* ent, qboolean isAnimated)
 	for (i = 0; i < numAttribs; i++)
 		glDisableVertexAttribArray(va_attrib[i]);
 
+
+	rperf.model_draw++;
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

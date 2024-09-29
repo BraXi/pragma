@@ -147,19 +147,20 @@ static inline void R_DrawCurrentEntity()
 
 /*
 =============
-R_DrawEntitiesOnList
+R_DrawEntities
+Draw all entities opaque and transparent entities, sorted.
 =============
 */
-void R_DrawEntitiesOnList(void)
+void R_DrawEntities(void)
 {
 	int		i;
 
 	if (!r_drawentities->value)
 		return;
 
-	//
-	// draw opaque entities
-	//
+	
+	// draw opaque entities first
+	gl_state.bDrawingTransparents = false;
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
 		pCurrentRefEnt = &r_newrefdef.entities[i];
@@ -179,13 +180,9 @@ void R_DrawEntitiesOnList(void)
 		R_DrawCurrentEntity();
 	}
 
-	//
-	// draw transparent entities
-	//
+	// draw transparent entities sorted from farthest to closest
 	
 	gl_state.bDrawingTransparents = true;
-
-
 	R_WriteToDepthBuffer(GL_FALSE); // no z writes
 
 	R_DepthTest(true);
@@ -328,6 +325,8 @@ static void R_SetFrustum()
 /*
 ===============
 R_SetupFrame
+Increase r_framecount, calculate view vectors for camera, find view clusters,
+clear out the portion of the screen that the NOWORLDMODEL defines.
 ===============
 */
 static void R_SetupFrame()
@@ -336,12 +335,12 @@ static void R_SetupFrame()
 
 	r_framecount++;
 
-// build the transformation matrix for the given view angles
-	VectorCopy (r_newrefdef.view.origin, r_origin);
+	// build the transformation matrix for the given view angles
+	VectorCopy(r_newrefdef.view.origin, r_origin);
 
 	AngleVectors (r_newrefdef.view.angles, vpn, vright, vup);
 
-// current viewcluster
+	// current viewcluster
 	if ( !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 	{
 		r_oldviewcluster = r_viewcluster;
@@ -357,8 +356,7 @@ static void R_SetupFrame()
 			VectorCopy (r_origin, temp);
 			temp[2] -= 16;
 			leaf = Mod_BSP_PointInLeaf (temp, r_worldmodel);
-			if ( !(leaf->contents & CONTENTS_SOLID) &&
-				(leaf->cluster != r_viewcluster2) )
+			if ( !(leaf->contents & CONTENTS_SOLID) && (leaf->cluster != r_viewcluster2) )
 				r_viewcluster2 = leaf->cluster;
 		}
 		else
@@ -368,8 +366,7 @@ static void R_SetupFrame()
 			VectorCopy (r_origin, temp);
 			temp[2] += 16;
 			leaf = Mod_BSP_PointInLeaf (temp, r_worldmodel);
-			if ( !(leaf->contents & CONTENTS_SOLID) &&
-				(leaf->cluster != r_viewcluster2) )
+			if ( !(leaf->contents & CONTENTS_SOLID) && (leaf->cluster != r_viewcluster2) )
 				r_viewcluster2 = leaf->cluster;
 		}
 	}
@@ -555,6 +552,33 @@ static void R_ProcessEntities()
 
 /*
 ================
+R_ClearPerfCounters
+
+clear performance counters
+================
+*/
+static void R_ClearPerfCounters()
+{
+#if 1
+	memset(&rperf, 0, sizeof(rperf));
+#else
+	int i;
+
+	rperf.brush_polys = 0;
+	rperf.brush_tris = 0;
+	rperf.brush_drawcalls = 0;
+	rperf.brush_textures = 0;
+
+	rperf.model_tris = 0;
+	rperf.model_drawcalls = 0;
+
+	for (i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
+		rperf.texture_binds[i] = 0;
+#endif
+}
+
+/*
+================
 R_RenderView
 
 r_newrefdef must be set before the first call
@@ -573,7 +597,7 @@ void R_RenderView (refdef_t *fd)
 	r_newrefdef = *fd;
 
 	if (!r_worldmodel && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
-		ri.Error (ERR_DROP, "R_RenderView: NULL worldmodel");
+		ri.Error(ERR_DROP, "R_RenderView: NULL worldmodel");
 
 #ifdef _DEBUG
 	if (!r_defaultmodel)
@@ -583,22 +607,13 @@ void R_RenderView (refdef_t *fd)
 	}
 #endif
 
-	// clear performance counters
-	rperf.brush_polys = 0;
-	rperf.brush_tris = 0;
-	rperf.brush_drawcalls = 0;
-	rperf.alias_tris = 0;
-	rperf.alias_drawcalls = 0;
-
-	for(i = 0; i < MIN_TEXTURE_MAPPING_UNITS; i++)
-		rperf.texture_binds[i] = 0;
-
+	R_ClearPerfCounters();
 	R_StartProfiling();
-	R_PushDlights ();
 
 	//
-	// set drawing parms
+	// STAGE_SETUP
 	//
+
 	R_SetCullFace(GL_FRONT);
 	R_CullFace(r_cull->value);
 
@@ -606,53 +621,52 @@ void R_RenderView (refdef_t *fd)
 	R_AlphaTest(false);
 	R_DepthTest(true);
 
-	R_SetupFrame ();
-
-	R_SetFrustum ();
-
-	R_World_MarkLeaves ();	// done here so we know if we're in water
-
-	R_ProcessEntities();
-
-	gl_state.bDrawingTransparents = false;
-	gl_state.bTraversedBSP = false; // force a BSP traverse to build up surface chains
-
+	R_SetupFrame();
+	R_SetFrustum();
+	R_MarkDynamicLights();
+	R_World_MarkLeaves();	// done here so we know if we're in water
+	
+	gl_state.bTraversedBSP = false; // Force a BSP traverse to build up surface chains
 	R_TraverseWorldBSP();
+
+	// Process all entities and figure out their drawing params
+	R_ProcessEntities();
 
 	R_ProfileAtStage(STAGE_SETUP);
 
 	//
-	// SHADOW MAP PASS    !!!ASSUMES ONLY FLASHLIGHT IN FIRST PERSON IS CASTING SHADOW!!!
+	// STAGE_SHADOWMAP
+	//
+	// 
 	// 
 	// Bind shadowmap FBO and render only to the depth buffer
 	// Traverse BSP to build surfaces
-	// Do not wipe texture chains after rendering wworld surfaces
-	// Do not draw translucent surfaces (TODO: draw them alpha tested)
+	// Do not wipe texture chains after rendering world surfaces
+	// Draw alpha tested surfaces so they can cast proper shadows
 	// Do not draw skybox
 	// Do not bind any textures except shadowmap
 	// Skip lighting, particles, debug lines, and all the other things which shouldn't render to depth
 	//
-		
+	
 	if (r_test->value)
 	{
 		R_InitShadowMap(vid.width, vid.height);
+
 		R_BeginShadowMapPass();
-
-		R_DrawWorld();
-		R_DrawEntitiesOnList();
-
+		{
+			R_DrawWorld();
+			R_DrawEntities();
+		}
 		R_EndShadowMapPass();
 
 	}
 
 	R_ProfileAtStage(STAGE_SHADOWMAP);
-	gl_state.bShadowMapPass = false;
+	
 
 	//
-	// FINAL PASS
-	// Draw all surfaces (we've previously ommited sky and transparents)
+	// STAGE_DRAWWORLD
 	//
-
 	R_SetViewport();
 	R_SetupProjection(r_newrefdef.width, r_newrefdef.height, r_newrefdef.view.fov_y, 4, 4096 * 2, r_newrefdef.view.origin, r_newrefdef.view.angles);
 	R_UpdateCommonProgUniforms(false);
@@ -663,21 +677,33 @@ void R_RenderView (refdef_t *fd)
 	R_DrawWorld();
 	R_ProfileAtStage(STAGE_DRAWWORLD);
 
-	//glDisable(GL_CULL_FACE); //test
-	R_DrawEntitiesOnList();
+	//
+	// STAGE_ENTITIES
+	//
+	R_DrawEntities();
 	R_ProfileAtStage(STAGE_ENTITIES);
-	//glEnable(GL_CULL_FACE);
 
+	//
+	// STAGE_DEBUG
+	//
 	R_DrawDebugLines();
 	R_ProfileAtStage(STAGE_DEBUG);
 
-//	R_RenderDlights ();
+	//
+	// STAGE_ALPHASURFS
+	//
 	R_World_DrawAlphaSurfaces();
 	R_ProfileAtStage(STAGE_ALPHASURFS);
 
+	//
+	// STAGE_PARTICLES
+	//
 	R_DrawParticles(r_newrefdef.num_particles, r_newrefdef.particles);
 	R_ProfileAtStage(STAGE_PARTICLES);
 
+	//
+	// STAGE_TOTAL
+	//
 	R_RenderToFBO(false); // end rendering to fbo
 	
 	R_SelectTextureUnit(0);
@@ -685,7 +711,7 @@ void R_RenderView (refdef_t *fd)
 	{
 		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i texbinds, %i lmbinds,\n",
 			rperf.brush_polys,
-			rperf.alias_tris,
+			rperf.model_tris,
 			rperf.brush_textures,
 			rperf.texture_binds[TMU_DIFFUSE],
 			rperf.texture_binds[TMU_LIGHTMAP]);
@@ -755,8 +781,8 @@ static void R_DrawPerfCounters()
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i particles count", r_newrefdef.num_particles));
 
 	Vector4Set(color, 1, 1, 1, 1.0);
-	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("%i rendered models", rperf.alias_drawcalls));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i model tris total", rperf.alias_tris));
+	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("%i rendered models", rperf.model_drawcalls));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i model tris total", rperf.model_tris));
 
 	R_DrawProfilingReport();
 }

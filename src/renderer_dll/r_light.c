@@ -83,10 +83,10 @@ void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node)
 
 /*
 =============
-R_PushDlights
+R_MarkDynamicLights
 =============
 */
-void R_PushDlights (void)
+void R_MarkDynamicLights()
 {
 	int			i;
 	dlight_t	*l;
