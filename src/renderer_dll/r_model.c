@@ -25,7 +25,6 @@ static byte mod_novis[MAX_MAP_LEAFS_QBSP/8];
 static byte *mod_base = NULL;
 
 #define RD_MAX_PMOD_HUNKSIZE	0x400000 // 4 MB
-#define RD_MAX_SMDL_HUNKSIZE	0x400000 // 4 MB
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
 #define RD_MAX_BSP_HUNKSIZE		0x1000000 // 16 MB
 #define RD_MAX_QBSP_HUNKSIZE	(RD_MAX_BSP_HUNKSIZE*8) // 96 MB -- we let much bigger qbism bsps 
@@ -38,7 +37,6 @@ static model_t	r_inlineModels[RD_MAX_MODELS]; // the inline "*" brush models fro
 
 extern void Mod_LoadBSP(model_t* mod, void* buffer);
 extern void Mod_LoadAliasMD3(model_t* mod, void* buffer);
-extern void Mod_LoadSkelModel(model_t* mod, void* buffer);
 extern void R_LoadNewModel(model_t* mod, void* buffer);
 
 extern void Mod_LoadNewModelTextures(model_t* mod);;
