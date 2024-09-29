@@ -872,6 +872,16 @@ void R_BeginFrame( float camera_separation )
 			ri.Cvar_Set("r_intensity", "6");
 	}
 
+	if (r_ambientlightscale->modified)
+	{
+		r_ambientlightscale->modified = false;
+
+		if (r_ambientlightscale->value < 0.0f)
+			ri.Cvar_Set("r_ambientlightscale", "0");
+		else if (r_ambientlightscale->value > 3.0f)
+			ri.Cvar_Set("r_ambientlightscale", "3");
+	}
+	
 	GLimp_BeginFrame( camera_separation );
 
 	/*
