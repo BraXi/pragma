@@ -183,8 +183,8 @@ void R_DrawEntities(void)
 	// draw transparent entities sorted from farthest to closest
 	
 	gl_state.bDrawingTransparents = true;
-	R_WriteToDepthBuffer(GL_FALSE); // no z writes
-
+	
+	//R_WriteToDepthBuffer(GL_FALSE); // no z writes
 	R_DepthTest(true);
 
 	//glEnable(GL_BLEND);
@@ -209,7 +209,7 @@ void R_DrawEntities(void)
 	gl_state.bDrawingTransparents = false;
 	
 	R_DepthTest(false);
-	R_WriteToDepthBuffer(GL_TRUE);// reenable z writing
+	//R_WriteToDepthBuffer(GL_TRUE);// reenable z writing
 
 	R_UnbindProgram();
 }

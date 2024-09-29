@@ -283,6 +283,10 @@ static void R_TouchAliasModel(model_t* mod)
 			if (mod->images[nt] == NULL)
 				mod->images[nt] = r_texture_missing;
 
+			// mark if surface has transparent texture
+			if (mod->images[nt]->has_alpha)
+				surf->flags = MSF_TRANSPARENT;
+
 			shader->shaderIndex = mod->images[nt]->texnum;
 			nt++;
 		}

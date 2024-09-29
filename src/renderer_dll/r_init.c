@@ -79,13 +79,15 @@ void R_RegisterCvarsAndCommands(void)
 	r_lefthand = ri.Cvar_Get("cl_hand", "0", CVAR_USERINFO | CVAR_ARCHIVE, NULL);
 	r_norefresh = ri.Cvar_Get("r_norefresh", "0", 0, NULL);
 
-	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT, "Skip all lighting (development tool).");
+	r_fullbright = ri.Cvar_Get("r_fullbright", "0", CVAR_CHEAT, "Skip all lighting (development tool)");
 
-	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT, "Draw entities (development tool).");
-	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT, "Draw world  (development tool).");
-	r_drawdecals = ri.Cvar_Get("r_drawdecals", "1", CVAR_CHEAT, "Draw decals  (development tool).");
+	r_drawentities = ri.Cvar_Get("r_drawentities", "1", CVAR_CHEAT, "Draw entities (development tool)");
+	r_drawworld = ri.Cvar_Get("r_drawworld", "1", CVAR_CHEAT, "Draw world  (development tool)");
+	r_drawdecals = ri.Cvar_Get("r_drawdecals", "1", CVAR_CHEAT, "Draw decals (development tool)");
 
-	r_speeds = ri.Cvar_Get("r_speeds", "0", 0, "Show performance counters - 1 in console, 2 detailed osd.");
+	//r_drawtrans = ri.Cvar_Get("r_drawtrans", "1", CVAR_CHEAT, "Draw transparent surfaces (development tool)");
+
+	r_speeds = ri.Cvar_Get("r_speeds", "0", 0, "Show performance counters - 1=print, 2=OSD.");
 	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT, "Do not cull by VIS data.");
 	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT, "Disable frustum culling.");
 	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT, "Lock PVS.");

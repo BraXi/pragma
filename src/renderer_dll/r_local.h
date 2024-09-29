@@ -56,6 +56,11 @@ typedef struct
 
 extern	viddef_t	vid;
 
+
+// model surface flags (set at runtime)
+#define MSF_TRANSPARENT 1 // model surface has texture with transparency
+
+
 typedef enum 
 {
 	it_model,
