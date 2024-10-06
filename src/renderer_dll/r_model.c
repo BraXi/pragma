@@ -162,6 +162,7 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 		//R_TouchAliasModel(mod); // load textures too
 		break;
 
+	//case Q3BSP_IDENT:
 	case BSP_IDENT: /* Quake2 .bsp v38*/
 		bExtendedBSP = false;
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "World BSP (Renderer)");
@@ -413,7 +414,7 @@ void Cmd_modellist_f(void)
 	model_t* mod;
 	int		total;
 
-	static char *mods[] = { "BAD", "BSP", "ALIAS", "SMDL", "PRMDL"};
+	static char *mods[] = { "BAD", "BSP", "ALIAS", "PRMDL", "Q3BSP"};
 
 	total = 0;
 	ri.Printf(PRINT_ALL, "Loaded models:\n");
@@ -1501,6 +1502,9 @@ static void Mod_BSP_ParseEntities(lump_t* lump)
 	ri.Printf(PRINT_ALL, "%s %i entities.\n", __FUNCTION__, numents);
 }
 #endif
+
+void R_LoadWorld(model_t* mod, void* buffer);
+
 /*
 =================
 Mod_LoadBSP
@@ -1518,6 +1522,13 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	header = (dbsp_header_t *)buffer;
 
 	i = LittleLong (header->version);
+
+	if (i == Q3BSP_VERSION)
+	{
+		R_LoadWorld(mod, buffer);
+		return;
+	}
+
 	if (i != BSP_VERSION)
 		ri.Error (ERR_DROP, "Mod_LoadBSP: %s is wrong version", mod->name);
 

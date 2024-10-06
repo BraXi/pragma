@@ -67,7 +67,8 @@ typedef struct worldNode_s // new mnode
 
 typedef struct renderWorld_s
 {
-	char name[MAX_QPATH];
+	char		name[MAX_QPATH]; // without .bsp and path
+	qboolean	bLoaded;
 
 	q3bsp_shader_t* shaders;
 	int			numShaders;
@@ -99,6 +100,9 @@ typedef struct renderWorld_s
 	vec3_t		lightGridInverseSize;
 	int			lightGridBounds[3];
 	byte		*lightGridData;
+
+	int			numLightmaps;
+	image_t		*lightmaps[Q3BSP_MAX_LIGHTMAPS];
 } renderWorld_t;
 
 static renderWorld_t world;
@@ -106,6 +110,11 @@ static renderWorld_t world;
 #define	PLANE_NON_AXIAL	3
 #define PlaneTypeForNormal(x) (x[0] == 1.0 ? PLANE_X : (x[1] == 1.0 ? PLANE_Y : (x[2] == 1.0 ? PLANE_Z : PLANE_NON_AXIAL) ) )
 
+/*
+=================
+CheckLumpSize
+=================
+*/
 static void CheckLumpSize(const lump_t* lump, size_t element_size, const char* func_name)
 {
 	if (lump->filelen % element_size)
@@ -114,6 +123,11 @@ static void CheckLumpSize(const lump_t* lump, size_t element_size, const char* f
 	}
 }
 
+/*
+=================
+R_LoadShaders
+=================
+*/
 static void R_LoadShaders(const lump_t* lump)
 {
 	int		i, count;
@@ -137,10 +151,87 @@ static void R_LoadShaders(const lump_t* lump)
 	}
 }
 
-static void R_LoadLightmaps(const lump_t *lump) 
+/*
+===============
+R_ColorShiftLightingBytes
+===============
+*/
+static void R_ColorShiftLightingBytes(byte in[4], byte out[4])
 {
+	int	r, g, b;
+	int max;
+
+	r = in[0];
+	g = in[1];
+	b = in[2];
+
+	// normalize by color instead of saturating to white
+	if ((r | g | b) > 255) 
+	{
+		max = r > g ? r : g;
+		max = max > b ? max : b;
+		r = r * 255 / max;
+		g = g * 255 / max;
+		b = b * 255 / max;
+	}
+
+	out[0] = r;
+	out[1] = g;
+	out[2] = b;
+	out[3] = in[3];
 }
 
+/*
+===============
+R_LoadLightmaps
+===============
+*/
+static void R_LoadLightmaps(const lump_t* lump)
+{
+	byte* buf, * buf_p;
+	int			len;
+	byte		pixelData[Q3BSP_LIGHTMAP_WIDTH * Q3BSP_LIGHTMAP_HEIGHT * 4];
+	int			i, j;
+	int			numPixels;
+
+	len = lump->filelen;
+	if (!len)
+	{
+		world.numLightmaps = 0;
+		return; // no lighting data
+	}
+
+	buf = mod_base + lump->fileofs;
+
+	numPixels = Q3BSP_LIGHTMAP_WIDTH * Q3BSP_LIGHTMAP_HEIGHT; // Q3BSP_LIGHTMAP_SIZE * Q3BSP_LIGHTMAP_SIZE
+
+	// create all the lightmaps
+	world.numLightmaps = len / (numPixels * 3);
+	for (i = 0; i < world.numLightmaps; i++)
+	{
+		// expand the 24 bit on-disk to 32 bit
+		buf_p = buf + i * numPixels * 3;
+
+		for (j = 0; j < numPixels; j++)
+		{
+			R_ColorShiftLightingBytes(&buf_p[j * 3], &pixelData[j * 4]);
+			pixelData[j * 4 + 3] = 255;
+		}
+
+		world.lightmaps[i] = R_LoadTexture(va("$lightmap_%d", i), (byte*)pixelData, Q3BSP_LIGHTMAP_WIDTH, Q3BSP_LIGHTMAP_HEIGHT, it_texture, 32);
+
+		// R_LoadTexture leaves texture bound, so make sure it clamps
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		R_BindTexture(0);
+	}
+}
+
+/*
+=================
+R_LoadPlanes
+=================
+*/
 static void R_LoadPlanes(const lump_t* lump)
 {
 	q3bsp_plane_t* in;
@@ -176,10 +267,20 @@ static void R_LoadPlanes(const lump_t* lump)
 	}
 }
 
-static void R_LoadFogs(const lump_t* lump)
+/*
+=================
+R_LoadFogs
+=================
+*/
+static void R_LoadFogs(const lump_t* fogLump, const lump_t* brushLump, const lump_t* brushSidesLump)
 {
 }
 
+/*
+=================
+R_LoadSurfaces
+=================
+*/
 static void R_LoadSurfaces(const lump_t* surfsLump, const lump_t* vertsLump, const lump_t* indexLump)
 {
 	q3bsp_surface_t* in;
@@ -241,7 +342,13 @@ static void R_LoadSurfaces(const lump_t* surfsLump, const lump_t* vertsLump, con
 
 	ri.Printf(PRINT_ALL, "... loaded %d faces, %i meshes, %i trisurfs, %i flares\n", numFaces, numMeshes, numTriSurfs, numFlares);
 }
-static void R_LoadMarksurfaces(const lump_t* lump)
+
+/*
+=================
+R_LoadMarkSurfaces
+=================
+*/
+static void R_LoadMarkSurfaces(const lump_t* lump)
 {
 	int		i, count;
 	int32_t	*in;
@@ -262,6 +369,11 @@ static void R_LoadMarksurfaces(const lump_t* lump)
 	}
 }
 
+/*
+=================
+R_SetParent
+=================
+*/
 static void R_SetParent(mnode_t* node, mnode_t* parent)
 {
 	node->parent = parent;
@@ -272,6 +384,11 @@ static void R_SetParent(mnode_t* node, mnode_t* parent)
 	R_SetParent(node->children[1], node);
 }
 
+/*
+=================
+R_LoadNodesAndLeafs
+=================
+*/
 static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 {
 	q3bsp_node_t* in;
@@ -287,7 +404,7 @@ static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 	numNodes = nodeLump->filelen / sizeof(q3bsp_node_t);
 	numLeafs = leafLump->filelen / sizeof(q3bsp_leaf_t);
 
-	out = Hunk_Alloc((numNodes + numLeafs) * sizeof(*out);
+	out = Hunk_Alloc((numNodes + numLeafs) * sizeof(*out));
 
 	world.nodes = out;
 	world.numNodes = numNodes + numLeafs;
@@ -343,7 +460,12 @@ static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 	R_SetParent(world.nodes, NULL);
 }
 
-static void R_LoadSubmodels(const lump_t* lump)
+/*
+=================
+R_LoadInlineModels
+=================
+*/
+static void R_LoadInlineModels(const lump_t* lump)
 {
 	q3bsp_model_t* in;
 	bmodel_t	*out;
@@ -374,6 +496,12 @@ static void R_LoadSubmodels(const lump_t* lump)
 		out->numSurfaces = LittleLong(in->numSurfaces);
 	}
 }
+
+/*
+=================
+R_LoadVisibility
+=================
+*/
 static void R_LoadVisibility(const lump_t* lump)
 {
 	int		len;
@@ -399,6 +527,11 @@ static void R_LoadVisibility(const lump_t* lump)
 	memcpy(world.vis, buf + 8, len - 8);
 }
 
+/*
+=================
+R_ParseEntities
+=================
+*/
 static void R_ParseEntities(const lump_t* lump)
 {
 	char	*token, *p;
@@ -475,6 +608,11 @@ static void R_ParseEntities(const lump_t* lump)
 	ri.Printf(PRINT_ALL, "... %i entities.\n", __FUNCTION__, numEntities);
 }
 
+/*
+=================
+R_LoadLightGrid
+=================
+*/
 static void R_LoadLightGrid(const lump_t* lump)
 {
 	int		i;
@@ -509,7 +647,7 @@ static void R_LoadLightGrid(const lump_t* lump)
 	}
 
 	w->lightGridData = Hunk_Alloc(lump->filelen);
-	memcpy(w->lightGridData, (void*)(mod_base + l->fileofs), l->filelen);
+	memcpy(w->lightGridData, (void*)(mod_base + lump->fileofs), lump->filelen);
 
 #if 0 // don't deal. - braxi.
 	// deal with overbright bits
@@ -521,15 +659,27 @@ static void R_LoadLightGrid(const lump_t* lump)
 #endif
 }
 
+
+/*
+=================
+R_LoadWorld
+=================
+*/
 void R_LoadWorld(model_t* mod, void* buffer)
 {
 	int		i;
 	q3bsp_header_t* header;
 
-	header = (q3bsp_header_t*)buffer;
+	if (world.bLoaded)
+	{
+		return;
+	}
 
+	world.bLoaded = false;
+
+	header = (q3bsp_header_t*)buffer;
 	i = LittleLong(header->version);
-	if (i != Q3BSP_IDENT)
+	if (i != Q3BSP_VERSION)
 	{
 		ri.Error(ERR_DROP, "R_LoadWorld: %s has wrong version number (%i should be %i)", mod->name, i, Q3BSP_VERSION);
 	}
@@ -541,22 +691,27 @@ void R_LoadWorld(model_t* mod, void* buffer)
 		((int*)header)[i] = LittleLong(((int*)header)[i]);
 	}
 
+	Com_sprintf(world.name, sizeof(world.name), "%s", COM_SkipPath(mod->name));
+
 	mod->type = MOD_Q3BRUSH;
 	mod->numframes = 1;
 	r_pCurrentModel = pLoadModel;
-
 
 	R_LoadShaders(&header->lumps[Q3LUMP_SHADERS]);
 	R_LoadLightmaps(&header->lumps[Q3LUMP_LIGHTMAPS]);
 	R_LoadPlanes(&header->lumps[Q3LUMP_PLANES]);
 	R_LoadFogs(&header->lumps[Q3LUMP_FOGS], &header->lumps[Q3LUMP_BRUSHES], &header->lumps[Q3LUMP_BRUSHSIDES]);
 	R_LoadSurfaces(&header->lumps[Q3LUMP_SURFACES], &header->lumps[Q3LUMP_DRAWVERTS], &header->lumps[Q3LUMP_DRAWINDEXES]);
-	R_LoadMarksurfaces(&header->lumps[Q3LUMP_LEAFSURFACES]);
+	R_LoadMarkSurfaces(&header->lumps[Q3LUMP_LEAFSURFACES]);
 	R_LoadNodesAndLeafs(&header->lumps[Q3LUMP_NODES], &header->lumps[Q3LUMP_LEAFS]);
-	R_LoadSubmodels(&header->lumps[Q3LUMP_MODELS]);
+	R_LoadInlineModels(&header->lumps[Q3LUMP_MODELS]);
 	R_LoadVisibility(&header->lumps[Q3LUMP_VISIBILITY]);
 	R_ParseEntities(&header->lumps[Q3LUMP_ENTITIES]);
 	R_LoadLightGrid(&header->lumps[Q3LUMP_LIGHTGRID]);
 
+	world.bLoaded = true;
+	mod->type = MOD_Q3BRUSH;
+
+	ri.Printf(PRINT_ALL, "Loaded Q3 BSP: %s\n", world.name);
 }
 

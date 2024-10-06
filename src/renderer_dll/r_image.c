@@ -424,7 +424,7 @@ image_t *R_LoadTexture(const char *name, byte *pixels, int width, int height, te
 	if (strlen(name) >= sizeof(image->name))
 		ri.Error (ERR_DROP, "R_LoadTexture: \"%s\" has too long name", name);
 
-	strcpy (image->name, name);
+	strncpy(image->name, name, sizeof(image->name));
 
 	image->registration_sequence = registration_sequence;
 
