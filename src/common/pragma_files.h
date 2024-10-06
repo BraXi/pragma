@@ -24,4 +24,6 @@ See the attached GNU General Public License v2 for more details.
 #include "fileformats/md3.h"
 #include "fileformats/pmodel.h"
 
+#include "fileformats/q3bsp.h"
+
 #endif /*_PRAGMA_FILES_H_*/

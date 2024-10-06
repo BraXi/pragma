@@ -182,6 +182,7 @@
     <ClCompile Include="..\common\shared_windows.c" />
     <ClCompile Include="glad_gl21.c" />
     <ClCompile Include="r_lightmap.c" />
+    <ClCompile Include="r_q3bsp.c" />
     <ClCompile Include="r_shadow.c" />
     <ClCompile Include="r_testmod.c" />
     <ClCompile Include="r_text.c" />

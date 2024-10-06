@@ -174,6 +174,13 @@ typedef struct mleaf_s
 
 //===================================================================
 
+typedef struct // q3 bmodel
+{
+	vec3_t		bounds[2];		// for culling
+	msurface_t* firstSurface;
+	int			numSurfaces;
+} bmodel_t;
+
 typedef struct model_s
 {
 	char		name[MAX_QPATH];
@@ -232,6 +239,8 @@ typedef struct model_s
 
 	byte		*lightdata;
 	int			lightdatasize;
+
+	bmodel_t	*bmodel; // MOD_Q3BRUSH
 
 	//
 	// MOD_ALIAS & MOD_NEWFORMAT

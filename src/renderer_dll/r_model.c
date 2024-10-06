@@ -22,7 +22,7 @@ static int bspx_lumps_count = 0;
 static int bspx_lumps_offset = 0;
 
 static byte mod_novis[MAX_MAP_LEAFS_QBSP/8];
-static byte *mod_base = NULL;
+byte *mod_base = NULL;
 
 #define RD_MAX_PMOD_HUNKSIZE	0x400000 // 4 MB
 #define RD_MAX_MD3_HUNKSIZE		0x400000 // 4 MB
@@ -33,7 +33,7 @@ static byte *mod_base = NULL;
 #define	RD_MAX_MODELS	1024
 static model_t	r_models[RD_MAX_MODELS];
 static int		r_models_count;
-static model_t	r_inlineModels[RD_MAX_MODELS]; // the inline "*" brush models from the current map are kept seperate
+model_t	r_inlineModels[RD_MAX_MODELS]; // the inline "*" brush models from the current map are kept seperate
 
 extern void Mod_LoadBSP(model_t* mod, void* buffer);
 extern void Mod_LoadAliasMD3(model_t* mod, void* buffer);
@@ -1440,6 +1440,67 @@ static void Mod_BSP_FindExtLumps()
 	ri.Printf(PRINT_ALL, "Mod_BSP_FindExtLumps OK.\n");
 }
 
+#if 0
+static void Mod_BSP_ParseEntities(lump_t* lump)
+{
+	char *token, *p;
+	int numents;
+	char key[64], value[64];
+
+	numents = 0;
+
+	p = (void*)(mod_base + lump->fileofs);
+	while (1)
+	{
+		// parse the opening brace	
+		token = COM_Parse(&p);
+
+		if (!p)
+			break;
+
+		if (token[0] != '{')
+		{
+			ri.Error(ERR_FATAL, "%s: Found '%s' when expecting {\n", __FUNCTION__, token);
+		}
+
+		// go through all the dictionary pairs
+		while (1)
+		{
+			token = COM_Parse(&p); // parse key
+
+			if (!token)
+			{
+				ri.Error(ERR_DROP, "%s: EOF without }\n", __FUNCTION__);
+				return;
+			}
+
+			if (token[0] == '}')
+			{
+				break;
+			}
+
+			strncpy(key, token, sizeof(key));
+
+			token = COM_Parse(&p); // parse value
+			if (!token)
+			{
+				ri.Error(ERR_DROP, "%s: no key\n", __FUNCTION__);
+				return;
+			}
+
+			if (token[0] == '}')
+			{
+				ri.Error(ERR_DROP, "%s: } without data\n", __FUNCTION__);
+			}
+
+			strncpy(value, token, sizeof(value));
+		}
+
+		numents++;
+	}
+	ri.Printf(PRINT_ALL, "%s %i entities.\n", __FUNCTION__, numents);
+}
+#endif
 /*
 =================
 Mod_LoadBSP
@@ -1451,7 +1512,6 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	dbsp_header_t	*header;
 	mmodel_t 	*bm;
 	
-//	if (pLoadModel != r_models)
 	if (r_worldmodel != NULL && pLoadModel != r_worldmodel)
 		ri.Error (ERR_DROP, "Mod_LoadBSP: Loaded BSP after the world");
 
@@ -1485,6 +1545,7 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	Mod_BSP_LoadLeafs (&header->lumps[LUMP_LEAFS]);
 	Mod_BSP_LoadNodes (&header->lumps[LUMP_NODES]);
 	Mod_BSP_LoadInlineModels (&header->lumps[LUMP_MODELS]);
+	//Mod_BSP_ParseEntities(&header->lumps[LUMP_ENTITIES]);
 
 	//
 	// set up the inline models

@@ -25,6 +25,7 @@
     <ClInclude Include="..\common\fileformats\md3.h" />
     <ClInclude Include="..\common\fileformats\pak.h" />
     <ClInclude Include="..\common\fileformats\pmodel.h" />
+    <ClInclude Include="..\common\fileformats\q3bsp.h" />
     <ClInclude Include="..\common\fileformats\smdl.h" />
     <ClInclude Include="..\common\pragma_files.h" />
     <ClInclude Include="..\common\pragma_windows.h" />
