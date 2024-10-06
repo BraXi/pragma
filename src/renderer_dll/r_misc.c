@@ -212,7 +212,6 @@ void GL_SetDefaultState( void )
 	R_MultiTextureBind(TMU_DIFFUSE, 0);
 	glEnable(GL_TEXTURE_2D);
 
-	R_AlphaTest(true);
 	glAlphaFunc(GL_GREATER, 0.1);
 
 	R_DepthTest(false);

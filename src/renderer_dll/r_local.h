@@ -538,16 +538,15 @@ a better gl state tracker
 ====================================================================
 */
 
-extern inline void R_AlphaTest(qboolean enable);
-extern inline void R_Blend(qboolean enable);
-extern inline void R_DepthTest(qboolean enable);
-extern inline void R_CullFace(qboolean enable);
+extern void R_Blend(qboolean enable);
+extern void R_DepthTest(qboolean enable);
+extern void R_CullFace(qboolean enable);
 
-extern inline void R_SetCullFace(GLenum newstate);
-extern inline void R_WriteToDepthBuffer(GLboolean newstate);
-extern inline void R_BlendFunc(GLenum newstateA, GLenum newstateB);
+extern void R_SetCullFace(GLenum newstate);
+extern void R_WriteToDepthBuffer(GLboolean newstate);
+extern void R_BlendFunc(GLenum newstateA, GLenum newstateB);
 
-extern inline void R_SetClearColor(float r, float g, float b, float a);
+extern void R_SetClearColor(float r, float g, float b, float a);
 
 extern void R_InitialOGLState();
 

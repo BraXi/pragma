@@ -834,6 +834,7 @@ void R_World_DrawAlphaSurfaces()
 	r_pCurrentModel = r_worldmodel;
 
 	//Don't write to depth and enable blending
+	gl_state.bDrawingTransparents = true;
 	R_WriteToDepthBuffer(false);
 	R_Blend(true);
 
@@ -848,6 +849,7 @@ void R_World_DrawAlphaSurfaces()
 	R_WriteToDepthBuffer(true);
 	R_Blend(false);
 
+	gl_state.bDrawingTransparents = false;
 	r_alpha_surfaces = NULL;
 }
 

@@ -645,7 +645,6 @@ void R_RenderView (refdef_t *fd)
 	R_CullFace(r_cull->value);
 
 	R_Blend(false);
-	R_AlphaTest(false);
 	R_DepthTest(true);
 
 	R_SetupFrame();
@@ -762,7 +761,6 @@ void R_BeginOrthoProjection()
 	R_DepthTest(false);
 	R_CullFace(false);
 	R_Blend(false);
-	R_AlphaTest(true);
 }
 
 void R_NewDrawFill(rect_t pos, rgba_t color);
