@@ -26,7 +26,7 @@ typedef struct
 	struct model_s* mod_v_flashlight;
 	struct model_s* mod_w_muzzleflash;
 
-	struct model_s* impact_small;
+//	struct model_s* impact_small;
 } cgMedia_t;
 
 typedef struct

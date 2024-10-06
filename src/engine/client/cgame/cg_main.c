@@ -52,13 +52,13 @@ Called before entering a new level, and when renderer is restarting
 */
 void CG_RegisterMedia()
 {
-	cgMedia.mod_v_muzzleflash = re.RegisterModel("models/fx/v_muzzleflash.md3");
-	cgMedia.mod_w_muzzleflash = re.RegisterModel("models/fx/w_muzzleflash.md3");
+	cgMedia.mod_v_muzzleflash = re.RegisterModel("models/fx/muzzleflash_view.md3");
+	cgMedia.mod_w_muzzleflash = re.RegisterModel("models/fx/muzzleflash_world.md3");
 
-	cgMedia.mod_v_flashlight = re.RegisterModel("models/fx/v_flashlight.md3");
-	cgMedia.mod_w_flashlight = re.RegisterModel("models/fx/w_flashlight.md3");
+	cgMedia.mod_v_flashlight = re.RegisterModel("models/fx/flashlight_view.md3");
+	cgMedia.mod_w_flashlight = re.RegisterModel("models/fx/flashlight_world.md3");
 
-	cgMedia.impact_small = re.RegisterModel("models/fx/impact_small.md3");
+//	cgMedia.impact_small = re.RegisterModel("models/fx/impact_small.md3"); // unused 
 }
 
 /*
