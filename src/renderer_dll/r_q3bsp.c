@@ -10,6 +10,16 @@ See the attached GNU General Public License v2 for more details.
 
 // r_q3bsp.c -- because q2bsp is fucking annoying
 
+/*
+notes:
+
+cplane_t in q3 is the same
+msurface_t = worldSurface_t
+mnode_t = worldNode_t
+
+misc_models in maps are turned into direct geometry by q3map == srfTriangles_t
+*/
+
 #include "r_local.h"
 
 extern model_t* pLoadModel;
@@ -38,11 +48,83 @@ typedef enum
 typedef struct worldSurface_s // new msurface_t
 {
 	int					viewCount;	// if == tr.viewCount, already added
-	struct shader_s		* shader;
+	struct shader_s		*material;
 	int					fogIndex;
 
-	surfaceType_t* data;			// any of srf*_t
+	surfaceType_t		*data;			// any of srf*_t
 } worldSurface_t;
+
+typedef struct srfGridMesh_s 
+{
+	surfaceType_t	surfaceType;
+
+	// dynamic lighting information
+	int				dlightBits[2];
+
+	// culling information
+	vec3_t			meshBounds[2];
+	vec3_t			localOrigin;
+	float			meshRadius;
+
+	// lod information, which may be different
+	// than the culling information to allow for
+	// groups of curves that LOD as a unit
+	vec3_t			lodOrigin;
+	float			lodRadius;
+	int				lodFixed;
+	int				lodStitched;
+
+	// vertexes
+	int				width, height;
+	float			*widthLodError;
+	float			*heightLodError;
+	q3bsp_drawVert_t	verts[1];		// variable sized
+} srfGridMesh_t;
+
+typedef struct
+{
+	surfaceType_t	surfaceType;
+
+	// dynamic lighting information
+	int				dlightBits[2];
+
+	// culling information
+	vec3_t			bounds[2];
+	vec3_t			localOrigin;
+	float			radius;
+
+	// triangle definitions
+	int				numIndexes;
+	int				*indexes;
+
+	int				numVerts;
+	q3bsp_drawVert_t* verts;
+} srfTriangles_t;
+
+typedef struct srfFlare_s 
+{
+	surfaceType_t	surfaceType;
+	vec3_t			origin;
+	vec3_t			normal;
+	vec3_t			color;
+} srfFlare_t;
+
+#define	VERTEXSIZE	8 // xyz normal uv
+typedef struct 
+{
+	surfaceType_t	surfaceType;
+	cplane_t	plane;
+
+	// dynamic lighting information
+	int			dlightBits[2];
+
+	// triangle definitions (no normals at points)
+	int			numPoints;
+	int			numIndices;
+	int			ofsIndices;
+	float		points[1][VERTEXSIZE];	// variable sized
+										// there is a variable length list of indices here also
+} srfSurfaceFace_t;
 
 #define	CONTENTS_NODE		-1
 typedef struct worldNode_s // new mnode
@@ -277,6 +359,272 @@ static void R_LoadFogs(const lump_t* fogLump, const lump_t* brushLump, const lum
 }
 
 /*
+===============
+ParseMesh
+===============
+*/
+static void ParseMesh(q3bsp_surface_t* ds, q3bsp_drawVert_t* verts, worldSurface_t* surf) 
+{
+	srfGridMesh_t* grid;
+	int				i, j;
+	int				width, height, numPoints;
+	q3bsp_drawVert_t points[MAX_PATCH_SIZE * MAX_PATCH_SIZE];
+	int				lightmapNum;
+	vec3_t			bounds[2];
+	vec3_t			tmpVec;
+	static surfaceType_t	skipData = SF_SKIP;
+
+	if (1) // FIXME: Q3
+		return;
+
+	lightmapNum = LittleLong(ds->lightmapNum);
+
+	// get fog volume
+	surf->fogIndex = LittleLong(ds->fogNum) + 1;
+
+	// get shader value
+	surf->material = NULL; // = ShaderForShaderNum(ds->shaderNum, lightmapNum);
+
+
+	// we may have a nodraw surface, because they might still need to be around for movement clipping
+	i = LittleLong(ds->shaderNum);
+	if (i >= world.numShaders || i < 0)
+	{
+		ri.Error(ERR_DROP, "Wrong material index %i\n", i);
+	}
+
+	if (world.shaders[i].surfaceFlags & Q3SURF_NODRAW) 
+	{
+		surf->data = &skipData;
+		return;
+	}
+
+	width = LittleLong(ds->patchWidth);
+	height = LittleLong(ds->patchHeight);
+
+	verts += LittleLong(ds->firstVert);
+	numPoints = width * height;
+	for (i = 0; i < numPoints; i++) 
+	{
+		for (j = 0; j < 3; j++) 
+		{
+			points[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
+			points[i].normal[j] = LittleFloat(verts[i].normal[j]);
+		}
+		for (j = 0; j < 2; j++) 
+		{
+			points[i].st[j] = LittleFloat(verts[i].st[j]);
+			points[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
+		}
+		R_ColorShiftLightingBytes(verts[i].color, points[i].color);
+	}
+
+	// pre-tesseleate
+	//grid = R_SubdividePatchToGrid(width, height, points); // FIXME: Q3
+	surf->data = (surfaceType_t*)grid;
+
+	// copy the level of detail origin, which is the center
+	// of the group of all curves that must subdivide the same
+	// to avoid cracking
+	for (i = 0; i < 3; i++) 
+	{
+		bounds[0][i] = LittleFloat(ds->lightmapVecs[0][i]);
+		bounds[1][i] = LittleFloat(ds->lightmapVecs[1][i]);
+	}
+
+	VectorAdd(bounds[0], bounds[1], bounds[1]);
+	VectorScale(bounds[1], 0.5f, grid->lodOrigin);
+	VectorSubtract(bounds[0], grid->lodOrigin, tmpVec);
+	grid->lodRadius = VectorLength(tmpVec);
+}
+
+/*
+=================
+ParseTriSurf
+=================
+*/
+static void ParseTriSurf(q3bsp_surface_t* ds, q3bsp_drawVert_t* verts, worldSurface_t* surf, int* indexes) 
+{
+	srfTriangles_t* tri;
+	int				i, j;
+	int				numVerts, numIndexes;
+
+	// get fog volume
+	surf->fogIndex = LittleLong(ds->fogNum) + 1;
+
+	// get shader
+	// FIXME: Q3
+	surf->material = NULL; // ShaderForShaderNum(ds->shaderNum, LIGHTMAP_BY_VERTEX);
+
+	numVerts = LittleLong(ds->numVerts);
+	numIndexes = LittleLong(ds->numIndexes);
+
+	tri = Hunk_Alloc(sizeof(*tri) + numVerts * sizeof(tri->verts[0]) + numIndexes * sizeof(tri->indexes[0]));
+	tri->surfaceType = SF_TRIANGLES;
+	tri->numVerts = numVerts;
+	tri->numIndexes = numIndexes;
+	tri->verts = (q3bsp_drawVert_t*)(tri + 1);
+	tri->indexes = (int*)(tri->verts + tri->numVerts);
+
+	surf->data = (surfaceType_t*)tri;
+
+	// copy vertexes
+	ClearBounds(tri->bounds[0], tri->bounds[1]);
+	verts += LittleLong(ds->firstVert);
+	for (i = 0; i < numVerts; i++) 
+	{
+		for (j = 0; j < 3; j++) 
+		{
+			tri->verts[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
+			tri->verts[i].normal[j] = LittleFloat(verts[i].normal[j]);
+		}
+		AddPointToBounds(tri->verts[i].xyz, tri->bounds[0], tri->bounds[1]);
+		for (j = 0; j < 2; j++) 
+		{
+			tri->verts[i].st[j] = LittleFloat(verts[i].st[j]);
+			tri->verts[i].lightmap[j] = LittleFloat(verts[i].lightmap[j]);
+		}
+
+		R_ColorShiftLightingBytes(verts[i].color, tri->verts[i].color);
+	}
+
+	// copy indexes
+	indexes += LittleLong(ds->firstIndex);
+	for (i = 0; i < numIndexes; i++) 
+	{
+		tri->indexes[i] = LittleLong(indexes[i]);
+		if (tri->indexes[i] < 0 || tri->indexes[i] >= numVerts) 
+		{
+			ri.Error(ERR_DROP, "Bad index in triangle surface");
+		}
+	}
+}
+
+/*
+===============
+SetPlaneSignbits
+===============
+*/
+static void SetPlaneSignbits(cplane_t* out) 
+{
+	int	bits, j;
+
+	// for fast box on planeside test
+	bits = 0;
+	for (j = 0; j < 3; j++) 
+	{
+		if (out->normal[j] < 0) 
+		{
+			bits |= 1 << j;
+		}
+	}
+	out->signbits = bits;
+}
+
+/*
+===============
+ParseFace
+===============
+*/
+static void ParseFace(q3bsp_surface_t* ds, q3bsp_drawVert_t* verts, worldSurface_t* surf, int* indexes) 
+{
+	int			i, j;
+	srfSurfaceFace_t* cv;
+	int			numPoints, numIndexes;
+	int			lightmapNum;
+	int			sfaceSize, ofsIndexes;
+
+	lightmapNum = LittleLong(ds->lightmapNum);
+
+	// get fog volume
+	surf->fogIndex = LittleLong(ds->fogNum) + 1;
+
+	// get shader value
+	// FIXME: Q3
+	surf->material = NULL; // ShaderForShaderNum(ds->shaderNum, lightmapNum);
+
+	numPoints = LittleLong(ds->numVerts);
+	if (numPoints > MAX_FACE_POINTS) 
+	{
+		ri.Printf(PRINT_ALL, "WARNING: MAX_FACE_POINTS exceeded: %i\n", numPoints);
+		numPoints = MAX_FACE_POINTS;
+		//surf->material = r_default_brush_material;
+	}
+
+	numIndexes = LittleLong(ds->numIndexes);
+
+	// create the srfSurfaceFace_t
+	sfaceSize = (int)&((srfSurfaceFace_t*)0)->points[numPoints];
+	ofsIndexes = sfaceSize;
+	sfaceSize += sizeof(int) * numIndexes;
+
+	cv = Hunk_Alloc(sfaceSize);
+	cv->surfaceType = SF_FACE;
+	cv->numPoints = numPoints;
+	cv->numIndices = numIndexes;
+	cv->ofsIndices = ofsIndexes;
+
+	verts += LittleLong(ds->firstVert);
+	for (i = 0; i < numPoints; i++) {
+		for (j = 0; j < 3; j++) {
+			cv->points[i][j] = LittleFloat(verts[i].xyz[j]);
+		}
+		for (j = 0; j < 2; j++) {
+			cv->points[i][3 + j] = LittleFloat(verts[i].st[j]);
+			cv->points[i][5 + j] = LittleFloat(verts[i].lightmap[j]);
+		}
+		R_ColorShiftLightingBytes(verts[i].color, (byte*)&cv->points[i][7]);
+	}
+
+	indexes += LittleLong(ds->firstIndex);
+	for (i = 0; i < numIndexes; i++) {
+		((int*)((byte*)cv + cv->ofsIndices))[i] = LittleLong(indexes[i]);
+	}
+
+	// take the plane information from the lightmap vector
+	for (i = 0; i < 3; i++) {
+		cv->plane.normal[i] = LittleFloat(ds->lightmapVecs[2][i]);
+	}
+	cv->plane.dist = DotProduct(cv->points[0], cv->plane.normal);
+	SetPlaneSignbits(&cv->plane);
+	cv->plane.type = PlaneTypeForNormal(cv->plane.normal);
+
+	surf->data = (void*)cv;
+}
+
+
+/*
+===============
+ParseFlare
+===============
+*/
+static void ParseFlare(q3bsp_surface_t* ds, q3bsp_drawVert_t* verts, worldSurface_t* surf, int* indexes) 
+{
+	srfFlare_t* flare;
+	int				i;
+
+	// get fog volume
+	surf->fogIndex = LittleLong(ds->fogNum) + 1;
+
+	// get shader
+	// FIXME: Q3
+	surf->material = NULL; // ShaderForShaderNum(ds->shaderNum, LIGHTMAP_BY_VERTEX);
+
+	flare = Hunk_Alloc(sizeof(*flare));
+	flare->surfaceType = SF_FLARE;
+
+	surf->data = (void*)flare;
+
+	for (i = 0; i < 3; i++) 
+	{
+		flare->origin[i] = LittleFloat(ds->lightmapOrigin[i]);
+		flare->color[i] = LittleFloat(ds->lightmapVecs[0][i]);
+		flare->normal[i] = LittleFloat(ds->lightmapVecs[2][i]);
+	}
+}
+
+
+/*
 =================
 R_LoadSurfaces
 =================
@@ -317,22 +665,22 @@ static void R_LoadSurfaces(const lump_t* surfsLump, const lump_t* vertsLump, con
 		switch (LittleLong(in->surfaceType))
 		{
 		case MST_PATCH:
-			//ParseMesh(in, dv, out);
+			ParseMesh(in, dv, out);
 			numMeshes++;
 			break;
 
 		case MST_TRIANGLE_SOUP:
-			//ParseTriSurf(in, dv, out, indexes);
+			ParseTriSurf(in, dv, out, indexes);
 			numTriSurfs++;
 			break;
 
 		case MST_PLANAR:
-			//ParseFace(in, dv, out, indexes);
+			ParseFace(in, dv, out, indexes);
 			numFaces++;
 			break;
 
 		case MST_FLARE:
-			//ParseFlare(in, dv, out, indexes);
+			ParseFlare(in, dv, out, indexes);
 			numFlares++;
 			break;
 		default:
@@ -714,4 +1062,3 @@ void R_LoadWorld(model_t* mod, void* buffer)
 
 	ri.Printf(PRINT_ALL, "Loaded Q3 BSP: %s\n", world.name);
 }
-
