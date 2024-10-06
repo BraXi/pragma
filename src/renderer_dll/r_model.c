@@ -944,7 +944,7 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 				R_LightMap_CreateForSurface(out);
 
 			//if (!(out->texinfo->flags & SURF_WARP))
-				R_BuildPolygonFromSurface(pCurrentModel, out);
+				R_BuildPolygonFromSurface(r_pCurrentModel, out);
 		}
 
 	}
@@ -991,7 +991,7 @@ static void Mod_BSP_LoadFaces(lump_t *l)
 				R_LightMap_CreateForSurface(out);
 
 			//if (!(out->texinfo->flags & SURF_WARP))
-			R_BuildPolygonFromSurface(pCurrentModel, out);
+			R_BuildPolygonFromSurface(r_pCurrentModel, out);
 		}
 	}
 
@@ -1468,7 +1468,7 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 
 	mod->type = MOD_BRUSH;
 	mod->numframes = 2;		// regular and alternate animation
-	pCurrentModel = pLoadModel;
+	r_pCurrentModel = pLoadModel;
 
 	Mod_BSP_FindExtLumps(); // check for BSPX extensions
 

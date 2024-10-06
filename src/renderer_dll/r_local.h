@@ -281,8 +281,8 @@ void R_FreeVertexBuffer(vertexbuffer_t* vbo);
 
 //====================================================
 
-extern	rentity_t	*pCurrentRefEnt;
-extern	model_t		*pCurrentModel;
+extern	rentity_t	*r_pCurrentEntity;
+extern	model_t		*r_pCurrentModel;
 
 //====================================================
 
@@ -347,9 +347,10 @@ extern	int		gl_tex_solid_format;
 extern	int		gl_tex_alpha_format;
 
 extern mat4_t r_world_matrix;
-extern mat4_t r_local_matrix; //Transforms a vertex into its final position in the world
 extern mat4_t r_projection_matrix;
 extern mat4_t r_ortho_matrix;
+
+extern rentity_t r_worldent;
 
 
 //===================================================================
@@ -409,7 +410,7 @@ void R_DrawSkyBox();
 
 void R_RenderView(refdef_t* fd);
 void R_BeginFrame(float camera_separation);
-void R_RotateForEntity(rentity_t* e);
+void R_MatrixForEntity(rentity_t* ent);
 qboolean R_CullBox(vec3_t mins, vec3_t maxs);
 void R_DrawBeam(rentity_t* e);
 

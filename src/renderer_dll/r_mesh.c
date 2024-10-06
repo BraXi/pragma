@@ -188,6 +188,8 @@ void R_PreProcessModelEntity(rentity_t* ent)
 	// entity is visible this frame!
 	ent->visibleFrame = r_framecount;
 
+	R_MatrixForEntity(ent);
+
 	R_SetEntityAmbientLight(ent);
 	R_ValidateEntityAnimation(ent);
 }
@@ -205,15 +207,6 @@ void R_DrawModelEntity(rentity_t* ent)
 
 	if (ent->visibleFrame != r_framecount)
 		return; // not visible in this frame
-
-	// move, rotate and scale
-#ifndef FIX_SQB
-	ent->angles[PITCH] = -ent->angles[PITCH]; // stupid quake bug
-#endif
-	R_RotateForEntity(ent);
-#ifndef FIX_SQB
-	ent->angles[PITCH] = -ent->angles[PITCH]; // stupid quake bug
-#endif
 
 	// decide what program to use
 	if (ent->model->type == MOD_ALIAS)
@@ -234,21 +227,14 @@ void R_DrawModelEntity(rentity_t* ent)
 		return;
 	}
 
-	if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
-		Mat4Scale(r_local_matrix, ent->scale, ent->scale, ent->scale);
-
 	// if its a view model and we chose to keep it in left hand 
 	if ((ent->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))
 	{
-		//Mat4Scale(r_local_matrix, 1, -1, 1); //I wish I could, but the muzzle flash is manually placed. Have to flip the projection matrix
+		//Mat4Scale(ent->modelMatrix, 1, -1, 1); //I wish I could, but the muzzle flash is manually placed. Have to flip the projection matrix
 		Mat4Scale(r_projection_matrix, -1, 1, 1);
 		r_pendingflip = true;
 		R_SetCullFace(GL_BACK);
 	}
-
-	// enable transparency
-	if (ent->renderfx & RF_TRANSLUCENT)
-		R_Blend(true);
 
 	// hack the depth range to prevent view model from poking into walls
 	if (ent->renderfx & RF_DEPTHHACK)
@@ -260,7 +246,8 @@ void R_DrawModelEntity(rentity_t* ent)
 	R_ProgUniformVec3(LOC_AMBIENT_COLOR, ent->ambient_color);
 	R_ProgUniformVec3(LOC_AMBIENT_DIR, ent->ambient_dir);
 
-	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
+	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, ent->modelMatrix);
+
 	if (r_pendingflip)
 	{
 		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
@@ -285,10 +272,6 @@ void R_DrawModelEntity(rentity_t* ent)
 		break;
 	}
 
-	// disable transparency
-	if (ent->renderfx & RF_TRANSLUCENT)
-		R_Blend(false);
-
 	// remove depth hack
 	if (ent->renderfx & RF_DEPTHHACK)
 		glDepthRange(gldepthmin, gldepthmax);
@@ -299,7 +282,7 @@ void R_DrawModelEntity(rentity_t* ent)
 		R_ProgUniformMatrix4fv(LOC_PROJECTION, 1, r_projection_matrix);
 	}
 
-	if (pCurrentRefEnt->renderfx & RF_VIEW_MODEL)
+	if (r_pCurrentEntity->renderfx & RF_VIEW_MODEL)
 		R_SendDynamicLightsToCurrentProgram(false);
 
 	if ((ent->renderfx & RF_VIEW_MODEL) && (r_lefthand->value == 1.0F))

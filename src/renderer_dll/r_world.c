@@ -264,6 +264,13 @@ static void R_World_BeginRendering()
 {
 	int attrib;
 
+#ifdef _DEBUG
+	if (!r_pCurrentEntity)
+	{
+		ri.Error(ERR_FATAL, "!r_pCurrentEntity");
+	}
+#endif
+
 	// bind shader and buffer and assign attrib locations
 
 	R_BindProgram(GLPROG_WORLD);
@@ -308,7 +315,7 @@ static void R_World_BeginRendering()
 	R_ProgUniform1f(LOC_WARPSTRENGTH, 0.f);
 	R_ProgUniform2f(LOC_FLOWSTRENGTH, 0.f, 0.f);
 
-	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_local_matrix);
+	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_pCurrentEntity->modelMatrix);
 
 	gfx_world.uniformflags = 0; //Always force a uniform update if needed
 	gfx_world.isRenderingWorld = true;
@@ -375,7 +382,7 @@ image_t* R_World_TextureAnimation(mtexinfo_t* tex)
 	if (!tex->next)
 		return tex->image;
 
-	c = pCurrentRefEnt->frame % tex->numframes;
+	c = r_pCurrentEntity->frame % tex->numframes;
 	while (c)
 	{
 		tex = tex->next;
@@ -564,16 +571,6 @@ void R_DrawBrushModel(rentity_t *ent)
 	if (ent->visibleFrame != r_framecount)
 		return; // not visible in this frame
 
-#ifndef FIX_SQB
-	ent->angles[0] = -ent->angles[0];	// stupid quake bug
-	ent->angles[2] = -ent->angles[2];	// stupid quake bug
-#endif
-	R_RotateForEntity(ent);
-#ifndef FIX_SQB
-	ent->angles[0] = -ent->angles[0];	// stupid quake bug
-	ent->angles[2] = -ent->angles[2];	// stupid quake bug
-#endif
-
 	if (ent->renderfx & RF_COLOR)
 		VectorCopy(ent->renderColor, colorOverride); // note: vec3->vec4
 	else
@@ -583,7 +580,7 @@ void R_DrawBrushModel(rentity_t *ent)
 
 	if (gl_state.bDrawingTransparents)
 	{
-		R_Blend(true);
+		//R_Blend(true);
 		if(ent->renderfx & RF_TRANSLUCENT)
 			colorOverride[3] = ent->alpha;
 	}
@@ -592,8 +589,8 @@ void R_DrawBrushModel(rentity_t *ent)
 
 	R_ProgUniform4f(LOC_COLOR4, colorOverride[0], colorOverride[1], colorOverride[2], colorOverride[3]);
 
-	psurf = &pCurrentModel->surfaces[pCurrentModel->firstmodelsurface];
-	for (i = 0; i < pCurrentModel->nummodelsurfaces; i++, psurf++)
+	psurf = &r_pCurrentModel->surfaces[r_pCurrentModel->firstmodelsurface];
+	for (i = 0; i < r_pCurrentModel->nummodelsurfaces; i++, psurf++)
 	{
 
 #ifdef BMODEL_CHECK_PLANE
@@ -657,8 +654,8 @@ void R_DrawBrushModel(rentity_t *ent)
 		glPolygonOffset(0.0f, 0.0f);
 	}
 
-	if(!gl_state.bDrawingTransparents)
-		R_Blend(false); // does nothing when blend is off
+	//if(!gl_state.bDrawingTransparents)
+	//	R_Blend(false); // does nothing when blend is off
 }
 
 
@@ -715,6 +712,8 @@ void R_PreprocessBrushModelEntity(rentity_t * ent)
 
 	// mark entitiy as visible this frame
 	ent->visibleFrame = r_framecount;
+
+	R_MatrixForEntity(ent);
 
 	// mark which dynamic lights impact this model (not the best)
 	if (!r_fullbright->value)
@@ -816,7 +815,7 @@ static void R_World_DrawSortedByDiffuseMap()
 
 /*
 ================
-R_World_DrawAlphaSurfaces_NEW
+R_World_DrawAlphaSurfaces
 
 Draw water surfaces and windows without writing to the depth buffer.
 The BSP tree is waled front to back, so unwinding the chain
@@ -827,10 +826,14 @@ void R_World_DrawAlphaSurfaces()
 {
 	msurface_t* surf;
 	
-	// go back to the world matrix
-	memcpy(r_local_matrix, mat4_identity, sizeof(mat4_t));
+	//
+	// go back to the world matrix and world entity
+	//
+	memcpy(r_worldent.modelMatrix, mat4_identity, sizeof(mat4_t));
+	r_pCurrentEntity = &r_worldent;
+	r_pCurrentModel = r_worldmodel;
 
-	//dont write z and enable blending
+	//Don't write to depth and enable blending
 	R_WriteToDepthBuffer(false);
 	R_Blend(true);
 
@@ -1205,6 +1208,23 @@ void R_TraverseWorldBSP()
 
 /*
 ================
+R_InitWorldEntity
+================
+*/
+static void R_InitWorldEntity()
+{
+	memset(&r_worldent, 0, sizeof(r_worldent));
+	memcpy(r_worldent.modelMatrix, mat4_identity, sizeof(mat4_t)); // no transform needed for world.
+	
+	r_worldent.model = r_worldmodel;
+	r_worldent.frame = (int)(r_newrefdef.time * 2);
+	r_worldent.alpha = 1.0f;
+	
+	VectorSet(r_worldent.renderColor, 1.0f, 1.0f, 1.0f);
+}
+
+/*
+================
 R_DrawWorld
 
 Draws world and skybox
@@ -1212,8 +1232,6 @@ Draws world and skybox
 */
 void R_DrawWorld()
 {
-	rentity_t	ent;
-
 	if (!r_drawworld->value)
 		return;
 
@@ -1225,18 +1243,12 @@ void R_DrawWorld()
 		ri.Error(ERR_FATAL, "R_DrawWorld without traversal of BSP");
 	}
 
-	memset(&ent, 0, sizeof(ent));
-	ent.frame = (int)(r_newrefdef.time * 2);
-	VectorSet(ent.renderColor, 1.0f, 1.0f, 1.0f);
-	ent.alpha = 1.0f;
 
-	pCurrentRefEnt = &ent;
-	pCurrentModel = r_worldmodel;
+	R_InitWorldEntity();
+	r_pCurrentEntity = &r_worldent;
+	r_pCurrentModel = r_worldmodel;
 
 	VectorCopy(r_newrefdef.view.origin, modelorg);
-
-	//no local transform needed for world. 
-	memcpy(r_local_matrix, mat4_identity, sizeof(mat4_t));
 
 
 	//

@@ -77,6 +77,8 @@ typedef struct rentity_s
 	vec3_t		ambient_dir;	// ambient light direction, normalized
 
 	vec3_t		center_origin; // center of entity derived from bbox
+
+	mat4_t		modelMatrix;
 } rentity_t;
 
 typedef enum

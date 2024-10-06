@@ -27,8 +27,8 @@ image_t		*r_texture_missing;		// use for bad textures
 image_t		*r_texture_particle;	// little dot for particles
 image_t		*r_texture_view;
 
-rentity_t	*pCurrentRefEnt;
-model_t		*pCurrentModel;
+rentity_t	*r_pCurrentEntity;
+model_t		*r_pCurrentModel;
 
 cplane_t	frustum[4];
 
@@ -50,7 +50,8 @@ vec3_t	r_origin;
 mat4_t	r_projection_matrix;
 mat4_t	r_ortho_matrix;
 mat4_t	r_world_matrix;
-mat4_t	r_local_matrix;
+
+rentity_t r_worldent;
 
 vertexbuffer_t* vb_particles;
 //
@@ -95,22 +96,52 @@ qboolean R_CullBox(vec3_t mins, vec3_t maxs)
 
 /*
 =================
-R_RotateForEntity
+R_MatrixForEntity
+Calculate model matrix for entity with translation, rotation and scale (RF_SCALE).
+Does a swap to put Z going up, has plenty of "stupid quake bug" ifdefs.
 =================
 */
-void R_RotateForEntity (rentity_t *e)
+void R_MatrixForEntity(rentity_t *ent)
 {
-	Mat4MakeIdentity(r_local_matrix);
-	Mat4Translate(r_local_matrix, e->origin[0], e->origin[1], e->origin[2]);
-	Mat4RotateAroundZ(r_local_matrix, e->angles[1]);
+	//
+	// translate
+	//
+	Mat4MakeIdentity(ent->modelMatrix);
+	Mat4Translate(ent->modelMatrix, ent->origin[0], ent->origin[1], ent->origin[2]);
+
+	//
+	// rotate
+	//
+	Mat4RotateAroundZ(ent->modelMatrix, ent->angles[YAW]);
 
 #ifdef FIX_SQB
-	Mat4RotateAroundY(r_local_matrix, e->angles[0]);
-	Mat4RotateAroundX(r_local_matrix, e->angles[2]);
-#else
-	Mat4RotateAroundY(r_local_matrix, -e->angles[0]); // stupid quake bug
-	Mat4RotateAroundX(r_local_matrix, -e->angles[2]); // stupid quake bug
+	Mat4RotateAroundY(ent->modelMatrix, ent->angles[PITCH]);
+	Mat4RotateAroundX(ent->modelMatrix, ent->angles[ROLL]);
+
+#else /* stupid quake bug */
+
+	ent->angles[PITCH] = -ent->angles[PITCH]; 
+	Mat4RotateAroundY(ent->modelMatrix, -ent->angles[PITCH]);
+	ent->angles[PITCH] = -ent->angles[PITCH];
+
+	if (ent->model->type == MOD_BRUSH)
+	{
+		ent->angles[ROLL] = -ent->angles[ROLL];
+	}
+	Mat4RotateAroundX(ent->modelMatrix, -ent->angles[ROLL]);
+	if (ent->model->type == MOD_BRUSH)
+	{
+		ent->angles[ROLL] = -ent->angles[ROLL];
+	}
 #endif
+
+	//
+	// scale (normalized)
+	//
+	if (ent->renderfx & RF_SCALE && ent->scale > 0.0f)
+	{
+		Mat4Scale(ent->modelMatrix, ent->scale, ent->scale, ent->scale);
+	}
 }
 
 
@@ -121,26 +152,26 @@ R_DrawCurrentEntity
 */
 static inline void R_DrawCurrentEntity()
 {
-	if (pCurrentRefEnt->renderfx & RF_BEAM)
+	if (r_pCurrentEntity->renderfx & RF_BEAM)
 	{
 		ri.Error(ERR_FATAL, "%s RF_BEAM", __FUNCTION__);
-		//R_DrawBeam(pCurrentRefEnt);
+		//R_DrawBeam(r_pCurrentEntity);
 	}
 	else
 	{
-		if (!pCurrentModel)
+		if (!r_pCurrentModel)
 		{
-			ri.Error(ERR_FATAL, "%s pCurrentModel == NULL", __FUNCTION__);
+			ri.Error(ERR_FATAL, "%s r_pCurrentModel == NULL", __FUNCTION__);
 			return; // should never happen
 		}
 
-		if (pCurrentModel->type == MOD_BRUSH)
+		if (r_pCurrentModel->type == MOD_BRUSH)
 		{
-			R_DrawBrushModel(pCurrentRefEnt);
+			R_DrawBrushModel(r_pCurrentEntity);
 		}
 		else
 		{
-			R_DrawModelEntity(pCurrentRefEnt);
+			R_DrawModelEntity(r_pCurrentEntity);
 		}
 	}
 }
@@ -163,17 +194,17 @@ void R_DrawEntities(void)
 	gl_state.bDrawingTransparents = false;
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
-		pCurrentRefEnt = &r_newrefdef.entities[i];
-		pCurrentModel = pCurrentRefEnt->model;
+		r_pCurrentEntity = &r_newrefdef.entities[i];
+		r_pCurrentModel = r_pCurrentEntity->model;
 
-		if ((pCurrentRefEnt->renderfx & RF_TRANSLUCENT))
+		if ((r_pCurrentEntity->renderfx & RF_TRANSLUCENT))
 		{
 			continue; // reject entities with transparency effect early
 		}
 
 		if (gl_state.bShadowMapPass)
 		{
-			if((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) || (pCurrentRefEnt->renderfx & RF_NO_SHADOW))
+			if((r_pCurrentEntity->renderfx & RF_VIEW_MODEL) || (r_pCurrentEntity->renderfx & RF_NO_SHADOW))
 				continue; // reject view models and non shadow casters in shadow pass
 		}
 
@@ -183,34 +214,27 @@ void R_DrawEntities(void)
 	// draw transparent entities sorted from farthest to closest
 	
 	gl_state.bDrawingTransparents = true;
-	
-	//R_WriteToDepthBuffer(GL_FALSE); // no z writes
+	R_Blend(true);
 	R_DepthTest(true);
-
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	// draw from back to front
 	for (i = 0; i < r_newrefdef.num_entities; i++)
 	{
-		pCurrentRefEnt = &r_newrefdef.entities[(r_newrefdef.num_entities-1)-i];
-		pCurrentModel = pCurrentRefEnt->model;
+		r_pCurrentEntity = &r_newrefdef.entities[(r_newrefdef.num_entities-1)-i];
+		r_pCurrentModel = r_pCurrentEntity->model;
 
 		if (gl_state.bShadowMapPass)
 		{
-			if ((pCurrentRefEnt->renderfx & RF_VIEW_MODEL) || (pCurrentRefEnt->renderfx & RF_NO_SHADOW))
+			if ((r_pCurrentEntity->renderfx & RF_VIEW_MODEL) || (r_pCurrentEntity->renderfx & RF_NO_SHADOW))
 				continue; // reject view models and non shadow casters in shadow pass
 		}
 
 		R_DrawCurrentEntity();
 	}
 
-	R_MultiTextureBind(TMU_DIFFUSE, r_texture_white->texnum);
-	gl_state.bDrawingTransparents = false;
-	
+	R_Blend(false);
 	R_DepthTest(false);
-	//R_WriteToDepthBuffer(GL_TRUE);// reenable z writing
+	gl_state.bDrawingTransparents = false;
 
+	R_MultiTextureBind(TMU_DIFFUSE, r_texture_white->texnum);
 	R_UnbindProgram();
 }
 
@@ -529,6 +553,11 @@ static void R_ProcessEntities()
 			}
 		}
 
+#ifdef _DEBUG
+		// impossible case, since model is set to r_defaultmodel
+		if (!ent->model)
+			continue;
+#endif
 		switch (ent->model->type)
 		{
 		case MOD_BRUSH:
