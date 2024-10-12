@@ -1516,18 +1516,17 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	dbsp_header_t	*header;
 	mmodel_t 	*bm;
 	
-	if (r_worldmodel != NULL && pLoadModel != r_worldmodel)
-		ri.Error (ERR_DROP, "Mod_LoadBSP: Loaded BSP after the world");
-
-	header = (dbsp_header_t *)buffer;
-
+	header = (dbsp_header_t*)buffer;
 	i = LittleLong (header->version);
 
-	if (i == Q3BSP_VERSION)
+	if (LittleLong(header->ident) == Q3BSP_IDENT && i == Q3BSP_VERSION)
 	{
 		R_LoadWorld(mod, buffer);
 		return;
 	}
+
+	if (r_worldmodel != NULL && pLoadModel != r_worldmodel)
+		ri.Error(ERR_DROP, "Mod_LoadBSP: Loaded BSP after the world");
 
 	if (i != BSP_VERSION)
 		ri.Error (ERR_DROP, "Mod_LoadBSP: %s is wrong version", mod->name);

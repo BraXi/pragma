@@ -240,7 +240,7 @@ void V_TestModel(void)
 
 		tm.angles[1] = cl.refdef.view.angles[1];
 
-		Com_sprintf(modname, sizeof(modname), "models/%s", testmodel->string);
+		Com_sprintf(modname, sizeof(modname), "%s", testmodel->string);
 		tm.model = re.RegisterModel(modname);
 	}
 

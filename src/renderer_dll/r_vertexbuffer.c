@@ -178,7 +178,7 @@ vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, uns
 	if ((flags & V_INDICES) && numIndices > 0)
 	{
 		glGenBuffers(1, &vbo->indexBuf);
-		vbo->indices = ri.MemAlloc(sizeof(unsigned short) * numIndices);
+		vbo->indices = ri.MemAlloc(sizeof(int) * numIndices);
 		{
 			ri.Error(ERR_FATAL, "R_AllocVertexBuffer failed to allocate %i indices\n", numIndices);
 			return NULL;
@@ -230,7 +230,7 @@ void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int num
 R_UpdateVertexBufferIndices
 ===============
 */
-void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, unsigned short* indices, unsigned int numIndices)
+void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, int* indices, unsigned int numIndices)
 {
 	if (vbo->indexBuf == 0)
 		glGenBuffers(1, &vbo->indexBuf);
@@ -243,7 +243,7 @@ void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, unsigned short* indices, u
 	vbo->numIndices = numIndices;
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo->indexBuf);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (numIndices * sizeof(unsigned short)), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (numIndices * sizeof(int)), indices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 

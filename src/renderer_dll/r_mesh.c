@@ -263,9 +263,9 @@ void R_DrawModelEntity(rentity_t* ent)
 	switch (ent->model->type)
 	{
 	case MOD_ALIAS:
-		glDisable(GL_CULL_FACE);
+		//glDisable(GL_CULL_FACE);
 		R_DrawAliasModel(ent);
-		glEnable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
 		break;
 	case MOD_NEWFORMAT:
 		R_DrawNewModel(ent, bAnimated);

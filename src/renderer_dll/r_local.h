@@ -128,6 +128,7 @@ enum
 	GLPROG_ALIAS_SHADOW,
 	GLPROG_SMDL_SHADOW,
 	GLPROG_SHADOW,
+	GLPROG_Q3WORLD,
 	MAX_GLPROGS
 };
 typedef enum
@@ -265,7 +266,7 @@ typedef struct
 
 vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, unsigned int numIndices);
 void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int numVerts, vboFlags_t flags);
-void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, unsigned short* indices, unsigned int numIndices);
+void R_UpdateVertexBufferIndices(vertexbuffer_t* vbo, int* indices, unsigned int numIndices);
 void R_DrawVertexBuffer(vertexbuffer_t* vbo, unsigned int startVert, unsigned int numVerts);
 void R_DeleteVertexBuffers(vertexbuffer_t* vbo); // this is handy for stack allocated vbos
 void R_FreeVertexBuffer(vertexbuffer_t* vbo);

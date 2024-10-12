@@ -121,7 +121,8 @@ static proginfo_t proginfo[] =
 	{GLPROG_WORLD_SHADOW,	"shadow_world"}, // TODO: insert define SHADOW_PASS to regular shaders for these instead of writing additinal shader programs...
 	{GLPROG_ALIAS_SHADOW,	"shadow_alias"},
 	{GLPROG_SMDL_SHADOW,	"shadow_smdl"},
-	{GLPROG_SHADOW,			"shadow",			PF_ORTHO}
+	{GLPROG_SHADOW,			"shadow",			PF_ORTHO},
+	{GLPROG_Q3WORLD,		"q3world"}
 };
 
 #define NUM_PROGINFO sizeof(proginfo) / sizeof(proginfo[0])

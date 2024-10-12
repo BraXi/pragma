@@ -176,8 +176,8 @@ typedef struct mleaf_s
 
 typedef struct // q3 bmodel
 {
-	vec3_t		bounds[2];		// for culling
-	msurface_t* firstSurface;
+	vec3_t		mins, maxs;		// for culling
+	void* firstSurface;
 	int			numSurfaces;
 } bmodel_t;
 

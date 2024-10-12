@@ -144,7 +144,6 @@ void R_MatrixForEntity(rentity_t *ent)
 	}
 }
 
-
 /*
 =================
 R_DrawCurrentEntity
@@ -165,7 +164,10 @@ static inline void R_DrawCurrentEntity()
 			return; // should never happen
 		}
 
-		if (r_pCurrentModel->type == MOD_BRUSH)
+		if (r_pCurrentModel->type == MOD_Q3BRUSH)
+		{
+		}
+		else if (r_pCurrentModel->type == MOD_BRUSH)
 		{
 			R_DrawBrushModel(r_pCurrentEntity);
 		}
@@ -700,7 +702,13 @@ void R_RenderView (refdef_t *fd)
 	R_ClearFBO(); 
 	R_RenderToFBO(true); // begin rendering to fbo
 
+
+	
 	R_DrawWorld();
+
+
+	
+
 	R_ProfileAtStage(STAGE_DRAWWORLD);
 
 	//

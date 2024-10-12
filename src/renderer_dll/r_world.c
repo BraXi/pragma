@@ -17,9 +17,11 @@ static vec3_t		modelorg; // relative to viewpoint
 static msurface_t	*r_alpha_surfaces = NULL; //transparent surfs
 static byte			fatvis[MAX_MAP_LEAFS_QBSP / 8]; // markleaves
 
-extern void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
-extern void R_BeginLinesRendering(qboolean dt);
-extern void R_EndLinesRendering();
+void R_LightMap_TexCoordsForSurf(msurface_t* surf, polyvert_t* vert, vec3_t pos);
+void R_BeginLinesRendering(qboolean dt);
+void R_EndLinesRendering();
+
+qboolean R_DrawQ3World();
 
 extern int registration_sequence; // experimental nature heh
 
@@ -1252,6 +1254,9 @@ void R_DrawWorld()
 
 	VectorCopy(r_newrefdef.view.origin, modelorg);
 
+
+	if (R_DrawQ3World())
+		return;
 
 	//
 	// DRAW THE WORLD
