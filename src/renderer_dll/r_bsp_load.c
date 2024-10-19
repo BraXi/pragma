@@ -267,7 +267,6 @@ static void R_LoadFogs(const lump_t* fogLump, const lump_t* brushLump, const lum
 {
 }
 
-int *di_changed;
 /*
 =================
 R_LoadDrawVerts
@@ -335,8 +334,6 @@ static void R_LoadDrawIndexes(const lump_t* lump)
 
 	world.drawIndexes = out;
 	world.numDrawIndexes = count;
-
-	di_changed = calloc(world.numDrawIndexes, sizeof(int));
 
 	for (i = 0; i < count; i++ )
 	{

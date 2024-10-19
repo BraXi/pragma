@@ -26,9 +26,8 @@ See the attached GNU General Public License v2 for more details.
 #include "../common/renderer.h"
 #include "win_qgl.h"
 
-#define	REF_VERSION	"0.5-next"
+#define	REF_VERSION	"0.6"
 
-#define DECOUPLED_LM 1
 
 //===================================================================
 // used to generate sin tables
@@ -275,12 +274,8 @@ void R_FreeVertexBuffer(vertexbuffer_t* vbo);
 
 
 #include "r_model.h"
-
 #include "r_bsp.h"
 #include "r_material.h"
-
-#define BACKFACE_EPSILON	0.01
-
 
 //====================================================
 
@@ -289,26 +284,26 @@ extern	model_t		*r_pCurrentModel;
 
 //====================================================
 
-extern unsigned int		r_visframecount;
-extern unsigned int		r_framecount;
+extern unsigned int r_visframecount;
+extern unsigned int r_framecount;
 
-extern cplane_t	frustum[4];
+extern cplane_t frustum[4];
 
-extern	float		gldepthmin, gldepthmax;
+extern float gldepthmin, gldepthmax;
 
 //
 // view origin
 //
-extern	vec3_t	vup;
-extern	vec3_t	vpn;
-extern	vec3_t	vright;
-extern	vec3_t	r_origin;
+extern vec3_t vup;
+extern vec3_t vpn;
+extern vec3_t vright;
+extern vec3_t r_origin;
 
 //
 // screen size info
 //
-extern	refdef_t	r_newrefdef;
-extern	int			r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
+extern refdef_t	r_newrefdef;
+extern int r_viewcluster, r_viewcluster2, r_oldviewcluster, r_oldviewcluster2;
 
 extern cvar_t* r_test;
 extern	cvar_t	*r_norefresh;
@@ -362,9 +357,7 @@ extern rentity_t r_worldent;
 
 extern model_t *r_worldmodel;
 extern model_t* r_defaultmodel;
-
 extern int registration_sequence;
-
 
 //===================================================================
 // r_init.c
@@ -372,7 +365,6 @@ extern int registration_sequence;
 
 int R_Init( void *hinstance, void *hWnd );
 void R_Shutdown( void );
-
 
 //===================================================================
 // r_misc.c
@@ -383,9 +375,8 @@ void R_ScreenShot_f(void);
 void GL_SetDefaultState(void);
 void GL_UpdateSwapInterval(void);
 
-
 //===================================================================
-// r_world.c
+// r_bsp_*.c
 //===================================================================
 
 void R_TraverseWorldBSP();
@@ -393,15 +384,13 @@ void R_DrawWorld();
 void R_DrawBrushModel(rentity_t* ent);
 void R_PreprocessBrushModelEntity(rentity_t* ent);
 
-
 //===================================================================
-// r_warp.c
+// r_sky.c
 //===================================================================
 
 void R_AddSkySurface (worldSurface_t* surf);
 void R_ClearSkyBox();
 void R_DrawSkyBox();
-
 
 //===================================================================
 // r_main.c 
@@ -412,7 +401,6 @@ void R_BeginFrame(float camera_separation);
 void R_MatrixForEntity(rentity_t* ent);
 qboolean R_CullBox(vec3_t mins, vec3_t maxs);
 void R_DrawBeam(rentity_t* e);
-
 
 //===================================================================
 // r_light.c
@@ -426,8 +414,6 @@ void R_SendDynamicLightsToCurrentProgram(qboolean bViewFlashLight);
 // shared.c
 //===================================================================
 // void COM_StripExtension (char *in, char *out); //unused in render
-
-
 
 //===================================================================
 // r_draw.c
@@ -556,7 +542,6 @@ Live profiling (currently windows only) + counters
 typedef struct /*per frame statistics*/
 {
 	// brush models
-	int	brush_polys;
 	int brush_tris;
 	int brush_drawcalls;
 	int	brush_textures;
@@ -600,8 +585,10 @@ extern double lastsamples[NUM_PROFILES][NUM_TIMESAMPLES];
 
 //Starts profiling. Will record the time it was called at.
 void R_StartProfiling();
+
 //Called at the end of a stage, compares the stage's time to the previous,
 //unless that stage is STAGE_TOTAL, at which it compares to the time at the call of R_StartProfiling.
+
 void R_ProfileAtStage(profiletype_e stage);
 //Finishes profiling by converting all the relevant numbers into milliseconds and incrementing the sample number.
 void R_FinishProfiling();
@@ -619,7 +606,6 @@ IMPORTED FUNCTIONS
 
 extern	refimport_t	ri;
 
-
 /*
 ====================================================================
 
@@ -627,7 +613,6 @@ IMPLEMENTATION SPECIFIC FUNCTIONS - win_opengl.c
 
 ====================================================================
 */
-
 void GLimp_BeginFrame( float camera_separation );
 void GLimp_EndFrame( void );
 int GLimp_Init( void *hinstance, void *hWnd );

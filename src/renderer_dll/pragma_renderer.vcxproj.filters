@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\common\mathlib.c" />
+    <ClCompile Include="..\common\shared.c" />
+    <ClCompile Include="..\common\shared_windows.c" />
+    <ClCompile Include="glad_gl21.c" />
+    <ClCompile Include="r_bsp_load.c" />
+    <ClCompile Include="r_shadow.c" />
+    <ClCompile Include="r_testmod.c" />
+    <ClCompile Include="r_text.c" />
+    <ClCompile Include="r_framebuffer.c" />
+    <ClCompile Include="r_progs.c" />
+    <ClCompile Include="r_vertexbuffer.c" />
+    <ClCompile Include="r_draw.c" />
+    <ClCompile Include="r_image.c" />
+    <ClCompile Include="r_init.c" />
+    <ClCompile Include="r_light.c" />
+    <ClCompile Include="r_aliasmod.c" />
+    <ClCompile Include="r_mesh.c" />
+    <ClCompile Include="r_model.c" />
+    <ClCompile Include="r_main.c" />
+    <ClCompile Include="r_misc.c" />
+    <ClCompile Include="r_state.c" />
+    <ClCompile Include="r_sky.c" />
+    <ClCompile Include="win_qgl.c">
+      <Filter>PLATFORM</Filter>
+    </ClCompile>
+    <ClCompile Include="win_opengl.c">
+      <Filter>PLATFORM</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\mathlib.h" />
+    <ClInclude Include="..\common\shared.h" />
+    <ClInclude Include="..\common\renderer.h" />
+    <ClInclude Include="include\glad\glad_21.h" />
+    <ClInclude Include="r_local.h" />
+    <ClInclude Include="r_model.h" />
+    <ClInclude Include="warpsin.h" />
+    <ClInclude Include="..\platform\winquake.h">
+      <Filter>PLATFORM</Filter>
+    </ClInclude>
+    <ClInclude Include="win_qgl.h">
+      <Filter>PLATFORM</Filter>
+    </ClInclude>
+    <ClInclude Include="win_glw.h">
+      <Filter>PLATFORM</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="PLATFORM">
+      <UniqueIdentifier>{076dcf92-c371-47ca-8629-272b24644f1f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

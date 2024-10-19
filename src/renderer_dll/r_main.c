@@ -594,7 +594,6 @@ static void R_ClearPerfCounters()
 #else
 	int i;
 
-	rperf.brush_polys = 0;
 	rperf.brush_tris = 0;
 	rperf.brush_drawcalls = 0;
 	rperf.brush_textures = 0;
@@ -742,8 +741,8 @@ void R_RenderView (refdef_t *fd)
 	R_SelectTextureUnit(0);
 	if (r_speeds->value == 1.0f)
 	{
-		ri.Printf (PRINT_ALL, "%4i bsppolys, %4i mdltris, %i vistex, %i texbinds, %i lmbinds,\n",
-			rperf.brush_polys,
+		ri.Printf (PRINT_ALL, "%4i bsptris, %4i mdltris, %i vistex, %i texbinds, %i lmbinds,\n",
+			rperf.brush_tris,
 			rperf.model_tris,
 			rperf.brush_textures,
 			rperf.texture_binds[TMU_DIFFUSE],
@@ -770,7 +769,6 @@ void R_BeginOrthoProjection()
 	R_Blend(false);
 }
 
-void R_NewDrawFill(rect_t pos, rgba_t color);
 static void R_DrawPerfCounters()
 {
 	float x, y, h;
@@ -792,9 +790,6 @@ static void R_DrawPerfCounters()
 
 	Vector4Set(color, 1.0, 0.65, 0, 1.0);
 	R_DrawText(x + 5, h + 4, 2, 0, fontscale, color, va("%s", gl_config.renderer_string));
-
-	Vector4Set(color, 1, 1, 1, 1.0);
-	R_DrawText(x, y, 2, 0, fontscale, color, va("%i brush polygons", rperf.brush_polys));
 
 	if (rperf.brush_tris > 0)
 	{
