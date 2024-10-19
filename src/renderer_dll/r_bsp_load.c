@@ -8,7 +8,7 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
-// r_q3bsp.c -- because q2bsp is fucking annoying
+// r_bsp_load.c -- bsp loading
 
 /*
 notes:
@@ -22,157 +22,14 @@ misc_models in maps are turned into geometry by q3map == worldSurf_Mesh_t
 
 #include "r_local.h"
 
+//#define ALLOW_EXTERNAL_LIGHTMAPS	// allow loading external lightmaps from TGA images
+
 extern model_t* pLoadModel;
 extern int modelFileLength;
 extern byte* mod_base;
 extern model_t r_inlineModels[MAX_WORLD_MODELS];
 
-typedef struct
-{
-	char		name[MAX_QPATH];
-
-	image_t		*diffuse;
-	image_t		*lightmap;
-} material_t;
-
-typedef enum 
-{
-	WORLDSURF_BAD,				// none cannot be bad
-
-	WORLDSURF_SKIP,				// ignore / hidden
-	WORLDSURF_FACE,				// brush face
-	WORLDSURF_MESH,				// misc_model
-	WORLDSURF_BILLBOARD,		// billboard / flare
-	WORLDSURF_PATCH,			// curve patch
-
-	WORLDSURF_TYPES,
-} worldSurfaceType_t;
-
-typedef struct 
-{
-	struct material_t	*material;
-	int					fogVolumeIndex;
-
-	worldSurfaceType_t	surfaceType;
-	void				*data; // any of worldSurf_*t
-} worldSurface_t; // new msurface_t
-
-typedef struct
-{
-	// culling information
-	vec3_t		mins, maxs;
-	float		radius;
-
-	// >= 0 : index to lightmaps, < 0 : vertex lit
-	int			lightmap;
-
-	// triangle definitions
-	int			firstIndex;
-	int			numIndexes;
-
-	int			firstVert;
-	int			numVerts;
-} worldSurf_Mesh_t;
-
-typedef struct
-{
-	vec3_t		origin;
-	vec3_t		normal;
-	vec3_t		color;
-} worldSurf_Billboard_t;
-
-
-typedef struct
-{
-	cplane_t	plane;
-
-	// >= 0 : index to lightmaps, < 0 : vertex lit
-	int			lightmap;
-
-	// triangle definitions (no normals at verts)
-	int			firstVert;
-	int			numVerts;
-	int			firstIndex;
-	int			numIndexes;
-} worldSurf_Face_t;
-
-
-typedef struct worldNode_s
-{
-	// common with leaf and node
-	int			contents;		// -1 for nodes, to differentiate from leafs
-	int			visframe;		// node needs to be traversed if current
-	vec3_t		mins, maxs;		// for bounding box culling
-	struct mnode_s* parent;
-
-	// node specific
-	cplane_t* plane;
-	struct worldNode_s* children[2];
-
-	// leaf specific
-	int			cluster;
-	int			area;
-
-	worldSurface_t** firstmarksurface;
-	int			nummarksurfaces;
-} worldNode_t;
-
-typedef struct renderWorld_s
-{
-	char		name[MAX_QPATH]; // without .bsp and path
-	qboolean	bLoaded;
-
-	q3bsp_material_t* materials;
-	int			numMaterials;
-
-	q3bsp_drawVert_t* drawVerts;
-	int			numDrawVerts;
-
-	GLuint			*drawIndexes;
-	int			numDrawIndexes;
-
-	cplane_t	*planes;
-	int			numPlanes;
-
-	worldSurface_t* surfaces; // New msurface_t !
-	int			numSurfaces;
-
-	worldSurface_t** marksurfaces; // New msurface_t !
-	int			numMarkSurfaces;
-
-	worldNode_t* nodes; // New mnode_t !
-	int			numNodes;
-	int			numDecisionNodes;
-
-	int			numClusters;
-	int			clusterBytes;
-
-	bmodel_t	*bmodels;
-	int			numBrushModels;
-
-	byte		*vis;
-	byte		*novis;
-
-	vec3_t		lightGridOrigin;
-	vec3_t		lightGridSize;
-	vec3_t		lightGridInverseSize;
-	int			lightGridBounds[3];
-	byte		*lightGridData;
-
-	int			numLightmaps;
-	image_t		*lightmaps[Q3BSP_MAX_LIGHTMAPS];
-
-
-	unsigned int vbo_verts;
-#if 0
-	unsigned int vbo_indexes;
-#endif
-} renderWorld_t;
-
-static renderWorld_t world;
-
-#define	PLANE_NON_AXIAL	3
-#define PlaneTypeForNormal(x) (x[0] == 1.0 ? PLANE_X : (x[1] == 1.0 ? PLANE_Y : (x[2] == 1.0 ? PLANE_Z : PLANE_NON_AXIAL) ) )
+renderWorld_t world;
 
 /*
 =================
@@ -195,7 +52,7 @@ R_LoadWorldMaterials
 static void R_LoadWorldMaterials(const lump_t* lump)
 {
 	int		i, count;
-	q3bsp_material_t *in, *out;
+	q3bsp_surfinfo_t *in, *out;
 
 	in = (void*)(mod_base + lump->fileofs);
 	CheckLumpSize(lump, sizeof(*in), __FUNCTION__);
@@ -212,6 +69,8 @@ static void R_LoadWorldMaterials(const lump_t* lump)
 	{
 		out[i].surfaceFlags = LittleLong(out[i].surfaceFlags);
 		out[i].contentFlags = LittleLong(out[i].contentFlags);
+
+		ri.Printf(PRINT_ALL, "    '%s'\n", out[i].name);
 	}
 
 	ri.Printf(PRINT_ALL, "... %i materials\n", world.numMaterials);
@@ -219,33 +78,72 @@ static void R_LoadWorldMaterials(const lump_t* lump)
 
 /*
 ===============
-R_ColorShiftLightingBytes
+R_CopyColorNoAlpha
 ===============
 */
-static void R_ColorShiftLightingBytes(byte in[4], byte out[4])
+static void R_CopyColorNoTrans(byte in[4], byte out[4])
 {
-	int	r, g, b;
-	int max;
-
-	r = in[0];
-	g = in[1];
-	b = in[2];
-
-	// normalize by color instead of saturating to white
-	if ((r | g | b) > 255) 
-	{
-		max = r > g ? r : g;
-		max = max > b ? max : b;
-		r = r * 255 / max;
-		g = g * 255 / max;
-		b = b * 255 / max;
-	}
-
-	out[0] = r;
-	out[1] = g;
-	out[2] = b;
+	out[0] = in[0];
+	out[1] = in[1];
+	out[2] = in[2];
 	out[3] = in[3];
 }
+
+#ifdef ALLOW_EXTERNAL_LIGHTMAPS 
+/*
+===============
+R_TryLoadExternalLightmaps
+===============
+*/
+static void R_TryLoadExternalLightmaps()
+{
+	q3bsp_header_t *hdr;
+	q3bsp_surface_t *surf;
+	image_t *lightmap;
+	int numReferencedLightmaps;
+	int i, count, lmnum;
+	char filename[MAX_QPATH];
+
+	hdr = (q3bsp_header_t*)mod_base;
+	surf = (void*)(mod_base + hdr->lumps[Q3LUMP_SURFACES].fileofs);
+	count = hdr->lumps[Q3LUMP_SURFACES].filelen / sizeof(*surf);
+
+	// find the highest lightmap index in surfaces to know the number of lightmaps we need
+	numReferencedLightmaps = -1;
+	for (i = 0; i < count; i++, surf++)
+	{
+		lmnum = LittleLong(surf->lightmapNum);
+		if (lmnum >= 0 && lmnum > numReferencedLightmaps)
+		{
+			numReferencedLightmaps = lmnum;
+		}
+	}
+
+	// ... and try loading them
+	for (count = 0, i = 0; i < numReferencedLightmaps+1; i++)
+	{
+		Com_sprintf(filename, sizeof(filename), "maps/%s/lm_%04d.tga", world.name, i);
+		lightmap = R_FindTexture(filename, it_texture, true);
+		if (lightmap && lightmap != r_texture_missing)
+		{
+			count++;
+			world.lightmaps[i] = lightmap;
+		}
+		else
+		{
+			ri.Error(ERR_DROP, "missing lightmap %i for map %s", i, world.name);
+		}
+	}
+
+	if (!count)
+		return;
+
+	world.numLightmaps = count;
+
+	world.bExternalLightmaps = true;
+	ri.Printf(PRINT_ALL, "... %i external light maps\n", world.numLightmaps);
+}
+#endif
 
 /*
 ===============
@@ -256,29 +154,45 @@ static void R_LoadLightmaps(const lump_t* lump)
 {
 	byte* buf, * buf_p;
 	int			len;
-	byte		pixelData[Q3BSP_LIGHTMAP_WIDTH * Q3BSP_LIGHTMAP_HEIGHT * 4];
+	byte		*tempPixels;
 	int			i, j;
 	int			numPixels;
+
+	world.bExternalLightmaps = false;
 
 	len = lump->filelen;
 	if (!len)
 	{
+		
 		world.numLightmaps = 0;
-		return; // no lighting data
+
+#ifdef ALLOW_EXTERNAL_LIGHTMAPS
+		// No lightmap data in BSP but maybe there are external lightmaps
+		R_TryLoadExternalLightmaps();
+#endif
+		return; 
 	}
 
 	buf = mod_base + lump->fileofs;
 
-	numPixels = Q3BSP_LIGHTMAP_WIDTH * Q3BSP_LIGHTMAP_HEIGHT; // Q3BSP_LIGHTMAP_SIZE * Q3BSP_LIGHTMAP_SIZE
+	numPixels = WORLD_LIGHTMAP_WIDTH * WORLD_LIGHTMAP_WIDTH; // Q3BSP_LIGHTMAP_SIZE * Q3BSP_LIGHTMAP_SIZE
 
-	
 	world.numLightmaps = len / (numPixels * 3);
 
-	if (world.numLightmaps >= Q3BSP_MAX_LIGHTMAPS)
+	if (world.numLightmaps >= MAX_WORLD_LIGHTMAPS)
 	{
 		ri.Error(ERR_DROP, "Too many lightmaps");
 		return;
 	}
+
+	tempPixels = malloc(numPixels * 4);
+	if (!tempPixels)
+	{
+		ri.Error(ERR_DROP, "malloc for lightmap failed.");
+		return;
+	}
+
+	memset(tempPixels, 255, numPixels * 4);
 
 	// create all the lightmaps
 	for (i = 0; i < world.numLightmaps; i++)
@@ -288,11 +202,11 @@ static void R_LoadLightmaps(const lump_t* lump)
 
 		for (j = 0; j < numPixels; j++)
 		{
-			R_ColorShiftLightingBytes(&buf_p[j * 3], &pixelData[j * 4]);
-			pixelData[j * 4 + 3] = 255;
+			R_CopyColorNoTrans(&buf_p[j * 3], &tempPixels[j * 4]);
+			tempPixels[j * 4 + 3] = 255;
 		}
 
-		world.lightmaps[i] = R_LoadTexture(va("$lightmap_%d", i), (byte*)pixelData, Q3BSP_LIGHTMAP_WIDTH, Q3BSP_LIGHTMAP_HEIGHT, it_texture, 32);
+		world.lightmaps[i] = R_LoadTexture(va("$lightmap_%d", i), (byte*)tempPixels, WORLD_LIGHTMAP_WIDTH, WORLD_LIGHTMAP_HEIGHT, it_texture, 32);
 
 		// make sure lightmap is set to clamp to edges (R_LoadTexture leaves texture bound)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -300,7 +214,8 @@ static void R_LoadLightmaps(const lump_t* lump)
 		R_BindTexture(0);
 	}
 
-	ri.Printf(PRINT_ALL, "... %i light maps (%i kb)\n", world.numLightmaps, (numPixels * 4 * world.numLightmaps) / 1024);
+	free(tempPixels);
+	ri.Printf(PRINT_ALL, "... %i light map%s (%i kb)\n", world.numLightmaps, (world.numLightmaps > 0) ? "s" : "", (numPixels * 4 * world.numLightmaps) / 1024);
 }
 
 /*
@@ -352,7 +267,7 @@ static void R_LoadFogs(const lump_t* fogLump, const lump_t* brushLump, const lum
 {
 }
 
-
+int *di_changed;
 /*
 =================
 R_LoadDrawVerts
@@ -360,7 +275,8 @@ R_LoadDrawVerts
 */
 static void R_LoadDrawVerts(const lump_t* lump)
 {
-	q3bsp_drawVert_t *in, *out;
+	q3bsp_drawVert_t *in;
+	worldDrawVert_t *out;
 	int			i, j;
 	int			count;
 
@@ -387,34 +303,19 @@ static void R_LoadDrawVerts(const lump_t* lump)
 			out[i].lightmap[j] = LittleFloat(in[i].lightmap[j]);
 		}
 
-		//out[i].lightmap[1] = -out[i].lightmap[1];
-
+		// convert color from bytes to floats
 		for (j = 0; j < 4; j++)
-			out[i].color[j] = in[i].color[j];	
-
-		R_ColorShiftLightingBytes(out[i].color, in[i].color);
+		{
+			out[i].color[j] = (in[i].color[j] / 255.0);
+		}
 	}
-}
-
-typedef enum
-{
-	LIGHTMAP_LIGHTMAP = 0,		// (>= 0) means surface is properly light mapped
-	LIGHTMAP_NONE = -1,			// material does not reference lightmap
-	LIGHTMAP_WHITEIMAGE = -2,	// surface is fullbright
-	LIGHTMAP_BY_VERTEX = -3,	// per vertex lighting
-	LIGHTMAP_2D = -4			// material for 2D rendering
-} WorldLightMapType;
-
-
-void* R_WorldMaterialForNum(const int num, const WorldLightMapType lightmap)
-{
-	return NULL;
 }
 
 typedef struct
 {
 	int32_t val;
 } drawindex_t;
+
 /*
 =================
 R_LoadDrawIndexes
@@ -435,59 +336,12 @@ static void R_LoadDrawIndexes(const lump_t* lump)
 	world.drawIndexes = out;
 	world.numDrawIndexes = count;
 
+	di_changed = calloc(world.numDrawIndexes, sizeof(int));
+
 	for (i = 0; i < count; i++ )
 	{
 		out[i] = LittleLong(in[i].val);
-
-		int y = out[i];
-		
-		ri.Printf(PRINT_ALL, "%d,", y);
-		if (out[i] < 0 || out[i] >= world.numDrawVerts)
-		{
-			ri.Printf(0, "Bad draw index");
-		}
 	}
-}
-
-/*
-=================
-ParseMeshSurface
-misc_models etc..
-=================
-*/
-static void ParseMeshSurface(const q3bsp_surface_t* bspSurf, worldSurface_t* worldSurf) 
-{
-	worldSurf_Mesh_t *mesh;
-	q3bsp_drawVert_t *pVertex;
-	int i;
-
-	mesh = Hunk_Alloc(sizeof(*mesh));
-	
-	mesh->lightmap = LittleLong(bspSurf->lightmapNum);
-	mesh->firstIndex = LittleLong(bspSurf->firstIndex);
-	mesh->numIndexes = LittleLong(bspSurf->numIndexes);
-	mesh->firstVert = LittleLong(bspSurf->firstVert);
-	mesh->numVerts = LittleLong(bspSurf->numVerts);
-
-	// Fix indices to be relative to firstVert
-	for (i = 0; i < mesh->numIndexes; i++)
-	{
-		world.drawIndexes[mesh->firstIndex + i] += mesh->firstVert;
-	}
-
-	// calculate bounding box for world surface
-	pVertex = world.drawVerts + mesh->firstVert;
-
-	ClearBounds(mesh->mins, mesh->maxs);
-	for (i = 0; i < mesh->numVerts; i++, pVertex++)
-	{
-		AddPointToBounds(pVertex->xyz, mesh->mins, mesh->maxs);
-	}
-
-	worldSurf->material = R_WorldMaterialForNum(bspSurf->materialNum, LIGHTMAP_BY_VERTEX);
-	worldSurf->surfaceType = WORLDSURF_MESH;
-	worldSurf->fogVolumeIndex = LittleLong(bspSurf->fogNum) + 1;
-	worldSurf->data = (void*)mesh;
 }
 
 /*
@@ -522,19 +376,24 @@ static void ParseBrushFace(const q3bsp_surface_t* bspSurf, worldSurface_t* world
 	int i;
 
 	face = Hunk_Alloc(sizeof(*face));
-
 	face->lightmap = LittleLong(bspSurf->lightmapNum);
 	face->firstVert = LittleLong(bspSurf->firstVert);
 	face->numVerts = LittleLong(bspSurf->numVerts);
 	face->firstIndex = LittleLong(bspSurf->firstIndex);
 	face->numIndexes = LittleLong(bspSurf->numIndexes);
 
-	// Fix indices to be relative to firstVert
+	face->indices = Hunk_Alloc(face->numIndexes * sizeof(int));
 	for (i = 0; i < face->numIndexes; i++)
 	{
-		world.drawIndexes[face->firstIndex + i] += face->firstVert;
+		face->indices[i] = world.drawIndexes[face->firstIndex + i] + face->firstVert;
+		//world.drawIndexes[face->firstIndex + i] += face->firstVert;
+		int index = world.drawIndexes[face->firstIndex + i];
+	
+		if (index < 0 || index >= world.numDrawVerts)
+		{
+			ri.Error(ERR_DROP, "Bad brush draw index %i", index);
+		}
 	}
-
 	// take the plane information from the lightmap vector
 	for (i = 0; i < 3; i++) 
 	{
@@ -546,11 +405,59 @@ static void ParseBrushFace(const q3bsp_surface_t* bspSurf, worldSurface_t* world
 	face->plane.type = PlaneTypeForNormal(face->plane.normal);
 
 	worldSurf->surfaceType = WORLDSURF_FACE;
+	worldSurf->material = LittleLong(bspSurf->materialNum);
 	worldSurf->fogVolumeIndex = LittleLong(bspSurf->fogNum) + 1;
-	worldSurf->material = R_WorldMaterialForNum(bspSurf->materialNum, LittleLong(bspSurf->lightmapNum));
+	//worldSurf->material = R_WorldMaterialForNum(bspSurf->materialNum, LittleLong(bspSurf->lightmapNum));
 	worldSurf->data = (void*)face;
 }
 
+/*
+=================
+ParseMeshSurface
+misc_models etc..
+=================
+*/
+static void ParseMeshSurface(const q3bsp_surface_t* bspSurf, worldSurface_t* worldSurf)
+{
+	worldSurf_Mesh_t* mesh;
+	worldDrawVert_t* pVertex;
+	int i;
+
+	mesh = Hunk_Alloc(sizeof(*mesh));
+
+	mesh->lightmap = LittleLong(bspSurf->lightmapNum);
+	mesh->firstIndex = LittleLong(bspSurf->firstIndex);
+	mesh->numIndexes = LittleLong(bspSurf->numIndexes);
+	mesh->firstVert = LittleLong(bspSurf->firstVert);
+	mesh->numVerts = LittleLong(bspSurf->numVerts);
+
+	mesh->indices = Hunk_Alloc(mesh->numIndexes * sizeof(int));
+	for (i = 0; i < mesh->numIndexes; i++)
+	{
+		mesh->indices[i] = world.drawIndexes[mesh->firstIndex + i] + mesh->firstVert;
+		//world.drawIndexes[mesh->firstIndex + i] += mesh->firstVert;
+		int index = world.drawIndexes[mesh->firstIndex + i];
+		if (index < 0 || index > world.numDrawVerts)
+		{
+			ri.Error(ERR_DROP, "Bad mesh draw index %i", index);
+		}
+	}
+
+	// calculate bounding box for world surface
+	pVertex = world.drawVerts + mesh->firstVert;
+
+	ClearBounds(mesh->mins, mesh->maxs);
+	for (i = 0; i < mesh->numVerts; i++, pVertex++)
+	{
+		AddPointToBounds(pVertex->xyz, mesh->mins, mesh->maxs);
+	}
+
+	//worldSurf->material = R_WorldMaterialForNum(bspSurf->materialNum, LIGHTMAP_BY_VERTEX);
+	worldSurf->material = LittleLong(bspSurf->materialNum);
+	worldSurf->surfaceType = WORLDSURF_MESH;
+	worldSurf->fogVolumeIndex = LittleLong(bspSurf->fogNum) + 1;
+	worldSurf->data = (void*)mesh;
+}
 
 /*
 ===============
@@ -573,17 +480,17 @@ static void ParseBillboard(const q3bsp_surface_t* bspSurf, worldSurface_t* world
 
 	worldSurf->surfaceType = WORLDSURF_BILLBOARD;
 	worldSurf->fogVolumeIndex = LittleLong(bspSurf->fogNum) + 1;
-	worldSurf->material = R_WorldMaterialForNum(bspSurf->materialNum, LIGHTMAP_BY_VERTEX);
+	//->material = R_WorldMaterialForNum(bspSurf->materialNum, LIGHTMAP_BY_VERTEX);
 	worldSurf->data = (void*)billboard;
 }
 
 
 /*
 =================
-R_LoadSurfaces
+R_LoadWorldSurfaces
 =================
 */
-static void R_LoadSurfaces(const lump_t* surfsLump, const lump_t* vertsLump, const lump_t* indexLump)
+static void R_LoadWorldSurfaces(const lump_t* surfsLump, const lump_t* vertsLump, const lump_t* indexLump)
 {
 	q3bsp_surface_t *in;
 	worldSurface_t *out;
@@ -616,6 +523,7 @@ static void R_LoadSurfaces(const lump_t* surfsLump, const lump_t* vertsLump, con
 
 		case MST_PATCH: /* curve patches */
 			//ParseMesh(in, dv, out);
+			//ParseMeshSurface(in, out);
 			numPatchMeshes++;
 			break;
 
@@ -769,7 +677,7 @@ static void R_LoadInlineModels(const lump_t* lump)
 	CheckLumpSize(lump, sizeof(*in), __FUNCTION__);
 	count = lump->filelen / sizeof(*in);
 
-	world.bmodels = out = Hunk_Alloc(count * sizeof(*out));
+	world.inlineModels = out = Hunk_Alloc(count * sizeof(*out));
 
 	for (i = 0; i < count; i++, in++, out++) 
 	{
@@ -905,7 +813,7 @@ static void R_ParseEntities(const lump_t* lump)
 		numEntities++;
 
 	}
-	ri.Printf(PRINT_ALL, "... parsed %i entities\n", numEntities);
+	ri.Printf(PRINT_ALL, "... %i entities in a map\n", numEntities);
 }
 
 /*
@@ -927,8 +835,8 @@ static void R_LoadLightGrid(const lump_t* lump)
 	w->lightGridInverseSize[1] = 1.0f / w->lightGridSize[1];
 	w->lightGridInverseSize[2] = 1.0f / w->lightGridSize[2];
 
-	wMins = w->bmodels[0].mins;
-	wMaxs = w->bmodels[0].maxs;
+	wMins = w->inlineModels[0].mins;
+	wMaxs = w->inlineModels[0].maxs;
 
 	for (i = 0; i < 3; i++) 
 	{
@@ -953,8 +861,8 @@ static void R_LoadLightGrid(const lump_t* lump)
 	// deal with overbright bits
 	for (i = 0; i < numGridPoints; i++) 
 	{
-		R_ColorShiftLightingBytes(&w->lightGridData[i * 8], &w->lightGridData[i * 8]);
-		R_ColorShiftLightingBytes(&w->lightGridData[i * 8 + 3], &w->lightGridData[i * 8 + 3]);
+		R_CopyColorNoTrans(&w->lightGridData[i * 8], &w->lightGridData[i * 8]);
+		R_CopyColorNoTrans(&w->lightGridData[i * 8 + 3], &w->lightGridData[i * 8 + 3]);
 	}
 
 	ri.Printf(PRINT_ALL, "... %i light grid points (gridsize %ix%ix%i)\n", numGridPoints, (int)w->lightGridSize[0], (int)w->lightGridSize[1], (int)w->lightGridSize[2]);
@@ -970,7 +878,6 @@ static qboolean R_CreateWorldVBO()
 	GLint upload_size = 0;
 	GLint total_size = 0;
 
-	// upload vertices
 	upload_size = 0;
 	glGenBuffers(1, &world.vbo_verts);
 
@@ -1020,6 +927,7 @@ void R_LoadWorld(model_t* mod, void* buffer)
 {
 	int		i;
 	q3bsp_header_t* header;
+	char tempname[MAX_QPATH];
 
 	if (world.bLoaded)
 	{
@@ -1030,9 +938,9 @@ void R_LoadWorld(model_t* mod, void* buffer)
 
 	header = (q3bsp_header_t*)buffer;
 	i = LittleLong(header->version);
-	if (i != Q3BSP_VERSION)
+	if (i != WORLD_VERSION)
 	{
-		ri.Error(ERR_DROP, "R_LoadWorld: %s has wrong version number (%i should be %i)", mod->name, i, Q3BSP_VERSION);
+		ri.Error(ERR_DROP, "R_LoadWorld: %s has wrong version number (%i should be %i)", mod->name, i, WORLD_VERSION);
 	}
 
 	// swap all the lumps
@@ -1042,11 +950,14 @@ void R_LoadWorld(model_t* mod, void* buffer)
 		((int*)header)[i] = LittleLong(((int*)header)[i]);
 	}
 
-	Com_sprintf(world.name, sizeof(world.name), "%s", COM_SkipPath(mod->name));
+	COM_StripExtension(COM_SkipPath(mod->name), tempname);
+	Com_sprintf(world.name, sizeof(world.name), "%s", tempname);
 
 	mod->type = MOD_Q3BRUSH;
 	mod->numframes = 1;
 	r_pCurrentModel = pLoadModel;
+
+	ri.Printf(PRINT_ALL, "----- %s(%s) -----\n", __FUNCTION__, world.name);
 
 	R_LoadWorldMaterials(&header->lumps[Q3LUMP_SHADERS]);
 	R_LoadLightmaps(&header->lumps[Q3LUMP_LIGHTMAPS]);
@@ -1054,13 +965,15 @@ void R_LoadWorld(model_t* mod, void* buffer)
 	R_LoadFogs(&header->lumps[Q3LUMP_FOGS], &header->lumps[Q3LUMP_BRUSHES], &header->lumps[Q3LUMP_BRUSHSIDES]);
 	R_LoadDrawVerts(&header->lumps[Q3LUMP_DRAWVERTS]);
 	R_LoadDrawIndexes(&header->lumps[Q3LUMP_DRAWINDEXES]);
-	R_LoadSurfaces(&header->lumps[Q3LUMP_SURFACES], &header->lumps[Q3LUMP_DRAWVERTS], &header->lumps[Q3LUMP_DRAWINDEXES]);
+	R_LoadWorldSurfaces(&header->lumps[Q3LUMP_SURFACES], &header->lumps[Q3LUMP_DRAWVERTS], &header->lumps[Q3LUMP_DRAWINDEXES]);
 	R_LoadMarkSurfaces(&header->lumps[Q3LUMP_LEAFSURFACES]);
 	R_LoadNodesAndLeafs(&header->lumps[Q3LUMP_NODES], &header->lumps[Q3LUMP_LEAFS]);
 	R_LoadInlineModels(&header->lumps[Q3LUMP_MODELS]);
 	R_LoadVisibility(&header->lumps[Q3LUMP_VISIBILITY]);
 	R_ParseEntities(&header->lumps[Q3LUMP_ENTITIES]);
 	R_LoadLightGrid(&header->lumps[Q3LUMP_LIGHTGRID]);
+
+	R_InitMaterials();
 
 	if (R_CreateWorldVBO() == false)
 	{
@@ -1070,90 +983,16 @@ void R_LoadWorld(model_t* mod, void* buffer)
 	world.bLoaded = true;
 	mod->type = MOD_Q3BRUSH;
 
-	ri.Printf(PRINT_ALL, "Succesfuly loaded Quake3 BSP %s\n", world.name);
+	ri.Printf(PRINT_ALL, "----------\n");
 }
 
 
-
-qboolean R_DrawQ3World()
+/*
+=================
+R_FreeWorld
+=================
+*/
+void R_FreeWorld()
 {
-	int i;
-	worldSurface_t* surf;
-	worldSurf_Face_t* face;
-	worldSurf_Mesh_t* mesh;
 
-	if (!world.bLoaded)
-		return false;
-
-	glFrontFace(GL_CW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, world.vbo_verts);
-
-	R_BindProgram(GLPROG_Q3WORLD);
-
-	//Mat4MakeIdentity(r_worldent.modelMatrix);
-	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_worldent.modelMatrix);
-
-	R_MultiTextureBind(TMU_DIFFUSE, r_texture_white->texnum);
-	R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
-
-	glEnableVertexAttribArray(0);
-	glBindAttribLocation(pCurrentProgram->programObject, 0, "inVertPos");
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(q3bsp_drawVert_t), (void*)0);
-
-	glEnableVertexAttribArray(1);
-	glBindAttribLocation(pCurrentProgram->programObject, 1, "inTexCoord");
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(q3bsp_drawVert_t), (void*)offsetof(q3bsp_drawVert_t, st));
-
-	glEnableVertexAttribArray(2);
-	glBindAttribLocation(pCurrentProgram->programObject, 2, "inLightMapCoord");
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(q3bsp_drawVert_t), (void*)offsetof(q3bsp_drawVert_t, lightmap));
-
-	glEnableVertexAttribArray(3);
-	glBindAttribLocation(pCurrentProgram->programObject, 3, "inNormal");
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(q3bsp_drawVert_t), (void*)offsetof(q3bsp_drawVert_t, normal));
-
-	glDisable(GL_CULL_FACE);
-	surf = world.surfaces;
-	for (i = 0; i < world.numSurfaces; i++, surf++)
-	{
-		if (surf->surfaceType == WORLDSURF_FACE)
-		{
-			face = (worldSurf_Face_t*)surf->data;
-
-			if (face->lightmap >= 0)
-				R_MultiTextureBind(TMU_LIGHTMAP, world.lightmaps[face->lightmap]->texnum);
-			else
-				continue;
-
-				//R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
-
-			glDrawArrays(GL_TRIANGLE_FAN, face->firstVert, face->numVerts);
-		}
-		else if (surf->surfaceType == WORLDSURF_MESH)
-		{
-			mesh = (worldSurf_Mesh_t*)surf->data;
-
-			R_MultiTextureBind(TMU_DIFFUSE, r_texture_missing->texnum);
-
-			if (mesh->lightmap >= 0)
-				R_MultiTextureBind(TMU_LIGHTMAP, world.lightmaps[mesh->lightmap]->texnum);
-			else
-				R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
-			
-			//void glDrawRangeElements( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void* indices);
-			glDrawElements(GL_TRIANGLES, mesh->numIndexes, GL_UNSIGNED_INT, &world.drawIndexes[mesh->firstIndex]);
-		}
-	}
-
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
-	glDisableVertexAttribArray(3);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	R_UnbindProgram();
-
-	return true;
 }

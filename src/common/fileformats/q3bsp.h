@@ -11,25 +11,17 @@ See the attached GNU General Public License v2 for more details.
 /*
 ==============================================================================
 
-  .BSP file format
-
-  Quake2 BSP
-  QBISM BSP
-
-  BSPX DECOUPLED_LM
-
-  CONTENT FLAGS
-  SURFACE FLAGS
+   Quake 3 derived .BSP file format
 
 ==============================================================================
 */
 
 
-#ifndef _PRAGMA_Q3BSP_H_
-#define _PRAGMA_Q3BSP_H_
+#ifndef _PRAGMA_WORLDBSP_H_
+#define _PRAGMA_WORLDBSP_H_
 
-#define Q3BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I')
-#define Q3BSP_VERSION	46
+#define WORLD_IDENT				(('P'<<24)+('S'<<16)+('B'<<8)+'B')
+#define WORLD_VERSION			1
 
 
 // there shouldn't be any problem with increasing these values at the
@@ -57,14 +49,19 @@ See the attached GNU General Public License v2 for more details.
 #define	MAX_WORLD_DRAW_VERTS	524288
 #define	MAX_WORLD_DRAW_INDEXES	524288
 
-#define	Q3BSP_LIGHTMAP_WIDTH	128
-#define	Q3BSP_LIGHTMAP_HEIGHT	128
-#define Q3BSP_LIGHTMAP_SIZE		128
-#define Q3BSP_MAX_LIGHTMAPS		256
+#define MAX_WORLD_LIGHTMAPS		256
 
-#define Q3BSP_MAX_WORLD_COORD	( 128*1024 )
-#define Q3BSP_MIN_WORLD_COORD	( -128*1024 )
-#define Q3BSP_WORLD_SIZE		( Q3BSP_MAX_WORLD_COORD - Q3BSP_MIN_WORLD_COORD )
+#define	Q3BSP_LIGHTMAP_WIDTH	128
+#define	Q3BSP_LIGHTMAP_HEIGHT	Q3BSP_LIGHTMAP_WIDTH
+#define Q3BSP_LIGHTMAP_SIZE		Q3BSP_LIGHTMAP_WIDTH
+
+#define	WORLD_LIGHTMAP_WIDTH	1024
+#define WORLD_LIGHTMAP_HEIGHT	WORLD_LIGHTMAP_WIDTH
+#define WORLD_LIGHTMAP_SIZE		WORLD_LIGHTMAP_WIDTH
+
+#define WORLD_MAX_COORD			( 128*1024 )
+#define WORLD_MIN_COORD			( -128*1024 )
+#define WORLD_SIZE				( WORLD_MAX_COORD - WORLD_MIN_COORD )
 
 #define MAX_PATCH_SIZE			32
 #define MAX_FACE_POINTS			128 // limit from q3map light.c, not quake3 engine
@@ -118,7 +115,7 @@ typedef struct
 	char		name[MAX_QPATH];
 	int32_t		surfaceFlags;
 	int32_t		contentFlags;
-} q3bsp_material_t;
+} q3bsp_surfinfo_t;
 
 // planes x^1 is allways the opposite of plane x
 
@@ -166,7 +163,7 @@ typedef struct
 
 typedef struct 
 {
-	char		shader[MAX_QPATH];
+	char		material[MAX_QPATH];
 	int32_t		brushNum;
 	int32_t		visibleSide;	// the brush side that ray tests need to clip against (-1 == none)
 } q3bsp_fog_t;
@@ -177,7 +174,7 @@ typedef struct
 	float		st[2]; // diffuse texcoords
 	float		lightmap[2]; // lightmap texcoords
 	vec3_t		normal;
-	byte		color[4];// must extract first
+	byte		color[4]; // must extract first
 } q3bsp_drawVert_t;
 
 typedef enum 
@@ -186,7 +183,8 @@ typedef enum
 	MST_PLANAR,
 	MST_PATCH,
 	MST_TRIANGLE_SOUP,
-	MST_FLARE
+	MST_FLARE,
+	MST_FOLIAGE
 } q3bsp_surfaceType_t;
 
 typedef struct 

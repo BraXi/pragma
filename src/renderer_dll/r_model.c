@@ -17,6 +17,8 @@ int		registration_sequence; // increased with each level load
 model_t	*pLoadModel;		// ptr to model which is being loaded
 int		modelFileLength;	// length of loaded model file
 
+void R_LoadWorld(model_t* mod, void* buffer);
+
 static qboolean bExtendedBSP = false; // this is true when qbism bsp is detected
 static int bspx_lumps_count = 0;
 static int bspx_lumps_offset = 0;
@@ -162,7 +164,11 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 		//R_TouchAliasModel(mod); // load textures too
 		break;
 
-	//case Q3BSP_IDENT:
+	case WORLD_IDENT:
+		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "World BSP (Renderer)");
+		R_LoadWorld(mod, buf);
+		break;
+
 	case BSP_IDENT: /* Quake2 .bsp v38*/
 		bExtendedBSP = false;
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "World BSP (Renderer)");
@@ -1503,8 +1509,6 @@ static void Mod_BSP_ParseEntities(lump_t* lump)
 }
 #endif
 
-void R_LoadWorld(model_t* mod, void* buffer);
-
 /*
 =================
 Mod_LoadBSP
@@ -1515,21 +1519,17 @@ void Mod_LoadBSP(model_t *mod, void *buffer)
 	int			i;
 	dbsp_header_t	*header;
 	mmodel_t 	*bm;
-	
-	header = (dbsp_header_t*)buffer;
-	i = LittleLong (header->version);
-
-	if (LittleLong(header->ident) == Q3BSP_IDENT && i == Q3BSP_VERSION)
-	{
-		R_LoadWorld(mod, buffer);
-		return;
-	}
 
 	if (r_worldmodel != NULL && pLoadModel != r_worldmodel)
 		ri.Error(ERR_DROP, "Mod_LoadBSP: Loaded BSP after the world");
 
+	header = (dbsp_header_t*)buffer;
+
+	i = LittleLong(header->version);
 	if (i != BSP_VERSION)
 		ri.Error (ERR_DROP, "Mod_LoadBSP: %s is wrong version", mod->name);
+
+	
 
 	// swap all the lumps
 	mod_base = (byte *)header;

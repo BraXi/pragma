@@ -276,6 +276,8 @@ void R_FreeVertexBuffer(vertexbuffer_t* vbo);
 
 #include "r_model.h"
 
+#include "r_bsp.h"
+#include "r_material.h"
 
 #define BACKFACE_EPSILON	0.01
 

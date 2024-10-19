@@ -170,6 +170,8 @@
     <ClInclude Include="..\common\shared.h" />
     <ClInclude Include="..\common\renderer.h" />
     <ClInclude Include="include\glad\glad_21.h" />
+    <ClInclude Include="r_bsp.h" />
+    <ClInclude Include="r_material.h" />
     <ClInclude Include="win_glw.h" />
     <ClInclude Include="r_local.h" />
     <ClInclude Include="r_model.h" />
@@ -181,8 +183,10 @@
     <ClCompile Include="..\common\shared.c" />
     <ClCompile Include="..\common\shared_windows.c" />
     <ClCompile Include="glad_gl21.c" />
+    <ClCompile Include="r_bsp_draw.c" />
     <ClCompile Include="r_lightmap.c" />
-    <ClCompile Include="r_q3bsp.c" />
+    <ClCompile Include="r_material.c" />
+    <ClCompile Include="r_bsp_load.c" />
     <ClCompile Include="r_shadow.c" />
     <ClCompile Include="r_testmod.c" />
     <ClCompile Include="r_text.c" />

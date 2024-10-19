@@ -714,7 +714,7 @@ void R_RenderView (refdef_t *fd)
 	//
 	// STAGE_ENTITIES
 	//
-	R_DrawEntities();
+	//R_DrawEntities();
 	R_ProfileAtStage(STAGE_ENTITIES);
 
 	//

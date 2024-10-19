@@ -828,6 +828,10 @@ void R_World_DrawAlphaSurfaces()
 {
 	msurface_t* surf;
 	
+	r_alpha_surfaces = NULL;
+	if (1)
+		return; // Q3
+
 	//
 	// go back to the world matrix and world entity
 	//
