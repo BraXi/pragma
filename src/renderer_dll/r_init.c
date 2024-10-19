@@ -218,7 +218,7 @@ static void R_OpenGLConfig()
 	ri.Printf(PRINT_ALL, "MAX_TEXTURE_IMAGE_UNITS: %i\n", gl_config.max_tmu);
 	ri.Printf(PRINT_ALL, "MAX_FRAGMENT_UNIFORM_COMPONENTS: %i\n", gl_config.max_frag_uniforms);
 	ri.Printf(PRINT_ALL, "MAX_VERTEX_UNIFORM_COMPONENTS: %i\n", gl_config.max_vert_uniforms);
-	ri.Printf(PRINT_ALL, "---------------------------------\n", gl_config.vendor_string);
+	ri.Printf(PRINT_ALL, "---------------------------------\n");
 
 	strcpy(renderer_buffer, gl_config.renderer_string); 
 	_strlwr(renderer_buffer);
@@ -248,15 +248,8 @@ R_Init
 int R_Init(void* hinstance, void* hWnd)
 {
 	int		err;
-	int		j;
-	extern float r_turbsin[256];
 
-	for (j = 0; j < 256; j++)
-	{
-		r_turbsin[j] *= 0.5;
-	}
-
-	ri.Printf(PRINT_ALL, "OpenGL 1.4 renderer version : "REF_VERSION"\n");
+	ri.Printf(PRINT_ALL, "OpenGL 2.1 renderer version : "REF_VERSION"\n");
 
 	R_RegisterCvarsAndCommands();
 
@@ -264,7 +257,7 @@ int R_Init(void* hinstance, void* hWnd)
 	if (!QGL_Init(gl_driver->string))
 	{
 		QGL_Shutdown();
-		ri.Printf(PRINT_ALL, "ref_gl::R_Init() - could not load \"%s\"\n", gl_driver->string);
+		ri.Printf(PRINT_ALL, "R_Init() - could not load \"%s\"\n", gl_driver->string);
 		return -1;
 	}
 
@@ -298,11 +291,9 @@ int R_Init(void* hinstance, void* hWnd)
 	// get our various GL strings and consts
 	R_OpenGLConfig();
 
-	ri.Cvar_Set("scr_drawall", "1");
-
-	/*
-	** grab extensions
-	*/
+	//
+	// grab extensions
+	//
 #ifdef WIN32
 	if (strstr(gl_config.extensions_string, "WGL_EXT_swap_control"))
 	{
@@ -316,33 +307,7 @@ int R_Init(void* hinstance, void* hWnd)
 
 	srand(time(NULL));
 	QueryPerformanceFrequency(&qpc_freq);
-
-#if 0 //[ISB] SSE matrix multiplication experimental benchmark. 
-	mat4_t a, b, sourcea;
-	for (int i = 0; i < 16; i++)
-	{
-		sourcea[i] = (float)rand() / RAND_MAX;
-		b[i] = (float)rand() / RAND_MAX;
-	}
-
-	LARGE_INTEGER test, test2;
-	QueryPerformanceCounter(&test);
-	for (int run = 0; run < 100000000; run++)
-	{
-		memcpy(a, sourcea, sizeof(a));
-		Mat4Multiply(a, b);
-	}
-	QueryPerformanceCounter(&test2);
-	test2.QuadPart -= test.QuadPart;
-	double ms = (double)test2.QuadPart / qpc_freq.QuadPart * 1000;
-	ri.Printf(PRINT_ALL, "100000000 matrix multiplies in %f MS (side effect %f)\n", ms, a[rand() & 15]);
 #endif
-
-#endif
-
-//	ri.Printf(PRINT_ALL, "--- GL_ARB_multitexture forced off ---\n");
-//	glActiveTexture = 0;
-//	glMultiTexCoord2f = 0;
 
 	R_EnableMultiTexture();
 
@@ -351,7 +316,7 @@ int R_Init(void* hinstance, void* hWnd)
 	R_InitFrameBuffer();
 
 	GL_SetDefaultState();
-	R_InitialOGLState(); //wip
+	R_InitialOGLState();
 
 	R_InitModels();
 	R_LoadFonts();

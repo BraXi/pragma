@@ -7,11 +7,9 @@ Copyright (C) 1997-2001 Id Software, Inc.
 
 See the attached GNU General Public License v2 for more details.
 */
-// r_warp.c -- sky and water polygons
+// r_sky.c -- sky rendering
 
 #include "r_local.h"
-
-extern	model_t	*pLoadModel;
 
 char	skyname[MAX_QPATH];
 float	skyrotate;
@@ -19,285 +17,15 @@ vec3_t	skyaxis;
 vec3_t	skycolor;
 image_t	*sky_images[6];
 
-msurface_t	*warpface;
-
-#define	SUBDIVIDE_SIZE	64
-//#define	SUBDIVIDE_SIZE	1024
-
 vertexbuffer_t vb_sky;
 static glvert_t skyverts[6];
 static int numSkyVerts;
-
-
-/*
-=================
-R_BoundPoly
-
-calculate bounding box for polygon
-=================
-*/
-static void R_BoundPoly(int numverts, float* verts, vec3_t mins, vec3_t maxs)
-{
-	int i, j;
-	float* v;
-
-	mins[0] = mins[1] = mins[2] = 9999;
-	maxs[0] = maxs[1] = maxs[2] = -9999;
-	v = verts;
-
-	for (i = 0; i < numverts; i++)
-	{
-		for (j = 0; j < 3; j++, v++)
-		{
-			if (*v < mins[j])
-			{
-				mins[j] = *v;
-			}
-
-			if (*v > maxs[j])
-			{
-				maxs[j] = *v;
-			}
-		}
-	}
-}
-
-/*
-=================
-R_SubdividePolygon
-=================
-*/
-static void R_SubdividePolygon(int numverts, float *verts)
-{
-	int i, j, k;
-	vec3_t mins, maxs;
-	float* v;
-	vec3_t front[64], back[64];
-	int f, b;
-	float dist[64];
-	float frac;
-	poly_t* poly;
-	vec3_t total;
-	float total_s, total_t;
-	vec3_t normal;
-
-	VectorCopy(warpface->plane->normal, normal);
-
-	if (numverts > 60)
-	{
-		ri.Error(ERR_DROP, "%s: numverts = %i", __func__, numverts);
-	}
-
-	R_BoundPoly(numverts, verts, mins, maxs);
-
-	for (i = 0; i < 3; i++)
-	{
-		float m;
-
-		m = (mins[i] + maxs[i]) * 0.5;
-		m = SUBDIVIDE_SIZE * floor(m / SUBDIVIDE_SIZE + 0.5);
-
-		if (maxs[i] - m < 8)
-		{
-			continue;
-		}
-
-		if (m - mins[i] < 8)
-		{
-			continue;
-		}
-
-		// cut it 
-		v = verts + i;
-
-		for (j = 0; j < numverts; j++, v += 3)
-		{
-			dist[j] = *v - m;
-		}
-
-		// wrap cases
-		dist[j] = dist[0];
-		v -= i;
-		VectorCopy(verts, v);
-
-		f = b = 0;
-		v = verts;
-
-		for (j = 0; j < numverts; j++, v += 3)
-		{
-			if (dist[j] >= 0)
-			{
-				VectorCopy(v, front[f]);
-				f++;
-			}
-
-			if (dist[j] <= 0)
-			{
-				VectorCopy(v, back[b]);
-				b++;
-			}
-
-			if ((dist[j] == 0) || (dist[j + 1] == 0))
-			{
-				continue;
-			}
-
-			if ((dist[j] > 0) != (dist[j + 1] > 0))
-			{
-				// clip point
-				frac = dist[j] / (dist[j] - dist[j + 1]);
-
-				for (k = 0; k < 3; k++)
-				{
-					front[f][k] = back[b][k] = v[k] + frac * (v[3 + k] - v[k]);
-				}
-
-				f++;
-				b++;
-			}
-		}
-
-		R_SubdividePolygon(f, front[0]);
-		R_SubdividePolygon(b, back[0]);
-		return;
-	}
-
-	// add a point in the center to help keep warp valid
-	poly = Hunk_Alloc(sizeof(poly_t) + ((numverts - 4) + 2) * sizeof(polyvert_t));
-	poly->next = warpface->polys;
-	warpface->polys = poly;
-	poly->numverts = numverts + 2;
-	VectorClear(total);
-	total_s = 0;
-	total_t = 0;
-
-	for (i = 0; i < numverts; i++, verts += 3)
-	{
-		float s, t;
-
-		VectorCopy(verts, poly->verts[i + 1].pos);
-		s = DotProduct(verts, warpface->texinfo->vecs[0]);
-		t = DotProduct(verts, warpface->texinfo->vecs[1]);
-
-		total_s += s;
-		total_t += t;
-		VectorAdd(total, verts, total);
-
-		Vector2Set(poly->verts[i + 1].texCoord, s, t);
-		VectorCopy(normal, poly->verts[i + 1].normal);
-	}
-
-	VectorScale(total, (1.0 / numverts), poly->verts[0].pos);
-
-	Vector2Set(poly->verts[0].texCoord, total_s / numverts, total_t / numverts);
-	VectorCopy(normal, poly->verts[0].normal);
-
-	// copy first vertex to last
-	memcpy(&poly->verts[i + 1], &poly->verts[1], sizeof(polyvert_t));
-}
-
-/*
-================
-R_SubdivideSurface
-
-Breaks a polygon up along axial 64 unit boundaries so 
-that turbulent and sky warps can be done reasonably.
-================
-*/
-void R_SubdivideSurface(msurface_t *fa)
-{
-	vec3_t		verts[64];
-	int			numverts;
-	int			i;
-	int			lindex;
-	float		*vec;
-
-	warpface = fa;
-
-	//
-	// convert edges back to a normal polygon
-	//
-	numverts = 0;
-	for (i=0 ; i<fa->numedges ; i++)
-	{
-		lindex = pLoadModel->surfedges[fa->firstedge + i];
-
-		if (lindex > 0)
-			vec = pLoadModel->vertexes[pLoadModel->edges[lindex].v[0]].position;
-		else
-			vec = pLoadModel->vertexes[pLoadModel->edges[-lindex].v[1]].position;
-		VectorCopy (vec, verts[numverts]);
-		numverts++;
-	}
-
-	R_SubdividePolygon (numverts, verts[0]);
-}
-
-//=========================================================
-
-
-
-// speed up sin calculations - Ed
-float	r_turbsin[] =
-{
-	#include "warpsin.h"
-};
-#define TURBSCALE (256.0 / (2 * M_PI))
-
-/*
-=============
-R_World_DrawUnlitWaterSurf
-
-Does a water warp on the pre-fragmented glpoly_t chain, also handles unlit flowing geometry
-=============
-*/
-void R_World_DrawUnlitWaterSurf (msurface_t *surf)
-{
-	poly_t	*p, *bp;
-	polyvert_t		*v;
-	int			i;
-	float		s, t, os, ot;
-	float		scroll;
-	float		rdt = r_newrefdef.time;
-
-	if (surf->texinfo->flags & SURF_FLOWING)
-		scroll = -64 * ( (r_newrefdef.time*0.5) - (int)(r_newrefdef.time*0.5) );
-	else
-		scroll = 0;
-
-	rperf.brush_drawcalls++;
-
-	for (bp=surf->polys ; bp ; bp=bp->next)
-	{
-		rperf.brush_polys++;
-		p = bp;
-		glBegin (GL_TRIANGLE_FAN);
-		for (i = 0, v = &p->verts[0]; i <p->numverts; i++, v++)
-		{
-			os = v->texCoord[0];
-			ot = v->texCoord[1];
-
-			s = os + r_turbsin[(int)((ot*0.125+r_newrefdef.time) * TURBSCALE) & 255];
-			s += scroll;
-			s *= (1.0/64);
-
-			t = ot + r_turbsin[(int)((os*0.125+rdt) * TURBSCALE) & 255];
-			t *= (1.0/64);
-
-			//glTexCoord2f (s, t);
-			glMultiTexCoord2f(GL_TEXTURE0, s, t);
-			glMultiTexCoord2f(GL_TEXTURE1, v->lmTexCoord[0], v->lmTexCoord[1]);
-			glVertex3fv (v->pos);
-		}
-		glEnd ();
-	}
-}
-
-//===================================================================
-
 static char* sky_tex_prefix[6] = { "rt", "bk", "lf", "ft", "up", "dn" }; // environment map names
 
-static vec3_t skyclip[6] = 
+static float	skymins[2][6], skymaxs[2][6];
+static float	sky_min, sky_max;
+
+static const vec3_t skyclip[6] = 
 {
 	{1,1,0},
 	{1,-1,0},
@@ -310,7 +38,7 @@ static vec3_t skyclip[6] =
 static int c_sky;
 
 // 1 = s, 2 = t, 3 = 2048
-static int st_to_vec[6][3] =
+static const int st_to_vec[6][3] =
 {
 	{3,-1,2},
 	{-3,1,2},
@@ -326,7 +54,7 @@ static int st_to_vec[6][3] =
 };
 
 // s = [0]/[2], t = [1]/[2]
-static int vec_to_st[6][3] =
+static const int vec_to_st[6][3] =
 {
 	{-2,3,1},
 	{2,3,-1},
@@ -341,8 +69,7 @@ static int vec_to_st[6][3] =
 //	{1,2,-3}
 };
 
-static float	skymins[2][6], skymaxs[2][6];
-static float	sky_min, sky_max;
+
 
 /*
 =============
@@ -443,7 +170,7 @@ R_ClipSkyPolygon
 */
 static void R_ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 {
-	float	*norm;
+	const float *norm;
 	float	*v;
 	qboolean	front, back;
 	float	d, e;
