@@ -221,22 +221,23 @@ static void PFCG_trace(void)
 	VectorCopy(trace.plane.normal, cg.script_globals->trace_plane_normal);
 	VectorCopy(trace.endpos, cg.script_globals->trace_endpos);
 //	cg.script_globals->trace_ent = ENT_TO_VM(cg.localEntities); // FIXME
-	cg.script_globals->trace_entnum = trace.entitynum;
+	cg.script_globals->trace_entnum = trace.entityNum;
 	cg.script_globals->trace_contents = trace.contents;
 
-
+#if 0
 	if (trace.surface)
 	{
 		cg.script_globals->trace_surface_name = Scr_SetTempString(trace.surface->name);
 		cg.script_globals->trace_surface_flags = trace.surface->flags;
-		cg.script_globals->trace_surface_value = trace.surface->value;
+		//cg.script_globals->trace_surface_value = trace.surface->value;
 	}
 	else
 	{
 		cg.script_globals->trace_surface_name = Scr_SetTempString("");
 		cg.script_globals->trace_surface_flags = 0;
-		cg.script_globals->trace_surface_value = 0;
+		//cg.script_globals->trace_surface_value = 0;
 	}
+#endif
 }
 
 // read network packets
@@ -458,6 +459,7 @@ void PFCG_setmodel(void)
 	clentity_t* ent;
 	const char* name;
 	int modelindex = 0;
+	clipHandle_t clip;
 
 	ent = Scr_GetParmEntity(0);
 	if (!ent->inuse)
@@ -487,9 +489,8 @@ void PFCG_setmodel(void)
 	// if it is an inline model, get the size information for it
 	if (name[0] == '*')
 	{
-		cmodel_t* mod = CM_InlineModel(name);
-		VectorCopy(mod->mins, ent->v.mins);
-		VectorCopy(mod->maxs, ent->v.maxs);
+		clip = CM_InlineModel(atoi(name+1));
+		CM_ModelBounds(clip, ent->v.mins, ent->v.maxs);
 //		CG_LinkLocalEntity(ent);
 	}
 }

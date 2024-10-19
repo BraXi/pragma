@@ -45,7 +45,7 @@ typedef struct cl_globalvars_s
 	int32_t			trace_contents;
 	scr_string_t	trace_surface_name;
 	float			trace_surface_flags;
-	float			trace_surface_value;
+	float			trace_surface_value; // FIXME: remove, no longer used
 	scr_entity_t	trace_ent;
 
 	float			pm_state_pm_type;		// byte pmtype_t

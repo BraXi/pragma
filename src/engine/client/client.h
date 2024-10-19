@@ -155,14 +155,14 @@ typedef struct
 	char		configstrings[MAX_CONFIGSTRINGS][MAX_QPATH];
 
 	// inline models are derived from BSP
-	struct model_s* inlinemodel_draw[MAX_MODELS];
-	struct cmodel_s* inlinemodel_clip[MAX_MODELS];
+	struct model_s		*inlinemodel_draw[MAX_MODELS];
+	clipHandle_t		inlinemodel_clip[MAX_MODELS];
 
 	//
 	// locally derived information from server state indexes must match server indexes
 	//
 	struct model_s		*model_draw[MAX_MODELS];
-	struct cmodel_s		*model_clip[MAX_MODELS];
+	clipHandle_t		model_clip[MAX_MODELS];
 
 	struct sfx_s		*sound_precache[MAX_SOUNDS];
 	struct image_s		*image_precache[MAX_IMAGES];

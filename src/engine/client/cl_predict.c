@@ -62,17 +62,20 @@ CL_ClipMoveToEntities
 
 ====================
 */
-void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, trace_t *tr )
+void CL_ClipMoveToEntities( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, trace_t *tr )
 {
 	trace_t		trace;
 	int			headnode;
 	float		*angles;
 	entity_state_t	*ent;
 	int			num;
-	cmodel_t		*cmodel;
+	clipHandle_t clip;
 	vec3_t		bmins, bmaxs;
-	int i;
-	for (i=0 ; i<cl.frame.num_entities ; i++)
+	int i, capsule;
+
+	capsule = 0; // FIXME: Q3BSP CAPSULE
+
+	for (i = 0; i < cl.frame.num_entities; i++)
 	{
 		num = (cl.frame.parse_entities + i)&(MAX_PARSE_ENTITIES-1);
 		ent = &cl_parse_entities[num];
@@ -86,25 +89,25 @@ void CL_ClipMoveToEntities ( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end,
 		if (ent->packedSolid == PACKED_BSP)
 		{	
 			// special value for bmodel
-			cmodel = CL_GetClipModel((int)ent->modelindex);
-			if (!cmodel)
+			clip = CL_GetClipModel((int)ent->modelindex);
+			if (!clip)
 				continue;
-			headnode = cmodel->headnode;
+			headnode = clip;
 			angles = ent->angles;
 		}
 		else
 		{	
 			// encoded bbox
 			MSG_UnpackSolid32(ent->packedSolid, bmins, bmaxs);
-
-			headnode = CM_HeadnodeForBox (bmins, bmaxs);
+			
+			headnode = CM_TempBoxModel(bmins, bmaxs, capsule);
 			angles = vec3_origin;	// boxes don't rotate
 		}
 
 		if (tr->allsolid)
 			return;
 
-		trace = CM_TransformedBoxTrace (start, end, mins, maxs, headnode,  MASK_PLAYERSOLID, ent->origin, angles);
+		CM_TransformedBoxTrace (&trace, start, end, mins, maxs, headnode, MASK_PLAYERSOLID, ent->origin, angles, capsule);
 
 		if (trace.allsolid || trace.startsolid || trace.fraction < tr->fraction)
 		{

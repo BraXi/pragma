@@ -72,6 +72,7 @@ extern qboolean print_time;
 #include "network.h"
 #include "net_chan.h"
 #include "cmodel.h"
+#include "collision/cm_public.h"
 #include "filesystem.h"
 #include "message.h"
 #include "usercmd.h"
@@ -299,7 +300,7 @@ void Con_Print (char *text);
 void SCR_BeginLoadingPlaque (void);
 
 struct model_s* CL_GetDrawModel(int modelindex);
-cmodel_t* CL_GetClipModel(int modelindex);
+clipHandle_t CL_GetClipModel(int modelindex);
 #endif
 
 void SV_Init (void);

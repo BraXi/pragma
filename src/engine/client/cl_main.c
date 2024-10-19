@@ -1560,7 +1560,7 @@ CL_GetClipModel
 Returns inline clip model for collision.
 ===============
 */
-cmodel_t* CL_GetClipModel(int modelindex)
+clipHandle_t CL_GetClipModel(int modelindex)
 {
 	int realindex;
 

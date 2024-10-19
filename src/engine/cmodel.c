@@ -10,6 +10,8 @@ See the attached GNU General Public License v2 for more details.
 
 // cmodel.c -- BSP model loading, collision handling
 
+#if 0
+
 #include "pragma.h"
 
 qboolean bExtendedBSP = false;
@@ -976,7 +978,6 @@ static int CM_PointLeafnum_r(vec3_t p, int nodenum)
 /*
 =============
 CM_PointLeafnum
-
 sound may call this without map loaded
 =============
 */
@@ -996,7 +997,6 @@ static int		leaf_topnode;
 /*
 =============
 CM_BoxLeafnums_r
-
 Fills in a list of all the leafs touched
 =============
 */
@@ -1955,3 +1955,4 @@ qboolean CM_HeadnodeVisible(int nodenum, byte *visbits)
 	return CM_HeadnodeVisible(node->children[1], visbits);
 }
 
+#endif

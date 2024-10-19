@@ -338,9 +338,9 @@ static void CL_LoadModelAtIndex(const char* name, int index)
 	cl.model_draw[index] = re.RegisterModel(name);
 
 	if (name[0] == '*')
-		cl.model_clip[index] = CM_InlineModel(name);
+		cl.model_clip[index] = CM_InlineModel(atoi(name+1));
 	else
-		cl.model_clip[index] = NULL;
+		cl.model_clip[index] = 0;
 }
 
 /*
@@ -404,7 +404,7 @@ void CL_PrepRefresh (void)
 	for (i = 1; i < CM_NumInlineModels(); i++)
 	{
 		cl.inlinemodel_draw[i] = re.RegisterModel(va("*%i", i));
-		cl.inlinemodel_clip[i] = CM_InlineModel(va("*%i", i));
+		cl.inlinemodel_clip[i] = CM_InlineModel(i);
 	}
 
 	SCR_UpdateScreen();
@@ -429,12 +429,12 @@ void CL_PrepRefresh (void)
 	Com_Printf ("                                     \r");
 
 	// the renderer can now free unneeded stuff
-	re.EndRegistration ();
+	re.EndRegistration();
 
 	// clear any lines of console text
-	Con_ClearNotify ();
+	Con_ClearNotify();
 
-	SCR_UpdateScreen ();
+	SCR_UpdateScreen();
 	cl.refresh_prepped = true;
 	cl.force_refdef = true;	// make sure we have a valid refdef
 }

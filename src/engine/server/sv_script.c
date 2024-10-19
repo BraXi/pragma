@@ -58,8 +58,8 @@ void Scr_Event_Impact(gentity_t* self, trace_t* trace)
 {
 	gentity_t* other = trace->ent;
 
-	Scr_Event_Touch(self, other, &trace->plane, trace->surface);
-	Scr_Event_Touch(other, self, NULL, NULL);
+	Scr_Event_Touch(self, other, &trace->plane, trace->surfaceFlags);
+	Scr_Event_Touch(other, self, NULL, 0);
 }
 
 //SV_Physics_Pusher
@@ -79,7 +79,7 @@ void Scr_Event_Blocked(gentity_t* self, gentity_t* other)
 	sv.script_globals->other = oldother;
 }
 
-void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurface_t* surf)
+void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, int surfaceFlags)
 {
 	if (!self->v.touch || self->v.solid == SOLID_NOT)
 		return;
@@ -103,7 +103,7 @@ void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurfac
 		Scr_AddFloat(0, 0.0f);
 		Scr_AddVector(1, vec3_origin);
 	}
-	Scr_AddFloat(2, surf != NULL ? surf->flags : 0);
+	Scr_AddFloat(2, surfaceFlags);
 	Scr_Execute(VM_SVGAME, self->v.touch, __FUNCTION__);
 
 	sv.script_globals->self = oldself;

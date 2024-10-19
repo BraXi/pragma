@@ -309,24 +309,34 @@ COLLISION DETECTION
 #define	AREA_TRIGGERS	2
 #define	AREA_PATHNODES	3
 
-// plane_t structure
-// !!! if this is changed, it must be changed in asm code too !!!
-typedef struct cplane_s
+
+// plane types are used to speed some tests
+// 0-2 are axial planes
+#define	PLANE_X			0
+#define	PLANE_Y			1
+#define	PLANE_Z			2
+#define	PLANE_NON_AXIAL	3
+
+#define PlaneTypeForNormal(x) (x[0] == 1.0 ? PLANE_X : (x[1] == 1.0 ? PLANE_Y : (x[2] == 1.0 ? PLANE_Z : PLANE_NON_AXIAL) ) )
+
+// cplane_t structure
+typedef struct cplane_s 
 {
 	vec3_t	normal;
 	float	dist;
-	byte	type;			// for fast side tests
-	byte	signbits;		// signx + (signy<<1) + (signz<<1)
+	byte	type;			// for fast side tests: 0,1,2 = axial, 3 = nonaxial
+	byte	signbits;		// signx + (signy<<1) + (signz<<2), used as lookup during collision
 	byte	pad[2];
 } cplane_t;
 
-
+#if 0
 typedef struct cmodel_s
 {
 	vec3_t		mins, maxs;
 	vec3_t		origin;		// for sounds or lights
 	int			headnode;
 } cmodel_t;
+#endif
 
 typedef struct csurface_s
 {
@@ -341,6 +351,27 @@ typedef struct mapsurface_s  // used internally due to name len probs //ZOID
 	char		rname[32];
 } mapsurface_t;
 
+#if 1
+// a trace is returned when a box is swept through the world
+typedef struct 
+{
+	qboolean	allsolid;			// if true, plane is not valid
+	qboolean	startsolid;			// if true, the initial point was in a solid area
+	
+	float		fraction;			// time completed, 1.0 = didn't hit anything
+	vec3_t		endpos;				// final position
+
+	cplane_t	plane;				// surface normal at impact, transformed to world space
+	int			surfaceFlags;		// surface hit
+	int			contents;			// contents on other side of surface hit
+
+	int			entityNum;			// entity the contacted surface is a part of
+
+	struct gentity_s* ent;			// set by SV_*() functions
+	struct entity_state_s* clent;	// set by CG_*() functions
+} trace_t;
+
+#else
 // a trace is returned when a box is swept through the world
 typedef struct
 {
@@ -352,9 +383,9 @@ typedef struct
 	csurface_t	*surface;	// surface hit
 	int			contents;	// contents on other side of surface hit
 	int			entitynum;	// -1 = nothing hit
-	struct gentity_s	*ent;		// not set by CM_*() functions
-	struct entity_state_s *clent;		//set by CM_*() functions
+
 } trace_t;
+#endif
 
 
 

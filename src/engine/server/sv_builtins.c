@@ -620,17 +620,17 @@ static void CopyTraceToProgs(trace_t trace)
 	sv.script_globals->trace_entnum = (trace.ent == NULL ? -1 : trace.ent->s.number);
 	sv.script_globals->trace_contents = trace.contents;
 
-	if (trace.surface)
+	if (trace.surfaceFlags)
 	{
-		sv.script_globals->trace_surface_name = Scr_SetTempString(trace.surface->name);
-		sv.script_globals->trace_surface_flags = trace.surface->flags;
-		sv.script_globals->trace_surface_value = trace.surface->value;
+		//sv.script_globals->trace_surface_name = Scr_SetTempString(trace.surface->name);
+		sv.script_globals->trace_surface_flags = trace.surfaceFlags;
+		//sv.script_globals->trace_surface_value = trace.surface->value;
 	}
 	else
 	{
-		sv.script_globals->trace_surface_name = Scr_SetTempString("");
+		//sv.script_globals->trace_surface_name = Scr_SetTempString("");
 		sv.script_globals->trace_surface_flags = 0;
-		sv.script_globals->trace_surface_value = 0;
+		//sv.script_globals->trace_surface_value = 0;
 	}
 }
 
@@ -764,12 +764,14 @@ void PFSV_stopsounds(void)
 
 /*
 ==============
-SetAreaPortalState(portal,state)
+SetAreaPortalState(area1, area2, isopen)
 ==============
 */
 void PFSV_SetAreaPortalState(void)
 {
-	CM_SetAreaPortalState((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1));
+	// FIXME: Q3BSP
+	// the builtin was: SetAreaPortalState(float portal, bool open)
+	CM_AdjustAreaPortalState((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1), (int)Scr_GetParmFloat(2));
 }
 
 /*
@@ -840,6 +842,10 @@ float canPotentialyHearEachOther = inPHS(player.origin, monster.origin);
 */
 void PFSV_inPHS(void)
 {
+
+#if 1
+	PFSV_inPVS();
+#else // TODO: Q3BSP
 	float	*p1, *p2;
 	int		leafnum;
 	int		cluster;
@@ -871,6 +877,7 @@ void PFSV_inPHS(void)
 		return;
 	}
 	Scr_ReturnFloat(1);
+#endif
 }
 
 // =================================================================================

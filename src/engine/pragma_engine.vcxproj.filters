@@ -209,6 +209,24 @@
     <ClCompile Include="script\qcvm_strings.c">
       <Filter>QCVM</Filter>
     </ClCompile>
+    <ClCompile Include="collision\cm_load.c">
+      <Filter>CollisonModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_polylib.c">
+      <Filter>CollisonModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_test.c">
+      <Filter>CollisonModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_trace.c">
+      <Filter>CollisonModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_patch.c">
+      <Filter>CollisonModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_areas.c">
+      <Filter>CollisonModel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\crc.h" />
@@ -332,6 +350,18 @@
     <ClInclude Include="..\common\fileformats\q3bsp.h">
       <Filter>Common\File Formats</Filter>
     </ClInclude>
+    <ClInclude Include="collision\cm_local.h">
+      <Filter>CollisonModel</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_patch.h">
+      <Filter>CollisonModel</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_polylib.h">
+      <Filter>CollisonModel</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_public.h">
+      <Filter>CollisonModel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="pragma.rc" />
@@ -363,6 +393,9 @@
     </Filter>
     <Filter Include="Common\File Formats">
       <UniqueIdentifier>{87710d39-a80c-4ea4-ad15-187203329dd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CollisonModel">
+      <UniqueIdentifier>{c3916c21-89d8-452f-9eb0-d6266659995c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

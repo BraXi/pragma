@@ -51,7 +51,7 @@ typedef struct svmodel_s
 
 	int				modelindex;
 
-	cmodel_t		*bmodel;	// MOD_BRUSH, allocated and freed by cmodel
+	clipHandle_t	clip;		// MOD_BRUSH
 	alias_data_t	*alias;		// MOD_ALIAS
 	pmodel_header_t	*mesh;		// MOD_NEWFORMAT
 

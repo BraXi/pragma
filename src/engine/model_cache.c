@@ -129,7 +129,7 @@ static cached_model_t* Mod_ForName(const cacheuser_t user, const char* name, con
 			Com_Error(ERR_DROP, "%s: bad inline model number %i.\n", __FUNCTION__, bmodel);
 		}
 		mod->type = MOD_BRUSH;
-		mod->brush = CM_InlineModel(name);
+		mod->clip = CM_InlineModel(bmodel);
 		return mod;
 	}
 

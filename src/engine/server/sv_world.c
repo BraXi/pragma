@@ -104,7 +104,7 @@ void M_CheckGround(gentity_t* ent)
 	if (!trace.startsolid && !trace.allsolid)
 	{
 		VectorCopy(trace.endpos, ent->s.origin);
-		ent->v.groundentity_num = trace.entitynum;
+		ent->v.groundentity_num = trace.entityNum;
 		ent->v.groundentity_linkcount = trace.ent->v.linkcount;
 		ent->v.velocity[2] = 0;
 	}
@@ -308,9 +308,14 @@ SV_ClearWorld
 */
 void SV_ClearWorld (void)
 {
+	vec3_t mins, maxs;
+
 	memset (sv_areanodes, 0, sizeof(sv_areanodes));
 	sv_numareanodes = 0;
-	SV_CreateAreaNode (0, sv.models[MODELINDEX_WORLD].bmodel->mins, sv.models[MODELINDEX_WORLD].bmodel->maxs);
+
+	CM_ModelBounds(0, mins, maxs); // FIXME: Q3BSP
+	SV_CreateAreaNode (0, mins, maxs);
+	//SV_CreateAreaNode (0, sv.models[MODELINDEX_WORLD].bmodel->mins, sv.models[MODELINDEX_WORLD].bmodel->maxs);
 }
 
 
@@ -629,44 +634,32 @@ int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, i
 ================
 SV_HullForEntity
 
-Returns a headnode that can be used for testing or clipping an object of mins/maxs size.
-Offset is filled in to contain the adjustment that must be added to the
-testing object's origin to get a point to use with the returned hull.
+Returns a headnode that can be used for testing or clipping to a given entity.
+If the entity is a bsp model, the headnode will be returned, otherwise a custom box tree will be constructed.
 
-inline models are mandatory for SOLID_BSP and optional for SOLID_TRIGGER
-
+Inline models are mandatory for SOLID_BSP and optional for SOLID_TRIGGER
 SOLID_BSP entities must error when they have no inline model set
 SOLID_TRIGGER entities will explictly use inline model instead of bounding box when they have inline model set
 ================
 */
-int SV_HullForEntity(gentity_t* ent)
+clipHandle_t SV_HullForEntity(gentity_t* ent)
 {
-	cmodel_t* model;
+	int capsule = 0;
 
-	// decide which clipping hull to use
-	if (!SV_IsBrushModel((int)ent->v.modelindex) && ent->v.solid == SOLID_BSP)
+	if (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER)
 	{
-		Scr_RunError("entity %s (%i) at [%i %i %i] has SOLID_BSP set but doesn't use inline model\n", Scr_GetString(ent->v.classname),
-			NUM_FOR_EDICT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
-		return -1;
+		// explicit hulls in the BSP model
+		return CM_InlineModel(ent->v.modelindex);
 	}
 
-	if (SV_IsBrushModel((int)ent->v.modelindex) && (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER))
+	if (ent->v.svflags & SVF_CAPSULE) 
 	{
-		model = CM_InlineModelNum(0 - ent->v.modelindex);
-		//model = sv.models[(int)ent->v.modelindex].bmodel;
-		if (!model)
-		{
-			Scr_RunError("entity %s (%i) at [%i %i %i] has no bsp model - this should never happen!\n", Scr_GetString(ent->v.classname),
-				NUM_FOR_EDICT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
-			return -1;
-		}
-
-		return model->headnode;
+		// create a temp capsule from bounding box sizes
+		capsule = 1;
 	}
 
-	// create a temp hull from bounding box sizes
-	return CM_HeadnodeForBox(ent->v.mins, ent->v.maxs);
+	// create a temp tree from bounding box sizes
+	return CM_TempBoxModel(ent->v.mins, ent->v.maxs, capsule);
 }
 
 /*
@@ -679,11 +672,12 @@ int SV_PointContents(vec3_t p)
 	gentity_t	*touch[MAX_GENTITIES], *pEnt;
 	int			i, num;
 	int			contents, contents_entity;
-	int			headnode;
+	clipHandle_t clip;
 	float		*angles;
 
 	// get base contents from world
-	contents = CM_PointContents (p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
+	contents = CM_PointContents(p, 0); // FIXME: Q3BSP
+	//contents = CM_PointContents(p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
 
 	// or in contents from all the other entities
 	num = SV_AreaEntities (p, p, touch, MAX_GENTITIES, AREA_SOLID);
@@ -693,16 +687,16 @@ int SV_PointContents(vec3_t p)
 		pEnt = touch[i];
 
 		// might intersect, so do an exact clip
-		headnode = SV_HullForEntity(pEnt);
+		clip = SV_HullForEntity(pEnt);
 		angles = pEnt->v.angles;
 
 		// brush models rotate, boxes don't
-		if (pEnt->v.solid != SOLID_BSP)
+		if (pEnt->v.solid != SOLID_BSP && pEnt->v.solid != SOLID_TRIGGER)
 		{
 			angles = vec3_origin;
 		}
 
-		contents_entity = CM_TransformedPointContents (p, headnode, pEnt->v.origin, pEnt->v.angles);
+		contents_entity = CM_TransformedPointContents (p, clip, pEnt->v.origin, pEnt->v.angles);
 		contents |= contents_entity;
 	}
 
@@ -735,22 +729,25 @@ Returns true if clipent overlaps with the bounding box
 trace_t SV_Clip(gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask) 
 {
 	trace_t     trace;
+	int			capsule;
 
 	if (!mins)
 		mins = vec3_origin;
 	if (!maxs)
 		maxs = vec3_origin;
 
+	capsule = (clipent->v.svflags & SVF_CAPSULE); // FIXME: Q3BSP - CAPSULE
+
 	if (clipent == sv.edicts)
-		trace = CM_BoxTrace(start, end, mins, maxs, 0, contentmask);
+		CM_BoxTrace(&trace, start, end, mins, maxs, 0, contentmask, capsule); 
 	else
-		trace = CM_TransformedBoxTrace(start, end, mins, maxs, SV_HullForEntity(clipent), contentmask, clipent->v.origin, clipent->v.angles);
+		CM_TransformedBoxTrace(&trace, start, end, mins, maxs, SV_HullForEntity(clipent), contentmask, clipent->v.origin, clipent->v.angles, capsule);
 
 	trace.ent = clipent;
 	if (trace.ent == NULL)
-		trace.entitynum = ENTITYNUM_NULL;
+		trace.entityNum = ENTITYNUM_NULL;
 	else
-		trace.entitynum = NUM_FOR_ENT(trace.ent);
+		trace.entityNum = NUM_FOR_ENT(trace.ent); // qcvm can be diferent?
 
 	return trace;
 }
@@ -806,9 +803,9 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 			angles = vec3_origin;	// boxes don't rotate
 
 		if ((int)touch->v.svflags & SVF_MONSTER) //braxi: this is silly as mins/maxs is copied to mins2/maxs2, probably quake1 leftover?
-			trace = CM_TransformedBoxTrace (clip->start, clip->end, clip->mins2, clip->maxs2, headnode, clip->contentmask, touch->v.origin, angles);
+			CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins2, clip->maxs2, headnode, clip->contentmask, touch->v.origin, angles, 0);
 		else
-			trace = CM_TransformedBoxTrace (clip->start, clip->end, clip->mins, clip->maxs, headnode, clip->contentmask, touch->v.origin, angles);
+			CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins, clip->maxs, headnode, clip->contentmask, touch->v.origin, angles, 0);
 
 		if (trace.allsolid || trace.startsolid || trace.fraction < clip->trace.fraction)
 		{
@@ -825,9 +822,9 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 			clip->trace.startsolid = true;
 
 		if (trace.ent == NULL)
-			trace.entitynum = ENTITYNUM_NULL;
+			trace.entityNum = ENTITYNUM_NULL;
 		else
-			trace.entitynum = NUM_FOR_ENT(trace.ent);
+			trace.entityNum = NUM_FOR_ENT(trace.ent);
 	}
 }
 
@@ -872,9 +869,10 @@ Passedict and edicts owned by passedict are explicitly not checked.
 
 ==================
 */
-trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *passedict, int contentmask)
+trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *passedict, int contentmask)
 {
 	moveclip_t	clip;
+	int capsule;
 
 	if (!mins)
 		mins = vec3_origin;
@@ -883,14 +881,16 @@ trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t 
 
 	memset ( &clip, 0, sizeof ( moveclip_t ) );
 
+	capsule = 0; // FIXME: Q3BSP - CAPSULE
+
 	// clip to world
-	clip.trace = CM_BoxTrace (start, end, mins, maxs, 0, contentmask);
+	CM_BoxTrace (&clip.trace, start, end, mins, maxs, 0, contentmask, capsule);
 
 	clip.trace.ent = sv.edicts; // world
 	if (clip.trace.ent == NULL)
-		clip.trace.entitynum = ENTITYNUM_NULL;
+		clip.trace.entityNum = ENTITYNUM_NULL;
 	else
-		clip.trace.entitynum = NUM_FOR_ENT(clip.trace.ent);
+		clip.trace.entityNum = NUM_FOR_ENT(clip.trace.ent);
 
 	if (clip.trace.fraction == 0)
 		return clip.trace;		// blocked by the world
@@ -912,9 +912,9 @@ trace_t SV_Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t 
 	SV_ClipMoveToEntities ( &clip );
 
 	if (clip.trace.ent == NULL)
-		clip.trace.entitynum = ENTITYNUM_NULL;
+		clip.trace.entityNum = ENTITYNUM_NULL;
 	else
-		clip.trace.entitynum = NUM_FOR_ENT(clip.trace.ent);
+		clip.trace.entityNum = NUM_FOR_ENT(clip.trace.ent);
 
 	return clip.trace;
 }

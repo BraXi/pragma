@@ -31,7 +31,8 @@ typedef struct cached_model_s // !!! IF THIS IS CHANGED RENDERER MUST BE RECOMPI
 
 	vec3_t mins, maxs;
 
-	cmodel_t* brush;
+	clipHandle_t clip;
+
 	pmodel_header_t* skel;
 	md3Header_t* alias;
 

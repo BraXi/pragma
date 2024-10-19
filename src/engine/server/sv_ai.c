@@ -578,7 +578,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 		actor->v.flags &= ~FL_PARTIALGROUND;
 	}
 
-	actor->v.groundentity_num = trace.entitynum;
+	actor->v.groundentity_num = trace.entityNum;
 	actor->v.groundentity_linkcount = trace.ent->v.linkcount;
 
 	// the move is ok

@@ -17,10 +17,11 @@ See the attached GNU General Public License v2 for more details.
 CG_HullForEntity
 ====================
 */
-static int CG_HullForEntity(entity_state_t* ent)
+static clipHandle_t CG_HullForEntity(entity_state_t* ent)
 {
-	cmodel_t* model;
+	clipHandle_t model;
 	vec3_t		bmins, bmaxs;
+	int capsule;
 
 	// decide which clipping hull to use
 	if (ent->packedSolid == PACKED_BSP)
@@ -32,14 +33,16 @@ static int CG_HullForEntity(entity_state_t* ent)
 			Com_Error(ERR_DROP, "CG_HullForEntity: non BSP model for entity %i\n", ent->number);
 			return -1;
 		}
-		return model->headnode;
+		return model;
 	}
 
 	// extract bbox size
 	MSG_UnpackSolid32(ent->packedSolid, bmins, bmaxs);
 
+	capsule = 0; // FIXME: Q3BSP CAPSULE
+
 	// create a temp hull from bounding box sizes
-	return CM_HeadnodeForBox(bmins, bmaxs);
+	return CM_TempBoxModel(bmins, bmaxs, capsule);
 }
 
 /*
@@ -50,7 +53,8 @@ CG_ClipMoveToEntities
 static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum, trace_t* tr)
 {
 	trace_t		trace;
-	int			headnode, i, num;
+	int			i, num;
+	clipHandle_t headnode;
 	float* angles;
 	entity_state_t* ent;
 
@@ -75,12 +79,12 @@ static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t
 		else
 			angles = vec3_origin;	// boxes don't rotate
 
-		trace = CM_TransformedBoxTrace(start, end, mins, maxs, headnode, contentsMask, ent->origin, angles);
+		CM_TransformedBoxTrace(&trace, start, end, mins, maxs, headnode, contentsMask, ent->origin, angles, 0);
 
 		if (trace.allsolid || trace.startsolid || trace.fraction < tr->fraction)
 		{
 			trace.clent = ent;
-			tr->entitynum = ent->number;
+			tr->entityNum = ent->number;
 			if (tr->startsolid)
 			{
 				*tr = trace;
@@ -111,12 +115,12 @@ trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int content
 	memset(&trace, 0, sizeof(trace_t));
 
 	// check against world
-	trace = CM_BoxTrace(start, end, mins, maxs, 0, contentsMask);
+	CM_BoxTrace(&trace, start, end, mins, maxs, 0, contentsMask, 0);
 	if (trace.fraction == 0.0f)
 	{
 		// blocked by world
 		trace.clent = cg.localEntities; // fixme this is not so good but better than null
-		trace.entitynum = 0;
+		trace.entityNum = 0;
 		return trace;
 	}
 
@@ -136,7 +140,7 @@ int	CG_PointContents(vec3_t point)
 	int			i;
 	entity_state_t* ent;
 	int			num;
-	cmodel_t* cmodel;
+	clipHandle_t clip;
 	int			contents;
 
 	contents = CM_PointContents(point, 0);
@@ -149,11 +153,11 @@ int	CG_PointContents(vec3_t point)
 		if (ent->packedSolid != PACKED_BSP) // special value for bmodel
 			continue;
 
-		cmodel = CL_GetClipModel((int)ent->modelindex);
-		if (!cmodel)
+		clip = CL_GetClipModel((int)ent->modelindex);
+		if (!clip)
 			continue;
 
-		contents |= CM_TransformedPointContents(point, cmodel->headnode, ent->origin, ent->angles);
+		contents |= CM_TransformedPointContents(point, clip, ent->origin, ent->angles);
 	}
 
 	return contents;

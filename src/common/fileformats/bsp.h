@@ -211,6 +211,7 @@ typedef struct /* BSPX DECOUPLED LIGHTMAPS */
 
 //const int a = (1 << 25);
 
+#if 0
 // 0-2 are axial planes
 #define	PLANE_X			0
 #define	PLANE_Y			1
@@ -220,6 +221,7 @@ typedef struct /* BSPX DECOUPLED LIGHTMAPS */
 #define	PLANE_ANYX		3
 #define	PLANE_ANYY		4
 #define	PLANE_ANYZ		5
+#endif
 
 // the visibility lump consists of a header with a count, then
 // byte offsets for the PVS and PHS of each cluster, then the raw

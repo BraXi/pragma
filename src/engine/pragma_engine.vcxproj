@@ -47,6 +47,10 @@
     <ClInclude Include="client\vid.h" />
     <ClInclude Include="cmd.h" />
     <ClInclude Include="cmodel.h" />
+    <ClInclude Include="collision\cm_local.h" />
+    <ClInclude Include="collision\cm_patch.h" />
+    <ClInclude Include="collision\cm_polylib.h" />
+    <ClInclude Include="collision\cm_public.h" />
     <ClInclude Include="cvar.h" />
     <ClInclude Include="filesystem.h" />
     <ClInclude Include="message.h" />
@@ -111,6 +115,12 @@
     <ClCompile Include="client\ui\ui_centermsg.c" />
     <ClCompile Include="client\ui\ui_load.c" />
     <ClCompile Include="client\ui\ui_main.c" />
+    <ClCompile Include="collision\cm_areas.c" />
+    <ClCompile Include="collision\cm_load.c" />
+    <ClCompile Include="collision\cm_patch.c" />
+    <ClCompile Include="collision\cm_polylib.c" />
+    <ClCompile Include="collision\cm_test.c" />
+    <ClCompile Include="collision\cm_trace.c" />
     <ClCompile Include="md4.c" />
     <ClCompile Include="message.c" />
     <ClCompile Include="model_cache.c" />

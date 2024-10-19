@@ -729,6 +729,11 @@ vec_t VectorLength(vec3_t v)
 	return length;
 }
 
+vec_t VectorLengthSquared(const vec3_t v)
+{
+	return (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
 vec_t Vector4Length(vec4_t v)
 {
 	int		i;
@@ -1375,7 +1380,6 @@ void Mat4Invert(const mat4_t m, mat4_t invOut)
 }
 
 //====================================================================================
-
 
 /*
 =================

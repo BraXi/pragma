@@ -209,7 +209,7 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 		}
 
 		touched++;
-		Scr_Event_Touch(hit, ent, NULL, NULL);
+		Scr_Event_Touch(hit, ent, NULL, 0);
 	}
 
 	return touched;
@@ -735,7 +735,7 @@ SV_SetEntityBrushModel
 void SV_SetEntityBrushModel(gentity_t* ent, const char* modelName)
 {
 	int mod;
-	cmodel_t* bmodel;
+	clipHandle_t clip;
 
 	if (!modelName || !modelName[0])
 	{
@@ -769,10 +769,8 @@ void SV_SetEntityBrushModel(gentity_t* ent, const char* modelName)
 	if (ent->v.angles[YAW] == 0.0f)
 		ent->v.angles[YAW] = 360.0f;
 
-
 	// brush models have their mins and maxs updated and relink
-	bmodel = CM_InlineModel(modelName);
-	VectorCopy(bmodel->mins, ent->v.mins);
-	VectorCopy(bmodel->maxs, ent->v.maxs);
+	clip = CM_InlineModel(atoi(modelName+1));
+	CM_ModelBounds(clip, ent->v.mins, ent->v.maxs);
 	SV_LinkEdict(ent);
 }

@@ -548,7 +548,7 @@ void SV_BuildClientFrame (client_t *client)
 	frame->ps = clent->client->ps;
 
 	SV_FatPVS (org);
-	clientphs = CM_ClusterPHS (clientcluster);
+	clientphs = CM_ClusterPVS(clientcluster); // FIXME: Q3BSP - was CM_ClusterPVS
 
 	// build up the list of visible entities
 	frame->num_entities = 0;
@@ -661,16 +661,20 @@ void SV_BuildClientFrame (client_t *client)
 						bitvector = fatpvs;
 
 					if (ent->num_clusters == -1)
-					{	// too many leafs for individual check, go by headnode
+					{	
+#if 0 // FIXME: Q3BSP URGENT!!!
+						// too many leafs for individual check, go by headnode
 						if (!CM_HeadnodeVisible(ent->headnode, bitvector))
 						{
 							SV_RestoreEntityStateAfterClient(ent);
-							continue;		// blocked by a door
+							continue; // blocked by a door
 						}
+#endif
 						c_fullsend++;
 					}
 					else
-					{	// check individual leafs
+					{	
+						// check individual leafs
 						for (i = 0; i < ent->num_clusters; i++)
 						{
 							l = ent->clusternums[i];
@@ -685,7 +689,8 @@ void SV_BuildClientFrame (client_t *client)
 					}
 
 					if (ent->s.modelindex == 0)
-					{	// don't send sounds if they will be attenuated away
+					{	
+						// don't send sounds if they will be attenuated away
 						vec3_t	delta;
 						float	len;
 
@@ -755,10 +760,7 @@ void SV_RecordDemoMessage (void)
 	while (e < sv.max_edicts) //sv.num_edicts
 	{
 		// ignore ents without visible models unless they have an effect
-		if (ent->inuse &&
-			ent->s.number && 
-			((int)ent->s.modelindex != 0 || ent->s.effects || ent->s.loopingSound || ent->s.event) && 
-			!((int)ent->v.svflags & SVF_NOCLIENT))
+		if (ent->inuse && ent->s.number && ((int)ent->s.modelindex != 0 || ent->s.effects || ent->s.loopingSound || ent->s.event) && !((int)ent->v.svflags & SVF_NOCLIENT))
 			MSG_WriteDeltaEntity (&nostate, &ent->s, &buf, false, true);
 
 		e++;

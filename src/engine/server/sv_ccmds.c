@@ -341,6 +341,7 @@ SV_ReadLevelFile
 */
 void SV_ReadLevelFile (void)
 {
+#if 0
 	char	name[MAX_OSPATH];
 	FILE	*f;
 
@@ -359,6 +360,7 @@ void SV_ReadLevelFile (void)
 
 	Com_sprintf (name, sizeof(name), "%s/save/current/%s.sav", FS_Gamedir(), sv.mapname);
 	ReadLevel (name);
+#endif
 }
 
 /*

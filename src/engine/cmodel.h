@@ -20,6 +20,8 @@ COLLISION MODEL
 #ifndef _PRAGMA_CMODEL_H_
 #define _PRAGMA_CMODEL_H_
 
+#if 0
+
 void		CM_FreeMap();
 cmodel_t* CM_LoadMap(char* name, qboolean clientload, unsigned* checksum);
 cmodel_t* CM_InlineModelNum(int index);
@@ -67,5 +69,7 @@ qboolean	CM_HeadnodeVisible(int headnode, byte* visbits);
 
 void		CM_WritePortalState(FILE* f);
 void		CM_ReadPortalState(FILE* f);
+
+#endif
 
 #endif /*_PRAGMA_CMODEL_H_*/

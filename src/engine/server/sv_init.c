@@ -241,13 +241,17 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	{
 		// no real map -- cinematic server
 		SV_SetConfigString(CS_MODELS + 1, "");
-		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap ("", false, &checksum_map);	
+		
+		//sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap ("", false, &checksum_map);
+		CM_LoadMap("", false, &checksum_map);
 	}
 	else
 	{
 		SV_SetConfigString(CS_MODELS + 1, va("maps/%s.bsp", mapname));
 		strcpy(sv.models[MODELINDEX_WORLD].name, sv.configstrings[CS_MODELS + 1]);
-		sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap (sv.models[1].name, false, &checksum_map);
+		
+		//sv.models[MODELINDEX_WORLD].bmodel = CM_LoadMap (sv.models[1].name, false, &checksum_map);
+		CM_LoadMap(sv.models[1].name, false, &checksum_map);
 	}
 
 #if 0

@@ -192,7 +192,7 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 	case MULTICAST_PHS:
 		leafnum = CM_PointLeafnum (origin);
 		cluster = CM_LeafCluster (leafnum);
-		mask = CM_ClusterPHS (cluster);
+		mask = CM_ClusterPVS(cluster); // FIXME : Q3BSP - was CM_ClusterPHS
 		break;
 
 	case MULTICAST_PVS_R:

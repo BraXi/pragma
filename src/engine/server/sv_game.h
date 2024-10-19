@@ -32,6 +32,7 @@ typedef struct link_s
 #define	SVF_ONLYTEAM		32	// send only to players in matching team team (.showto must match team)
 #define	SVF_PATHNODE		64	// this entity is an pathnode
 #define	SVF_PLAYER			128	// don't clip against other players
+#define SVF_CAPSULE			256 // use capsule instead of box
 
 // gentity->v.flags
 #define FL_NOSTEP				1

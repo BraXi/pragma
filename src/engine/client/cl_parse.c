@@ -216,9 +216,9 @@ void CL_ParseConfigString (void)
 
 			// inline models are handled somewhere else, but leaving this here for modders
 			if (cl.configstrings[csIndex][0] == '*') 
-				cl.model_clip[assetIndex] = CM_InlineModel (cl.configstrings[csIndex]);
+				cl.model_clip[assetIndex] = CM_InlineModel(atoi(cl.configstrings[csIndex]+1));
 			else
-				cl.model_clip[assetIndex] = NULL;
+				cl.model_clip[assetIndex] = 0;
 		}
 	}
 	else if (csIndex >= CS_SOUNDS && csIndex < CS_SOUNDS+MAX_SOUNDS)

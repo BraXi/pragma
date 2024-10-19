@@ -18,7 +18,6 @@ MATHLIB
 
 #ifndef _PRAGMA_MATHLIB_H_
 #define _PRAGMA_MATHLIB_H_
-
 #pragma once
 
 typedef float vec_t;
@@ -114,6 +113,8 @@ vec_t VectorDistance(vec3_t p1, vec3_t p2);
 vec_t Vector4Length(vec4_t v);
 
 vec_t VectorLength(vec3_t v);
+
+vec_t VectorLengthSquared(const vec3_t v);
 
 // just in case you do't want to use the macros
 vec_t _DotProduct(vec3_t v1, vec3_t v2);

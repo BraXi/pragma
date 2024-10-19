@@ -120,7 +120,7 @@ void SV_CheckGround(gentity_t* ent)
 	if (!trace.startsolid && !trace.allsolid)
 	{
 		VectorCopy(trace.endpos, ent->v.origin);
-		ent->v.groundentity_num = trace.entitynum;
+		ent->v.groundentity_num = trace.entityNum;
 		ent->v.groundentity_linkcount = trace.ent->v.linkcount;
 		ent->v.velocity[2] = 0;
 	}
@@ -754,7 +754,7 @@ void SV_Physics_Toss(gentity_t* ent)
 		{
 			if (ent->v.velocity[2] < 60 || ent->v.movetype != MOVETYPE_BOUNCE)
 			{
-				ent->v.groundentity_num = trace.entitynum;
+				ent->v.groundentity_num = trace.entityNum;
 				ent->v.groundentity_linkcount = trace.ent->v.linkcount;
 				VectorCopy(vec3_origin, ent->v.velocity);
 				VectorCopy(vec3_origin, ent->v.avelocity);
