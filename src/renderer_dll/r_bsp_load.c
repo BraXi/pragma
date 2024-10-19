@@ -26,7 +26,7 @@ misc_models in maps are turned into geometry by q3map == worldSurf_Mesh_t
 
 extern model_t* pLoadModel;
 extern int modelFileLength;
-extern byte* mod_base;
+byte* mod_base;
 extern model_t r_inlineModels[MAX_WORLD_MODELS];
 
 renderWorld_t world;
@@ -575,7 +575,7 @@ static void R_LoadMarkSurfaces(const lump_t* lump)
 R_SetParent
 =================
 */
-static void R_SetParent(mnode_t* node, mnode_t* parent)
+static void R_SetParent(worldNode_t* node, worldNode_t* parent)
 {
 	node->parent = parent;
 	if (node->contents != Q3CONTENTS_NODE)

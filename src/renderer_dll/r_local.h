@@ -390,8 +390,6 @@ void GL_UpdateSwapInterval(void);
 
 void R_TraverseWorldBSP();
 void R_DrawWorld();
-void R_World_MarkLeaves();
-void R_World_DrawAlphaSurfaces(); //old rendering path
 void R_DrawBrushModel(rentity_t* ent);
 void R_PreprocessBrushModelEntity(rentity_t* ent);
 
@@ -400,8 +398,7 @@ void R_PreprocessBrushModelEntity(rentity_t* ent);
 // r_warp.c
 //===================================================================
 
-void R_World_DrawUnlitWaterSurf (msurface_t *fa); //old rendering path
-void R_AddSkySurface (msurface_t *fa);
+void R_AddSkySurface (worldSurface_t* surf);
 void R_ClearSkyBox();
 void R_DrawSkyBox();
 
@@ -421,10 +418,8 @@ void R_DrawBeam(rentity_t* e);
 // r_light.c
 //===================================================================
 
-void R_MarkLights(dlight_t* light, vec3_t lightorg, int bit, mnode_t* node);
 void R_LightForPoint(const vec3_t point, vec3_t outAmbient);
 void R_SetEntityAmbientLight(rentity_t* ent);
-void R_MarkDynamicLights(void);
 void R_SendDynamicLightsToCurrentProgram(qboolean bViewFlashLight);
 
 //===================================================================

@@ -264,8 +264,9 @@ static void R_ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 R_AddSkySurface
 =================
 */
-void R_AddSkySurface(msurface_t *fa)
+void R_AddSkySurface(worldSurface_t *fa)
 {
+#if 0
 	int			i;
 	vec3_t		verts[MAX_CLIP_VERTS];
 	poly_t	*p;
@@ -279,6 +280,7 @@ void R_AddSkySurface(msurface_t *fa)
 		}
 		R_ClipSkyPolygon (p->numverts, verts[0], 0);
 	}
+#endif
 }
 
 

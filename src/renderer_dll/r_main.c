@@ -357,18 +357,16 @@ clear out the portion of the screen that the NOWORLDMODEL defines.
 */
 static void R_SetupFrame()
 {
-	mleaf_t	*leaf;
-
 	r_framecount++;
 
 	// build the transformation matrix for the given view angles
 	VectorCopy(r_newrefdef.view.origin, r_origin);
-
 	AngleVectors (r_newrefdef.view.angles, vpn, vright, vup);
 
 	// current viewcluster
 	if ( !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
 	{
+#if 0
 		r_oldviewcluster = r_viewcluster;
 		r_oldviewcluster2 = r_viewcluster2;
 		leaf = Mod_BSP_PointInLeaf (r_origin, r_worldmodel);
@@ -395,6 +393,7 @@ static void R_SetupFrame()
 			if ( !(leaf->contents & CONTENTS_SOLID) && (leaf->cluster != r_viewcluster2) )
 				r_viewcluster2 = leaf->cluster;
 		}
+#endif
 	}
 
 	Vector4Copy(r_newrefdef.view.fx.blend, v_blend);
@@ -651,8 +650,8 @@ void R_RenderView (refdef_t *fd)
 
 	R_SetupFrame();
 	R_SetFrustum();
-	R_MarkDynamicLights();
-	R_World_MarkLeaves();	// done here so we know if we're in water
+//	R_MarkDynamicLights();
+//	R_World_MarkLeaves();	// done here so we know if we're in water
 	
 	gl_state.bTraversedBSP = false; // Force a BSP traverse to build up surface chains
 	R_TraverseWorldBSP();
@@ -726,7 +725,7 @@ void R_RenderView (refdef_t *fd)
 	//
 	// STAGE_ALPHASURFS
 	//
-	R_World_DrawAlphaSurfaces();
+	//R_World_DrawAlphaSurfaces();
 	R_ProfileAtStage(STAGE_ALPHASURFS);
 
 	//
