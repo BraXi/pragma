@@ -276,7 +276,7 @@ void PFSV_setorigin(void)
 	org = Scr_GetParmVector(1);
 
 	VectorCopy(org, ent->v.origin);
-	SV_LinkEdict(ent);
+	SV_LinkEntity(ent);
 }
 
 /*
@@ -320,7 +320,7 @@ void PFSV_setangles(void)
 
 		// solid inline models DO rotate their bounds so relink them
 		if ((int)ent->v.solid > SOLID_NOT)
-			SV_LinkEdict(ent);
+			SV_LinkEntity(ent);
 	}
 
 	// if this is the player update their view too
@@ -418,7 +418,7 @@ void PFSV_setsize(void)
 		VectorCopy(maxs, ent->client->ps.pmove.maxs);
 	}
 
-	SV_LinkEdict(ent);
+	SV_LinkEntity(ent);
 }
 
 // =================================================================================
@@ -441,7 +441,7 @@ void PFSV_linkentity(void)
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
 
-	SV_LinkEdict(ent);
+	SV_LinkEntity(ent);
 }
 
 /*
@@ -461,7 +461,7 @@ void PFSV_unlinkentity(void)
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
 
-	SV_UnlinkEdict(ent);
+	SV_UnlinkEntity(ent);
 }
 
 /*

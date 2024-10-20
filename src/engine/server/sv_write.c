@@ -456,6 +456,7 @@ void SV_FatPVS (vec3_t org)
 	int		longs;
 	byte	*src;
 	vec3_t	mins, maxs;
+	int lastLeaf;
 
 	for (i=0 ; i<3 ; i++)
 	{
@@ -463,7 +464,7 @@ void SV_FatPVS (vec3_t org)
 		maxs[i] = org[i] + 8;
 	}
 
-	count = CM_BoxLeafnums (mins, maxs, leafs, 64, NULL);
+	count = CM_BoxLeafnums (mins, maxs, leafs, 64, &lastLeaf);
 	if (count < 1)
 		Com_Error (ERR_FATAL, "SV_FatPVS: count < 1");
 	longs = (CM_NumClusters()+31)>>5;
@@ -660,7 +661,7 @@ void SV_BuildClientFrame (client_t *client)
 					else
 						bitvector = fatpvs;
 
-					if (ent->num_clusters == -1)
+					if (ent->numClusters == -1)
 					{	
 #if 0 // FIXME: Q3BSP URGENT!!!
 						// too many leafs for individual check, go by headnode
@@ -675,13 +676,13 @@ void SV_BuildClientFrame (client_t *client)
 					else
 					{	
 						// check individual leafs
-						for (i = 0; i < ent->num_clusters; i++)
+						for (i = 0; i < ent->numClusters; i++)
 						{
 							l = ent->clusternums[i];
 							if (bitvector[l >> 3] & (1 << (l & 7)))
 								break;
 						}
-						if (i == ent->num_clusters)
+						if (i == ent->numClusters)
 						{
 							SV_RestoreEntityStateAfterClient(ent);
 							continue;		// blocked by a door

@@ -438,6 +438,8 @@ void SV_InitGame (void)
 	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0, NULL);
 	sv_gravity = Cvar_Get("sv_gravity", "800", 0, NULL);
 
+	sv_debug = Cvar_Get("sv_debug", "0", 0, NULL);
+
 	// make sure critical cvars are in their proper range
 	if (sv_maxclients->value <= 0)
 		Cvar_FullSet("sv_maxclients", "1", CVAR_SERVERINFO | CVAR_LATCH, NULL);

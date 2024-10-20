@@ -486,7 +486,7 @@ void SV_ReadServerFile (void)
 
 	// read game state
 	Com_sprintf (name, sizeof(name), "%s/save/current/game.ssv", FS_Gamedir());
-	ReadGame (name);
+	//ReadGame (name);
 }
 
 

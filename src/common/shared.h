@@ -429,7 +429,7 @@ typedef struct
 	short		delta_angles[3];
 } pmove_state_t;
 
-#define PACKED_BSP 31
+#define PACKEDSOLID_BSP 31
 
 //
 // button bits

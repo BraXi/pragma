@@ -45,7 +45,8 @@ int CM_PointLeafnum_r( const vec3_t p, int num )
 
 int CM_PointLeafnum( const vec3_t p ) 
 {
-	if ( !cm.numNodes ) {	// map not loaded
+	if ( !cm.numNodes ) 
+	{	// map not loaded
 		return 0;
 	}
 	return CM_PointLeafnum_r (p, 0);
@@ -217,7 +218,6 @@ void CM_BoxLeafnums_r( leafList_t *ll, int nodenum )
 	cNode_t		*node;
 	int			s;
 
-	Com_Printf(__FUNCTION__"\n");
 	while (1)
 	{
 		if (nodenum < 0) 
@@ -243,8 +243,6 @@ void CM_BoxLeafnums_r( leafList_t *ll, int nodenum )
 			CM_BoxLeafnums_r( ll, node->children[0] );
 			nodenum = node->children[1];
 		}
-
-		Com_Printf("side: %i - nodenum %i\n", s, nodenum);
 
 	}
 }
@@ -326,10 +324,12 @@ int CM_PointContents( const vec3_t p, clipHandle_t model )
 		return 0;
 	}
 
-	if ( model ) {
+	if ( model ) 
+	{
 		clipm = CM_ClipHandleToModel( model );
 		leaf = &clipm->leaf;
-	} else {
+	} else 
+	{
 		leafnum = CM_PointLeafnum_r (p, 0);
 		leaf = &cm.leafs[leafnum];
 	}

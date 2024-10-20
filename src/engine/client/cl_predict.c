@@ -86,7 +86,7 @@ void CL_ClipMoveToEntities( vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, 
 		if (ent->number == cl.playernum+1)
 			continue;
 
-		if (ent->packedSolid == PACKED_BSP)
+		if (ent->packedSolid == PACKEDSOLID_BSP)
 		{	
 			// special value for bmodel
 			clip = CL_GetClipModel((int)ent->modelindex);

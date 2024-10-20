@@ -24,7 +24,7 @@ static clipHandle_t CG_HullForEntity(entity_state_t* ent)
 	int capsule;
 
 	// decide which clipping hull to use
-	if (ent->packedSolid == PACKED_BSP)
+	if (ent->packedSolid == PACKEDSOLID_BSP)
 	{
 		// explicit hulls in the BSP model
 		model = CL_GetClipModel(ent->modelindex);
@@ -74,7 +74,7 @@ static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t
 
 		// might intersect
 		headnode = CG_HullForEntity(ent);
-		if (ent->packedSolid == PACKED_BSP)
+		if (ent->packedSolid == PACKEDSOLID_BSP)
 			angles = ent->angles;
 		else
 			angles = vec3_origin;	// boxes don't rotate
@@ -150,7 +150,7 @@ int	CG_PointContents(vec3_t point)
 		num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
 		ent = &cl_parse_entities[num];
 
-		if (ent->packedSolid != PACKED_BSP) // special value for bmodel
+		if (ent->packedSolid != PACKEDSOLID_BSP) // special value for bmodel
 			continue;
 
 		clip = CL_GetClipModel((int)ent->modelindex);

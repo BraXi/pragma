@@ -104,9 +104,12 @@ struct gentity_s
 	qboolean	inuse;
 //	int			linkcount;
 	link_t		area;				// linked to a division node or leaf	
-	int			num_clusters;		// if -1, use headnode instead
+
+	int			numClusters;		// if -1, use headnode instead
+	int			lastCluster;
 	int			clusternums[MAX_ENT_CLUSTERS];
-	int			headnode;			// unused if num_clusters != -1
+
+	int			headnode;			// unused if numClusters != -1
 	int			areanum, areanum2;
 
 	float		freetime;			// time when entity was freed
@@ -128,7 +131,7 @@ extern void Scr_EntityPreThink(gentity_t* self);
 extern void Scr_Think(gentity_t* self);
 extern void Scr_Event_Impact(gentity_t* self, trace_t* trace);
 extern void Scr_Event_Blocked(gentity_t* self, gentity_t* other);
-extern void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, csurface_t* surf);
+extern void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, uint32_t surfaceFlags);
 
 extern void SV_SpawnEntities(const char* mapname, char* entities, const char* spawnpoint);
 
@@ -151,10 +154,10 @@ void ClientCommand(gentity_t* ent);
 void SV_RunWorldFrame(void);
 
 // savegames stubs
-void WriteGame(const char* filename, qboolean autosave);
-void ReadGame(const char* filename);
-void WriteLevel(const char* filename);
-void ReadLevel(const char* filename);
+//void WriteGame(const char* filename, qboolean autosave);
+//void ReadGame(const char* filename);
+//void WriteLevel(const char* filename);
+//void ReadLevel(const char* filename);
 
 
 #endif /*_PRAGMA_SV_GAME_H_*/

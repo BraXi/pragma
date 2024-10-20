@@ -184,7 +184,7 @@ static void SV_DropPathNodeToFloor(gentity_t* self)
 	}
 
 	VectorCopy(trace.endpos, self->v.origin);
-	SV_LinkEdict(self);
+	SV_LinkEntity(self);
 
 	self->v.nodeIndex = Nav_AddPathNode(self->v.origin[0], self->v.origin[1], self->v.origin[2]);
 }
@@ -481,7 +481,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 				VectorCopy(trace.endpos, actor->v.origin);
 				if (relink)
 				{
-					SV_LinkEdict(actor);
+					SV_LinkEntity(actor);
 //					SV_TouchEntities(ent, AREA_TRIGGERS);
 				}
 				return true;
@@ -538,7 +538,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 			VectorAdd(actor->v.origin, move, actor->v.origin);
 			if (relink)
 			{
-				SV_LinkEdict(actor);
+				SV_LinkEntity(actor);
 				SV_TouchEntities(actor, AREA_TRIGGERS);
 				SV_TouchEntities(actor, AREA_PATHNODES);
 			}
@@ -559,7 +559,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 			// and is trying to correct
 			if (relink)
 			{
-				SV_LinkEdict(actor);
+				SV_LinkEntity(actor);
 				SV_TouchEntities(actor, AREA_TRIGGERS);
 				SV_TouchEntities(actor, AREA_PATHNODES);
 			}
@@ -584,7 +584,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	// the move is ok
 	if (relink)
 	{
-		SV_LinkEdict(actor);
+		SV_LinkEntity(actor);
 		SV_TouchEntities(actor, AREA_TRIGGERS);
 		SV_TouchEntities(actor, AREA_PATHNODES);
 	}
@@ -668,12 +668,12 @@ qboolean SV_StepDirection(gentity_t* actor, float yaw, float dist)
 			// not turned far enough, so don't take the step
 			VectorCopy(oldorigin, actor->v.origin);
 		}
-		SV_LinkEdict(actor);
+		SV_LinkEntity(actor);
 		SV_TouchEntities(actor, AREA_TRIGGERS);
 		SV_TouchEntities(actor, AREA_PATHNODES);
 		return true;
 	}
-	SV_LinkEdict(actor);
+	SV_LinkEntity(actor);
 	SV_TouchEntities(actor, AREA_TRIGGERS);
 	SV_TouchEntities(actor, AREA_PATHNODES);
 	return false;

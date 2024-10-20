@@ -108,7 +108,7 @@ void SV_FreeEntity(gentity_t* self)
 		return;
 	}
 
-	SV_UnlinkEdict(self);
+	SV_UnlinkEntity(self);
 
 	Scr_BindVM(VM_SVGAME);
 
@@ -721,7 +721,7 @@ void SV_SetEntityModel(gentity_t *ent, const char *modelName)
 
 		//Com_Printf("%s set external model on a SOLID_BSP entity %i, solidity changed to SOLID_NOT.\n", Scr_BuiltinFuncName(), NUM_FOR_EDICT(ent));
 		//ent->v.solid = SOLID_NOT;
-		//SV_LinkEdict(ent);
+		//SV_LinkEntity(ent);
 	}
 }
 
@@ -772,5 +772,5 @@ void SV_SetEntityBrushModel(gentity_t* ent, const char* modelName)
 	// brush models have their mins and maxs updated and relink
 	clip = CM_InlineModel(atoi(modelName+1));
 	CM_ModelBounds(clip, ent->v.mins, ent->v.maxs);
-	SV_LinkEdict(ent);
+	SV_LinkEntity(ent);
 }

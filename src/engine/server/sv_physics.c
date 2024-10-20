@@ -388,7 +388,7 @@ retry:
 	trace = SV_Trace(start, ent->v.mins, ent->v.maxs, end, ent, mask);
 
 	VectorCopy(trace.endpos, ent->v.origin);
-	SV_LinkEdict(ent);
+	SV_LinkEntity(ent);
 
 	if (trace.fraction != 1.0)
 	{
@@ -399,7 +399,7 @@ retry:
 		{
 			// move the pusher back and try again
 			VectorCopy(start, ent->v.origin);
-			SV_LinkEdict(ent);
+			SV_LinkEntity(ent);
 			goto retry;
 		}
 	}
@@ -461,7 +461,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 	// move the pusher to it's final position
 	VectorAdd(pusher->v.origin, move, pusher->v.origin);
 	VectorAdd(pusher->v.angles, amove, pusher->v.angles);
-	SV_LinkEdict(pusher);
+	SV_LinkEntity(pusher);
 
 	// see if any solid entities are inside the final position
 	for (e = 1; e < sv.max_edicts; e++) //sv.num_edicts
@@ -533,7 +533,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			block = SV_TestEntityPosition(check);
 			if (!block)
 			{	// pushed ok
-				SV_LinkEdict(check);
+				SV_LinkEntity(check);
 				// impact?
 				continue;
 			}
@@ -563,7 +563,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 				p->ent->client->ps.pmove.delta_angles[YAW] = p->deltayaw;
 				p->ent->v.pm_delta_angles[YAW] = p->deltayaw;
 			}
-			SV_LinkEdict(p->ent);
+			SV_LinkEntity(p->ent);
 		}
 		return false;
 	}
@@ -672,7 +672,7 @@ void SV_Physics_Noclip(gentity_t* ent)
 	VectorMA(ent->v.angles, SV_FRAMETIME, ent->v.avelocity, ent->v.angles);
 	VectorMA(ent->v.origin, SV_FRAMETIME, ent->v.velocity, ent->v.origin);
 
-	SV_LinkEdict(ent);
+	SV_LinkEntity(ent);
 }
 
 /*
@@ -784,7 +784,7 @@ void SV_Physics_Toss(gentity_t* ent)
 	for (slave = ent->teamchain; slave; slave = slave->teamchain)
 	{
 		VectorCopy(ent->v.origin, slave->v.origin);
-		SV_LinkEdict(slave);
+		SV_LinkEntity(slave);
 	}
 }
 
@@ -922,7 +922,7 @@ void SV_Physics_Step(gentity_t* ent)
 			mask = MASK_SOLID;
 		SV_FlyMove(ent, SV_FRAMETIME, mask);
 
-		SV_LinkEdict(ent);
+		SV_LinkEntity(ent);
 		SV_TouchEntities(ent, AREA_TRIGGERS);
 		if (!ent->inuse)
 			return;

@@ -273,7 +273,7 @@ void SV_Begin_f (void)
 		SV_InitEntity(ent);
 		ent->v.classname = sv.cstr.player;
 		Scr_ClientBegin(ent);
-		SV_LinkEdict(ent);
+		SV_LinkEntity(ent);
 	}
 
 //	SV_InitEntity(ent);

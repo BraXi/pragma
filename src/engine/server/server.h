@@ -259,6 +259,7 @@ extern	cvar_t		*sv_paused;
 extern	cvar_t		*sv_password;
 extern  cvar_t		*sv_nolateloading;
 extern	cvar_t		*sv_cheats;
+extern	cvar_t		*sv_debug;
 extern	cvar_t		*sv_maxclients;
 extern	cvar_t		*sv_maxentities;
 extern	cvar_t		*sv_noreload;			// don't reload level state when reentering, development tool
@@ -392,11 +393,11 @@ extern int SV_TouchEntities(gentity_t* ent, int areatype);
 void SV_ClearWorld (void);
 // called after the world model has been loaded, before linking any entities
 
-void SV_UnlinkEdict (gentity_t *ent);
+void SV_UnlinkEntity (gentity_t *ent);
 // call before removing an entity, and before trying to move one,
 // so it doesn't clip against itself
 
-void SV_LinkEdict (gentity_t *ent);
+void SV_LinkEntity (gentity_t *ent);
 // Needs to be called any time an entity changes origin, mins, maxs,
 // or solid.  Automatically unlinks if needed.
 // sets ent->v.absmin and ent->v.absmax

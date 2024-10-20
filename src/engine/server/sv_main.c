@@ -36,6 +36,7 @@ cvar_t	*sv_maxclients;
 cvar_t	*sv_maxentities;
 cvar_t	*sv_showclamp;
 cvar_t	*sv_cheats;
+cvar_t  *sv_debug;
 
 cvar_t *sv_nolateloading;
 

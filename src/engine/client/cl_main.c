@@ -1570,7 +1570,7 @@ clipHandle_t CL_GetClipModel(int modelindex)
 		{
 			// modelindex 0 is reserved for no model
 			Com_Error(ERR_DROP, "%s Bad model index %i.", __FUNCTION__, modelindex);
-			return NULL;
+			return -1;
 		}
 
 		return cl.model_clip[modelindex];
@@ -1581,13 +1581,13 @@ clipHandle_t CL_GetClipModel(int modelindex)
 		if (realindex >= CM_NumInlineModels())
 		{
 			Com_Error(ERR_DROP, "%s Bad inline model index %i.\n", __FUNCTION__, modelindex);
-			return NULL;
+			return -1;
 		}
 
 		return cl.inlinemodel_clip[realindex];
 	}
 	else
 	{
-		return NULL;
+		return -1;
 	}
 }

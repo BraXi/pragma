@@ -619,7 +619,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 	int i, length;
 	static unsigned	last_checksum;
 
-	if ( !name || !name[0] ) 
+	if ( !name ) 
 	{
 		Com_Error( ERR_DROP, __FUNCTION__": NULL name" );
 	}
@@ -650,6 +650,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 	
 	if ( !name[0] ) 
 	{
+		// "cinematic" server
 		cm.numLeafs = 1;
 		cm.numClusters = 1;
 		cm.numAreas = 1;
@@ -676,6 +677,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
 	}
 
+#if 0
 	if (header.ident != WORLD_IDENT)
 	{
 		Com_Error(ERR_DROP, "CM_LoadMap: %s is not a map", name);
@@ -685,10 +687,10 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 	{
 		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number (%i should be %i)", name, header.version, WORLD_VERSION);
 	}
+#endif
 
 	cmod_base = (byte *)buf;
-
-	cmod_base = Hunk_Begin(1024 * 1024 * 8, "CModel");
+	cmodel_base = Hunk_Begin(1024 * 1024 * 8, "CModel");
 
 	// load into heap
 	CMod_LoadShaders( &header.lumps[Q3LUMP_SHADERS] );

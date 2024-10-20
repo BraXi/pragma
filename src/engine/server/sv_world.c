@@ -16,13 +16,9 @@ See the attached GNU General Public License v2 for more details.
 #include <limits.h>
 #endif
 
-gentity_t	*sv_entity;	// currently run entity
+#define MAX_TOTAL_ENT_LEAFS 128
 
-void WriteGame(const char* filename, qboolean autosave) {}
-void ReadGame(const char* filename) {}
-void WriteLevel(const char* filename) {}
-void ReadLevel(const char* filename) {}
-
+gentity_t *sv_entity; // currently run entity
 
 void Scr_ClientBeginServerFrame(gentity_t* self);
 void Scr_ClientEndServerFrame(gentity_t* ent);
@@ -216,9 +212,9 @@ typedef struct areanode_s
 	int		axis;		// -1 = leaf node
 	float	dist;
 	struct areanode_s	*children[2];
-	link_t	trigger_edicts;
-	link_t	solid_edicts;
-	link_t	pathnode_edicts;
+	link_t	trigger_ents;
+	link_t	solid_ents;
+	link_t	pathnode_ents;
 } areanode_t;
 
 #define	AREA_DEPTH	4
@@ -269,9 +265,9 @@ areanode_t *SV_CreateAreaNode (int depth, vec3_t mins, vec3_t maxs)
 	anode = &sv_areanodes[sv_numareanodes];
 	sv_numareanodes++;
 
-	ClearLink (&anode->trigger_edicts);
-	ClearLink (&anode->solid_edicts);
-	ClearLink (&anode->pathnode_edicts);
+	ClearLink (&anode->trigger_ents);
+	ClearLink (&anode->solid_ents);
+	ClearLink (&anode->pathnode_ents);
 	
 	if (depth == AREA_DEPTH)
 	{
@@ -303,7 +299,6 @@ areanode_t *SV_CreateAreaNode (int depth, vec3_t mins, vec3_t maxs)
 /*
 ===============
 SV_ClearWorld
-
 ===============
 */
 void SV_ClearWorld (void)
@@ -313,24 +308,8 @@ void SV_ClearWorld (void)
 	memset (sv_areanodes, 0, sizeof(sv_areanodes));
 	sv_numareanodes = 0;
 
-	CM_ModelBounds(0, mins, maxs); // FIXME: Q3BSP
+	CM_ModelBounds(0, mins, maxs); 
 	SV_CreateAreaNode (0, mins, maxs);
-	//SV_CreateAreaNode (0, sv.models[MODELINDEX_WORLD].bmodel->mins, sv.models[MODELINDEX_WORLD].bmodel->maxs);
-}
-
-
-/*
-===============
-SV_UnlinkEdict
-
-===============
-*/
-void SV_UnlinkEdict (gentity_t *ent)
-{
-	if (!ent->area.prev)
-		return;		// not linked in anywhere
-	RemoveLink (&ent->area);
-	ent->area.prev = ent->area.next = NULL;
 }
 
 static int SV_PackSolid32(gentity_t* ent)
@@ -340,7 +319,7 @@ static int SV_PackSolid32(gentity_t* ent)
 
 	packedsolid = MSG_PackSolid32(ent->v.mins, ent->v.maxs); //Q2PRO's MSG_PackSolid32_Ver2
 
-	if (packedsolid == PACKED_BSP)
+	if (packedsolid == PACKEDSOLID_BSP)
 		packedsolid = 0;  // can happen in pathological case if z mins > maxs
 
 #ifdef _DEBUG
@@ -360,29 +339,49 @@ static int SV_PackSolid32(gentity_t* ent)
 
 /*
 ===============
-SV_LinkEdict
-
+SV_UnlinkEntity
 ===============
 */
-#define MAX_TOTAL_ENT_LEAFS		128
-void SV_LinkEdict (gentity_t *ent)
+void SV_UnlinkEntity(gentity_t *ent)
 {
-	areanode_t	*node;
-	int			leafs[MAX_TOTAL_ENT_LEAFS];
-	int			clusters[MAX_TOTAL_ENT_LEAFS];
-	int			num_leafs;
-	int			i, j;
-	int			area;
-	int			topnode;
+	if (!ent->area.prev)
+	{
+		return; // not linked in anywhere
+	}
+
+	RemoveLink (&ent->area);
+	ent->area.prev = ent->area.next = NULL;
+}
+
+/*
+===============
+SV_LinkEntity
+===============
+*/
+
+void SV_LinkEntity(gentity_t *ent)
+{
+	areanode_t *node;
+	int leafs[MAX_TOTAL_ENT_LEAFS];
+	int cluster, area, num_leafs, lastLeaf;
+	int max, i;
+	
+#ifdef _DEBUG
+	if (!ent)
+	{
+		SV_Error(__FUNCTION__": NULL ent");
+	}
+#endif
+
+	if (ent == sv.edicts || !ent->inuse)
+	{
+		return; // don't add the world and unused entities
+	}
 
 	if (ent->area.prev)
-		SV_UnlinkEdict (ent);	// unlink from old position
-		
-	if (ent == sv.edicts)
-		return;		// don't add the world
-
-	if (!ent->inuse)
-		return;
+	{
+		SV_UnlinkEntity(ent); // unlink from old position
+	}
 
 	// set the size
 	VectorSubtract (ent->v.maxs, ent->v.mins, ent->v.size);
@@ -391,6 +390,7 @@ void SV_LinkEdict (gentity_t *ent)
 	switch ((int)ent->v.solid)
 	{
 	case SOLID_BBOX:
+		//if ( ent->v.contents & ( Q3CONTENTS_SOLID | Q3CONTENTS_BODY ) || VectorCompare(ent->v.mins, ent->v.maxs) )
 		if (((int)ent->v.svflags & SVF_DEADMONSTER) || VectorCompare(ent->v.mins, ent->v.maxs))
 		{
 			ent->s.packedSolid = 0;
@@ -400,29 +400,23 @@ void SV_LinkEdict (gentity_t *ent)
 			ent->s.packedSolid = SV_PackSolid32(ent);
 		}
 		break;
+
 	case SOLID_BSP:
-		ent->s.packedSolid = PACKED_BSP;      // a SOLID_BBOX will never create this value
+		// a SOLID_BBOX will never create this value
+		ent->s.packedSolid = PACKEDSOLID_BSP;
 		break;
+
 	default:
 		ent->s.packedSolid = 0;
 		break;
 	}
 
 	// set the abs box
-	if (ent->v.solid == SOLID_BSP && (ent->v.angles[0] || ent->v.angles[1] || ent->v.angles[2]) )
-	{	// expand for rotation
-		float		max, v;
-		max = 0;
-		for (i=0 ; i<3 ; i++)
-		{
-			v = fabs(ent->v.mins[i]);
-			if (v > max)
-				max = v;
-			v = fabs(ent->v.maxs[i]);
-			if (v > max)
-				max = v;
-		}
-		for (i=0 ; i<3 ; i++)
+	if ((ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER) && (ent->v.angles[0] || ent->v.angles[1] || ent->v.angles[2]) )
+	{	
+		// expand for rotation
+		max = RadiusFromBounds(ent->v.mins, ent->v.maxs);
+		for (i = 0; i < 3; i++) 
 		{
 			ent->v.absmin[i] = ent->v.origin[i] - max;
 			ent->v.absmax[i] = ent->v.origin[i] + max;
@@ -436,88 +430,92 @@ void SV_LinkEdict (gentity_t *ent)
 
 	// because movement is clipped an epsilon away from an actual edge,
 	// we must fully check even when bounding boxes don't quite touch
-	ent->v.absmin[0] -= 1;
-	ent->v.absmin[1] -= 1;
-	ent->v.absmin[2] -= 1;
-	ent->v.absmax[0] += 1;
-	ent->v.absmax[1] += 1;
-	ent->v.absmax[2] += 1;
+	for (i = 0; i < 3; i++)
+	{
+		ent->v.absmin[i] -= 1;
+		ent->v.absmax[i] += 1;
+	}
 
-// link to PVS leafs
-	ent->num_clusters = 0;
-	ent->areanum = 0;
-	ent->areanum2 = 0;
+	// link to PVS leafs
+	ent->numClusters = 0;
+	ent->lastCluster = 0;
+	ent->areanum = ent->areanum2 = -1;
 
 	//get all leafs, including solids
-	num_leafs = CM_BoxLeafnums (ent->v.absmin, ent->v.absmax, leafs, MAX_TOTAL_ENT_LEAFS, &topnode);
+	num_leafs = CM_BoxLeafnums (ent->v.absmin, ent->v.absmax, leafs, MAX_TOTAL_ENT_LEAFS, &lastLeaf);
 
-	// Q3A: if none of the leafs were inside the map, the
-	// entity is outside the world and can be considered unlinked
 	if (!num_leafs) 
 	{
-		Com_DPrintf(DP_SV, "%s: entity %i is outside the world at %i %i %i\n", __FUNCTION__, NUM_FOR_ENT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+		// if none of the leafs were inside the map, the entity is considered to be outside the world and can be unlinked
+		if (sv_debug->value)
+		{
+			Com_Printf(__FUNCTION__:" Entity %i outside the world at [%i %i %i]\n", NUM_FOR_ENT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+		}
 		return;
 	}
 
-	// set areas
-	for (i=0 ; i<num_leafs ; i++)
+	// set areas, even from clusters that don't fit in the entity array
+	for (i = 0; i < num_leafs; i++) 
 	{
-		clusters[i] = CM_LeafCluster (leafs[i]);
-		area = CM_LeafArea (leafs[i]);
-		if (area)
-		{	// doors may legally straggle two areas,
-			// but nothing should ever need more than that
-			if (ent->areanum && ent->areanum != area)
+		area = CM_LeafArea(leafs[i]);
+		if (area != -1) 
+		{
+			// doors may legally straggle two areas, but nothing should evern need more than that
+			if (ent->areanum != -1 && ent->areanum != area) 
 			{
-				if (ent->areanum2 && ent->areanum2 != area && sv.state == ss_loading)
-					Com_DPrintf(DP_SV, "Object touching 3 areas at %f %f %f\n", ent->v.absmin[0], ent->v.absmin[1], ent->v.absmin[2]);
+				if (ent->areanum2 != -1 && ent->areanum2 != area && sv.state == ss_loading) 
+				{
+					if (sv_debug->value)
+					{
+						Com_Printf( __FUNCTION__": Entity %i touching 3 areas at [%i %i %i]\n", NUM_FOR_ENT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+					}
+				}
 				ent->areanum2 = area;
 			}
-			else
-				ent->areanum = area;
-		}
-	}
-
-	if (num_leafs >= MAX_TOTAL_ENT_LEAFS)
-	{	// assume we missed some leafs, and mark by headnode
-		ent->num_clusters = -1;
-		ent->headnode = topnode;
-	}
-	else
-	{
-		ent->num_clusters = 0;
-		for (i=0 ; i<num_leafs ; i++)
-		{
-			if (clusters[i] == -1)
-				continue;		// not a visible leaf
-			for (j=0 ; j<i ; j++)
-				if (clusters[j] == clusters[i])
-					break;
-			if (j == i)
+			else 
 			{
-				if (ent->num_clusters == MAX_ENT_CLUSTERS)
-				{	// assume we missed some leafs, and mark by headnode
-					ent->num_clusters = -1;
-					ent->headnode = topnode;
-					break;
-				}
-
-				ent->clusternums[ent->num_clusters++] = clusters[i];
+				ent->areanum = area;
 			}
 		}
 	}
 
-	// if first time, make sure old_origin is valid
+	// store as many explicit clusters as we can
+	ent->numClusters = 0;
+	for (i = 0; i < num_leafs; i++) 
+	{
+		cluster = CM_LeafCluster(leafs[i]);
+		if (cluster != -1) 
+		{
+			ent->clusternums[ent->numClusters++] = cluster;
+			if (ent->numClusters == MAX_ENT_CLUSTERS) 
+			{
+				break;
+			}
+		}
+	}
+
+	// store off a last cluster if we need to in case there are more clusternums[] than we store
+	if (i != num_leafs) 
+	{
+		ent->lastCluster = CM_LeafCluster(lastLeaf);
+	}
+
+	// make sure old_origin is valid if linking this entity for the first time
 	if (!ent->v.linkcount)
 	{
 		VectorCopy (ent->v.origin, ent->v.old_origin);
 	}
+
+	// let gamecode know we've been relinked
 	ent->v.linkcount++;
 
+	// if the entity isn't nonsolid add it to solids, triggers or path nodes lists
 	if (ent->v.solid == SOLID_NOT)
+	{
 		return;
+	}
 
-// find the first node that the ent's box crosses
+	// find the first node that the ent's box crosses
 	node = sv_areanodes;
 	while (1)
 	{
@@ -528,16 +526,16 @@ void SV_LinkEdict (gentity_t *ent)
 		else if (ent->v.absmax[node->axis] < node->dist)
 			node = node->children[1];
 		else
-			break;		// crosses the node
+			break;	// crosses the node
 	}
 	
 	// link it in	
 	if (ent->v.solid == SOLID_TRIGGER)
-		InsertLinkBefore (&ent->area, &node->trigger_edicts);
+		InsertLinkBefore (&ent->area, &node->trigger_ents);
 	else if (ent->v.solid == SOLID_PATHNODE)
-		InsertLinkBefore(&ent->area, &node->pathnode_edicts);
+		InsertLinkBefore(&ent->area, &node->pathnode_ents);
 	else
-		InsertLinkBefore (&ent->area, &node->solid_edicts);
+		InsertLinkBefore(&ent->area, &node->solid_ents);
 
 }
 
@@ -550,24 +548,24 @@ SV_AreaEdicts_r
 */
 void SV_AreaEdicts_r (areanode_t *node)
 {
-	link_t		*l, *next, *start;
-	gentity_t		*check;
-	int			count;
+	link_t *l, *next, *start;
+	gentity_t *check;
+	int count;
 
 	count = 0;
 
-	// touch linked edicts
+	// touch linked entities
 	start = NULL;
 	if (area_type == AREA_SOLID)
-		start = &node->solid_edicts;
+		start = &node->solid_ents;
 	else if (area_type == AREA_TRIGGERS)
-		start = &node->trigger_edicts;
+		start = &node->trigger_ents;
 	else  if (area_type == AREA_PATHNODES)
-		start = &node->pathnode_edicts;
+		start = &node->pathnode_ents;
 
 	if (start == NULL)
 	{
-		Com_Error(ERR_DROP, "%s: unknown area_type %i\n", __FUNCTION__, area_type);
+		Com_Error(ERR_DROP, __FUNCTION__": Unknown area_type %i\n", area_type);
 		return;
 	}
 
@@ -578,6 +576,7 @@ void SV_AreaEdicts_r (areanode_t *node)
 
 		if (check->v.solid == SOLID_NOT)
 			continue;		// deactivated
+
 		if (check->v.absmin[0] > area_maxs[0]
 		|| check->v.absmin[1] > area_maxs[1]
 		|| check->v.absmin[2] > area_maxs[2]
@@ -588,7 +587,7 @@ void SV_AreaEdicts_r (areanode_t *node)
 
 		if (area_count == area_maxcount)
 		{
-			Com_Printf ("SV_AreaEntities: hit MAXCOUNT (%i)\n", area_maxcount);
+			Com_Printf(__FUNCTION__": Hit MAXCOUNT (%i)\n", area_maxcount);
 			return;
 		}
 
@@ -610,10 +609,10 @@ void SV_AreaEdicts_r (areanode_t *node)
 ================
 SV_AreaEntities
 
-Returns the **list of entities within mins/maxs og a given type
+Returns the **list of entities within mins/maxs of a given type
 ================
 */
-int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, int areatype)
+int SV_AreaEntities(vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, int areatype)
 {
 	area_mins = mins;
 	area_maxs = maxs;
@@ -646,19 +645,27 @@ clipHandle_t SV_HullForEntity(gentity_t* ent)
 {
 	int capsule = 0;
 
-	if (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER)
+	if (SV_IsBrushModel(ent->v.modelindex))
 	{
-		// explicit hulls in the BSP model
-		return CM_InlineModel(ent->v.modelindex);
+		if (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER)
+		{
+			// explicit hulls in the BSP model
+			return CM_InlineModel(ent->v.modelindex);
+		}
 	}
 
+	// create a temp capsule from bounding box sizes if SVF_CAPSULE
+	// otherwise create a temp box from bounding box sizes
 	if (ent->v.svflags & SVF_CAPSULE) 
 	{
-		// create a temp capsule from bounding box sizes
 		capsule = 1;
 	}
 
-	// create a temp tree from bounding box sizes
+	if (sv_debug->value && ent->v.solid == SOLID_BSP)
+	{
+		Com_Printf(__FUNCTION__": solid_bsp entity %i has no bmodel (using BBOX)\n", NUM_FOR_ENT(ent));
+	}
+
 	return CM_TempBoxModel(ent->v.mins, ent->v.maxs, capsule);
 }
 
@@ -676,11 +683,10 @@ int SV_PointContents(vec3_t p)
 	float		*angles;
 
 	// get base contents from world
-	contents = CM_PointContents(p, 0); // FIXME: Q3BSP
-	//contents = CM_PointContents(p, sv.models[MODELINDEX_WORLD].bmodel->headnode);
+	contents = CM_PointContents(p, 0);
 
 	// or in contents from all the other entities
-	num = SV_AreaEntities (p, p, touch, MAX_GENTITIES, AREA_SOLID);
+	num = SV_AreaEntities(p, p, touch, MAX_GENTITIES, AREA_SOLID);
 
 	for (i = 0; i < num; i++)
 	{
@@ -688,15 +694,18 @@ int SV_PointContents(vec3_t p)
 
 		// might intersect, so do an exact clip
 		clip = SV_HullForEntity(pEnt);
-		angles = pEnt->v.angles;
-
-		// brush models rotate, boxes don't
-		if (pEnt->v.solid != SOLID_BSP && pEnt->v.solid != SOLID_TRIGGER)
+		
+		// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate, others don't
+		if (SV_IsBrushModel(pEnt->v.modelindex) && (pEnt->v.solid == SOLID_BSP || pEnt->v.solid == SOLID_TRIGGER))
+		{
+			angles = pEnt->v.angles;
+		}
+		else
 		{
 			angles = vec3_origin;
 		}
 
-		contents_entity = CM_TransformedPointContents (p, clip, pEnt->v.origin, pEnt->v.angles);
+		contents_entity = CM_TransformedPointContents(p, clip, pEnt->v.origin, angles);
 		contents |= contents_entity;
 	}
 

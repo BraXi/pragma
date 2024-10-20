@@ -79,7 +79,7 @@ void Scr_Event_Blocked(gentity_t* self, gentity_t* other)
 	sv.script_globals->other = oldother;
 }
 
-void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, int surfaceFlags)
+void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, uint32_t surfaceFlags)
 {
 	if (!self->v.touch || self->v.solid == SOLID_NOT)
 		return;
@@ -262,7 +262,7 @@ void Scr_ClientDisconnect(gentity_t* self)
 
 	sv.script_globals->self = GENT_TO_PROG(sv.edicts);
 
-	SV_UnlinkEdict(self);
+	SV_UnlinkEntity(self);
 
 //	memset(&self->v, 0, Scr_GetEntityFieldsSize());
 	SV_InitEntity(self); // clear ALL fields, but mark it as unused
