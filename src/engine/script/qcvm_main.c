@@ -26,9 +26,9 @@ const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 
 	{VM_NONE, NULL, 0, "shared"}, // dummy for shared builtins
 
-	{VM_SVGAME, "progs/svgame.dat", 49005, "server game"},
-	{VM_CLGAME, "progs/cgame.dat", 15591, "client game"},
-	{VM_GUI, "progs/gui.dat", 0, "user interface"}
+	{VM_SVGAME, "progs/svgame.dat", 49005, "server"},
+	{VM_CLGAME, "progs/cgame.dat", 15591, "client"},
+	{VM_GUI, "progs/gui.dat", 0, "gui"}
 };
 
 void Cmd_PrintVMEntity_f(void);
