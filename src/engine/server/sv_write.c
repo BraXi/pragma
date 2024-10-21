@@ -633,15 +633,17 @@ void SV_BuildClientFrame(client_t *client)
 		// make sure entity number is correct
 		if (ent->s.number != ent_num)
 		{
-			Com_DPrintf("FIXING ENT->S.NUMBER!!!\n");
+			if(sv_debug->value)
+				Com_Printf(__FUNCTION__": Fixing entity number for %i\n", ent_num);
 			ent->s.number = ent_num;
 		}
 
 		if (ent->v.EntityStateForClient > 0)
 		{
+			sv.criticalEntitySection = true;
+
 			// create backup of entitystate before calling EntityStateForClient
 			memcpy(&ent->stateBackup, &ent->s, sizeof(ent->s));
-
 			// call EntityStateForClient to set custom state for entity and decide whenever to send it or not
 			sv.script_globals->self = ENT_TO_VM(ent);
 			Scr_AddEntity(0, clent);
@@ -661,6 +663,7 @@ void SV_BuildClientFrame(client_t *client)
 
 			// restore entitystate from before EntityStateForClient
 			SV_RestoreEntityStateAfterClient(ent);
+			sv.criticalEntitySection = false;
 			continue; 
 		}
 

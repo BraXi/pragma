@@ -111,6 +111,8 @@ typedef struct
 	int					entity_size;			// retrieved from progs
 	int					num_edicts;				// number of _active_ entities
 
+	qboolean			criticalEntitySection;	// if true nothing can spawn or remove entity
+
 	server_strings_t	cstr;					// string constants
 
 	// these two are diferent from server's because simulation can be paused, server cannot be

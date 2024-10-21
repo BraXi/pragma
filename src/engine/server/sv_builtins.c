@@ -90,6 +90,14 @@ entity spawn()
 void PFSV_spawn(void)
 {
 	gentity_t* ent;
+
+	if (sv.criticalEntitySection)
+	{
+		Scr_RunError("Cannot call %s() in critical section.", Scr_BuiltinFuncName());
+		//Scr_ReturnEntity(sv.edicts);
+		return;
+	}
+
 	ent = SV_SpawnEntity();
 	Scr_ReturnEntity(ent);
 }
@@ -102,13 +110,20 @@ remove(entity)
 */
 void PFSV_remove(void)
 {
-	gentity_t* ent = Scr_GetParmEntity(0);
+	gentity_t* ent;
+
+	if (sv.criticalEntitySection)
+	{
+		Scr_RunError("Cannot call %s() in critical section.", Scr_BuiltinFuncName());
+		return;
+	}
+
+	ent = Scr_GetParmEntity(0);
 
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
 
-	if (ent && ent->inuse)
-		SV_FreeEntity(ent);
+	SV_FreeEntity(ent);
 }
 
 /*
