@@ -9,7 +9,6 @@
     <ClCompile Include="pragma.c" />
     <ClCompile Include="astar_navigation.c" />
     <ClCompile Include="cmd.c" />
-    <ClCompile Include="cmodel.c" />
     <ClCompile Include="cvar.c" />
     <ClCompile Include="filesystem.c" />
     <ClCompile Include="net_chan.c" />
@@ -231,7 +230,6 @@
   <ItemGroup>
     <ClInclude Include="..\common\crc.h" />
     <ClInclude Include="cmd.h" />
-    <ClInclude Include="cmodel.h" />
     <ClInclude Include="cvar.h" />
     <ClInclude Include="filesystem.h" />
     <ClInclude Include="message.h" />
@@ -301,9 +299,6 @@
     </ClInclude>
     <ClInclude Include="..\common\renderer.h">
       <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\fileformats\bsp.h">
-      <Filter>Common\File Formats</Filter>
     </ClInclude>
     <ClInclude Include="..\common\fileformats\md3.h">
       <Filter>Common\File Formats</Filter>

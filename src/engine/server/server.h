@@ -148,7 +148,7 @@ typedef enum
 typedef struct
 {
 	int					areabytes;
-	byte				areabits[MAX_MAP_AREAS/8];		// portalarea visibility bits
+	byte				areabits[MAX_WORLD_AREAS/8]; // portalarea visibility bits
 	player_state_t		ps;
 	int					num_entities;
 	int					first_entity;		// into the circular sv_packet_entities[]
@@ -417,13 +417,13 @@ int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, i
 //
 // functions that interact with everything apropriate
 //
-int SV_PointContents (vec3_t p);
-// returns the CONTENTS_* value from the world at the given point.
-// Quake 2 extends this to also check entities, to allow moving liquids
+
+// Returns the CONTENTS_* value from the world and entities at the given point.
+int SV_PointContents(vec3_t p);
 
 trace_t SV_Clip(gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask);
+trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *ignoreEntity, int contentmask, qboolean bCapsule);
 
-trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *passedict, int contentmask);
 // mins and maxs are relative
 
 // if the entire move stays in a solid volume, trace.allsolid will be set,
@@ -432,6 +432,6 @@ trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *
 // if the starting point is in a solid, it will be allowed to move out
 // to an open area
 
-// passedict is explicitly excluded from clipping checks (normally NULL)
+// ignoreEntity is explicitly excluded from clipping checks (normally NULL)
 
 #endif /*_PRAGMA_SERVER_H_*/

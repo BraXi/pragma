@@ -192,6 +192,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	//
 	Z_FreeTags(TAG_SERVER_GAME);
 	SV_FreeModels();
+	CM_ClearMap();
 
 	svs.realtime = 0;
 

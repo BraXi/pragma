@@ -285,9 +285,6 @@ typedef struct
 	void	*(*Glob_HunkAlloc)(int size);
 	int		(*Glob_HunkEnd)(void);
 	void	(*Glob_HunkFree)(void* base);
-
-	unsigned int (*GetBSPLimit)(bspDataType type, qboolean extendedbsp);
-	unsigned int (*GetBSPElementSize)(bspDataType type, qboolean extendedbsp);
 } refimport_t;
 
 

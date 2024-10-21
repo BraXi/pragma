@@ -148,10 +148,6 @@ static cached_model_t* Mod_ForName(const cacheuser_t user, const char* name, con
 
 	switch (LittleLong(*(unsigned*)buf))
 	{
-	case BSP_IDENT:
-	case QBISM_IDENT:
-		// this will be fun...
-
 	case PMODEL_IDENT:
 		break;
 

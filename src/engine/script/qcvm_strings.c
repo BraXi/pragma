@@ -153,7 +153,7 @@ int Scr_SetString(const char* str)
 	pVMStr->stringTable[strindex] = str;
 
 #ifdef _DEBUG
-	Com_Printf("New string '%s' (%i strings, strtable for %i)\n", str, pVMStr->numStringsInTable, pVMStr->stringTableSize);
+	//Com_Printf("New string '%s' (%i strings, strtable for %i)\n", str, pVMStr->numStringsInTable, pVMStr->stringTableSize);
 #endif
 	return -1 - strindex;
 }

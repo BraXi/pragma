@@ -71,7 +71,6 @@ extern qboolean print_time;
 #include "sizebuf.h"
 #include "network.h"
 #include "net_chan.h"
-#include "cmodel.h"
 #include "collision/cm_public.h"
 #include "filesystem.h"
 #include "message.h"

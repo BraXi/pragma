@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClInclude Include="..\common\crc.h" />
     <ClInclude Include="..\common\cvar_public.h" />
-    <ClInclude Include="..\common\fileformats\bsp.h" />
     <ClInclude Include="..\common\fileformats\md3.h" />
     <ClInclude Include="..\common\fileformats\pak.h" />
     <ClInclude Include="..\common\fileformats\pmodel.h" />
@@ -46,7 +45,6 @@
     <ClInclude Include="client\ui\ui_local.h" />
     <ClInclude Include="client\vid.h" />
     <ClInclude Include="cmd.h" />
-    <ClInclude Include="cmodel.h" />
     <ClInclude Include="collision\cm_local.h" />
     <ClInclude Include="collision\cm_patch.h" />
     <ClInclude Include="collision\cm_polylib.h" />
@@ -131,7 +129,6 @@
     <ClCompile Include="..\common\mathlib.c" />
     <ClCompile Include="astar_navigation.c" />
     <ClCompile Include="cmd.c" />
-    <ClCompile Include="cmodel.c" />
     <ClCompile Include="cvar.c" />
     <ClCompile Include="filesystem.c" />
     <ClCompile Include="net_chan.c" />

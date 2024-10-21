@@ -18,7 +18,6 @@ See the attached GNU General Public License v2 for more details.
 #ifndef _PRAGMA_FILES_H_
 #define _PRAGMA_FILES_H_
 
-#include "fileformats/bsp.h"
 #include "fileformats/pak.h"
 #include "fileformats/smdl.h"
 #include "fileformats/md3.h"

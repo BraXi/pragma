@@ -114,6 +114,8 @@ struct gentity_s
 
 	float		freetime;			// time when entity was freed
 
+	int			contents;
+
 	// this will hold the original state when EntityStateForClient is used
 	entity_state_t		stateBackup;
 	qboolean			bEntityStateForClientChanged;

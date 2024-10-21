@@ -244,63 +244,14 @@ COLLISION DETECTION
 ==============================================================
 */
 
-// lower bits are stronger, and will eat weaker brushes completely
-#define	CONTENTS_SOLID			1		// an eye is never valid in a solid
-#define	CONTENTS_WINDOW			2		// translucent, but not watery
-#define	CONTENTS_AUX			4
-#define	CONTENTS_LAVA			8
-#define	CONTENTS_SLIME			16
-#define	CONTENTS_WATER			32
-#define	CONTENTS_MIST			64
-#define	LAST_VISIBLE_CONTENTS	64
-// remaining contents are non-visible, and don't eat brushes
-#define	CONTENTS_AREAPORTAL		0x8000
-#define	CONTENTS_PLAYERCLIP		0x10000
-#define	CONTENTS_MONSTERCLIP	0x20000
-// currents can be added to any other contents, and may be mixed
-#define	CONTENTS_CURRENT_0		0x40000
-#define	CONTENTS_CURRENT_90		0x80000
-#define	CONTENTS_CURRENT_180	0x100000
-#define	CONTENTS_CURRENT_270	0x200000
-#define	CONTENTS_CURRENT_UP		0x400000
-#define	CONTENTS_CURRENT_DOWN	0x800000
-#define	CONTENTS_ORIGIN			0x1000000	// removed before bsping an entity
-#define	CONTENTS_MONSTER		0x2000000	// should never be on a brush, only in game
-#define	CONTENTS_DEADMONSTER	0x4000000	// should never be on a brush, only in game
-#define	CONTENTS_DETAIL			0x8000000	// brushes to be added after vis leafs
-#define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has SURF_TRANSxx flag
-#define	CONTENTS_LADDER			0x20000000
-
-// surface flags
-#define	SURF_LIGHT		(1 << 0) /*1*/		// value will hold the light strength
-#define	SURF_SLICK		(1 << 1) /*2*/		// effects game physics
-#define	SURF_SKY		(1 << 2) /*4*/		// don't draw, but add to skybox
-#define	SURF_WARP		(1 << 3) /*8*/		// turbulent water warp
-#define	SURF_TRANS33	(1 << 4) /*16*/		// 33% alpha
-#define	SURF_TRANS66	(1 << 5) /*32*/		// 66% alpha
-#define	SURF_FLOWING	(1 << 6) /*64*/ 	// scroll towards S coord
-#define	SURF_NODRAW		(1 << 7) /*128*/ 	// don't bother referencing the texture
-#define	SURF_HINT		(1 << 8) /*256*/	// make a primary bsp splitter
-#define	SURF_SKIP		(1 << 9) /*256*/	// completely ignore, allowing non-closed brushes
-
-// ericw_tools additional surface flags
-#define SURF_ALPHATEST	(1 << 25) // alpha test flag
-//#define SURF_N64_UV	(1 << 28) // N64 UV and surface flag hack UNUSED
-#define SURF_SCROLLX	(1 << 29) // slow x scroll
-#define SURF_SCROLLY	(1 << 30) // slow y scroll
-#define SURF_SCROLLFLIP	(1 << 31) // flip scroll directon
-
-
-// content masks
 #define	MASK_ALL				(-1)
-#define	MASK_SOLID				(CONTENTS_SOLID|CONTENTS_WINDOW)
-#define	MASK_PLAYERSOLID		(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER/*|CONTENTS_PLAYER*/)
-#define	MASK_DEADSOLID			(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW)
-#define	MASK_MONSTERSOLID		(CONTENTS_SOLID|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_PLAYER)
-#define	MASK_WATER				(CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
-#define	MASK_OPAQUE				(CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA)
-#define	MASK_SHOT				(CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER)
-#define MASK_CURRENT			(CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN)
+#define	MASK_SOLID				(Q3CONTENTS_SOLID)
+#define	MASK_PLAYERSOLID		(Q3CONTENTS_SOLID|Q3CONTENTS_PLAYERCLIP|Q3CONTENTS_BODY)
+#define	MASK_DEADSOLID			(Q3CONTENTS_SOLID|Q3CONTENTS_PLAYERCLIP)
+#define	MASK_MONSTERSOLID		(Q3CONTENTS_SOLID|Q3CONTENTS_MONSTERCLIP|Q3CONTENTS_BODY)
+#define	MASK_WATER				(Q3CONTENTS_WATER|Q3CONTENTS_LAVA|Q3CONTENTS_SLIME)
+#define	MASK_OPAQUE				(Q3CONTENTS_SOLID|Q3CONTENTS_SLIME|Q3CONTENTS_LAVA)
+#define	MASK_SHOT				(Q3CONTENTS_SOLID|Q3CONTENTS_BODY|Q3CONTENTS_CORPSE)
 
 
 // SV_AreaEntities() can return a list of either solid, trigger or pathnode entities
@@ -329,29 +280,6 @@ typedef struct cplane_s
 	byte	pad[2];
 } cplane_t;
 
-#if 0
-typedef struct cmodel_s
-{
-	vec3_t		mins, maxs;
-	vec3_t		origin;		// for sounds or lights
-	int			headnode;
-} cmodel_t;
-#endif
-
-typedef struct csurface_s
-{
-	char		name[32]; // braxi -- 32 to match qbsp
-	int			flags;
-	int			value;
-} csurface_t;
-
-typedef struct mapsurface_s  // used internally due to name len probs //ZOID
-{
-	csurface_t	c;
-	char		rname[32];
-} mapsurface_t;
-
-#if 1
 // a trace is returned when a box is swept through the world
 typedef struct 
 {
@@ -370,22 +298,6 @@ typedef struct
 	struct gentity_s* ent;			// set by SV_*() functions
 	struct entity_state_s* clent;	// set by CG_*() functions
 } trace_t;
-
-#else
-// a trace is returned when a box is swept through the world
-typedef struct
-{
-	qboolean	allsolid;	// if true, plane is not valid
-	qboolean	startsolid;	// if true, the initial point was in a solid area
-	float		fraction;	// time completed, 1.0 = didn't hit anything
-	vec3_t		endpos;		// final position
-	cplane_t	plane;		// surface normal at impact
-	csurface_t	*surface;	// surface hit
-	int			contents;	// contents on other side of surface hit
-	int			entitynum;	// -1 = nothing hit
-
-} trace_t;
-#endif
 
 
 

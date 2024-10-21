@@ -619,7 +619,9 @@ static void CopyTraceToProgs(trace_t trace)
 	sv.script_globals->trace_ent = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
 	sv.script_globals->trace_entnum = (trace.ent == NULL ? -1 : trace.ent->s.number);
 	sv.script_globals->trace_contents = trace.contents;
+	sv.script_globals->trace_surface_flags = trace.surfaceFlags;
 
+#if 0
 	if (trace.surfaceFlags)
 	{
 		//sv.script_globals->trace_surface_name = Scr_SetTempString(trace.surface->name);
@@ -632,6 +634,7 @@ static void CopyTraceToProgs(trace_t trace)
 		sv.script_globals->trace_surface_flags = 0;
 		//sv.script_globals->trace_surface_value = 0;
 	}
+#endif
 }
 
 /*
@@ -662,7 +665,7 @@ void PFSV_traceline(void)
 	if (ignoreEnt == sv.edicts)
 		ignoreEnt = NULL;
 
-	trace = SV_Trace(start, vec3_origin, vec3_origin, end, ignoreEnt, contentmask);
+	trace = SV_Trace(start, vec3_origin, vec3_origin, end, ignoreEnt, contentmask, false);
 	CopyTraceToProgs(trace);
 }
 
@@ -696,7 +699,7 @@ void PFSV_tracebox(void)
 	if (ignoreEnt == sv.edicts)
 		ignoreEnt = NULL;
 
-	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask);
+	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask, false);
 	CopyTraceToProgs(trace);
 }
 // =================================================================================

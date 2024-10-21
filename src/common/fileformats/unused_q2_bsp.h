@@ -24,6 +24,7 @@ See the attached GNU General Public License v2 for more details.
 ==============================================================================
 */
 
+#if 0
 
 #ifndef _PRAGMA_BSP_H_
 #define _PRAGMA_BSP_H_
@@ -409,3 +410,5 @@ typedef struct
 
 
 #endif /*_PRAGMA_BSP_H_*/
+
+#endif

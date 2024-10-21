@@ -320,6 +320,8 @@ static int SignbitsForPlane (cplane_t *out)
 	return bits;
 }
 
+#define	PLANE_ANYZ		5
+
 /*
 ============
 R_SetFrustum
@@ -712,7 +714,7 @@ void R_RenderView (refdef_t *fd)
 	//
 	// STAGE_ENTITIES
 	//
-	//R_DrawEntities();
+	R_DrawEntities();
 	R_ProfileAtStage(STAGE_ENTITIES);
 
 	//

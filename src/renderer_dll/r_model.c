@@ -144,7 +144,7 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 		//R_TouchAliasModel(mod); // load textures too
 		break;
 
-	case WORLD_IDENT:
+	case BSP_IDENT:
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "World BSP (Renderer)");
 		R_LoadWorld(mod, buf);
 		break;

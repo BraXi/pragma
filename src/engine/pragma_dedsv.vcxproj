@@ -31,7 +31,10 @@
     <ClInclude Include="..\common\shared.h" />
     <ClInclude Include="client\cgame\progdefs_client.h" />
     <ClInclude Include="cmd.h" />
-    <ClInclude Include="cmodel.h" />
+    <ClInclude Include="collision\cm_local.h" />
+    <ClInclude Include="collision\cm_patch.h" />
+    <ClInclude Include="collision\cm_polylib.h" />
+    <ClInclude Include="collision\cm_public.h" />
     <ClInclude Include="cvar.h" />
     <ClInclude Include="filesystem.h" />
     <ClInclude Include="message.h" />
@@ -62,7 +65,12 @@
     <ClCompile Include="client\cgame\cg_builtins.c" />
     <ClCompile Include="client\ui\ui_builtins.c" />
     <ClCompile Include="cmd.c" />
-    <ClCompile Include="cmodel.c" />
+    <ClCompile Include="collision\cm_areas.c" />
+    <ClCompile Include="collision\cm_load.c" />
+    <ClCompile Include="collision\cm_patch.c" />
+    <ClCompile Include="collision\cm_polylib.c" />
+    <ClCompile Include="collision\cm_test.c" />
+    <ClCompile Include="collision\cm_trace.c" />
     <ClCompile Include="cvar.c" />
     <ClCompile Include="filesystem.c" />
     <ClCompile Include="main_windows.c" />

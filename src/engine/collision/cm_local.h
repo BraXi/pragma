@@ -99,8 +99,11 @@ typedef struct
 {
 	char		name[MAX_QPATH];
 
+	void		*membase;
+	unsigned int memsize;
+
 	int			numShaders;
-	q3bsp_surfinfo_t* shaders;
+	bsp_surfinfo_t* shaders;
 
 	int			numBrushSides;
 	cbrushside_t *brushsides;

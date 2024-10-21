@@ -48,7 +48,6 @@
       <Filter>Stubs</Filter>
     </ClInclude>
     <ClInclude Include="cmd.h" />
-    <ClInclude Include="cmodel.h" />
     <ClInclude Include="cvar.h" />
     <ClInclude Include="filesystem.h" />
     <ClInclude Include="message.h" />
@@ -71,6 +70,18 @@
     </ClInclude>
     <ClInclude Include="..\common\shared.h">
       <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_local.h">
+      <Filter>CollisionModel</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_patch.h">
+      <Filter>CollisionModel</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_polylib.h">
+      <Filter>CollisionModel</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_public.h">
+      <Filter>CollisionModel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -103,7 +114,6 @@
     </ClCompile>
     <ClCompile Include="astar_navigation.c" />
     <ClCompile Include="cmd.c" />
-    <ClCompile Include="cmodel.c" />
     <ClCompile Include="cvar.c" />
     <ClCompile Include="filesystem.c" />
     <ClCompile Include="main_windows.c" />
@@ -168,6 +178,24 @@
     <ClCompile Include="script\qcvm_strings.c">
       <Filter>QCVM</Filter>
     </ClCompile>
+    <ClCompile Include="collision\cm_areas.c">
+      <Filter>CollisionModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_load.c">
+      <Filter>CollisionModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_patch.c">
+      <Filter>CollisionModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_polylib.c">
+      <Filter>CollisionModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_test.c">
+      <Filter>CollisionModel</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_trace.c">
+      <Filter>CollisionModel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -181,6 +209,9 @@
     </Filter>
     <Filter Include="Server">
       <UniqueIdentifier>{eb2d25a4-ed06-41e0-8501-a21e2ff39434}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CollisionModel">
+      <UniqueIdentifier>{ad35c91f-9793-4700-b74a-3827fdc66555}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

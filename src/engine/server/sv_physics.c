@@ -45,7 +45,7 @@ qboolean SV_CheckBottom(gentity_t* ent)
 		{
 			start[0] = x ? maxs[0] : mins[0];
 			start[1] = y ? maxs[1] : mins[1];
-			if (SV_PointContents(start) != CONTENTS_SOLID)
+			if (SV_PointContents(start) != Q3CONTENTS_SOLID)
 				goto realcheck;
 		}
 
@@ -63,7 +63,7 @@ realcheck:
 	start[0] = stop[0] = (mins[0] + maxs[0]) * 0.5;
 	start[1] = stop[1] = (mins[1] + maxs[1]) * 0.5;
 	stop[2] = start[2] - 2 * STEPSIZE;
-	trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID);
+	trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
 
 	if (trace.fraction == 1.0)
 		return false;
@@ -76,7 +76,7 @@ realcheck:
 			start[0] = stop[0] = x ? maxs[0] : mins[0];
 			start[1] = stop[1] = y ? maxs[1] : mins[1];
 
-			trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID);
+			trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
 
 			if (trace.fraction != 1.0 && trace.endpos[2] > bottom)
 				bottom = trace.endpos[2];
@@ -108,7 +108,7 @@ void SV_CheckGround(gentity_t* ent)
 	point[1] = ent->v.origin[1];
 	point[2] = ent->v.origin[2] - 0.25;
 
-	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID);
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
 
 	// check steepness
 	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
@@ -142,7 +142,7 @@ gentity_t* SV_TestEntityPosition(gentity_t* ent)
 	else
 		mask = MASK_SOLID;
 
-	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask);
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask, false); // FIXME: Q3BSP CAPSULES?
 
 	if (trace.startsolid)
 		return sv.edicts;
@@ -245,7 +245,7 @@ int SV_FlyMove(gentity_t* ent, float time, int mask)
 		for (i = 0; i < 3; i++)
 			end[i] = ent->v.origin[i] + time_left * ent->v.velocity[i];
 
-		trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, end, ent, mask);
+		trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, end, ent, mask, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
 
 		if (trace.allsolid)
 		{	// entity is trapped in another solid
@@ -385,7 +385,7 @@ retry:
 	else
 		mask = MASK_SOLID;
 
-	trace = SV_Trace(start, ent->v.mins, ent->v.maxs, end, ent, mask);
+	trace = SV_Trace(start, ent->v.mins, ent->v.maxs, end, ent, mask, false);
 
 	VectorCopy(trace.endpos, ent->v.origin);
 	SV_LinkEntity(ent);

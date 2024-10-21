@@ -52,7 +52,7 @@ R_LoadWorldMaterials
 static void R_LoadWorldMaterials(const lump_t* lump)
 {
 	int		i, count;
-	q3bsp_surfinfo_t *in, *out;
+	bsp_surfinfo_t *in, *out;
 
 	in = (void*)(mod_base + lump->fileofs);
 	CheckLumpSize(lump, sizeof(*in), __FUNCTION__);
@@ -70,7 +70,7 @@ static void R_LoadWorldMaterials(const lump_t* lump)
 		out[i].surfaceFlags = LittleLong(out[i].surfaceFlags);
 		out[i].contentFlags = LittleLong(out[i].contentFlags);
 
-		ri.Printf(PRINT_ALL, "    '%s'\n", out[i].name);
+		//ri.Printf(PRINT_ALL, "    '%s'\n", out[i].name);
 	}
 
 	ri.Printf(PRINT_ALL, "... %i materials\n", world.numMaterials);
@@ -97,16 +97,16 @@ R_TryLoadExternalLightmaps
 */
 static void R_TryLoadExternalLightmaps()
 {
-	q3bsp_header_t *hdr;
-	q3bsp_surface_t *surf;
+	bsp_header_t *hdr;
+	bsp_surface_t *surf;
 	image_t *lightmap;
 	int numReferencedLightmaps;
 	int i, count, lmnum;
 	char filename[MAX_QPATH];
 
-	hdr = (q3bsp_header_t*)mod_base;
-	surf = (void*)(mod_base + hdr->lumps[Q3LUMP_SURFACES].fileofs);
-	count = hdr->lumps[Q3LUMP_SURFACES].filelen / sizeof(*surf);
+	hdr = (bsp_header_t*)mod_base;
+	surf = (void*)(mod_base + hdr->lumps[BSPLUMP_SURFACES].fileofs);
+	count = hdr->lumps[BSPLUMP_SURFACES].filelen / sizeof(*surf);
 
 	// find the highest lightmap index in surfaces to know the number of lightmaps we need
 	numReferencedLightmaps = -1;
@@ -181,7 +181,7 @@ static void R_LoadLightmaps(const lump_t* lump)
 
 	if (world.numLightmaps >= MAX_WORLD_LIGHTMAPS)
 	{
-		ri.Error(ERR_DROP, "Too many lightmaps");
+		ri.Error(ERR_DROP, "Too many lightmaps (%i)", world.numLightmaps);
 		return;
 	}
 
@@ -225,7 +225,7 @@ R_LoadWorldPlanes
 */
 static void R_LoadWorldPlanes(const lump_t* lump)
 {
-	q3bsp_plane_t* in;
+	bsp_plane_t* in;
 	int			i, j;
 	int			count;
 	int			bits;
@@ -274,7 +274,7 @@ R_LoadDrawVerts
 */
 static void R_LoadDrawVerts(const lump_t* lump)
 {
-	q3bsp_drawVert_t *in;
+	bsp_drawvert_t *in;
 	worldDrawVert_t *out;
 	int			i, j;
 	int			count;
@@ -367,7 +367,7 @@ static void SetPlaneSignbits(cplane_t* out)
 ParseBrushFace
 ===============
 */
-static void ParseBrushFace(const q3bsp_surface_t* bspSurf, worldSurface_t* worldSurf) 
+static void ParseBrushFace(const bsp_surface_t* bspSurf, worldSurface_t* worldSurf) 
 {
 	worldSurf_Face_t* face;
 	int i;
@@ -414,7 +414,7 @@ ParseMeshSurface
 misc_models etc..
 =================
 */
-static void ParseMeshSurface(const q3bsp_surface_t* bspSurf, worldSurface_t* worldSurf)
+static void ParseMeshSurface(const bsp_surface_t* bspSurf, worldSurface_t* worldSurf)
 {
 	worldSurf_Mesh_t* mesh;
 	worldDrawVert_t* pVertex;
@@ -461,7 +461,7 @@ static void ParseMeshSurface(const q3bsp_surface_t* bspSurf, worldSurface_t* wor
 ParseBillboard
 ===============
 */
-static void ParseBillboard(const q3bsp_surface_t* bspSurf, worldSurface_t* worldSurf) 
+static void ParseBillboard(const bsp_surface_t* bspSurf, worldSurface_t* worldSurf) 
 {
 	worldSurf_Billboard_t* billboard;
 	int i;
@@ -489,7 +489,7 @@ R_LoadWorldSurfaces
 */
 static void R_LoadWorldSurfaces(const lump_t* surfsLump, const lump_t* vertsLump, const lump_t* indexLump)
 {
-	q3bsp_surface_t *in;
+	bsp_surface_t *in;
 	worldSurface_t *out;
 	int count;
 	int numFaces, numPatchMeshes, numMeshes, numBillboards;
@@ -589,18 +589,18 @@ R_LoadNodesAndLeafs
 */
 static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 {
-	q3bsp_node_t* in;
-	q3bsp_leaf_t* inLeaf;
+	bsp_node_t* in;
+	bsp_leaf_t* inLeaf;
 	worldNode_t* out;
 	int			i, j, p;
 	int			numNodes, numLeafs;
 
 	in = (void*)(mod_base + nodeLump->fileofs);
-	CheckLumpSize(nodeLump, sizeof(q3bsp_node_t), __FUNCTION__);
-	CheckLumpSize(leafLump, sizeof(q3bsp_leaf_t), __FUNCTION__);
+	CheckLumpSize(nodeLump, sizeof(bsp_node_t), __FUNCTION__);
+	CheckLumpSize(leafLump, sizeof(bsp_leaf_t), __FUNCTION__);
 
-	numNodes = nodeLump->filelen / sizeof(q3bsp_node_t);
-	numLeafs = leafLump->filelen / sizeof(q3bsp_leaf_t);
+	numNodes = nodeLump->filelen / sizeof(bsp_node_t);
+	numLeafs = leafLump->filelen / sizeof(bsp_leaf_t);
 
 	out = Hunk_Alloc((numNodes + numLeafs) * sizeof(*out));
 
@@ -665,7 +665,7 @@ R_LoadInlineModels
 */
 static void R_LoadInlineModels(const lump_t* lump)
 {
-	q3bsp_model_t* in;
+	bsp_model_t* in;
 	bmodel_t	*out;
 	model_t		*model;
 	int			i, j, count;
@@ -917,13 +917,24 @@ static qboolean R_CreateWorldVBO()
 
 /*
 =================
+R_FreeWorld
+=================
+*/
+void R_FreeWorld()
+{
+
+}
+
+/*
+=================
 R_LoadWorld
 =================
 */
 void R_LoadWorld(model_t* mod, void* buffer)
 {
+
 	int		i;
-	q3bsp_header_t* header;
+	bsp_header_t* header;
 	char tempname[MAX_QPATH];
 
 	if (world.bLoaded)
@@ -933,16 +944,16 @@ void R_LoadWorld(model_t* mod, void* buffer)
 
 	world.bLoaded = false;
 
-	header = (q3bsp_header_t*)buffer;
+	header = (bsp_header_t*)buffer;
 	i = LittleLong(header->version);
-	if (i != WORLD_VERSION)
+	if (i != BSP_VERSION)
 	{
-		ri.Error(ERR_DROP, "R_LoadWorld: %s has wrong version number (%i should be %i)", mod->name, i, WORLD_VERSION);
+		ri.Error(ERR_DROP, __FUNCTION__": %s has wrong version number (%i should be %i)", mod->name, i, BSP_VERSION);
 	}
 
 	// swap all the lumps
 	mod_base = (byte*)header;
-	for (i = 0; i < sizeof(q3bsp_header_t) / 4; i++)
+	for (i = 0; i < sizeof(bsp_header_t) / 4; i++)
 	{
 		((int*)header)[i] = LittleLong(((int*)header)[i]);
 	}
@@ -954,21 +965,21 @@ void R_LoadWorld(model_t* mod, void* buffer)
 	mod->numframes = 1;
 	r_pCurrentModel = pLoadModel;
 
-	ri.Printf(PRINT_ALL, "----- %s(%s) -----\n", __FUNCTION__, world.name);
+	ri.Printf(PRINT_ALL, "----- %s(%s) -----\n", __FUNCTION__, mod->name);
 
-	R_LoadWorldMaterials(&header->lumps[Q3LUMP_SHADERS]);
-	R_LoadLightmaps(&header->lumps[Q3LUMP_LIGHTMAPS]);
-	R_LoadWorldPlanes(&header->lumps[Q3LUMP_PLANES]);
-	R_LoadFogs(&header->lumps[Q3LUMP_FOGS], &header->lumps[Q3LUMP_BRUSHES], &header->lumps[Q3LUMP_BRUSHSIDES]);
-	R_LoadDrawVerts(&header->lumps[Q3LUMP_DRAWVERTS]);
-	R_LoadDrawIndexes(&header->lumps[Q3LUMP_DRAWINDEXES]);
-	R_LoadWorldSurfaces(&header->lumps[Q3LUMP_SURFACES], &header->lumps[Q3LUMP_DRAWVERTS], &header->lumps[Q3LUMP_DRAWINDEXES]);
-	R_LoadMarkSurfaces(&header->lumps[Q3LUMP_LEAFSURFACES]);
-	R_LoadNodesAndLeafs(&header->lumps[Q3LUMP_NODES], &header->lumps[Q3LUMP_LEAFS]);
-	R_LoadInlineModels(&header->lumps[Q3LUMP_MODELS]);
-	R_LoadVisibility(&header->lumps[Q3LUMP_VISIBILITY]);
-	R_ParseEntities(&header->lumps[Q3LUMP_ENTITIES]);
-	R_LoadLightGrid(&header->lumps[Q3LUMP_LIGHTGRID]);
+	R_LoadWorldMaterials(&header->lumps[BSPLUMP_MATERIALS]);
+	R_LoadLightmaps(&header->lumps[BSPLUMP_LIGHTMAPS]);
+	R_LoadWorldPlanes(&header->lumps[BSPLUMP_PLANES]);
+	//R_LoadFogs(&header->lumps[BSPLUMP_FOGS], &header->lumps[BSPLUMP_BRUSHES], &header->lumps[BSPLUMP_BRUSHSIDES]);
+	R_LoadDrawVerts(&header->lumps[BSPLUMP_DRAWVERTS]);
+	R_LoadDrawIndexes(&header->lumps[BSPLUMP_DRAWINDEXES]);
+	R_LoadWorldSurfaces(&header->lumps[BSPLUMP_SURFACES], &header->lumps[BSPLUMP_DRAWVERTS], &header->lumps[BSPLUMP_DRAWINDEXES]);
+	R_LoadMarkSurfaces(&header->lumps[BSPLUMP_LEAFSURFACES]);
+	R_LoadNodesAndLeafs(&header->lumps[BSPLUMP_NODES], &header->lumps[BSPLUMP_LEAFS]);
+	R_LoadInlineModels(&header->lumps[BSPLUMP_MODELS]);
+	R_LoadVisibility(&header->lumps[BSPLUMP_VISIBILITY]);
+	R_ParseEntities(&header->lumps[BSPLUMP_ENTITIES]);
+	R_LoadLightGrid(&header->lumps[BSPLUMP_LIGHTGRID]);
 
 	R_InitMaterials();
 
@@ -981,15 +992,4 @@ void R_LoadWorld(model_t* mod, void* buffer)
 	mod->type = MOD_Q3BRUSH;
 
 	ri.Printf(PRINT_ALL, "----------\n");
-}
-
-
-/*
-=================
-R_FreeWorld
-=================
-*/
-void R_FreeWorld()
-{
-
 }

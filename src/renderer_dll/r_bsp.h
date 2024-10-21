@@ -125,7 +125,7 @@ typedef struct renderWorld_s
 	char		name[MAX_QPATH]; // without .bsp and path
 	qboolean	bLoaded;
 
-	q3bsp_surfinfo_t* materials;
+	bsp_surfinfo_t* materials;
 	int			numMaterials;
 
 	worldDrawVert_t* drawVerts;

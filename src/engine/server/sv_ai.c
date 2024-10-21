@@ -139,7 +139,7 @@ static void SV_LinkPathNode(gentity_t* self)
 	{
 		VectorCopy(nodes[i].origin, end);
 		end[2] += 16;
-		trace = SV_Trace(start, mins, maxs, end, self, MASK_MONSTERSOLID);
+		trace = SV_Trace(start, mins, maxs, end, self, MASK_MONSTERSOLID, false);
 
 		if (trace.fraction != 1.0)
 			continue;
@@ -167,7 +167,7 @@ static void SV_DropPathNodeToFloor(gentity_t* self)
 	VectorCopy(self->v.origin, dest);
 	dest[2] -= 128;
 
-	trace = SV_Trace(self->v.origin, self->v.mins, self->v.maxs, dest, self, MASK_MONSTERSOLID);
+	trace = SV_Trace(self->v.origin, self->v.mins, self->v.maxs, dest, self, MASK_MONSTERSOLID, false);
 
 	if (trace.startsolid)
 	{
@@ -274,7 +274,7 @@ static void SV_GetNearestPathNode(vec3_t point)
 	{
 		VectorCopy(nodes[i].origin, end);
 		end[2] += 16;
-		trace = SV_Trace(start, vec3_origin, vec3_origin, end, NULL, MASK_MONSTERSOLID);
+		trace = SV_Trace(start, vec3_origin, vec3_origin, end, NULL, MASK_MONSTERSOLID, false);
 
 		if (trace.fraction != 1.0)
 			continue;
@@ -443,7 +443,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 						neworg[2] += dz;
 				}
 			}
-			trace = SV_Trace(actor->v.origin, actor->v.mins, actor->v.maxs, neworg, actor, contentmask);
+			trace = SV_Trace(actor->v.origin, actor->v.mins, actor->v.maxs, neworg, actor, contentmask, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
 
 			// fly monsters don't enter water voluntarily
 			if (actor->v.flags & FL_FLY)
@@ -504,7 +504,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	VectorCopy(neworg, end);
 	end[2] -= stepsize * 2;
 
-	trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask);
+	trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
 
 	if (trace.allsolid)
 		return false;
@@ -512,7 +512,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	if (trace.startsolid)
 	{
 		neworg[2] -= stepsize;
-		trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask);
+		trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
 		if (trace.allsolid || trace.startsolid)
 			return false;
 	}

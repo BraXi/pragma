@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "cm_local.h"
 
+#define CMODEL_HUNKSIZE		1024*1024*8 // 8mb
+
 #define	MAX_PATCH_VERTS		1024
 
 // to allow boxes to be treated as brush models, we allocate
@@ -37,7 +39,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 clipMap_t	cm;
 int			c_pointcontents;
 int			c_traces, c_brush_traces, c_patch_traces;
-
 
 byte		*cmod_base;
 
@@ -69,7 +70,7 @@ CMod_LoadShaders
 */
 static void CMod_LoadShaders(lump_t *l) 
 {
-	q3bsp_surfinfo_t *in, *out;
+	bsp_surfinfo_t *in, *out;
 	int i, count;
 
 	in = (void *)(cmod_base + l->fileofs);
@@ -90,7 +91,8 @@ static void CMod_LoadShaders(lump_t *l)
 	memcpy( cm.shaders, in, count * sizeof( *cm.shaders ) );
 
 	out = cm.shaders;
-	for ( i=0 ; i<count ; i++, in++, out++ ) {
+	for ( i=0 ; i<count ; i++, in++, out++ ) 
+	{
 		out->contentFlags = LittleLong( out->contentFlags );
 		out->surfaceFlags = LittleLong( out->surfaceFlags );
 	}
@@ -104,7 +106,7 @@ CMod_LoadSubmodels
 */
 static void CMod_LoadSubmodels(lump_t *l) 
 {
-	q3bsp_model_t *in;
+	bsp_model_t *in;
 	cmodel_t *out;
 	int i, j, count;
 	int *indexes;
@@ -173,7 +175,7 @@ CMod_LoadNodes
 */
 static void CMod_LoadNodes(lump_t *l) 
 {
-	q3bsp_node_t *in;
+	bsp_node_t *in;
 	cNode_t *out;
 	int child;
 	int i, j, count;
@@ -232,7 +234,7 @@ CMod_LoadBrushes
 */
 static void CMod_LoadBrushes(lump_t *l) 
 {
-	q3bsp_brush_t *in;
+	bsp_brush_t *in;
 	cbrush_t *out;
 	int i, count;
 
@@ -272,7 +274,7 @@ CMod_LoadLeafs
 */
 static void CMod_LoadLeafs(lump_t *l)
 {
-	q3bsp_leaf_t *in;
+	bsp_leaf_t *in;
 	cLeaf_t *out;
 	int i, count;
 	
@@ -323,7 +325,7 @@ CMod_LoadPlanes
 */
 static void CMod_LoadPlanes(lump_t *l)
 {
-	q3bsp_plane_t *in;
+	bsp_plane_t *in;
 	cplane_t *out;
 	int count, bits, i, j;
 	
@@ -425,7 +427,7 @@ CMod_LoadBrushSides
 */
 static void CMod_LoadBrushSides(lump_t *l)
 {
-	q3bsp_brushside_t *in;
+	bsp_brushside_t *in;
 	cbrushside_t *out;
 	int i, count, num;
 
@@ -515,8 +517,8 @@ CMod_LoadPatches
 */
 static void CMod_LoadPatches(lump_t *surfs, lump_t *verts) 
 {
-	q3bsp_surface_t* in;
-	q3bsp_drawVert_t *dv, *dv_p;
+	bsp_surface_t* in;
+	bsp_drawvert_t *dv, *dv_p;
 	cPatch_t *patch;
 	int c, i, j, count;
 	int width, height;
@@ -584,69 +586,71 @@ unsigned CM_LumpChecksum(lump_t *lump)
 	return LittleLong (Com_BlockChecksum (cmod_base + lump->fileofs, lump->filelen));
 }
 
-unsigned CM_Checksum(q3bsp_header_t *header) 
+unsigned CM_Checksum(bsp_header_t *header) 
 {
 	unsigned checksums[16];
-	checksums[0] = CM_LumpChecksum(&header->lumps[Q3LUMP_SHADERS]);
-	checksums[1] = CM_LumpChecksum(&header->lumps[Q3LUMP_LEAFS]);
-	checksums[2] = CM_LumpChecksum(&header->lumps[Q3LUMP_LEAFBRUSHES]);
-	checksums[3] = CM_LumpChecksum(&header->lumps[Q3LUMP_LEAFSURFACES]);
-	checksums[4] = CM_LumpChecksum(&header->lumps[Q3LUMP_PLANES]);
-	checksums[5] = CM_LumpChecksum(&header->lumps[Q3LUMP_BRUSHSIDES]);
-	checksums[6] = CM_LumpChecksum(&header->lumps[Q3LUMP_BRUSHES]);
-	checksums[7] = CM_LumpChecksum(&header->lumps[Q3LUMP_MODELS]);
-	checksums[8] = CM_LumpChecksum(&header->lumps[Q3LUMP_NODES]);
-	checksums[9] = CM_LumpChecksum(&header->lumps[Q3LUMP_SURFACES]);
-	checksums[10] = CM_LumpChecksum(&header->lumps[Q3LUMP_DRAWVERTS]);
+	checksums[0] = CM_LumpChecksum(&header->lumps[BSPLUMP_MATERIALS]);
+	checksums[1] = CM_LumpChecksum(&header->lumps[BSPLUMP_LEAFS]);
+	checksums[2] = CM_LumpChecksum(&header->lumps[BSPLUMP_LEAFBRUSHES]);
+	checksums[3] = CM_LumpChecksum(&header->lumps[BSPLUMP_LEAFSURFACES]);
+	checksums[4] = CM_LumpChecksum(&header->lumps[BSPLUMP_PLANES]);
+	checksums[5] = CM_LumpChecksum(&header->lumps[BSPLUMP_BRUSHSIDES]);
+	checksums[6] = CM_LumpChecksum(&header->lumps[BSPLUMP_BRUSHES]);
+	checksums[7] = CM_LumpChecksum(&header->lumps[BSPLUMP_MODELS]);
+	checksums[8] = CM_LumpChecksum(&header->lumps[BSPLUMP_NODES]);
+	checksums[9] = CM_LumpChecksum(&header->lumps[BSPLUMP_SURFACES]);
+	checksums[10] = CM_LumpChecksum(&header->lumps[BSPLUMP_DRAWVERTS]);
 
 	return LittleLong(Com_BlockChecksum(checksums, 11 * 4));
 }
 
+/*
+==================
+CM_ClearMap
+==================
+*/
+void CM_ClearMap()
+{
+//	Com_Printf("CM_ClearMap(%s)\n", cm.name != NULL ? cm.name : "");
+	Hunk_Free(cm.membase);
+	memset(&cm, 0, sizeof(cm));
+	CM_ClearLevelPatches();
+}
 
-byte* cmodel_base = NULL;
-int cmodel_size;
 /*
 ==================
 CM_LoadMap
-
 Loads in the map and all submodels
 ==================
 */
 void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) 
 {
-	q3bsp_header_t header;
+	bsp_header_t header;
 	int *buf;
 	int i, length;
 	static unsigned	last_checksum;
+	int start_time;
 
 	if ( !name ) 
 	{
 		Com_Error( ERR_DROP, __FUNCTION__": NULL name" );
+		return;
 	}
 	
-
 	cm_noAreas = Cvar_Get("cm_noAreas", "0", CVAR_CHEAT, NULL);
-	cm_noCurves = Cvar_Get("cm_noCurves", "0", CVAR_CHEAT, NULL);
+	cm_noCurves = Cvar_Get("cm_noCurves", "1", CVAR_CHEAT, NULL);
 	cm_playerCurveClip = Cvar_Get("cm_playerCurveClip", "1", CVAR_ARCHIVE|CVAR_CHEAT, NULL);
 	
-	Com_Printf( __FUNCTION__"( %s, %i )\n", name, clientload );
+	Com_Printf( __FUNCTION__"( %s, %s )\n", name, clientload == true ? "client" : "server");
 
-	if ( !strcmp( cm.name, name ) && clientload ) 
+	if (!Q_strcasecmp( cm.name, name ) && clientload)
 	{
 		*checksum = last_checksum;
 		return;
 	}
 
 	// free old stuff
-	memset( &cm, 0, sizeof( cm ) );
-	CM_ClearLevelPatches();
-
-	if (cmodel_base)
-	{
-		Hunk_Free(cmodel_base);
-		cmodel_base = NULL;
-		cmodel_size = 0;
-	}
+	CM_ClearMap();
 	
 	if ( !name[0] ) 
 	{
@@ -658,6 +662,8 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 		*checksum = 0;
 		return;
 	}
+
+	start_time = Sys_Milliseconds();
 
 	//
 	// load the file
@@ -671,42 +677,43 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 	last_checksum = LittleLong (Com_BlockChecksum (buf, length));
 	*checksum = last_checksum;
 
-	header = *(q3bsp_header_t*)buf;
-	for (i = 0; i<sizeof(q3bsp_header_t)/4; i++) 
+	header = *(bsp_header_t*)buf;
+	for (i = 0; i<sizeof(bsp_header_t)/4; i++) 
 	{
 		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
 	}
 
-#if 0
-	if (header.ident != WORLD_IDENT)
+	if (header.ident != BSP_IDENT)
 	{
-		Com_Error(ERR_DROP, "CM_LoadMap: %s is not a map", name);
+		Com_Error(ERR_DROP, "%s is not a map", name);
 	}
 
-	if ( header.version != WORLD_VERSION )
+	if ( header.version != BSP_VERSION )
 	{
-		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number (%i should be %i)", name, header.version, WORLD_VERSION);
+		Com_Error (ERR_DROP, "%s has wrong version number (%i should be %i)", name, header.version, BSP_VERSION);
 	}
-#endif
 
 	cmod_base = (byte *)buf;
-	cmodel_base = Hunk_Begin(1024 * 1024 * 8, "CModel");
+	cm.membase = Hunk_Begin(CMODEL_HUNKSIZE, "CModel");
 
 	// load into heap
-	CMod_LoadShaders( &header.lumps[Q3LUMP_SHADERS] );
-	CMod_LoadLeafs (&header.lumps[Q3LUMP_LEAFS]);
-	CMod_LoadLeafBrushes (&header.lumps[Q3LUMP_LEAFBRUSHES]);
-	CMod_LoadLeafSurfaces (&header.lumps[Q3LUMP_LEAFSURFACES]);
-	CMod_LoadPlanes (&header.lumps[Q3LUMP_PLANES]);
-	CMod_LoadBrushSides (&header.lumps[Q3LUMP_BRUSHSIDES]);
-	CMod_LoadBrushes (&header.lumps[Q3LUMP_BRUSHES]);
-	CMod_LoadSubmodels (&header.lumps[Q3LUMP_MODELS]);
-	CMod_LoadNodes (&header.lumps[Q3LUMP_NODES]);
-	CMod_LoadEntityString (&header.lumps[Q3LUMP_ENTITIES]);
-	CMod_LoadVisibility( &header.lumps[Q3LUMP_VISIBILITY] );
-	CMod_LoadPatches( &header.lumps[Q3LUMP_SURFACES], &header.lumps[Q3LUMP_DRAWVERTS] );
+	CMod_LoadShaders( &header.lumps[BSPLUMP_MATERIALS] );
+	CMod_LoadLeafs (&header.lumps[BSPLUMP_LEAFS]);
+	CMod_LoadLeafBrushes (&header.lumps[BSPLUMP_LEAFBRUSHES]);
+	CMod_LoadLeafSurfaces (&header.lumps[BSPLUMP_LEAFSURFACES]);
+	CMod_LoadPlanes (&header.lumps[BSPLUMP_PLANES]);
+	CMod_LoadBrushSides (&header.lumps[BSPLUMP_BRUSHSIDES]);
+	CMod_LoadBrushes (&header.lumps[BSPLUMP_BRUSHES]);
+	CMod_LoadSubmodels (&header.lumps[BSPLUMP_MODELS]);
+	CMod_LoadNodes (&header.lumps[BSPLUMP_NODES]);
+	CMod_LoadEntityString (&header.lumps[BSPLUMP_ENTITIES]);
+	CMod_LoadVisibility( &header.lumps[BSPLUMP_VISIBILITY] );
+	CMod_LoadPatches( &header.lumps[BSPLUMP_SURFACES], &header.lumps[BSPLUMP_DRAWVERTS] );
 
-	cmodel_size = Hunk_End();
+	cm.memsize = Hunk_End();
+
+	Com_Printf("Loaded %s in %ims (%iKB of hunk).\n", name, (Sys_Milliseconds() - start_time), (cm.memsize/1024));
+
 
 	// we are NOT freeing the file, because it is cached for the ref
 	FS_FreeFile (buf);
@@ -719,17 +726,6 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 	{
 		strncpy( cm.name, name, sizeof(cm.name) );
 	}
-}
-
-/*
-==================
-CM_ClearMap
-==================
-*/
-void CM_ClearMap() 
-{
-	memset( &cm, 0, sizeof( cm ) );
-	CM_ClearLevelPatches();
 }
 
 /*

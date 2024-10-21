@@ -638,8 +638,7 @@ void SV_ShowEntitySurface(gentity_t* self, const char* surfaceName)
 /*
 ==============
 SV_EntityCanBeDrawn
-
-returns false if all parts of a model are hidden or there's no model at all
+returns true if entity can be potentialy seen
 ==============
 */
 qboolean SV_EntityCanBeDrawn(gentity_t* self)
@@ -661,7 +660,7 @@ qboolean SV_EntityCanBeDrawn(gentity_t* self)
 		return false; // totally transparent!
 
 	if (svmod->type == MOD_BRUSH)
-		return true;
+		return true; // always send bmodels
 
 	if (self->s.hidePartBits <= 0)
 		return true; // nothing was hidden

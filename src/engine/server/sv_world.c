@@ -84,7 +84,7 @@ void M_CheckGround(gentity_t* ent)
 	point[1] = ent->v.origin[1];
 	point[2] = ent->v.origin[2] - 0.25;
 
-	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID);
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID, false);
 
 	// check steepness
 	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
@@ -449,7 +449,7 @@ void SV_LinkEntity(gentity_t *ent)
 		// if none of the leafs were inside the map, the entity is considered to be outside the world and can be unlinked
 		if (sv_debug->value)
 		{
-			Com_Printf(__FUNCTION__:" Entity %i outside the world at [%i %i %i]\n", NUM_FOR_ENT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+			Com_Printf(__FUNCTION__": Entity %i outside the world at [%i %i %i]\n", NUM_FOR_ENT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 		}
 		return;
 	}
@@ -716,13 +716,13 @@ int SV_PointContents(vec3_t p)
 
 typedef struct
 {
-	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
+	vec3_t		boxmins, boxmaxs; // enclose the test object along entire move
 	float		*mins, *maxs;	// size of the moving object
-	vec3_t		mins2, maxs2;	// size when clipping against monsters
 	float		*start, *end;
 	trace_t		trace;
-	gentity_t		*passedict;
+	gentity_t	*ignoreEntity;
 	int			contentmask;
+	int			capsule;
 } moveclip_t;
 
 
@@ -762,6 +762,31 @@ trace_t SV_Clip(gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3
 }
 
 /*
+==================
+SV_SetTraceEnt
+
+If NULL  : entityNum = -1     | entity = world
+If WORLD : entityNum = 0      | entity = world
+Others   : entityNum = entNum | entity = ent
+
+Note: trace.ent can not be NULL in QCVM
+==================
+*/
+static void SV_SetTraceEnt(trace_t* trace, gentity_t* ent)
+{
+	if (ent == NULL)
+	{
+		trace->entityNum = ENTITYNUM_NULL;
+		trace->ent = sv.edicts;
+	}
+	else
+	{
+		trace->entityNum = NUM_FOR_ENT(ent);
+		trace->ent = ent;
+	}
+}
+
+/*
 ====================
 SV_ClipMoveToEntities
 ====================
@@ -771,69 +796,79 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 	int			i, num;
 	gentity_t	*touchlist[MAX_GENTITIES], *touch;
 	trace_t		trace;
-	int			headnode;
+	clipHandle_t clipHandle;
 	float		*angles;
+	qboolean	oldStart;
 
 	num = SV_AreaEntities(clip->boxmins, clip->boxmaxs, touchlist, MAX_GENTITIES, AREA_SOLID);
 
-	// be careful, it is possible to have an entity in this
-	// list removed before we get to it (killtriggered)
+	// it is possible to have an entity in this list removed before we get to it (killtriggered)
 	for (i = 0; i < num; i++)
 	{
+		if (clip->trace.allsolid)
+			return; 
+
 		touch = touchlist[i];
 
+		if (!touch->inuse)
+			continue; // the entity was likely killtriggered
+
 		if ((int)touch->v.solid == SOLID_NOT)
-			continue;
+			continue; // the entity isn't solid
 
-		if (touch == clip->passedict)
-			continue;
-
-		if (clip->trace.allsolid)
-			return;
-
-		if (clip->passedict)
+		if (clip->ignoreEntity) // see if the entity should be ignored
 		{
-		 	if (PROG_TO_GENT(touch->v.owner) == clip->passedict)
-				continue;	// don't clip against own missiles
-			if (PROG_TO_GENT(clip->passedict->v.owner) == touch)
-				continue;	// don't clip against owner
+			if (touch == clip->ignoreEntity) 
+				continue; // don't clip against the ignored entity
+
+			if (PROG_TO_GENT(touch->v.owner) == clip->ignoreEntity)
+				continue; // don't clip against entities that have ignoreEntity as their owner
 		}
-
-		if ( !(clip->contentmask & CONTENTS_DEADMONSTER) && ((int)touch->v.svflags & SVF_DEADMONSTER) )
-				continue;
-
-		if (!(clip->contentmask & CONTENTS_PLAYER) && ((int)touch->v.svflags & SVF_PLAYER))
-			continue; // don't clip player against other players
+	
+		if (!(clip->contentmask & touch->contents)) 
+		{
+			continue; // if the entity lacks the contents we trace against ignore it
+		}
 
 		// might intersect, so do an exact clip
-		headnode = SV_HullForEntity (touch);
-		angles = touch->v.angles;
-		if (touch->v.solid != SOLID_BSP)
-			angles = vec3_origin;	// boxes don't rotate
+		clipHandle = SV_HullForEntity(touch);
 
-		if ((int)touch->v.svflags & SVF_MONSTER) //braxi: this is silly as mins/maxs is copied to mins2/maxs2, probably quake1 leftover?
-			CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins2, clip->maxs2, headnode, clip->contentmask, touch->v.origin, angles, 0);
-		else
-			CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins, clip->maxs, headnode, clip->contentmask, touch->v.origin, angles, 0);
 
-		if (trace.allsolid || trace.startsolid || trace.fraction < clip->trace.fraction)
+		// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate
+		// BBOX entities don't rotate
+		if (SV_IsBrushModel(touch->v.modelindex) && (touch->v.solid == SOLID_BSP || touch->v.solid == SOLID_TRIGGER))
 		{
-			trace.ent = touch;
-		 	if (clip->trace.startsolid)
-			{
-				clip->trace = trace;
-				clip->trace.startsolid = true;
-			}
-			else
-				clip->trace = trace;
+			angles = touch->v.angles;
 		}
-		else if (trace.startsolid)
-			clip->trace.startsolid = true;
-
-		if (trace.ent == NULL)
-			trace.entityNum = ENTITYNUM_NULL;
 		else
-			trace.entityNum = NUM_FOR_ENT(trace.ent);
+		{
+			angles = vec3_origin;
+		}
+
+		CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins, clip->maxs, clipHandle, clip->contentmask, touch->v.origin, angles, clip->capsule);
+
+		if (trace.allsolid) 
+		{
+			clip->trace.allsolid = true;
+			//trace.entityNum = NUM_FOR_ENT(touch); //touch->s.number;
+			SV_SetTraceEnt(&trace, touch);
+		}
+		else if (trace.startsolid) 
+		{
+			clip->trace.startsolid = true;
+			SV_SetTraceEnt(&trace, touch);
+		}
+
+		if (trace.fraction < clip->trace.fraction)
+		{
+			// make sure we keep a startsolid from a previous trace
+			oldStart = clip->trace.startsolid;	
+			clip->trace = trace;
+			clip->trace.startsolid |= oldStart;
+			SV_SetTraceEnt(&trace, touch);
+		}
+
+		
 	}
 }
 
@@ -868,63 +903,57 @@ boxmaxs[0] = boxmaxs[1] = boxmaxs[2] = 9999;
 #endif
 }
 
+
 /*
 ==================
 SV_Trace
-
 Moves the given mins/maxs volume through the world from start to end.
-
-Passedict and edicts owned by passedict are explicitly not checked.
-
+ignoreEntity and entities owned by ignoreEntity are explicitly not checked.
 ==================
 */
-trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *passedict, int contentmask)
+trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *ignoreEntity, int contentmask, qboolean bCapsule)
 {
 	moveclip_t	clip;
 	int capsule;
 
-	if (!mins)
-		mins = vec3_origin;
-	if (!maxs)
-		maxs = vec3_origin;
 
-	memset ( &clip, 0, sizeof ( moveclip_t ) );
+	if (!mins)
+	{
+		mins = vec3_origin;
+	}
+	if (!maxs)
+	{
+		maxs = vec3_origin;
+	}
+
+	memset(&clip, 0, sizeof(moveclip_t));
+	SV_SetTraceEnt(&clip.trace, sv.edicts);
 
 	capsule = 0; // FIXME: Q3BSP - CAPSULE
 
 	// clip to world
-	CM_BoxTrace (&clip.trace, start, end, mins, maxs, 0, contentmask, capsule);
-
-	clip.trace.ent = sv.edicts; // world
-	if (clip.trace.ent == NULL)
-		clip.trace.entityNum = ENTITYNUM_NULL;
-	else
-		clip.trace.entityNum = NUM_FOR_ENT(clip.trace.ent);
+	CM_BoxTrace(&clip.trace, start, end, mins, maxs, 0, contentmask, capsule);
 
 	if (clip.trace.fraction == 0)
-		return clip.trace;		// blocked by the world
+	{
+		// blocked by the world
+		SV_SetTraceEnt(&clip.trace, sv.edicts);
+		return clip.trace;
+	}
 
 	clip.contentmask = contentmask;
 	clip.start = start;
 	clip.end = end;
 	clip.mins = mins;
 	clip.maxs = maxs;
-	clip.passedict = passedict;
-
-	VectorCopy (mins, clip.mins2);
-	VectorCopy (maxs, clip.maxs2);
+	clip.ignoreEntity = ignoreEntity;
 	
 	// create the bounding box of the entire move
-	SV_TraceBounds ( start, clip.mins2, clip.maxs2, end, clip.boxmins, clip.boxmaxs );
+	SV_TraceBounds(start, clip.mins, clip.maxs, end, clip.boxmins, clip.boxmaxs);
 
 	// clip to other solid entities
-	SV_ClipMoveToEntities ( &clip );
-
-	if (clip.trace.ent == NULL)
-		clip.trace.entityNum = ENTITYNUM_NULL;
-	else
-		clip.trace.entityNum = NUM_FOR_ENT(clip.trace.ent);
-
+	SV_ClipMoveToEntities( &clip );
+	SV_SetTraceEnt(&clip.trace, clip.trace.ent);
 	return clip.trace;
 }
 
