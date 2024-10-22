@@ -67,7 +67,7 @@ typedef struct sv_entvars_s
 	vec3_t		angles;
 	vec3_t		old_origin;		// for lerping
 
-	float		modelindex;		// models
+	int			modelindex;		// models
 	int32_t		anim;			// index to anim def
 	int32_t		animstarttime;	// sv.time when animation started
 	int32_t		animFrame;		// current animation frame
@@ -77,7 +77,7 @@ typedef struct sv_entvars_s
 	int32_t		renderFlags;	// RF_ flags
 	float		renderScale;	// used when renderFlags & RF_SCALE 
 	vec3_t		renderColor;	// used when renderFlags & RF_COLOR
-	float		renderAlpha;	// used whne renderFlags & RF_TRANSLUCENT
+	float		renderAlpha;	// used when renderFlags & RF_TRANSLUCENT
 
 	int32_t		loopsound;		// index to sound from precache_sound() that will constantly loop
 
@@ -90,6 +90,8 @@ typedef struct sv_entvars_s
 	// physics
 	int32_t			linkcount;	// increased each time linkentity() is invoked
 	float			solid;		// SOLID_NOT etc
+	int32_t			contents;	// CONTENTS_SOLID etc..
+
 	float			movetype;	// MOVETYPE_NONE etc
 	float			gravity;	// [0-1.0]
 	int32_t			clipmask;
@@ -145,8 +147,6 @@ typedef struct sv_entvars_s
 	int32_t		viewmodel_frame;
 
 	int32_t		pm_type; //pmtype_t
-	vec3_t		pm_mins;
-	vec3_t		pm_maxs;
 	int32_t		pm_flags;			// ducked, jump_held, etc
 	float		pm_time;			// each unit = 8 ms
 	int32_t		pm_gravity;

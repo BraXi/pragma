@@ -102,12 +102,10 @@ typedef enum
 // destination class for gi.multicast()
 typedef enum
 {
-MULTICAST_ALL,
-MULTICAST_PHS,
-MULTICAST_PVS,
-MULTICAST_ALL_R,
-MULTICAST_PHS_R,
-MULTICAST_PVS_R
+	MULTICAST_ALL,		// To everyone on server
+	MULTICAST_PVS,		// To everyone in the same PVS
+	MULTICAST_ALL_R, 	// Same as MULTICAST_ALL but reliable
+	MULTICAST_PVS_R		// Same as MULTICAST_PVSL but reliable
 } multicast_t;
 
 //=============================================

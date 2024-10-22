@@ -17,8 +17,6 @@ void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
 
 #define MAX_PACKET_ENTITIES 1024 // fixme: == MAX_PARSE_ENTITIES
 
-// FIXME: calls to remove() and spawn() in CustomizeForClient should cause error!!!
-
 /*
 * float EntityStateForClient(entity player);
 *
@@ -559,7 +557,7 @@ void SV_AddEntityToClientFrame(client_frame_t* frame, client_t* client, gentity_
 	if (sv_debug->value >= 3.0f)
 	{
 		state->renderFlags |= RF_DEPTHHACK;
-		Com_Printf("%4i: %i %s [%i %i %i]\n", frame->num_entities,  addEnt->s.number, Scr_GetString(addEnt->v.classname), (int)addEnt->v.origin[0], (int)addEnt->v.origin[1], (int)addEnt->v.origin[2]);
+		Com_Printf("%4i: %i %s [%i %i %i]\n", frame->num_entities, addEnt->s.number, Scr_GetString(addEnt->v.classname), (int)addEnt->v.origin[0], (int)addEnt->v.origin[1], (int)addEnt->v.origin[2]);
 	}
 
 	// don't mark players missiles as solid
@@ -686,15 +684,15 @@ void SV_BuildClientFrame(client_t *client)
 		}
 
 		// always send ourselves (the player entity), but ignore others if not touching a PV leaf
-		// if entity has SVF_NOCULL flag it will be _always_ sent regardless of PVS/PHS
+		// if entity has SVF_BROADCAST flag it will be _always_ sent regardless of PVS/PHS
 		if (ent == clent)
 		{
 			SV_AddEntityToClientFrame(frame, client, ent);
 			continue;
 		}
 
-		// SVF_NOCULL are broadcasted to every player
-		if (ent->v.svflags & SVF_NOCULL)
+		// SVF_BROADCAST are broadcasted to every player
+		if (ent->v.svflags & SVF_BROADCAST)
 		{
 			SV_AddEntityToClientFrame(frame, client, ent);
 			continue;
@@ -716,19 +714,9 @@ void SV_BuildClientFrame(client_t *client)
 			continue;
 		}		
 
-		if (!CM_AreasConnected(clientarea, ent->areanum))
-		{	
-			// doors can legally straddle two areas, so we may need to check another one
-			if (!ent->areanum2 || !CM_AreasConnected(clientarea, ent->areanum2))
-			{
-				continue; // blocked by a door
-			}			
-		}
-
 		if (!CM_AreasConnected(clientarea, ent->areanum)) 
 		{
-			// doors can legally straddle two areas, so  we may need to check another one
-			
+			// doors can legally straddle two areas, so  we may need to check another one			
 			//if (!ent->areanum2 || !CM_AreasConnected(clientarea, ent->areanum2)) // Q2
 			if (!CM_AreasConnected(clientarea, ent->areanum2)) // Q3
 			{

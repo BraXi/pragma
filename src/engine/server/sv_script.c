@@ -378,8 +378,8 @@ void Scr_ClientEndServerFrame(gentity_t* ent)
 
 	for (i = 0; i < 3; i++)
 	{
-		ent->client->ps.pmove.mins[i] = ent->v.pm_mins[i];
-		ent->client->ps.pmove.maxs[i] = ent->v.pm_maxs[i];
+		ent->client->ps.pmove.mins[i] = ent->v.mins[i];
+		ent->client->ps.pmove.maxs[i] = ent->v.maxs[i];
 		ent->client->ps.pmove.delta_angles[i] = ent->v.pm_delta_angles[i];
 	}
 

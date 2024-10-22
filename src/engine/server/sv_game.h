@@ -25,10 +25,10 @@ typedef struct link_s
 
 // edict->v.svflags
 #define	SVF_NOCLIENT		1	// don't send entity to clients, even if it has effects
-#define	SVF_NOCULL			2	// entity will be _always_ sent regardless of PVS/PHS
+#define	SVF_BROADCAST		2	// entity will be _always_ sent regardless of PVS/PHS
 #define	SVF_SINGLECLIENT	4	// send to only one client (.showto must be set to desider player entity number)
 #define	SVF_ONLYTEAM		8	// send only to players in matching team team (.showto must match team)
-#define SVF_CAPSULE			16	// use capsule instead of box
+#define SVF_CAPSULE			16	// use capsule instead of bounding box for collision
 #define	SVF_MONSTER			32	// use MASK_MONSTERSOLID in Physics_Step
 #define	SVF_PATHNODE		64	// this entity is an pathnode
 #define	SVF_PLAYER			128	// don't clip against other players
@@ -113,8 +113,6 @@ struct gentity_s
 	int			areanum, areanum2;
 
 	float		freetime;			// time when entity was freed
-
-	int			contents; // FIXME: move to progs!
 
 	// this will hold the original state when EntityStateForClient is used
 	entity_state_t		stateBackup;

@@ -147,19 +147,22 @@ SV_Multicast
 Sends the contents of sv.multicast to a subset of the clients,
 then clears sv.multicast.
 
-MULTICAST_ALL	same as broadcast (origin can be NULL)
-MULTICAST_PVS	send to clients potentially visible from org
-MULTICAST_PHS	send to clients potentially hearable from org
+MULTICAST_ALL	broadcast to eveyone on server (origin can be NULL)
+MULTICAST_PVS	send to clients potentially visible from origin
+MULTICAST_ALL_R	same as MULTICAST_ALL but reliable
+MULTICAST_PVS_R	same as MULTICAST_PVS but reliable
 =================
 */
-void SV_Multicast (vec3_t origin, multicast_t to)
+void SV_Multicast(vec3_t origin, multicast_t to)
 {
 	client_t	*client;
 	byte		*mask;
 	int			leafnum, cluster;
-	int			j;
+	int			i, j;
 	qboolean	reliable;
 	int			area1, area2;
+
+	vec3_t		view_origin;
 
 	reliable = false;
 
@@ -174,9 +177,11 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 		area1 = 0;
 	}
 
-	// if doing a serverrecord, store everything
 	if (svs.demofile)
-		SZ_Write (&svs.demo_multicast, sv.multicast.data, sv.multicast.cursize);
+	{
+		// if doing a serverrecord, store everything
+		SZ_Write(&svs.demo_multicast, sv.multicast.data, sv.multicast.cursize);
+	}
 	
 	switch (to)
 	{
@@ -185,14 +190,6 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 	case MULTICAST_ALL:
 		leafnum = 0;
 		mask = NULL;
-		break;
-
-	case MULTICAST_PHS_R:
-		reliable = true;	// intentional fallthrough
-	case MULTICAST_PHS:
-		leafnum = CM_PointLeafnum (origin);
-		cluster = CM_LeafCluster (leafnum);
-		mask = CM_ClusterPVS(cluster); // FIXME : Q3BSP - was CM_ClusterPHS
 		break;
 
 	case MULTICAST_PVS_R:
@@ -209,7 +206,7 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 	}
 
 	// send the data to all relevent clients
-	for (j = 0, client = svs.clients; j < sv_maxclients->value; j++, client++)
+	for (i = 0, client = svs.clients; i < sv_maxclients->value; i++, client++)
 	{
 		if (client->state == cs_free || client->state == cs_zombie)
 			continue;
@@ -218,10 +215,13 @@ void SV_Multicast (vec3_t origin, multicast_t to)
 
 		if (mask)
 		{
-			leafnum = CM_PointLeafnum (client->edict->v.origin);
-			cluster = CM_LeafCluster (leafnum);
-			area2 = CM_LeafArea (leafnum);
-			if (!CM_AreasConnected (area1, area2))
+			for (j = 0; j < 3; j++)
+				view_origin[j] = client->edict->v.origin[j] + client->edict->v.viewoffset[j];
+
+			leafnum = CM_PointLeafnum(view_origin);
+			cluster = CM_LeafCluster(leafnum);
+			area2 = CM_LeafArea(leafnum);
+			if (!CM_AreasConnected(area1, area2))
 				continue;
 			if ( mask && (!(mask[cluster>>3] & (1<<(cluster&7)) ) ) )
 				continue;
@@ -243,7 +243,7 @@ SV_StartSound
 
 Each entity can have eight independant sound sources, like voice, weapon, feet, etc.
 
-If channel & 8, the sound will be sent to everyone, not just things in the PHS.
+If channel & 8, the sound will be sent to everyone, not just things in the PVS.
 
 FIXME: if entity isn't in PHS, they must be forced to be sent or
 have the origin explicitly sent.
@@ -268,7 +268,7 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
     int			i;
 	int			ent;
 	vec3_t		origin_v;
-	qboolean	use_phs;
+	qboolean	use_pvs;
 
 	if (volume < 0 || volume > 1.0)
 		Com_Error (ERR_FATAL, "SV_StartSound: volume = %f [0.0-1.0]", volume);
@@ -284,13 +284,13 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 
 	ent = NUM_FOR_EDICT(entity);
 
-	if (channel & 8)	// no PHS flag
+	if (channel & 8)	// no PVS flag
 	{
-		use_phs = false;
+		use_pvs = false;
 		channel &= 7;
 	}
 	else
-		use_phs = true;
+		use_pvs = true;
 
 	sendchan = (ent<<3) | (channel&7);
 
@@ -349,19 +349,19 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 
 	// if the sound doesn't attenuate, send it to everyone (global radio chatter, voiceovers, etc)
 	if (attenuation == ATTN_NONE)
-		use_phs = false;
+		use_pvs = false;
 
 	if (channel & CHAN_RELIABLE)
 	{
-		if (use_phs)
-			SV_Multicast (origin, MULTICAST_PHS_R);
+		if (use_pvs)
+			SV_Multicast (origin, MULTICAST_PVS_R);
 		else
 			SV_Multicast (origin, MULTICAST_ALL_R);
 	}
 	else
 	{
-		if (use_phs)
-			SV_Multicast (origin, MULTICAST_PHS);
+		if (use_pvs)
+			SV_Multicast (origin, MULTICAST_PVS);
 		else
 			SV_Multicast (origin, MULTICAST_ALL);
 	}

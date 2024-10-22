@@ -788,7 +788,7 @@ void PFSV_AreasConnected(void)
 
 /*
 =================
-PFSV_inPVS
+PFSV_PointsInPVS
 
 float PointsInPVS(vector p1, vector p2, float checkAreaPortals)
 Returns true when point p2 is within PVS of p1, if checkAreaPortals=false it ignores area portals
@@ -796,11 +796,10 @@ Returns true when point p2 is within PVS of p1, if checkAreaPortals=false it ign
 float canPotentialySeeEachOther = PointsInPVS(player.origin, monster.origin, true);
 =================
 */
-void PFSV_inPVS(void)
+void PFSV_PointsInPVS(void)
 {
 	float	*p1, *p2;
 	qboolean checkAreaPortals;
-	byte	*mask;
 
 	p1 = Scr_GetParmVector(0);
 	p2 = Scr_GetParmVector(1);
@@ -919,11 +918,8 @@ void multicast(vector position, float sendto)
 sendto:
 MULTICAST_ALL		broadcast to everyone on server (origin can be NULL)
 MULTICAST_PVS		send to clients potentially visible from org
-MULTICAST_PHS		send to clients potentially hearable from org
 MULTICAST_ALL_R		same as MULTICAST_ALL but reliable (when you want all clients to receive message)
-MULTICAST_PHS_R		same as MULTICAST_PHS but reliable
-MULTICAST_PVS_R		same as MULTICAST_pvs but reliable
-
+MULTICAST_PVS_R		same as MULTICAST_PVS but reliable
 
 multicast(monster.origin, MULTICAST_PVS);
 ===============
@@ -2038,121 +2034,124 @@ Register server script functions
 void SV_InitScriptBuiltins()
 {
 	// precache functions return index of loaded asset
-	Scr_DefineBuiltin(PFSV_precache_model, PF_SV, "precache_model", "float(string n)");
-	Scr_DefineBuiltin(PFSV_precache_sound, PF_SV, "precache_sound", "float(string n)");
-	Scr_DefineBuiltin(PFSV_precache_image, PF_SV, "precache_image", "float(string n)");
+	Scr_DefineBuiltin(PFSV_precache_model, PF_SV, "precache_model", "float(string sModelFileName)");
+	Scr_DefineBuiltin(PFSV_precache_sound, PF_SV, "precache_sound", "float(string sSoundFileName)");
+	Scr_DefineBuiltin(PFSV_precache_image, PF_SV, "precache_image", "float(string sImageFileName)");
 
 	// server general
-	Scr_DefineBuiltin(PFSV_changemap, PF_SV, "changemap", "float(string nm, float pers)");
-	Scr_DefineBuiltin(PFSV_kickclient, PF_SV, "kickclient", "void(entity p, string reason)");
-	Scr_DefineBuiltin(PFSV_getclientname, PF_SV, "getclientname", "string(entity e)");
+	Scr_DefineBuiltin(PFSV_changemap, PF_SV, "changemap", "float(string sNextMapName, float bSavePersistantData)");
+	Scr_DefineBuiltin(PFSV_kickclient, PF_SV, "kickclient", "void(entity ePlayerEntity, string sDropReason)");
+	Scr_DefineBuiltin(PFSV_getclientname, PF_SV, "getclientname", "string(entity ePlayerEntity)");
 
 	// entity general
 	Scr_DefineBuiltin(PFSV_spawn, PF_SV, "spawn", "entity()");
-	Scr_DefineBuiltin(PFSV_remove, PF_SV, "remove", "void(entity e)");
+	Scr_DefineBuiltin(PFSV_remove, PF_SV, "remove", "void(entity eEntity)");
 
-	Scr_DefineBuiltin(PFSV_getent, PF_SV, "getent", "entity(float idx)");
-	Scr_DefineBuiltin(PFSV_nextent, PF_SV, "nextent", "entity(entity prev)");
-	Scr_DefineBuiltin(PFSV_find, PF_SV, "find", "entity(entity e, .string fld, string match)");
-	Scr_DefineBuiltin(PFSV_findradius, PF_SV, "findradius", "entity(entity e, vector v, float r)");
-	Scr_DefineBuiltin(PFSV_getEntNum, PF_SV, "getentnum", "float(entity e)");
+	Scr_DefineBuiltin(PFSV_getent, PF_SV, "getent", "entity(float fEntityNumber)");
+	Scr_DefineBuiltin(PFSV_nextent, PF_SV, "nextent", "entity(entity ePreviousEntity)");
+	Scr_DefineBuiltin(PFSV_find, PF_SV, "find", "entity(entity ePreviousEntity, .string sFieldName, string sMatchString)");
+	Scr_DefineBuiltin(PFSV_findradius, PF_SV, "findradius", "entity(entity ePreviousEntity, vector vSearchPos, float vSearchRadius)");
+	Scr_DefineBuiltin(PFSV_getEntNum, PF_SV, "getentnum", "float(entity eEntity)");
 
-	Scr_DefineBuiltin(PFSV_setorigin, PF_SV, "setorigin", "void(entity e, vector v)");
-	Scr_DefineBuiltin(PFSV_setangles, PF_SV, "setangles", "void(entity e, vector v)");
+	Scr_DefineBuiltin(PFSV_setorigin, PF_SV, "setorigin", "void(entity eEntity, vector vPos)");
+	Scr_DefineBuiltin(PFSV_setangles, PF_SV, "setangles", "void(entity eEntity, vector vAngles)");
 
-	Scr_DefineBuiltin(PFSV_setmodel, PF_SV, "setmodel", "void(entity e, string s)");
-	Scr_DefineBuiltin(PFSV_setbrushmodel, PF_SV, "setbrushmodel", "void(entity e, string s)");
+	Scr_DefineBuiltin(PFSV_setmodel, PF_SV, "setmodel", "void(entity eEntity, string sModelFileName)");
+	Scr_DefineBuiltin(PFSV_setbrushmodel, PF_SV, "setbrushmodel", "void(entity eEntity, string sModelFileName)");
 
-	Scr_DefineBuiltin(PFSV_setsize, PF_SV, "setsize", "void(entity e, vector v1, vector v2)");
-	Scr_DefineBuiltin(PFSV_linkentity, PF_SV, "linkentity", "void(entity e)");
-	Scr_DefineBuiltin(PFSV_unlinkentity, PF_SV, "unlinkentity", "void(entity e)");
+	Scr_DefineBuiltin(PFSV_setsize, PF_SV, "setsize", "void(entity eEntity, vector vBoxMins, vector vBoxMaxs)");
+	Scr_DefineBuiltin(PFSV_linkentity, PF_SV, "linkentity", "void(entity eEntity)");
+	Scr_DefineBuiltin(PFSV_unlinkentity, PF_SV, "unlinkentity", "void(entity eEntity)");
 
-	Scr_DefineBuiltin(PFSV_attach, PF_SV, "attach", "void(entity e, string tn, string mn)");
-	Scr_DefineBuiltin(PFSV_detach, PF_SV, "detach", "void(entity e, string mn)");
-	Scr_DefineBuiltin(PFSV_detachall, PF_SV, "detachall", "void(entity e, string mn)");
+	Scr_DefineBuiltin(PFSV_attach, PF_SV, "attach", "void(entity eEntity, string sTagName, string sModelFileName)");
+	Scr_DefineBuiltin(PFSV_detach, PF_SV, "detach", "void(entity eEntity, string sModelFileName)");
+	Scr_DefineBuiltin(PFSV_detachall, PF_SV, "detachall", "void(entity eEntity)");
 
-	Scr_DefineBuiltin(PFSV_hidepart, PF_SV, "hidepart", "void(entity e, string pn)");
-	Scr_DefineBuiltin(PFSV_showpart, PF_SV, "showpart", "void(entity e, string pn)");
-	Scr_DefineBuiltin(PFSV_showallparts, PF_SV, "showallparts", "void(entity e)");
+	Scr_DefineBuiltin(PFSV_hidepart, PF_SV, "hidepart", "void(entity eEntity, string sPartName)");
+	Scr_DefineBuiltin(PFSV_showpart, PF_SV, "showpart", "void(entity eEntity, string sPartName)");
+	Scr_DefineBuiltin(PFSV_showallparts, PF_SV, "showallparts", "void(entity eEntity)");
 
 	// collision and physics
-	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector v)");
-	Scr_DefineBuiltin(PFSV_traceline, PF_SV, "traceline", "void(vector p1, vector p2, entity e, int c)");
-	Scr_DefineBuiltin(PFSV_tracebox, PF_SV, "tracebox", "void(vector p1, vector p2, vector v1, vector v2, entity e, int c)");
-	Scr_DefineBuiltin(PFSV_touchentities, PF_SV, "touchentities", "float(entity e, float at)");
-	Scr_DefineBuiltin(PFSV_checkbottom, PF_SV, "checkbottom", "float(entity e)");
-	Scr_DefineBuiltin(PFSV_movetogoal, PF_SV, "movetogoal", "float(entity e, entity g, float d)");
-	Scr_DefineBuiltin(PFSV_walkmove, PF_SV, "walkmove", "float(entity e, float y, float d)");
+	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector vPos)");
+	Scr_DefineBuiltin(PFSV_traceline, PF_SV, "traceline", "void(vector vStartPos, vector vEndPos, entity eIgnoreEntity, int iContentMask)");
+	Scr_DefineBuiltin(PFSV_tracebox, PF_SV, "tracebox", "void(vector vStartPos, vector vEndPos, vector vBoxMins, vector vBoxMaxs, entity eIgnoreEntity, int iContentMask)");
+	Scr_DefineBuiltin(PFSV_touchentities, PF_SV, "touchentities", "float(entity eEntity, float fAreaType)");
+	Scr_DefineBuiltin(PFSV_checkbottom, PF_SV, "checkbottom", "float(entity eEntity)");
+	Scr_DefineBuiltin(PFSV_movetogoal, PF_SV, "movetogoal", "float(entity eEntity, entity eGoalEntity, float fStepMoveDistance)");
+	Scr_DefineBuiltin(PFSV_walkmove, PF_SV, "walkmove", "float(entity eEntity, float fYaw, float fStepMoveDistance)");
 
 	// sound
-	Scr_DefineBuiltin(PFSV_sound, PF_SV, "playsound", "void(vector v, entity e, float ch, string snd, float vol, float att, float tofs)");
-	Scr_DefineBuiltin(PFSV_stopsounds, PF_SV, "stopsounds", "void(entity e)");
+	Scr_DefineBuiltin(PFSV_sound, PF_SV, "playsound", "void(vector vPosition, entity eEntity, float fChannel, string sSoundFileName, float fVolume, float fAttenuation, float fTimeOffset)");
+	Scr_DefineBuiltin(PFSV_stopsounds, PF_SV, "stopsounds", "void(entity eEntity)");
 
 	// visibility and hearability
-	Scr_DefineBuiltin(PFSV_SetAreaPortalState, PF_SV, "SetAreaPortalState", "void(float a1, float a2, float bAreasOpen)");
-	Scr_DefineBuiltin(PFSV_AreasConnected, PF_SV, "AreasConnected", "float(float a1, float a2)");
+	Scr_DefineBuiltin(PFSV_SetAreaPortalState, PF_SV, "SetAreaPortalState", "void(float fAreaNum1, float fAreaNum2, float bOpenAreaPortals)");
+	Scr_DefineBuiltin(PFSV_AreasConnected, PF_SV, "AreasConnected", "float(float fAreaNum1, float fAreaNum2)");
 
-	Scr_DefineBuiltin(PFSV_inPVS, PF_SV, "inPVS", "float(vector p1, vector p2, float bCheckAreaPortals)");
+	Scr_DefineBuiltin(PFSV_PointsInPVS, PF_SV, "PointsInPVS", "float(vector vPos1, vector vPos2, float bCheckAreaPortals)");
 
 	//strings
-	Scr_DefineBuiltin(PFSV_sprint, PF_SV, "sprint", "void(entity e, float pl, string s, ...)"); // overloading strings supported
-	Scr_DefineBuiltin(PFSV_bprint, PF_SV, "bprint", "void(float pl, string s, ...)"); // overloading strings supported
-	Scr_DefineBuiltin(PFSV_centerprint, PF_SV, "centerprint", "void(entity e, string s, ...)"); // overloading strings supported
+	Scr_DefineBuiltin(PFSV_sprint, PF_SV, "sprint", "void(entity ePlayerEntity, float fPrintLevel, string sString, ...)"); // overloading strings supported
+	Scr_DefineBuiltin(PFSV_bprint, PF_SV, "bprint", "void(float fPrintLevel, string sString, ...)"); // overloading strings supported
+	Scr_DefineBuiltin(PFSV_centerprint, PF_SV, "centerprint", "void(entity ePlayerEntity, string sString, ...)"); // overloading strings supported
 
 	//configstrings and lightstyles
-	Scr_DefineBuiltin(PFSV_configstring, PF_SV, "configstring", "void(float cs, string v)");
-	Scr_DefineBuiltin(PFSV_lightstyle, PF_SV, "lightstyle", "void(float s, string v)");
+	Scr_DefineBuiltin(PFSV_configstring, PF_SV, "configstring", "void(float fConfigStringIndex, string sString)");
+	Scr_DefineBuiltin(PFSV_lightstyle, PF_SV, "lightstyle", "void(float fLightStyleIndex, string sString)");
 
 	// network messages
-	Scr_DefineBuiltin(PFSV_Unicast, PF_SV, "MSG_Unicast", "void(entity e, float r)");
-	Scr_DefineBuiltin(PFSV_Multicast, PF_SV, "MSG_Multicast", "void(vector v, float to)");
-	Scr_DefineBuiltin(PFSV_WriteChar, PF_SV, "MSG_WriteChar", "void(string v)");
-	Scr_DefineBuiltin(PFSV_WriteByte, PF_SV, "MSG_WriteByte", "void(float v)");
-	Scr_DefineBuiltin(PFSV_WriteShort, PF_SV, "MSG_WriteShort", "void(float v)");
-	Scr_DefineBuiltin(PFSV_WriteShort, PF_SV, "MSG_WriteLong", "void(float v)");
-	Scr_DefineBuiltin(PFSV_WriteString, PF_SV, "MSG_WriteString", "void(string v)");
-	Scr_DefineBuiltin(PFSV_WritePos, PF_SV, "MSG_WritePos", "void(vector v)");
-	Scr_DefineBuiltin(PFSV_WriteDir, PF_SV, "MSG_WriteDir", "void(vector v)");
-	Scr_DefineBuiltin(PFSV_WriteAngle, PF_SV, "MSG_WriteAngle", "void(float v)");
+	Scr_DefineBuiltin(PFSV_Unicast, PF_SV, "MSG_Unicast", "void(entity ePlayerEntity, float bIsReliable)");
+	Scr_DefineBuiltin(PFSV_Multicast, PF_SV, "MSG_Multicast", "void(vector vPosition, float fSendTo)");
+	Scr_DefineBuiltin(PFSV_WriteChar, PF_SV, "MSG_WriteChar", "void(string sSingleChar)");
+	Scr_DefineBuiltin(PFSV_WriteByte, PF_SV, "MSG_WriteByte", "void(float fWriteValue)");
+	Scr_DefineBuiltin(PFSV_WriteShort, PF_SV, "MSG_WriteShort", "void(float fWriteValue)");
+	Scr_DefineBuiltin(PFSV_WriteShort, PF_SV, "MSG_WriteLong", "void(float fWriteValue)");
+	Scr_DefineBuiltin(PFSV_WriteString, PF_SV, "MSG_WriteString", "void(string sWriteString)");
+	Scr_DefineBuiltin(PFSV_WritePos, PF_SV, "MSG_WritePos", "void(vector vPositionVector)");
+	Scr_DefineBuiltin(PFSV_WriteDir, PF_SV, "MSG_WriteDir", "void(vector vDirectionVector)");
+	Scr_DefineBuiltin(PFSV_WriteAngle, PF_SV, "MSG_WriteAngle", "void(float vAnglesVector)");
 
 	// client
-	Scr_DefineBuiltin(PFSV_isplayer, PF_SV, "isplayer", "float(entity e)");
-	Scr_DefineBuiltin(PFSV_getping, PF_SV, "getping", "float(entity e)");
+	Scr_DefineBuiltin(PFSV_isplayer, PF_SV, "isplayer", "float(entity eEntity)");
+	Scr_DefineBuiltin(PFSV_getping, PF_SV, "getping", "float(entity ePlayerEntity)");
 
-	Scr_DefineBuiltin(PFSV_setvieweffect, PF_SV, "setvieweffect", "void(entity e, float fx, ...)");
-	Scr_DefineBuiltin(PFSV_clearvieweffects, PF_SV, "clearvieweffects", "void(entity e)");
+	Scr_DefineBuiltin(PFSV_setvieweffect, PF_SV, "setvieweffect", "void(entity ePlayerEntity, float fViewEffectType, ...)");
+	Scr_DefineBuiltin(PFSV_clearvieweffects, PF_SV, "clearvieweffects", "void(entity ePlayerEntity)");
 
-	Scr_DefineBuiltin(PFSV_stuffcmd, PF_SV, "stuffcmd", "void(entity e, string s)"); // overloading strings supported
-	Scr_DefineBuiltin(PFSV_setstat, PF_SV, "setstat", "float(entity e, float sg, float sc)");
+	Scr_DefineBuiltin(PFSV_stuffcmd, PF_SV, "stuffcmd", "void(entity ePlayerEntity, string sString)"); // overloading strings supported
+	Scr_DefineBuiltin(PFSV_setstat, PF_SV, "setstat", "float(entity ePlayerEntity, float fPlayerStatIndex, float fPlayerStatValue)");
 
 	// persistant data across map changes
-	Scr_DefineBuiltin(PFSV_saveclientfield, PF_SV, "saveclientfield", "void(entity p, float idx, float val)");
-	Scr_DefineBuiltin(PFSV_loadclientfield, PF_SV, "loadclientfield", "float(entity p, float idx)");
-	Scr_DefineBuiltin(PFSV_saveglobal, PF_SV, "saveglobal", "void(float idx, float val)");
-	Scr_DefineBuiltin(PFSV_loadglobal, PF_SV, "loadglobal", "float(float idx)");
+	Scr_DefineBuiltin(PFSV_saveclientfield, PF_SV, "saveclientfield", "void(entity ePlayerEntity, float fPersIndex, float fPersValue)");
+	Scr_DefineBuiltin(PFSV_loadclientfield, PF_SV, "loadclientfield", "float(entity ePlayerEntity, float fPersIndex)");
+	Scr_DefineBuiltin(PFSV_saveglobal, PF_SV, "saveglobal", "void(float fPersIndex, float fPersValue)");
+	Scr_DefineBuiltin(PFSV_loadglobal, PF_SV, "loadglobal", "float(float fPersIndex)");
 
 	// navigation 
-	Scr_DefineBuiltin(PFSV_nav_addpathnode, PF_SV, "nav_addpathnode", "float(vector p)");
-	Scr_DefineBuiltin(PFSV_nav_linkpathnode, PF_SV, "nav_linkpathnode", "void(float n, float lt)");
-	Scr_DefineBuiltin(PFSV_nav_getnearestnode, PF_SV, "nav_getnearestnode", "float(vector p)");
-	Scr_DefineBuiltin(PFSV_nav_searchpath, PF_SV, "nav_searchpath", "float(float n1, float n2)");
-	Scr_DefineBuiltin(PFSV_nav_getnodepos, PF_SV, "nav_getnodepos", "vector(float n)");
+	Scr_DefineBuiltin(PFSV_nav_addpathnode, PF_SV, "nav_addpathnode", "float(vector vPosition)");
+	Scr_DefineBuiltin(PFSV_nav_linkpathnode, PF_SV, "nav_linkpathnode", "void(float fPathNodeIndex, float fLinkToPathNodeIndex)");
+	Scr_DefineBuiltin(PFSV_nav_getnearestnode, PF_SV, "nav_getnearestnode", "float(vector vPosition)");
+	Scr_DefineBuiltin(PFSV_nav_searchpath, PF_SV, "nav_searchpath", "float(float fStartPathNodeIndex, float fGoalPathNodeIndex)");
+	Scr_DefineBuiltin(PFSV_nav_getnodepos, PF_SV, "nav_getnodepos", "vector(float fPathNodeIndex)");
 	Scr_DefineBuiltin(PFSV_nav_getnodescount, PF_SV, "nav_getnodescount", "float()");
-	Scr_DefineBuiltin(PFSV_nav_getnodelinkcount, PF_SV, "nav_getnodelinkcount", "float(float n)");
-	Scr_DefineBuiltin(PFSV_nav_getnodelink, PF_SV, "nav_getnodelink", "float(float n, float l)");
+	Scr_DefineBuiltin(PFSV_nav_getnodelinkcount, PF_SV, "nav_getnodelinkcount", "float(float fPathNodeIndex)");
+	Scr_DefineBuiltin(PFSV_nav_getnodelink, PF_SV, "nav_getnodelink", "float(float fPathNodeIndex, float fNodeLinkIndex)");
 	
 
 	// models
 	// TODO -- share with cgame
-	Scr_DefineBuiltin(PFSV_getframescount, PF_SV, "getframescount", "float(float midx)");
-	Scr_DefineBuiltin(PFSV_gettagscount, PF_SV, "gettagscount", "float(float midx)");
-	Scr_DefineBuiltin(PFSV_tagexists, PF_SV, "tagexists", "float(entity e, string tn)");
-	Scr_DefineBuiltin(PFSV_gettagorigin, PF_SV, "gettagorigin", "vector(entity e, string tn)");
-	Scr_DefineBuiltin(PFSV_gettagangles, PF_SV, "gettagangles", "vector(entity e, string tn)");
+	Scr_DefineBuiltin(PFSV_getframescount, PF_SV, "getframescount", "float(float fModelIndex)");
+	Scr_DefineBuiltin(PFSV_gettagscount, PF_SV, "gettagscount", "float(float fModelIndex)");
+	Scr_DefineBuiltin(PFSV_tagexists, PF_SV, "tagexists", "float(entity eEntity, string sTagName)");
+	Scr_DefineBuiltin(PFSV_gettagorigin, PF_SV, "gettagorigin", "vector(entity eEntity, string sTagName)");
+	Scr_DefineBuiltin(PFSV_gettagangles, PF_SV, "gettagangles", "vector(entity eEntity, string sTagName)");
 
+
+	//"tracebox", "void(vector vStartPos, vector vEndPos, vector vBoxMins, vector vBoxMaxs, entity eIgnoreEntity, int iContentMask)");
+	
 	// debug
-	Scr_DefineBuiltin(PFSV_drawline, PF_SV, "drawline", "void(vector p1, vector p2, vector c, float th, float dt, float t)");
-	Scr_DefineBuiltin(PFSV_drawpoint, PF_SV, "drawpoint", "void(vector p, vector c, float th, float dt, float t)");
-	Scr_DefineBuiltin(PFSV_drawbox, PF_SV, "drawbox", "void(vector p, vector p1, vector p2, vector c, float th, float dt, float t)"); // fixme?
-	Scr_DefineBuiltin(PFSV_drawstring, PF_SV, "drawstring", "void(vector p, vector c, float fs, float dt, float t, string s, ...)");
+	Scr_DefineBuiltin(PFSV_drawline, PF_SV, "drawline", "void(vector vStartPos, vector vEndPos, vector vColorRGB, float fThickness, float bDepthTest, float fDrawTime)");
+	Scr_DefineBuiltin(PFSV_drawpoint, PF_SV, "drawpoint", "void(vector vPosition, vector vColorRGB, float fThickness, float bDepthTest, float fDrawTime)");
+	Scr_DefineBuiltin(PFSV_drawbox, PF_SV, "drawbox", "void(vector vPosition, vector vBoxMins, vector vBoxMaxs, vector vColorRGB, float fThickness, float bDepthTest, float fDrawTime)");
+	Scr_DefineBuiltin(PFSV_drawstring, PF_SV, "drawstring", "void(vector vPosition, vector vColorRGB, float fTextScale, float bDepthTest, float fDrawTime, string sString, ...)");
 }

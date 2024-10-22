@@ -415,7 +415,9 @@ byte *CM_ClusterPVS(int cluster)
 /*
 ================
 CM_PointsInPVS
-Returns true when point p2 is within PVS of p1
+
+Returns true when second point is within PVS of point, 
+when bCheckAreaPortals==false do not check area portals.
 ================
 */
 qboolean CM_PointsInPVS(const vec3_t p1, const vec3_t p2, qboolean bCheckAreaPortals)

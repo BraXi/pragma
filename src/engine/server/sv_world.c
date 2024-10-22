@@ -389,7 +389,7 @@ void SV_LinkEntity(gentity_t *ent)
 	switch ((int)ent->v.solid)
 	{
 	case SOLID_BBOX:
-		if (ent->contents & ( CONTENTS_SOLID | CONTENTS_BODY ) && !VectorCompare(ent->v.mins, ent->v.maxs))
+		if (ent->v.contents & ( CONTENTS_SOLID | CONTENTS_BODY ) && !VectorCompare(ent->v.mins, ent->v.maxs))
 		{
 			ent->s.packedSolid = SV_PackSolid32(ent);
 		}
@@ -770,14 +770,13 @@ void SV_ClipToEntity(trace_t *trace, gentity_t* clipent, vec3_t start, vec3_t mi
 	if (!maxs)
 		maxs = vec3_origin;
 
-#if 0
-	// if it doesn't have any contents of a type we are looking for, ignore it
-	if (!(contentmask & clipent->contents))
+	// if it doesn't have any contents of a type we're looking for, ignore it
+	if (!(contentmask & clipent->v.contents))
 	{
 		trace->fraction = 1.0;
 		return;
 	}
-#endif
+
 	clipHandle = SV_ClipHandleForEntity(clipent);
 
 	// boxes don't rotate, bmodels do
@@ -787,9 +786,14 @@ void SV_ClipToEntity(trace_t *trace, gentity_t* clipent, vec3_t start, vec3_t mi
 		angles = vec3_origin;
 
 	if (clipent == sv.edicts)
-		CM_BoxTrace(trace, start, end, mins, maxs, 0, contentmask, capsule); 
+	{
+		// world never moves
+		CM_BoxTrace(trace, start, end, mins, maxs, 0, contentmask, capsule);
+	}
 	else
+	{
 		CM_TransformedBoxTrace(trace, start, end, mins, maxs, clipHandle, contentmask, clipent->v.origin, angles, capsule);
+	}
 
 	if (trace->fraction < 1.0f) 
 		SV_SetTraceEnt(trace, clipent);
@@ -835,26 +839,23 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 				continue; // don't clip against entities that have ignoreEntity as their owner
 		}
 	
-#if 0
-		if (!(clip->contentmask & touch->contents)) 
+		if (!(clip->contentmask & touch->v.contents)) 
 		{
 			continue; // if the entity lacks the contents we trace against ignore it
 		}
-#endif
 
 		// might intersect, so do an exact clip
 		clipHandle = SV_ClipHandleForEntity(touch);
 
+		angles = vec3_origin;
 
 		// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate
-		// BBOX entities don't rotate
-		if (SV_IsBrushModel(touch->v.modelindex) && (touch->v.solid == SOLID_BSP || touch->v.solid == SOLID_TRIGGER))
+		if (SV_IsBrushModel(touch->v.modelindex))
 		{
-			angles = touch->v.angles;
-		}
-		else
-		{
-			angles = vec3_origin;
+			if (touch->v.solid == SOLID_BSP || touch->v.solid == SOLID_TRIGGER)
+			{
+				angles = touch->v.angles;
+			}
 		}
 
 		CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins, clip->maxs, clipHandle, clip->contentmask, touch->v.origin, angles, clip->capsule);
