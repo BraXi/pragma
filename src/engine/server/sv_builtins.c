@@ -632,24 +632,9 @@ static void CopyTraceToProgs(trace_t trace)
 	VectorCopy(trace.plane.normal, sv.script_globals->trace_plane_normal);
 	VectorCopy(trace.endpos, sv.script_globals->trace_endpos);
 	sv.script_globals->trace_ent = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
-	sv.script_globals->trace_entnum = (trace.ent == NULL ? -1 : trace.ent->s.number);
+	sv.script_globals->trace_entnum = (trace.ent == NULL ? ENTITYNUM_NULL: trace.ent->s.number);
 	sv.script_globals->trace_contents = trace.contents;
 	sv.script_globals->trace_surface_flags = trace.surfaceFlags;
-
-#if 0
-	if (trace.surfaceFlags)
-	{
-		//sv.script_globals->trace_surface_name = Scr_SetTempString(trace.surface->name);
-		sv.script_globals->trace_surface_flags = trace.surfaceFlags;
-		//sv.script_globals->trace_surface_value = trace.surface->value;
-	}
-	else
-	{
-		//sv.script_globals->trace_surface_name = Scr_SetTempString("");
-		sv.script_globals->trace_surface_flags = 0;
-		//sv.script_globals->trace_surface_value = 0;
-	}
-#endif
 }
 
 /*
@@ -765,7 +750,6 @@ void PFSV_sound(void)
 /*
 =================
 PFSV_stopsounds
-
 void stopsounds(entity ent)
 
 Cancel all sounds that are currently playing from this entity including looping sound.
@@ -806,97 +790,29 @@ void PFSV_AreasConnected(void)
 =================
 PFSV_inPVS
 
-Checks if two points are in PVS, also checks portalareas so that doors block sight
+float PointsInPVS(vector p1, vector p2, float checkAreaPortals)
+Returns true when point p2 is within PVS of p1, if checkAreaPortals=false it ignores area portals
 
-float inPVS(vecto p1r, vector p1)
-
-float canPotentialySeeEachOther = inPVS(player.origin, monster.origin);
+float canPotentialySeeEachOther = PointsInPVS(player.origin, monster.origin, true);
 =================
 */
 void PFSV_inPVS(void)
 {
 	float	*p1, *p2;
-	int		leafnum;
-	int		cluster;
-	int		area1, area2;
+	qboolean checkAreaPortals;
 	byte	*mask;
 
 	p1 = Scr_GetParmVector(0);
 	p2 = Scr_GetParmVector(1);
+	checkAreaPortals = Scr_GetParmFloat(2) > 0.0f ? true : false;
 
-	leafnum = CM_PointLeafnum(p1);
-	cluster = CM_LeafCluster(leafnum);
-	area1 = CM_LeafArea(leafnum);
-	mask = CM_ClusterPVS(cluster);
-
-	leafnum = CM_PointLeafnum(p2);
-	cluster = CM_LeafCluster(leafnum);
-	area2 = CM_LeafArea(leafnum);
-
-	if (mask && (!(mask[cluster >> 3] & (1 << (cluster & 7)))))
-	{
+	if(CM_PointsInPVS(p1,p2, checkAreaPortals))
+		Scr_ReturnFloat(1);
+	else
 		Scr_ReturnFloat(0);
-		return;
-	}
-	if (!CM_AreasConnected(area1, area2))
-	{
-		// a door blocks sight
-		Scr_ReturnFloat(0);
-		return;
-	}
-	Scr_ReturnFloat(1);
 }
 
-/*
-=================
-PF_inPHS
 
-Checks if two points are in PHS, also checks portalareas so that doors block sound
-
-float inPHS(vector p1, vector p1)
-
-float canPotentialyHearEachOther = inPHS(player.origin, monster.origin);
-=================
-*/
-void PFSV_inPHS(void)
-{
-
-#if 1
-	PFSV_inPVS();
-#else // TODO: Q3BSP
-	float	*p1, *p2;
-	int		leafnum;
-	int		cluster;
-	int		area1, area2;
-	byte	*mask;
-
-	p1 = Scr_GetParmVector(0);
-	p2 = Scr_GetParmVector(1);
-
-	leafnum = CM_PointLeafnum(p1);
-	cluster = CM_LeafCluster(leafnum);
-	area1 = CM_LeafArea(leafnum);
-	mask = CM_ClusterPHS(cluster);
-
-	leafnum = CM_PointLeafnum(p2);
-	cluster = CM_LeafCluster(leafnum);
-	area2 = CM_LeafArea(leafnum);
-
-	if (mask && (!(mask[cluster >> 3] & (1 << (cluster & 7)))))
-	{
-		// more than one bounce away
-		Scr_ReturnFloat(0);
-		return;
-	}
-	if (!CM_AreasConnected(area1, area2))
-	{
-		// a door blocks hearing
-		Scr_ReturnFloat(0);
-		return;
-	}
-	Scr_ReturnFloat(1);
-#endif
-}
 
 // =================================================================================
 
@@ -2173,11 +2089,10 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_stopsounds, PF_SV, "stopsounds", "void(entity e)");
 
 	// visibility and hearability
-	Scr_DefineBuiltin(PFSV_SetAreaPortalState, PF_SV, "SetAreaPortalState", "void(float a1, float a2)");
+	Scr_DefineBuiltin(PFSV_SetAreaPortalState, PF_SV, "SetAreaPortalState", "void(float a1, float a2, float bAreasOpen)");
 	Scr_DefineBuiltin(PFSV_AreasConnected, PF_SV, "AreasConnected", "float(float a1, float a2)");
 
-	Scr_DefineBuiltin(PFSV_inPVS, PF_SV, "inPVS", "float(vector v1, vector v2)");
-	Scr_DefineBuiltin(PFSV_inPHS, PF_SV, "inPHS", "float(vector v1, vector v2)");
+	Scr_DefineBuiltin(PFSV_inPVS, PF_SV, "inPVS", "float(vector p1, vector p2, float bCheckAreaPortals)");
 
 	//strings
 	Scr_DefineBuiltin(PFSV_sprint, PF_SV, "sprint", "void(entity e, float pl, string s, ...)"); // overloading strings supported

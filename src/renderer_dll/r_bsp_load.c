@@ -575,7 +575,7 @@ R_SetParent
 static void R_SetParent(worldNode_t* node, worldNode_t* parent)
 {
 	node->parent = parent;
-	if (node->contents != Q3CONTENTS_NODE)
+	if (node->contents != CONTENTS_NODE)
 		return;
 
 	R_SetParent(node->children[0], node);
@@ -620,7 +620,7 @@ static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 		p = LittleLong(in->planeNum);
 		out->plane = world.planes + p;
 
-		out->contents = Q3CONTENTS_NODE;	// differentiate from leafs
+		out->contents = CONTENTS_NODE;	// differentiate from leafs
 
 		for (j = 0; j < 2; j++)
 		{

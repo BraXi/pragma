@@ -130,6 +130,8 @@ typedef struct
 	// demo server information
 	FILE				*demofile;
 	qboolean			timedemo;				// don't time sync
+
+	int					sfx_water_in, sfx_water_out, sfx_land;
 } server_t;
 
 #define EDICT_NUM(n) ((gentity_t *)((byte *)sv.edicts + sv.entity_size*(n)))
@@ -285,7 +287,7 @@ int SV_ImageIndex(const char* name);
 void SV_FreeModels();
 svmodel_t* SV_ModelForNum(int index);
 int SV_ModelIndexForName(const char *name);
-qboolean SV_IsBrushModel(int modelindex);
+qboolean SV_IsBrushModel(const int modelindex);
 
 int SV_ModelSurfIndexForName(int modelindex, const char* surfaceName);
 int SV_TagIndexForName(int modelindex, const char* tagName);
@@ -423,7 +425,7 @@ int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, i
 // Returns the CONTENTS_* value from the world and entities at the given point.
 int SV_PointContents(vec3_t p);
 
-trace_t SV_Clip(gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask);
+void SV_ClipToEntity(trace_t* trace, gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask, int capsule);
 trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *ignoreEntity, int contentmask, qboolean bCapsule);
 
 // mins and maxs are relative

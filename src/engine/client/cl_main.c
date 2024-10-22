@@ -1569,7 +1569,7 @@ clipHandle_t CL_GetClipModel(int modelindex)
 		if (modelindex >= MAX_MODELS || modelindex < 1) 
 		{
 			// modelindex 0 is reserved for no model
-			Com_Error(ERR_DROP, "%s Bad model index %i.", __FUNCTION__, modelindex);
+			Com_Error(ERR_DROP, "%s Bad model index %i.\n", __FUNCTION__, modelindex);
 			return -1;
 		}
 

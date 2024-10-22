@@ -15,6 +15,8 @@ static byte fatpvs[(MAX_WORLD_LEAFS * 2) / 8];// this needs to be double the lea
 void SV_ProgVarsToEntityState(gentity_t* ent);
 void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
 
+#define MAX_PACKET_ENTITIES 1024 // fixme: == MAX_PARSE_ENTITIES
+
 // FIXME: calls to remove() and spawn() in CustomizeForClient should cause error!!!
 
 /*
@@ -386,12 +388,12 @@ static void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *t
 
 	// send stats
 	statbits = 0;
-	for (i=0 ; i<MAX_STATS ; i++)
+	for (i = 0; i < MAX_STATS; i++)
 		if (ps->stats[i] != ops->stats[i])
 			statbits |= 1<<i;
 
 	MSG_WriteLong (msg, statbits);
-	for (i=0 ; i<MAX_STATS ; i++)
+	for (i=0 ; i < MAX_STATS; i++)
 		if (statbits & (1<<i))
 			MSG_WriteShort (msg, ps->stats[i]);
 }
@@ -407,10 +409,8 @@ void SV_WriteFrameToClient(client_t *client, sizebuf_t *msg)
 	client_frame_t		*frame, *oldframe;
 	int					lastframe;
 
-	if (sv_debug->value)
-	{
-		Com_Printf(__FUNCTION__": lastframe=%i, framenum=%i\n", client->lastframe, sv.framenum);
-	}
+//	if (sv_debug->value)
+//		Com_Printf(__FUNCTION__"(%s): lastframe=%i, framenum=%i\n", client->name, client->lastframe, sv.framenum);
 	
 	// this is the frame we are creating
 	frame = &client->frames[sv.framenum & UPDATE_MASK];
@@ -423,7 +423,10 @@ void SV_WriteFrameToClient(client_t *client, sizebuf_t *msg)
 	else if (sv.framenum - client->lastframe >= (UPDATE_BACKUP - 3) )
 	{	
 		// client hasn't gotten a good message through in a long time
-//		Com_Printf ("%s: Delta request from out-of-date packet.\n", client->name);
+
+		if (sv_debug->value)
+			Com_Printf (__FUNCTION__"(%s): Delta request from out-of-date packet.\n", client->name);
+
 		oldframe = NULL;
 		lastframe = -1;
 	}
@@ -507,7 +510,7 @@ static void SV_FatPVS(const vec3_t org)
 		}
 
 		if (j != i)
-			continue; // already have the cluster we want
+			continue; // already have the checkcluster we want
 
 		src = CM_ClusterPVS(leafs[i]);
 		for (j = 0; j < longs; j++)
@@ -541,11 +544,26 @@ void SV_AddEntityToClientFrame(client_frame_t* frame, client_t* client, gentity_
 {
 	entity_state_t* state;
 
+	if (frame->num_entities == MAX_PACKET_ENTITIES)
+	{
+		if (sv_debug->value)
+			Com_Printf(__FUNCTION__"(%s): discarded entity %i (MAX_PACKET_ENTITIES)\n", client->name, addEnt->s.number);
+
+		return;
+	}
+
 	// add it to the circular client_entities array
 	state = &svs.client_entities[svs.next_client_entities % svs.num_client_entities];
 	*state = addEnt->s;
 
+	if (sv_debug->value >= 3.0f)
+	{
+		state->renderFlags |= RF_DEPTHHACK;
+		Com_Printf("%4i: %i %s [%i %i %i]\n", frame->num_entities,  addEnt->s.number, Scr_GetString(addEnt->v.classname), (int)addEnt->v.origin[0], (int)addEnt->v.origin[1], (int)addEnt->v.origin[2]);
+	}
+
 	// don't mark players missiles as solid
+	// FIXME: why is it here?
 	if (VM_TO_ENT(addEnt->v.owner) == client->edict)
 		state->packedSolid = 0;
 
@@ -566,31 +584,31 @@ void SV_BuildClientFrame(client_t *client)
 	gentity_t	*ent;
 	gentity_t	*clent;
 	client_frame_t	*frame;
-	int		cluster;
+	int		checkcluster;
 	int		clientarea, clientcluster;
 	int		leafnum;
 	int		c_fullsend;
 	byte	*clientPVS;
 	byte	*bitvector;
 
-	// during an error shutdown message we may need to transmit the shutdown 
-	// message after the server has shutdown, so specfically check for it
 	if (!sv.state)
 	{
-		return;	
+		return;	// no need to send when we're shutting down
 	}
+
+	// this is the frame we are creating
+	frame = &client->frames[sv.framenum & UPDATE_MASK]; 
+	frame->num_entities = 0;
+	memset(frame->areabits, 0, sizeof(frame->areabits));
+
+	// save time for ping calculation later on
+	frame->senttime = svs.realtime;  
 
 	clent = client->edict;
 	if (!clent->client)
 	{
 		return;	// client not in game yet
 	}
-
-	// this is the frame we are creating
-	frame = &client->frames[sv.framenum & UPDATE_MASK]; 
-
-	// save time for ping calculation later on
-	frame->senttime = svs.realtime; 
 
 	// find the client's PVS
 	for (i = 0; i < 3; i++)
@@ -622,7 +640,7 @@ void SV_BuildClientFrame(client_t *client)
 	// ignore entity 0 which is world and begin from entity 1 which may be a player...
 	for (ent_num = 1; ent_num < sv.max_edicts; ent_num++)
 	{
-		ent = VM_TO_ENT(ent_num);
+		ent = EDICT_NUM(ent_num);
 
 		// never send unused and unlinked entities
 		if (!ent->inuse /* || ent->linked */ )
@@ -698,7 +716,6 @@ void SV_BuildClientFrame(client_t *client)
 			continue;
 		}		
 
-
 		if (!CM_AreasConnected(clientarea, ent->areanum))
 		{	
 			// doors can legally straddle two areas, so we may need to check another one
@@ -708,41 +725,62 @@ void SV_BuildClientFrame(client_t *client)
 			}			
 		}
 
-		// FIXME: if an ent has a model and a sound, but isn't
-		// in the PVS, only the PHS, clear the model
+		if (!CM_AreasConnected(clientarea, ent->areanum)) 
+		{
+			// doors can legally straddle two areas, so  we may need to check another one
+			
+			//if (!ent->areanum2 || !CM_AreasConnected(clientarea, ent->areanum2)) // Q2
+			if (!CM_AreasConnected(clientarea, ent->areanum2)) // Q3
+			{
+				continue; // blocked by a door
+			}
+		}
+
 		if (ent->s.loopingSound)
 		{
-			bitvector = fatpvs;	//clientphs;
+			bitvector = clientPVS;
 		}
 		else
 		{
 			bitvector = fatpvs;
 		}
 
-		if (ent->numClusters == -1)
-		{	
-#if 0 // FIXME: Q3BSP URGENT!!!
-			// too many leafs for individual check, go by headnode
-			if (!CM_HeadnodeVisible(ent->headnode, bitvector))
-			{
-				SV_RestoreEntityStateAfterClient(ent);
-				continue; // blocked by a door
-			}
-#endif
-			c_fullsend++;
+		if (!ent->numClusters) 
+		{
+			continue; // entity is outside the world?
 		}
-		else
-		{	
-			// check individual leafs
-			for (i = 0; i < ent->numClusters; i++)
+
+		// check individual leafs
+		checkcluster = 0;
+		for (i = 0; i < ent->numClusters; i++) 
+		{
+			checkcluster = ent->clusternums[i];
+			if (bitvector[checkcluster >> 3] & (1 << (checkcluster & 7))) 
 			{
-				cluster = ent->clusternums[i];
-				if (bitvector[cluster >> 3] & (1 << (cluster & 7)))
-					break;
+				break;
 			}
-			if (i == ent->numClusters)
+		}
+
+		// if we haven't found it to be visible, check overflow clusters that coudln't be stored
+		if (i == ent->numClusters) 
+		{
+			if (ent->lastCluster) 
 			{
-				continue; // blocked by a door
+				for (; checkcluster <= ent->lastCluster; checkcluster++)
+				{
+					if (bitvector[checkcluster >> 3] & (1 << (checkcluster & 7)))
+					{
+						break;
+					}
+				}
+				if (checkcluster == ent->lastCluster)
+				{
+					continue;	// not visible
+				}
+			}
+			else 
+			{
+				continue;
 			}
 		}
 

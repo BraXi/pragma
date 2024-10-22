@@ -50,6 +50,8 @@ void CM_TransformedBoxTrace(trace_t *results, const vec3_t start, const vec3_t e
 byte *CM_ClusterPVS(int cluster);
 int CM_PointLeafnum(const vec3_t p);
 
+qboolean CM_PointsInPVS(const vec3_t p1, const vec3_t p2, qboolean bIgnoreAreaPortals);
+
 // only returns non-solid leafs
 // overflow if return listsize and if *lastLeaf != list[listsize-1]
 int CM_BoxLeafnums(const vec3_t mins, const vec3_t maxs, int *list, int listsize, int *lastLeaf);

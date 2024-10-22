@@ -34,6 +34,7 @@ qboolean SV_CheckBottom(gentity_t* ent)
 	int		x, y;
 	float	mid, bottom;
 
+
 	VectorAdd(ent->v.origin, ent->v.mins, mins);
 	VectorAdd(ent->v.origin, ent->v.maxs, maxs);
 
@@ -45,7 +46,7 @@ qboolean SV_CheckBottom(gentity_t* ent)
 		{
 			start[0] = x ? maxs[0] : mins[0];
 			start[1] = y ? maxs[1] : mins[1];
-			if (SV_PointContents(start) != Q3CONTENTS_SOLID)
+			if (SV_PointContents(start) != CONTENTS_SOLID)
 				goto realcheck;
 		}
 
@@ -63,7 +64,7 @@ realcheck:
 	start[0] = stop[0] = (mins[0] + maxs[0]) * 0.5;
 	start[1] = stop[1] = (mins[1] + maxs[1]) * 0.5;
 	stop[2] = start[2] - 2 * STEPSIZE;
-	trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
+	trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, (ent->v.svflags & SVF_CAPSULE));
 
 	if (trace.fraction == 1.0)
 		return false;
@@ -76,7 +77,7 @@ realcheck:
 			start[0] = stop[0] = x ? maxs[0] : mins[0];
 			start[1] = stop[1] = y ? maxs[1] : mins[1];
 
-			trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
+			trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, (ent->v.svflags & SVF_CAPSULE));
 
 			if (trace.fraction != 1.0 && trace.endpos[2] > bottom)
 				bottom = trace.endpos[2];
@@ -108,7 +109,7 @@ void SV_CheckGround(gentity_t* ent)
 	point[1] = ent->v.origin[1];
 	point[2] = ent->v.origin[2] - 0.25;
 
-	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID, (ent->v.svflags & SVF_CAPSULE));
 
 	// check steepness
 	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
@@ -142,7 +143,7 @@ gentity_t* SV_TestEntityPosition(gentity_t* ent)
 	else
 		mask = MASK_SOLID;
 
-	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask, false); // FIXME: Q3BSP CAPSULES?
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask, (ent->v.svflags & SVF_CAPSULE));
 
 	if (trace.startsolid)
 		return sv.edicts;
@@ -245,7 +246,7 @@ int SV_FlyMove(gentity_t* ent, float time, int mask)
 		for (i = 0; i < 3; i++)
 			end[i] = ent->v.origin[i] + time_left * ent->v.velocity[i];
 
-		trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, end, ent, mask, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
+		trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, end, ent, mask, (ent->v.svflags & SVF_CAPSULE));
 
 		if (trace.allsolid)
 		{	// entity is trapped in another solid
@@ -776,9 +777,9 @@ void SV_Physics_Toss(gentity_t* ent)
 		ent->v.waterlevel = 0;
 
 	if (!wasinwater && isinwater)
-		SV_StartSound(old_origin, sv.edicts, CHAN_AUTO, SV_SoundIndex("misc/h2ohit1.wav"), 1, 1, 0);
+		SV_StartSound(old_origin, sv.edicts, CHAN_AUTO, sv.sfx_water_in, 1.0f, ATTN_NORM, 0.0f);
 	else if (wasinwater && !isinwater)
-		SV_StartSound(ent->v.origin, sv.edicts, CHAN_AUTO, SV_SoundIndex("misc/h2ohit1.wav"), 1, 1, 0);
+		SV_StartSound(ent->v.origin, sv.edicts, CHAN_AUTO, sv.sfx_water_out, 1.0f, ATTN_NORM, 0.0f);
 
 	// move teamslaves
 	for (slave = ent->teamchain; slave; slave = slave->teamchain)
@@ -920,6 +921,7 @@ void SV_Physics_Step(gentity_t* ent)
 			mask = MASK_MONSTERSOLID;
 		else
 			mask = MASK_SOLID;
+
 		SV_FlyMove(ent, SV_FRAMETIME, mask);
 
 		SV_LinkEntity(ent);
@@ -928,7 +930,7 @@ void SV_Physics_Step(gentity_t* ent)
 			return;
 
 		if ((int)ent->v.groundentity_num != ENTITYNUM_NULL && !wasonground && hitsound)
-			SV_StartSound(NULL, ent, 0, SV_SoundIndex("world/land.wav"), 1, 1, 0);
+			SV_StartSound(NULL, ent, CHAN_AUTO, sv.sfx_land, 1.0f, ATTN_NONE, 0.0f);
 	}
 
 	// regular thinking

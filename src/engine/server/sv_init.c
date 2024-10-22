@@ -163,7 +163,7 @@ SV_SpawnServer
 Change the server to a new map, taking all connected clients along with it.
 ================
 */
-void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
+void SV_SpawnServer(char *mapname, char *spawnpoint, server_state_t serverstate, qboolean attractloop, qboolean loadgame)
 {
 	int			i;
 	unsigned	checksum_map, checksum_cgprogs, checksum_guiprogs;
@@ -255,21 +255,6 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 		CM_LoadMap(sv.models[1].name, false, &checksum_map);
 	}
 
-#if 0
-	// set up brush models
-	for (i = 1; i < CM_NumInlineModels(); i++)
-	{
-		SV_SetConfigString((CS_MODELS + 1 + i), va("*%i", i));
-
-		strcpy(sv.models[sv.numModels].name, sv.configstrings[CS_MODELS + 1 + i]);
-		sv.models[sv.numModels].type = MOD_BRUSH;
-		sv.models[sv.numModels].bmodel = CM_InlineModel(sv.configstrings[CS_MODELS + 1 + i]);
-		sv.models[sv.numModels].modelindex = sv.numModels;
-
-		sv.numModels++;
-	}
-#endif
-
 	//
 	// we want to do a CRC checksums for currently loaded map and client programs
 	// to validate that the client is using exactly _the same data_ as the server and simulation is identical
@@ -286,8 +271,7 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 
 	Com_Printf("client progs crc: %d\n", checksum_cgprogs);
 	Com_Printf("gui progs crc: %d\n", checksum_guiprogs);
-
-
+	
 	//
 	// dev tools
 	//
@@ -314,7 +298,6 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	SV_ClearWorld ();
 	
 
-
 	//
 	// spawn the rest of the entities on the map
 	//	
@@ -327,6 +310,11 @@ void SV_SpawnServer (char *mapname, char *spawnpoint, server_state_t serverstate
 	Cvar_FullSet("mapname", sv.mapname, CVAR_SERVERINFO | CVAR_NOSET, NULL);
 	Cvar_FullSet("gamename", "pragma", CVAR_SERVERINFO | CVAR_LATCH, NULL);
 	Cvar_FullSet("gamedate", __DATE__, CVAR_SERVERINFO | CVAR_NOSET, NULL);
+
+	// precache code assets
+	sv.sfx_water_in = SV_SoundIndex("impacts/water_in.wav");
+	sv.sfx_water_out = SV_SoundIndex("impacts/water_out.wav");
+	sv.sfx_land = SV_SoundIndex("impacts/land.wav");
 
 	// load and spawn all other entities
 	SV_SpawnEntities( sv.mapname, CM_EntityString(), spawnpoint );

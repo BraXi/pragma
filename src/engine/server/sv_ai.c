@@ -443,7 +443,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 						neworg[2] += dz;
 				}
 			}
-			trace = SV_Trace(actor->v.origin, actor->v.mins, actor->v.maxs, neworg, actor, contentmask, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
+			trace = SV_Trace(actor->v.origin, actor->v.mins, actor->v.maxs, neworg, actor, contentmask, (actor->v.svflags & SVF_CAPSULE));
 
 			// fly monsters don't enter water voluntarily
 			if (actor->v.flags & FL_FLY)
@@ -504,7 +504,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	VectorCopy(neworg, end);
 	end[2] -= stepsize * 2;
 
-	trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
+	trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, (actor->v.svflags & SVF_CAPSULE));
 
 	if (trace.allsolid)
 		return false;
@@ -512,7 +512,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	if (trace.startsolid)
 	{
 		neworg[2] -= stepsize;
-		trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, false); // FIXME: Q3BSP ACTORS SHOULD USE CAPSULES?
+		trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, (actor->v.svflags & SVF_CAPSULE));
 		if (trace.allsolid || trace.startsolid)
 			return false;
 	}

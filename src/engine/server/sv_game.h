@@ -25,14 +25,14 @@ typedef struct link_s
 
 // edict->v.svflags
 #define	SVF_NOCLIENT		1	// don't send entity to clients, even if it has effects
-#define	SVF_DEADMONSTER		2	// treat as CONTENTS_DEADMONSTER for collision
-#define	SVF_MONSTER			4	// treat as CONTENTS_MONSTER for collision
-#define	SVF_NOCULL			8	// entity will be _always_ sent regardless of PVS/PHS
-#define	SVF_SINGLECLIENT	16	// send to only one client (.showto must be set to desider player entity number)
-#define	SVF_ONLYTEAM		32	// send only to players in matching team team (.showto must match team)
+#define	SVF_NOCULL			2	// entity will be _always_ sent regardless of PVS/PHS
+#define	SVF_SINGLECLIENT	4	// send to only one client (.showto must be set to desider player entity number)
+#define	SVF_ONLYTEAM		8	// send only to players in matching team team (.showto must match team)
+#define SVF_CAPSULE			16	// use capsule instead of box
+#define	SVF_MONSTER			32	// use MASK_MONSTERSOLID in Physics_Step
 #define	SVF_PATHNODE		64	// this entity is an pathnode
 #define	SVF_PLAYER			128	// don't clip against other players
-#define SVF_CAPSULE			256 // use capsule instead of box
+
 
 // gentity->v.flags
 #define FL_NOSTEP				1
@@ -47,7 +47,7 @@ typedef enum
 {
 	SOLID_NOT,				// no interaction with other objects
 	SOLID_BBOX,				// touch on edge
-	SOLID_TRIGGER,			// only touch when inside, after moving / OR bsp clip, touch on edge
+	SOLID_TRIGGER,			// touch when inside, after moving / OR bsp clip, touch on edge
 	SOLID_BSP,				// bsp clip, touch on edge
 	SOLID_PATHNODE			// only SVF_MONSTER entities touch when inside, after moving
 } solid_t;
@@ -114,7 +114,7 @@ struct gentity_s
 
 	float		freetime;			// time when entity was freed
 
-	int			contents;
+	int			contents; // FIXME: move to progs!
 
 	// this will hold the original state when EntityStateForClient is used
 	entity_state_t		stateBackup;

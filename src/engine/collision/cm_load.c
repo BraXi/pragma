@@ -655,10 +655,15 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 	if ( !name[0] ) 
 	{
 		// "cinematic" server
+		cm.membase = Hunk_Begin(CMODEL_HUNKSIZE, "CModel");
 		cm.numLeafs = 1;
 		cm.numClusters = 1;
 		cm.numAreas = 1;
-		cm.cmodels = Hunk_Alloc( sizeof( *cm.cmodels ) );
+		cm.numSubModels = 1;
+		
+		cm.cmodels = Hunk_Alloc( sizeof( *cm.cmodels ) );	
+		cm.memsize = Hunk_End();
+
 		*checksum = 0;
 		return;
 	}
@@ -796,7 +801,7 @@ clipHandle_t CM_InlineModel(int index)
 {
 	if ( index < 0 || index >= CM_NumInlineModels())
 	{
-		Com_Error (ERR_DROP, __FUNCTION__": bad number");
+		Com_Error (ERR_DROP, __FUNCTION__": bad number %i", index);
 	}
 	return index;
 }
@@ -866,7 +871,7 @@ static void CM_InitBoxHull()
 	box_brush = &cm.brushes[cm.numBrushes];
 	box_brush->numsides = 6;
 	box_brush->sides = cm.brushsides + cm.numBrushSides;
-	box_brush->contents = Q3CONTENTS_BODY;
+	box_brush->contents = CONTENTS_BODY;
 
 	box_model.leaf.numLeafBrushes = 1;
 //	box_model.leaf.firstLeafBrush = cm.numBrushes;

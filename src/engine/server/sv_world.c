@@ -189,7 +189,6 @@ void SV_RunWorldFrame(void)
 	SV_EndWorldFrame();
 }
 
-
 /*
 ===============================================================================
 
@@ -319,7 +318,7 @@ static int SV_PackSolid32(gentity_t* ent)
 
 	packedsolid = MSG_PackSolid32(ent->v.mins, ent->v.maxs); //Q2PRO's MSG_PackSolid32_Ver2
 
-	if (packedsolid == PACKEDSOLID_BSP)
+	if (packedsolid == SOLID_PACKED_BMODEL)
 		packedsolid = 0;  // can happen in pathological case if z mins > maxs
 
 #ifdef _DEBUG
@@ -386,44 +385,44 @@ void SV_LinkEntity(gentity_t *ent)
 	// set the size
 	VectorSubtract (ent->v.maxs, ent->v.mins, ent->v.size);
 
-	// encode the size into the entity_state for client prediction
+	// encode the size into the entity_state_t for client prediction
 	switch ((int)ent->v.solid)
 	{
 	case SOLID_BBOX:
-		//if ( ent->v.contents & ( Q3CONTENTS_SOLID | Q3CONTENTS_BODY ) || VectorCompare(ent->v.mins, ent->v.maxs) )
-		if (((int)ent->v.svflags & SVF_DEADMONSTER) || VectorCompare(ent->v.mins, ent->v.maxs))
+		if (ent->contents & ( CONTENTS_SOLID | CONTENTS_BODY ) && !VectorCompare(ent->v.mins, ent->v.maxs))
 		{
-			ent->s.packedSolid = 0;
+			ent->s.packedSolid = SV_PackSolid32(ent);
 		}
 		else
 		{
-			ent->s.packedSolid = SV_PackSolid32(ent);
+			ent->s.packedSolid = SOLID_NOT;
 		}
 		break;
 
 	case SOLID_BSP:
-		// a SOLID_BBOX will never create this value
-		ent->s.packedSolid = PACKEDSOLID_BSP;
+		
+		ent->s.packedSolid = SOLID_PACKED_BMODEL;
 		break;
 
 	default:
-		ent->s.packedSolid = 0;
+		ent->s.packedSolid = SOLID_NOT;
 		break;
 	}
 
 	// set the abs box
-	if ((ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER) && (ent->v.angles[0] || ent->v.angles[1] || ent->v.angles[2]) )
+	if ((ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER) && !VectorCompare(ent->v.angles, vec3_origin))
 	{	
 		// expand for rotation
 		max = RadiusFromBounds(ent->v.mins, ent->v.maxs);
 		for (i = 0; i < 3; i++) 
 		{
+			// add one pixel
 			ent->v.absmin[i] = ent->v.origin[i] - max;
 			ent->v.absmax[i] = ent->v.origin[i] + max;
 		}
 	}
 	else
-	{	// normal
+	{	
 		VectorAdd (ent->v.origin, ent->v.mins, ent->v.absmin);	
 		VectorAdd (ent->v.origin, ent->v.maxs, ent->v.absmax);
 	}
@@ -449,7 +448,7 @@ void SV_LinkEntity(gentity_t *ent)
 		// if none of the leafs were inside the map, the entity is considered to be outside the world and can be unlinked
 		if (sv_debug->value)
 		{
-			Com_Printf(__FUNCTION__": Entity %i outside the world at [%i %i %i]\n", NUM_FOR_ENT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+			Com_Printf(__FUNCTION__"(%i): Outside the world at [%i %i %i]\n", ent->s.number, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 		}
 		return;
 	}
@@ -467,7 +466,7 @@ void SV_LinkEntity(gentity_t *ent)
 				{
 					if (sv_debug->value)
 					{
-						Com_Printf( __FUNCTION__": Entity %i touching 3 areas at [%i %i %i]\n", NUM_FOR_ENT(ent), (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
+						Com_Printf( __FUNCTION__"(%i): Touching 3 areas at [%i %i %i]\n", ent->s.number, (int)ent->v.origin[0], (int)ent->v.origin[1], (int)ent->v.origin[2]);
 					}
 				}
 				ent->areanum2 = area;
@@ -631,7 +630,7 @@ int SV_AreaEntities(vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, in
 
 /*
 ================
-SV_HullForEntity
+SV_ClipHandleForEntity
 
 Returns a headnode that can be used for testing or clipping to a given entity.
 If the entity is a bsp model, the headnode will be returned, otherwise a custom box tree will be constructed.
@@ -641,7 +640,7 @@ SOLID_BSP entities must error when they have no inline model set
 SOLID_TRIGGER entities will explictly use inline model instead of bounding box when they have inline model set
 ================
 */
-clipHandle_t SV_HullForEntity(gentity_t* ent)
+clipHandle_t SV_ClipHandleForEntity(gentity_t* ent)
 {
 	int capsule = 0;
 
@@ -650,7 +649,8 @@ clipHandle_t SV_HullForEntity(gentity_t* ent)
 		if (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER)
 		{
 			// explicit hulls in the BSP model
-			return CM_InlineModel(ent->v.modelindex);
+			int idx = 0 - ent->v.modelindex;
+			return CM_InlineModel(0 - ent->v.modelindex);
 		}
 	}
 
@@ -693,7 +693,7 @@ int SV_PointContents(vec3_t p)
 		pEnt = touch[i];
 
 		// might intersect, so do an exact clip
-		clip = SV_HullForEntity(pEnt);
+		clip = SV_ClipHandleForEntity(pEnt);
 		
 		// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate, others don't
 		if (SV_IsBrushModel(pEnt->v.modelindex) && (pEnt->v.solid == SOLID_BSP || pEnt->v.solid == SOLID_TRIGGER))
@@ -729,39 +729,6 @@ typedef struct
 //===========================================================================
 
 /*
-====================
-SV_Clip
-
-Returns true if clipent overlaps with the bounding box
-====================
-*/
-trace_t SV_Clip(gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask) 
-{
-	trace_t     trace;
-	int			capsule;
-
-	if (!mins)
-		mins = vec3_origin;
-	if (!maxs)
-		maxs = vec3_origin;
-
-	capsule = (clipent->v.svflags & SVF_CAPSULE); // FIXME: Q3BSP - CAPSULE
-
-	if (clipent == sv.edicts)
-		CM_BoxTrace(&trace, start, end, mins, maxs, 0, contentmask, capsule); 
-	else
-		CM_TransformedBoxTrace(&trace, start, end, mins, maxs, SV_HullForEntity(clipent), contentmask, clipent->v.origin, clipent->v.angles, capsule);
-
-	trace.ent = clipent;
-	if (trace.ent == NULL)
-		trace.entityNum = ENTITYNUM_NULL;
-	else
-		trace.entityNum = NUM_FOR_ENT(trace.ent); // qcvm can be diferent?
-
-	return trace;
-}
-
-/*
 ==================
 SV_SetTraceEnt
 
@@ -785,6 +752,49 @@ static void SV_SetTraceEnt(trace_t* trace, gentity_t* ent)
 		trace->ent = ent;
 	}
 }
+
+/*
+====================
+SV_ClipToEntity
+====================
+*/
+void SV_ClipToEntity(trace_t *trace, gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask, int capsule) 
+{
+	clipHandle_t clipHandle;
+	float* angles;
+
+	memset(trace, 0, sizeof(*trace));
+
+	if (!mins)
+		mins = vec3_origin;
+	if (!maxs)
+		maxs = vec3_origin;
+
+#if 0
+	// if it doesn't have any contents of a type we are looking for, ignore it
+	if (!(contentmask & clipent->contents))
+	{
+		trace->fraction = 1.0;
+		return;
+	}
+#endif
+	clipHandle = SV_ClipHandleForEntity(clipent);
+
+	// boxes don't rotate, bmodels do
+	if (SV_IsBrushModel(clipent->v.modelindex))
+		angles = clipent->v.angles;
+	else
+		angles = vec3_origin;
+
+	if (clipent == sv.edicts)
+		CM_BoxTrace(trace, start, end, mins, maxs, 0, contentmask, capsule); 
+	else
+		CM_TransformedBoxTrace(trace, start, end, mins, maxs, clipHandle, contentmask, clipent->v.origin, angles, capsule);
+
+	if (trace->fraction < 1.0f) 
+		SV_SetTraceEnt(trace, clipent);
+}
+
 
 /*
 ====================
@@ -825,13 +835,15 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 				continue; // don't clip against entities that have ignoreEntity as their owner
 		}
 	
+#if 0
 		if (!(clip->contentmask & touch->contents)) 
 		{
 			continue; // if the entity lacks the contents we trace against ignore it
 		}
+#endif
 
 		// might intersect, so do an exact clip
-		clipHandle = SV_HullForEntity(touch);
+		clipHandle = SV_ClipHandleForEntity(touch);
 
 
 		// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate
@@ -914,8 +926,6 @@ ignoreEntity and entities owned by ignoreEntity are explicitly not checked.
 trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *ignoreEntity, int contentmask, qboolean bCapsule)
 {
 	moveclip_t	clip;
-	int capsule;
-
 
 	if (!mins)
 	{
@@ -929,10 +939,8 @@ trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *
 	memset(&clip, 0, sizeof(moveclip_t));
 	SV_SetTraceEnt(&clip.trace, sv.edicts);
 
-	capsule = 0; // FIXME: Q3BSP - CAPSULE
-
 	// clip to world
-	CM_BoxTrace(&clip.trace, start, end, mins, maxs, 0, contentmask, capsule);
+	CM_BoxTrace(&clip.trace, start, end, mins, maxs, 0, contentmask, bCapsule);
 
 	if (clip.trace.fraction == 0)
 	{

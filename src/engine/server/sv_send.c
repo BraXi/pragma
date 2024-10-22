@@ -410,52 +410,40 @@ FRAME UPDATES
 SV_SendClientDatagram
 =======================
 */
-extern void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
-extern void SV_RestoreEntityStateAfterClient(gentity_t* ent);
-
 qboolean SV_SendClientDatagram(client_t *client)
 {
 	byte		msg_buf[MAX_MSGLEN];
 	sizebuf_t	msg;
 
-	SV_BuildClientFrame (client);
-
-#if 1 //#ifdef PARANOID
-	// clean up after CustomizeForClient...
-	gentity_t* ent;
-	for (int i = 1; i < sv.max_edicts; i++)
-	{
-		ent = EDICT_NUM(i);
-
-		// don't check for inuse boolean here, some dumb idiot
-		// could have removed the entity in CustomizeForClient...
-
-		SV_RestoreEntityStateAfterClient(ent);
-	}
-#endif
+	SV_BuildClientFrame(client);
 
 	SZ_Init (&msg, msg_buf, sizeof(msg_buf));
 	msg.allowoverflow = true;
 
 	// send over all the relevant entity_state_t and the player_state_t
-	SV_WriteFrameToClient (client, &msg);
+	SV_WriteFrameToClient(client, &msg);
 		
 	// copy the accumulated multicast datagram for this client out to the message
 	// it is necessary for this to be after the WriteEntities so that entity references will be current
 	if (client->datagram.overflowed)
-		Com_Printf ("WARNING: datagram overflowed for %s\n", client->name);
+	{
+		Com_Printf("WARNING: datagram overflowed for %s\n", client->name);
+	}
 	else
-		SZ_Write (&msg, client->datagram.data, client->datagram.cursize);
+	{
+		SZ_Write(&msg, client->datagram.data, client->datagram.cursize);
+	}
+	
 	SZ_Clear (&client->datagram);
 
-#if 0 //handy stats
-	Com_Printf("#%i - datagram for %i (%s): %i/%ib (%i ents)\n", sv.framenum , client->edict->s.number-1, client->name, msg.cursize, msg.maxsize, client->frames[sv.framenum & UPDATE_MASK].num_entities);
-#endif
+	if(sv_debug->value >= 2.0f)
+		Com_Printf( __FUNCTION__"(%s): %i ents (%i bytes)\n", client->name, client->frames[sv.framenum & UPDATE_MASK].num_entities, msg.cursize);
 
 	if (msg.overflowed)
-	{	// must have room left for the packet header
-		Com_Printf ("WARNING: msg overflowed for %s\n", client->name);
-		SZ_Clear (&msg);
+	{	
+		// must have room left for the packet header
+		Com_Printf(__FUNCTION__"(%i): WARNING: msg overflowed for %s\n", client->name);
+		SZ_Clear(&msg);
 	}
 
 	// send the datagram

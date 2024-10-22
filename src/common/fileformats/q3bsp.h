@@ -207,39 +207,39 @@ typedef struct
 //
 // Content flags
 //
-#define	Q3CONTENTS_NODE			-1			// differentiate node from leafs
+#define	CONTENTS_NODE			-1			// differentiate node from leafs
 
-#define	Q3CONTENTS_SOLID		1			// an eye is never valid in a solid
-#define	Q3CONTENTS_LAVA			8			// treat as lava
-#define	Q3CONTENTS_SLIME		16			// treat as slime
-#define	Q3CONTENTS_WATER		32			// treat as water
-#define	Q3CONTENTS_FOG			64			// fog volume
+#define	CONTENTS_SOLID		1			// an eye is never valid in a solid
+#define	CONTENTS_LAVA			8			// treat as lava
+#define	CONTENTS_SLIME		16			// treat as slime
+#define	CONTENTS_WATER		32			// treat as water
+#define	CONTENTS_FOG			64			// fog volume
 
-#define Q3CONTENTS_NOTTEAM1		0x0080
-#define Q3CONTENTS_NOTTEAM2		0x0100
-#define Q3CONTENTS_NOBOTCLIP	0x0200		//
+#define CONTENTS_NOTTEAM1		0x0080
+#define CONTENTS_NOTTEAM2		0x0100
+#define CONTENTS_NOBOTCLIP	0x0200		//
 
-#define	Q3CONTENTS_AREAPORTAL	0x8000
+#define	CONTENTS_AREAPORTAL	0x8000
 
-#define	Q3CONTENTS_PLAYERCLIP	0x10000
-#define	Q3CONTENTS_MONSTERCLIP	0x20000
+#define	CONTENTS_PLAYERCLIP	0x10000
+#define	CONTENTS_MONSTERCLIP	0x20000
 
-#define	Q3CONTENTS_TELEPORTER	0x40000		// bot specific contents type
-#define	Q3CONTENTS_JUMPPAD		0x80000		// bot specific contents type
-#define Q3CONTENTS_CLUSTERPORTAL 0x100000	// bot specific contents type
-#define Q3CONTENTS_DONOTENTER	0x200000	// bot specific contents type
-#define Q3CONTENTS_BOTCLIP		0x400000	// bot specific contents type
-#define Q3CONTENTS_MOVER		0x800000	// bot specific contents type
+#define	CONTENTS_TELEPORTER	0x40000		// bot specific contents type
+#define	CONTENTS_JUMPPAD		0x80000		// bot specific contents type
+#define CONTENTS_CLUSTERPORTAL 0x100000	// bot specific contents type
+#define CONTENTS_DONOTENTER	0x200000	// bot specific contents type
+#define CONTENTS_BOTCLIP		0x400000	// bot specific contents type
+#define CONTENTS_MOVER		0x800000	// bot specific contents type
 
-#define	Q3CONTENTS_ORIGIN		0x1000000	// removed before bsping an entity
+#define	CONTENTS_ORIGIN		0x1000000	// removed before bsping an entity
 
-#define	Q3CONTENTS_BODY			0x2000000	// should never be on a brush, only in game
-#define	Q3CONTENTS_CORPSE		0x4000000
-#define	Q3CONTENTS_DETAIL		0x8000000	// brushes not used for the bsp
-#define	Q3CONTENTS_STRUCTURAL	0x10000000	// brushes used for the bsp
-#define	Q3CONTENTS_TRANSLUCENT	0x20000000	// don't consume surface fragments inside
-#define	Q3CONTENTS_TRIGGER		0x40000000
-#define	Q3CONTENTS_NODROP		0x80000000	// don't leave bodies or items (death fog, lava)
+#define	CONTENTS_BODY			0x2000000	// should never be on a brush, only in game
+#define	CONTENTS_CORPSE		0x4000000
+#define	CONTENTS_DETAIL		0x8000000	// brushes not used for the bsp
+#define	CONTENTS_STRUCTURAL	0x10000000	// brushes used for the bsp
+#define	CONTENTS_TRANSLUCENT	0x20000000	// don't consume surface fragments inside
+#define	CONTENTS_TRIGGER		0x40000000
+#define	CONTENTS_NODROP		0x80000000	// don't leave bodies or items (death fog, lava)
 
 
 

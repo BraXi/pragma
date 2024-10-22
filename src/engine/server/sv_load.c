@@ -129,9 +129,10 @@ int SV_ModelIndexForName(const char *name)
 /*
 ================
 SV_IsBrushModel
+True if this modelindex is occupied by brush model
 ================
 */
-qboolean SV_IsBrushModel(int modelindex)
+qboolean SV_IsBrushModel(const int modelindex)
 {
 	if (modelindex == MODELINDEX_WORLD)
 		return true; // world

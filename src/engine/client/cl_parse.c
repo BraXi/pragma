@@ -777,7 +777,9 @@ void CL_ParsePacketEntities(frame_t* oldframe, frame_t* newframe)
 	// delta from the entities present in oldframe
 	oldindex = 0;
 	if (!oldframe)
+	{
 		oldnum = 99999;
+	}
 	else
 	{
 		if (oldindex >= oldframe->num_entities)
@@ -793,18 +795,20 @@ void CL_ParsePacketEntities(frame_t* oldframe, frame_t* newframe)
 	{
 		newnum = CL_ParseEntityBits(&bits);
 		if (newnum >= MAX_GENTITIES)
-			Com_Error(ERR_DROP, "CL_ParsePacketEntities: bad number:%i", newnum);
+			Com_Error(ERR_DROP, __FUNCTION__": bad ent number: %i", newnum);
 
 		if (net_message.readcount > net_message.cursize)
-			Com_Error(ERR_DROP, "CL_ParsePacketEntities: end of message");
+			Com_Error(ERR_DROP, __FUNCTION__": end of message");
 
 		if (!newnum)
 			break;
 
 		while (oldnum < newnum)
-		{	// one or more entities from the old packet are unchanged
+		{	
+			// one or more entities from the old packet are unchanged
 			if (cl_shownet->value == 3)
 				Com_Printf("   unchanged: %i\n", oldnum);
+
 			CL_DeltaEntity(newframe, oldnum, oldstate, 0);
 
 			oldindex++;
@@ -819,9 +823,11 @@ void CL_ParsePacketEntities(frame_t* oldframe, frame_t* newframe)
 		}
 
 		if (bits & U_REMOVE)
-		{	// the entity present in oldframe is not in the current frame
+		{	
+			// the entity present in oldframe is not in the current frame
 			if (cl_shownet->value == 3)
 				Com_Printf("   remove: %i\n", newnum);
+
 			if (oldnum != newnum)
 				Com_Printf("U_REMOVE: oldnum != newnum\n");
 
@@ -838,9 +844,11 @@ void CL_ParsePacketEntities(frame_t* oldframe, frame_t* newframe)
 		}
 
 		if (oldnum == newnum)
-		{	// delta from previous state
+		{	
+			// delta from previous state
 			if (cl_shownet->value == 3)
 				Com_Printf("   delta: %i\n", newnum);
+
 			CL_DeltaEntity(newframe, newnum, oldstate, bits);
 
 			oldindex++;
@@ -856,9 +864,11 @@ void CL_ParsePacketEntities(frame_t* oldframe, frame_t* newframe)
 		}
 
 		if (oldnum > newnum)
-		{	// delta from baseline
+		{	
+			// delta from baseline
 			if (cl_shownet->value == 3)
 				Com_Printf("   baseline: %i\n", newnum);
+
 			CL_DeltaEntity(newframe, newnum, &cl_entities[newnum].baseline, bits);
 			continue;
 		}
@@ -867,9 +877,11 @@ void CL_ParsePacketEntities(frame_t* oldframe, frame_t* newframe)
 
 	// any remaining entities in the old frame are copied over
 	while (oldnum != 99999)
-	{	// one or more entities from the old packet are unchanged
+	{	
+		// one or more entities from the old packet are unchanged
 		if (cl_shownet->value == 3)
 			Com_Printf("   unchanged: %i\n", oldnum);
+
 		CL_DeltaEntity(newframe, oldnum, oldstate, 0);
 
 		oldindex++;

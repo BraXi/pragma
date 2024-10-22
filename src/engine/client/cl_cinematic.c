@@ -136,7 +136,7 @@ void SCR_PlayCinematic (char *arg)
 
 	if (dot && !strcmp (dot, ".tga"))
 	{	
-		Com_sprintf (name, sizeof(name), "gfx/cin/%s", arg);
+		Com_sprintf (name, sizeof(name), "%s", arg);
 		cl.cinematicframe = -1;
 		cl.cinematictime = 1;
 		SCR_EndLoadingPlaque ();
