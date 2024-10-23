@@ -29,17 +29,24 @@ typedef struct sv_globalvars_s
 
 	int32_t			sv_time;
 
-	vec3_t			v_forward, v_up, v_right;
+	// makevectors()
+	vec3_t			v_forward;
+	vec3_t			v_up;
+	vec3_t			v_right;
 
-	float			trace_allsolid, trace_startsolid, trace_fraction, trace_plane_dist;
-	vec3_t			trace_endpos, trace_plane_normal;
-	scr_entity_t	trace_ent;
-	float			trace_entnum;  	// this is tricky, if nothing is hit trace_ent = world, but 
-									// trace_entnum will be -1, thats because QC's null entity is world
-	int32_t			trace_contents;
-	scr_string_t	trace_surface_name;
-	float			trace_surface_flags;
-	float			trace_surface_value;
+	// trace*()
+	float			trace_allsolid;
+	float			trace_startsolid;
+	float			trace_fraction;		// 0.0-1.0
+	float			trace_planedist;
+	vec3_t			trace_normal;
+	vec3_t			trace_endpos;
+	scr_entity_t	trace_entity;		// use trace_entitynum to detect misses
+	float			trace_entitynum;  	// if nothing was hit (trace_entity == world) and (trace_entitynum == -1)
+	int32_t			trace_contents;		// CONTENTS_*
+	int32_t			trace_flags;		// SURF_*
+	scr_string_t	trace_material;		// name of material
+
 
 	scr_func_t		main;
 	scr_func_t		StartFrame;
@@ -93,7 +100,7 @@ typedef struct sv_entvars_s
 	int32_t			contents;	// CONTENTS_SOLID etc..
 
 	float			movetype;	// MOVETYPE_NONE etc
-	float			gravity;	// [0-1.0]
+	float			gravity;	// 0.0-1.0
 	int32_t			clipmask;
 	int32_t			groundentity_num; // -1 = in air, 0 world, etc..
 	int32_t			groundentity_linkcount;

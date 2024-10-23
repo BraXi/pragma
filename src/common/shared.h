@@ -288,6 +288,7 @@ typedef struct
 	vec3_t		endpos;				// final position
 
 	cplane_t	plane;				// surface normal at impact, transformed to world space
+	int			material;			// index to materials
 	int			surfaceFlags;		// surface hit
 	int			contents;			// contents on other side of surface hit
 

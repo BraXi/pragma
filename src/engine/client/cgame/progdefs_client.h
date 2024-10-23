@@ -26,7 +26,7 @@ typedef struct cl_globalvars_s
 	int32_t	pad[28];
 
 	float			frametime; // seconds since last frame
-	int32_t			time; // this is the time value that the clientis rendering at. always <= realtime between oldframe and frame
+	int32_t			time; // this is the time value that the client is rendering at. always <= realtime between oldframe and frame
 	int32_t			realtime; // always increasing, no clamping
 
 	int32_t			vid_width;
@@ -37,16 +37,23 @@ typedef struct cl_globalvars_s
 	scr_entity_t	self;
 	scr_entity_t	other;
 
-	vec3_t			v_forward, v_up, v_right;
+	// makevectors()
+	vec3_t			v_forward;
+	vec3_t			v_up;
+	vec3_t			v_right;
 
-	float			trace_allsolid, trace_startsolid, trace_fraction, trace_plane_dist;
-	vec3_t			trace_endpos, trace_plane_normal;
-	float			trace_entnum;
+	// trace*() functions
+	float			trace_allsolid;
+	float			trace_startsolid;
+	float			trace_fraction;
+	float			trace_planedist;
+	vec3_t			trace_normal;
+	vec3_t			trace_endpos;
 	int32_t			trace_contents;
-	scr_string_t	trace_surface_name;
-	float			trace_surface_flags;
-	float			trace_surface_value; // FIXME: remove, no longer used
-	scr_entity_t	trace_ent;
+	int32_t			trace_flags;
+	scr_entity_t	trace_entity;
+	float			trace_entitynum;
+	scr_string_t	trace_material;
 
 	float			pm_state_pm_type;		// byte pmtype_t
 	vec3_t			pm_state_origin;		// floats

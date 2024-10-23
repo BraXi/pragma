@@ -176,37 +176,53 @@ qboolean SV_RunThink(gentity_t* ent)
 ============
 SV_TouchEntities
 
-Touches all entities overlaping with ent's bbox
+Touches all entities overlaping with entity
 areatype could either be AREA_SOLID, AREA_TRIGGERS or AREA_PATHNODES
 Returns the number of touched ents
 ============
 */
 int SV_TouchEntities(gentity_t* ent, int areatype)
 {
-	int			i, num, touched;
-	gentity_t* touch[MAX_GENTITIES], * hit;
-	trace_t		trace;
+	int i, numEnts, touched;
+	gentity_t *touch[MAX_GENTITIES], *hit;
+	trace_t trace;
+	vec3_t mins, maxs;
 
-#if 0
-	if (areatype == AREA_PATHNODES && !((int)ent->v.svflags & SVF_MONSTER))
-		return;
-#endif
+	memset(&trace, 0, sizeof(trace));
 
-	num = SV_AreaEntities(ent->v.absmin, ent->v.absmax, touch, MAX_GENTITIES, areatype);
+
+	VectorAdd(ent->v.origin, ent->v.mins, mins);
+	VectorAdd(ent->v.origin, ent->v.maxs, maxs);
+
+
+	numEnts = SV_AreaEntities(ent->v.absmin, ent->v.absmax, touch, MAX_GENTITIES, areatype);
 	touched = 0;
+
 	// be careful, it is possible to have an entity in this list removed before we get to it (killtriggered)
-	for (i = 0; i < num; i++)
+	for (i = 0; i < numEnts; i++)
 	{
 		hit = touch[i];
+
 		if (!hit->inuse)
 			continue;
 
-		if (areatype == AREA_TRIGGERS && (int)hit->v.modelindex != 0)
+//		if (!(hit->v.contents & CONTENTS_TRIGGER)) 
+//		{
+//			continue;
+//		}
+	
+
+#if 1
+		if (!SV_EntityContact(mins, maxs, hit, false))
+			continue;
+#else
+		if (areatype == AREA_TRIGGERS && hit->v.modelindex != 0)
 		{
 			SV_ClipToEntity(&trace, hit, ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent->v.clipmask, false);
 			if (trace.fraction == 1.0f)
 				continue;
 		}
+#endif
 
 		touched++;
 		Scr_Event_Touch(hit, ent, NULL, 0);

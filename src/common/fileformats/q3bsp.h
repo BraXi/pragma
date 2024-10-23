@@ -225,9 +225,9 @@ typedef struct
 
 #define	CONTENTS_PLAYERCLIP		0x10000
 #define	CONTENTS_MONSTERCLIP	0x20000
-
 #define	CONTENTS_TELEPORTER		0x40000		// bot specific contents type
 #define	CONTENTS_JUMPPAD		0x80000		// bot specific contents type
+
 #define CONTENTS_CLUSTERPORTAL	0x100000	// bot specific contents type
 #define CONTENTS_DONOTENTER		0x200000	// bot specific contents type
 #define CONTENTS_BOTCLIP		0x400000	// bot specific contents type

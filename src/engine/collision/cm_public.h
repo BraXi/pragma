@@ -27,6 +27,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 typedef int clipHandle_t;
 
+#define	BOX_MODEL_HANDLE		MAX_WORLD_MODELS
+#define CAPSULE_MODEL_HANDLE	MAX_WORLD_MODELS+1
+
 void CM_LoadMap(const char *name, qboolean clientload, int *checksum);
 void CM_ClearMap();
 
@@ -36,7 +39,7 @@ int CM_NumInlineModels();
 
 clipHandle_t CM_InlineModel(int index); // 0 = world, 1 + are bmodels
 clipHandle_t CM_TempBoxModel(const vec3_t mins, const vec3_t maxs, int capsule);
-
+void CM_SetTempBoxModelContents(int contents);
 void CM_ModelBounds(clipHandle_t model, vec3_t mins, vec3_t maxs);
 
 // returns an ORed contents mask

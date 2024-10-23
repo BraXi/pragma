@@ -217,24 +217,24 @@ static void PFCG_trace(void)
 	cg.script_globals->trace_allsolid = trace.allsolid;
 	cg.script_globals->trace_startsolid = trace.startsolid;
 	cg.script_globals->trace_fraction = trace.fraction;
-	cg.script_globals->trace_plane_dist = trace.plane.dist;
-	VectorCopy(trace.plane.normal, cg.script_globals->trace_plane_normal);
+	cg.script_globals->trace_planedist = trace.plane.dist;
+	VectorCopy(trace.plane.normal, cg.script_globals->trace_normal);
 	VectorCopy(trace.endpos, cg.script_globals->trace_endpos);
-//	cg.script_globals->trace_ent = ENT_TO_VM(cg.localEntities); // FIXME
-	cg.script_globals->trace_entnum = trace.entityNum;
+//	cg.script_globals->trace_entity = ENT_TO_VM(cg.localEntities); // FIXME
+	cg.script_globals->trace_entitynum = trace.entityNum;
 	cg.script_globals->trace_contents = trace.contents;
 
 #if 0
 	if (trace.surface)
 	{
-		cg.script_globals->trace_surface_name = Scr_SetTempString(trace.surface->name);
-		cg.script_globals->trace_surface_flags = trace.surface->flags;
+		cg.script_globals->trace_material = Scr_SetTempString(trace.surface->name);
+		cg.script_globals->trace_flags = trace.surface->flags;
 		//cg.script_globals->trace_surface_value = trace.surface->value;
 	}
 	else
 	{
-		cg.script_globals->trace_surface_name = Scr_SetTempString("");
-		cg.script_globals->trace_surface_flags = 0;
+		cg.script_globals->trace_material = Scr_SetTempString("");
+		cg.script_globals->trace_flags = 0;
 		//cg.script_globals->trace_surface_value = 0;
 	}
 #endif

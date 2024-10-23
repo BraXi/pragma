@@ -426,6 +426,9 @@ int SV_AreaEntities (vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, i
 int SV_PointContents(vec3_t p);
 
 void SV_ClipToEntity(trace_t* trace, gentity_t* clipent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentmask, int capsule);
+
+qboolean SV_EntityContact(vec3_t mins, vec3_t maxs, const gentity_t* ent, int capsule);
+
 trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *ignoreEntity, int contentmask, qboolean bCapsule);
 
 // mins and maxs are relative

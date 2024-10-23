@@ -628,13 +628,13 @@ static void CopyTraceToProgs(trace_t trace)
 	sv.script_globals->trace_allsolid = trace.allsolid;
 	sv.script_globals->trace_startsolid = trace.startsolid;
 	sv.script_globals->trace_fraction = trace.fraction;
-	sv.script_globals->trace_plane_dist = trace.plane.dist;
-	VectorCopy(trace.plane.normal, sv.script_globals->trace_plane_normal);
+	sv.script_globals->trace_planedist = trace.plane.dist;
+	VectorCopy(trace.plane.normal, sv.script_globals->trace_normal);
 	VectorCopy(trace.endpos, sv.script_globals->trace_endpos);
-	sv.script_globals->trace_ent = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
-	sv.script_globals->trace_entnum = (trace.ent == NULL ? ENTITYNUM_NULL: trace.ent->s.number);
+	sv.script_globals->trace_entity = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
+	sv.script_globals->trace_entitynum = (trace.ent == NULL ? ENTITYNUM_NULL: trace.ent->s.number);
 	sv.script_globals->trace_contents = trace.contents;
-	sv.script_globals->trace_surface_flags = trace.surfaceFlags;
+	sv.script_globals->trace_flags = trace.surfaceFlags;
 }
 
 /*

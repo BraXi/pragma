@@ -16,10 +16,6 @@ Note: CModel implementation is mostly a direct copy of the one found in Quake II
 #include "../pragma.h"
 #include "cm_polylib.h"
 
-#define	MAX_SUBMODELS			MAX_WORLD_MODELS
-#define	BOX_MODEL_HANDLE		MAX_WORLD_MODELS-1
-#define CAPSULE_MODEL_HANDLE	MAX_WORLD_MODELS-2
-
 #define	MAX_POSITION_LEAFS		1024
 #define RADIUS_EPSILON			1.0f
 

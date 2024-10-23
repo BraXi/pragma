@@ -261,7 +261,7 @@ void SV_SpawnServer(char *mapname, char *spawnpoint, server_state_t serverstate,
 	// TODO: server checksums should be private and the server should ask client to send them nicely to compare
 	// otherwise, a malicious client can just slap an "is matching!" response and connect with different files loaded
 	//
-	checksum_cgprogs = CRC_ChecksumFile("progs/cgame.dat", true);
+	checksum_cgprogs = CRC_ChecksumFile("progs/client.dat", true);
 	checksum_guiprogs = CRC_ChecksumFile("progs/gui.dat", true);
 
 	SV_SetConfigString(CS_CHECKSUM_MAP, va("%i", checksum_map));

@@ -640,7 +640,7 @@ SOLID_BSP entities must error when they have no inline model set
 SOLID_TRIGGER entities will explictly use inline model instead of bounding box when they have inline model set
 ================
 */
-clipHandle_t SV_ClipHandleForEntity(gentity_t* ent)
+clipHandle_t SV_ClipHandleForEntity(const gentity_t* ent)
 {
 	int capsule = 0;
 
@@ -705,10 +705,21 @@ int SV_PointContents(vec3_t p)
 			angles = vec3_origin;
 		}
 
+		// bbox entities have their contents set in code
+		if (clip == BOX_MODEL_HANDLE || clip == CAPSULE_MODEL_HANDLE)
+		{
+			if(pEnt->v.contents != CONTENTS_NONE) // FIXME: eliminate when qc variable .solid is turned into makesolid() func
+				CM_SetTempBoxModelContents(pEnt->v.contents);
+		}
+
 		contents_entity = CM_TransformedPointContents(p, clip, pEnt->v.origin, angles);
 		contents |= contents_entity;
-	}
 
+		if (clip == BOX_MODEL_HANDLE || clip == CAPSULE_MODEL_HANDLE)
+		{
+			CM_SetTempBoxModelContents(CONTENTS_BODY);
+		}
+	}
 	return contents;
 }
 
@@ -771,7 +782,7 @@ void SV_ClipToEntity(trace_t *trace, gentity_t* clipent, vec3_t start, vec3_t mi
 		maxs = vec3_origin;
 
 	// if it doesn't have any contents of a type we're looking for, ignore it
-	if (!(contentmask & clipent->v.contents))
+	if (clipent->v.contents != CONTENTS_NONE && !(contentmask & clipent->v.contents))
 	{
 		trace->fraction = 1.0;
 		return;
@@ -799,6 +810,33 @@ void SV_ClipToEntity(trace_t *trace, gentity_t* clipent, vec3_t start, vec3_t mi
 		SV_SetTraceEnt(trace, clipent);
 }
 
+/*
+====================
+SV_EntityContact
+Returns true if the entity overlaps with bounding box.
+====================
+*/
+qboolean SV_EntityContact(vec3_t mins, vec3_t maxs, const gentity_t* ent, int capsule) 
+{
+	trace_t trace;
+	clipHandle_t clipHandle;
+	const float* angles;
+
+	memset(&trace, 0, sizeof(trace));
+	clipHandle = SV_ClipHandleForEntity(ent);
+
+	if (clipHandle == BOX_MODEL_HANDLE || ent == sv.edicts)
+	{
+		angles = vec3_origin;
+	}
+	else
+	{
+		angles = ent->v.angles;
+	}
+
+	CM_TransformedBoxTrace(&trace, vec3_origin, vec3_origin, mins, maxs, clipHandle, MASK_ALL, ent->v.origin, angles, capsule);
+	return trace.startsolid;
+}
 
 /*
 ====================
@@ -830,18 +868,13 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 		if ((int)touch->v.solid == SOLID_NOT)
 			continue; // the entity isn't solid
 
-		if (clip->ignoreEntity) // see if the entity should be ignored
+		if (clip->ignoreEntity && clip->ignoreEntity != sv.edicts) // see if the entity should be ignored
 		{
 			if (touch == clip->ignoreEntity) 
 				continue; // don't clip against the ignored entity
 
 			if (PROG_TO_GENT(touch->v.owner) == clip->ignoreEntity)
 				continue; // don't clip against entities that have ignoreEntity as their owner
-		}
-	
-		if (!(clip->contentmask & touch->v.contents)) 
-		{
-			continue; // if the entity lacks the contents we trace against ignore it
 		}
 
 		// might intersect, so do an exact clip
@@ -858,18 +891,36 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 			}
 		}
 
+		if (touch->v.contents != CONTENTS_NONE && !(clip->contentmask & touch->v.contents))
+		{
+			// if the entity lacks the contents we trace against ignore it
+			// inline model entities don't do this check and cannot have their contents overwritten
+			continue;
+		}
+
+		if (clipHandle == BOX_MODEL_HANDLE || clipHandle == CAPSULE_MODEL_HANDLE) 
+		{
+			if(touch->v.contents != CONTENTS_NONE)
+				CM_SetTempBoxModelContents(touch->v.contents);
+		}
+
 		CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins, clip->maxs, clipHandle, clip->contentmask, touch->v.origin, angles, clip->capsule);
+
+		if (clipHandle == BOX_MODEL_HANDLE || clipHandle == CAPSULE_MODEL_HANDLE)
+		{
+			CM_SetTempBoxModelContents(CONTENTS_BODY);
+		}
 
 		if (trace.allsolid) 
 		{
 			clip->trace.allsolid = true;
-			//trace.entityNum = NUM_FOR_ENT(touch); //touch->s.number;
-			SV_SetTraceEnt(&trace, touch);
+			//clip->trace.entityNum = NUM_FOR_ENT(touch); //touch->s.number;
+			SV_SetTraceEnt(&clip->trace, touch);
 		}
 		else if (trace.startsolid) 
 		{
 			clip->trace.startsolid = true;
-			SV_SetTraceEnt(&trace, touch);
+			SV_SetTraceEnt(&clip->trace, touch);
 		}
 
 		if (trace.fraction < clip->trace.fraction)
@@ -878,7 +929,7 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 			oldStart = clip->trace.startsolid;	
 			clip->trace = trace;
 			clip->trace.startsolid |= oldStart;
-			SV_SetTraceEnt(&trace, touch);
+			SV_SetTraceEnt(&clip->trace, touch);
 		}
 
 		
@@ -938,7 +989,7 @@ trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *
 	}
 
 	memset(&clip, 0, sizeof(moveclip_t));
-	SV_SetTraceEnt(&clip.trace, sv.edicts);
+	SV_SetTraceEnt(&clip.trace, NULL);
 
 	// clip to world
 	CM_BoxTrace(&clip.trace, start, end, mins, maxs, 0, contentmask, bCapsule);

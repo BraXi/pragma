@@ -128,7 +128,7 @@ static void CMod_LoadSubmodels(lump_t *l)
 
 	if ( count > MAX_WORLD_MODELS ) 
 	{
-		Com_Error( ERR_DROP, "MAX_SUBMODELS exceeded" );
+		Com_Error( ERR_DROP, "MAX_WORLD_MODELS exceeded" );
 	}
 
 	for (i = 0; i<count ; i++, in++, out++)
@@ -752,12 +752,12 @@ cmodel_t *CM_ClipHandleToModel( clipHandle_t handle )
 	{
 		return &box_model;
 	}
-	if ( handle < MAX_SUBMODELS ) 
+	if ( handle < MAX_WORLD_MODELS)
 	{
-		Com_Error( ERR_DROP, __FUNCTION__": bad handle %i < %i < %i", cm.numSubModels, handle, MAX_SUBMODELS );
+		Com_Error( ERR_DROP, __FUNCTION__": bad handle %i < %i < %i", cm.numSubModels, handle, MAX_WORLD_MODELS);
 	}
 
-	Com_Error( ERR_DROP, __FUNCTION__": bad handle %i", handle + MAX_SUBMODELS );
+	Com_Error( ERR_DROP, __FUNCTION__": bad handle %i", handle);
 	return NULL;
 
 }
@@ -957,4 +957,12 @@ void CM_ModelBounds(clipHandle_t model, vec3_t mins, vec3_t maxs)
 	VectorCopy(cmod->maxs, maxs);
 }
 
-
+/*
+===================
+CM_SetTempBoxModelContents
+===================
+*/
+void CM_SetTempBoxModelContents(int contents) 
+{
+	box_brush->contents = contents;
+}

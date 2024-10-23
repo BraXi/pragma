@@ -102,7 +102,7 @@ void Com_Printf(char* fmt, ...)
 	vsprintf(msg, fmt, argptr);
 	va_end(argptr);
 
-	printf(msg);
+//	printf(msg);
 #if 0
 	if (dedicated != NULL && dedicated->value > 0 && print_time == true)
 	{
