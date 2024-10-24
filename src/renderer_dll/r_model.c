@@ -29,7 +29,6 @@ model_t			r_inlineModels[RD_MAX_MODELS]; // the inline "*" brush models from the
 void Mod_LoadAliasMD3(model_t* mod, void* buffer);
 void R_LoadNewModel(model_t* mod, void* buffer);
 void Mod_LoadNewModelTextures(model_t* mod);;
-void R_LoadWorld(model_t* mod, void* buffer);
 
 /*
 =================
@@ -43,7 +42,7 @@ model_t* R_ModelForNum(int index)
 	model_t* mod;
 
 	// out of range gets the default model
-	if (index < 1 || index >= r_models_count)
+	if (index < 0 || index >= r_models_count)
 	{
 		return r_defaultmodel; // NULL
 	}
@@ -132,27 +131,21 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 	//
 	switch (LittleLong(*(unsigned*)buf))
 	{
-	case PMODEL_IDENT: /* Pragma's own model format */
+	case PMODEL_IDENT:
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_PMOD_HUNKSIZE, "Model (Renderer)");
 		R_LoadNewModel(mod, buf);
-		//R_TouchNewModel(mod);
 		break;
 
-	case MD3_IDENT: /* Quake3 .md3 model */
+	case MD3_IDENT: /* MD3 */
 		pLoadModel->extradata = Hunk_Begin(RD_MAX_MD3_HUNKSIZE, "Alias Model (Renderer)");
 		Mod_LoadAliasMD3(mod, buf);
-		//R_TouchAliasModel(mod); // load textures too
-		break;
-
-	case BSP_IDENT:
-		pLoadModel->extradata = Hunk_Begin(RD_MAX_BSP_HUNKSIZE, "World BSP (Renderer)");
-		R_LoadWorld(mod, buf);
 		break;
 	default:
 			ri.Error(ERR_DROP, "R_ModelForName:%s is not a model", mod->name);
 		break;
 	}
 
+	pLoadModel = NULL;
 	ri.FreeFile(buf);
 
 	return mod;
@@ -256,7 +249,7 @@ static void R_TouchAliasModel(model_t* mod)
 			if (mod->images[nt] == NULL)
 				mod->images[nt] = r_texture_missing;
 
-			// mark if surface has transparent texture
+			// mark surfaces with transparent textures
 			if (mod->images[nt]->has_alpha)
 				surf->flags = MSF_TRANSPARENT;
 
@@ -267,19 +260,12 @@ static void R_TouchAliasModel(model_t* mod)
 	}
 }
 
-static void R_TouchBrushModel(model_t* mod)
-{
-	// BUMP TEXTURE REGISTRATION REQUENCE
-}
-
-
 static void R_TouchNewModel(model_t* mod)
 {
 	if (!mod || !mod->newmod)
 	{
 		return;
 	}
-
 	Mod_LoadNewModelTextures(mod);
 }
 
@@ -302,24 +288,24 @@ struct model_s* R_RegisterModel(const char* name)
 
 	mod->registration_sequence = registration_sequence;
 
-	if (mod->type == MOD_Q3BRUSH)
+	switch (mod->type)
 	{
-		R_TouchBrushModel(mod);
-	}
-	else if (mod->type == MOD_ALIAS)
-	{
+	case MOD_BRUSH:
+		// intentionaly empty
+		break;
+
+	case MOD_ALIAS:
 		R_TouchAliasModel(mod);
-	}
-	else if (mod->type == MOD_NEWFORMAT)
-	{
+		break;
+
+	case MOD_NEWFORMAT:
 		R_TouchNewModel(mod);
+		break;
+
+	default:
+		ri.Error(ERR_DROP, __FUNCTION__": Model %s has bad type %i\n", mod->name, mod->type);
+		break;
 	}
-#ifdef _DEBUG
-	else
-	{
-		ri.Printf(PRINT_LOW, "%s: unknown type %i\n", __FUNCTION__, mod->type);
-	}
-#endif
 
 	return mod;
 }
@@ -327,31 +313,14 @@ struct model_s* R_RegisterModel(const char* name)
 /*
 ================
 R_BeginRegistration
-
-Loads the world BSP model and bumps registration sequence so the unused assets can be freed after init is done
+Loads the world BSP model and bumps registration sequence so the (old) unused assets can be freed after registration is complete.
 ================
 */
 void R_BeginRegistration(const char *worldName)
 {
-	char	fullname[MAX_QPATH];
-	cvar_t* flushmap;
-
 	registration_sequence ++;
-	r_oldviewcluster = -1;		// force markleafs
 
-	Com_sprintf(fullname, sizeof(fullname), "maps/%s.bsp", worldName);
-
-	// explicitly free the old map if different, this guarantees that r_worldmodel is the world map
-	// this also ensures we don't reload the map when restarting level
-	flushmap = ri.Cvar_Get("cm_flushmap", "0", 0, NULL);
-	if (r_worldmodel && (strcmp(r_worldmodel->name, fullname) || flushmap->value))
-	{
-		R_FreeModel(r_worldmodel);
-		r_worldmodel = NULL;
-	}
-
-	r_worldmodel = R_ModelForName(fullname, true);
-	r_viewcluster = r_viewcluster2 = -1;
+	R_LoadWorld(worldName);
 
 	// load the default model
 	r_defaultmodel = R_ModelForName("models/dev/xyz.md3", true);
@@ -361,8 +330,7 @@ void R_BeginRegistration(const char *worldName)
 /*
 ================
 R_EndRegistration
-
-Frees images and models which haven't bumped their registration sequence (they're no longer needed)
+Frees all assets that don't have matching registration_sequence/
 ================
 */
 void R_EndRegistration(void)

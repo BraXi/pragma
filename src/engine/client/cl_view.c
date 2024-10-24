@@ -335,7 +335,9 @@ static void CL_LoadModelAtIndex(const char* name, int index)
 		return;
 	}
 
-	cl.model_draw[index] = re.RegisterModel(name);
+	cl.model_draw[index] = NULL;
+	if(index != 1)
+		cl.model_draw[index] = re.RegisterModel(name);
 
 	if (name[0] == '*')
 		cl.model_clip[index] = CM_InlineModel(atoi(name+1));

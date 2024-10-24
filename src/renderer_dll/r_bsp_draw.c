@@ -10,7 +10,6 @@ See the attached GNU General Public License v2 for more details.
 
 #include "r_local.h"
 
-extern renderWorld_t world;
 extern material_t* r_materials;
 static vec3_t		modelorg; // relative to viewpoint
 
@@ -24,7 +23,7 @@ static void R_BindWorldDrawVertsBuffer()
 	static const dv_size = sizeof(worldDrawVert_t);
 	int attrib_xyz, attrib_normal, attrib_tc, attrib_lmtc, attrib_color;
 
-	glBindBuffer(GL_ARRAY_BUFFER, world.vbo_verts);
+	glBindBuffer(GL_ARRAY_BUFFER, r_world->vbo_verts);
 
 	// diferent program may have diferent atrributes and their locations
 	attrib_xyz = R_GetProgAttribLoc(VALOC_POS);
@@ -97,11 +96,14 @@ static void R_InitWorldEntity()
 	memset(&r_worldent, 0, sizeof(r_worldent));
 	memcpy(r_worldent.modelMatrix, mat4_identity, sizeof(mat4_t)); // no transform needed for world.
 
-	r_worldent.model = r_worldmodel;
+	r_worldent.model = NULL;
 	r_worldent.frame = (int)(r_newrefdef.time * 2);
 	r_worldent.alpha = 1.0f;
 
 	VectorSet(r_worldent.renderColor, 1.0f, 1.0f, 1.0f);
+
+	r_pCurrentEntity = &r_worldent;
+	r_pCurrentModel = NULL;
 }
 
 
@@ -206,7 +208,162 @@ void R_TraverseWorldBSP()
 	gl_state.bTraversedBSP = true;
 }
 
+/*
+================
+R_SetLightMap
+================
+*/
+static void R_SetLightMap(const worldLightMap_t lightmap_index)
+{
+	qboolean useVertexColors;
+	worldLightMap_t lightmap;
 
+	useVertexColors = false;
+
+	if (r_fullbright->value)
+	{
+		lightmap = LIGHTMAP_WHITEIMAGE;
+		goto change_lightmap; // Sneak in GOTO so I can be called evil
+	}
+
+	lightmap = lightmap_index;
+
+	if (lightmap >= LIGHTMAP_LIGHTMAP)
+	{
+		// use lightmap image	
+		//useVertexColors = false; // implicit
+	}
+	else
+	{
+		switch (lightmap)
+		{
+		case LIGHTMAP_NONE:
+		case LIGHTMAP_WHITEIMAGE:
+			// fullbright
+			useVertexColors = false;
+			break;
+
+		case LIGHTMAP_BY_VERTEX:
+			// vertex colors
+			useVertexColors = true;
+			break;
+		}
+	}
+
+change_lightmap:
+	if (lightmap >= LIGHTMAP_LIGHTMAP)
+	{
+		if (lightmap >= r_world->numLightmaps)
+		{
+			ri.Error(ERR_DROP, __FUNCTION__": Wrong lightmap %i.\n", lightmap);
+			return;
+		}
+
+		R_MultiTextureBind(TMU_LIGHTMAP, r_world->lightmaps[lightmap]->texnum);		
+	}
+	else
+	{
+		R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
+	}
+
+	if (useVertexColors)
+		R_ProgUniform1f(LOC_PARM0, 1.0f);
+	else
+		R_ProgUniform1f(LOC_PARM0, 0.0f);	
+}
+
+/*
+================
+R_BeginRenderingWorld
+================
+*/
+static void R_BeginRenderingWorld()
+{
+	if (gl_state.bRenderingWorldModel)
+		return;
+
+	gl_state.bRenderingWorldModel = true;
+	R_BindProgram(GLPROG_Q3WORLD);
+	R_BindWorldDrawVertsBuffer();
+}
+
+/*
+================
+R_EndRenderingWorld
+================
+*/
+static void R_EndRenderingWorld()
+{
+	if (!gl_state.bRenderingWorldModel)
+		return;
+
+	gl_state.bRenderingWorldModel = false;
+	R_UnbindProgram();
+	R_UnbindWorldDrawVertsBuffer();
+}
+
+/*
+================
+R_DrawBModel
+Draw brush model
+================
+*/
+void R_DrawBModel(const int bmodel_index)
+{
+	worldSurface_t* surf;
+	GLuint* pDrawIndexes;
+	unsigned int numIndexes, numSurfaces;
+	int material_id, i;
+	worldLightMap_t lightmap_id;
+
+#ifdef _DEBUG
+	if (!r_world)
+	{
+		ri.Error(ERR_DROP, __FUNCTION__": no world.\n");
+		return;
+	}
+
+	if (!gl_state.bRenderingWorldModel)
+	{
+		ri.Error(ERR_DROP, __FUNCTION__": no world.\n");
+		return;
+	}
+#endif
+
+	if (bmodel_index < 0 || bmodel_index >= r_world->numInlineModels)
+	{
+		ri.Error(ERR_DROP, __FUNCTION__": bad index %i.\n", bmodel_index);
+		return;
+	}
+
+	surf = &r_world->surfaces[r_world->inlineModels[bmodel_index].firstSurface];
+	numSurfaces = r_world->inlineModels[bmodel_index].numSurfaces;
+
+	for (i = 0; i < numSurfaces; i++, surf++)
+	{
+		if (surf->surfaceType != WORLDSURF_FACE && surf->surfaceType != WORLDSURF_MESH)
+			continue;
+
+		material_id = surf->material_id;
+		lightmap_id = surf->lightmap_id;
+		numIndexes = surf->numIndexes;
+		pDrawIndexes = surf->drawIndexes;
+
+		//ri.Printf(PRINT_ALL, "%4i: %iM, %iL\n", bmodel_index, material_id, lightmap_id);
+		if (numIndexes == 0)
+			continue;
+
+		R_MultiTextureBind(TMU_DIFFUSE, r_materials[material_id].diffuse_id);
+		R_SetLightMap(lightmap_id);
+
+		glDrawElements(GL_TRIANGLES, numIndexes, GL_UNSIGNED_INT, pDrawIndexes);
+
+		rperf.brush_drawcalls++;
+		rperf.brush_tris += numIndexes / 3;
+	}
+
+	//ri.Printf(PRINT_ALL, "----\n", bmodel_index, material_id, lightmap_id);
+}
 
 /*
 ================
@@ -216,13 +373,7 @@ Draw world and skybox
 */
 void R_DrawWorld()
 {
-	worldSurface_t* surf;
-	worldSurf_Face_t* face;
-	worldSurf_Mesh_t* mesh;
-	GLuint* pIndexes;
-	unsigned int  numIndexes;
-	int i, lightmap;
-	int material;
+	int i;
 
 	if (!r_drawworld->value)
 		return;
@@ -232,81 +383,28 @@ void R_DrawWorld()
 
 	if (!gl_state.bTraversedBSP)
 	{
-		ri.Error(ERR_FATAL, "R_DrawWorld without traversal of BSP");
+		ri.Error(ERR_FATAL, __FUNCTION__": BSP tree not traversed");
 	}
 
-	if (!world.bLoaded)
+	if (!r_world)
 	{
 		return;
 	}
 
 	R_InitWorldEntity();
-	r_pCurrentEntity = &r_worldent;
-	r_pCurrentModel = r_worldmodel;
 
 	VectorCopy(r_newrefdef.view.origin, modelorg);
 
-	R_BindProgram(GLPROG_Q3WORLD);
-	R_BindWorldDrawVertsBuffer();
+	R_BeginRenderingWorld();
+
 	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, r_worldent.modelMatrix);
 	R_ProgUniformMatrix4fv(LOC_MODELVIEW, 1, r_world_matrix);
 
-	R_MultiTextureBind(TMU_DIFFUSE, r_texture_white->texnum);
 
-	pIndexes = NULL;
-	numIndexes = 0;
-	lightmap = 0;
+	for(i = 0; i < r_world->numInlineModels; i++)
+		R_DrawBModel(i);
 
-	//glDisable(GL_CULL_FACE);
-	surf = world.surfaces;
-	for (i = 0; i < world.numSurfaces; i++, surf++)
-	{
-		pIndexes = NULL;
-		numIndexes = 0;
-		material = surf->material;
-		if (surf->surfaceType == WORLDSURF_FACE)
-		{
-			face = (worldSurf_Face_t*)surf->data;
-
-			lightmap = face->lightmap;
-			numIndexes = face->numIndexes;
-			pIndexes = face->indices;
-		}
-		else if (surf->surfaceType == WORLDSURF_MESH)
-		{
-			mesh = (worldSurf_Mesh_t*)surf->data;
-			lightmap = mesh->lightmap;
-			numIndexes = mesh->numIndexes;
-			pIndexes = mesh->indices;
-		}
-		else if (surf->surfaceType == WORLDSURF_PATCH)
-		{
-		}
-
-		if (numIndexes == 0)
-			continue; // nothing to draw
-
-		R_MultiTextureBind(TMU_DIFFUSE, r_materials[material].diffuse_id);
-
-
-		if (lightmap >= 0)
-		{
-			R_MultiTextureBind(TMU_LIGHTMAP, world.lightmaps[lightmap]->texnum);
-			R_ProgUniform1f(LOC_PARM0, 0.0f);
-		}
-		else
-		{
-			R_MultiTextureBind(TMU_LIGHTMAP, r_texture_white->texnum);
-			R_ProgUniform1f(LOC_PARM0, 1.0f);
-		}
-
-		rperf.brush_drawcalls++;
-		rperf.brush_tris += numIndexes / 3;
-		glDrawElements(GL_TRIANGLES, numIndexes, GL_UNSIGNED_INT, pIndexes);
-	}
-
-	R_UnbindProgram();
-	R_UnbindWorldDrawVertsBuffer();
+	R_EndRenderingWorld();
 
 	// 
 	// DRAW SKYBOX but only in final pass

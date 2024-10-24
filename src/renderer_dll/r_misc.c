@@ -262,15 +262,15 @@ static int currentsample; //0 - (NUM_TIMESAMPLES-1)
 
 const char* stagenames[NUM_PROFILES] =
 {
-	"start",
-	"setup and BSP",
-	"shadow pass",
-	"world geo",
-	"entities",
-	"debug",
-	"alpha surfaces",
-	"particles",
-	"total"
+	"Start",
+	"Init",
+	"Shadows",
+	"Draw World",
+	"Entities",
+	"Debug",
+	"Transparent",
+	"Particles",
+	"Total"
 };
 
 void R_StartProfiling()

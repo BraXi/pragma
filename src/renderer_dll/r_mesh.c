@@ -133,11 +133,11 @@ void R_PreProcessModelEntity(rentity_t* ent)
 	{
 		return; // player desires to not draw view model
 	}
-	else if (ent->model->cullDist > 0.0f)
+	else if (ent->model->drawDistance > 0.0f)
 	{
 		// cull objects based on distance, but only if they're not a view model
 		VectorSubtract(r_newrefdef.view.origin, ent->origin, v);
-		if (VectorLength(v) > ent->model->cullDist)
+		if (VectorLength(v) > ent->model->drawDistance)
 		{
 			rperf.ent_cull_distance++;
 			return; // entity is too far, reject

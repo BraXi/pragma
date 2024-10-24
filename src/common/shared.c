@@ -609,8 +609,8 @@ size_t Q_strlcat(char* dst, const char* src, size_t dsize)
 void Com_sprintf (char *dest, int size, const char *fmt, ...)
 {
 	int		len;
-	va_list		argptr;
-	char	bigbuffer[0x10000];
+	va_list	argptr;
+	char	bigbuffer[4096];
 
 	va_start (argptr,fmt);
 	len = vsprintf (bigbuffer,fmt,argptr);

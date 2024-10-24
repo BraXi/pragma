@@ -98,7 +98,7 @@ void R_SendDynamicLightsToCurrentProgram(qboolean bNoViewFlashLight)
 	vec3_t		dl_colors[MAX_DLIGHTS];
 	int			numDynLights;
 
-	if (!r_worldmodel || !R_UsingProgram())
+	if (!r_world || !R_UsingProgram())
 		return;
 
 	numDynLights = !r_dynamic->value ? 0 : r_newrefdef.num_dlights; // no dlights when r_dynamic is off

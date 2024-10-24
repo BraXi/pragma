@@ -13,7 +13,6 @@ See the attached GNU General Public License v2 for more details.
 
 void R_Clear (void);
 
-model_t		*r_worldmodel = NULL;
 model_t		*r_defaultmodel = NULL; //for missing models
 
 float		gldepthmin, gldepthmax;
@@ -164,10 +163,7 @@ static inline void R_DrawCurrentEntity()
 			return; // should never happen
 		}
 
-		if (r_pCurrentModel->type == MOD_Q3BRUSH)
-		{
-		}
-		else if (r_pCurrentModel->type == MOD_BRUSH)
+		if (r_pCurrentModel->type == MOD_BRUSH)
 		{
 			R_DrawBrushModel(r_pCurrentEntity);
 		}
@@ -625,13 +621,13 @@ void R_RenderView (refdef_t *fd)
 
 	r_newrefdef = *fd;
 
-	if (!r_worldmodel && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
-		ri.Error(ERR_DROP, "R_RenderView: NULL worldmodel");
+	if (!r_world && !( r_newrefdef.view.flags & RDF_NOWORLDMODEL ) )
+		ri.Error(ERR_DROP, __FUNCTION__": World not loaded.\n");
 
 #ifdef _DEBUG
 	if (!r_defaultmodel)
 	{
-		ri.Error(ERR_FATAL, "r_defaultmodel is NULL");
+		ri.Error(ERR_FATAL, __FUNCTION__": r_defaultmodel is NULL.\n");
 		return; // should theoreticaly never happen
 	}
 #endif
@@ -793,25 +789,22 @@ static void R_DrawPerfCounters()
 	Vector4Set(color, 1.0, 0.65, 0, 1.0);
 	R_DrawText(x + 5, h + 4, 2, 0, fontscale, color, va("%s", gl_config.renderer_string));
 
-	if (rperf.brush_tris > 0)
+	Vector4Set(color, 1.0, 1.0, 1, 1.0);
+
+	if (rperf.brush_tris > 0 || rperf.brush_drawcalls > 0)
 	{
-		R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i brush triangles", rperf.brush_tris));
+		R_DrawText(x, y += h, 2, 0, fontscale, color, va("BSP Tris: %i, Surfs: %i", rperf.brush_tris, rperf.brush_drawcalls));
 	}
 
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i brush drawcalls", rperf.brush_drawcalls));
+	//R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.brush_textures));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("TMU0: %i, TMU1: %i", rperf.texture_binds[TMU_DIFFUSE], rperf.texture_binds[TMU_LIGHTMAP]));
 
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.brush_textures));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i lightmap binds", rperf.texture_binds[TMU_LIGHTMAP]));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i texture binds", rperf.texture_binds[TMU_DIFFUSE]));
+	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("Dlights: %i", r_newrefdef.num_dlights));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("Ents: %i", r_newrefdef.num_entities));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("Particles: %i", r_newrefdef.num_particles));
 
-	Vector4Set(color, 0.8, 0.8, 1, 1.0);
-	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("%i dynamic lights", r_newrefdef.num_dlights));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i render entities", r_newrefdef.num_entities));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i particles count", r_newrefdef.num_particles));
-
-	Vector4Set(color, 1, 1, 1, 1.0);
-	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("%i rendered models", rperf.model_drawcalls));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i model tris total", rperf.model_tris));
+	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("Models: %i", rperf.model_drawcalls));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("Model Tris: %i", rperf.model_tris));
 
 	R_DrawProfilingReport();
 }

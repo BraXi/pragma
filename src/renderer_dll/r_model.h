@@ -20,31 +20,34 @@ See the attached GNU General Public License v2 for more details.
 
 //===================================================================
 
-typedef struct // q3 bmodel
+typedef struct // brush models are parts of world model
 {
-	vec3_t		mins, maxs;		// for culling
-	void* firstSurface;
-	int			numSurfaces;
+	// for culling
+	vec3_t	mins, maxs;
+	float	radius;
+
+	int		firstSurface; // index to world surfaces
+	int		numSurfaces;
 } bmodel_t;
 
 typedef struct model_s
 {
 	char		name[MAX_QPATH];
-	int			index;
-	int			registration_sequence;
 	modtype_t	type;
+	int			registration_sequence;
+	int			index;
 
 	int			numframes;
-	int			flags;
 
-	// volume occupied by the model graphics	
+	// flags -- unused
+	//int		flags;
+
+	// for culling	
 	vec3_t		mins, maxs;
 	float		radius;
+	int			drawDistance;
 
-	// don't draw if eye is farther than this
-	int			cullDist;
-
-	// MOD_BMODEL
+	// MOD_BRUSH
 	bmodel_t	*bmodel;
 
 	// MOD_NEWFORMAT
@@ -53,9 +56,8 @@ typedef struct model_s
 
 	// MOD_ALIAS
 	md3Header_t* alias;	
-	image_t* images[MD3_MAX_SURFACES]; // MD3_MAX_SHADERS ??
+	image_t* images[MD3_MAX_SURFACES];
 
-	// common for all models
 	vertexbuffer_t* vb[MD3_MAX_SURFACES];
 	
 	int			extradatasize;

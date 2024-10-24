@@ -102,7 +102,7 @@ typedef struct
 
 	svmodel_t			models[MAX_MODELS];		// md3, smdl
 	int					numModels;
-	int					numBrushModels;
+	int					numInlineModels;
 
 	qboolean			qcvm_active;
 	sv_globalvars_t*	script_globals;			// qcvm globals

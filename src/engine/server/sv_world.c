@@ -880,17 +880,6 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 		// might intersect, so do an exact clip
 		clipHandle = SV_ClipHandleForEntity(touch);
 
-		angles = vec3_origin;
-
-		// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate
-		if (SV_IsBrushModel(touch->v.modelindex))
-		{
-			if (touch->v.solid == SOLID_BSP || touch->v.solid == SOLID_TRIGGER)
-			{
-				angles = touch->v.angles;
-			}
-		}
-
 		if (touch->v.contents != CONTENTS_NONE && !(clip->contentmask & touch->v.contents))
 		{
 			// if the entity lacks the contents we trace against ignore it
@@ -900,8 +889,18 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 
 		if (clipHandle == BOX_MODEL_HANDLE || clipHandle == CAPSULE_MODEL_HANDLE) 
 		{
+			angles = vec3_origin;
+
 			if(touch->v.contents != CONTENTS_NONE)
 				CM_SetTempBoxModelContents(touch->v.contents);
+		}
+		else
+		{
+			// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate
+			if (touch->v.solid == SOLID_BSP || touch->v.solid == SOLID_TRIGGER)
+			{
+				angles = touch->v.angles;
+			}
 		}
 
 		CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins, clip->maxs, clipHandle, clip->contentmask, touch->v.origin, angles, clip->capsule);

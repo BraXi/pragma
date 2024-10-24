@@ -1272,7 +1272,6 @@ cheatvar_t	cheatvars[] =
 	{"r_lightmap", "0"},
 	{"r_ambientlightscale", "1"},
 
-	{"r_nobind", "0"},
 	{"r_lockpvs", "0"},
 	
 	{NULL, NULL}

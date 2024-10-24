@@ -31,40 +31,14 @@ typedef enum
 
 typedef enum
 {
-	LIGHTMAP_LIGHTMAP = 0,		// (>= 0) means surface is properly light mapped
+	LIGHTMAP_LIGHTMAP = 0,		// a value greater or equal to zero means index to r_world->lightmaps[]
 	LIGHTMAP_NONE = -1,			// material does not reference lightmap
-	LIGHTMAP_WHITEIMAGE = -2,	// surface is fullbright
-	LIGHTMAP_BY_VERTEX = -3,	// per vertex lighting
-	LIGHTMAP_2D = -4			// material for 2D rendering
+	LIGHTMAP_WHITEIMAGE = -2,	// use white texture (fullbright)
+	LIGHTMAP_BY_VERTEX = -3,	// use vertex colors for lighting
+	LIGHTMAP_2D = -4,			// ???
+
+	LIGHTMAP_MAX = MAX_WORLD_LIGHTMAPS
 } worldLightMap_t;
-
-typedef struct
-{
-	int					material;
-	int					fogVolumeIndex;
-
-	worldSurfaceType_t	surfaceType;
-	void* data; // any of worldSurf_*t
-} worldSurface_t; // new msurface_t
-
-typedef struct
-{
-	// culling information
-	vec3_t		mins, maxs;
-	float		radius;
-
-	// >= 0 : index to lightmaps, < 0 : vertex lit
-	int			lightmap;
-
-	// triangle definitions
-	int			firstIndex;
-	int			numIndexes;
-
-	int			firstVert;
-	int			numVerts;
-
-	int* indices;
-} worldSurf_Mesh_t;
 
 typedef struct
 {
@@ -73,22 +47,45 @@ typedef struct
 	vec3_t		color;
 } worldSurf_Billboard_t;
 
-
 typedef struct
 {
 	cplane_t	plane;
+} worldSurf_Face_t;
 
-	// >= 0 : index to lightmaps, < 0 : vertex lit
-	int			lightmap;
+typedef struct
+{
+	worldSurfaceType_t	surfaceType;
 
-	// triangle definitions (no normals at verts)
+	// index to r_world->materials[]
+	int			material_id;
+
+	// index to r_world->lightmaps[], see worldLightMap_t for details
+	int			lightmap_id;
+
+	// currently unused
+	int			fogvolume_id;
+
+	// culling information
+	vec3_t		mins, maxs;
+	float		radius;
+
+	// index to r_world->drawVerts[]
 	int			firstVert;
+
+	// number of vertexes
 	int			numVerts;
-	int			firstIndex;
+
+	// number of draw indexes
 	int			numIndexes;
 
-	int* indices;
-} worldSurf_Face_t;
+	// dynmicaly allocated draw indexes pointing to r_world->drawVerts[]
+	int			*drawIndexes;
+
+	// additional worldSurf_*t data depending on surfaceType
+	void		*data; 
+
+} worldSurface_t; // new msurface_t
+
 
 
 typedef struct worldNode_s
@@ -123,7 +120,7 @@ typedef struct
 typedef struct renderWorld_s
 {
 	char		name[MAX_QPATH]; // without .bsp and path
-	qboolean	bLoaded;
+	int			hunksize;
 
 	bsp_surfinfo_t* materials;
 	int			numMaterials;
@@ -151,7 +148,7 @@ typedef struct renderWorld_s
 	int			clusterBytes;
 
 	bmodel_t* inlineModels;
-	int			numBrushModels;
+	int			numInlineModels;
 
 	byte* vis;
 	byte* novis;
@@ -172,13 +169,15 @@ typedef struct renderWorld_s
 #endif
 } renderWorld_t;
 
+extern renderWorld_t *r_world;
 
 //
 // r_bsp_load.c
 //
 
-void R_LoadWorld(model_t* mod, void* buffer);
 void R_FreeWorld();
+void R_LoadWorld(const char *bsp_name);
+
 
 
 //

@@ -29,7 +29,7 @@ extern int modelFileLength;
 byte* mod_base;
 extern model_t r_inlineModels[MAX_WORLD_MODELS];
 
-renderWorld_t world;
+renderWorld_t *r_world;
 
 /*
 =================
@@ -40,7 +40,7 @@ static void CheckLumpSize(const lump_t* lump, size_t element_size, const char* f
 {
 	if (lump->filelen % element_size)
 	{
-		ri.Error(ERR_DROP, "%s: funny lump size in %s", func_name, world.name);
+		ri.Error(ERR_DROP, "%s: funny lump size in %s", func_name, r_world->name);
 	}
 }
 
@@ -60,8 +60,8 @@ static void R_LoadWorldMaterials(const lump_t* lump)
 	count = lump->filelen / sizeof(*in);
 	out = Hunk_Alloc(count * sizeof(*out));
 
-	world.materials = out;
-	world.numMaterials = count;
+	r_world->materials = out;
+	r_world->numMaterials = count;
 
 	memcpy(out, in, count * sizeof(*out));
 
@@ -73,7 +73,7 @@ static void R_LoadWorldMaterials(const lump_t* lump)
 		//ri.Printf(PRINT_ALL, "    '%s'\n", out[i].name);
 	}
 
-	ri.Printf(PRINT_ALL, "... %i materials\n", world.numMaterials);
+	ri.Printf(PRINT_ALL, "... %i materials\n", r_world->numMaterials);
 }
 
 /*
@@ -122,26 +122,26 @@ static void R_TryLoadExternalLightmaps()
 	// ... and try loading them
 	for (count = 0, i = 0; i < numReferencedLightmaps+1; i++)
 	{
-		Com_sprintf(filename, sizeof(filename), "maps/%s/lm_%04d.tga", world.name, i);
+		Com_sprintf(filename, sizeof(filename), "maps/%s/lm_%04d.tga", r_world->name, i);
 		lightmap = R_FindTexture(filename, it_texture, true);
 		if (lightmap && lightmap != r_texture_missing)
 		{
 			count++;
-			world.lightmaps[i] = lightmap;
+			r_world->lightmaps[i] = lightmap;
 		}
 		else
 		{
-			ri.Error(ERR_DROP, "missing lightmap %i for map %s", i, world.name);
+			ri.Error(ERR_DROP, "missing lightmap %i for map %s", i, r_world->name);
 		}
 	}
 
 	if (!count)
 		return;
 
-	world.numLightmaps = count;
+	r_world->numLightmaps = count;
 
-	world.bExternalLightmaps = true;
-	ri.Printf(PRINT_ALL, "... %i external light maps\n", world.numLightmaps);
+	r_world->bExternalLightmaps = true;
+	ri.Printf(PRINT_ALL, "... %i external light maps\n", r_world->numLightmaps);
 }
 #endif
 
@@ -158,13 +158,13 @@ static void R_LoadLightmaps(const lump_t* lump)
 	int			i, j;
 	int			numPixels;
 
-	world.bExternalLightmaps = false;
+	r_world->bExternalLightmaps = false;
 
 	len = lump->filelen;
 	if (!len)
 	{
 		
-		world.numLightmaps = 0;
+		r_world->numLightmaps = 0;
 
 #ifdef ALLOW_EXTERNAL_LIGHTMAPS
 		// No lightmap data in BSP but maybe there are external lightmaps
@@ -177,11 +177,11 @@ static void R_LoadLightmaps(const lump_t* lump)
 
 	numPixels = WORLD_LIGHTMAP_WIDTH * WORLD_LIGHTMAP_WIDTH; // Q3BSP_LIGHTMAP_SIZE * Q3BSP_LIGHTMAP_SIZE
 
-	world.numLightmaps = len / (numPixels * 3);
+	r_world->numLightmaps = len / (numPixels * 3);
 
-	if (world.numLightmaps >= MAX_WORLD_LIGHTMAPS)
+	if (r_world->numLightmaps >= MAX_WORLD_LIGHTMAPS)
 	{
-		ri.Error(ERR_DROP, "Too many lightmaps (%i)", world.numLightmaps);
+		ri.Error(ERR_DROP, "Too many lightmaps (%i)", r_world->numLightmaps);
 		return;
 	}
 
@@ -195,7 +195,7 @@ static void R_LoadLightmaps(const lump_t* lump)
 	memset(tempPixels, 255, numPixels * 4);
 
 	// create all the lightmaps
-	for (i = 0; i < world.numLightmaps; i++)
+	for (i = 0; i < r_world->numLightmaps; i++)
 	{
 		// expand the 24 bit on-disk to 32 bit
 		buf_p = buf + i * numPixels * 3;
@@ -206,16 +206,16 @@ static void R_LoadLightmaps(const lump_t* lump)
 			tempPixels[j * 4 + 3] = 255;
 		}
 
-		world.lightmaps[i] = R_LoadTexture(va("$lightmap_%d", i), (byte*)tempPixels, WORLD_LIGHTMAP_WIDTH, WORLD_LIGHTMAP_HEIGHT, it_texture, 32);
+		r_world->lightmaps[i] = R_LoadTexture(va("$lightmap_%d", i), (byte*)tempPixels, WORLD_LIGHTMAP_WIDTH, WORLD_LIGHTMAP_HEIGHT, it_texture, 32);
 
 		// make sure lightmap is set to clamp to edges (R_LoadTexture leaves texture bound)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		R_BindTexture(0);
+		//R_BindTexture(0);
 	}
 
 	free(tempPixels);
-	ri.Printf(PRINT_ALL, "... %i light map%s (%i kb)\n", world.numLightmaps, (world.numLightmaps > 0) ? "s" : "", (numPixels * 4 * world.numLightmaps) / 1024);
+	ri.Printf(PRINT_ALL, "... %i light map%s (%i kb)\n", r_world->numLightmaps, (r_world->numLightmaps > 1) ? "s" : "", (numPixels * 4 * r_world->numLightmaps) / 1024);
 }
 
 /*
@@ -237,8 +237,8 @@ static void R_LoadWorldPlanes(const lump_t* lump)
 	count = lump->filelen / sizeof(*in);
 	out = Hunk_Alloc(count * 2 * sizeof(*out));
 
-	world.planes = out;
-	world.numPlanes = count;
+	r_world->planes = out;
+	r_world->numPlanes = count;
 
 	for (i = 0; i < count; i++, in++, out++) 
 	{
@@ -285,8 +285,8 @@ static void R_LoadDrawVerts(const lump_t* lump)
 	count = lump->filelen / sizeof(*in);
 	out = Hunk_Alloc(count * sizeof(*out));
 
-	world.drawVerts = out;
-	world.numDrawVerts = count;
+	r_world->drawVerts = out;
+	r_world->numDrawVerts = count;
 
 	for (i = 0; i < count; i++)
 	{
@@ -332,8 +332,8 @@ static void R_LoadDrawIndexes(const lump_t* lump)
 	count = lump->filelen / sizeof(int);
 	out = Hunk_Alloc(count * sizeof(int));
 
-	world.drawIndexes = out;
-	world.numDrawIndexes = count;
+	r_world->drawIndexes = out;
+	r_world->numDrawIndexes = count;
 
 	for (i = 0; i < count; i++ )
 	{
@@ -370,27 +370,35 @@ ParseBrushFace
 static void ParseBrushFace(const bsp_surface_t* bspSurf, worldSurface_t* worldSurf) 
 {
 	worldSurf_Face_t* face;
-	int i;
+	int i, firstIndex, index;
 
 	face = Hunk_Alloc(sizeof(*face));
-	face->lightmap = LittleLong(bspSurf->lightmapNum);
-	face->firstVert = LittleLong(bspSurf->firstVert);
-	face->numVerts = LittleLong(bspSurf->numVerts);
-	face->firstIndex = LittleLong(bspSurf->firstIndex);
-	face->numIndexes = LittleLong(bspSurf->numIndexes);
 
-	face->indices = Hunk_Alloc(face->numIndexes * sizeof(int));
-	for (i = 0; i < face->numIndexes; i++)
+	worldSurf->surfaceType = WORLDSURF_FACE;
+
+	worldSurf->material_id = LittleLong(bspSurf->materialNum);
+	worldSurf->lightmap_id = LittleLong(bspSurf->lightmapNum);
+	worldSurf->fogvolume_id = LittleLong(bspSurf->fogNum) + 1;
+
+	worldSurf->firstVert = LittleLong(bspSurf->firstVert);
+	worldSurf->numVerts = LittleLong(bspSurf->numVerts);
+
+	worldSurf->numIndexes = LittleLong(bspSurf->numIndexes);
+	worldSurf->drawIndexes = Hunk_Alloc(worldSurf->numIndexes * sizeof(int));
+
+	firstIndex = LittleLong(bspSurf->firstIndex);
+
+	for (i = 0; i < worldSurf->numIndexes; i++)
 	{
-		face->indices[i] = world.drawIndexes[face->firstIndex + i] + face->firstVert;
-		//world.drawIndexes[face->firstIndex + i] += face->firstVert;
-		int index = world.drawIndexes[face->firstIndex + i];
+		worldSurf->drawIndexes[i] = r_world->drawIndexes[firstIndex + i] + worldSurf->firstVert;
+		index = r_world->drawIndexes[firstIndex + i];
 	
-		if (index < 0 || index >= world.numDrawVerts)
+		if (index < 0 || index >= r_world->numDrawVerts)
 		{
 			ri.Error(ERR_DROP, "Bad brush draw index %i", index);
 		}
 	}
+
 	// take the plane information from the lightmap vector
 	for (i = 0; i < 3; i++) 
 	{
@@ -398,13 +406,12 @@ static void ParseBrushFace(const bsp_surface_t* bspSurf, worldSurface_t* worldSu
 	}
 
 	SetPlaneSignbits(&face->plane);
-	face->plane.dist = DotProduct(world.drawVerts[ world.drawIndexes[face->firstIndex] ].xyz, face->plane.normal);
+	index = r_world->drawIndexes[firstIndex + worldSurf->firstVert];
+	face->plane.dist = DotProduct(r_world->drawVerts[index].xyz, face->plane.normal);
 	face->plane.type = PlaneTypeForNormal(face->plane.normal);
 
-	worldSurf->surfaceType = WORLDSURF_FACE;
-	worldSurf->material = LittleLong(bspSurf->materialNum);
-	worldSurf->fogVolumeIndex = LittleLong(bspSurf->fogNum) + 1;
-	//worldSurf->material = R_WorldMaterialForNum(bspSurf->materialNum, LittleLong(bspSurf->lightmapNum));
+	
+
 	worldSurf->data = (void*)face;
 }
 
@@ -416,44 +423,44 @@ misc_models etc..
 */
 static void ParseMeshSurface(const bsp_surface_t* bspSurf, worldSurface_t* worldSurf)
 {
-	worldSurf_Mesh_t* mesh;
 	worldDrawVert_t* pVertex;
-	int i;
+	int i, firstIndex, index;
 
-	mesh = Hunk_Alloc(sizeof(*mesh));
+	worldSurf->surfaceType = WORLDSURF_MESH;
 
-	mesh->lightmap = LittleLong(bspSurf->lightmapNum);
-	mesh->firstIndex = LittleLong(bspSurf->firstIndex);
-	mesh->numIndexes = LittleLong(bspSurf->numIndexes);
-	mesh->firstVert = LittleLong(bspSurf->firstVert);
-	mesh->numVerts = LittleLong(bspSurf->numVerts);
+	worldSurf->material_id = LittleLong(bspSurf->materialNum);
+	worldSurf->lightmap_id = LittleLong(bspSurf->lightmapNum);
+	worldSurf->fogvolume_id = LittleLong(bspSurf->fogNum) + 1;
 
-	mesh->indices = Hunk_Alloc(mesh->numIndexes * sizeof(int));
-	for (i = 0; i < mesh->numIndexes; i++)
+	worldSurf->firstVert = LittleLong(bspSurf->firstVert);
+	worldSurf->numVerts = LittleLong(bspSurf->numVerts);
+
+	worldSurf->numIndexes = LittleLong(bspSurf->numIndexes);
+	worldSurf->drawIndexes = Hunk_Alloc(worldSurf->numIndexes * sizeof(int));
+
+	worldSurf->data = NULL;
+
+	firstIndex = LittleLong(bspSurf->firstIndex);
+
+	for (i = 0; i < worldSurf->numIndexes; i++)
 	{
-		mesh->indices[i] = world.drawIndexes[mesh->firstIndex + i] + mesh->firstVert;
-		//world.drawIndexes[mesh->firstIndex + i] += mesh->firstVert;
-		int index = world.drawIndexes[mesh->firstIndex + i];
-		if (index < 0 || index > world.numDrawVerts)
+		worldSurf->drawIndexes[i] = r_world->drawIndexes[firstIndex + i] + worldSurf->firstVert;
+		index = r_world->drawIndexes[firstIndex + i];
+
+		if (index < 0 || index >= r_world->numDrawVerts)
 		{
 			ri.Error(ERR_DROP, "Bad mesh draw index %i", index);
 		}
 	}
 
 	// calculate bounding box for world surface
-	pVertex = world.drawVerts + mesh->firstVert;
+	pVertex = r_world->drawVerts + worldSurf->firstVert;
 
-	ClearBounds(mesh->mins, mesh->maxs);
-	for (i = 0; i < mesh->numVerts; i++, pVertex++)
+	ClearBounds(worldSurf->mins, worldSurf->maxs);
+	for (i = 0; i < worldSurf->numVerts; i++, pVertex++)
 	{
-		AddPointToBounds(pVertex->xyz, mesh->mins, mesh->maxs);
+		AddPointToBounds(pVertex->xyz, worldSurf->mins, worldSurf->maxs);
 	}
-
-	//worldSurf->material = R_WorldMaterialForNum(bspSurf->materialNum, LIGHTMAP_BY_VERTEX);
-	worldSurf->material = LittleLong(bspSurf->materialNum);
-	worldSurf->surfaceType = WORLDSURF_MESH;
-	worldSurf->fogVolumeIndex = LittleLong(bspSurf->fogNum) + 1;
-	worldSurf->data = (void*)mesh;
 }
 
 /*
@@ -476,8 +483,8 @@ static void ParseBillboard(const bsp_surface_t* bspSurf, worldSurface_t* worldSu
 	}
 
 	worldSurf->surfaceType = WORLDSURF_BILLBOARD;
-	worldSurf->fogVolumeIndex = LittleLong(bspSurf->fogNum) + 1;
-	//->material = R_WorldMaterialForNum(bspSurf->materialNum, LIGHTMAP_BY_VERTEX);
+	worldSurf->material_id = LittleLong(bspSurf->materialNum);
+	worldSurf->fogvolume_id = LittleLong(bspSurf->fogNum) + 1;
 	worldSurf->data = (void*)billboard;
 }
 
@@ -506,25 +513,23 @@ static void R_LoadWorldSurfaces(const lump_t* surfsLump, const lump_t* vertsLump
 	count = surfsLump->filelen / sizeof(*in);
 	out = Hunk_Alloc(count * sizeof(*out));
 
-	world.surfaces = out;
-	world.numSurfaces = count;
+	r_world->surfaces = out;
+	r_world->numSurfaces = count;
 
 	for (i = 0; i < count; i++, in++, out++)
 	{
 		switch (LittleLong(in->surfaceType))
 		{
-		case MST_PLANAR: /* brush sides */
+		case MST_PLANAR: /* brushes */
 			ParseBrushFace(in, out);
 			numFaces++;
 			break;
 
-		case MST_PATCH: /* curve patches */
-			//ParseMesh(in, dv, out);
-			//ParseMeshSurface(in, out);
+		case MST_PATCH: /* curve patches (old) */
 			numPatchMeshes++;
 			break;
 
-		case MST_TRIANGLE_SOUP: /* meshes - misc_models */
+		case MST_TRIANGLE_SOUP: /* misc_models and curve patches (patchmeta) */
 			ParseMeshSurface(in, out);
 			numMeshes++;
 			break;
@@ -534,7 +539,7 @@ static void R_LoadWorldSurfaces(const lump_t* surfsLump, const lump_t* vertsLump
 			numBillboards++;
 			break;
 		default:
-			ri.Error(ERR_DROP, "Bad surface type %i", in->surfaceType);
+			ri.Error(ERR_DROP, __FUNCTION__": Bad surface type %i", in->surfaceType);
 		}
 	}
 
@@ -558,12 +563,12 @@ static void R_LoadMarkSurfaces(const lump_t* lump)
 	count = lump->filelen / sizeof(*in);
 	out = Hunk_Alloc(count * sizeof(*out));
 
-	world.marksurfaces = out;
-	world.numMarkSurfaces = count;
+	r_world->marksurfaces = out;
+	r_world->numMarkSurfaces = count;
 
 	for (i = 0; i < count; i++)
 	{
-		out[i] = world.surfaces + LittleLong(in[i]);
+		out[i] = r_world->surfaces + LittleLong(in[i]);
 	}
 }
 
@@ -604,9 +609,9 @@ static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 
 	out = Hunk_Alloc((numNodes + numLeafs) * sizeof(*out));
 
-	world.nodes = out;
-	world.numNodes = numNodes + numLeafs;
-	world.numDecisionNodes = numNodes;
+	r_world->nodes = out;
+	r_world->numNodes = numNodes + numLeafs;
+	r_world->numDecisionNodes = numNodes;
 
 	// load nodes
 	for (i = 0; i < numNodes; i++, in++, out++)
@@ -618,7 +623,7 @@ static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 		}
 
 		p = LittleLong(in->planeNum);
-		out->plane = world.planes + p;
+		out->plane = r_world->planes + p;
 
 		out->contents = CONTENTS_NODE;	// differentiate from leafs
 
@@ -626,9 +631,9 @@ static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 		{
 			p = LittleLong(in->children[j]);
 			if (p >= 0)
-				out->children[j] = world.nodes + p;
+				out->children[j] = r_world->nodes + p;
 			else
-				out->children[j] = world.nodes + numNodes + (-1 - p);
+				out->children[j] = r_world->nodes + numNodes + (-1 - p);
 		}
 	}
 
@@ -645,17 +650,17 @@ static void R_LoadNodesAndLeafs(const lump_t* nodeLump, const lump_t* leafLump)
 		out->cluster = LittleLong(inLeaf->cluster);
 		out->area = LittleLong(inLeaf->area);
 
-		if (out->cluster >= world.numClusters) 
+		if (out->cluster >= r_world->numClusters) 
 		{
-			world.numClusters = out->cluster + 1;
+			r_world->numClusters = out->cluster + 1;
 		}
 
-		out->firstmarksurface = (world.marksurfaces + LittleLong(inLeaf->firstLeafSurface));
+		out->firstmarksurface = (r_world->marksurfaces + LittleLong(inLeaf->firstLeafSurface));
 		out->nummarksurfaces = LittleLong(inLeaf->numLeafSurfaces);
 	}
 
 	// chain decendants
-	R_SetParent(world.nodes, NULL);
+	R_SetParent(r_world->nodes, NULL);
 }
 
 /*
@@ -672,15 +677,17 @@ static void R_LoadInlineModels(const lump_t* lump)
 
 	in = (void*)(mod_base + lump->fileofs);
 	CheckLumpSize(lump, sizeof(*in), __FUNCTION__);
-	count = lump->filelen / sizeof(*in);
 
-	world.inlineModels = out = Hunk_Alloc(count * sizeof(*out));
+	count = lump->filelen / sizeof(bsp_model_t);
+
+	r_world->inlineModels = out = Hunk_Alloc(count * sizeof(*out));
+	r_world->numInlineModels = count;
 
 	for (i = 0; i < count; i++, in++, out++) 
 	{
 		model = &r_inlineModels[i];
 
-		model->type = MOD_Q3BRUSH;
+		model->type = MOD_BRUSH;
 		model->bmodel = out;
 		Com_sprintf(model->name, sizeof(model->name), "*%d", i);
 
@@ -690,12 +697,13 @@ static void R_LoadInlineModels(const lump_t* lump)
 			out->maxs[j] = LittleFloat(in->maxs[j]);
 		}
 
-		out->firstSurface = world.surfaces + LittleLong(in->firstSurface);
+		//out->firstSurface = r_world->surfaces + LittleLong(in->firstSurface);
+		out->firstSurface = LittleLong(in->firstSurface);
 		out->numSurfaces = LittleLong(in->numSurfaces);
 	}
 
 	if (count > 1)
-		ri.Printf(PRINT_ALL, "... %i inline models\n");
+		ri.Printf(PRINT_ALL, "... %i inline models\n", r_world->numInlineModels);
 }
 
 /*
@@ -708,25 +716,25 @@ static void R_LoadVisibility(const lump_t* lump)
 	int		len;
 	byte	*buf;
 
-	len = (world.numClusters + 63) & ~63;
+	len = (r_world->numClusters + 63) & ~63;
 
-	world.novis = Hunk_Alloc(len);
-	memset(world.novis, 0xff, len);
+	r_world->novis = Hunk_Alloc(len);
+	memset(r_world->novis, 0xff, len);
 
 	len = lump->filelen;
 	if (!len) 
 	{
-		ri.Printf(PRINT_ALL, "... %s has no visibility data\n", world.name);
+		ri.Printf(PRINT_ALL, "... %s has no visibility data\n", r_world->name);
 		return;
 	}
 
 	buf = mod_base + lump->fileofs;
 
-	world.numClusters = LittleLong(((int*)buf)[0]);
-	world.clusterBytes = LittleLong(((int*)buf)[1]);
+	r_world->numClusters = LittleLong(((int*)buf)[0]);
+	r_world->clusterBytes = LittleLong(((int*)buf)[1]);
 
-	world.vis = Hunk_Alloc(len - 8);
-	memcpy(world.vis, buf + 8, len - 8);
+	r_world->vis = Hunk_Alloc(len - 8);
+	memcpy(r_world->vis, buf + 8, len - 8);
 
 	ri.Printf(PRINT_ALL, "... %i kb of visibility data\n", len-8/1024);
 }
@@ -743,7 +751,7 @@ static void R_ParseEntities(const lump_t* lump)
 	char	key[64], value[256];
 	renderWorld_t* w;
 
-	w = &world;
+	w = r_world;
 	w->lightGridSize[0] = 64;
 	w->lightGridSize[1] = 64;
 	w->lightGridSize[2] = 128;
@@ -826,7 +834,7 @@ static void R_LoadLightGrid(const lump_t* lump)
 	renderWorld_t *w;
 	float	*wMins, *wMaxs;
 
-	w = &world;
+	w = r_world;
 
 	w->lightGridInverseSize[0] = 1.0f / w->lightGridSize[0];
 	w->lightGridInverseSize[1] = 1.0f / w->lightGridSize[1];
@@ -870,22 +878,24 @@ static void R_LoadLightGrid(const lump_t* lump)
 R_CreateWorldVBO
 =================
 */
-static qboolean R_CreateWorldVBO()
+static void R_CreateWorldVBO()
 {
 	GLint upload_size = 0;
 	GLint total_size = 0;
 
-	upload_size = 0;
-	glGenBuffers(1, &world.vbo_verts);
+	r_world->vbo_verts = 0;
 
-	glBindBuffer(GL_ARRAY_BUFFER, world.vbo_verts);
-	glBufferData(GL_ARRAY_BUFFER, (world.numDrawVerts * sizeof(world.drawVerts[0])), &world.drawVerts[0].xyz[0], GL_STATIC_DRAW);
+	upload_size = 0;
+	glGenBuffers(1, &r_world->vbo_verts);
+
+	glBindBuffer(GL_ARRAY_BUFFER, r_world->vbo_verts);
+	glBufferData(GL_ARRAY_BUFFER, (r_world->numDrawVerts * sizeof(r_world->drawVerts[0])), &r_world->drawVerts[0].xyz[0], GL_STATIC_DRAW);
 	
 	glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &upload_size);
-	if (upload_size != (world.numDrawVerts * sizeof(world.drawVerts[0])))
+	if (upload_size != (r_world->numDrawVerts * sizeof(r_world->drawVerts[0])))
 	{
-		ri.Printf(PRINT_ALL, "Failed to create vertex buffer for %s\n", world.name);
-		return false;
+		ri.Error(ERR_FATAL, "Failed to create vertex buffer for %s\n", r_world->name);
+		return;
 	}
 	total_size += upload_size;
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -893,26 +903,24 @@ static qboolean R_CreateWorldVBO()
 #if 0
 	// upload indices
 	upload_size = 0;
-	glGenBuffers(1, &world.vbo_indexes);
+	glGenBuffers(1, &r_world->vbo_indexes);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, world.vbo_indexes);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (world.numDrawIndexes * sizeof(int)), world.drawIndexes, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, r_world->vbo_indexes);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (r_world->numDrawIndexes * sizeof(int)), r_world->drawIndexes, GL_STATIC_DRAW);
 
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &upload_size);
-	if (upload_size != (world.numDrawIndexes * sizeof(int)))
+	if (upload_size != (r_world->numDrawIndexes * sizeof(int)))
 	{
-		ri.Printf(PRINT_ALL, "Failed to create index buffer for %s\n", world.name);
+		ri.Printf(PRINT_ALL, "Failed to create index buffer for %s\n", r_world->name);
 		return false;
 	}
 	total_size += upload_size;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	ri.Printf(PRINT_ALL, "... created VBOs for world model with %i vertexes and %i indices (%i kb)\n", world.numDrawVerts, world.numDrawIndexes, total_size / 1024);
+	ri.Printf(PRINT_ALL, "... created VBOs for world model with %i vertexes and %i indices (%i kb)\n", r_world->numDrawVerts, r_world->numDrawIndexes, total_size / 1024);
 #else
 
-	ri.Printf(PRINT_ALL, "... created VBO for world model with %i vertexes (%i kb)\n", world.numDrawVerts, total_size / 1024);
+	ri.Printf(PRINT_ALL, "... created VBO for world model with %i vertexes (%i kb)\n", r_world->numDrawVerts, total_size / 1024);
 #endif
-
-	return true;
 }
 
 /*
@@ -922,33 +930,77 @@ R_FreeWorld
 */
 void R_FreeWorld()
 {
+	int time;
+	if (!r_world || r_world == NULL)
+		return;
 
+	time = Sys_Milliseconds();
+	if (glDeleteBuffers)
+	{
+		if (r_world->vbo_verts)
+		{
+			glDeleteBuffers(1, &r_world->vbo_verts);
+		}
+	}
+
+	Hunk_Free(r_world);
+	r_world = NULL;
+
+	ri.Printf(PRINT_ALL, "... Took %i miliseconds to free previous world.\n", Sys_Milliseconds() - time);
 }
 
+#define BSP_HUNKSIZE 1024*1024*32
 /*
 =================
 R_LoadWorld
 =================
 */
-void R_LoadWorld(model_t* mod, void* buffer)
+void R_LoadWorld(const char *bsp_name)
 {
-
-	int		i;
+	char fullname[MAX_QPATH];
+	cvar_t *cm_flushmap;
+	int bsp_size, i;
 	bsp_header_t* header;
-	char tempname[MAX_QPATH];
+	unsigned *buffer;
+	int time;
 
-	if (world.bLoaded)
+	ri.Printf(PRINT_ALL, "----- %s(%s) -----\n", __FUNCTION__, bsp_name);
+
+	time = Sys_Milliseconds();
+
+	// explicitly free the old map if different, this guarantees that r_worldmodel is the world map
+	// this also ensures we don't reload the map when restarting level
+	cm_flushmap = ri.Cvar_Get("cm_flushmap", "0", 0, NULL);
+	if (r_world && (strcmp(r_world->name, bsp_name) || cm_flushmap->value))
 	{
+		R_FreeWorld();
+	}
+
+	// Load BSP from disk
+	buffer = NULL;
+	Com_sprintf(fullname, sizeof(fullname), "maps/%s.bsp", bsp_name);
+	bsp_size = ri.LoadFile(fullname, &buffer);
+	if (!buffer)
+	{
+		ri.Error(ERR_DROP, __FUNCTION__": %s not found.\n", fullname);
 		return;
 	}
 
-	world.bLoaded = false;
-
+	// Validate the header
 	header = (bsp_header_t*)buffer;
+
+	i = LittleLong(header->ident);
+	if (i != BSP_IDENT)
+	{
+		ri.Error(ERR_DROP, __FUNCTION__": %s is not world.\n", fullname);
+		return;
+	}
+
 	i = LittleLong(header->version);
 	if (i != BSP_VERSION)
 	{
-		ri.Error(ERR_DROP, __FUNCTION__": %s has wrong version number (%i should be %i)", mod->name, i, BSP_VERSION);
+		ri.Error(ERR_DROP, __FUNCTION__": %s has wrong version.\n", fullname);
+		return;
 	}
 
 	// swap all the lumps
@@ -958,14 +1010,15 @@ void R_LoadWorld(model_t* mod, void* buffer)
 		((int*)header)[i] = LittleLong(((int*)header)[i]);
 	}
 
-	COM_StripExtension(COM_SkipPath(mod->name), tempname);
-	Com_sprintf(world.name, sizeof(world.name), "%s", tempname);
 
-	mod->type = MOD_Q3BRUSH;
-	mod->numframes = 1;
-	r_pCurrentModel = pLoadModel;
+	//
+	// load the world into hunk
+	//
+	r_world = Hunk_Begin(BSP_HUNKSIZE, "World BSP (Renderer)");
 
-	ri.Printf(PRINT_ALL, "----- %s(%s) -----\n", __FUNCTION__, mod->name);
+	Hunk_Alloc(sizeof(renderWorld_t));
+
+	strncpy(r_world->name, bsp_name, sizeof(r_world->name));
 
 	R_LoadWorldMaterials(&header->lumps[BSPLUMP_MATERIALS]);
 	R_LoadLightmaps(&header->lumps[BSPLUMP_LIGHTMAPS]);
@@ -980,16 +1033,15 @@ void R_LoadWorld(model_t* mod, void* buffer)
 	R_LoadVisibility(&header->lumps[BSPLUMP_VISIBILITY]);
 	R_ParseEntities(&header->lumps[BSPLUMP_ENTITIES]);
 	R_LoadLightGrid(&header->lumps[BSPLUMP_LIGHTGRID]);
+	R_CreateWorldVBO();
+
+	r_world->hunksize = Hunk_End();
 
 	R_InitMaterials();
 
-	if (R_CreateWorldVBO() == false)
-	{
-		// should freak out here
-	}
+	// force markleafs
+	r_viewcluster = r_viewcluster2 = -1;
+	r_oldviewcluster = r_oldviewcluster2 = -1;
 
-	world.bLoaded = true;
-	mod->type = MOD_Q3BRUSH;
-
-	ri.Printf(PRINT_ALL, "----------\n");
+	ri.Printf(PRINT_ALL, "Loaded world %s in %i miliseconds.\n", fullname, Sys_Milliseconds() - time);
 }

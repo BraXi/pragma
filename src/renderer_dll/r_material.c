@@ -4,10 +4,8 @@
 
 material_t r_defaultMaterial;
 
-material_t* r_materials;
+material_t* r_materials = NULL;
 static int r_numMaterials = 0;
-
-extern renderWorld_t world;
 
 /*
 =================
@@ -48,16 +46,17 @@ material_t* R_WorldMaterialForNum(const int materialNum, const worldLightMap_t l
 	material_t* material;
 	const char* name;
 
-	if (materialNum < 0 || materialNum >= world.numMaterials)
+	if (materialNum < 0 || materialNum >= r_world->numMaterials)
 	{
 		ri.Error(ERR_DROP, "%s: bad num %i", materialNum);
 	}
 
-	name = world.materials[materialNum].name;
+	name = r_world->materials[materialNum].name;
 	material = R_FindMaterial(name, lightmap);
 	return NULL;
 }
 
+extern int registration_sequence;
 /*
 =================
 R_InitMaterials
@@ -70,7 +69,11 @@ void R_InitMaterials()
 	material_t* mat;
 
 	// allocate space for materials
-	r_materials = ri.MemAlloc(sizeof(material_t) * MAX_MATERIALS);
+	if (!r_materials)
+	{
+		r_materials = ri.MemAlloc(sizeof(material_t) * MAX_MATERIALS);
+	}
+
 	r_numMaterials = 0;
 
 #if 0
@@ -82,13 +85,14 @@ void R_InitMaterials()
 	r_numMaterials++;
 #endif
 
-	for (int i = 0; i < world.numMaterials; i++)
+	for (int i = 0; i < r_world->numMaterials; i++)
 	{
 		mat = &r_materials[r_numMaterials];
-		Com_sprintf(mat->name, sizeof(mat->name), world.materials[i].name);
+		Com_sprintf(mat->name, sizeof(mat->name), r_world->materials[i].name);
 
-		Com_sprintf(temp, sizeof(temp), "%s.tga", world.materials[i].name);
+		Com_sprintf(temp, sizeof(temp), "%s.tga", r_world->materials[i].name);
 		tex = R_FindTexture(temp, it_texture, true);
+		tex->registration_sequence = registration_sequence;
 		mat->diffuse_id = tex->texnum;
 
 		r_numMaterials++;

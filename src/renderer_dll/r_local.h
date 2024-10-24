@@ -59,11 +59,20 @@ extern	viddef_t	vid;
 // model surface flags (set at runtime)
 #define MSF_TRANSPARENT 1 // model surface has texture with transparency
 
+typedef enum
+{
+	TMU_DIFFUSE = 0,
+	TMU_LIGHTMAP = 1,
+	TMU_SHADOWMAP = 2,
+
+	TMU_COUNT
+	//TMU_SPECULAR,
+	//TMU_NORMAL
+} TextureUnit_t;
 
 typedef enum 
 {
 	it_model,
-	//it_font,
 	it_sprite,
 	it_texture,
 	it_gui,
@@ -322,7 +331,6 @@ extern	cvar_t	*r_bitdepth;
 extern	cvar_t	*r_mode;
 extern	cvar_t	*r_lightmap;
 extern	cvar_t	*r_dynamic;
-extern	cvar_t	*r_nobind;
 extern	cvar_t	*r_picmip;
 extern	cvar_t	*r_showtris;
 extern	cvar_t	*r_finish;
@@ -355,7 +363,6 @@ extern rentity_t r_worldent;
 // r_model.c
 //===================================================================
 
-extern model_t *r_worldmodel;
 extern model_t* r_defaultmodel;
 extern int registration_sequence;
 
@@ -436,7 +443,7 @@ void R_EnableMultiTexture();
 void R_DisableMultiTexture();
 void R_SelectTextureUnit(unsigned int textureMappingUnit);
 void R_BindTexture(int texnum);
-void R_MultiTextureBind(unsigned int tmu, int texnum);
+void R_MultiTextureBind(TextureUnit_t tmu, int texnum);
 image_t *R_LoadTexture(const char *name, byte *pixels, int width, int height, texType_t type, int bits);
 image_t	*R_FindTexture(const char *name, texType_t type, qboolean load);
 void R_SetTextureMode(char *string);
@@ -449,17 +456,6 @@ void R_TextureSolidMode(char *string);
 
 #define	TEXNUM_IMAGES		1153
 #define	MAX_GLTEXTURES		1024
-
-#define MIN_TEXTURE_MAPPING_UNITS 4 //5
-
-enum
-{
-	TMU_DIFFUSE,
-	TMU_LIGHTMAP,
-	TMU_SHADOWMAP
-	//TMU_SPECULAR,
-	//TMU_NORMAL
-};
 
 extern int gl_filter_min, gl_filter_max;
 
@@ -498,6 +494,7 @@ typedef struct
 	qboolean fullscreen;
 	int     prev_mode;			// previous r_mode->value
 
+	qboolean bRenderingWorldModel;
 	qboolean bTraversedBSP;
 	qboolean bShadowMapPass;
 	qboolean bDrawingTransparents;
@@ -556,7 +553,7 @@ typedef struct /*per frame statistics*/
 	int ent_cull_distance;		// ents too far from view
 	int ent_cull_frustum;		// ents not in frustum
 
-	int	texture_binds[MIN_TEXTURE_MAPPING_UNITS]; // number of texture binds per texture unit
+	int	texture_binds[TMU_COUNT]; // number of texture binds per texture unit
 } rperfcounters_t;
 
 extern rperfcounters_t rperf;

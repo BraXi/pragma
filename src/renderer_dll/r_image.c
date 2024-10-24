@@ -26,7 +26,7 @@ static mte = false;
 
 void R_EnableMultiTexture()
 {
-	for (int i = MIN_TEXTURE_MAPPING_UNITS; i != -1; i--)
+	for (int i = TMU_COUNT; i != -1; i--)
 	{
 		gl_state.current_texture[i] = -1;
 		R_SelectTextureUnit(i);
@@ -37,7 +37,7 @@ void R_EnableMultiTexture()
 void R_DisableMultiTexture()
 {
 	// disable everything but diffuse
-	for (int i = MIN_TEXTURE_MAPPING_UNITS; i != 0; i--)
+	for (int i = TMU_COUNT; i != 0; i--)
 	{
 		R_SelectTextureUnit(i);
 		glDisable(GL_TEXTURE_2D);
@@ -58,33 +58,51 @@ void R_SelectTextureUnit( unsigned int tmu )
 
 void R_BindTexture(int texnum)
 {
-	if (r_nobind->value)
-	{
-		return;
-	}
-
 	if ( gl_state.current_texture[gl_state.current_tmu] == texnum)
 		return;
-
-	rperf.texture_binds[gl_state.current_tmu]++;
+	
+	glBindTexture(GL_TEXTURE_2D, texnum);
 
 	gl_state.current_texture[gl_state.current_tmu] = texnum;
-	glBindTexture(GL_TEXTURE_2D, texnum);
+	rperf.texture_binds[gl_state.current_tmu]++;
 }
 
+#if 1
+void R_MultiTextureBind(TextureUnit_t tmu, int texnum)
+{
+	if (gl_state.bShadowMapPass && gl_state.bDrawingTransparents == false)
+		return; // no texturing in shadow pass, unless its a transparent
+
+	if( gl_state.current_texture[tmu] == texnum)
+		return;
+
+	if (gl_state.current_tmu != tmu)
+	{
+		glActiveTexture(GL_TEXTURE0 + tmu);
+	}
+
+	glBindTexture(GL_TEXTURE_2D, texnum);
+
+	gl_state.current_tmu = tmu;
+	gl_state.current_texture[tmu] = texnum;
+
+	rperf.texture_binds[tmu]++;
+}
+
+#else
 void R_MultiTextureBind(unsigned int tmu, int texnum)
 {
 	if (gl_state.bShadowMapPass && gl_state.bDrawingTransparents == false)
 		return; // no texturing in shadow pass, unless its a transparent
 
-	R_SelectTextureUnit( tmu );
-
 	if ( gl_state.current_texture[tmu] == texnum )
 		return;
 
+	R_SelectTextureUnit(tmu);
+
 	R_BindTexture( texnum );
 }
-
+#endif
 typedef struct
 {
 	char *name;
@@ -227,46 +245,20 @@ void R_TextureList_f(void)
 {
 	int		i;
 	image_t	*image;
-	int		texels;
+	static const char* tex_types[] = { "model", "sprite", "texture", "gui", "font", "sky" };
 
 	ri.Printf (PRINT_ALL, "------------------\n");
-	texels = 0;
 
-	for (i=0, image=r_textures ; i<r_textures_count ; i++, image++)
+	for (i = 0, image = r_textures; i < r_textures_count; i++, image++)
 	{
 		if (image->texnum <= 0)
 			continue;
-		texels += image->upload_width*image->upload_height;
-		switch (image->type)
-		{
-		case it_model:
-			ri.Printf (PRINT_ALL, "MDL ");
-			break;
-		case it_sprite:
-			ri.Printf (PRINT_ALL, "SPR ");
-			break;
-		case it_texture:
-			ri.Printf (PRINT_ALL, "TEX ");
-			break;
-		case it_gui:
-			ri.Printf (PRINT_ALL, "GUI ");
-			break;
-		case it_font:
-			ri.Printf(PRINT_ALL, "FONT ");
-			break;
-		case it_sky:
-			ri.Printf(PRINT_ALL, "SKY ");
-			break;
-		default:
-			ri.Printf (PRINT_ALL, "?   ");
-			break;
-		}
 
-		ri.Printf (PRINT_ALL, "%i: [%ix%i %s]: %s\n",
-			i, image->upload_width, image->upload_height, (image->has_alpha ? "RGBA" : "RGB"), image->name);
+
+		ri.Printf (PRINT_ALL, "%4i: %s - %ix%i%s (%s)\n", i, image->name, image->upload_width, image->upload_height, (image->has_alpha ? " A" : ""), tex_types[image->type]);
 	}
-	ri.Printf (PRINT_ALL, "\nTotal texel count (not counting mipmaps): %i\n", texels);
-	ri.Printf(PRINT_ALL, "Total %i out of %i textures in use\n\n", r_textures_count, MAX_GLTEXTURES);
+
+	ri.Printf(PRINT_ALL, "%i images in use.\n", r_textures_count, MAX_GLTEXTURES);
 }
 
 /*

@@ -35,7 +35,6 @@ cvar_t* r_lightmap;
 cvar_t* r_mode;
 cvar_t* r_dynamic;
 cvar_t* r_ambientlightscale;
-cvar_t* r_nobind;
 cvar_t* r_picmip;
 cvar_t* r_showtris;
 cvar_t* r_finish;
@@ -102,7 +101,6 @@ void R_RegisterCvarsAndCommands(void)
 	r_dynamic = ri.Cvar_Get("r_dynamic", "1", CVAR_CHEAT, "Enable dynamic lights and light styles.");
 	r_picmip = ri.Cvar_Get("r_picmip", "0", 0, NULL);
 	
-	r_nobind = ri.Cvar_Get("r_nobind", "0", CVAR_CHEAT, NULL);
 	r_showtris = ri.Cvar_Get("r_showtris", "0", CVAR_CHEAT, NULL);
 	r_finish = ri.Cvar_Get("r_finish", "0", CVAR_ARCHIVE, NULL);
 	r_clear = ri.Cvar_Get("r_clear", "0", 0, NULL);
@@ -236,8 +234,8 @@ static void R_OpenGLConfig()
 		gl_config.renderer = GL_RENDERER_OTHER;
 
 
-	if (gl_config.max_tmu < MIN_TEXTURE_MAPPING_UNITS)
-		ri.Error(ERR_FATAL, "Your graphics card doesn't support 4 texture mapping units");
+	if (gl_config.max_tmu < TMU_COUNT)
+		ri.Error(ERR_FATAL, "Your graphics card doesn't support %i texture mapping units", TMU_COUNT);
 }
 
 /*
