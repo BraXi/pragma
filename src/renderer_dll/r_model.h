@@ -39,16 +39,13 @@ typedef struct model_s
 
 	int			numframes;
 
-	// flags -- unused
-	//int		flags;
-
 	// for culling	
 	vec3_t		mins, maxs;
 	float		radius;
 	int			drawDistance;
 
 	// MOD_BRUSH
-	bmodel_t	*bmodel;
+	int			bmodel_id; // index to r_world->inlineModels[]
 
 	// MOD_NEWFORMAT
 	pmodel_header_t* newmod;
@@ -58,10 +55,11 @@ typedef struct model_s
 	md3Header_t* alias;	
 	image_t* images[MD3_MAX_SURFACES];
 
+	// common
 	vertexbuffer_t* vb[MD3_MAX_SURFACES];
 	
-	int			extradatasize;
-	void		*extradata;
+	int			hunkDataSize;
+	void		*hunkData;
 } model_t;
 
 //============================================================================

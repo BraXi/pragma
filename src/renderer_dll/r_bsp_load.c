@@ -406,7 +406,7 @@ static void ParseBrushFace(const bsp_surface_t* bspSurf, worldSurface_t* worldSu
 	}
 
 	SetPlaneSignbits(&face->plane);
-	index = r_world->drawIndexes[firstIndex + worldSurf->firstVert];
+	index = worldSurf->drawIndexes[0];
 	face->plane.dist = DotProduct(r_world->drawVerts[index].xyz, face->plane.normal);
 	face->plane.type = PlaneTypeForNormal(face->plane.normal);
 
@@ -542,8 +542,7 @@ static void R_LoadWorldSurfaces(const lump_t* surfsLump, const lump_t* vertsLump
 			ri.Error(ERR_DROP, __FUNCTION__": Bad surface type %i", in->surfaceType);
 		}
 	}
-
-	ri.Printf(PRINT_ALL, "... loaded %d faces, %i patches, %i meshes, %i billboards\n", numFaces, numPatchMeshes, numMeshes, numBillboards);
+	ri.Printf(PRINT_ALL, "... Loaded %d faces, %i patches, %i meshes, %i billboards\n", numFaces, numPatchMeshes, numMeshes, numBillboards);
 }
 
 /*
@@ -688,7 +687,8 @@ static void R_LoadInlineModels(const lump_t* lump)
 		model = &r_inlineModels[i];
 
 		model->type = MOD_BRUSH;
-		model->bmodel = out;
+		model->bmodel_id = i;
+
 		Com_sprintf(model->name, sizeof(model->name), "*%d", i);
 
 		for (j = 0; j < 3; j++) 
@@ -697,7 +697,6 @@ static void R_LoadInlineModels(const lump_t* lump)
 			out->maxs[j] = LittleFloat(in->maxs[j]);
 		}
 
-		//out->firstSurface = r_world->surfaces + LittleLong(in->firstSurface);
 		out->firstSurface = LittleLong(in->firstSurface);
 		out->numSurfaces = LittleLong(in->numSurfaces);
 	}
@@ -736,7 +735,7 @@ static void R_LoadVisibility(const lump_t* lump)
 	r_world->vis = Hunk_Alloc(len - 8);
 	memcpy(r_world->vis, buf + 8, len - 8);
 
-	ri.Printf(PRINT_ALL, "... %i kb of visibility data\n", len-8/1024);
+	ri.Printf(PRINT_ALL, "... %i kb of visibility data\n", (len-8)/1024);
 }
 
 /*
@@ -919,7 +918,7 @@ static void R_CreateWorldVBO()
 	ri.Printf(PRINT_ALL, "... created VBOs for world model with %i vertexes and %i indices (%i kb)\n", r_world->numDrawVerts, r_world->numDrawIndexes, total_size / 1024);
 #else
 
-	ri.Printf(PRINT_ALL, "... created VBO for world model with %i vertexes (%i kb)\n", r_world->numDrawVerts, total_size / 1024);
+	ri.Printf(PRINT_ALL, "... Created VBO for world with %i vertexes (%ikb in VRAM)\n", r_world->numDrawVerts, total_size / 1024);
 #endif
 }
 
@@ -946,7 +945,7 @@ void R_FreeWorld()
 	Hunk_Free(r_world);
 	r_world = NULL;
 
-	ri.Printf(PRINT_ALL, "... Took %i miliseconds to free previous world.\n", Sys_Milliseconds() - time);
+	ri.Printf(PRINT_ALL, "... Took %i miliiseconds to free world.\n", Sys_Milliseconds() - time);
 }
 
 #define BSP_HUNKSIZE 1024*1024*32
@@ -962,7 +961,7 @@ void R_LoadWorld(const char *bsp_name)
 	int bsp_size, i;
 	bsp_header_t* header;
 	unsigned *buffer;
-	int time;
+	int time, time2;
 
 	ri.Printf(PRINT_ALL, "----- %s(%s) -----\n", __FUNCTION__, bsp_name);
 
@@ -1037,11 +1036,14 @@ void R_LoadWorld(const char *bsp_name)
 
 	r_world->hunksize = Hunk_End();
 
-	R_InitMaterials();
-
 	// force markleafs
 	r_viewcluster = r_viewcluster2 = -1;
 	r_oldviewcluster = r_oldviewcluster2 = -1;
 
-	ri.Printf(PRINT_ALL, "Loaded world %s in %i miliseconds.\n", fullname, Sys_Milliseconds() - time);
+	time2 = Sys_Milliseconds();
+	ri.Printf(PRINT_ALL, "Loaded world %s in %i milliseconds.\n", fullname, time2 - time);
+
+	R_InitMaterials();
+	ri.Printf(PRINT_ALL, "Loaded materials for world in %i milliseconds.\n", Sys_Milliseconds() - time2);
+	
 }

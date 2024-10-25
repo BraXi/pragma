@@ -248,7 +248,7 @@ void Mod_LoadAliasMD3(model_t* mod, void* buffer)
 		return;
 	}
 
-	mod->extradatasize = size;
+	mod->hunkDataSize = size;
 	mod->alias = Hunk_Alloc(size);
 
 	memcpy(mod->alias, buffer, LittleLong(pinmodel->ofsEnd));

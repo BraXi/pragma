@@ -796,11 +796,14 @@ static void R_DrawPerfCounters()
 		R_DrawText(x, y += h, 2, 0, fontscale, color, va("BSP Tris: %i, Surfs: %i", rperf.brush_tris, rperf.brush_drawcalls));
 	}
 
+	if (rperf.brush_nodraw)
+		R_DrawText(x, y += h, 2, 0, fontscale, color, va("BSP NoDraw: %i", rperf.brush_nodraw));
+
 	//R_DrawText(x, y += h, 2, 0, fontscale, color, va("%i textures in chain", rperf.brush_textures));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("TMU0: %i, TMU1: %i", rperf.texture_binds[TMU_DIFFUSE], rperf.texture_binds[TMU_LIGHTMAP]));
 
-	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("Dlights: %i", r_newrefdef.num_dlights));
-	R_DrawText(x, y += h, 2, 0, fontscale, color, va("Ents: %i", r_newrefdef.num_entities));
+	R_DrawText(x, y += h*2, 2, 0, fontscale, color, va("Dynamic lights: %i", r_newrefdef.num_dlights));
+	R_DrawText(x, y += h, 2, 0, fontscale, color, va("Entities: %i", r_newrefdef.num_entities));
 	R_DrawText(x, y += h, 2, 0, fontscale, color, va("Particles: %i", r_newrefdef.num_particles));
 
 	R_DrawText(x, y += h * 2, 2, 0, fontscale, color, va("Models: %i", rperf.model_drawcalls));

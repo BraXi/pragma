@@ -542,6 +542,7 @@ typedef struct /*per frame statistics*/
 	int brush_tris;
 	int brush_drawcalls;
 	int	brush_textures;
+	int brush_nodraw;
 
 	// md3 and skel models
 	int model_tris; // total triangles

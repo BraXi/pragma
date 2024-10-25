@@ -343,14 +343,13 @@ void R_Shutdown(void)
 	R_FreeFrameBuffer();
 	R_FreePrograms();
 
+	R_FreeWorld();
 	R_FreeAllModels();
-
 	R_FreeTextures();
 
 	// remove vertex buffers
 	R_DeleteVertexBuffers(&vb_gui);
 	R_DeleteVertexBuffers(&vb_sky);
-
 	R_FreeVertexBuffer(vb_particles);
 
 	// shut down OS specific OpenGL stuff like contexts, etc.

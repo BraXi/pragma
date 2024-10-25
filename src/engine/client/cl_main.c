@@ -1529,7 +1529,7 @@ struct model_s *CL_GetDrawModel(int modelindex)
 	int realindex;
 	if (modelindex >= 0)
 	{
-		if (modelindex >= MAX_MODELS || modelindex < 1)
+		if (modelindex >= MAX_MODELS || modelindex < 0)
 		{
 			// modelindex 0 is reserved for no model
 			Com_Error(ERR_DROP, "%s Bad model index %i.\n", __FUNCTION__, modelindex);

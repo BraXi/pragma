@@ -304,6 +304,27 @@ static void R_EndRenderingWorld()
 
 /*
 ================
+R_IsWorldSurfaceDrawable
+================
+*/
+qboolean R_IsWorldSurfaceDrawable(const worldSurface_t* surf)
+{
+	int surfaceFlags;
+
+	surfaceFlags = r_world->materials[surf->material_id].surfaceFlags;
+
+	if (surfaceFlags & SURF_SKIP || surfaceFlags & SURF_NODRAW)
+	{
+		rperf.brush_nodraw++;
+		return false;
+	}
+
+	return true;
+}
+
+
+/*
+================
 R_DrawBModel
 Draw brush model
 ================
@@ -325,7 +346,7 @@ void R_DrawBModel(const int bmodel_index)
 
 	if (!gl_state.bRenderingWorldModel)
 	{
-		ri.Error(ERR_DROP, __FUNCTION__": no world.\n");
+		ri.Error(ERR_DROP, __FUNCTION__": not in rendering world stage.\n");
 		return;
 	}
 #endif
@@ -342,6 +363,9 @@ void R_DrawBModel(const int bmodel_index)
 	for (i = 0; i < numSurfaces; i++, surf++)
 	{
 		if (surf->surfaceType != WORLDSURF_FACE && surf->surfaceType != WORLDSURF_MESH)
+			continue;
+
+		if (!R_IsWorldSurfaceDrawable(surf))
 			continue;
 
 		material_id = surf->material_id;
@@ -361,8 +385,6 @@ void R_DrawBModel(const int bmodel_index)
 		rperf.brush_drawcalls++;
 		rperf.brush_tris += numIndexes / 3;
 	}
-
-	//ri.Printf(PRINT_ALL, "----\n", bmodel_index, material_id, lightmap_id);
 }
 
 /*

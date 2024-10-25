@@ -248,7 +248,7 @@ void R_LoadNewModel(model_t* mod, void* buffer)
 	}
 
 	// allocate model
-	mod->extradatasize = modelFileLength+1;
+	mod->hunkDataSize = modelFileLength+1;
 	mod->newmod = Hunk_Alloc(modelFileLength+1);
 	memcpy(mod->newmod, buffer, modelFileLength);
 	mod->type = MOD_NEWFORMAT;

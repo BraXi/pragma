@@ -66,7 +66,9 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 	int		i;
 
 	if (!name[0])
-		ri.Error(ERR_DROP, "%s: called with NULL name.\n", __FUNCTION__);
+	{
+		ri.Error(ERR_DROP, __FUNCTION__": called with NULL name.\n");
+	}
 
 	//
 	// inline models are grabbed only from worldmodel
@@ -74,8 +76,9 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 	if (name[0] == '*')
 	{
 		i = atoi(name + 1);
-	//	if (i < 1 || !r_worldmodel || i >= r_worldmodel->numInlineModels) // FIXME@Q3BSP
-	//		ri.Error(ERR_DROP, "%s: bad inline model number %i.\n", __FUNCTION__, i);
+		//if (i < 1 || !r_world || i >= r_world->numInlineModels)
+		if (!r_world || i < 0 || i >= r_world->numInlineModels) // nothing stops us from allowing entities to render worlds multiple times!
+			ri.Error(ERR_DROP, __FUNCTION__": bad inline model number %i.\n", i);
 		return &r_inlineModels[i];
 	}
 
@@ -132,12 +135,12 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 	switch (LittleLong(*(unsigned*)buf))
 	{
 	case PMODEL_IDENT:
-		pLoadModel->extradata = Hunk_Begin(RD_MAX_PMOD_HUNKSIZE, "Model (Renderer)");
+		pLoadModel->hunkData = Hunk_Begin(RD_MAX_PMOD_HUNKSIZE, "Model (Renderer)");
 		R_LoadNewModel(mod, buf);
 		break;
 
 	case MD3_IDENT: /* MD3 */
-		pLoadModel->extradata = Hunk_Begin(RD_MAX_MD3_HUNKSIZE, "Alias Model (Renderer)");
+		pLoadModel->hunkData = Hunk_Begin(RD_MAX_MD3_HUNKSIZE, "Alias Model (Renderer)");
 		Mod_LoadAliasMD3(mod, buf);
 		break;
 	default:
@@ -170,9 +173,9 @@ void R_FreeModel(model_t* mod)
 		}
 	}
 
-	if (mod->extradata)
+	if (mod->hunkData)
 	{
-		Hunk_Free(mod->extradata);
+		Hunk_Free(mod->hunkData);
 	}
 
 	memset(mod, 0, sizeof(*mod));
@@ -190,7 +193,7 @@ void R_FreeAllModels()
 	int		i;
 	for (i = 0; i < r_models_count; i++)
 	{
-		if (r_models[i].extradatasize)
+		if (r_models[i].hunkDataSize)
 			R_FreeModel(&r_models[i]);
 	}
 }
@@ -322,9 +325,10 @@ void R_BeginRegistration(const char *worldName)
 
 	R_LoadWorld(worldName);
 
-	// load the default model
-	r_defaultmodel = R_ModelForName("models/dev/xyz.md3", true);
-	r_defaultmodel->registration_sequence = registration_sequence;
+	if (r_defaultmodel)
+	{
+		r_defaultmodel->registration_sequence = registration_sequence;
+	}
 }
 
 /*
@@ -350,25 +354,22 @@ void Cmd_modellist_f(void)
 	model_t* mod;
 	int		total;
 
-	static char *mods[] = { "BAD", "BSP", "ALIAS", "MESH"};
+	static char *mods[] = { "BAD", "BRUSH", "ALIAS", "MESH"};
 
 	total = 0;
-	ri.Printf(PRINT_ALL, "Loaded models:\n");
+	ri.Printf(PRINT_ALL, "------ cached models ------\n");
 	for (i = 0, mod = r_models; i < r_models_count; i++, mod++)
 	{
 		if (!mod->name[0])
 			continue;
 
-		if (mod->type == MOD_BRUSH)
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mods[mod->type], mod->name, mod->extradatasize/1024);
-		else if (mod->type == MOD_NEWFORMAT)
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d kb]\n", i, mods[mod->type], mod->name, mod->extradatasize / 1024);
-		else
-			ri.Printf(PRINT_ALL, "%i: %s '%s' [%d frames, %d kb]\n", i, mods[mod->type], mod->name, mod->numframes, mod->extradatasize/1024);
-		total += mod->extradatasize;
+		// mod->hunkDataSize/1024
+
+		ri.Printf(PRINT_ALL, "%4i: '%s' (%s)\n", i, mod->name, mods[mod->type]);
+
+		total += mod->hunkDataSize;
 	}
-	ri.Printf(PRINT_ALL, "\nTotal resident: %i kb\n", total / 1024);
-	ri.Printf(PRINT_ALL, "Total %i out of %i models in use\n", i, RD_MAX_MODELS);
+	ri.Printf(PRINT_ALL, "Renderer cached %i models (using %i kb of memory).\n", r_models_count, total / 1024);
 }
 
 /*
@@ -379,4 +380,7 @@ R_InitModels
 void R_InitModels()
 {
 	ri.AddCommand("modellist", Cmd_modellist_f);
+
+	// load the default model
+	r_defaultmodel = R_ModelForName("models/dev/xyz.md3", true);
 }
