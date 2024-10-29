@@ -406,7 +406,7 @@ typedef struct
 #define	RF_GLOW				512		// pulse lighting for bonus items
 #define RF_SCALE			1024	// entity model is scaled by .renderScale
 #define	RF_NOANIMLERP		2048	// animation is not smoothed (software q1 style)
-#define RF_UNUSED1			4096
+#define RF_LIGHTING_ORIGIN	4096	// sample light from lightingOrigin instead of origin
 #define RF_UNUSED2			8192
 
 // player_state_t->refdef flags

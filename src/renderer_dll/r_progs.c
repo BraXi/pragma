@@ -37,8 +37,9 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_TIME,				"time",				F_FLOAT }, // fixme: unset
 
 	/* md3 models */
-	{ LOC_AMBIENT_DIR,		"ambient_dir",		F_VECTOR3 },
-	{ LOC_AMBIENT_COLOR,	"ambient_color",	F_VECTOR3 },
+	{ LOC_DIRECT_COLOR,		"directLightColor",		F_VECTOR3 },
+	{ LOC_DIRECT_DIR,		"directLightDir",		F_VECTOR3 },
+	{ LOC_AMBIENT_COLOR,	"ambientLightColor",	F_VECTOR3 },
 	{ LOC_LERPFRAC,			"lerpFrac",			F_FLOAT },
 	{ LOC_WARPSTRENGTH,		"warpstrength",		F_FLOAT },
 	{ LOC_FLOWSTRENGTH,		"flowstrength",		F_VECTOR2 },

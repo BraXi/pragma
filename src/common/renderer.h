@@ -73,10 +73,15 @@ typedef struct rentity_s
 	
 	unsigned int visibleFrame;	// draw entity if visibleFrame == r_framecount
 
-	vec3_t		ambient_color;	// ambient light color (lightmap sample + effects)
-	vec3_t		ambient_dir;	// ambient light direction, normalized
-
 	vec3_t		center_origin; // center of entity derived from bbox
+
+	qboolean	lightingCalculated; // useless for now considering how rdentities are created
+
+	// Light grid
+	vec3_t		lightingOrigin;
+	vec3_t		ambientLight;	// ambient light color (lightgrid + effects)
+	vec3_t		directedLight;	// directed light color (lightgrid + sky)
+	vec3_t		lightDir;		// lit from this direction, normalized
 
 	mat4_t		modelMatrix;
 } rentity_t;

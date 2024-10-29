@@ -243,8 +243,9 @@ void R_DrawModelEntity(rentity_t* ent)
 	// 
 	// setup common uniforms
 	//
-	R_ProgUniformVec3(LOC_AMBIENT_COLOR, ent->ambient_color);
-	R_ProgUniformVec3(LOC_AMBIENT_DIR, ent->ambient_dir);
+	R_ProgUniformVec3(LOC_AMBIENT_COLOR, ent->ambientLight);
+	R_ProgUniformVec3(LOC_DIRECT_COLOR, ent->directedLight);
+	R_ProgUniformVec3(LOC_DIRECT_DIR, ent->lightDir);
 
 	R_ProgUniformMatrix4fv(LOC_LOCALMODELVIEW, 1, ent->modelMatrix);
 

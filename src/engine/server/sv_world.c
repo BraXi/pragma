@@ -650,7 +650,7 @@ clipHandle_t SV_ClipHandleForEntity(const gentity_t* ent)
 		{
 			// explicit hulls in the BSP model
 			int idx = 0 - ent->v.modelindex;
-			return CM_InlineModel(0 - ent->v.modelindex);
+			return CM_InlineModel(idx);
 		}
 	}
 
@@ -887,10 +887,10 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 			continue;
 		}
 
+		angles = vec3_origin;
+
 		if (clipHandle == BOX_MODEL_HANDLE || clipHandle == CAPSULE_MODEL_HANDLE) 
 		{
-			angles = vec3_origin;
-
 			if(touch->v.contents != CONTENTS_NONE)
 				CM_SetTempBoxModelContents(touch->v.contents);
 		}

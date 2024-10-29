@@ -33,6 +33,10 @@ See the attached GNU General Public License v2 for more details.
 // used to generate sin tables
 //===================================================================
 
+#define FUNCTABLE_SIZE 1024
+#define FUNCTABLE_MASK (FUNCTABLE_SIZE-1)
+extern float r_sinTable[FUNCTABLE_SIZE];
+
 //#ifndef RAD2DEG
 //#define RAD2DEG( a ) ( ( (a) * 180.0f ) / M_PI ) // unused
 //#endif
@@ -148,7 +152,8 @@ typedef enum
 	LOC_SCALE,
 	LOC_COLOR4,
 	LOC_TIME,
-	LOC_AMBIENT_DIR,
+	LOC_DIRECT_COLOR,
+	LOC_DIRECT_DIR,
 	LOC_AMBIENT_COLOR,
 	LOC_LERPFRAC,
 	LOC_WARPSTRENGTH,
@@ -336,7 +341,9 @@ extern	cvar_t	*r_showtris;
 extern	cvar_t	*r_finish;
 extern	cvar_t	*r_clear;
 extern	cvar_t	*r_cull;
-extern	cvar_t	*r_ambientlightscale;
+extern	cvar_t	*r_debugLight;
+extern	cvar_t	*r_ambientLightScale;
+extern  cvar_t  *r_directedLightScale;
 extern	cvar_t	*r_drawbuffer;
 extern  cvar_t  *gl_driver;
 extern	cvar_t	*r_swapinterval;
@@ -413,7 +420,6 @@ void R_DrawBeam(rentity_t* e);
 // r_light.c
 //===================================================================
 
-void R_LightForPoint(const vec3_t point, vec3_t outAmbient);
 void R_SetEntityAmbientLight(rentity_t* ent);
 void R_SendDynamicLightsToCurrentProgram(qboolean bViewFlashLight);
 

@@ -34,7 +34,9 @@ cvar_t* gl_driver;
 cvar_t* r_lightmap;
 cvar_t* r_mode;
 cvar_t* r_dynamic;
-cvar_t* r_ambientlightscale;
+cvar_t* r_debugLight;
+cvar_t* r_ambientLightScale;
+cvar_t* r_directedLightScale;
 cvar_t* r_picmip;
 cvar_t* r_showtris;
 cvar_t* r_finish;
@@ -64,6 +66,20 @@ extern vertexbuffer_t vb_gui;
 extern vertexbuffer_t vb_sky;
 extern vertexbuffer_t *vb_particles;
 
+float r_sinTable[FUNCTABLE_SIZE];
+
+/*
+=================
+R_GenerateSinTable
+This is used for MD3 vertex normals and light grid.
+=================
+*/
+static void R_GenerateSinTable()
+{
+	for (int i = 0; i < FUNCTABLE_SIZE; i++)
+		r_sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
+}
+
 /*
 ==================
 R_RegisterCvarsAndCommands
@@ -86,14 +102,16 @@ void R_RegisterCvarsAndCommands(void)
 
 	//r_drawtrans = ri.Cvar_Get("r_drawtrans", "1", CVAR_CHEAT, "Draw transparent surfaces (development tool)");
 
-	r_speeds = ri.Cvar_Get("r_speeds", "0", 0, "Show performance counters - 1=print, 2=OSD.");
+	r_speeds = ri.Cvar_Get("r_speeds", "0", 0, "Show performance counters : 1=print, 2=OSD.");
 	r_novis = ri.Cvar_Get("r_novis", "0", CVAR_CHEAT, "Do not cull by VIS data.");
 	r_nocull = ri.Cvar_Get("r_nocull", "0", CVAR_CHEAT, "Disable frustum culling.");
-	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT, "Lock PVS.");
+	r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", CVAR_CHEAT, "Lock PVS updates.");
 
 	r_lerpmodels = ri.Cvar_Get("r_lerpmodels", "1", CVAR_CHEAT, "Smooth model animations.");
 
-	r_ambientlightscale = ri.Cvar_Get("r_ambientlightscale", "1", CVAR_CHEAT, NULL);
+	r_debugLight = ri.Cvar_Get("r_debugLight", "0", CVAR_CHEAT, "Show ambient and directed light debug info from lightgrid sampling.");
+	r_ambientLightScale = ri.Cvar_Get("r_ambientLightScale", "1.5", CVAR_CHEAT, "Scale ambient light intensity by this.");
+	r_directedLightScale = ri.Cvar_Get("r_directedLightScale", "1.5", CVAR_CHEAT, "Scale direct light intensity by this.");
 
 	r_bitdepth = ri.Cvar_Get("r_bitdepth", "0", 0, NULL);
 	r_mode = ri.Cvar_Get("r_mode", "3", CVAR_ARCHIVE, NULL);
@@ -306,6 +324,8 @@ int R_Init(void* hinstance, void* hWnd)
 	srand(time(NULL));
 	QueryPerformanceFrequency(&qpc_freq);
 #endif
+
+	R_GenerateSinTable();
 
 	R_EnableMultiTexture();
 

@@ -31,27 +31,6 @@ extern qboolean r_pendingflip;
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 #endif
 
-#define FUNCTABLE_SIZE 1024
-#define FUNCTABLE_MASK (FUNCTABLE_SIZE-1)
-static float sinTable[FUNCTABLE_SIZE];
-static qboolean bSinTableGenerated = false;
-
-/*
-=================
-R_GenerateSinTableForAliasModels
-This is only used to upload md3 vertices to gpu.
-=================
-*/
-static void R_GenerateSinTableForAliasModels()
-{
-	if (bSinTableGenerated)
-		return;
-
-	for (int i = 0; i < FUNCTABLE_SIZE; i++)
-		sinTable[i] = sin(DEG2RAD(i * 360.0f / ((float)(FUNCTABLE_SIZE - 1))));
-
-	bSinTableGenerated = true;
-}
 
 /*
 =================
@@ -84,18 +63,18 @@ static void R_LerpAliasFrame(float lerp, int index, md3XyzNormal_t* oldVert, md3
 	lat *= (FUNCTABLE_SIZE / 256);
 	lng *= (FUNCTABLE_SIZE / 256);
 
-	n1[0] = sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * sinTable[lng];
-	n1[1] = sinTable[lat] * sinTable[lng];
-	n1[2] = sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+	n1[0] = r_sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * r_sinTable[lng];
+	n1[1] = r_sinTable[lat] * r_sinTable[lng];
+	n1[2] = r_sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
 
 	lat = (vert->normal >> 8) & 0xff;
 	lng = (vert->normal & 0xff);
 	lat *= (FUNCTABLE_SIZE / 256);
 	lng *= (FUNCTABLE_SIZE / 256);
 
-	n2[0] = sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * sinTable[lng];
-	n2[1] = sinTable[lat] * sinTable[lng];
-	n2[2] = sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+	n2[0] = r_sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * r_sinTable[lng];
+	n2[1] = r_sinTable[lat] * r_sinTable[lng];
+	n2[2] = r_sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
 
 	outNormal[0] = (n1[0] + lerp * (n2[0] - n1[0]));
 	outNormal[1] = (n1[1] + lerp * (n2[1] - n1[1]));
@@ -120,8 +99,6 @@ static void R_UploadAliasModelTris(model_t* mod)
 
 	pModel = mod->alias;
 	frame = oldframe = 0;
-
-	R_GenerateSinTableForAliasModels();
 
 	pSurface = (md3Surface_t*)((byte*)pModel + pModel->ofsSurfaces);
 	for (surf = 0; surf < pModel->numSurfaces; surf++)

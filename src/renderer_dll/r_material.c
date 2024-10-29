@@ -88,9 +88,9 @@ void R_InitMaterials()
 	for (int i = 0; i < r_world->numMaterials; i++)
 	{
 		mat = &r_materials[r_numMaterials];
-		Com_sprintf(mat->name, sizeof(mat->name), r_world->materials[i].name);
-
+		
 		Com_sprintf(temp, sizeof(temp), "%s.tga", r_world->materials[i].name);
+
 		tex = R_FindTexture(temp, it_texture, true);
 		tex->registration_sequence = registration_sequence;
 		mat->diffuse_id = tex->texnum;

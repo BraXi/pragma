@@ -16,6 +16,12 @@ unsigned int r_dlightframecount;
 
 #define	DLIGHT_CUTOFF	64
 
+
+static vec_t _DotProduct(vec3_t v1, vec3_t v2)
+{
+	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
 /*
 =================
 R_SetEntityAmbientLight
@@ -31,6 +37,8 @@ It should calculate ambient lighting by probing for nearby
 light sources and find the one thats closest & strongest!
 =================
 */
+
+#if 0
 void R_SetEntityAmbientLight(rentity_t* ent)
 {
 	float	scale;
@@ -83,6 +91,7 @@ void R_SetEntityAmbientLight(rentity_t* ent)
 	VectorSet(ent->ambient_dir, 0, 1, -1);
 	VectorNormalize(ent->ambient_dir);
 }
+#endif
 
 /*
 =================
@@ -167,16 +176,253 @@ void R_SendDynamicLightsToCurrentProgram(qboolean bNoViewFlashLight)
 	}
 }
 
+/*
+=================
+R_SetupEntityLightingGrid
+=================
+*/
+static void R_SetupEntityLightingGrid(rentity_t* ent) 
+{
+	vec3_t	lightOrigin;
+	int		pos[3];
+	int		i, j;
+	byte* gridData;
+	float	frac[3];
+	int		gridStep[3];
+	vec3_t	direction;
+	float	totalFactor;
+
+	if (ent->renderfx & RF_LIGHTING_ORIGIN) 
+	{
+		// seperate lightOrigins are needed so an object that is sinking into the 
+		// ground can still be lit, and so multi-part models can be lit identically
+		VectorCopy(ent->lightingOrigin, lightOrigin);
+	}
+	else 
+	{
+		VectorCopy(ent->origin, lightOrigin);
+	}
+
+	VectorSubtract(lightOrigin, r_world->lightGridOrigin, lightOrigin);
+
+	for (i = 0; i < 3; i++) 
+	{
+		float	v;
+
+		v = lightOrigin[i] * r_world->lightGridInverseSize[i];
+		pos[i] = floor(v);
+		frac[i] = v - pos[i];
+
+		if (pos[i] < 0) 
+		{
+			pos[i] = 0;
+		}
+		else if (pos[i] >= r_world->lightGridBounds[i] - 1) 
+		{
+			pos[i] = r_world->lightGridBounds[i] - 1;
+		}
+	}
+
+
+	VectorClear(ent->ambientLight);
+	VectorClear(ent->directedLight);
+	VectorClear(direction);
+
+	assert(r_world->lightGridData); // NULL when a BSP doesn't have lightmaps
+
+	// trilerp the light value
+	gridStep[0] = 8;
+	gridStep[1] = 8 * r_world->lightGridBounds[0];
+	gridStep[2] = 8 * r_world->lightGridBounds[0] * r_world->lightGridBounds[1];
+	gridData = r_world->lightGridData + pos[0] * gridStep[0] + pos[1] * gridStep[1] + pos[2] * gridStep[2];
+
+	totalFactor = 0;
+	for (i = 0; i < 8; i++) 
+	{
+		float	factor;
+		byte* data;
+		int		lat, lng;
+		vec3_t	normal;
+
+		factor = 1.0;
+		data = gridData;
+
+		for (j = 0; j < 3; j++) 
+		{
+			if (i & (1 << j)) 
+			{
+				factor *= frac[j];
+				data += gridStep[j];
+			}
+			else 
+			{
+				factor *= (1.0f - frac[j]);
+			}
+		}
+
+		if (!(data[0] + data[1] + data[2])) 
+		{
+			continue;	// ignore samples in walls
+		}
+
+		totalFactor += factor;
+
+		ent->ambientLight[0] += factor * data[0];
+		ent->ambientLight[1] += factor * data[1];
+		ent->ambientLight[2] += factor * data[2];
+
+		ent->directedLight[0] += factor * data[3];
+		ent->directedLight[1] += factor * data[4];
+		ent->directedLight[2] += factor * data[5];
+
+		lat = data[7];
+		lng = data[6];
+		lat *= (FUNCTABLE_SIZE / 256);
+		lng *= (FUNCTABLE_SIZE / 256);
+
+		// decode X as cos( lat ) * sin( long )
+		normal[0] = r_sinTable[(lat + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK] * r_sinTable[lng];
+		// decode Y as sin( lat ) * sin( long )
+		normal[1] = r_sinTable[lat] * r_sinTable[lng];
+		// decode Z as cos( long )
+		normal[2] = r_sinTable[(lng + (FUNCTABLE_SIZE / 4)) & FUNCTABLE_MASK];
+
+		VectorMA(direction, factor, normal, direction);
+	}
+
+	if (totalFactor > 0 && totalFactor < 0.99) 
+	{
+		totalFactor = 1.0f / totalFactor;
+		VectorScale(ent->ambientLight, totalFactor, ent->ambientLight);
+		VectorScale(ent->directedLight, totalFactor, ent->directedLight);
+	}
+
+	VectorScale(ent->ambientLight, r_ambientLightScale->value, ent->ambientLight);
+	VectorScale(ent->directedLight, r_directedLightScale->value, ent->directedLight);
+
+	VectorNormalize2(direction, ent->lightDir);
+}
+
 
 /*
 ===============
-R_LightForPoint
-
-Returns the lightmap pixel color beneath point
+LogLight
 ===============
 */
-void R_LightForPoint(const vec3_t point, vec3_t outAmbient)
+static void LogLight(rentity_t* ent) 
 {
-	VectorSet(outAmbient, 1.0f, 1.0f, 1.0f); 
-	VectorScale (outAmbient, r_ambientlightscale->value, outAmbient);
+	float	max1, max2;
+
+	if (!(ent->renderfx & RF_VIEW_MODEL)) 
+	{
+		return;
+	}
+
+	max1 = ent->ambientLight[0];
+	if (ent->ambientLight[1] > max1) 
+	{
+		max1 = ent->ambientLight[1];
+	}
+	else if (ent->ambientLight[2] > max1) 
+	{
+		max1 = ent->ambientLight[2];
+	}
+
+	max2 = ent->directedLight[0];
+	if (ent->directedLight[1] > max2) 
+	{
+		max2 = ent->directedLight[1];
+	}
+	else if (ent->directedLight[2] > max2) 
+	{
+		max2 = ent->directedLight[2];
+	}
+
+	ri.Printf(PRINT_ALL, "amb: %.2f %.2f %.2f (%i) dir: %.2f %.2f %.2f (%i)\n", ent->ambientLight[0], ent->ambientLight[1], ent->ambientLight[2], max1, ent->directedLight[0], ent->directedLight[1], ent->directedLight[2], max2);
 }
+
+void R_SetEntityAmbientLight(rentity_t* ent)
+{
+	vec3_t lightDir;
+	vec3_t lightOrigin;
+	vec3_t temp;
+	int	i;
+
+	// lighting calculations 
+	if (ent->lightingCalculated) 
+	{
+		return;
+	}
+	ent->lightingCalculated = true;
+
+
+	if (ent->renderfx & RF_LIGHTING_ORIGIN) 
+	{
+		// seperate lightOrigins are needed so an object that is
+		// sinking into the ground can still be lit, and so
+		// multi-part models can be lit identically
+		VectorCopy(ent->lightingOrigin, lightOrigin);
+	}
+	else
+	{
+		VectorCopy(ent->origin, lightOrigin);
+	}
+
+	// if NOWORLDMODEL, only use dynamic lights (menu system, etc)
+	if (!(r_newrefdef.view.flags & RDF_NOWORLDMODEL) && r_world->lightGridData) 
+	{
+		R_SetupEntityLightingGrid(ent);
+	}
+	else 
+	{
+		VectorSet(ent->ambientLight, 255, 255, 255);
+		VectorSet(ent->directedLight, 255, 255, 255);
+		VectorCopy(r_world->sunDirection, ent->lightDir);
+
+		VectorNormalize(ent->lightDir);
+	}
+
+	// give some entities (such as view models) a bit of light so they are never completly dark
+	if (ent->renderfx & RF_MINLIGHT ) 
+	{
+		ent->ambientLight[0] += 32;
+		ent->ambientLight[1] += 32;
+		ent->ambientLight[2] += 32;
+	}
+
+
+	// clamp ambient to a maximum of 150% brightness
+	for (i = 0; i < 3; i++) 
+	{
+		if (ent->ambientLight[i] > 255 * 1.5) 
+		{
+			ent->ambientLight[i] = 255 * 1.5;
+		}
+	}
+
+
+#if 0 // test: Set dir to UP & RIGHT
+	VectorCopy(ent->lightDir, temp);
+	VectorSet(ent->lightDir, 0, -1, -1); 
+#else
+
+	// Negate the direction for GLSL
+	for (i = 0; i < 3; i++)
+		ent->lightDir[i] = -ent->lightDir[i];
+	VectorNormalize(ent->lightDir);
+#endif
+
+	// Convert color from bytes to floats for GLSL
+	for (i = 0; i < 3; i++)
+	{
+		ent->ambientLight[i] = ent->ambientLight[i] * (1.0f / 255.0f);
+		ent->directedLight[i] = ent->directedLight[i] * (1.0f / 255.0f);
+	}
+
+	if (r_debugLight->value) 
+	{
+		LogLight(ent);
+
+	}
+}
+

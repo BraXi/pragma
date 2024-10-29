@@ -21,8 +21,8 @@ void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parent
 static muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES] =
 {
 		//light radius,	light color,		scale,	volume,	sound
-		{300,			{1, 0.9, 0.7},		1.4f,	0.7f,	"weapons/deagle/shot.wav"}, 	// FX_MUZZLEFLASH_PISTOL
-		{360,			{1, 0.9, 0.8},		1.0f,	0.6f,	"weapons/ak47/shot.wav"},	// FX_MUZZLEFLASH_RIFLE
+		{240,			{1, 0.9, 0.7},		1.4f,	0.7f,	"weapons/deagle/shot.wav"}, 	// FX_MUZZLEFLASH_PISTOL
+		{300,			{1, 0.9, 0.8},		1.0f,	0.6f,	"weapons/ak47/shot.wav"},	// FX_MUZZLEFLASH_RIFLE
 		{200,			{1, 1, 0.7},		1.0f,	1.0f,	NULL}	// FX_MUZZLEFLASH_SHOTGUN
 };
 
@@ -42,7 +42,7 @@ void CG_ParseMuzzleFlashMessage(void)
 
 	entity_num = MSG_ReadShort(&net_message);
 	if (entity_num < 1 || entity_num >= MAX_GENTITIES)
-		Com_Error(ERR_DROP, "CL_ParseMuzzleFlash: bad entity");
+		Com_Error(ERR_DROP, __FUNCTION__": bad entity");
 
 	cent = &cl_entities[entity_num];
 	effectNum = MSG_ReadByte(&net_message);
@@ -64,9 +64,12 @@ void CG_ParseMuzzleFlashMessage(void)
 	}
 
 
+	// TODO: Unhardcode origin and use tag_weapon origin here
 	AngleVectors(cent->current.angles, v_fwd, v_right, v_up);
 	VectorMA(dlight->origin, 12, v_fwd, dlight->origin);
-	VectorMA(dlight->origin, 16, v_right, dlight->origin);
+
+	VectorCopy(cent->current.origin, dlight->origin);
+	dlight->origin[2] += 50;
 
 	if (effectNum >= 0 && effectNum < FX_WEAPON_MUZZLEFLASHES)
 	{

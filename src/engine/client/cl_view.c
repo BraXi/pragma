@@ -233,10 +233,10 @@ void V_TestModel(void)
 		//for (int i = 0; i < 3; i++)
 		//	tm.origin[i] = cl.refdef.view.origin[i] + cl.v_forward[i] * 96 - cl.v_up[i] * 10;
 
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 3; i++)
 			tm.origin[i] = cl.refdef.view.origin[i] + cl.v_forward[i] * 96;
 
-		tm.origin[2] = cl.refdef.view.origin[2] - 60.0f; // HARDCODED view height
+		//tm.origin[2] = cl.refdef.view.origin[2] - 60.0f; // HARDCODED view height
 
 		tm.angles[1] = cl.refdef.view.angles[1];
 

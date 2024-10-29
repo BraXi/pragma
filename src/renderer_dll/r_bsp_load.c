@@ -11,13 +11,9 @@ See the attached GNU General Public License v2 for more details.
 // r_bsp_load.c -- bsp loading
 
 /*
-notes:
+todos:
 
-cplane_t in Q3 is the same in Q2
-q2 msurface_t = worldSurface_t
-q2 mnode_t = worldNode_t
-
-misc_models in maps are turned into geometry by q3map == worldSurf_Mesh_t
+- free file buffer when error is encountered in LoadWorld
 */
 
 #include "r_local.h"
@@ -30,6 +26,8 @@ byte* mod_base;
 extern model_t r_inlineModels[MAX_WORLD_MODELS];
 
 renderWorld_t *r_world;
+
+static unsigned* world_fileBuffer = NULL;
 
 /*
 =================
@@ -811,6 +809,12 @@ static void R_ParseEntities(const lump_t* lump)
 					sscanf(value, "%f %f %f", &w->lightGridSize[0], &w->lightGridSize[1], &w->lightGridSize[2]);
 					continue;
 				}
+				// check for a sun direction
+				else if (!Q_stricmp(key, "sundirection"))
+				{
+					sscanf(value, "%f %f %f", &w->sunDirection[0], &w->sunDirection[1], &w->sunDirection[2]);
+					continue;
+				}
 			}
 		}
 
@@ -942,10 +946,16 @@ void R_FreeWorld()
 		}
 	}
 
+	if (world_fileBuffer)
+	{
+		ri.FreeFile(world_fileBuffer);
+		world_fileBuffer = NULL;
+	}
+
 	Hunk_Free(r_world);
 	r_world = NULL;
 
-	ri.Printf(PRINT_ALL, "... Took %i miliiseconds to free world.\n", Sys_Milliseconds() - time);
+	ri.Printf(PRINT_ALL, "... Took %i milliseconds to free world.\n", Sys_Milliseconds() - time);
 }
 
 #define BSP_HUNKSIZE 1024*1024*32
@@ -960,15 +970,14 @@ void R_LoadWorld(const char *bsp_name)
 	cvar_t *cm_flushmap;
 	int bsp_size, i;
 	bsp_header_t* header;
-	unsigned *buffer;
 	int time, time2;
 
 	ri.Printf(PRINT_ALL, "----- %s(%s) -----\n", __FUNCTION__, bsp_name);
 
 	time = Sys_Milliseconds();
 
-	// explicitly free the old map if different, this guarantees that r_worldmodel is the world map
-	// this also ensures we don't reload the map when restarting level
+	// explicitly free the old map if different and ensure we don't reload the map when restarting level
+	// TODO: make it also free textures used by world
 	cm_flushmap = ri.Cvar_Get("cm_flushmap", "0", 0, NULL);
 	if (r_world && (strcmp(r_world->name, bsp_name) || cm_flushmap->value))
 	{
@@ -976,17 +985,17 @@ void R_LoadWorld(const char *bsp_name)
 	}
 
 	// Load BSP from disk
-	buffer = NULL;
+	world_fileBuffer = NULL;
 	Com_sprintf(fullname, sizeof(fullname), "maps/%s.bsp", bsp_name);
-	bsp_size = ri.LoadFile(fullname, &buffer);
-	if (!buffer)
+	bsp_size = ri.LoadFile(fullname, &world_fileBuffer);
+	if (!world_fileBuffer)
 	{
 		ri.Error(ERR_DROP, __FUNCTION__": %s not found.\n", fullname);
 		return;
 	}
 
 	// Validate the header
-	header = (bsp_header_t*)buffer;
+	header = (bsp_header_t*)world_fileBuffer;
 
 	i = LittleLong(header->ident);
 	if (i != BSP_IDENT)
@@ -1014,7 +1023,6 @@ void R_LoadWorld(const char *bsp_name)
 	// load the world into hunk
 	//
 	r_world = Hunk_Begin(BSP_HUNKSIZE, "World BSP (Renderer)");
-
 	Hunk_Alloc(sizeof(renderWorld_t));
 
 	strncpy(r_world->name, bsp_name, sizeof(r_world->name));
@@ -1036,12 +1044,22 @@ void R_LoadWorld(const char *bsp_name)
 
 	r_world->hunksize = Hunk_End();
 
+	ri.FreeFile(world_fileBuffer);
+	world_fileBuffer = NULL;
+
+	// set default sun direction if it wasn't set earlier
+	if (VectorCompare(r_world->sunDirection, vec3_origin))
+	{
+		VectorSet(r_world->sunDirection, 0.45f, 0.3f, 0.9f);
+	}
+	VectorNormalize(r_world->sunDirection);
+
 	// force markleafs
 	r_viewcluster = r_viewcluster2 = -1;
 	r_oldviewcluster = r_oldviewcluster2 = -1;
 
 	time2 = Sys_Milliseconds();
-	ri.Printf(PRINT_ALL, "Loaded world %s in %i milliseconds.\n", fullname, time2 - time);
+	ri.Printf(PRINT_ALL, "Loaded world %s in %i milliseconds (%ikb of hunk).\n", fullname, time2 - time, r_world->hunksize/1024);
 
 	R_InitMaterials();
 	ri.Printf(PRINT_ALL, "Loaded materials for world in %i milliseconds.\n", Sys_Milliseconds() - time2);

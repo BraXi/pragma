@@ -1051,7 +1051,7 @@ void SV_Init (void)
 	sv_maxclients = Cvar_Get("sv_maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH, "Maximum number of players.");
 	sv_cheats = Cvar_Get("sv_cheats", "0", CVAR_SERVERINFO, "Enable cheats.");
 	sv_maxentities = Cvar_Get("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH, "Maximum number of server entities. Better don't change.");
-	sv_maxvelocity = Cvar_Get("sv_maxevelocity", "1500", 0, "Maximum velocity of an entities (excluding players).");
+	sv_maxvelocity = Cvar_Get("sv_maxvelocity", "2500", 0, "Maximum velocity of an entities (excluding players).");
 	sv_gravity = Cvar_Get("sv_gravity", "800", 0, "Gravity (default 800).");
 
 	sv_hostname = Cvar_Get ("hostname", "pragma server", CVAR_SERVERINFO | CVAR_ARCHIVE, "This is the server's name.");

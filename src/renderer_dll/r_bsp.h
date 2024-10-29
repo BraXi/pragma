@@ -122,6 +122,8 @@ typedef struct renderWorld_s
 	char		name[MAX_QPATH]; // without .bsp and path
 	int			hunksize;
 
+	vec3_t		sunDirection;
+
 	bsp_surfinfo_t* materials;
 	int			numMaterials;
 
