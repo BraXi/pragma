@@ -65,7 +65,9 @@ typedef enum
 	MOVETYPE_FLY,
 	MOVETYPE_TOSS,			// gravity
 	MOVETYPE_FLYMISSILE,	// extra size to monsters
-	MOVETYPE_BOUNCE
+	MOVETYPE_BOUNCE,
+
+	MOVETYPE_CUSTOM			// QC controlled physics, runs ent->v.physics
 } movetype_t;
 
 //===============================================================

@@ -42,6 +42,7 @@ qboolean SV_CheckBottom(gentity_t* ent)
 	// with the tougher checks the corners must be within 16 of the midpoint
 	start[2] = mins[2] - 1;
 	for (x = 0; x <= 1; x++)
+	{
 		for (y = 0; y <= 1; y++)
 		{
 			start[0] = x ? maxs[0] : mins[0];
@@ -49,6 +50,7 @@ qboolean SV_CheckBottom(gentity_t* ent)
 			if (SV_PointContents(start) != CONTENTS_SOLID)
 				goto realcheck;
 		}
+	}
 
 	c_yes++;
 	return true; // we got out easy
@@ -67,11 +69,15 @@ realcheck:
 	trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, (ent->v.svflags & SVF_CAPSULE));
 
 	if (trace.fraction == 1.0)
+	{
 		return false;
+	}
+
 	mid = bottom = trace.endpos[2];
 
 	// the corners must be within 16 of the midpoint	
 	for (x = 0; x <= 1; x++)
+	{
 		for (y = 0; y <= 1; y++)
 		{
 			start[0] = stop[0] = x ? maxs[0] : mins[0];
@@ -80,10 +86,16 @@ realcheck:
 			trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, (ent->v.svflags & SVF_CAPSULE));
 
 			if (trace.fraction != 1.0 && trace.endpos[2] > bottom)
+			{
 				bottom = trace.endpos[2];
+			}
+			
 			if (trace.fraction == 1.0 || mid - trace.endpos[2] > STEPSIZE)
+			{
 				return false;
+			}
 		}
+	}
 
 	c_yes++;
 	return true;
@@ -146,7 +158,9 @@ gentity_t* SV_TestEntityPosition(gentity_t* ent)
 	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask, (ent->v.svflags & SVF_CAPSULE));
 
 	if (trace.startsolid)
+	{
 		return sv.edicts;
+	}
 
 	return NULL;
 }
@@ -165,7 +179,9 @@ void SV_CheckVelocity(gentity_t* ent)
 	if (vel > sv_maxvelocity->value)
 	{
 		for (i = 0; i < 3; i++)
+		{
 			ent->v.velocity[i] = (ent->v.velocity[i] / vel) * sv_maxvelocity->value;
+		}
 	}
 }
 
@@ -249,7 +265,8 @@ int SV_FlyMove(gentity_t* ent, float time, int mask)
 		trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, end, ent, mask, (ent->v.svflags & SVF_CAPSULE));
 
 		if (trace.allsolid)
-		{	// entity is trapped in another solid
+		{	
+			// entity is trapped in another solid
 			VectorCopy(vec3_origin, ent->v.velocity);
 			return 3;
 		}
@@ -426,8 +443,7 @@ static gentity_t* obstacle;
 /*
 ============
 SV_Push
-Objects need to be moved back on a failed push,
-otherwise riders would continue to slide.
+Objects need to be moved back on a failed push, otherwise riders would continue to slide.
 ============
 */
 qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
@@ -503,7 +519,8 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			VectorCopy(check->v.angles, pushed_p->angles);
 			pushed_p++;
 
-//	Com_Printf("pushed %s\n", Scr_GetString(check->v.classname));
+			//Com_Printf("pushed %s\n", Scr_GetString(check->v.classname));
+			
 			// try moving the contacted entity 
 			VectorAdd(check->v.origin, move, check->v.origin);
 			if (check->client)
@@ -525,15 +542,19 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 			VectorSubtract(org2, org, move2);
 			VectorAdd(check->v.origin, move2, check->v.origin);
 
-			// may have pushed them off an edge
+			
 			if (check->v.groundentity_num != NUM_FOR_ENT(pusher))
-				check->v.groundentity_num = ENTITYNUM_NULL;
+			{
+				check->v.groundentity_num = ENTITYNUM_NULL; // may have pushed them off an edge
+			}
 
 			//if (check->client)
 			//	Com_Printf("%s gnd %i pusher %i\n", check->client->pers.netname, check->v.groundentity_num, NUM_FOR_ENT(pusher));
+			
 			block = SV_TestEntityPosition(check);
 			if (!block)
-			{	// pushed ok
+			{	
+				// pushed ok
 				SV_LinkEntity(check);
 				// impact?
 				continue;
@@ -580,7 +601,7 @@ qboolean SV_Push(gentity_t* pusher, vec3_t move, vec3_t amove)
 /*
 ================
 SV_Physics_Pusher
-Bmodel objects don't interact with each other, but push all box objects
+Bmodel objects don't interact with each other, but push all bbox objects
 ================
 */
 void SV_Physics_Pusher(gentity_t* ent)
@@ -598,10 +619,10 @@ void SV_Physics_Pusher(gentity_t* ent)
 	pushed_p = pushed;
 	for (part = ent; part; part = part->teamchain)
 	{
-		if (part->v.velocity[0] || part->v.velocity[1] || part->v.velocity[2] ||
-			part->v.avelocity[0] || part->v.avelocity[1] || part->v.avelocity[2]
-			)
-		{	// object is moving
+		//if (part->v.velocity[0] || part->v.velocity[1] || part->v.velocity[2] || part->v.avelocity[0] || part->v.avelocity[1] || part->v.avelocity[2] )
+		if ( !VectorCompare(part->v.velocity, vec3_origin) == false || !VectorCompare(part->v.avelocity, vec3_origin))
+		{	
+			// object is moving
 			VectorScale(part->v.velocity, SV_FRAMETIME, move);
 			VectorScale(part->v.avelocity, SV_FRAMETIME, amove);
 
@@ -609,8 +630,9 @@ void SV_Physics_Pusher(gentity_t* ent)
 				break;	// move was blocked
 		}
 	}
+
 	if (pushed_p > &pushed[MAX_GENTITIES])
-		Com_Error(ERR_DROP, "pushed_p > &pushed[MAX_EDICTS], memory corrupted");
+		Com_Error(ERR_DROP, __FUNCTION__":pushed_p > &pushed[MAX_EDICTS], memory corrupted");
 
 	if (part)
 	{
@@ -632,7 +654,7 @@ void SV_Physics_Pusher(gentity_t* ent)
 			SV_RunThink(part);
 			if (!part->inuse)
 			{
-				Com_Error(ERR_DROP, "SV_Physics_Pusher: entity %i deleted itself\n", NUM_FOR_EDICT(part));
+				Com_Error(ERR_DROP, __FUNCTION__": Entity %i deleted itself\n", NUM_FOR_EDICT(part));
 				return; 
 			}
 
@@ -652,6 +674,11 @@ void SV_Physics_None(gentity_t* ent)
 {
 	SV_RunThink(ent);
 
+	if (!ent->inuse)
+	{
+		return; // could have deleted itself in think
+	}
+
 	VectorMA(ent->v.angles, SV_FRAMETIME, ent->v.avelocity, ent->v.angles);
 }
 
@@ -668,7 +695,9 @@ void SV_Physics_Noclip(gentity_t* ent)
 		return;
 
 	if (!ent->inuse)
+	{
 		return; // could have deleted itself in think
+	}
 
 	VectorMA(ent->v.angles, SV_FRAMETIME, ent->v.avelocity, ent->v.angles);
 	VectorMA(ent->v.origin, SV_FRAMETIME, ent->v.velocity, ent->v.origin);
@@ -693,36 +722,54 @@ void SV_Physics_Toss(gentity_t* ent)
 	trace_t		trace;
 	vec3_t		move;
 	float		backoff;
-	gentity_t* slave;
+	gentity_t	*slave;
 	qboolean	wasinwater;
 	qboolean	isinwater;
 	vec3_t		old_origin;
+	gentity_t	*groundent;
 
 	// regular thinking
 	SV_RunThink(ent);
+
 	if (!ent->inuse)
+	{
 		return; // could have deleted itself in think
+	}
 
 	// if not a team captain, so movement will be handled elsewhere
 	if ((int)ent->v.flags & FL_TEAMSLAVE)
+	{
 		return;
+	}
 
 	if (ent->v.velocity[2] > 0)
+	{
+		// moving up so not on ground
 		ent->v.groundentity_num = ENTITYNUM_NULL;
+	}
 
-	gentity_t* groundent = NULL;
+	groundent = NULL;
 
 	if (ent->v.groundentity_num != ENTITYNUM_NULL)
+	{
+		if (ent->v.groundentity_num < ENTITYNUM_NULL || ent->v.groundentity_num >= MAX_GENTITIES)
+		{
+			Com_Error(ERR_DROP, __FUNCTION__": Entity %i (%s) has bad groundentity_num %i\n", NUM_FOR_ENT(ent), Scr_GetString(ent->v.classname), ent->v.groundentity_num);
+		}
+
 		groundent = ENT_FOR_NUM((int)ent->v.groundentity_num);
+	}
 
 	// check for the groundentity going away
-	if (groundent)
-		if (!groundent->inuse)
-			ent->v.groundentity_num = ENTITYNUM_NULL;
+	if (groundent != NULL && !groundent->inuse)
+	{
+		ent->v.groundentity_num = ENTITYNUM_NULL;
+	}
 
-	// if onground, return without moving
 	if (groundent)
-		return;
+	{
+		return; // if onground, return without moving
+	}
 
 	VectorCopy(ent->v.origin, old_origin);
 
@@ -738,8 +785,11 @@ void SV_Physics_Toss(gentity_t* ent)
 	// move origin
 	VectorScale(ent->v.velocity, SV_FRAMETIME, move);
 	trace = SV_PushEntity(ent, move);
+
 	if (!ent->inuse)
-		return;
+	{
+		return; // could have been removed in impact function
+	}
 
 	if (trace.fraction < 1)
 	{
@@ -841,6 +891,10 @@ void SV_Physics_Step(gentity_t* ent)
 	if ((int)ent->v.groundentity_num == ENTITYNUM_NULL)
 		SV_CheckGround(ent);
 
+	if (ent->v.groundentity_num < ENTITYNUM_NULL || ent->v.groundentity_num >= MAX_GENTITIES)
+	{
+		Com_Error(ERR_DROP, __FUNCTION__": Entity %i (%s) has bad groundentity_num %i\n", NUM_FOR_ENT(ent), Scr_GetString(ent->v.classname), ent->v.groundentity_num);
+	}
 	groundentity = ((int)ent->v.groundentity_num == ENTITYNUM_NULL) ? NULL : ENT_FOR_NUM((int)ent->v.groundentity_num);
 
 	SV_CheckVelocity(ent);
@@ -850,8 +904,10 @@ void SV_Physics_Step(gentity_t* ent)
 	else
 		wasonground = false;
 
-	if (ent->v.avelocity[0] || ent->v.avelocity[1] || ent->v.avelocity[2])
+	if (!VectorCompare(ent->v.avelocity, vec3_origin))
+	{
 		SV_AddRotationalFriction(ent);
+	}
 
 	// add gravity except:
 	//   flying monsters
@@ -892,7 +948,8 @@ void SV_Physics_Step(gentity_t* ent)
 		ent->v.velocity[2] *= newspeed;
 	}
 
-	if (ent->v.velocity[2] || ent->v.velocity[1] || ent->v.velocity[0])
+	//if (ent->v.velocity[2] || ent->v.velocity[1] || ent->v.velocity[0])
+	if(!VectorCompare(ent->v.velocity, vec3_origin))
 	{
 		// apply friction
 		// let dead monsters who aren't completely onground slide
@@ -926,8 +983,11 @@ void SV_Physics_Step(gentity_t* ent)
 
 		SV_LinkEntity(ent);
 		SV_TouchEntities(ent, AREA_TRIGGERS);
+
 		if (!ent->inuse)
-			return;
+		{
+			return; // could have removed itself in touch
+		}
 
 		if ((int)ent->v.groundentity_num != ENTITYNUM_NULL && !wasonground && hitsound)
 			SV_StartSound(NULL, ent, CHAN_AUTO, sv.sfx_land, 1.0f, ATTN_NONE, 0.0f);
@@ -935,6 +995,29 @@ void SV_Physics_Step(gentity_t* ent)
 
 	// regular thinking
 	SV_RunThink(ent);
+}
+
+/*
+=============
+SV_Physics_Custom
+A custom, entirely QuakeC controlled physics.
+=============
+*/
+void SV_Physics_Custom(gentity_t* self)
+{
+#if 0
+	if (!self->v.physics)
+	{
+		Com_Error(ERR_DROP, __FUNCTION__": Entity %i (%s) has MOVETYPE_CUSTOM but no physics function set.\n", NUM_FOR_EDICT(self), Scr_GetString(self->v.classname));
+		return;
+	}
+
+	sv.script_globals->sv_time = sv.time;
+	sv.script_globals->g_time = sv.gameTime;
+	sv.script_globals->self = GENT_TO_PROG(self);
+	sv.script_globals->other = GENT_TO_PROG(sv.edicts);
+	Scr_Execute(VM_SVGAME, self->v.physics, __FUNCTION__);
+#endif
 }
 
 void SV_RunEntityPhysics(gentity_t* ent)
@@ -960,7 +1043,10 @@ void SV_RunEntityPhysics(gentity_t* ent)
 	case MOVETYPE_FLYMISSILE:
 		SV_Physics_Toss(ent);
 		break;
+	case MOVETYPE_SCRIPTED:
+		SV_Physics_Scripted(ent);
+		break;
 	default:
-		Com_Error(ERR_DROP, "SV_Physics: entity %i has bad movetype %i\n", NUM_FOR_EDICT(ent), (int)ent->v.movetype);
+		Com_Error(ERR_DROP, __FUNCTION__": Entity %i (%s) has bad movetype %i\n", NUM_FOR_EDICT(ent), Scr_GetString(ent->v.classname), (int)ent->v.movetype);
 	}
 }

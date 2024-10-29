@@ -111,8 +111,7 @@ void M_CheckGround(gentity_t* ent)
 /*
 ================
 SV_RunWorldFrame
-
-Advances the world by 0.1 seconds
+Advances the world by SV_FRAMETIME seconds
 ================
 */
 extern void SV_CheckGround(gentity_t* ent);
@@ -311,12 +310,17 @@ void SV_ClearWorld (void)
 	SV_CreateAreaNode (0, mins, maxs);
 }
 
+/*
+===============
+SV_PackSolid32
+Compresses bounding box using Q2PRO's MSG_PackSolid32_Ver2 method.
+===============
+*/
 static int SV_PackSolid32(gentity_t* ent)
 {
-	// Q2PRO code
 	int packedsolid;
 
-	packedsolid = MSG_PackSolid32(ent->v.mins, ent->v.maxs); //Q2PRO's MSG_PackSolid32_Ver2
+	packedsolid = MSG_PackSolid32(ent->v.mins, ent->v.maxs); 
 
 	if (packedsolid == SOLID_PACKED_BMODEL)
 		packedsolid = 0;  // can happen in pathological case if z mins > maxs
@@ -329,7 +333,7 @@ static int SV_PackSolid32(gentity_t* ent)
 		MSG_UnpackSolid32(packedsolid, mins, maxs);// // Q2PRO's MSG_UnpackSolid32_Ver2 for those curious
 
 		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
-			Com_Printf("%s: bad mins/maxs on entity %d\n", __FUNCTION__, NUM_FOR_EDICT(ent));
+			Com_Printf(__FUNCTION__": bad mins/maxs on entity %d\n", , NUM_FOR_EDICT(ent));
 	}
 #endif
 
