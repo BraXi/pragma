@@ -343,9 +343,7 @@ static void LogLight(rentity_t* ent)
 
 void R_SetEntityAmbientLight(rentity_t* ent)
 {
-	vec3_t lightDir;
 	vec3_t lightOrigin;
-	vec3_t temp;
 	int	i;
 
 	// lighting calculations 
