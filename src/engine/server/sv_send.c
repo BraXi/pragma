@@ -58,8 +58,8 @@ void SV_ClientPrintf(client_t *cl, int level, char *fmt, ...)
 	va_list		argptr;
 	char		string[1024];
 	
-	if (level < cl->messagelevel)
-		return;
+//	if (level < cl->messagelevel)
+//		return;
 	
 	va_start (argptr,fmt);
 	vsprintf (string, fmt,argptr);
@@ -77,16 +77,16 @@ SV_BroadcastPrintf
 Sends text to all active clients
 =================
 */
-void SV_BroadcastPrintf (int level, char *fmt, ...)
+void SV_BroadcastPrintf(int level, char *fmt, ...)
 {
 	va_list		argptr;
-	char		string[2048];
+	char		string[1024];
 	client_t	*cl;
 	int			i;
 
-	va_start (argptr,fmt);
-	vsprintf (string, fmt,argptr);
-	va_end (argptr);
+	va_start(argptr,fmt);
+	vsnprintf(string, sizeof(string), fmt, argptr);
+	va_end(argptr);
 	
 	// echo to console
 	if (dedicated->value)
@@ -104,12 +104,13 @@ void SV_BroadcastPrintf (int level, char *fmt, ...)
 			Com_Printf("%s", copy);
 	}
 
-	for (i=0, cl = svs.clients ; i<sv_maxclients->value; i++, cl++)
+	for (i = 0, cl = svs.clients; i < sv_maxclients->value; i++, cl++)
 	{
-		if (level < cl->messagelevel)
-			continue;
+//		if (level < cl->messagelevel)
+//			continue;
 		if (cl->state != cs_spawned)
 			continue;
+
 		MSG_WriteByte (&cl->netchan.message, SVC_PRINT);
 		MSG_WriteByte (&cl->netchan.message, level);
 		MSG_WriteString (&cl->netchan.message, string);
@@ -119,8 +120,7 @@ void SV_BroadcastPrintf (int level, char *fmt, ...)
 /*
 =================
 SV_BroadcastCommand
-
-Sends text to all active clients
+Sends command to all active clients
 =================
 */
 void SV_BroadcastCommand (char *fmt, ...)
@@ -261,7 +261,7 @@ If origin is NULL, the origin is determined from the entity origin
 or the midpoint of the entity box for bmodels.
 ==================
 */  
-void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundindex, float volume, float attenuation, float timeofs)
+void SV_StartSound(vec3_t origin, gentity_t *entity, int channel, int soundindex, float volume, float attenuation, float timeofs)
 {       
 	int			sendchan;
     int			flags;
@@ -271,16 +271,16 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 	qboolean	use_pvs;
 
 	if (volume < 0 || volume > 1.0)
-		Com_Error (ERR_FATAL, "SV_StartSound: volume = %f [0.0-1.0]", volume);
+		Com_Error (ERR_FATAL, __FUNCTION__": volume = %f [0.0-1.0]", volume);
 
 	if (attenuation < ATTN_NONE || attenuation > ATTN_STATIC)
-		Com_Error (ERR_FATAL, "SV_StartSound: attenuation = %f [0-3]", attenuation);
+		Com_Error (ERR_FATAL, __FUNCTION__": attenuation = %f [0-3]", attenuation);
 
 //	if (channel < CHAN_AUTO || channel > 15 )
 //		Com_Error (ERR_FATAL, "SV_StartSound: channel = %i [0-15]", channel);
 
 	if (timeofs < 0 || timeofs > 0.255)
-		Com_Error (ERR_FATAL, "SV_StartSound: timeofs = %f [0-0.255]", timeofs);
+		Com_Error (ERR_FATAL, __FUNCTION__": timeofs = %f [0-0.255]", timeofs);
 
 	ent = NUM_FOR_EDICT(entity);
 
@@ -301,7 +301,8 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 		flags |= SND_ATTENUATION;
 
 	// the client doesn't know that bmodels have weird origins, the origin can also be explicitly set
-	if ( ((int)entity->v.svflags & SVF_NOCLIENT) || (entity->v.solid == SOLID_BSP) || origin )
+	//if ( (entity->v.svflags & SVF_NOCLIENT) || (entity->v.solid == SOLID_BSP) || origin )
+	if ((entity->v.svflags & SVF_NOCLIENT) || SV_IsBrushModel(entity->v.modelindex) || origin)
 		flags |= SND_POS;
 
 	// always send the entity number for channel overrides
@@ -313,14 +314,17 @@ void SV_StartSound (vec3_t origin, gentity_t *entity, int channel, int soundinde
 	if (timeofs)
 		flags |= SND_OFFSET;
 
+	
 	// use the entity origin unless it is a bmodel or explicitly specified
 	if (!origin)
 	{
 		origin = origin_v;
-		if (entity->v.solid == SOLID_BSP)
+
+		//if (entity->v.solid == SOLID_BSP)
+		if(SV_IsBrushModel(entity->v.modelindex))
 		{
-			for (i=0 ; i<3 ; i++)
-				origin_v[i] = entity->v.origin[i] + 0.5f * (entity->v.mins[i]+entity->v.maxs[i]);
+			for (i = 0; i < 3; i++)
+				origin_v[i] = entity->v.origin[i] + (0.5f * (entity->v.mins[i] + entity->v.maxs[i]));
 		}
 		else
 		{
@@ -378,14 +382,15 @@ void SV_StopSounds(gentity_t* entity)
 
 	if (!entity)
 	{
-		Com_Error(ERR_DROP, "SV_StopSounds: NULL entity");
-		return; //msvc..
+		Com_Error(ERR_DROP, __FUNCTION__": NULL entity");
+		return;
 	}
 
 	entnum = NUM_FOR_EDICT(entity);
 	if (entnum >= MAX_GENTITIES || entnum < 0)
 	{
-		Com_Error(ERR_DROP, "SV_StopSounds: wrong entity number %i", entnum);
+		Com_Error(ERR_DROP, __FUNCTION__": wrong entity number %i", entnum);
+		return;
 	}
 
 	entity->s.loopingSound = entity->v.loopsound = 0; // stop looping sound too

@@ -134,8 +134,11 @@ True if this modelindex is occupied by brush model
 */
 qboolean SV_IsBrushModel(const int modelindex)
 {
+	if (modelindex == MODELINDEX_BAD)
+		return false; // no model
+
 	if (modelindex == MODELINDEX_WORLD)
-		return true; // world
+		return true; // world model
 
 	if (modelindex < 0 && modelindex >= (0 - CM_NumInlineModels()))
 		return true; // bmodels are indexed negative

@@ -431,7 +431,7 @@ static qboolean R_CompileShader(glprog_t* glprog, qboolean isfrag)
 	len = ri.LoadTextFile(fileName, (void**)&data);
 	if (!len || len == -1 || data == NULL)
 	{
-		ri.Error(ERR_FATAL, "failed to load shader: %s\n", fileName);
+		ri.Error(ERR_FATAL, "Could not open shader: %s\n", fileName);
 		return false;
 	}
 
@@ -483,12 +483,12 @@ static qboolean R_LinkProgram(glprog_t* prog)
 	glGetProgramiv(prog->programObject, GL_LINK_STATUS, &linked);
 	if(!linked)
 	{
-		ri.Printf(PRINT_ALERT, "Failed to load shader program: %s\n", prog->name);
+		ri.Printf(PRINT_ALERT, "Failed to load GLSL program: %s\n", prog->name);
 		return false;
 	}
 
 	prog->isValid = true;
-	ri.Printf(PRINT_LOW, "Loaded shader program: %s\n", prog->name);
+	ri.Printf(PRINT_LOW, "Loaded GLSL program: %s\n", prog->name);
 	return true;
 }
 

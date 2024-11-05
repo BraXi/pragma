@@ -70,7 +70,7 @@ void M_CheckGround(gentity_t* ent)
 	vec3_t		point;
 	trace_t		trace;
 
-	if ((int)ent->v.flags & (FL_SWIM | FL_FLY))
+	if (ent->v.flags & (FL_SWIM | FL_FLY))
 		return;
 
 	if (ent->v.velocity[2] > 100)
@@ -167,10 +167,10 @@ void SV_RunWorldFrame(void)
 				ent->v.groundentity_num = ENTITYNUM_NULL;
 
 #if 0
-				if (ent->v.solid != SOLID_NOT && !((int)ent->v.flags & (FL_SWIM | FL_FLY)))
+				if (ent->v.solid != SOLID_NOT && !(ent->v.flags & (FL_SWIM | FL_FLY)))
 					SV_CheckGround(ent); // temporary fix
 
-				if(!((int)ent->v.flags & (FL_SWIM | FL_FLY)) && (int)ent->v.svflags & SVF_MONSTER)
+				if(!(ent->v.flags & (FL_SWIM | FL_FLY)) && ent->v.svflags & SVF_MONSTER)
 				{
 					M_CheckGround(ent);
 				}
@@ -325,17 +325,15 @@ static int SV_PackSolid32(gentity_t* ent)
 	if (packedsolid == SOLID_PACKED_BMODEL)
 		packedsolid = 0;  // can happen in pathological case if z mins > maxs
 
-#ifdef _DEBUG
-	if (developer->value)
+	if (sv_debug->value)
 	{
 		vec3_t mins, maxs;
 
 		MSG_UnpackSolid32(packedsolid, mins, maxs);// // Q2PRO's MSG_UnpackSolid32_Ver2 for those curious
 
 		if (!VectorCompare(ent->v.mins, mins) || !VectorCompare(ent->v.maxs, maxs))
-			Com_Printf(__FUNCTION__": bad mins/maxs on entity %d\n", , NUM_FOR_EDICT(ent));
+			Com_Printf(__FUNCTION__": bad mins/maxs on entity %d\n", ent->s.number);
 	}
-#endif
 
 	return packedsolid;
 }
@@ -545,11 +543,11 @@ void SV_LinkEntity(gentity_t *ent)
 
 /*
 ====================
-SV_AreaEdicts_r
+SV_AreaEntities_r
 
 ====================
 */
-void SV_AreaEdicts_r (areanode_t *node)
+void SV_AreaEntities_r (areanode_t *node)
 {
 	link_t *l, *next, *start;
 	gentity_t *check;
@@ -603,15 +601,14 @@ void SV_AreaEdicts_r (areanode_t *node)
 
 	// recurse down both sides
 	if ( area_maxs[node->axis] > node->dist )
-		SV_AreaEdicts_r ( node->children[0] );
+		SV_AreaEntities_r ( node->children[0] );
 	if ( area_mins[node->axis] < node->dist )
-		SV_AreaEdicts_r ( node->children[1] );
+		SV_AreaEntities_r ( node->children[1] );
 }
 
 /*
 ================
 SV_AreaEntities
-
 Returns the **list of entities within mins/maxs of a given type
 ================
 */
@@ -624,7 +621,7 @@ int SV_AreaEntities(vec3_t mins, vec3_t maxs, gentity_t **list, int maxcount, in
 	area_maxcount = maxcount;
 	area_type = areatype;
 
-	SV_AreaEdicts_r (sv_areanodes);
+	SV_AreaEntities_r (sv_areanodes);
 
 	return area_count;
 }

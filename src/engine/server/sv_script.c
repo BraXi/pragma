@@ -243,7 +243,7 @@ void Scr_ClientDisconnect(gentity_t* self)
 
 		// find gentities that were only shown to that particular 
 		// client, and make sure they become visible to everyone
-		if (((int)ent->v.svflags & SVF_SINGLECLIENT))
+		if ((ent->v.svflags & SVF_SINGLECLIENT))
 		{
 			if (ent->v.showto == self->s.number) //NUM_FOR_ENT(self))
 			{

@@ -107,7 +107,7 @@ void SV_CheckGround(gentity_t* ent)
 	vec3_t		point;
 	trace_t		trace;
 
-	if ((int)ent->v.flags & (FL_SWIM | FL_FLY))
+	if (ent->v.flags & (FL_SWIM | FL_FLY))
 		return;
 
 	if (ent->v.velocity[2] > 100)
@@ -610,7 +610,7 @@ void SV_Physics_Pusher(gentity_t* ent)
 	gentity_t* part, * mv;
 
 	// if not a team captain, so movement will be handled elsewhere
-	if ((int)ent->v.flags & FL_TEAMSLAVE)
+	if (ent->v.flags & FL_TEAMSLAVE)
 		return;
 
 	// make sure all team slaves can move before commiting any moves or calling any think functions
@@ -737,7 +737,7 @@ void SV_Physics_Toss(gentity_t* ent)
 	}
 
 	// if not a team captain, so movement will be handled elsewhere
-	if ((int)ent->v.flags & FL_TEAMSLAVE)
+	if (ent->v.flags & FL_TEAMSLAVE)
 	{
 		return;
 	}
@@ -914,7 +914,7 @@ void SV_Physics_Step(gentity_t* ent)
 	//   swimming monsters who are in the water
 	if (!wasonground)
 	{
-		if (!((int)ent->v.flags & FL_FLY) && !(((int)ent->v.flags & FL_SWIM) && (ent->v.waterlevel > 2)))
+		if (!(ent->v.flags & FL_FLY) && !((ent->v.flags & FL_SWIM) && (ent->v.waterlevel > 2)))
 		{
 			if (ent->v.velocity[2] < sv_gravity->value * -0.1)
 				hitsound = true;
@@ -924,7 +924,7 @@ void SV_Physics_Step(gentity_t* ent)
 	}
 
 	// friction for flying monsters that have been given vertical velocity
-	if (((int)ent->v.flags & FL_FLY) && (ent->v.velocity[2] != 0))
+	if ((ent->v.flags & FL_FLY) && (ent->v.velocity[2] != 0))
 	{
 		speed = fabs(ent->v.velocity[2]);
 		control = speed < sv_stopspeed ? sv_stopspeed : speed;
@@ -937,7 +937,7 @@ void SV_Physics_Step(gentity_t* ent)
 	}
 
 	// friction for flying monsters that have been given vertical velocity
-	if (((int)ent->v.flags & FL_SWIM) && (ent->v.velocity[2] != 0))
+	if ((ent->v.flags & FL_SWIM) && (ent->v.velocity[2] != 0))
 	{
 		speed = fabs(ent->v.velocity[2]);
 		control = speed < sv_stopspeed ? sv_stopspeed : speed;
@@ -953,7 +953,7 @@ void SV_Physics_Step(gentity_t* ent)
 	{
 		// apply friction
 		// let dead monsters who aren't completely onground slide
-		if ((wasonground) || ((int)ent->v.flags & (FL_SWIM | FL_FLY)))
+		if ((wasonground) || (ent->v.flags & (FL_SWIM | FL_FLY)))
 			if (!(ent->v.health <= 0.0 && !SV_CheckBottom(ent)))
 			{
 				vel = ent->v.velocity;
@@ -974,7 +974,7 @@ void SV_Physics_Step(gentity_t* ent)
 				}
 			}
 
-		if ((int)ent->v.svflags & SVF_MONSTER)
+		if (ent->v.svflags & SVF_MONSTER)
 			mask = MASK_MONSTERSOLID;
 		else
 			mask = MASK_SOLID;
@@ -1043,8 +1043,8 @@ void SV_RunEntityPhysics(gentity_t* ent)
 	case MOVETYPE_FLYMISSILE:
 		SV_Physics_Toss(ent);
 		break;
-	case MOVETYPE_SCRIPTED:
-		SV_Physics_Scripted(ent);
+	case MOVETYPE_CUSTOM:
+		SV_Physics_Custom(ent);
 		break;
 	default:
 		Com_Error(ERR_DROP, __FUNCTION__": Entity %i (%s) has bad movetype %i\n", NUM_FOR_EDICT(ent), Scr_GetString(ent->v.classname), (int)ent->v.movetype);

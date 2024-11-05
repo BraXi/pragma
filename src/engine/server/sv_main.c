@@ -1015,13 +1015,15 @@ void SV_UserinfoChanged (client_t *cl)
 	else
 		cl->rate = NET_RATE_DEFAULT;
 
+#if 0
 	// messagelevel command
 	val = Info_ValueForKey (cl->userinfo, "messagelevel");
 	if (strlen(val))
 	{
 		cl->messagelevel = atoi(val);
 	}
-	
+#endif
+
 	SV_SetConfigString((CS_CLIENTS + (NUM_FOR_ENT(cl->edict) - 1)), cl->name);
 }
 
