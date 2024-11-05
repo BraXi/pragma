@@ -439,15 +439,19 @@ qboolean SV_SendClientDatagram(client_t *client)
 		SZ_Write(&msg, client->datagram.data, client->datagram.cursize);
 	}
 	
-	SZ_Clear (&client->datagram);
 
-	if(sv_debug->value >= 2.0f)
-		Com_Printf( __FUNCTION__"(%s): %i ents (%i bytes)\n", client->name, client->frames[sv.framenum & UPDATE_MASK].num_entities, msg.cursize);
+
+	if (sv_debug->value >= 2.0f)
+	{
+		Com_Printf(__FUNCTION__"(%s): %i ents (%i bytes)\n", client->name, client->frames[sv.framenum & UPDATE_MASK].num_entities, msg.cursize);
+		Com_Printf(__FUNCTION__"(%s): client->datagram.cursize=%i\n", client->name, client->datagram.cursize);	
+	}
+	SZ_Clear(&client->datagram);
 
 	if (msg.overflowed)
 	{	
 		// must have room left for the packet header
-		Com_Printf(__FUNCTION__"(%i): WARNING: msg overflowed for %s\n", client->name);
+		Com_Printf(__FUNCTION__"(%s): WARNING: msg overflowed.\n", client->name);
 		SZ_Clear(&msg);
 	}
 

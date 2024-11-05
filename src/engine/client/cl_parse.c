@@ -657,11 +657,16 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	// current origin
 	if (bits & U_ORIGIN_XY)
 	{
-		to->origin[0] = MSG_ReadCoord(&net_message);
-		to->origin[1] = MSG_ReadCoord(&net_message);
+		//to->origin[0] = MSG_ReadCoord(&net_message);
+		//to->origin[1] = MSG_ReadCoord(&net_message);
+		to->origin[0] = MSG_ReadShort(&net_message);
+		to->origin[1] = MSG_ReadShort(&net_message);
 	}
 	if (bits & U_ORIGIN_Z)
-		to->origin[2] = MSG_ReadCoord(&net_message);
+	{
+		to->origin[2] = MSG_ReadShort(&net_message);
+		//to->origin[2] = MSG_ReadCoord(&net_message);
+	}
 
 	// current angles
 	if (bits & U_ANGLE_X)
@@ -673,7 +678,12 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 
 	// old origin (used for smoothing move)
 	if (bits & U_OLDORIGIN)
-		MSG_ReadPos(&net_message, to->old_origin);
+	{
+		//MSG_ReadPos(&net_message, to->old_origin);
+		to->old_origin[0] = MSG_ReadShort(&net_message);
+		to->old_origin[1] = MSG_ReadShort(&net_message);
+		to->old_origin[2] = MSG_ReadShort(&net_message);
+	}
 
 	// looping sound
 	if (bits & U_LOOPSOUND)

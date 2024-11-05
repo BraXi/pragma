@@ -1663,3 +1663,15 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 
 	*results = trace;
 }
+
+/*
+==================
+CM_ClearTrace
+Clears a trace for use
+==================
+*/
+void CM_ClearTrace(trace_t* trace)
+{
+	memset(trace, 0, sizeof(trace_t));
+	trace->entityNum = -1; // ENTITYNUM_NULL
+}

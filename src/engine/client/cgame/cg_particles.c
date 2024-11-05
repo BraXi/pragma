@@ -57,10 +57,10 @@ cparticle_t* CG_AllocParticle()
 		}
 	}
 
-	if(part != NULL)
-		cg_numparticles ++;
+	if (part == NULL)
+		return NULL;
 
-
+	cg_numparticles ++;
 	part->inuse = true;
 
 //	printf("cg_numparticles=%i\n", cg_numparticles);

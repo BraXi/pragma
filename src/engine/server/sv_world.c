@@ -26,6 +26,8 @@ void Scr_ClientEndServerFrame(gentity_t* ent);
 void SV_ScriptStartFrame();
 void SV_ScriptEndFrame();
 
+void SV_CheckGround(gentity_t* ent);
+
 void SV_ProgVarsToEntityState(gentity_t* ent);
 //void SV_EntityStateToProgVars(gentity_t* ent, entity_state_t* state);
 
@@ -102,6 +104,7 @@ void M_CheckGround(gentity_t* ent)
 		VectorCopy(trace.endpos, ent->s.origin);
 		ent->v.groundentity_num = trace.entityNum;
 		ent->v.groundentity_linkcount = trace.ent->v.linkcount;
+		
 		ent->v.velocity[2] = 0;
 	}
 }
@@ -114,7 +117,7 @@ SV_RunWorldFrame
 Advances the world by SV_FRAMETIME seconds
 ================
 */
-extern void SV_CheckGround(gentity_t* ent);
+
 void SV_RunWorldFrame(void)
 {
 	int		i;
@@ -401,8 +404,7 @@ void SV_LinkEntity(gentity_t *ent)
 		}
 		break;
 
-	case SOLID_BSP:
-		
+	case SOLID_BSP:	
 		ent->s.packedSolid = SOLID_PACKED_BMODEL;
 		break;
 
@@ -775,7 +777,7 @@ void SV_ClipToEntity(trace_t *trace, gentity_t* clipent, vec3_t start, vec3_t mi
 	clipHandle_t clipHandle;
 	float* angles;
 
-	memset(trace, 0, sizeof(*trace));
+	CM_ClearTrace(trace);
 
 	if (!mins)
 		mins = vec3_origin;
@@ -823,7 +825,7 @@ qboolean SV_EntityContact(vec3_t mins, vec3_t maxs, const gentity_t* ent, int ca
 	clipHandle_t clipHandle;
 	const float* angles;
 
-	memset(&trace, 0, sizeof(trace));
+	CM_ClearTrace(&trace);
 	clipHandle = SV_ClipHandleForEntity(ent);
 
 	if (clipHandle == BOX_MODEL_HANDLE || ent == sv.edicts)
@@ -989,7 +991,8 @@ trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *
 	}
 
 	memset(&clip, 0, sizeof(moveclip_t));
-	SV_SetTraceEnt(&clip.trace, NULL);
+	CM_ClearTrace(&clip.trace);
+	//SV_SetTraceEnt(&clip.trace, NULL);
 
 	// clip to world
 	CM_BoxTrace(&clip.trace, start, end, mins, maxs, 0, contentmask, bCapsule);
