@@ -168,14 +168,10 @@ static void TempEnt_Explosion(void)
 	S_StartSound(pos, 0, 0, cgMedia.sfx_explosion[0], 2, ATTN_NORM, 0);
 }
 
-extern void CG_GenericParticleEffect2(vec3_t org, vec3_t dir, vec3_t color, int count, int dirspread, float alphavel, float gravity);
 static void TempEnt_Rain(void)
 {
 	MSG_ReadPos(&net_message, pos);
 
-	vec3_t dir = { 0,0,-1 };
-	vec3_t c = { 0.207f, 0.596f, 0.843f };
-	CG_GenericParticleEffect2(pos, dir, c, 24, 72, 0.6f, -120);
 }
 
 
@@ -210,6 +206,14 @@ void CL_ClearTEnts (void)
 }
 
 
+/*
+=================
+CG_AddTempEntities
+=================
+*/
+void CG_AddTempEntities(void)
+{
+}
 
 /*
 =================
@@ -219,9 +223,7 @@ CG_ParseTempEntityCommand
 void CG_ParseTempEntityCommand (void)
 {
 	TE_Type = MSG_ReadByte (&net_message);
-
-//	printf("TE_Type= %i\n", TE_Type);
-	if (TE_Type > TE_COUNT)
+	if (TE_Type >= TE_COUNT || TE_Type < 0)
 	{
 		Com_Error(ERR_DROP, "CG_ParseTempEntityCommand: bad temp entity %i\n", TE_Type);
 		return;
@@ -229,11 +231,3 @@ void CG_ParseTempEntityCommand (void)
 	tempEntityDefs[TE_Type].func();
 }
 
-/*
-=================
-CG_AddTempEntities
-=================
-*/
-void CG_AddTempEntities (void)
-{
-}

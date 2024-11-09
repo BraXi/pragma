@@ -45,6 +45,8 @@ See the attached GNU General Public License v2 for more details.
 typedef unsigned char 		byte;
 typedef enum {false, true}	qboolean;
 
+typedef unsigned int		prTime_t;
+
 #ifndef NULL
 #define NULL ((void *)0)
 #endif

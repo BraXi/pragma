@@ -189,7 +189,7 @@ enum clc_ops_e
 #define	U_MOREBITS_3		(1<<23)		// -- read one additional byte --
 
 // fourth byte
-#define	U_OLDORIGIN			(1<<24)		// id: FIXME: get rid of this, braxi: WHY?
+//#define	U_OLDORIGIN			(1<<24)		// id: FIXME: get rid of this, braxi: yeah.
 #define	U_ANIMATION			(1<<25)
 #define	U_LOOPSOUND			(1<<26)		// byte/short, index to sounds
 #define	U_PACKEDSOLID		(1<<27)

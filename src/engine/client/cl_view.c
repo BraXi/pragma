@@ -96,7 +96,7 @@ void V_AddDebugPrimitive(debugprimitive_t *obj)
 V_AddParticle
 =====================
 */
-void V_AddParticle (vec3_t org, vec3_t color, float alpha, vec2_t size)
+void V_AddParticle(int flags, vec3_t org, vec3_t up, vec3_t right, vec3_t color, float alpha, vec2_t size, struct image_s *tex)
 {
 	particle_t	*p;
 
@@ -107,10 +107,18 @@ void V_AddParticle (vec3_t org, vec3_t color, float alpha, vec2_t size)
 	}
 
 	p = &r_particles[r_numparticles++];
-	VectorCopy (org, p->origin);
+	p->flags = flags;
+	VectorCopy(org, p->origin);
+
+	if(up)
+		VectorCopy(up, p->up);
+	if(right)
+		VectorCopy(right, p->right);
+
 	VectorCopy(color, p->color);
-	VectorCopy(size, p->size);
+	Vector2Copy(size, p->size);
 	p->alpha = alpha;
+	p->material = tex;
 }
 
 /*

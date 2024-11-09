@@ -19,9 +19,12 @@ PARTICLE MANAGEMENT
 ==============================================================
 */
 
-int				cg_numparticles = 0;
-cparticle_t		cg_particles[MAX_PARTICLES];
+int cg_numActiveParticles = 0;
+cparticle_t cg_particles[MAX_PARTICLES];
 
+prTime_t cg_effectsTime = 0;
+
+void CG_SimulatePragmaParticles();
 
 /*
 ==================
@@ -30,14 +33,32 @@ CG_FreeParticle
 */
 void CG_FreeParticle(cparticle_t* part)
 {
-	if (!part || !part->inuse)
+	if (!part || part && !part->inuse)
 	{
 		//Com_Error(ERR_DROP, "CG_FreeParticle: not active\n");
 		return;
 	}
+
 	memset(part, 0, sizeof(cparticle_t));
-	part->inuse = false;
-	cg_numparticles--;
+	//part->inuse = false;
+	cg_numActiveParticles--;
+}
+
+/*
+===============
+CG_NumFreeParticlesInPool
+Returns true if there are available particles in pool
+===============
+*/
+qboolean CG_NumFreeParticlesInPool(unsigned int count)
+{
+	if (cg_numActiveParticles >= MAX_PARTICLES)
+		return false;
+
+	if (cg_numActiveParticles + count >= MAX_PARTICLES)
+		return false;
+
+	return true;
 }
 
 /*
@@ -49,6 +70,9 @@ cparticle_t* CG_AllocParticle()
 {
 	cparticle_t* part = NULL;
 
+	if (!CG_NumFreeParticlesInPool(1))
+		return NULL;
+
 	for (int i = 0; i < MAX_PARTICLES; i++)
 	{
 		if (!cg_particles[i].inuse)
@@ -58,12 +82,17 @@ cparticle_t* CG_AllocParticle()
 	}
 
 	if (part == NULL)
-		return NULL;
+	{
+		return NULL; // no free particles
+	}
 
-	cg_numparticles ++;
+	cg_numActiveParticles++;
+
+	memset(part, 0, sizeof(*part));
 	part->inuse = true;
+	part->time = cl.time;
 
-//	printf("cg_numparticles=%i\n", cg_numparticles);
+	//printf("cg_numActiveParticles: %i\n", cg_numActiveParticles);
 
 	return part;
 }
@@ -71,21 +100,30 @@ cparticle_t* CG_AllocParticle()
 
 /*
 ===============
-CG_ClearParticles
+CG_ParticleFromPool
+Grabs particle from pool, returns NULL if all particles are in use
+===============
+*/
 
+cparticle_t* CG_ParticleFromPool()
+{
+	return CG_AllocParticle();
+}
+
+
+/*
+===============
+CG_ClearParticles
 Clear all particles
 ===============
 */
 void CG_ClearParticles()
 {
 	memset(cg_particles, 0, sizeof(cg_particles));
-	cg_numparticles = 0;
-
-//	for (int i = 0; i < MAX_PARTICLES - 1; i++)
-//	{
-//		cg_particles[i].next = &cg_particles[i + 1];
-//	}
+	cg_numActiveParticles = 0;
+	cg_effectsTime = 0;
 }
+
 
 /*
 ===============
@@ -102,6 +140,7 @@ void CG_SimulateAndAddParticles()
 	vec3_t			org;
 	vec3_t			color;
 
+	CG_SimulatePragmaParticles();
 
 	time = 0.000001;
 
@@ -109,14 +148,14 @@ void CG_SimulateAndAddParticles()
 	for (i = 0; i < MAX_PARTICLES; i++)
 	{
 		p = &cg_particles[i];
-		if (!p->inuse)
+		if (!p->inuse || p->type != 0)
 			continue;
 
 		// PMM - added INSTANT_PARTICLE handling for heat beam
-		if (p->alphavel != INSTANT_PARTICLE)
+		if (p->alphaVelocity != INSTANT_PARTICLE)
 		{
 			time = (cl.time - p->time) * 0.001;
-			alpha = p->alpha + time * p->alphavel;
+			alpha = p->alpha + time * p->alphaVelocity;
 			if (alpha <= 0)
 			{	
 				// faded out
@@ -137,15 +176,16 @@ void CG_SimulateAndAddParticles()
 
 		time2 = time * time;
 
-		org[0] = p->org[0] + p->vel[0] * time + p->accel[0] * time2;
-		org[1] = p->org[1] + p->vel[1] * time + p->accel[1] * time2;
-		org[2] = p->org[2] + p->vel[2] * time + p->accel[2] * time2;
+		org[0] = p->origin[0] + p->velocity[0] * time + p->acceleration[0] * time2;
+		org[1] = p->origin[1] + p->velocity[1] * time + p->acceleration[1] * time2;
+		org[2] = p->origin[2] + p->velocity[2] * time + p->acceleration[2] * time2;
 
-		V_AddParticle(org, color, alpha, p->size);
+		//V_AddParticle(int flags, vec3_t org, vec3_t up, vec3_t right, vec3_t color, float alpha, vec2_t size, struct image_s *tex)
+		V_AddParticle(p->flags, org, p->up, p->right, color, alpha, p->size, p->tex);
 		// PMM
-		if (p->alphavel == INSTANT_PARTICLE)
+		if (p->alphaVelocity == INSTANT_PARTICLE)
 		{
-			p->alphavel = 0.0;
+			p->alphaVelocity = 0.0;
 			p->alpha = 0.0;
 		}
 	}
@@ -153,66 +193,7 @@ void CG_SimulateAndAddParticles()
 //	active_particles = active;
 }
 
-/*
-===============
-CG_ParticleFromPool
 
-Grabs particle from pool, returns NULL if all particles are in use
-===============
-*/
-cparticle_t* CG_ParticleFromPool()
-{
-	return CG_AllocParticle();
-}
-
-/*
-===============
-CG_AreThereFreeParticles
-
-Returns true if there are any free particles left
-===============
-*/
-qboolean CG_AreThereFreeParticles()
-{
-	return true;
-}
-
-/*
-===============
-CG_GenericParticleEffect
-===============
-*/
-void CG_GenericParticleEffect(vec3_t org, vec3_t dir, vec3_t color, int count, int dirspread, float alphavel, float gravity)
-{
-	int			i, j;
-	cparticle_t* p;
-	float		d;
-
-	if (!count)
-		Com_Error(ERR_DROP, "CG_GenericParticleEffect: !count\n");
-
-	for (i = 0; i < count; i++)
-	{
-		p = CG_ParticleFromPool();
-		if (p == NULL)
-			return; // no free particles
-
-		p->time = cl.time;
-		VectorCopy(color, p->color);
-		d = rand() & dirspread;
-		for (j = 0; j < 3; j++)
-		{
-			p->org[j] = org[j] + ((rand() & 7) - 4) + d * dir[j];
-			p->vel[j] = crand() * 20;
-		}
-
-		p->accel[0] = p->accel[1] = 0;
-		p->accel[2] = gravity;
-		p->alpha = 1.0;
-
-		p->alphavel = -1.0f / (0.5f + frand() * alphavel);
-	}
-}
 
 
 /*
@@ -240,18 +221,18 @@ void CG_GenericParticleEffect2(vec3_t org, vec3_t dir, vec3_t color, int count, 
 		d = rand() & dirspread;
 		for (j = 0; j < 2; j++)
 		{
-			p->org[j] = org[j] + (crand() * dirspread);
-			p->vel[j] = crand() * 6;
+			p->origin[j] = org[j] + (crand() * dirspread);
+			p->velocity[j] = crand() * 6;
 		}
-		p->org[2] = org[2] + (rand() % 12);
+		p->origin[2] = org[2] + (rand() % 12);
 
-		p->vel[2] = -20 - (rand() & 6);
+		p->velocity[2] = -20 - (rand() & 6);
 
-		p->accel[0] = p->accel[1] = 0;
-		p->accel[2] = gravity;
+		p->acceleration[0] = p->acceleration[1] = 0;
+		p->acceleration[2] = gravity;
 		p->alpha = 0.5;
 
-		p->alphavel = alphavel; // -1.0f / (0.1f + frand() * alphavel);
+		p->alphaVelocity = alphavel; // -1.0f / (0.1f + frand() * alphaVelocity);
 	}
 }
 

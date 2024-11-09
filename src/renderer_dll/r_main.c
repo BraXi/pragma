@@ -38,6 +38,8 @@ rperfcounters_t rperf;
 
 static rgba_t	v_blend;			// final blending color
 
+static int r_numParticleVerts;
+
 //
 // view origin
 //
@@ -236,6 +238,110 @@ void R_DrawEntities(void)
 	R_UnbindProgram();
 }
 
+
+
+
+/*
+===============
+R_CreateParticleSurface
+===============
+*/
+static void R_CreateParticleSurface(const particle_t *part)
+{
+	float halfWidth, halfHeight;
+	glvert_t *v, *pv;
+	int i;
+
+	const float *upVec, *rightVec;
+
+	halfWidth = part->size[0] / 2.0f;
+	halfHeight = part->size[1] / 2.0f;
+
+	//if (halfWidth <= 0.0f || halfHeight <= 0.0f)
+	//	return;
+	
+	if (halfWidth <= 0.0f || halfHeight <= 0.0f)
+	{
+		halfWidth = halfHeight = 2.0f;
+	}
+
+	if (part->flags & 1)
+	{
+		upVec = part->up;
+		rightVec = part->right;
+	}
+	else
+	{
+		upVec = vup;
+		rightVec = vright;
+	}
+
+	// Triangle 1
+	v = &vb_particles->verts[r_numParticleVerts++];
+	pv = v;
+	Vector2Set(v->st, 0.0f, 1.0f); // 0 0
+	v->xyz[0] = (-halfWidth * rightVec[0] - halfHeight * upVec[0]);
+	v->xyz[1] = (-halfWidth * rightVec[1] - halfHeight * upVec[1]);
+	v->xyz[2] = (-halfWidth * rightVec[2] - halfHeight * upVec[2]);
+
+	v = &vb_particles->verts[r_numParticleVerts++];
+	Vector2Set(v->st, 1.0f, 1.0f); // 1 0
+	v->xyz[0] = (halfWidth * rightVec[0] - halfHeight * upVec[0]);
+	v->xyz[1] = (halfWidth * rightVec[1] - halfHeight * upVec[1]);
+	v->xyz[2] = (halfWidth * rightVec[2] - halfHeight * upVec[2]);
+
+	v = &vb_particles->verts[r_numParticleVerts++];
+	Vector2Set(v->st, 1.0f, 0.0f); // 1 1
+	v->xyz[0] = (halfWidth * rightVec[0] + halfHeight * upVec[0]);
+	v->xyz[1] = (halfWidth * rightVec[1] + halfHeight * upVec[1]);
+	v->xyz[2] = (halfWidth * rightVec[2] + halfHeight * upVec[2]);
+
+	// Triangle 2
+	v = &vb_particles->verts[r_numParticleVerts++];
+	Vector2Set(v->st, 0.0f, 1.0f);// 0 0
+	v->xyz[0] = (-halfWidth * rightVec[0] - halfHeight * upVec[0]);
+	v->xyz[1] = (-halfWidth * rightVec[1] - halfHeight * upVec[1]);
+	v->xyz[2] = (-halfWidth * rightVec[2] - halfHeight * upVec[2]);
+
+	v = &vb_particles->verts[r_numParticleVerts++];
+	Vector2Set(v->st, 1.0f, 0.0f); // 1 1
+	v->xyz[0] = (halfWidth * rightVec[0] + halfHeight * upVec[0]);
+	v->xyz[1] = (halfWidth * rightVec[1] + halfHeight * upVec[1]);
+	v->xyz[2] = (halfWidth * rightVec[2] + halfHeight * upVec[2]);
+
+	v = &vb_particles->verts[r_numParticleVerts++];
+	Vector2Set(v->st, 0.0f, 0.0f); // 0 1
+	v->xyz[0] = (-halfWidth * rightVec[0] + halfHeight * upVec[0]);
+	v->xyz[1] = (-halfWidth * rightVec[1] + halfHeight * upVec[1]);
+	v->xyz[2] = (-halfWidth * rightVec[2] + halfHeight * upVec[2]);
+
+	for (i = 0; i < 6; i++, pv++)
+	{
+		VectorAdd(pv->xyz, part->origin, pv->xyz);
+		Vector4Set(pv->rgba, part->color[0], part->color[1], part->color[2], part->alpha);
+	}
+}
+
+/*
+===============
+R_DrawBufferedParticles
+===============
+*/
+static void R_DrawBufferedParticles(const image_t *tex)
+{
+	if (!r_numParticleVerts)
+		return;
+
+	if (!tex)
+		R_MultiTextureBind(TMU_DIFFUSE, r_texture_particle->texnum);
+	else
+		R_MultiTextureBind(TMU_DIFFUSE, tex->texnum);
+
+	R_UpdateVertexBuffer(vb_particles, NULL, r_numParticleVerts, (V_UV | V_COLOR | V_NOFREE));
+	R_DrawVertexBuffer(vb_particles, 0, 0);
+	r_numParticleVerts = 0;
+}
+
 /*
 ===============
 R_DrawParticles
@@ -243,53 +349,42 @@ R_DrawParticles
 */
 void R_DrawParticles( int num_particles, const particle_t particles[] )
 {
-	const particle_t *p;
-	int				i;
-	vec3_t			up, right;
-	int vertcnt = 0;
+	const particle_t *part;
+	const image_t* tex;
+	int i;
 
-	for (p = particles, i = 0; i < num_particles ; i++, p++)
-	{
-		if (p->size[0] > 0.0f && p->size[1] > 0.0f)
-		{
-			VectorScale(vup, p->size[0], up);
-			VectorScale(vright, p->size[1], right);
-		}
-		else
-		{
-			VectorScale(vup, 3.0f, up);
-			VectorScale(vright, 3.0f, right);
-		}
+	r_numParticleVerts = 0;
 
-		Vector4Set(vb_particles->verts[vertcnt].rgba, p->color[0], p->color[1], p->color[2], p->alpha);
-		Vector2Set(vb_particles->verts[vertcnt].st, 0.0625, 0.0625 );
-		VectorCopy(p->origin, vb_particles->verts[vertcnt].xyz);
-		vertcnt++;
-
-		Vector4Set(vb_particles->verts[vertcnt].rgba, p->color[0], p->color[1], p->color[2], p->alpha);
-		Vector2Set(vb_particles->verts[vertcnt].st, 1.0625, 0.0625 );
-		VectorSet(vb_particles->verts[vertcnt].xyz, p->origin[0] + up[0], p->origin[1] + up[1], p->origin[2] + up[2]);
-		vertcnt++;
-
-		Vector4Set(vb_particles->verts[vertcnt].rgba, p->color[0], p->color[1], p->color[2], p->alpha);
-		Vector2Set(vb_particles->verts[vertcnt].st, 0.0625, 1.0625 );
-		VectorSet(vb_particles->verts[vertcnt].xyz, p->origin[0] + right[0], p->origin[1] + right[1], p->origin[2] + right[2]);
-		vertcnt++;
-	}
-
-	R_UpdateVertexBuffer(vb_particles, NULL, vertcnt, (V_UV|V_COLOR|V_NOFREE));
+	if (!num_particles)
+		return;
 
 	R_BindProgram(GLPROG_PARTICLE);
-	R_MultiTextureBind(TMU_DIFFUSE, r_texture_particle->texnum);
-	//R_BindTexture(r_texture_white->texnum); // testing
-
 	R_Blend(true);
-	R_WriteToDepthBuffer(GL_FALSE);		// no z buffering
+	R_BlendFunc(GL_SRC_ALPHA, GL_ONE);
+	R_WriteToDepthBuffer(GL_FALSE);
+	glDisable(GL_CULL_FACE);
 
-	R_DrawVertexBuffer(vb_particles, 0, 0);
+	part = particles;
+	tex = part->material;
 
+	for (i = 0; i < num_particles ; i++, part++)
+	{
+		if (tex != part->material /* || blend != part->blend*/)
+		{
+			//R_BlendFunc(part->blend[0], part->blend[1]);
+			R_DrawBufferedParticles(tex);
+		}
+		tex = part->material;
+
+		R_CreateParticleSurface(part);
+	}
+
+	R_DrawBufferedParticles(tex);
+
+	glEnable(GL_CULL_FACE);
+	R_WriteToDepthBuffer(GL_TRUE);
+	R_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	R_Blend(false);
-	R_WriteToDepthBuffer(GL_TRUE);		// back to normal Z buffering
 	R_UnbindProgram();
 }
 

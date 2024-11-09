@@ -36,7 +36,7 @@ CL_EntityAnimation
 */
 static inline void CL_EntityAnimationOld(clentity_t* clent, entity_state_t* state, rentity_t *refent)
 {
-	int		autoanim;
+	prTime_t	autoanim;
 	unsigned int effects = state->effects;
 
 	// models can auto animate their frames

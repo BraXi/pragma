@@ -414,13 +414,14 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 		to->renderColor[2] != from->renderColor[2])
 		bits |= U_RENDERCOLOR;
 
+#if 0
 	if (newentity || (to->renderFlags & RF_BEAM))
 	{
 		//if (to->old_origin[0] != from->old_origin[0] || to->old_origin[1] != from->old_origin[1] || to->old_origin[2] != from->old_origin[2])
 		if ((int)to->old_origin[0] != (int)from->old_origin[0] || (int)to->old_origin[1] != (int)from->old_origin[1] || (int)to->old_origin[2] != (int)from->old_origin[2])
 			bits |= U_OLDORIGIN;
 	}
-
+#endif
 	//
 	// write the message
 	//
@@ -577,6 +578,7 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 	if (bits & U_ANGLE_Z)
 		MSG_WriteAngle(msg, to->angles[2]);
 
+#if 0
 	// old origin (used for smoothing move)
 	if (bits & U_OLDORIGIN)
 	{
@@ -587,6 +589,7 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 		//MSG_WriteCoord (msg, to->old_origin[1]);
 		//MSG_WriteCoord (msg, to->old_origin[2]);
 	}
+#endif
 
 	// looping sound
 	if (bits & U_LOOPSOUND)

@@ -108,7 +108,9 @@ typedef struct
 
 typedef struct
 {
+	int		flags;
 	vec3_t	origin;
+	vec3_t	up, right;
 	vec3_t	color;
 	float	alpha;
 	struct image_s* material;

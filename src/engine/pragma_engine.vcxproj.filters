@@ -226,6 +226,12 @@
     <ClCompile Include="collision\cm_areas.c">
       <Filter>CollisonModel</Filter>
     </ClCompile>
+    <ClCompile Include="client\cgame\cg_fx.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cgame\cg_newfx.c">
+      <Filter>Client\Client Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\crc.h" />

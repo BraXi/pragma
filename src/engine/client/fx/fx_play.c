@@ -358,5 +358,5 @@ void CL_ParsePlayFXOnTag()
 }
 
 
-/*p->vel[0] = crandom() * 16;
-p->vel[1] = crandom() * 16;*/
+/*p->velocity[0] = crandom() * 16;
+p->velocity[1] = crandom() * 16;*/

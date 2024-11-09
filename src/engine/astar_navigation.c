@@ -9,7 +9,7 @@ See the attached GNU General Public License v2 for more details.
 */
 
 // navigation.c - implementation of A* pathfinding alghoritm 
-// https://en.wikipedia.org/wiki/A*_search_algorithm
+// https://en.wikipedia.origin/wiki/A*_search_algorithm
 
 #include "pragma.h"
 

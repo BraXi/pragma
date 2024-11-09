@@ -19,8 +19,8 @@ LIGHT STYLE MANAGEMENT
 ==============================================================
 */
 
-static CLightStyle_t	cg_lightstyles[MAX_LIGHTSTYLES];
-static int				lastofs;
+static CLightStyle_t cg_lightstyles[MAX_LIGHTSTYLES];
+static /*prTime_t*/ int lastofs;
 
 /*
 ================
