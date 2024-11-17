@@ -316,20 +316,15 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 
 	if (to->number >= 256)
 		bits |= U_NUMBER_16;		// number8 is implicit otherwise
-	
+
 	if (to->eType != from->eType)
 		bits |= U_ETYPE;
 
 	// origin
-	if ((int)to->origin[0] != (int)from->origin[0] || (int)to->origin[1] != (int)from->origin[1])
+	if (to->origin[0] != from->origin[0] || to->origin[1] != from->origin[1])
 		bits |= U_ORIGIN_XY;
-	if ((int)to->origin[2] != (int)from->origin[2])
+	if (to->origin[2] != from->origin[2])
 		bits |= U_ORIGIN_Z;
-
-	//if (to->origin[0] != from->origin[0] || to->origin[1] != from->origin[1])
-	//	bits |= U_ORIGIN_XY;
-	//if (to->origin[2] != from->origin[2])
-	//	bits |= U_ORIGIN_Z;
 
 	// angles
 	if (to->angles[0] != from->angles[0])
@@ -414,14 +409,12 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 		to->renderColor[2] != from->renderColor[2])
 		bits |= U_RENDERCOLOR;
 
-#if 0
 	if (newentity || (to->renderFlags & RF_BEAM))
 	{
-		//if (to->old_origin[0] != from->old_origin[0] || to->old_origin[1] != from->old_origin[1] || to->old_origin[2] != from->old_origin[2])
-		if ((int)to->old_origin[0] != (int)from->old_origin[0] || (int)to->old_origin[1] != (int)from->old_origin[1] || (int)to->old_origin[2] != (int)from->old_origin[2])
+		if (to->old_origin[0] != from->old_origin[0] || to->old_origin[1] != from->old_origin[1] || to->old_origin[2] != from->old_origin[2])
 			bits |= U_OLDORIGIN;
 	}
-#endif
+
 	//
 	// write the message
 	//
@@ -559,16 +552,11 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 	// current origin
 	if (bits & U_ORIGIN_XY)
 	{
-		MSG_WriteShort(msg, to->origin[0]);
-		MSG_WriteShort(msg, to->origin[1]);
-		//MSG_WriteCoord(msg, to->origin[0]);
-		//MSG_WriteCoord(msg, to->origin[1]);
+		MSG_WriteCoord(msg, to->origin[0]);
+		MSG_WriteCoord(msg, to->origin[1]);
 	}
 	if (bits & U_ORIGIN_Z)
-	{
-		MSG_WriteShort(msg, to->origin[2]);
-		//MSG_WriteCoord (msg, to->origin[2]);
-	}
+		MSG_WriteCoord(msg, to->origin[2]);
 
 	// current angles
 	if (bits & U_ANGLE_X)
@@ -578,18 +566,13 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 	if (bits & U_ANGLE_Z)
 		MSG_WriteAngle(msg, to->angles[2]);
 
-#if 0
 	// old origin (used for smoothing move)
 	if (bits & U_OLDORIGIN)
 	{
-		MSG_WriteShort (msg, to->old_origin[0]);
-		MSG_WriteShort (msg, to->old_origin[1]);
-		MSG_WriteShort (msg, to->old_origin[2]);
-		//MSG_WriteCoord (msg, to->old_origin[0]);
-		//MSG_WriteCoord (msg, to->old_origin[1]);
-		//MSG_WriteCoord (msg, to->old_origin[2]);
+		MSG_WriteCoord(msg, to->old_origin[0]);
+		MSG_WriteCoord(msg, to->old_origin[1]);
+		MSG_WriteCoord(msg, to->old_origin[2]);
 	}
-#endif
 
 	// looping sound
 	if (bits & U_LOOPSOUND)
@@ -603,7 +586,7 @@ void MSG_WriteDeltaEntity(entity_state_t* from, entity_state_t* to, sizebuf_t* m
 
 	// event
 	if (bits & U_EVENT_8)
-		MSG_WriteByte (msg, to->event);
+		MSG_WriteByte(msg, to->event);
 
 	// solid
 	if (bits & U_PACKEDSOLID)

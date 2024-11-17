@@ -238,7 +238,9 @@ void R_DrawModelEntity(rentity_t* ent)
 
 	// hack the depth range to prevent view model from poking into walls
 	if (ent->renderfx & RF_DEPTHHACK)
+	{
 		glDepthRange(gldepthmin, gldepthmin + 0.3f * (gldepthmax - gldepthmin));
+	}
 
 	// 
 	// setup common uniforms
@@ -275,7 +277,9 @@ void R_DrawModelEntity(rentity_t* ent)
 
 	// remove depth hack
 	if (ent->renderfx & RF_DEPTHHACK)
+	{
 		glDepthRange(gldepthmin, gldepthmax);
+	}
 
 	if (r_pendingflip)
 	{

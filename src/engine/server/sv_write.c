@@ -238,11 +238,11 @@ static void SV_WritePlayerstateToClient (client_frame_t *from, client_frame_t *t
 	// write it
 	//
 	MSG_WriteByte (msg, SVC_PLAYERINFO);
-	MSG_WriteShort (msg, pflags);
+	MSG_WriteLong (msg, pflags);
 
-	if (pflags & PS_EXTRABYTES) // reki --  Send the extra bytes
-		MSG_WriteShort(msg, (pflags >> 16));
-	//
+	//if (pflags & PS_EXTRABYTES) // reki --  Send the extra bytes
+	//	MSG_WriteShort(msg, (pflags >> 16));
+
 	// write the pmove_state_t
 	//
 	if (pflags & PS_M_TYPE)

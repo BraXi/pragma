@@ -421,6 +421,7 @@ typedef struct
 //
 enum
 {
+	FX_MUZZLEFLASH_NONE,
 	FX_MUZZLEFLASH_PISTOL,
 	FX_MUZZLEFLASH_RIFLE,
 	FX_MUZZLEFLASH_SHOTGUN,
@@ -567,8 +568,11 @@ typedef struct entity_state_s
 	short		modelindex;		// main model
 	byte		hidePartBits;
 
+	short		effectindex;
+	prTime_t	effectStartTime;
+
 	byte		animationIdx;
-	unsigned int animStartTime;
+	prTime_t	animStartTime;
 	short		frame;
 	byte		skinnum;		// byte
 

@@ -84,6 +84,7 @@ void PFSV_precache_image(void)
 /*
 =================
 PFSV_spawn
+Spawns a general purpose game entity
 entity spawn()
 =================
 */
@@ -100,6 +101,105 @@ void PFSV_spawn(void)
 
 	ent = SV_SpawnEntity();
 	Scr_ReturnEntity(ent);
+}
+
+/*
+=================
+PFSV_spawneffect
+Spawns en effect runner entity
+entity spawnfx(string sEffectName, [optional]vector vOrigin, [optional]vector vAngles)
+=================
+*/
+void PFSV_spawneffect(void)
+{
+#if 0
+	const char *effectname;
+	float *origin, *angles;
+	gentity_t *fxEnt;
+
+	if (sv.criticalEntitySection)
+	{
+		Scr_RunError("Cannot call '%s' in critical section.", Scr_BuiltinFuncName());
+		//Scr_ReturnEntity(sv.edicts);
+		return;
+	}
+
+	if (Scr_NumArgs() < 1)
+	{
+		Scr_RunError("Must call '%s' with name of effect.", Scr_BuiltinFuncName());
+		return;
+	}
+
+	effectname = Scr_GetParmString(0);
+
+	// FIXME: FX
+	//int effectindex = SV_EffectIndex(effectname);
+	//if(!effectindex)
+	//{
+	//	Scr_RunError("Effect '%s' doesn't exist.", effectname);
+	//	return;
+	//}
+
+	fxEnt = SV_SpawnEntity();
+	fxEnt->bEffectRunner = true;
+
+	if (Scr_NumArgs() > 1)
+	{
+		origin = Scr_GetParmVector(1);
+		VectorCopy(origin, fxEnt->v.origin);
+		SV_LinkEntity(fxEnt);
+	}
+
+	if (Scr_NumArgs() > 2)
+	{
+		angles = Scr_GetParmVector(2);
+		VectorCopy(angles, fxEnt->v.angles);
+	}
+
+	Scr_ReturnEntity(fxEnt);
+#endif
+}
+
+/*
+=================
+PFSV_playeffect
+void playfx(entity eEffectEntity, float bContinueEffect)
+=================
+*/
+void PFSV_playeffect(void)
+{
+//	gentity_t* fxEnt;
+//	fxEnt = Scr_GetParmEntity(0);
+//	if (!fxEnt->bEffectRunner)
+//		return;
+}
+
+/*
+=================
+PFSV_playloopedeffect
+void playloopedfx(entity eEffectEntity)
+=================
+*/
+void PFSV_playloopedeffect(void)
+{
+//	gentity_t* fxEnt;
+//	fxEnt = Scr_GetParmEntity(0);
+//	if (!fxEnt->bEffectRunner)
+//		return;
+}
+
+/*
+=================
+PFSV_pauseeffect
+void pausefx(entity eEffectEntity)
+=================
+*/
+void PFSV_pauseeffect(void)
+{
+//	gentity_t* fxEnt;
+//	fxEnt = Scr_GetParmEntity(0);
+//	if (!fxEnt->bEffectRunner)
+//		return;
 }
 
 /*
@@ -2046,6 +2146,8 @@ void SV_InitScriptBuiltins()
 	// entity general
 	Scr_DefineBuiltin(PFSV_spawn, PF_SV, "spawn", "entity()");
 	Scr_DefineBuiltin(PFSV_remove, PF_SV, "remove", "void(entity eEntity)");
+
+	//Scr_DefineBuiltin(PFSV_spawneffect, PF_SV, "spawneffect", "entity(string sEffectName, vector vPos, vector vAngles)");
 
 	Scr_DefineBuiltin(PFSV_getent, PF_SV, "getent", "entity(float fEntityNumber)");
 	Scr_DefineBuiltin(PFSV_nextent, PF_SV, "nextent", "entity(entity ePreviousEntity)");

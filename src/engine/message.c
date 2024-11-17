@@ -49,9 +49,10 @@ void MSG_WriteShort(sizebuf_t* sb, int c)
 {
 	byte* buf;
 
-#ifdef PARANOID
-	if (c < ((short)0x8000) || c >(short)0x7fff)
-		Com_Error(ERR_FATAL, "MSG_WriteShort: range error");
+#if 1
+	if (c > 0xffff)
+		Com_Printf("MSG_WriteShort: range error");
+		//Com_Error(ERR_FATAL, "MSG_WriteShort: range error");
 #endif
 
 	buf = SZ_GetSpace(sb, 2);
@@ -112,7 +113,9 @@ void MSG_WriteAngle(sizebuf_t* sb, float f)
 
 void MSG_WriteAngle16(sizebuf_t* sb, float f)
 {
-	MSG_WriteShort(sb, ANGLE2SHORT(f));
+	int angle;
+	angle = ANGLE2SHORT(f);
+	MSG_WriteShort(sb, angle);
 }
 
 

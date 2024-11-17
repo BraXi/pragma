@@ -77,7 +77,7 @@ void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops)
 
 	viewmodel.animbacklerp = viewmodel.backlerp;
 	VectorCopy(viewmodel.origin, viewmodel.oldorigin);
-	viewmodel.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_VIEW_MODEL;
+	viewmodel.renderfx = /*RF_MINLIGHT |*/ RF_DEPTHHACK | RF_VIEW_MODEL;
 	
 	V_AddEntity(&viewmodel);
 

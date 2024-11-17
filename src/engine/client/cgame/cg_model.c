@@ -11,6 +11,48 @@ See the attached GNU General Public License v2 for more details.
 #include "../client.h"
 #include "cg_local.h"
 
+
+/*
+==============
+CG_AddFirstPersonBodyModel
+==============
+*/
+void CG_AddFirstPersonBodyModel(const clentity_t* ent, const player_state_t *ps)
+{
+	rentity_t	body;
+	int			i;
+	vec3_t		fwd;
+
+	if (ent->current.modelindex == 0 || ps->stats[STAT_HEALTH] <= 0)
+		return;
+
+	memset(&body, 0, sizeof(body));
+
+	body.model = CL_GetDrawModel(ent->current.modelindex);
+	body.frame = ent->current.frame;
+	body.oldframe = ent->prev.frame;
+	body.animbacklerp = body.backlerp = 1.0f - cl.lerpfrac;
+	body.renderfx = RF_VIEW_MODEL;
+
+	// set up orientation and position
+	VectorSet(body.angles, 0.0f, cl.refdef.view.angles[YAW], 0.0f);
+	AnglesToAxis(body.angles, body.axis);
+	AngleVectors(body.angles, fwd, NULL, NULL);
+	
+	VectorCopy(cl.refdef.view.origin, body.origin);
+	body.origin[2] -= ps->viewoffset[2];
+
+	for (i = 0; i < 3; i++)
+	{
+		body.origin[i] = body.origin[i] - (fwd[i] * 20.0f);
+	}
+
+	VectorCopy(body.origin, body.oldorigin);
+
+	V_AddEntity(&body);
+}
+
+
 orientation_t out;
 #if 0
 int CG_GetTag(clentity_t* ent, int modelSlot, char *tagname)

@@ -654,32 +654,14 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	if (bits & U_RENDERALPHA)
 		to->renderAlpha = MSG_ReadByte(&net_message) * (1.0f / 255.0f);
 
-#if 1
-	VectorCopy(to->origin, to->old_origin);
-#else
-	// old origin (used for smoothing move)
-	if (bits & U_OLDORIGIN)
-	{
-		//MSG_ReadPos(&net_message, to->old_origin);
-		to->old_origin[0] = MSG_ReadShort(&net_message);
-		to->old_origin[1] = MSG_ReadShort(&net_message);
-		to->old_origin[2] = MSG_ReadShort(&net_message);
-	}
-#endif
-
 	// current origin
 	if (bits & U_ORIGIN_XY)
 	{
-		//to->origin[0] = MSG_ReadCoord(&net_message);
-		//to->origin[1] = MSG_ReadCoord(&net_message);
-		to->origin[0] = MSG_ReadShort(&net_message);
-		to->origin[1] = MSG_ReadShort(&net_message);
-	}
+		to->origin[0] = MSG_ReadCoord(&net_message);
+		to->origin[1] = MSG_ReadCoord(&net_message);
+}
 	if (bits & U_ORIGIN_Z)
-	{
-		to->origin[2] = MSG_ReadShort(&net_message);
-		//to->origin[2] = MSG_ReadCoord(&net_message);
-	}
+		to->origin[2] = MSG_ReadCoord(&net_message);
 
 	// current angles
 	if (bits & U_ANGLE_X)
@@ -689,6 +671,9 @@ void CL_ParseDelta(entity_state_t* from, entity_state_t* to, int number, int bit
 	if (bits & U_ANGLE_Z)
 		to->angles[2] = MSG_ReadAngle(&net_message);
 
+	// old origin (used for smoothing move)
+	if (bits & U_OLDORIGIN)
+		MSG_ReadPos(&net_message, to->old_origin);
 
 	// looping sound
 	if (bits & U_LOOPSOUND)
@@ -933,9 +918,10 @@ void CL_ParsePlayerstate(frame_t* oldframe, frame_t* newframe)
 	else
 		memset(state, 0, sizeof(*state));
 
-	flags = MSG_ReadShort(&net_message);
-	if (flags & PS_EXTRABYTES)
-		flags = (MSG_ReadShort(&net_message) << 16) | (flags & 0xFFFF); // reki --  Allow extra bytes, so we don't choke ourselves
+	flags = MSG_ReadLong(&net_message);
+	
+	//if (flags & PS_EXTRABYTES)
+	//	flags = (MSG_ReadShort(&net_message) << 16) | (flags & 0xFFFF); // reki --  Allow extra bytes, so we don't choke ourselves
 
 	//
 	// parse the pmove_state_t

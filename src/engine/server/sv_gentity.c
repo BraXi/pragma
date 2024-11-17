@@ -265,8 +265,8 @@ void SV_CallSpawnForEntity(gentity_t* ent)
 	if (ent == sv.edicts)
 	{
 		// worldspawn hack
-		ent->inuse = 1;
-		ent->v.modelindex = 1;
+		ent->inuse = true;
+		ent->v.modelindex = MODELINDEX_WORLD;
 		sv.num_edicts++;
 	}
 
@@ -509,6 +509,18 @@ void SV_AttachModel(gentity_t *self, const char* tagname, const char *model)
 	}
 #endif
 
+	// try to swap with whats attached first
+	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
+	{
+		attachInfo = &self->s.attachments[i];
+		if (attachInfo->parentTag == (tag+1))
+		{
+			attachInfo->modelindex = modindex;
+			//attachInfo->parentTag = tag + 1; // must offset tag by 1 for network
+			return;
+		}
+	}
+
 	for (i = 0; i < MAX_ATTACHED_MODELS; i++)
 	{
 		attachInfo = &self->s.attachments[i];
@@ -516,9 +528,11 @@ void SV_AttachModel(gentity_t *self, const char* tagname, const char *model)
 		{ 
 			attachInfo->modelindex = modindex;
 			attachInfo->parentTag = tag + 1; // must offset tag by 1 for network
-			break;
+			return;
 		}
 	}
+
+	Com_DPrintf(DP_GAME, "Could not attach '%s' on tag `%s` to entity %s - MAX_ATTACHED_MODELS\n", model, tagname, Scr_GetString(self->v.classname));
 }
 
 

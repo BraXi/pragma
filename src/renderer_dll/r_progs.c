@@ -34,7 +34,7 @@ static glprogloc_t progUniLocs[NUM_LOCS] =
 	{ LOC_LIGHTSTYLES,		"lightstyles",		F_VECTOR3 }, //F_VECTOR3*4
 	{ LOC_COLOR4,			"color_rgba",		F_FLOAT },
 	{ LOC_SCALE,			"scale",			F_VECTOR3 },
-	{ LOC_TIME,				"time",				F_FLOAT }, // fixme: unset
+	{ LOC_TIME,				"time",				F_FLOAT },
 
 	/* md3 models */
 	{ LOC_DIRECT_COLOR,		"directLightColor",		F_VECTOR3 },

@@ -942,7 +942,7 @@ void SCR_UpdateScreen (void)
 		//
 
 		re.SetColor(1, 1, 1, 1);
-		//CG_DrawGUI();
+		CG_DrawGUI();
 
 		re.SetColor(1, 1, 1, 1);
 		UI_Draw();

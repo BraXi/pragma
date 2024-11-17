@@ -117,6 +117,7 @@ static inline void CL_EntityPositionAndRotation(clentity_t* clent, entity_state_
 {
 	int i;
 	float	current_angles, previous_angles;
+	vec3_t temp;
 
 	//
 	// ORIGIN
@@ -144,11 +145,20 @@ static inline void CL_EntityPositionAndRotation(clentity_t* clent, entity_state_
 		{
 			current_angles = clent->current.angles[i];
 			previous_angles = clent->prev.angles[i];
-			refent->angles[i] = LerpAngle(previous_angles, current_angles, cl.lerpfrac);
+			clent->lerp_angles[i] = refent->angles[i] = LerpAngle(previous_angles, current_angles, cl.lerpfrac);
 		}
 	}
 
-	AnglesToAxis(refent->angles, refent->axis);
+	if (clent->current.eType == 1) // ET_PLAYER
+	{
+		VectorClear(temp);
+		temp[1] = refent->angles[1];
+		AnglesToAxis(temp, refent->axis);
+	}
+	else
+	{
+		AnglesToAxis(refent->angles, refent->axis);
+	}
 }
 
 /*
@@ -306,7 +316,7 @@ void CL_AddPacketEntities(frame_t* frame)
 			AngleVectors(rent.angles, forward, NULL, NULL);
 			VectorMA(rent.origin, -10, forward, rent.origin);
 #else
-			rent.renderfx |= RF_VIEWERMODEL;	// only draw from mirrors
+//			rent.renderfx |= RF_VIEWERMODEL;	// only draw from mirrors
 			continue;
 #endif
 		}
@@ -330,6 +340,11 @@ void CL_AddPacketEntities(frame_t* frame)
 		rent.alpha = state->renderAlpha;
 		VectorCopy(state->renderColor, rent.renderColor);
 		rent.scale = state->renderScale;
+
+		if (clent->current.eType == 1)
+		{
+			rent.angles[0] = rent.angles[2] = 0.0f;
+		}
 
 		// add entity to refresh list
 		V_AddEntity(&rent);
@@ -358,6 +373,8 @@ void CL_AddPacketEntities(frame_t* frame)
 
 
 
+
+void CG_AddFirstPersonBodyModel(const clentity_t* ent, const player_state_t* ps);
 
 
 /*
@@ -464,8 +481,9 @@ void CL_CalcViewValues()
 	cl.refdef.view.fx.noise = ops->fx.noise + lerp * (ps->fx.noise - ops->fx.noise);
 
 	//
-	// add view model
+	// add view models
 	//
+	//CG_AddFirstPersonBodyModel(&cl_entities[cl.playernum + 1], &cl.frame.playerstate);
 	CG_AddViewWeapon(ps, ops);
 }
 

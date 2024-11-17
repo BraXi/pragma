@@ -510,18 +510,18 @@ void CG_InitScriptBuiltins()
 	CG_StubScriptBuiltins();
 #else
 	// precache
-	Scr_DefineBuiltin(PFCG_modelindex, PF_CL, "precache_model", "float(string fn)");
-	Scr_DefineBuiltin(PFCG_precache_sound, PF_CL, "precache_sound", "float(string fn)");
-	Scr_DefineBuiltin(PFCG_precache_image, PF_CL, "precache_image", "float(string fn)");
+	Scr_DefineBuiltin(PFCG_modelindex, PF_CL, "precache_model", "float(string sModelName)");
+	Scr_DefineBuiltin(PFCG_precache_sound, PF_CL, "precache_sound", "float(string sSoundName)");
+	Scr_DefineBuiltin(PFCG_precache_image, PF_CL, "precache_image", "float(string sImageName)");
 
 	// collision
-	Scr_DefineBuiltin(PFCG_pointcontents, PF_CL, "pointcontents", "float(vector v)");
-	Scr_DefineBuiltin(PFCG_trace, PF_CL, "trace", "void(vector s, vector bmins, vector bmaxs, vector e, float ie, int cm)");
+	Scr_DefineBuiltin(PFCG_pointcontents, PF_CL, "pointcontents", "float(vector vPos)");
+	Scr_DefineBuiltin(PFCG_trace, PF_CL, "trace", "void(vector vStartPos, vector vBoxMins, vector vBoxMaxs, vector vEndPos, float fIgnoreEntNum, int iContentMask)");
 
 	// config strings and stats
-	Scr_DefineBuiltin(PFCG_getconfigstring, PF_CL, "getconfigstring", "string(int idx)");
-	Scr_DefineBuiltin(PFCG_getstat, PF_CL, "getstat", "float(float idx)");
-	Scr_DefineBuiltin(PFCG_getclientname, PF_CL, "getclientname", "string(int idx)");
+	Scr_DefineBuiltin(PFCG_getconfigstring, PF_CL, "getconfigstring", "string(int fIndex)");
+	Scr_DefineBuiltin(PFCG_getstat, PF_CL, "getstat", "float(float fIndex)");
+	Scr_DefineBuiltin(PFCG_getclientname, PF_CL, "getclientname", "string(int fClientNum)");
 
 	// message reading
 	Scr_DefineBuiltin(PFCG_MSG_ReadChar, PF_CL, "MSG_ReadChar", "float()");
@@ -537,17 +537,17 @@ void CG_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_MSG_ReadString, PF_CL, "MSG_ReadString", "string()");
 
 	// drawing
-	Scr_DefineBuiltin(PFCG_drawstring, PF_CL, "drawstring", "void(vector xya, float fs, vector c, float a, string s1, ...)");
-	Scr_DefineBuiltin(PFCG_drawimage, PF_CL, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string img)");
-	Scr_DefineBuiltin(PFCG_drawfill, PF_CL, "drawfill", "void(float x, float y, float w, float h, vector c, float a)");
+	Scr_DefineBuiltin(PFCG_drawstring, PF_CL, "drawstring", "void(vector vXYAlign, float fScale, vector vColor, float fAlpka, string sText, ...)");
+	Scr_DefineBuiltin(PFCG_drawimage, PF_CL, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string sImageName)");
+	Scr_DefineBuiltin(PFCG_drawfill, PF_CL, "drawfill", "void(float x, float y, float fWidth, float fHeight, vector vColor, float fAlpha)");
 
 	// sound
-	Scr_DefineBuiltin(PFCG_localsound, PF_CL, "localsound", "void(string s, float v)");
-	Scr_DefineBuiltin(PFCG_playsound, PF_CL, "playsound", "void(vector v, float en, string snd, float ch, float vol, float att, float tofs)");
+	Scr_DefineBuiltin(PFCG_localsound, PF_CL, "localsound", "void(string sSoundName, float fVolume)");
+	Scr_DefineBuiltin(PFCG_playsound, PF_CL, "playsound", "void(vector vPos, float fEntNum, string sSoundName, float fChannel, float fVolume, float fAttenuation, float fTimeOffset)");
 
 	// commands
-	Scr_DefineBuiltin(PFCG_addcommand, PF_CL, "addcommand", "void(string cn, void() f)");
-	Scr_DefineBuiltin(PFCG_getbindkey, PF_CL, "getbindkey", "string(string bind)");
+	Scr_DefineBuiltin(PFCG_addcommand, PF_CL, "addcommand", "void(string sCmdName, void() fnCmdFunction)");
+	Scr_DefineBuiltin(PFCG_getbindkey, PF_CL, "getbindkey", "string(string sCmdName)");
 
 	// visual
 //	Scr_DefineBuiltin(PFCG_setmodel, PF_CL, "setmodel", "void(entity e, string m)");

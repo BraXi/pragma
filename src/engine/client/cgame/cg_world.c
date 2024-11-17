@@ -30,7 +30,7 @@ static clipHandle_t CG_HullForEntity(entity_state_t* ent)
 		model = CL_GetClipModel(ent->modelindex);
 		if (!model)
 		{
-			Com_Error(ERR_DROP, "CG_HullForEntity: non BSP model for entity %i\n", ent->number);
+			Com_Error(ERR_DROP, __FUNCTION__": non BSP model for entity %i\n", ent->number);
 			return -1;
 		}
 		return model;
@@ -111,7 +111,7 @@ trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int content
 	if (!maxs)
 		maxs = vec3_origin;
 
-	memset(&trace, 0, sizeof(trace_t));
+	CM_ClearTrace(&trace);
 
 	// check against world
 	CM_BoxTrace(&trace, start, end, mins, maxs, 0, contentsMask, 0);

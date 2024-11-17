@@ -21,6 +21,7 @@ void PositionRotatedEntityOnTag(rentity_t* entity, rentity_t* parent, int parent
 static muzzleflash_t cl_muzzleflashes[FX_WEAPON_MUZZLEFLASHES] =
 {
 		//light radius,	light color,		scale,	volume,	sound
+		{200,			{1, 1, 1},			1.4f,	0.0f,	"weapons/deagle/shot.wav"},
 		{240,			{1, 0.9, 0.7},		1.4f,	0.7f,	"weapons/deagle/shot.wav"}, 	// FX_MUZZLEFLASH_PISTOL
 		{300,			{1, 0.9, 0.8},		1.0f,	0.6f,	"weapons/ak47/shot.wav"},	// FX_MUZZLEFLASH_RIFLE
 		{200,			{1, 1, 0.7},		1.0f,	1.0f,	NULL}	// FX_MUZZLEFLASH_SHOTGUN
@@ -162,6 +163,7 @@ void CG_AddViewFlashLight(rentity_t* parentEnt, player_state_t* ps)
 			PositionRotatedEntityOnTag(&ent, parentEnt, ps->viewmodel[0], tag);	
 			VectorAngles_Fixed(ent.axis[0], ent.angles);
 
+
 			//VectorCopy(cl.refdef.view.origin, ent.origin);
 		
 			ent.model = cgMedia.mod_v_flashlight;
@@ -218,15 +220,25 @@ void CG_AddFlashLightToEntity(clentity_t *cent, rentity_t* parentEnt)
 			memset(&ent, 0, sizeof(ent));
 			AxisClear(ent.axis);
 			PositionRotatedEntityOnTag(&ent, parentEnt, cent->current.modelindex, tag);
-			VectorAngles_Fixed(ent.axis[0], ent.angles);
+
+			if (cent->current.eType == 1) // ET_PLAYER
+			{
+				AngleVectors(cent->lerp_angles, v_fwd, NULL, NULL);
+
+				VectorAngles_Fixed(v_fwd, ent.angles);				
+				V_AddSpotLight(ent.origin, v_fwd, 240, -0.95, 1.0f, 0.85f, 0.7f);
+			}
+			else
+			{
+				VectorAngles_Fixed(ent.axis[0], ent.angles);
+				V_AddSpotLight(ent.origin, ent.axis[0], 240, -0.95, 1.0f, 0.85f, 0.7f);
+			}
 
 			ent.model = cgMedia.mod_w_flashlight;
 			ent.renderfx = RF_FULLBRIGHT | RF_TRANSLUCENT;
-			ent.alpha = 0.075f;
+			ent.alpha = 0.175f;
 			V_AddEntity(&ent);
-
 			V_AddPointLight(ent.origin, 32, 1.0f, 0.85f, 0.6f); //a little more yellowish for better effect
-			V_AddSpotLight(ent.origin, ent.axis[0], 240, -0.95, 1.0f, 0.85f, 0.7f);
 		}
 	}
 	else

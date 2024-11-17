@@ -240,7 +240,7 @@ void Netchan_Transmit (netchan_t *chan, int length, byte *data)
 
 	// send the qport if we are a client
 	if (chan->sock == NS_CLIENT)
-		MSG_WriteShort (&send, net_qport->value);
+		MSG_WriteLong (&send, net_qport->value);
 
 // copy the reliable message to the packet first
 	if (send_reliable)
@@ -297,7 +297,7 @@ qboolean Netchan_Process (netchan_t *chan, sizebuf_t *msg)
 
 	// read the qport if we are a server
 	if (chan->sock == NS_SERVER)
-		qport = MSG_ReadShort (msg);
+		qport = MSG_ReadLong (msg);
 
 	reliable_message = sequence >> 31;
 	reliable_ack = sequence_ack >> 31;

@@ -360,7 +360,7 @@ void R_DrawParticles( int num_particles, const particle_t particles[] )
 
 	R_BindProgram(GLPROG_PARTICLE);
 	R_Blend(true);
-	R_BlendFunc(GL_SRC_ALPHA, GL_ONE);
+	//R_BlendFunc(GL_SRC_ALPHA, GL_ONE);
 	R_WriteToDepthBuffer(GL_FALSE);
 	glDisable(GL_CULL_FACE);
 
