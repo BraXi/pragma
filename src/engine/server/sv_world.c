@@ -846,11 +846,8 @@ qboolean SV_EntityContact(vec3_t mins, vec3_t maxs, const gentity_t* ent, int ca
 	CM_ClearTrace(&trace);
 	clipHandle = SV_ClipHandleForEntity(ent);
 
-	if (clipHandle == BOX_MODEL_HANDLE || ent == sv.edicts)
-	{
-		angles = vec3_origin;
-	}
-	else
+	angles = vec3_origin;
+	if (ent != sv.edicts && (SV_IsBrushModel(ent->v.modelindex) || ent->v.solid == SOLID_BBOX_ORIENTED))
 	{
 		angles = ent->v.angles;
 	}
@@ -915,7 +912,8 @@ static void SV_ClipMoveToEntities(moveclip_t *clip)
 			if(touch->v.contents != CONTENTS_NONE)
 				CM_SetTempBoxModelContents(touch->v.contents);
 
-			if (touch->v.solid == SOLID_BBOX_ORIENTED)
+			// looks mesy af
+			if (clipHandle != CAPSULE_MODEL_HANDLE && touch->v.solid == SOLID_BBOX_ORIENTED)
 			{
 				angles = touch->v.angles;
 			}

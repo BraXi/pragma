@@ -763,6 +763,6 @@ SV_PositionTagOnEntity
 orientation_t* SV_PositionTagOnEntity(gentity_t* ent, const char* tagName)
 {
 	orientation_t* tag;
-	tag = SV_PositionTag(ent->v.origin, ent->v.angles, (int)ent->v.modelindex, (int)ent->v.animFrame, tagName);
+	tag = SV_PositionTag(ent->v.origin, ent->v.angles, ent->v.modelindex, ent->v.animFrame, tagName);
 	return tag;
 }

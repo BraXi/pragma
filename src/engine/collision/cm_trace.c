@@ -1604,7 +1604,8 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 	VectorSubtract( end_l, origin, end_l );
 
 	// rotate start and end into the models frame of reference
-	if ( model != BOX_MODEL_HANDLE && (angles[0] || angles[1] || angles[2]) ) 
+	//if ( model != BOX_MODEL_HANDLE && (angles[0] || angles[1] || angles[2]) ) 
+	if (!VectorCompare(angles, vec3_origin)) // braxi -- rotating boxes
 	{
 		rotated = true;
 	} 

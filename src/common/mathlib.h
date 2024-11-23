@@ -105,7 +105,7 @@ void VectorScale(vec3_t in, vec_t scale, vec3_t out);
 void Vector4Scale(vec4_t in, vec_t scale, vec4_t out);
 
 int Vector2Compare(vec2_t v1, vec2_t v2);
-int VectorCompare(vec3_t v1, vec3_t v2);
+int VectorCompare(const vec3_t v1, const vec3_t v2);
 int Vector4Compare(vec4_t v1, vec4_t v2);
 
 vec_t Vector2Length(vec2_t v);

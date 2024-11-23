@@ -418,6 +418,9 @@ void PFSV_setangles(void)
 	BUILTIN_NOT_UNUSED(ent);
 	BUILTIN_NOT_WORLD(ent);
 
+	if (VectorCompare(angles, ent->v.angles))
+		return; // angles haven't changed
+
 	VectorCopy(angles, ent->v.angles);
 
 	for(i = 0; i < 3; i++)
@@ -432,11 +435,11 @@ void PFSV_setangles(void)
 		// inline models should always have their YAW set properly
 		if(ent->v.angles[YAW] == 0.0f)
 			ent->v.angles[YAW] = 360.0f;
-
-		// solid inline models DO rotate their bounds so relink them
-		if ((int)ent->v.solid > SOLID_NOT)
-			SV_LinkEntity(ent);
 	}
+
+	// inline models and rotated boxes update their absbox
+	if (SV_IsBrushModel(ent->v.modelindex) || ent->v.solid == SOLID_BBOX_ORIENTED)
+		SV_LinkEntity(ent);
 
 	// if this is the player update their view too
 	if (ent->client)
