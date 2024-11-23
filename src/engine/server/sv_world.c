@@ -391,16 +391,14 @@ void SV_LinkEntity(gentity_t *ent)
 	VectorSubtract (ent->v.maxs, ent->v.mins, ent->v.size);
 
 	// encode the size into the entity_state_t for client prediction
+	ent->s.packedSolid = SOLID_NOT;
 	switch ((int)ent->v.solid)
 	{
 	case SOLID_BBOX:
+	case SOLID_CAPSULE:
 		if (ent->v.contents & ( CONTENTS_SOLID | CONTENTS_BODY ) && !VectorCompare(ent->v.mins, ent->v.maxs))
 		{
 			ent->s.packedSolid = SV_PackSolid32(ent);
-		}
-		else
-		{
-			ent->s.packedSolid = SOLID_NOT;
 		}
 		break;
 
@@ -651,8 +649,8 @@ clipHandle_t SV_ClipHandleForEntity(const gentity_t* ent)
 	{
 		if (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER)
 		{
-			// explicit hulls in the BSP model
-			int idx = 0 - ent->v.modelindex;
+			// Use explicit inline model
+			int idx = 0 - ent->v.modelindex; // Do this because model index is negated and CM doesn't like it
 			return CM_InlineModel(idx);
 		}
 	}
@@ -688,7 +686,7 @@ int SV_PointContents(vec3_t p)
 	// get base contents from world
 	contents = CM_PointContents(p, 0);
 
-	// or in contents from all the other entities
+	// Or in contents from all the other entities
 	num = SV_AreaEntities(p, p, touch, MAX_GENTITIES, AREA_SOLID);
 
 	for (i = 0; i < num; i++)
@@ -758,7 +756,8 @@ static void SV_SetTraceEnt(trace_t* trace, gentity_t* ent)
 	if (ent == NULL)
 	{
 		trace->entityNum = ENTITYNUM_NULL;
-		trace->ent = sv.edicts;
+		trace->ent = sv.edicts; // FIXME: this is incorrect!
+		//trace->ent = NULL; // this is correct but causes crashes in sv_movestep (which could've been fixed faster than writing this comment)
 	}
 	else
 	{
@@ -933,8 +932,6 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 			clip->trace.startsolid |= oldStart;
 			SV_SetTraceEnt(&clip->trace, touch);
 		}
-
-		
 	}
 }
 

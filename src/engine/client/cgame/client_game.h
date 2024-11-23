@@ -31,18 +31,18 @@ typedef struct
 
 typedef struct
 {
-	unsigned int	time;
+	unsigned int		time;
 
 	//
 	// qcvm
 	//
-	qboolean			qcvm_active;
+	qboolean	qcvm_active;
 	cl_globalvars_t		*script_globals;	// qcvm globals
 
-	struct clentity_t			*localEntities;			// local (not broadcasted) entities allocated by qcvm
-	int					maxLocalEntities;		// number of progs allocated entities
-	int					localEntitySize;		// retrieved from progs
-	int					numActiveLocalEnts;		// increases towards MAX_CLENTITIES
+	struct clentity_t	*localEntities;			// local (not broadcasted) entities allocated by qcvm
+	int			maxLocalEntities;		// number of progs allocated entities
+	int			localEntitySize;		// retrieved from progs
+	int			numActiveLocalEnts;		// increases towards MAX_CLENTITIES
 } cg_t;
 
 extern cg_t cg;
@@ -98,6 +98,11 @@ typedef struct
 	int		flags;
 } animstate_t;
 
+//
+// cg_world.c
+//
+
+void CG_BuildSolidEntitiesList();
 
 //extern	cdlight_t	cl_dlights[MAX_DLIGHTS];
 

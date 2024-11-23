@@ -1017,10 +1017,10 @@ void printvec(char* str, vec3_t v)
 
 void CL_PrintEnts_f(void)
 {
-	entity_state_t* ent;
+	//entity_state_t* ent;
 	int			num;
 	int i;
-	
+	clentity_t* ent;
 	if (!CL_CheatsAllowed())
 	{
 		Com_Printf("'%s' - cheats not allowed\n", Cmd_Argv(0));
@@ -1036,20 +1036,19 @@ void CL_PrintEnts_f(void)
 	for (i = 0; i < cl.frame.num_entities; i++)
 	{
 		num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
-		ent = &cl_parse_entities[num];
+		//ent = &cl_parse_entities[num];
+		ent = &cl_entities[i];
 
 		Com_Printf("\n--- ENTITY %i (%i) ---\n", i, num);
 
-		Com_Printf("number: %i\n", ent->number);
+		Com_Printf("number: %i\n", ent->current.number);
+		printvec("origin", ent->current.origin);
+		printvec("angles", ent->current.angles);
 
-		printvec("origin", ent->origin);
-		printvec("old_origin", ent->old_origin);
-		printvec("angles", ent->angles);
-
-		if (ent->modelindex > 0)
-			Com_Printf("modelindex: %i (%s)\n", ent->modelindex, cl.configstrings[CS_MODELS + ent->modelindex]);
+		if (ent->current.modelindex > 0)
+			Com_Printf("model index: %i (%s)\n", ent->current.modelindex, cl.configstrings[CS_MODELS + ent->current.modelindex]);
 		else
-			Com_Printf("modelindex: %i\n", ent->modelindex);
+			Com_Printf("bmodel index: %i\n", ent->current.modelindex);
 
 #if 0 // FIXME: BMODELS-LOVE
 		if (ent->modelindex != 0)
@@ -1566,11 +1565,11 @@ clipHandle_t CL_GetClipModel(int modelindex)
 
 	if (modelindex >= 0)
 	{
-		if (modelindex >= MAX_MODELS || modelindex < 1) 
+		if (modelindex >= MAX_MODELS || modelindex < 0) 
 		{
 			// modelindex 0 is reserved for no model
-			Com_Error(ERR_DROP, "%s Bad model index %i.\n", __FUNCTION__, modelindex);
-			return -1;
+			Com_Printf(__FUNCTION__": Bad model index %i.\n", modelindex);
+			return 0;
 		}
 
 		return cl.model_clip[modelindex];
@@ -1580,14 +1579,15 @@ clipHandle_t CL_GetClipModel(int modelindex)
 		realindex = abs(modelindex);
 		if (realindex >= CM_NumInlineModels())
 		{
-			Com_Error(ERR_DROP, "%s Bad inline model index %i.\n", __FUNCTION__, modelindex);
-			return -1;
+			//Com_Error(ERR_DROP, "%s Bad inline model index %i.\n", __FUNCTION__, modelindex);
+			Com_Printf(__FUNCTION__": Bad inline model index %i.\n", modelindex);
+			return 0;
 		}
 
 		return cl.inlinemodel_clip[realindex];
 	}
 	else
 	{
-		return -1;
+		return 0;
 	}
 }

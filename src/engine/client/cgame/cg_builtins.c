@@ -21,6 +21,8 @@ See the attached GNU General Public License v2 for more details.
 extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 extern struct sfx_t* CG_FindOrRegisterSound(const char* filename);
 
+trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum);
+
 static void CheckEmptyString(const char* s) // definitely need to make it a shared code...
 {
 	if(s[0] <= ' ')
@@ -181,13 +183,17 @@ int contents = pointcontents(vector point)
 */
 static void PFCG_pointcontents(void)
 {
-	float* point = Scr_GetParmVector(0);
-	Scr_ReturnFloat(CG_PointContents(point));
+	float* point;
+	int contents;
+
+	point = Scr_GetParmVector(0);
+	contents = CG_PointContents(point);
+	Scr_ReturnFloat(contents);
 }
 
 /*
 =================
-PFSV_trace
+PFCG_trace
 
 Moves the given mins/maxs volume through the world from start to end.
 ignoreEntNum is explicitly not checked. contentmask is the collision contents mask
@@ -195,12 +201,11 @@ ignoreEntNum is explicitly not checked. contentmask is the collision contents ma
 trace(vector start, vector minS, vector maxS, vector end, float ignoreEnt, int contentmask)
 =================
 */
-extern trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum);
 static void PFCG_trace(void)
 {
 	trace_t		trace;
-	float* start, * end, * min, * max;
-	int ignoreEntNum;
+	float		*start, *end, *min, *max;
+	int			ignoreEntNum;
 	int			contentmask;
 
 	start = Scr_GetParmVector(0);
@@ -223,21 +228,10 @@ static void PFCG_trace(void)
 //	cg.script_globals->trace_entity = ENT_TO_VM(cg.localEntities); // FIXME
 	cg.script_globals->trace_entitynum = trace.entityNum;
 	cg.script_globals->trace_contents = trace.contents;
+	cg.script_globals->trace_flags = trace.surfaceFlags;
 
-#if 0
-	if (trace.surface)
-	{
-		cg.script_globals->trace_material = Scr_SetTempString(trace.surface->name);
-		cg.script_globals->trace_flags = trace.surface->flags;
-		//cg.script_globals->trace_surface_value = trace.surface->value;
-	}
-	else
-	{
-		cg.script_globals->trace_material = Scr_SetTempString("");
-		cg.script_globals->trace_flags = 0;
-		//cg.script_globals->trace_surface_value = 0;
-	}
-#endif
+	//cg.script_globals->trace_material = Scr_SetTempString(trace.surface->name);
+
 }
 
 // read network packets

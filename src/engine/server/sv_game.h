@@ -49,7 +49,9 @@ typedef enum
 	SOLID_BBOX,				// touch on edge
 	SOLID_TRIGGER,			// touch when inside, after moving / OR bsp clip, touch on edge
 	SOLID_BSP,				// bsp clip, touch on edge
-	SOLID_PATHNODE			// only SVF_MONSTER entities touch when inside, after moving
+	SOLID_PATHNODE,			// only SVF_MONSTER entities touch when inside, after moving
+	SOLID_CAPSULE,			// touch on edge, use capsule
+	SOLID_ORIENTED_BOX		// touch on edge, the box can be rotated
 } solid_t;
 
 // entity->v.movetype values

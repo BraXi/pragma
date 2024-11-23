@@ -114,7 +114,7 @@ static void SV_SetWorldEntityFields()
 	gentity_t* world = &sv.edicts[ENTITYNUM_WORLD];
 	world->v.classname = sv.cstr.worldspawn;
 	world->v.model = Scr_SetString(sv.configstrings[CS_MODELS + 1]); // set model name
-	world->v.modelindex = 1; // world model MUST always be index 1	
+	world->v.modelindex = MODELINDEX_WORLD; // world model MUST always be index 1	
 	world->v.movetype = MOVETYPE_PUSH;
 	world->v.solid = SOLID_BSP;
 }

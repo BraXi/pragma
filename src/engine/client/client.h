@@ -73,6 +73,9 @@ typedef struct
 
 	animstate_t	anim;
 
+	// for solidity, extracted from entity_state
+	vec3_t		mins, maxs;
+
 	// local entities
 	int			number;
 	qboolean	inuse;
