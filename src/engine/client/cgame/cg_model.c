@@ -20,7 +20,6 @@ CG_AddFirstPersonBodyModel
 void CG_AddFirstPersonBodyModel(const clentity_t* ent, const player_state_t *ps)
 {
 	rentity_t	body;
-	int			i;
 	vec3_t		fwd;
 
 	if (ent->current.modelindex == 0 || ps->stats[STAT_HEALTH] <= 0)
@@ -42,10 +41,11 @@ void CG_AddFirstPersonBodyModel(const clentity_t* ent, const player_state_t *ps)
 	VectorCopy(cl.refdef.view.origin, body.origin);
 	body.origin[2] -= ps->viewoffset[2];
 
-	for (i = 0; i < 3; i++)
-	{
-		body.origin[i] = body.origin[i] - (fwd[i] * 20.0f);
-	}
+	//if(!ent->isOnLadder)
+	//{
+	//	for (int i = 0; i < 3; i++)
+	//		body.origin[i] = body.origin[i] - (fwd[i] * 20.0f);
+	//}
 
 	VectorCopy(body.origin, body.oldorigin);
 

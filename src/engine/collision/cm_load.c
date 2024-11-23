@@ -748,7 +748,7 @@ cmodel_t *CM_ClipHandleToModel( clipHandle_t handle )
 	{
 		return &cm.cmodels[handle];
 	}
-	if ( handle == BOX_MODEL_HANDLE ) 
+	if (handle == BOX_MODEL_HANDLE || handle == CAPSULE_MODEL_HANDLE) 
 	{
 		return &box_model;
 	}
@@ -915,7 +915,6 @@ Capsules are handled differently though.
 */
 clipHandle_t CM_TempBoxModel(const vec3_t mins, const vec3_t maxs, int capsule) 
 {
-
 	VectorCopy( mins, box_model.mins );
 	VectorCopy( maxs, box_model.maxs );
 

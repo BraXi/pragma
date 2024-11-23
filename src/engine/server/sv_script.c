@@ -36,15 +36,15 @@ void Scr_EntityPreThink(gentity_t* self)
 	Scr_Execute(VM_SVGAME, self->v.prethink, __FUNCTION__);
 }
 
-void Scr_Think(gentity_t* self)
+void SV_RunThinkScript(gentity_t* self)
 {
+	self->v.nextthink = 0;
+
 	if (!self->v.think)
 	{
-		Com_Error(ERR_DROP,"Scr_Think: entity %i has no think function set\n", NUM_FOR_EDICT(self));
+		Com_Printf(__FUNCTION__": Entity %i should think in frame %i but has no think function.\n", NUM_FOR_EDICT(self), sv.gameFrame);
 		return;
 	}
-
-	self->v.nextthink = 0;	
 	sv.script_globals->sv_time = sv.time;
 	sv.script_globals->g_time = sv.gameTime;
 	sv.script_globals->self = GENT_TO_PROG(self);
@@ -413,8 +413,8 @@ void SV_ProgVarsToEntityState(gentity_t* ent)
 
 	ent->s.animationIdx = ent->v.anim;
 	ent->s.animStartTime = ent->v.animstarttime;
-	ent->s.frame = (int)ent->v.animFrame;
-	ent->s.skinnum = (int)ent->v.skinnum;
+	ent->s.frame = ent->v.animFrame;
+	ent->s.skinnum = ent->v.skinnum;
 	ent->s.effects = ent->v.effects;
 
 	ent->s.renderFlags = ent->v.renderFlags;
@@ -422,8 +422,8 @@ void SV_ProgVarsToEntityState(gentity_t* ent)
 	VectorCopy(ent->v.renderColor, ent->s.renderColor);
 	ent->s.renderAlpha = ent->v.renderAlpha;
 
-	ent->s.loopingSound = (int)ent->v.loopsound;
-	ent->s.event = (int)ent->v.event;
+	ent->s.loopingSound = ent->v.loopsound;
+	ent->s.event = ent->v.event;
 }
 
 /*

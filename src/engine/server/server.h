@@ -430,6 +430,9 @@ void SV_ClipToEntity(trace_t* trace, gentity_t* clipent, vec3_t start, vec3_t mi
 qboolean SV_EntityContact(vec3_t mins, vec3_t maxs, const gentity_t* ent, int capsule);
 
 trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *ignoreEntity, int contentmask, qboolean bCapsule);
+trace_t SV_TraceLine(vec3_t start, vec3_t end, gentity_t* ignoreEntity, int contentmask);
+trace_t SV_TraceBox(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, gentity_t* ignoreEntity, int contentmask);
+trace_t SV_TraceCapsule(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, gentity_t* ignoreEntity, int contentmask);
 
 // mins and maxs are relative
 

@@ -66,7 +66,7 @@ realcheck:
 	start[0] = stop[0] = (mins[0] + maxs[0]) * 0.5;
 	start[1] = stop[1] = (mins[1] + maxs[1]) * 0.5;
 	stop[2] = start[2] - 2 * STEPSIZE;
-	trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, (ent->v.svflags & SVF_CAPSULE));
+	trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, (ent->v.solid == SOLID_CAPSULE));
 
 	if (trace.fraction == 1.0)
 	{
@@ -83,7 +83,7 @@ realcheck:
 			start[0] = stop[0] = x ? maxs[0] : mins[0];
 			start[1] = stop[1] = y ? maxs[1] : mins[1];
 
-			trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, (ent->v.svflags & SVF_CAPSULE));
+			trace = SV_Trace(start, vec3_origin, vec3_origin, stop, ent, MASK_MONSTERSOLID, (ent->v.solid == SOLID_CAPSULE));
 
 			if (trace.fraction != 1.0 && trace.endpos[2] > bottom)
 			{
@@ -121,7 +121,7 @@ void SV_CheckGround(gentity_t* ent)
 	point[1] = ent->v.origin[1];
 	point[2] = ent->v.origin[2] - 0.25;
 
-	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID, (ent->v.svflags & SVF_CAPSULE));
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID, (ent->v.solid == SOLID_CAPSULE));
 
 	// check steepness
 	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
@@ -155,7 +155,7 @@ gentity_t* SV_TestEntityPosition(gentity_t* ent)
 	else
 		mask = MASK_SOLID;
 
-	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask, (ent->v.svflags & SVF_CAPSULE));
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, ent->v.origin, ent, mask, (ent->v.solid == SOLID_CAPSULE));
 
 	if (trace.startsolid)
 	{
@@ -262,7 +262,7 @@ int SV_FlyMove(gentity_t* ent, float time, int mask)
 		for (i = 0; i < 3; i++)
 			end[i] = ent->v.origin[i] + time_left * ent->v.velocity[i];
 
-		trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, end, ent, mask, (ent->v.svflags & SVF_CAPSULE));
+		trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, end, ent, mask, (ent->v.solid == SOLID_CAPSULE));
 
 		if (trace.allsolid)
 		{	
@@ -403,7 +403,7 @@ retry:
 	else
 		mask = MASK_SOLID;
 
-	trace = SV_Trace(start, ent->v.mins, ent->v.maxs, end, ent, mask, false);
+	trace = SV_Trace(start, ent->v.mins, ent->v.maxs, end, ent, mask, (ent->v.solid == SOLID_CAPSULE));
 
 	VectorCopy(trace.endpos, ent->v.origin);
 	SV_LinkEntity(ent);
@@ -757,7 +757,7 @@ void SV_Physics_Toss(gentity_t* ent)
 			Com_Error(ERR_DROP, __FUNCTION__": Entity %i (%s) has bad groundentity_num %i\n", NUM_FOR_ENT(ent), Scr_GetString(ent->v.classname), ent->v.groundentity_num);
 		}
 
-		groundent = ENT_FOR_NUM((int)ent->v.groundentity_num);
+		groundent = ENT_FOR_NUM(ent->v.groundentity_num);
 	}
 
 	// check for the groundentity going away

@@ -21,7 +21,7 @@ See the attached GNU General Public License v2 for more details.
 extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 extern struct sfx_t* CG_FindOrRegisterSound(const char* filename);
 
-trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum);
+trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum, qboolean useCapsule);
 
 static void CheckEmptyString(const char* s) // definitely need to make it a shared code...
 {
@@ -216,7 +216,13 @@ static void PFCG_trace(void)
 	ignoreEntNum = Scr_GetParmFloat(4); //cl.playernum + 1;
 	contentmask = Scr_GetParmInt(5);
 
-	trace = CG_Trace(start, min, max, end, contentmask, ignoreEntNum); 
+	// FIXME CAPSULE HACK TO NOT CHANGE QC API!!!
+	if (contentmask == MASK_PLAYERSOLID)
+		trace = CG_Trace(start, min, max, end, contentmask, ignoreEntNum, true);
+	else
+		trace = CG_Trace(start, min, max, end, contentmask, ignoreEntNum, false);
+
+	
 
 	// set globals in progs
 	cg.script_globals->trace_allsolid = trace.allsolid;

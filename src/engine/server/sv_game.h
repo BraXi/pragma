@@ -13,7 +13,10 @@ See the attached GNU General Public License v2 for more details.
 
 #pragma once
 
-#define MAX_PERS_FIELDS		64
+#define ENTITYNUM_NULL -1
+#define ENTITYNUM_WORLD 0
+
+#define MAX_PERS_FIELDS		64 // number of client persistant fields that can carry over to another level 
 
 // link_t is only used for entity area links now
 typedef struct link_s
@@ -28,10 +31,9 @@ typedef struct link_s
 #define	SVF_BROADCAST		2	// entity will be _always_ sent regardless of PVS/PHS
 #define	SVF_SINGLECLIENT	4	// send to only one client (.showto must be set to desider player entity number)
 #define	SVF_ONLYTEAM		8	// send only to players in matching team team (.showto must match team)
-#define SVF_CAPSULE			16	// use capsule instead of bounding box for collision
-#define	SVF_MONSTER			32	// use MASK_MONSTERSOLID in Physics_Step
-#define	SVF_PATHNODE		64	// this entity is an pathnode
-#define	SVF_PLAYER			128	// don't clip against other players
+#define	SVF_MONSTER			16	// use MASK_MONSTERSOLID in Physics_Step
+#define	SVF_PATHNODE		32	// this entity is an pathnode
+#define	SVF_PLAYER			64	// don't clip against other players
 
 
 // gentity->v.flags
@@ -51,7 +53,7 @@ typedef enum
 	SOLID_BSP,				// bsp clip, touch on edge
 	SOLID_PATHNODE,			// only SVF_MONSTER entities touch when inside, after moving
 	SOLID_CAPSULE,			// touch on edge, use capsule
-	SOLID_ORIENTED_BOX		// touch on edge, the box can be rotated
+	SOLID_BBOX_ORIENTED		// touch on edge, the box can be rotated
 } solid_t;
 
 // entity->v.movetype values
@@ -97,8 +99,7 @@ struct gclient_s
 	pmove_state_t			old_pmove;
 };
 
-#define ENTITYNUM_NULL -1
-#define ENTITYNUM_WORLD 0
+
 
 struct gentity_s
 {
@@ -133,7 +134,7 @@ extern gentity_t	*sv_entity;
 
 
 extern void Scr_EntityPreThink(gentity_t* self);
-extern void Scr_Think(gentity_t* self);
+extern void SV_RunThinkScript(gentity_t* self);
 extern void Scr_Event_Impact(gentity_t* self, trace_t* trace);
 extern void Scr_Event_Blocked(gentity_t* self, gentity_t* other);
 extern void Scr_Event_Touch(gentity_t* self, gentity_t* other, cplane_t* plane, uint32_t surfaceFlags);

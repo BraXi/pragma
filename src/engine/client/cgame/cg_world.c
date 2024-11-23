@@ -11,6 +11,7 @@ See the attached GNU General Public License v2 for more details.
 #include "../client.h"
 #include "cg_local.h"
 
+#define CAPSULE_BROKEN 1
 
 static int cg_numSolidEntities;
 static clentity_t* cg_solidEntities[MAX_PARSE_ENTITIES];
@@ -109,16 +110,13 @@ static clipHandle_t CG_ClipHandleForEntity(clentity_t* ent)
 CG_ClipMoveToEntities
 ====================
 */
-static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum, trace_t* tr)
+static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum, trace_t* tr, qboolean useCapsule)
 {
 	int				i;
 	entity_state_t	*touch;
 	trace_t			trace;
 	clipHandle_t	clipHandle;
 	float			*angles;
-	int				capsule;
-
-	capsule = 0; // FIXME: Q3BSP
 
 	trace.entityNum = -1;
 
@@ -146,7 +144,11 @@ static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t
 		else
 			angles = vec3_origin;
 
-		CM_TransformedBoxTrace(&trace, start, end, mins, maxs, clipHandle, contentsMask, touch->origin, angles, capsule);
+#ifdef CAPSULE_BROKEN
+		CM_TransformedBoxTrace(&trace, start, end, mins, maxs, clipHandle, contentsMask, touch->origin, angles, false);
+#else
+		CM_TransformedBoxTrace(&trace, start, end, mins, maxs, clipHandle, contentsMask, touch->origin, angles, useCapsule);
+#endif
 
 		if (trace.allsolid || trace.fraction < tr->fraction) 
 		{
@@ -169,12 +171,9 @@ static void CG_ClipMoveToEntities(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t
 CG_Trace
 ====================
 */
-trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum)
+trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum, qboolean useCapsule)
 {
 	trace_t	trace;
-	int capsule;
-
-	capsule = 0; // FIXME: Q3BSP
 
 	if (!mins)
 	{
@@ -188,7 +187,7 @@ trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int content
 	CM_ClearTrace(&trace);
 
 	// clip to world
-	CM_BoxTrace(&trace, start, end, mins, maxs, 0, contentsMask, capsule);
+	CM_BoxTrace(&trace, start, end, mins, maxs, 0, contentsMask, useCapsule);
 	trace.entityNum = (trace.fraction != 1.0) ? 0 : -1; // ENTITYNUM_WORLD : ENTITYNUM_NONE;
 	if (trace.fraction == 0.0f)
 	{
@@ -198,7 +197,7 @@ trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int content
 	}
 
 	// clip to other solid entities
-	CG_ClipMoveToEntities(start, mins, maxs, end, contentsMask, ignoreEntNum, &trace);
+	CG_ClipMoveToEntities(start, mins, maxs, end, contentsMask, ignoreEntNum, &trace, useCapsule);
 	return trace;
 }
 

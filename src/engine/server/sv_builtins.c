@@ -799,9 +799,15 @@ void PFSV_tracebox(void)
 	if (ignoreEnt == sv.edicts)
 		ignoreEnt = NULL;
 
-	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask, false);
+	// FIXME CAPSULE HACK TO NOT CHANGE QC API!!!
+	if(contentmask == MASK_PLAYERSOLID)
+		trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask, true);
+	else
+		trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask, false);
+
 	CopyTraceToProgs(trace);
 }
+
 // =================================================================================
 
 /*

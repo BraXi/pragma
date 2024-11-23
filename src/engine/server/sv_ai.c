@@ -63,6 +63,8 @@ static void SV_LinkPathNode(gentity_t* self)
 	vec3_t		mins, maxs;
 	trace_t		trace;
 	tempnode_t nodes[32];
+	qboolean bUseCapsule;
+	bUseCapsule = (self->v.solid == SOLID_CAPSULE);
 
 	static const int nodeLinkDist = 148;
 
@@ -139,7 +141,7 @@ static void SV_LinkPathNode(gentity_t* self)
 	{
 		VectorCopy(nodes[i].origin, end);
 		end[2] += 16;
-		trace = SV_Trace(start, mins, maxs, end, self, MASK_MONSTERSOLID, false);
+		trace = SV_Trace(start, mins, maxs, end, self, MASK_MONSTERSOLID, bUseCapsule);
 
 		if (trace.fraction != 1.0)
 			continue;
@@ -163,11 +165,14 @@ static void SV_DropPathNodeToFloor(gentity_t* self)
 {
 	trace_t trace;
 	vec3_t dest;
+	qboolean bUseCapsule;
 
 	VectorCopy(self->v.origin, dest);
 	dest[2] -= 128;
 
-	trace = SV_Trace(self->v.origin, self->v.mins, self->v.maxs, dest, self, MASK_MONSTERSOLID, false);
+	bUseCapsule = (self->v.solid == SOLID_CAPSULE);
+
+	trace = SV_Trace(self->v.origin, self->v.mins, self->v.maxs, dest, self, MASK_MONSTERSOLID, bUseCapsule);
 
 	if (trace.startsolid)
 	{
@@ -245,7 +250,7 @@ static void SV_GetNearestPathNode(vec3_t point)
 
 	if (!num)
 	{
-		Com_Printf("SV_GetNearestPathNode: no nearby nodes\n");
+		Com_Printf(__FUNCTION__": WARNING! No nearby nodes.\n");
 		return;
 	}
 
@@ -399,6 +404,10 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	float		stepsize;
 	vec3_t		test;
 	int			contents;
+	qboolean	bUseCapsule;
+
+
+	bUseCapsule = (actor->v.solid == SOLID_CAPSULE);
 
 	int contentmask = MASK_MONSTERSOLID;
 	gentity_t* goal = VM_TO_ENT(actor->v.goal_entity);
@@ -443,7 +452,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 						neworg[2] += dz;
 				}
 			}
-			trace = SV_Trace(actor->v.origin, actor->v.mins, actor->v.maxs, neworg, actor, contentmask, (actor->v.svflags & SVF_CAPSULE));
+			trace = SV_Trace(actor->v.origin, actor->v.mins, actor->v.maxs, neworg, actor, contentmask, bUseCapsule);
 
 			// fly monsters don't enter water voluntarily
 			if (actor->v.flags & FL_FLY)
@@ -504,7 +513,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	VectorCopy(neworg, end);
 	end[2] -= stepsize * 2;
 
-	trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, (actor->v.svflags & SVF_CAPSULE));
+	trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, bUseCapsule);
 
 	if (trace.allsolid)
 		return false;
@@ -512,7 +521,7 @@ qboolean SV_MoveStep(gentity_t* actor, vec3_t move, qboolean relink)
 	if (trace.startsolid)
 	{
 		neworg[2] -= stepsize;
-		trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, (actor->v.svflags & SVF_CAPSULE));
+		trace = SV_Trace(neworg, actor->v.mins, actor->v.maxs, end, actor, contentmask, bUseCapsule);
 		if (trace.allsolid || trace.startsolid)
 			return false;
 	}

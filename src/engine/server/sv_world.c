@@ -10,6 +10,23 @@ See the attached GNU General Public License v2 for more details.
 
 // world.c -- world query functions
 
+/*
+NOTES:
+
+SOLID_BBOX
+use mins/maxs for collision, do not rotate
+
+SOLID_BSP, SOLID_TRIGGER
+use inline model for collision, can rotate
+
+SOLID_CAPSULE
+use capsule for collision with world, but bbox with other entities, do not rotate
+
+SOLID_BBOX_ORIENTED
+use mins/maxs for collision, can rotate
+*/
+
+#define CAPSULE_BROKEN 1
 #include "server.h"
 
 #ifdef __linux__
@@ -86,7 +103,7 @@ void M_CheckGround(gentity_t* ent)
 	point[1] = ent->v.origin[1];
 	point[2] = ent->v.origin[2] - 0.25;
 
-	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID, false);
+	trace = SV_Trace(ent->v.origin, ent->v.mins, ent->v.maxs, point, ent, MASK_MONSTERSOLID, (ent->v.solid == SOLID_CAPSULE));
 
 	// check steepness
 	if (trace.plane.normal[2] < 0.7 && !trace.startsolid)
@@ -117,7 +134,6 @@ SV_RunWorldFrame
 Advances the world by SV_FRAMETIME seconds
 ================
 */
-
 void SV_RunWorldFrame(void)
 {
 	int		i;
@@ -412,7 +428,7 @@ void SV_LinkEntity(gentity_t *ent)
 	}
 
 	// set the abs box
-	if ((ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER) && !VectorCompare(ent->v.angles, vec3_origin))
+	if (!VectorCompare(ent->v.angles, vec3_origin) && (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER || ent->v.solid == SOLID_BBOX_ORIENTED))
 	{	
 		// expand for rotation
 		max = RadiusFromBounds(ent->v.mins, ent->v.maxs);
@@ -643,8 +659,6 @@ SOLID_TRIGGER entities will explictly use inline model instead of bounding box w
 */
 clipHandle_t SV_ClipHandleForEntity(const gentity_t* ent)
 {
-	int capsule = 0;
-
 	if (SV_IsBrushModel(ent->v.modelindex))
 	{
 		if (ent->v.solid == SOLID_BSP || ent->v.solid == SOLID_TRIGGER)
@@ -655,11 +669,10 @@ clipHandle_t SV_ClipHandleForEntity(const gentity_t* ent)
 		}
 	}
 
-	// create a temp capsule from bounding box sizes if SVF_CAPSULE
-	// otherwise create a temp box from bounding box sizes
-	if (ent->v.svflags & SVF_CAPSULE) 
+	if (ent->v.solid == SOLID_CAPSULE) 
 	{
-		capsule = 1;
+		// use capsule
+		return CM_TempBoxModel(ent->v.mins, ent->v.maxs, true);
 	}
 
 	if (sv_debug->value && ent->v.solid == SOLID_BSP)
@@ -667,7 +680,8 @@ clipHandle_t SV_ClipHandleForEntity(const gentity_t* ent)
 		Com_Printf(__FUNCTION__": solid_bsp entity %i has no bmodel (using BBOX)\n", NUM_FOR_ENT(ent));
 	}
 
-	return CM_TempBoxModel(ent->v.mins, ent->v.maxs, capsule);
+	// use box
+	return CM_TempBoxModel(ent->v.mins, ent->v.maxs, false);
 }
 
 /*
@@ -696,14 +710,18 @@ int SV_PointContents(vec3_t p)
 		// might intersect, so do an exact clip
 		clip = SV_ClipHandleForEntity(pEnt);
 		
-		// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate, others don't
+		angles = vec3_origin;
+
+		// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate
 		if (SV_IsBrushModel(pEnt->v.modelindex) && (pEnt->v.solid == SOLID_BSP || pEnt->v.solid == SOLID_TRIGGER))
 		{
 			angles = pEnt->v.angles;
 		}
-		else
+		
+
+		if(pEnt->v.solid == SOLID_BBOX_ORIENTED)
 		{
-			angles = vec3_origin;
+			angles = pEnt->v.angles; // SOLID_BBOX_ORIENTED also rotate
 		}
 
 		// bbox entities have their contents set in code
@@ -734,7 +752,8 @@ typedef struct
 	trace_t		trace;
 	gentity_t	*ignoreEntity;
 	int			contentmask;
-	int			capsule;
+
+	qboolean	isCapsule;
 } moveclip_t;
 
 
@@ -815,7 +834,7 @@ void SV_ClipToEntity(trace_t *trace, gentity_t* clipent, vec3_t start, vec3_t mi
 /*
 ====================
 SV_EntityContact
-Returns true if the entity overlaps with bounding box.
+Returns true if the entity overlaps with bounding box, bmodel, or a capsule.
 ====================
 */
 qboolean SV_EntityContact(vec3_t mins, vec3_t maxs, const gentity_t* ent, int capsule) 
@@ -845,7 +864,7 @@ qboolean SV_EntityContact(vec3_t mins, vec3_t maxs, const gentity_t* ent, int ca
 SV_ClipMoveToEntities
 ====================
 */
-void SV_ClipMoveToEntities( moveclip_t *clip )
+static void SV_ClipMoveToEntities(moveclip_t *clip)
 {
 	int			i, num;
 	gentity_t	*touchlist[MAX_GENTITIES], *touch;
@@ -895,17 +914,22 @@ void SV_ClipMoveToEntities( moveclip_t *clip )
 		{
 			if(touch->v.contents != CONTENTS_NONE)
 				CM_SetTempBoxModelContents(touch->v.contents);
+
+			if (touch->v.solid == SOLID_BBOX_ORIENTED)
+			{
+				angles = touch->v.angles;
+			}
 		}
 		else
 		{
-			// SOLID_BSP & SOLID_TRIGGER entities with bmodel rotate
+			// SOLID_BSP & SOLID_TRIGGER entities with bmodel always rotate
 			if (touch->v.solid == SOLID_BSP || touch->v.solid == SOLID_TRIGGER)
 			{
 				angles = touch->v.angles;
 			}
 		}
 
-		CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins, clip->maxs, clipHandle, clip->contentmask, touch->v.origin, angles, clip->capsule);
+		CM_TransformedBoxTrace(&trace, clip->start, clip->end, clip->mins, clip->maxs, clipHandle, clip->contentmask, touch->v.origin, angles, clip->isCapsule);
 
 		if (clipHandle == BOX_MODEL_HANDLE || clipHandle == CAPSULE_MODEL_HANDLE)
 		{
@@ -1007,6 +1031,12 @@ trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *
 	clip.mins = mins;
 	clip.maxs = maxs;
 	clip.ignoreEntity = ignoreEntity;
+
+#ifndef CAPSULE_BROKEN
+	clip.isCapsule = bCapsule;
+#else
+	clip.isCapsule = false;
+#endif
 	
 	// create the bounding box of the entire move
 	SV_TraceBounds(start, clip.mins, clip.maxs, end, clip.boxmins, clip.boxmaxs);
@@ -1017,3 +1047,39 @@ trace_t SV_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, gentity_t *
 	return clip.trace;
 }
 
+/*
+==================
+SV_TraceLine
+Moves the ray through the world from start to end.
+ignoreEntity and entities which have owner set to ignoreEntity are explicitly not checked.
+==================
+*/
+trace_t SV_TraceLine(vec3_t start, vec3_t end, gentity_t* ignoreEntity, int contentmask)
+{
+	return SV_Trace(start, NULL, NULL, end, ignoreEntity, contentmask, false);
+}
+
+
+/*
+==================
+SV_TraceBox
+Moves the given dimensions through the world from start to end.
+ignoreEntity and entities which have owner set to ignoreEntity are explicitly not checked.
+==================
+*/
+trace_t SV_TraceBox(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, gentity_t* ignoreEntity, int contentmask)
+{
+	return SV_Trace(start, mins, maxs, end, ignoreEntity, contentmask, false);
+}
+
+/*
+==================
+SV_TraceCapsule
+Moves the given capsule through the world from start to end.
+ignoreEntity and entities which have owner set to ignoreEntity are explicitly not checked.
+==================
+*/
+trace_t SV_TraceCapsule(vec3_t start, vec3_t end, vec3_t mins, vec3_t maxs, gentity_t* ignoreEntity, int contentmask)
+{
+	return SV_Trace(start, mins, maxs, end, ignoreEntity, contentmask, true);
+}

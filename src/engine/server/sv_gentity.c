@@ -35,11 +35,8 @@ void SV_InitEntity(gentity_t* ent)
 	ent->v.classname = sv.cstr.no_class;
 	ent->v.gravity = 1.0;
 	ent->v.groundentity_num = ENTITYNUM_NULL;
-
 	ent->v.renderScale = 1.0f;
-
 	ent->v.nodeIndex = ENTITYNUM_NULL;
-
 	ent->teamchain = ent->teammaster = NULL;
 	ent->bEntityStateForClientChanged = false;
 }
@@ -58,7 +55,7 @@ gentity_t* SV_SpawnEntity(void)
 	int			entnum;
 	gentity_t	*ent = NULL;
 
-	entnum = sv_maxclients->value + 1;
+	entnum = sv_maxclients->value + 1; // [world, players, anything else]
 	ent = EDICT_NUM(entnum);
 
 	// we seek for the first free gentity after worldspawn and players that wasn't recently freed
@@ -167,7 +164,7 @@ qboolean SV_RunThink(gentity_t* ent)
 	if (thinktime > sv.gameTime + 0.001)
 		return true;
 
-	Scr_Think(ent);
+	SV_RunThinkScript(ent);
 
 	return false;
 }
@@ -190,10 +187,8 @@ int SV_TouchEntities(gentity_t* ent, int areatype)
 
 	memset(&trace, 0, sizeof(trace));
 
-
 	VectorAdd(ent->v.origin, ent->v.mins, mins);
 	VectorAdd(ent->v.origin, ent->v.maxs, maxs);
-
 
 	numEnts = SV_AreaEntities(ent->v.absmin, ent->v.absmax, touch, MAX_GENTITIES, areatype);
 	touched = 0;
