@@ -1157,17 +1157,6 @@ void Qcommon_Init (int argc, char **argv)
 	char	*s;
 
 	print_time = false;
-#ifdef DEDICATED_ONLY
-	s = va("pragma dedicated server %s (%s %s %s)", PRAGMA_VERSION, CPUSTRING, __DATE__, BUILDSTRING);
-	printf("%s\n", s);
-	for( int i = 0; i < strlen(s); i++)
-		printf("=");
-
-	printf("\n\n");
-
-	printf("Server runs game at %i ticks per second.\n", SERVER_FPS);
-	printf("Protocol version is: %i.\n\n", PROTOCOL_VERSION);
-#endif
 
 	if (setjmp (abortframe) )
 		Sys_Error ("Error during initialization");
@@ -1230,20 +1219,20 @@ void Qcommon_Init (int argc, char **argv)
 	s = va("%s %s %s %s", PRAGMA_VERSION, CPUSTRING, __DATE__, BUILDSTRING);
 	Cvar_Get ("version", s, CVAR_SERVERINFO|CVAR_NOSET, NULL);
 
+	Sys_Init();
 
-	if (dedicated->value)
+	if (dedicated->value > 0)
 	{
 		Cmd_AddCommand("quit", Com_Quit);
 
-#ifndef DEDICATED_ONLY
-		Com_Printf("pragma %s dedicated server\n", PRAGMA_VERSION);
-		Com_Printf("build: %s\n", PRAGMA_TIMESTAMP);
-		Com_Printf("------------------------------\n");
-#endif
+		s = va("PRAGMA Dedicated Server %s (%s %s %s)", PRAGMA_VERSION, CPUSTRING, __DATE__, BUILDSTRING);
+		Com_Printf("%s\n", s);
+		for (int i = 0; i < strlen(s); i++)
+			Com_Printf("=");
+
+		Com_Printf("\n\n");
 	}
 
-
-	Sys_Init ();
 	NET_Init ();
 	Netchan_Init ();
 
@@ -1261,8 +1250,7 @@ void Qcommon_Init (int argc, char **argv)
 		// if the user didn't give any commands, run default action
 		if (!dedicated->value)
 			Cbuf_AddText ("ui_open main\n");
-		else
-			Cbuf_AddText ("dedicated_start\n");
+
 		Cbuf_Execute ();
 	}
 	else
@@ -1275,25 +1263,34 @@ void Qcommon_Init (int argc, char **argv)
 	}
 
 
-#ifndef DEDICATED_ONLY
-	Com_Printf("====== pragma initialized ======\n\n");
-#else
-	printf("====== Server Initialized ======\n\n");
-	print_time = true;
 
-#if 0
-	if (!logfile_active->value)
-		printf("No active logging.\n");
+	if (dedicated->value)
+	{
+		Com_Printf(	"'status' - Show the current status of this server (scores, map, clients..)\n" \
+					"'killserver' - Stops the server, without killing the server app.\n\n");
 
-	extern cvar_t* rcon_password;
-	if (!rcon_password || strlen(rcon_password->string) == 0)
-		printf("No rcon_password set.\n");
+		Com_Printf("Game tics at %i hz.\n", SERVER_FPS);
 
-	if (Com_ServerState() == 0 /*ss_dead*/)
-		printf("No map loaded, use `map` command to load map.\n");
-#endif
+		if (!logfile_active->value)
+			Com_Printf("WARNING: No active logging, set `%s 1` to enable server log.\n", logfile_active->name);
 
-#endif
+		extern cvar_t* rcon_password;
+		if (rcon_password && strlen(rcon_password->string) == 0)
+			Com_Printf("WARNING: Remote Console (rcon) not available, '%s' is empty (ALWAYS use strong password to enable).\n", rcon_password->name);
+
+		if (developer->value)
+			Com_Printf("WARNING: Developer mode is ENABLED and set to %i.\n", (int)developer->value);
+
+		if (Com_ServerState() == 0 /*ss_dead*/)
+			Com_Printf("\nWARNING: Server is offline! Must start a map to start server.\n");
+
+		Com_Printf("\n");
+		print_time = true;
+	}
+	else
+	{
+		Com_Printf("====== PRAGMA Initialization Complete ======\n\n");
+	}
 }
 
 /*

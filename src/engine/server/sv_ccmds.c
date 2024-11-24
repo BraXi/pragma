@@ -813,15 +813,20 @@ void SV_Status_f (void)
 		Com_Printf("\n");
 
 
-	Com_Printf("hostname  : %s\n", Cvar_VariableString("hostname"));
-	Com_Printf("map       : %s\n", sv.mapname);
-	Com_Printf("gamedir   : %s\n\n", FS_Gamedir());
+	Com_Printf("Hostname  : %s\n", Cvar_VariableString("hostname"));
+	Com_Printf("Map       : %s\n", sv.mapname);
+	Com_Printf("Game dir  : %s\n\n", FS_Gamedir());
 
 	Com_Printf("Clients   : %i / %i\n", numplayers, svs.max_clients);
 	Com_Printf("Entities  : %i / %i\n", sv.num_edicts, sv.max_edicts);
 
-	Com_Printf ("num score ping name            lastmsg address               qport \n");
-	Com_Printf ("--- ----- ---- --------------- ------- --------------------- ------\n");
+
+	if (numplayers)
+	{
+		Com_Printf("num score ping name            lastmsg address               qport \n");
+		Com_Printf("--- ----- ---- --------------- ------- --------------------- ------\n");
+	}
+
 	for (i = 0, cl = svs.clients; i < sv_maxclients->value; i++, cl++)
 	{
 		if (!cl->state)

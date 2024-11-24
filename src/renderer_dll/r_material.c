@@ -64,14 +64,18 @@ R_InitMaterials
 */
 void R_InitMaterials()
 {
+	size_t size;
 	char temp[MAX_QPATH];
 	image_t* tex;
 	material_t* mat;
 
+	size = sizeof(material_t) * MAX_MATERIALS;
+
 	// allocate space for materials
 	if (!r_materials)
 	{
-		r_materials = ri.MemAlloc(sizeof(material_t) * MAX_MATERIALS);
+		r_materials = ri.MemAlloc(size);
+		Com_Printf("Reserved %i kb of memory for materials.\n", size/1024);
 	}
 
 	r_numMaterials = 0;

@@ -374,7 +374,7 @@ int main(int inargc, char** inargv)
 	Qcommon_Init(inargc, inargv);
 	oldtime = Sys_Milliseconds();
 
-	/* main window message loop */
+	/* main  message loop */
 	while (1)
 	{
 		Sleep(1);
@@ -385,12 +385,9 @@ int main(int inargc, char** inargv)
 			time = newtime - oldtime;
 		} while (time < 1);
 
-#ifndef _M_X64
-		_controlfp(_PC_24, _MCW_PC);
-#endif
+		//_controlfp(_PC_24, _MCW_PC);
 
 		Qcommon_Frame(time);
-
 		oldtime = newtime;
 	}
 

@@ -565,6 +565,8 @@ void R_FreeUnusedTextures()
 			continue;		// don't free fonts
 		}
 
+		//Com_Printf("Freed: %s\n", image->name);
+
 		// free it
 		glDeleteTextures (1, &image->texnum);
 		memset (image, 0, sizeof(*image));

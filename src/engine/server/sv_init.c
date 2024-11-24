@@ -262,15 +262,15 @@ void SV_SpawnServer(char *mapname, char *spawnpoint, server_state_t serverstate,
 	// otherwise, a malicious client can just slap an "is matching!" response and connect with different files loaded
 	//
 	checksum_cgprogs = CRC_ChecksumFile("progs/client.dat", true);
+	//Com_Printf("client progs crc: %d\n", checksum_cgprogs);
 	checksum_guiprogs = CRC_ChecksumFile("progs/gui.dat", true);
+	//Com_Printf("gui progs crc: %d\n", checksum_guiprogs);
 
 	SV_SetConfigString(CS_CHECKSUM_MAP, va("%i", checksum_map));
 	SV_SetConfigString(CS_CHECKSUM_CGPROGS, va("%i", checksum_cgprogs));
 	SV_SetConfigString(CS_CHECKSUM_GUIPROGS, va("%i", checksum_guiprogs));
 	SV_SetConfigString(CS_CHEATS_ENABLED, va("%i", (int)sv_cheats->value));
 
-	Com_Printf("client progs crc: %d\n", checksum_cgprogs);
-	Com_Printf("gui progs crc: %d\n", checksum_guiprogs);
 	
 	//
 	// dev tools
@@ -552,7 +552,7 @@ void SV_Map (qboolean attractloop, char *levelstring, qboolean loadgame, qboolea
 
 	if (dedicated->value)
 	{
-		Com_Printf("[%s] *** server is changing map to '%s' ***\n", GetTimeStamp(true), level);
+		Com_Printf("\n[%s] SERVER IS CHANGING MAP TO: %s\n\n", GetTimeStamp(true), level);
 	}
 
 	l = (int)strlen(level);

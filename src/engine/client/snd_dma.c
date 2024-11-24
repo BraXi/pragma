@@ -338,7 +338,9 @@ void S_EndRegistration (void)
 		if (!sfx->name[0])
 			continue;
 		if (sfx->registration_sequence != s_registration_sequence)
-		{	// don't need this sound
+		{	
+			//Com_Printf("Freed: %s\n", sfx->name);
+			// don't need this sound
 			if (sfx->cache)	// it is possible to have a leftover
 				Z_Free (sfx->cache);	// from a server that didn't finish loading
 			memset (sfx, 0, sizeof(*sfx));

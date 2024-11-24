@@ -611,10 +611,14 @@ CM_ClearMap
 */
 void CM_ClearMap()
 {
-//	Com_Printf("CM_ClearMap(%s)\n", cm.name != NULL ? cm.name : "");
-	Hunk_Free(cm.membase);
-	memset(&cm, 0, sizeof(cm));
+	Com_Printf("CM_ClearMap(%s): freed %i kb of memory.\n", cm.name != NULL ? cm.name : "", cm.memsize/1024);
+	
 	CM_ClearLevelPatches();
+
+	if(cm.membase)
+		Hunk_Free(cm.membase);
+
+	memset(&cm, 0, sizeof(cm));
 }
 
 /*
@@ -641,7 +645,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 	cm_noCurves = Cvar_Get("cm_noCurves", "1", CVAR_CHEAT, NULL);
 	cm_playerCurveClip = Cvar_Get("cm_playerCurveClip", "1", CVAR_ARCHIVE|CVAR_CHEAT, NULL);
 	
-	Com_Printf( __FUNCTION__"( %s, %s )\n", name, clientload == true ? "client" : "server");
+	Com_Printf( __FUNCTION__"(%s, %s)\n", name, clientload == true ? "client" : "server");
 
 	if (!Q_strcasecmp( cm.name, name ) && clientload)
 	{
@@ -665,6 +669,8 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 		cm.memsize = Hunk_End();
 
 		*checksum = 0;
+
+		Com_Printf("Created Cmodel stub.\n");
 		return;
 	}
 
@@ -695,7 +701,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 
 	if ( header.version != BSP_VERSION )
 	{
-		Com_Error (ERR_DROP, "%s has wrong version number (%i should be %i)", name, header.version, BSP_VERSION);
+		Com_Error (ERR_DROP, "%s is wrong version (%i should be %i)", name, header.version, BSP_VERSION);
 	}
 
 	cmod_base = (byte *)buf;
@@ -717,7 +723,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum )
 
 	cm.memsize = Hunk_End();
 
-	Com_Printf("Loaded %s in %ims (%iKB of hunk).\n", name, (Sys_Milliseconds() - start_time), (cm.memsize/1024));
+	Com_Printf("Loaded %s in %ims (%ikb of memory).\n", name, (Sys_Milliseconds() - start_time), (cm.memsize/1024));
 
 
 	// we are NOT freeing the file, because it is cached for the ref

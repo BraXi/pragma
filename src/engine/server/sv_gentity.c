@@ -89,19 +89,19 @@ void SV_FreeEntity(gentity_t* self)
 {
 	if (!self)
 	{
-		Com_Error(ERR_DROP, "SV_FreeEntity: !ent\n");
+		Com_Error(ERR_DROP, __FUNCTION__": !ent\n");
 		return; //msvc..
 	}
 
 	if (self == sv.edicts)
 	{
-		Com_Error(ERR_DROP, "SV_FreeEntity: tried to remove world!\n");
+		Com_Error(ERR_DROP, __FUNCTION__": Tried to remove world!\n");
 		return;
 	}
 
 	if (NUM_FOR_EDICT(self) <= sv_maxclients->value)
 	{
-		Com_DPrintf(DP_SV, "tried to free client entity\n");
+		Com_DPrintf(DP_SV, __FUNCTION__": Warning: Tried to free client entity\n");
 		return;
 	}
 
@@ -246,14 +246,14 @@ void SV_CallSpawnForEntity(gentity_t* ent)
 
 	if (strlen(classname) > 60)
 	{
-		printf("SV_CallSpawnForEntity: classname '%s' is too long\n", classname);
+		Com_DPrintf(DP_SV, "Classname '%s' is too long.\n", classname);
 		return;
 	}
 
 	// check if someone is trying to spawn world...
 	if( NUM_FOR_ENT(ent) > 0 && EDICT_NUM(0)->inuse && stricmp(classname, "worldspawn") == 0 )
 	{
-		Com_Error(ERR_DROP, "SV_CallSpawnForEntity: only one worldspawn allowed\n", classname);
+		Com_Error(ERR_DROP, "Tried to spawn second instance of world.\n", classname);
 		return;
 	}
 
@@ -277,7 +277,7 @@ void SV_CallSpawnForEntity(gentity_t* ent)
 	spawnfunc = Scr_FindFunctionIndex(spawnFuncName);
 	if (spawnfunc == -1 && ent != sv.edicts)
 	{
-		Com_DPrintf( DP_SV, "SV_CallSpawnForEntity: unknown classname '%s'\n", classname);
+		Com_DPrintf(DP_SV, "Unknown entity: '%s'\n", classname);
 		SV_FreeEntity(ent);
 		return;
 	}
@@ -367,7 +367,8 @@ char* SV_ParseEntity(char* data, gentity_t * ent)
 		key = Scr_FindEntityField(keyname);
 		if (!key)
 		{
-			Com_Printf("%s: \"%s\" is not a field\n", __FUNCTION__, keyname);
+			if(developer->value)
+				Com_DPrintf(DP_SV, "Unknown entity field: '%s'\n", keyname);
 //			if (strncmp(keyname, "sky", 3))
 //			{
 //				gi.dprintf("\"%s\" is not a field\n", keyname);

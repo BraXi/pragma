@@ -174,7 +174,6 @@ static void R_LoadLightmaps(const lump_t* lump)
 	buf = mod_base + lump->fileofs;
 
 	numPixels = WORLD_LIGHTMAP_WIDTH * WORLD_LIGHTMAP_WIDTH; // Q3BSP_LIGHTMAP_SIZE * Q3BSP_LIGHTMAP_SIZE
-
 	r_world->numLightmaps = len / (numPixels * 3);
 
 	if (r_world->numLightmaps >= MAX_WORLD_LIGHTMAPS)
@@ -190,11 +189,11 @@ static void R_LoadLightmaps(const lump_t* lump)
 		return;
 	}
 
-	memset(tempPixels, 255, numPixels * 4);
-
 	// create all the lightmaps
 	for (i = 0; i < r_world->numLightmaps; i++)
 	{
+		memset(tempPixels, 255, numPixels * 4);
+
 		// expand the 24 bit on-disk to 32 bit
 		buf_p = buf + i * numPixels * 3;
 
@@ -943,7 +942,11 @@ void R_FreeWorld()
 		if (r_world->vbo_verts)
 		{
 			glDeleteBuffers(1, &r_world->vbo_verts);
+			r_world->vbo_verts = 0;
 		}
+
+		//if (r_world->vbo_indexes)
+		//	glDeleteBuffers(1, &r_world->vbo_indexes);
 	}
 
 	if (world_fileBuffer)
@@ -978,11 +981,11 @@ void R_LoadWorld(const char *bsp_name)
 
 	// explicitly free the old map if different and ensure we don't reload the map when restarting level
 	// TODO: make it also free textures used by world
-	cm_flushmap = ri.Cvar_Get("cm_flushmap", "0", 0, NULL);
-	if (r_world && (strcmp(r_world->name, bsp_name) || cm_flushmap->value))
-	{
+	//cm_flushmap = ri.Cvar_Get("cm_flushmap", "0", 0, NULL);
+	//if (r_world && (strcmp(r_world->name, bsp_name) || cm_flushmap->value))
+	//{
 		R_FreeWorld();
-	}
+	//}
 
 	// Load BSP from disk
 	world_fileBuffer = NULL;

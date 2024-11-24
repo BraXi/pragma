@@ -309,6 +309,7 @@ void SV_FreeModels()
 		mod = &sv.models[i];
 		if (mod->extradata)
 		{
+			Com_Printf("server freed: %s\n", mod->name);
 			Hunk_Free(mod->extradata);
 		}
 		memset(&sv.models[i], 0, sizeof(svmodel_t));

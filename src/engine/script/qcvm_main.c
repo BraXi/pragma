@@ -491,7 +491,7 @@ static void Scr_OpenLogFileForVM(qcvm_t *vm)
 	if (!developer->value)
 		return;
 
-	sprintf(name, "%s/%s.log", FS_Gamedir(), Scr_GetScriptName(vm->progsType));
+	sprintf(name, "%s/logs/%s.log", FS_Gamedir(), Scr_GetScriptName(vm->progsType));
 
 	vm->logfile = fopen(name, "w");
 	if (!vm->logfile)
@@ -535,7 +535,7 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 	Scr_LoadProgram(vm, vmDefs[vmType].filename);
 
 	// allocate entities
-	vm->entities = (vm_entity_t*)Z_Malloc(vm->num_entities * vm->entity_size);
+	vm->entities = (vm_entity_t*)Z_TagMalloc((vm->num_entities * vm->entity_size), (TAG_QCVM_MEMORY + vm->progsType));
 
 	// open devlog
 	Scr_OpenLogFileForVM(vm);
@@ -593,8 +593,8 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 		vm->strTable.stringTable = NULL;
 	}
 
-	if (vm->entities)
-		Z_Free(vm->entities);
+	//if (vm->entities)
+	//	Z_Free(vm->entities);
 
 	if (vm->progs)
 		Z_Free(vm->progs);

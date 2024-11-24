@@ -329,6 +329,6 @@ void R_FreeVertexBuffer(vertexbuffer_t* vbo)
 	}
 
 	ri.MemFree(vbo);
-	vbo = NULL;
+	//vbo = NULL;
 //	memset(vbo, 0, sizeof(*vbo));
 }

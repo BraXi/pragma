@@ -148,6 +148,8 @@ model_t* R_ModelForName(const char* name, qboolean crash)
 		break;
 	}
 
+	pLoadModel->hunkDataSize = Hunk_End();
+
 	pLoadModel = NULL;
 	ri.FreeFile(buf);
 
@@ -176,8 +178,10 @@ void R_FreeModel(model_t* mod)
 	if (mod->hunkData)
 	{
 		Hunk_Free(mod->hunkData);
+		mod->hunkData = NULL;
 	}
 
+	Com_Printf("Freed: %s\n", mod->name);
 	memset(mod, 0, sizeof(*mod));
 }
 
