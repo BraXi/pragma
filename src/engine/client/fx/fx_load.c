@@ -213,7 +213,7 @@ qboolean FX_LoadFromFile(char* name)
 
 	// load file
 	Com_sprintf(filename, sizeof(filename), "fx/%s.efx", name);
-	len = FS_LoadTextFile(filename, (void**)&data);
+	len = FS_LoadTextFile(filename, &data);
 	if (!len || len == -1)
 	{
 		return -1;

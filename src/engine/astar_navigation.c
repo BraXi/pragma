@@ -203,17 +203,17 @@ void Nav_Shutdown()
 	if (!Nav_IsInitialized())
 		return;
 
-	memset(openNodes, 0, sizeof(openNodes));
-	memset(closedNodes, 0, sizeof(closedNodes));
-	memset(&nav, 0, sizeof(nav));
-	nav.waypoints_count = 0;
-
 	if (nav.waypoints != NULL)
 	{
 		Z_Free(nav.waypoints, DBG_FFL);
 		nav.waypoints = NULL;
 	}
 
+	memset(openNodes, 0, sizeof(openNodes));
+	memset(closedNodes, 0, sizeof(closedNodes));
+	memset(&nav, 0, sizeof(nav));
+
+	nav.waypoints_count = 0;
 	Z_FreeTags(TAG_NAV_NODES);
 }
 

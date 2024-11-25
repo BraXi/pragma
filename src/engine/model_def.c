@@ -162,7 +162,7 @@ qboolean ModelDef_LoadFile(char* filename, modeldef_t* def, memtag_t tag) //sinc
 	int		len;
 	char	*data = NULL;
 
-	len = FS_LoadTextFile(filename, (void**)&data);
+	len = FS_LoadTextFile(filename, &data);
 	if (!len || len == -1)
 		return false;
 	if (data == NULL)

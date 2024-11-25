@@ -371,17 +371,16 @@ void Cmd_Exec_f(void)
 	}
 
 	if (strchr(Cmd_Argv(1), '.') == NULL)
-		len = FS_LoadTextFile(va("%s.cfg", Cmd_Argv(1)), (void**)&data);
+		len = FS_LoadTextFile(va("%s.cfg", Cmd_Argv(1)), &data);
 	else
-		len = FS_LoadTextFile(Cmd_Argv(1), (void**)&data);
+		len = FS_LoadTextFile(Cmd_Argv(1), &data);
 
 	if (!data)
 	{
-		Com_Printf("couldn't execute `%s`\n", Cmd_Argv(1));
+		Com_Printf("Could not execute: %s\n", Cmd_Argv(1));
 		return;
 	}
-	Com_Printf("executing `%s`...\n", Cmd_Argv(1));
-
+	Com_Printf("Executing: %s\n", Cmd_Argv(1));
 	Cbuf_InsertText(data);
 
 	FS_FreeFile(data);

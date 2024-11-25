@@ -165,7 +165,7 @@ qboolean UI_LoadFromFime(char* guiname)
 	//
 	// load file
 	//
-	len = FS_LoadTextFile(filename, (void**)&data);
+	len = FS_LoadTextFile(filename, &data);
 	if (!len || len == -1)
 	{
 		return false;
@@ -258,7 +258,7 @@ void UI_LoadGuisFromFile(char* name)
 
 	Com_sprintf(filename, sizeof(filename), "guis/%s.txt", name);
 
-	len = FS_LoadTextFile(filename, (void**)&data);
+	len = FS_LoadTextFile(filename, &data);
 	if (!len || len == -1)
 	{
 		return;
