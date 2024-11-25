@@ -936,15 +936,14 @@ void Z_FreeAll(qboolean writeLog)
 	{
 		char *a = va("Freed remaining %i kb of memory in %i memory blocks.\n\n", total_bytes / 1024, count);
 
-		strcat(msg, a);
-
+		strcat(msg, a); // call me evil for this.
 
 		for (i = 0; i < NUM_MEMORY_TAGS; i++)
 		{
 			if (per_tag_bytes[i] > 0)
 			{
 				a = va("%s: %i kb\n", memTagNames[i], per_tag_bytes[i]/1024);
-				strcat(msg, a);
+				strcat(msg, a); // ...and for this!
 			}
 		}
 
