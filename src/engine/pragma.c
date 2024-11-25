@@ -690,11 +690,11 @@ int	memsearch (byte *start, int count, int search)
 }
 
 
-char *CopyString (const char *in)
+char *CopyString (const char *in, memtag_t tag)
 {
 	char	*out;
 	
-	out = Z_TagMalloc((int)strlen(in)+1, TAG_NONE, DBG_FFL);
+	out = Z_TagMalloc((int)strlen(in)+1, tag, DBG_FFL);
 	strcpy (out, in);
 	return out;
 }
@@ -771,7 +771,8 @@ typedef struct zhead_s
 	const char	*from;		// where it's been allocated
 } zhead_t;
 
-static const char* memTagNames[] = { "NO_TAG", "RENDERER", "FX", "NAV_NODES", "SERVER_GAME", "CLIENT_GAME", "GUI", "QCVM_MEMORY", "QCVM1", "QCVM2", "QCVM3" };
+static const char* memTagNames[] = { "NO_TAG", "CMDSYS", "FILESYSTEM", "RENDERER", "FX", "NAV_NODES", "SERVER_GAME", "CLIENT_GAME", "GUI", "QCVM_MEMORY", "QCVM1", "QCVM2", "QCVM3" };
+
 
 static zhead_t		z_chain;
 static size_t		z_count, z_bytes;
@@ -802,6 +803,9 @@ Z_Free
 void Z_Free (void *ptr, const char *call_from)
 {
 	zhead_t	*z;
+
+	if (ptr == NULL)
+		return;
 
 	z = ((zhead_t *)ptr) - 1;
 
@@ -875,9 +879,17 @@ Frees ALL ZONE MEMORY, called only when PRAGMA is shutting down completly.
 void Z_FreeAll()
 {
 	zhead_t* z, * next;
+	FILE* log;
 	int count, i;
 	size_t total_bytes, per_tag_bytes[NUM_MEMORY_TAGS];
 	char msg[2048];
+
+	log = fopen("pragma_mem_onexit.csv", "w");
+
+	if (log)
+	{
+		fprintf(log, "MemTag,Size_In_Bytes,Time_Allocated,Allocated_In,\n");
+	}
 
 	count = 0;
 	total_bytes = 0;
@@ -888,9 +900,16 @@ void Z_FreeAll()
 		count++;
 		total_bytes += z->size;
 		per_tag_bytes[z->tag] += z->size;
+
+		if(log)
+			fprintf(log, "%s,%i,%i,%s,\n", memTagNames[z->tag], z->size, z->time, z->from);
+
 		next = z->next;
 		Z_Free((void*)(z + 1), DBG_FFL);
 	}
+
+	if (log)
+		fclose(log);
 
 	if (count)
 	{
@@ -1532,4 +1551,6 @@ Qcommon_Shutdown
 */
 void Qcommon_Shutdown (void)
 {
+	Z_FreeTags(TAG_CMDSYS); // free commands and cvars
+	Z_FreeTags(TAG_FILESYSTEM); // free remaining open files and pack structures
 }

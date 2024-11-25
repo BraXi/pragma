@@ -86,6 +86,8 @@ typedef enum memtag_s
 {
 	// !! If this is changed, update memTagNames[] in pragma.c !!
 	TAG_NONE,
+	TAG_CMDSYS,
+	TAG_FILESYSTEM,
 	TAG_RENDERER,
 	TAG_FX,
 	TAG_NAV_NODES,
@@ -186,7 +188,7 @@ void COM_AddParm (char *parm);
 void COM_Init (void);
 void COM_InitArgv (int argc, char **argv);
 
-char *CopyString (const char *in);
+char *CopyString (const char *in, memtag_t tag);
 
 
 void Info_Print (char *s);

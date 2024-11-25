@@ -14,6 +14,14 @@ See the attached GNU General Public License v2 for more details.
 
 cvar_t	*cvar_vars;
 
+#define SAFE_COPYSTRING(var, new_str)  \
+	if (var) \
+	{\
+		Z_Free(var, DBG_FFL); \
+		var = NULL; \
+	} \
+	var = CopyString(new_str, TAG_CMDSYS);
+
 /*
 ============
 Cvar_InfoValidate
@@ -147,13 +155,17 @@ cvar_t *Cvar_Get (const char *var_name, const char *var_value, int flags, const 
 		}
 	}
 
-	var = Z_TagMalloc (sizeof(*var), TAG_NONE, DBG_FFL);
-	var->name = CopyString (var_name);
+	var = Z_TagMalloc (sizeof(*var), TAG_CMDSYS, DBG_FFL);
+	//var->name = CopyString (var_name);
+	SAFE_COPYSTRING(var->name, var_name);
 	
 	if (var_desc != NULL)
-		var->description = CopyString(var_desc);
+	{
+		SAFE_COPYSTRING(var->description, var_desc);
+	}
 
-	var->string = CopyString (var_value);
+	SAFE_COPYSTRING(var->string, var_value);
+
 	var->modified = true;
 	var->value = atof (var->string);
 
@@ -215,11 +227,13 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 			if (Com_ServerState())
 			{
 				Com_Printf ("%s will be changed for next game.\n", var_name);
-				var->latched_string = CopyString(value);
+				//var->latched_string = CopyString(value);
+				SAFE_COPYSTRING(var->latched_string, value);
 			}
 			else
 			{
-				var->string = CopyString(value);
+				//var->string = CopyString(value);
+				SAFE_COPYSTRING(var->string, value);
 				var->value = atof (var->string);
 				if (!strcmp(var->name, "game"))
 				{
@@ -247,9 +261,10 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 	if (var->flags & CVAR_USERINFO)
 		userinfo_modified = true;	// transmit at next oportunity
 	
-	Z_Free (var->string, DBG_FFL);	// free the old value string
-	
-	var->string = CopyString(value);
+	//Z_Free (var->string, DBG_FFL);	// free the old value string
+	//var->string = CopyString(value);
+	SAFE_COPYSTRING(var->string, value);
+
 	var->value = atof (var->string);
 
 	return var;
@@ -296,9 +311,10 @@ cvar_t *Cvar_FullSet (const char *var_name, const char *value, int flags, const 
 	if (var->flags & CVAR_USERINFO)
 		userinfo_modified = true;	// transmit at next oportunity
 	
-	Z_Free (var->string, DBG_FFL);	// free the old value string
-	
-	var->string = CopyString(value);
+	//Z_Free (var->string, DBG_FFL);	// free the old value string
+	//var->string = CopyString(value);
+	SAFE_COPYSTRING(var->string, value);
+
 	var->value = atof (var->string);
 	var->flags = flags;
 

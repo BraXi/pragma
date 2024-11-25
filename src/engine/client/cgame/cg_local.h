@@ -88,9 +88,9 @@ cparticle_t* FX_CreateOrientedParticle(const vec3_t origin, const vec3_t angles)
 prTime_t CG_GetEffectsTime();
 
 //
-// cg_physics.c
+// cg_world.c
 //
-trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum);
+trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum, qboolean bUseCapsule);
 int CG_PointContents(vec3_t point);
 
 

@@ -111,7 +111,7 @@ void Cbuf_InsertText (const char *text)
 	templen = cmd_text.cursize;
 	if (templen)
 	{
-		temp = Z_TagMalloc (templen, TAG_NONE, DBG_FFL);
+		temp = Z_TagMalloc (templen, TAG_CMDSYS, DBG_FFL);
 		memcpy (temp, cmd_text.data, templen);
 		SZ_Clear (&cmd_text);
 	}
@@ -302,7 +302,7 @@ qboolean Cbuf_AddLateCommands (void)
 	if (!s)
 		return false;
 		
-	text = Z_TagMalloc (s+1, TAG_NONE, DBG_FFL);
+	text = Z_TagMalloc (s+1, TAG_CMDSYS, DBG_FFL);
 	text[0] = 0;
 	for (i=1 ; i<argc ; i++)
 	{
@@ -312,7 +312,7 @@ qboolean Cbuf_AddLateCommands (void)
 	}
 	
 // pull out the commands
-	build = Z_TagMalloc (s+1, TAG_NONE, DBG_FFL);
+	build = Z_TagMalloc (s+1, TAG_CMDSYS, DBG_FFL);
 	build[0] = 0;
 	
 	for (i=0 ; i<s-1 ; i++)
@@ -445,7 +445,7 @@ void Cmd_Alias_f (void)
 
 	if (!a)
 	{
-		a = Z_TagMalloc (sizeof(cmdalias_t), TAG_NONE, DBG_FFL);
+		a = Z_TagMalloc (sizeof(cmdalias_t), TAG_CMDSYS, DBG_FFL);
 		a->next = cmd_alias;
 		cmd_alias = a;
 	}
@@ -462,7 +462,7 @@ void Cmd_Alias_f (void)
 	}
 	strcat (cmd, "\n");
 	
-	a->value = CopyString (cmd);
+	a->value = CopyString (cmd, TAG_CMDSYS);
 }
 
 /*
@@ -664,7 +664,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 
 		if (cmd_argc < MAX_STRING_TOKENS)
 		{
-			cmd_argv[cmd_argc] = Z_TagMalloc((int)strlen(com_token)+1, TAG_NONE, DBG_FFL);
+			cmd_argv[cmd_argc] = Z_TagMalloc((int)strlen(com_token)+1, TAG_CMDSYS, DBG_FFL);
 			strcpy (cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
@@ -699,7 +699,7 @@ void Cmd_AddCommand(const char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = Z_TagMalloc (sizeof(cmd_function_t), TAG_NONE, DBG_FFL);
+	cmd = Z_TagMalloc (sizeof(cmd_function_t), TAG_CMDSYS, DBG_FFL);
 	cmd->name = cmd_name;
 	cmd->function = function;
 	cmd->next = cmd_functions;
@@ -733,7 +733,7 @@ void Cmd_AddCommandCG(const char* cmd_name, scr_func_t function)
 		}
 	}
 
-	cmd = Z_TagMalloc(sizeof(cmd_function_t), TAG_NONE, DBG_FFL);
+	cmd = Z_TagMalloc(sizeof(cmd_function_t), TAG_CMDSYS, DBG_FFL);
 	cmd->name = cmd_name;
 	cmd->prfunction = function;
 	cmd->next = cmd_functions;

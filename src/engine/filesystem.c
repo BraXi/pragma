@@ -373,7 +373,7 @@ int FS_LoadFile (const char *path, void **buffer)
 		return fileLength;
 	}
 
-	buf = Z_TagMalloc(fileLength+1, TAG_NONE, DBG_FFL);
+	buf = Z_TagMalloc(fileLength+1, TAG_FILESYSTEM, DBG_FFL);
 	*buffer = buf;
 
 	fread(buf, fileLength, 1, h);
@@ -421,7 +421,7 @@ int FS_LoadTextFile(const char* filename, char** buffer)
 	}
 
 	// NULL terminate the file
-	buf = Z_TagMalloc(len + 1, TAG_NONE, DBG_FFL);
+	buf = Z_TagMalloc(len + 1, TAG_FILESYSTEM, DBG_FFL);
 	*buffer = buf;
 
 	memcpy(buf, raw, len);
@@ -450,25 +450,29 @@ pack_t *FS_LoadPackFile (const char *packfile)
 	int				numpackfiles;
 	pack_t			*pack;
 	FILE			*packhandle;
-	dpackfile_t		info[MAX_FILES_IN_PACK];
 	unsigned		checksum;
+
+	static dpackfile_t info[MAX_FILES_IN_PACK];
 
 	packhandle = fopen(packfile, "rb");
 	if (!packhandle)
 		return NULL;
 
+	memset(&info, 0, sizeof(info));
+
 	fread (&header, 1, sizeof(header), packhandle);
 	if (LittleLong(header.ident) != IDPAKHEADER)
-		Com_Error (ERR_FATAL, "%s is not a packfile", packfile);
+		Com_Error (ERR_FATAL, "%s is not a package.", packfile);
+
 	header.dirofs = LittleLong (header.dirofs);
 	header.dirlen = LittleLong (header.dirlen);
 
 	numpackfiles = header.dirlen / sizeof(dpackfile_t);
 
 	if (numpackfiles > MAX_FILES_IN_PACK)
-		Com_Error (ERR_FATAL, "%s has %i files", packfile, numpackfiles);
+		Com_Error (ERR_FATAL, "%s has too many files (%i).", packfile, numpackfiles);
 
-	newfiles = Z_TagMalloc(numpackfiles * sizeof(packfile_t), TAG_NONE, DBG_FFL);
+	newfiles = Z_TagMalloc(numpackfiles * sizeof(packfile_t), TAG_FILESYSTEM, DBG_FFL);
 
 	fseek (packhandle, header.dirofs, SEEK_SET);
 	fread (info, 1, header.dirlen, packhandle);
@@ -488,7 +492,7 @@ pack_t *FS_LoadPackFile (const char *packfile)
 		newfiles[i].filelen = LittleLong(info[i].filelen);
 	}
 
-	pack = Z_TagMalloc(sizeof (pack_t), TAG_NONE, DBG_FFL);
+	pack = Z_TagMalloc(sizeof (pack_t), TAG_FILESYSTEM, DBG_FFL);
 	strcpy (pack->filename, packfile);
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
@@ -519,7 +523,7 @@ void FS_AddGameDirectory (char *dir)
 	//
 	// add the directory to the search path
 	//
-	search = Z_TagMalloc(sizeof(searchpath_t), TAG_NONE, DBG_FFL);
+	search = Z_TagMalloc(sizeof(searchpath_t), TAG_FILESYSTEM, DBG_FFL);
 	strcpy (search->filename, dir);
 	search->next = fs_searchpaths;
 	fs_searchpaths = search;
@@ -533,7 +537,7 @@ void FS_AddGameDirectory (char *dir)
 		pak = FS_LoadPackFile (pakfile);
 		if (!pak)
 			continue;
-		search = Z_TagMalloc(sizeof(searchpath_t), TAG_NONE, DBG_FFL);
+		search = Z_TagMalloc(sizeof(searchpath_t), TAG_FILESYSTEM, DBG_FFL);
 		search->pack = pak;
 		search->next = fs_searchpaths;
 		fs_searchpaths = search;		
@@ -610,6 +614,8 @@ void FS_SetGamedir (const char *dir)
 		fs_searchpaths = next;
 	}
 
+	//Z_FreeTags(TAG_FILESYSTEM);
+
 	//
 	// flush all data, so it will be forced to reload
 	//
@@ -664,19 +670,19 @@ void FS_Link_f (void)
 				Z_Free (l, DBG_FFL);
 				return;
 			}
-			l->to = CopyString (Cmd_Argv(2));
+			l->to = CopyString (Cmd_Argv(2), TAG_FILESYSTEM);
 			return;
 		}
 		prev = &l->next;
 	}
 
 	// create a new link
-	l = Z_TagMalloc(sizeof(*l), TAG_NONE, DBG_FFL);
+	l = Z_TagMalloc(sizeof(*l), TAG_FILESYSTEM, DBG_FFL);
 	l->next = fs_links;
 	fs_links = l;
-	l->from = CopyString(Cmd_Argv(1));
+	l->from = CopyString(Cmd_Argv(1), TAG_FILESYSTEM);
 	l->fromlength = (int)strlen(l->from);
-	l->to = CopyString(Cmd_Argv(2));
+	l->to = CopyString(Cmd_Argv(2), TAG_FILESYSTEM);
 }
 
 /*
