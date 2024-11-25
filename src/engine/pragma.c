@@ -1031,7 +1031,7 @@ char* COM_NewString(char* string, memtag_t memtag)
 	return newb;
 }
 
-qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f) //MEMLEAK
+qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f, memtag_t tag)
 {
 	float	vec[4];
 
@@ -1071,7 +1071,7 @@ qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f) 
 				break;
 
 			case F_STRING:
-				*(char**)(basePtr + f->ofs) = COM_NewString(value, 0); // FIXME memtag //MEMLEAK
+				*(char**)(basePtr + f->ofs) = COM_NewString(value, tag);
 				break;
 
 			case F_VECTOR2:

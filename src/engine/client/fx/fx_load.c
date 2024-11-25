@@ -179,9 +179,9 @@ static void FX_ParseFile(char* data, fxdef_t* def)
 			strncpy(value, token, sizeof(value) - 1);
 
 			if (fields == fields_fx_particle)
-				COM_ParseField(key, value, def->part[def->numPartSegments - 1], fields);
+				COM_ParseField(key, value, def->part[def->numPartSegments - 1], fields, TAG_FX);
 			else if (fields == fields_fx_dlight)
-				COM_ParseField(key, value, def->dlight[def->numDLightSegments - 1], fields);
+				COM_ParseField(key, value, def->dlight[def->numDLightSegments - 1], fields, TAG_FX);
 		}
 	}
 }

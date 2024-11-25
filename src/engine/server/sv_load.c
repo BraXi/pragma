@@ -12,7 +12,7 @@ See the attached GNU General Public License v2 for more details.
 
 #include "server.h"
 
-qboolean ModelDef_LoadFile(const char* filename, modeldef_t* def);
+qboolean ModelDef_LoadFile(const char* filename, modeldef_t* def, memtag_t tag);
 
 static void SV_LoadMD3(svmodel_t* out, void* buffer);
 static svmodel_t* SV_LoadModel(const char* name, qboolean crash);
@@ -270,7 +270,7 @@ static void SV_LoadDefForModel(svmodel_t* model)
 	model->def.anims[0].lastFrame = 0;
 	model->def.numAnimations = 1;
 
-	if (ModelDef_LoadFile(defname, &model->def))
+	if (ModelDef_LoadFile(defname, &model->def, TAG_SERVER_GAME))
 	{
 		// def found, see if anims are trully correct
 		for (i = 0; i < model->def.numAnimations; i++)

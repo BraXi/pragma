@@ -106,7 +106,7 @@ static void ModelDef_Parse(char* data, modeldef_t* def)
 			}
 
 			if(fields == fields_anim)
-				COM_ParseField(key, value, &def->anims[def->numAnimations - 1], fields);
+				COM_ParseField(key, value, &def->anims[def->numAnimations - 1], fields, TAG_NONE);
 //			else if (fields == fields_skin)
 //				COM_ParseField(key, value, def->skins[def->numSkins - 1], fields);
 		}
@@ -157,7 +157,7 @@ static void ModelDef_ValidateAnimations(modeldef_t* def)
 	}
 }
 
-qboolean ModelDef_LoadFile(char* filename, modeldef_t* def)
+qboolean ModelDef_LoadFile(char* filename, modeldef_t* def, memtag_t tag) //since only server uses it it should be not needed to pass memtag
 {
 	int		len;
 	char	*data = NULL;

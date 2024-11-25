@@ -255,7 +255,7 @@ void Z_FreeTags (memtag_t tag);
 void Z_FreeAll();
 
 char* COM_NewString(char* string, memtag_t memtag);
-qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f);
+qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f, memtag_t tag);
 
 void Qcommon_Init (int argc, char **argv);
 void Qcommon_Frame (int msec);
