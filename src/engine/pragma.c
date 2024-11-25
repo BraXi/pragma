@@ -694,7 +694,7 @@ char *CopyString (const char *in)
 {
 	char	*out;
 	
-	out = Z_Malloc ((int)strlen(in)+1);
+	out = Z_TagMalloc((int)strlen(in)+1, TAG_NONE, DBG_FFL);
 	strcpy (out, in);
 	return out;
 }
@@ -755,33 +755,69 @@ just cleared malloc with counters now...
 ==============================================================================
 */
 
+#define ZONE_ENABLE_LOG 1
 #define	Z_MAGIC		0x1d1d
-
 
 typedef struct zhead_s
 {
 	struct zhead_s	*prev, *next;
-	short		magic;
-	memtag_t	tag;			// for group free
-	int			size;
+	short		magic;		// == Z_MAGIC
+	memtag_t	tag;		// for group free
+	size_t		size;
+
+	// mem debug stuff
+	prTime_t	time;		// time this block was allocated
+	int			id;			// increasing with each allocation
+	const char	*from;		// where it's been allocated
 } zhead_t;
 
-zhead_t		z_chain;
-int		z_count, z_bytes;
+static const char* memTagNames[] = { "NO_TAG", "RENDERER", "FX", "NAV_NODES", "SERVER_GAME", "CLIENT_GAME", "GUI", "QCVM_MEMORY", "QCVM1", "QCVM2", "QCVM3" };
+
+static zhead_t		z_chain;
+static size_t		z_count, z_bytes;
+static unsigned int	z_id = 0;
+
+#ifdef ZONE_ENABLE_LOG
+FILE* z_logfile = NULL;
+
+void Z_OpenLog()
+{
+	if (z_logfile)
+		return;
+
+	z_logfile = fopen("pragma_mem_log.csv", "w");
+	if (!z_logfile)
+		return;
+
+	fprintf(z_logfile, "Opened memory log at %s,,,,,,,\n", GetTimeStamp(true));
+	fprintf(z_logfile, "Operation,At_Time,Block_Id,Size_Bytes,MemTag,AllocTime,Where,\n");
+}
+#endif /*ZONE_ENABLE_LOG*/
 
 /*
 ========================
 Z_Free
 ========================
 */
-void Z_Free (void *ptr)
+void Z_Free (void *ptr, const char *call_from)
 {
 	zhead_t	*z;
 
 	z = ((zhead_t *)ptr) - 1;
 
 	if (z->magic != Z_MAGIC)
-		Com_Error (ERR_FATAL, "Z_Free: bad magic");
+	{
+		Com_Error(ERR_FATAL, __FUNCTION__": Bad memory block.");
+	}
+
+#ifdef ZONE_ENABLE_LOG
+	Z_OpenLog();
+	if (z_logfile)
+	{
+		//Operation,At_Time,Block_Id,Size_Bytes,MemTag,AllocTime,Where
+		fprintf(z_logfile, "FREE,%i,%i,%i,%s,%i,%s,\n", Sys_Milliseconds(), z->id, z->size, memTagNames[z->tag], z->time, call_from);
+	}
+#endif /*ZONE_ENABLE_LOG*/
 
 	z->prev->next = z->next;
 	z->next->prev = z->prev;
@@ -794,12 +830,92 @@ void Z_Free (void *ptr)
 
 /*
 ========================
-Z_Stats_f
+Mem_Stats_f
 ========================
 */
-void Z_Stats_f (void)
+void Mem_Stats_f (void)
 {
-	Com_Printf ("%i bytes in %i blocks\n", z_bytes, z_count);
+	static const char* memLogName = "pragma_mem_report.csv";
+
+	FILE* memLogFile;
+	zhead_t* z, * next;
+	int i;
+
+	Com_Printf("Total of %i bytes in %i memory blocks.\n", z_bytes, z_count);
+
+	memLogFile = fopen(memLogName, "w");
+	if (!memLogFile)
+	{
+		return;
+	}
+
+	fprintf(memLogFile, "Block_Number,Size_In_Bytes,MemTag,Time_Allocated,Allocated_In,\n");
+
+	for (i = 1, z = z_chain.next; z != &z_chain; z = next, i++)
+	{
+		next = z->next;
+		fprintf(memLogFile, "%i,%i,%s,%i,%s,\n", z->id, z->size, memTagNames[z->tag], z->time, z->from);
+	}
+	fprintf(memLogFile, "Generated memory report at %s,,,,\n", GetTimeStamp(true));
+	fclose(memLogFile);
+
+	Com_Printf("Saved detailed zone memory report to file '%s'\n", memLogName);
+}
+
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
+/*
+========================
+Z_FreeAll
+Frees ALL ZONE MEMORY, called only when PRAGMA is shutting down completly.
+========================
+*/
+void Z_FreeAll()
+{
+	zhead_t* z, * next;
+	int count, i;
+	size_t total_bytes, per_tag_bytes[NUM_MEMORY_TAGS];
+	char msg[2048];
+
+	count = 0;
+	total_bytes = 0;
+	memset(&per_tag_bytes, 0, sizeof(per_tag_bytes));
+	memset(&msg, 0, sizeof(msg));
+	for (z = z_chain.next; z != &z_chain; z = next)
+	{
+		count++;
+		total_bytes += z->size;
+		per_tag_bytes[z->tag] += z->size;
+		next = z->next;
+		Z_Free((void*)(z + 1), DBG_FFL);
+	}
+
+	if (count)
+	{
+		char *a = va("Freed remaining %i kb of memory in %i memory blocks.\n\n", total_bytes / 1024, count);
+
+		strcat(msg, a);
+
+
+		for (i = 0; i < NUM_MEMORY_TAGS; i++)
+		{
+			if (per_tag_bytes[i] > 0)
+			{
+				a = va("%s: %i kb\n", memTagNames[i], per_tag_bytes[i]/1024);
+				strcat(msg, a);
+			}
+		}
+
+		Com_Printf(msg);
+
+#ifdef _WIN32
+		MessageBox(0, msg, "PRAGMA - Memory Warning!", MB_ICONWARNING);
+		OutputDebugString(msg);
+#endif
+	}
+	
 }
 
 /*
@@ -815,7 +931,7 @@ void Z_FreeTags (memtag_t tag)
 	{
 		next = z->next;
 		if (z->tag == tag)
-			Z_Free ((void *)(z+1));
+			Z_Free ((void *)(z+1), DBG_FFL);
 	}
 }
 
@@ -824,7 +940,7 @@ void Z_FreeTags (memtag_t tag)
 Z_TagMalloc
 ========================
 */
-void *Z_TagMalloc (int size, memtag_t tag)
+void *Z_TagMalloc (int size, memtag_t tag, const char* call_from)
 {
 	zhead_t	*z;
 	
@@ -839,12 +955,28 @@ void *Z_TagMalloc (int size, memtag_t tag)
 
 	memset (z, 0, size);
 
+	z_id++;
 	z_count++;
 	z_bytes += size;
 
 	z->magic = Z_MAGIC;
 	z->tag = tag;
 	z->size = size;
+
+	//debugging stuff
+	z->id = z_id;
+	z->time = Sys_Milliseconds();
+	z->from = call_from;
+
+
+#ifdef ZONE_ENABLE_LOG
+	Z_OpenLog();
+	if (z_logfile)
+	{
+		//Operation,At_Time,Block_Id,Size_Bytes,MemTag,AllocTime
+		fprintf(z_logfile, "ALLOC,%i,%i,%i,%s,%i,%s\n", Sys_Milliseconds(), z->id, z->size, memTagNames[z->tag], z->time, z->from);
+	}
+#endif
 
 	z->next = z_chain.next;
 	z->prev = &z_chain;
@@ -859,9 +991,9 @@ void *Z_TagMalloc (int size, memtag_t tag)
 Z_Malloc
 ========================
 */
-void *Z_Malloc (int size)
+void *Z_Malloc (int size, const char* call_from)
 {
-	return Z_TagMalloc (size, 0);
+	return Z_TagMalloc (size, TAG_NONE, call_from);
 }
 
 //====================================================================================
@@ -878,10 +1010,7 @@ char* COM_NewString(char* string, memtag_t memtag)
 
 	l = (int)strlen(string) + 1;
 
-	if (memtag > 0)
-		newb = Z_TagMalloc(l, memtag);
-	else
-		newb = Z_Malloc(l);
+	newb = Z_TagMalloc(l, memtag, DBG_FFL);
 
 	new_p = newb;
 
@@ -902,7 +1031,7 @@ char* COM_NewString(char* string, memtag_t memtag)
 	return newb;
 }
 
-qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
+qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f) //MEMLEAK
 {
 	float	vec[4];
 
@@ -942,7 +1071,7 @@ qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f)
 				break;
 
 			case F_STRING:
-				*(char**)(basePtr + f->ofs) = COM_NewString(value, 0); // FIXME memtag
+				*(char**)(basePtr + f->ofs) = COM_NewString(value, 0); // FIXME memtag //MEMLEAK
 				break;
 
 			case F_VECTOR2:
@@ -1113,7 +1242,7 @@ unsigned short CRC_ChecksumFile(const char* name, qboolean fatal)
 	checksum = CRC_Block(buf, length); // CRC
 //	checksum = LittleLong(Com_BlockChecksum(buf, length)); // MD4
 
-	Z_Free(buf);
+	Z_Free(buf, DBG_FFL);
 	return checksum;
 }
 
@@ -1197,7 +1326,8 @@ void Qcommon_Init (int argc, char **argv)
 	//
 	// init commands and vars
 	//
-    Cmd_AddCommand ("z_stats", Z_Stats_f);
+	developer = Cvar_Get("developer", "1337", 0, NULL);
+    Cmd_AddCommand ("mem_stats", Mem_Stats_f);
     Cmd_AddCommand ("error", Com_Error_f);
 
 #ifndef DEDICATED_ONLY

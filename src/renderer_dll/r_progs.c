@@ -402,7 +402,7 @@ static qboolean R_CheckShaderObject(glprog_t *prog, unsigned int shaderObject, c
 		GLint maxLength = 0;
 		glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &maxLength);
 
-		errorLog = (char*)malloc(sizeof(char) * maxLength);
+		errorLog = (char*)malloc(sizeof(char) * maxLength); // FIX_MEM
 
 		glGetShaderInfoLog(shaderObject, maxLength, &maxLength, &errorLog[0]);
 		ri.Error(ERR_FATAL, "Failed to compile %s shader for program \"%s\".\n\nError log:\n%s\n", name, prog->name, errorLog);

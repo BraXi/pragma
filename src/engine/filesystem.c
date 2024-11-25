@@ -373,7 +373,7 @@ int FS_LoadFile (const char *path, void **buffer)
 		return fileLength;
 	}
 
-	buf = Z_Malloc(fileLength+1);
+	buf = Z_TagMalloc(fileLength+1, TAG_NONE, DBG_FFL);
 	*buffer = buf;
 
 	fread(buf, fileLength, 1, h);
@@ -391,7 +391,7 @@ FS_FreeFile
 */
 void FS_FreeFile (void *buffer)
 {
-	Z_Free (buffer);
+	Z_Free (buffer, DBG_FFL);
 }
 
 /*
@@ -421,7 +421,7 @@ int FS_LoadTextFile(const char* filename, char** buffer)
 	}
 
 	// NULL terminate the file
-	buf = Z_Malloc(len + 1);
+	buf = Z_TagMalloc(len + 1, TAG_NONE, DBG_FFL);
 	*buffer = buf;
 
 	memcpy(buf, raw, len);
@@ -468,7 +468,7 @@ pack_t *FS_LoadPackFile (const char *packfile)
 	if (numpackfiles > MAX_FILES_IN_PACK)
 		Com_Error (ERR_FATAL, "%s has %i files", packfile, numpackfiles);
 
-	newfiles = Z_Malloc (numpackfiles * sizeof(packfile_t));
+	newfiles = Z_TagMalloc(numpackfiles * sizeof(packfile_t), TAG_NONE, DBG_FFL);
 
 	fseek (packhandle, header.dirofs, SEEK_SET);
 	fread (info, 1, header.dirlen, packhandle);
@@ -488,7 +488,7 @@ pack_t *FS_LoadPackFile (const char *packfile)
 		newfiles[i].filelen = LittleLong(info[i].filelen);
 	}
 
-	pack = Z_Malloc (sizeof (pack_t));
+	pack = Z_TagMalloc(sizeof (pack_t), TAG_NONE, DBG_FFL);
 	strcpy (pack->filename, packfile);
 	pack->handle = packhandle;
 	pack->numfiles = numpackfiles;
@@ -519,7 +519,7 @@ void FS_AddGameDirectory (char *dir)
 	//
 	// add the directory to the search path
 	//
-	search = Z_Malloc (sizeof(searchpath_t));
+	search = Z_TagMalloc(sizeof(searchpath_t), TAG_NONE, DBG_FFL);
 	strcpy (search->filename, dir);
 	search->next = fs_searchpaths;
 	fs_searchpaths = search;
@@ -533,7 +533,7 @@ void FS_AddGameDirectory (char *dir)
 		pak = FS_LoadPackFile (pakfile);
 		if (!pak)
 			continue;
-		search = Z_Malloc (sizeof(searchpath_t));
+		search = Z_TagMalloc(sizeof(searchpath_t), TAG_NONE, DBG_FFL);
 		search->pack = pak;
 		search->next = fs_searchpaths;
 		fs_searchpaths = search;		
@@ -602,11 +602,11 @@ void FS_SetGamedir (const char *dir)
 		if (fs_searchpaths->pack)
 		{
 			fclose (fs_searchpaths->pack->handle);
-			Z_Free (fs_searchpaths->pack->files);
-			Z_Free (fs_searchpaths->pack);
+			Z_Free (fs_searchpaths->pack->files, DBG_FFL);
+			Z_Free (fs_searchpaths->pack, DBG_FFL);
 		}
 		next = fs_searchpaths->next;
-		Z_Free (fs_searchpaths);
+		Z_Free (fs_searchpaths, DBG_FFL);
 		fs_searchpaths = next;
 	}
 
@@ -656,12 +656,12 @@ void FS_Link_f (void)
 	{
 		if (!strcmp (l->from, Cmd_Argv(1)))
 		{
-			Z_Free (l->to);
+			Z_Free (l->to, DBG_FFL);
 			if (!strlen(Cmd_Argv(2)))
 			{	// delete it
 				*prev = l->next;
-				Z_Free (l->from);
-				Z_Free (l);
+				Z_Free (l->from, DBG_FFL);
+				Z_Free (l, DBG_FFL);
 				return;
 			}
 			l->to = CopyString (Cmd_Argv(2));
@@ -671,7 +671,7 @@ void FS_Link_f (void)
 	}
 
 	// create a new link
-	l = Z_Malloc(sizeof(*l));
+	l = Z_TagMalloc(sizeof(*l), TAG_NONE, DBG_FFL);
 	l->next = fs_links;
 	fs_links = l;
 	l->from = CopyString(Cmd_Argv(1));

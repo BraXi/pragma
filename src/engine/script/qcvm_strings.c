@@ -272,7 +272,7 @@ scr_string_t Scr_AllocString(int size, char** ptr)
 		Scr_CreateStringTable();
 	}
 
-	pVMStr->stringTable[strindex] = (char*)Z_TagMalloc(size, (TAG_QCVM_MEMORY + active_qcvm->progsType));
+	pVMStr->stringTable[strindex] = (char*)Z_TagMalloc(size, (TAG_QCVM_MEMORY + active_qcvm->progsType), DBG_FFL);
 	pVMStr->numStringsInTable++;
 
 	if (ptr)

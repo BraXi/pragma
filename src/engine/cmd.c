@@ -111,7 +111,7 @@ void Cbuf_InsertText (const char *text)
 	templen = cmd_text.cursize;
 	if (templen)
 	{
-		temp = Z_Malloc (templen);
+		temp = Z_TagMalloc (templen, TAG_NONE, DBG_FFL);
 		memcpy (temp, cmd_text.data, templen);
 		SZ_Clear (&cmd_text);
 	}
@@ -125,7 +125,7 @@ void Cbuf_InsertText (const char *text)
 	if (templen)
 	{
 		SZ_Write (&cmd_text, temp, templen);
-		Z_Free (temp);
+		Z_Free (temp, DBG_FFL);
 	}
 }
 
@@ -302,7 +302,7 @@ qboolean Cbuf_AddLateCommands (void)
 	if (!s)
 		return false;
 		
-	text = Z_Malloc (s+1);
+	text = Z_TagMalloc (s+1, TAG_NONE, DBG_FFL);
 	text[0] = 0;
 	for (i=1 ; i<argc ; i++)
 	{
@@ -312,7 +312,7 @@ qboolean Cbuf_AddLateCommands (void)
 	}
 	
 // pull out the commands
-	build = Z_Malloc (s+1);
+	build = Z_TagMalloc (s+1, TAG_NONE, DBG_FFL);
 	build[0] = 0;
 	
 	for (i=0 ; i<s-1 ; i++)
@@ -338,8 +338,8 @@ qboolean Cbuf_AddLateCommands (void)
 	if (ret)
 		Cbuf_AddText (build);
 	
-	Z_Free (text);
-	Z_Free (build);
+	Z_Free (text, DBG_FFL);
+	Z_Free (build, DBG_FFL);
 
 	return ret;
 }
@@ -438,14 +438,14 @@ void Cmd_Alias_f (void)
 	{
 		if (!strcmp(s, a->name))
 		{
-			Z_Free (a->value);
+			Z_Free (a->value, DBG_FFL);
 			break;
 		}
 	}
 
 	if (!a)
 	{
-		a = Z_Malloc (sizeof(cmdalias_t));
+		a = Z_TagMalloc (sizeof(cmdalias_t), TAG_NONE, DBG_FFL);
 		a->next = cmd_alias;
 		cmd_alias = a;
 	}
@@ -614,7 +614,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 
 // clear the args from the last string
 	for (i=0 ; i<cmd_argc ; i++)
-		Z_Free (cmd_argv[i]);
+		Z_Free (cmd_argv[i], DBG_FFL);
 		
 	cmd_argc = 0;
 	cmd_args[0] = 0;
@@ -664,7 +664,7 @@ void Cmd_TokenizeString (char *text, qboolean macroExpand)
 
 		if (cmd_argc < MAX_STRING_TOKENS)
 		{
-			cmd_argv[cmd_argc] = Z_Malloc ((int)strlen(com_token)+1);
+			cmd_argv[cmd_argc] = Z_TagMalloc((int)strlen(com_token)+1, TAG_NONE, DBG_FFL);
 			strcpy (cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
@@ -699,7 +699,7 @@ void Cmd_AddCommand(const char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = Z_Malloc (sizeof(cmd_function_t));
+	cmd = Z_TagMalloc (sizeof(cmd_function_t), TAG_NONE, DBG_FFL);
 	cmd->name = cmd_name;
 	cmd->function = function;
 	cmd->next = cmd_functions;
@@ -733,7 +733,7 @@ void Cmd_AddCommandCG(const char* cmd_name, scr_func_t function)
 		}
 	}
 
-	cmd = Z_Malloc(sizeof(cmd_function_t));
+	cmd = Z_TagMalloc(sizeof(cmd_function_t), TAG_NONE, DBG_FFL);
 	cmd->name = cmd_name;
 	cmd->prfunction = function;
 	cmd->next = cmd_functions;
@@ -761,7 +761,7 @@ void Cmd_RemoveCommand(const char *cmd_name)
 		if (cmd->prfunction == -1 && !strcmp (cmd_name, cmd->name)) // workaround for crash when name is set to progstring but qcvm is already destroyed
 		{
 			*back = cmd->next;
-			Z_Free (cmd);
+			Z_Free (cmd, DBG_FFL);
 			return;
 		}
 		back = &cmd->next;
@@ -789,7 +789,7 @@ void Cmd_RemoveClientGameCommands()
 		if(cmd->prfunction != -1)
 		{
 			*back = cmd->next;
-			Z_Free(cmd);
+			Z_Free(cmd, DBG_FFL);
 			return;
 		}
 		back = &cmd->next;

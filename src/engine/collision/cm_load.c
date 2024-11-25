@@ -611,6 +611,9 @@ CM_ClearMap
 */
 void CM_ClearMap()
 {
+	if (!cm.membase)
+		return;
+
 	Com_Printf("CM_ClearMap(%s): freed %i kb of memory.\n", cm.name != NULL ? cm.name : "", cm.memsize/1024);
 	
 	CM_ClearLevelPatches();

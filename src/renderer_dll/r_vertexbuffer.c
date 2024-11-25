@@ -22,7 +22,9 @@ extern void ClearVertexBuffer();
 extern void PushVert(float x, float y, float z);
 extern void SetTexCoords(float s, float t);
 
-#define VBA_DEBUG 1
+#ifdef _DEBUG
+#define VBA_DEBUG 1 // Additional error checking in VBOs
+#endif
 
 /*
 ===============
@@ -149,7 +151,7 @@ vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, uns
 {
 	vertexbuffer_t* vbo = NULL;
 
-	vbo = ri.MemAlloc(sizeof(vertexbuffer_t));
+	vbo = ri.MemAlloc(sizeof(vertexbuffer_t), DBG_FFL);
 	if (!vbo)
 	{
 		ri.Error(ERR_FATAL, "R_AllocVertexBuffer failed\n");
@@ -166,7 +168,7 @@ vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, uns
 
 	if (numVerts)
 	{
-		vbo->verts = ri.MemAlloc(sizeof(glvert_t) * numVerts);
+		vbo->verts = ri.MemAlloc((sizeof(glvert_t) * numVerts), DBG_FFL);
 		if (!vbo->verts)
 		{
 			ri.Error(ERR_FATAL, "R_AllocVertexBuffer failed to allocate %i vertices\n", numVerts);
@@ -178,7 +180,7 @@ vertexbuffer_t* R_AllocVertexBuffer(vboFlags_t flags, unsigned int numVerts, uns
 	if ((flags & V_INDICES) && numIndices > 0)
 	{
 		glGenBuffers(1, &vbo->indexBuf);
-		vbo->indices = ri.MemAlloc(sizeof(int) * numIndices);
+		vbo->indices = ri.MemAlloc(sizeof(int) * numIndices, DBG_FFL);
 		{
 			ri.Error(ERR_FATAL, "R_AllocVertexBuffer failed to allocate %i indices\n", numIndices);
 			return NULL;
@@ -219,7 +221,7 @@ void R_UpdateVertexBuffer(vertexbuffer_t* vbo, glvert_t* verts, unsigned int num
 
 	if (!(vbo->flags & V_NOFREE) && vbo->verts != NULL)
 	{
-		ri.MemFree(vbo->verts);
+		ri.MemFree(vbo->verts, DBG_FFL);
 		vbo->verts = NULL;
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -318,17 +320,17 @@ void R_FreeVertexBuffer(vertexbuffer_t* vbo)
 
 	if (vbo->indices)
 	{
-		ri.MemFree(vbo->indices);
+		ri.MemFree(vbo->indices, DBG_FFL);
 		vbo->indices = NULL;
 	}
 
 	if (vbo->verts)
 	{
-		ri.MemFree(vbo->verts);
+		ri.MemFree(vbo->verts, DBG_FFL);
 		vbo->verts = NULL;
 	}
 
-	ri.MemFree(vbo);
+	ri.MemFree(vbo, DBG_FFL);
 	//vbo = NULL;
 //	memset(vbo, 0, sizeof(*vbo));
 }

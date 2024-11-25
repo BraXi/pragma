@@ -277,7 +277,7 @@ void SV_CallSpawnForEntity(gentity_t* ent)
 	spawnfunc = Scr_FindFunctionIndex(spawnFuncName);
 	if (spawnfunc == -1 && ent != sv.edicts)
 	{
-		Com_DPrintf(DP_SV, "Unknown entity: '%s'\n", classname);
+		//Com_DPrintf(DP_SV, "Unknown entity: '%s'\n", classname);
 		SV_FreeEntity(ent);
 		return;
 	}
@@ -367,8 +367,7 @@ char* SV_ParseEntity(char* data, gentity_t * ent)
 		key = Scr_FindEntityField(keyname);
 		if (!key)
 		{
-			if(developer->value)
-				Com_DPrintf(DP_SV, "Unknown entity field: '%s'\n", keyname);
+			//Com_DPrintf(DP_SV, "Unknown entity field: '%s'\n", keyname);
 //			if (strncmp(keyname, "sky", 3))
 //			{
 //				gi.dprintf("\"%s\" is not a field\n", keyname);
@@ -444,7 +443,7 @@ void SV_SpawnEntities(const char* mapname, char* entities, const char* spawnpoin
 			discard++;
 		total++;
 	}
-	Com_Printf("'%s' entities: %i inhibited, %i discarded (%i in map total)\n", sv.mapname, inhibit, discard, total);
+	Com_Printf("Inhibited %i game entities from a map '%s'.\n", inhibit, sv.mapname);
 }
 
 

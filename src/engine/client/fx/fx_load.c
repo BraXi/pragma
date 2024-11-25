@@ -70,7 +70,7 @@ static void FX_CreatePartSegment(fxdef_t* owner)
 		return;
 	}
 
-	fx_particle_def_t* part = Z_TagMalloc(sizeof(fx_particle_def_t), TAG_FX);
+	fx_particle_def_t* part = Z_TagMalloc(sizeof(fx_particle_def_t), TAG_FX, DBG_FFL);
 
 	VectorSet(part->color, 1.0f, 1.0f, 1.0f);
 	part->size[0] = part->size[1] = 1.0;
@@ -93,7 +93,7 @@ static void FX_CreateDynamicLightSegment(fxdef_t* owner)
 		return;
 	}
 
-	fx_dlight_t* dlight = Z_TagMalloc(sizeof(fx_dlight_t), TAG_FX);
+	fx_dlight_t* dlight = Z_TagMalloc(sizeof(fx_dlight_t), TAG_FX, DBG_FFL);
 
 	VectorSet(dlight->color, 1.0f, 1.0f, 1.0f);
 	dlight->radius = 64;
@@ -219,7 +219,7 @@ qboolean FX_LoadFromFile(char* name)
 		return -1;
 	}
 
-	fx = Z_TagMalloc(sizeof(fxdef_t), TAG_FX);
+	fx = Z_TagMalloc(sizeof(fxdef_t), TAG_FX, DBG_FFL);
 	strncpy(fx->name, name, sizeof(fx->name));
 
 	// parse it

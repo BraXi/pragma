@@ -74,7 +74,7 @@ void R_InitMaterials()
 	// allocate space for materials
 	if (!r_materials)
 	{
-		r_materials = ri.MemAlloc(size);
+		r_materials = ri.MemAlloc(size, DBG_FFL);
 		Com_Printf("Reserved %i kb of memory for materials.\n", size/1024);
 	}
 

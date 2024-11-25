@@ -195,7 +195,7 @@ qboolean UI_LoadGui(char* guiname)
 		return true;
 
 	// create new gui
-	newgui = Z_TagMalloc(sizeof(GuiDef_t), TAG_GUI);
+	newgui = Z_TagMalloc(sizeof(GuiDef_t), TAG_GUI, DBG_FFL);
 	strcpy(newgui->name, guiname);
 
 	newgui->openTime = -1;

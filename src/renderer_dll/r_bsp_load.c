@@ -981,11 +981,11 @@ void R_LoadWorld(const char *bsp_name)
 
 	// explicitly free the old map if different and ensure we don't reload the map when restarting level
 	// TODO: make it also free textures used by world
-	//cm_flushmap = ri.Cvar_Get("cm_flushmap", "0", 0, NULL);
-	//if (r_world && (strcmp(r_world->name, bsp_name) || cm_flushmap->value))
-	//{
+	cm_flushmap = ri.Cvar_Get("cm_flushmap", "0", 0, NULL);
+	if (r_world && (strcmp(r_world->name, bsp_name) || cm_flushmap->value))
+	{
 		R_FreeWorld();
-	//}
+	}
 
 	// Load BSP from disk
 	world_fileBuffer = NULL;

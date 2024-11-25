@@ -58,7 +58,7 @@ winding_t	*AllocWinding (int points)
 		c_peak_windings = c_active_windings;
 
 	s = sizeof(vec_t)*3*points + sizeof(int);
-	w = Z_Malloc (s);
+	w = Z_TagMalloc(s, TAG_NONE, DBG_FFL);
 	memset (w, 0, s); 
 	return w;
 }
@@ -70,7 +70,7 @@ void FreeWinding (winding_t *w)
 	*(unsigned *)w = 0xdeaddead;
 
 	c_active_windings--;
-	Z_Free (w);
+	Z_Free (w, DBG_FFL);
 }
 
 /*

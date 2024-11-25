@@ -499,11 +499,18 @@ void VID_NewWindow ( int width, int height)
 
 void VID_FreeReflib (void)
 {
+	Z_FreeTags(TAG_RENDERER);
+
 	if ( !FreeLibrary( reflib_library ) )
 		Com_Error( ERR_FATAL, "Reflib FreeLibrary failed" );
 	memset (&re, 0, sizeof(re));
 	reflib_library = NULL;
 	reflib_active  = false;
+}
+
+static void *VID_Alloc(int size, const char* call_from)
+{
+	return Z_TagMalloc(size, TAG_RENDERER, call_from);
 }
 
 /*
@@ -531,7 +538,7 @@ qboolean VID_LoadRefresh( char *name )
 		return false;
 	}
 
-	ri.MemAlloc = Z_Malloc;
+	ri.MemAlloc = VID_Alloc; // Z_Malloc;
 	ri.MemFree = Z_Free;
 
 	ri.AddCommand = Cmd_AddCommand;

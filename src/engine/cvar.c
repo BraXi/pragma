@@ -147,7 +147,7 @@ cvar_t *Cvar_Get (const char *var_name, const char *var_value, int flags, const 
 		}
 	}
 
-	var = Z_Malloc (sizeof(*var));
+	var = Z_TagMalloc (sizeof(*var), TAG_NONE, DBG_FFL);
 	var->name = CopyString (var_name);
 	
 	if (var_desc != NULL)
@@ -204,7 +204,7 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 			{
 				if (strcmp(value, var->latched_string) == 0)
 					return var;
-				Z_Free (var->latched_string);
+				Z_Free (var->latched_string, DBG_FFL);
 			}
 			else
 			{
@@ -234,7 +234,7 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 	{
 		if (var->latched_string)
 		{
-			Z_Free (var->latched_string);
+			Z_Free (var->latched_string, DBG_FFL);
 			var->latched_string = NULL;
 		}
 	}
@@ -247,7 +247,7 @@ cvar_t *Cvar_Set2 (const char *var_name, const char *value, qboolean force)
 	if (var->flags & CVAR_USERINFO)
 		userinfo_modified = true;	// transmit at next oportunity
 	
-	Z_Free (var->string);	// free the old value string
+	Z_Free (var->string, DBG_FFL);	// free the old value string
 	
 	var->string = CopyString(value);
 	var->value = atof (var->string);
@@ -296,7 +296,7 @@ cvar_t *Cvar_FullSet (const char *var_name, const char *value, int flags, const 
 	if (var->flags & CVAR_USERINFO)
 		userinfo_modified = true;	// transmit at next oportunity
 	
-	Z_Free (var->string);	// free the old value string
+	Z_Free (var->string, DBG_FFL);	// free the old value string
 	
 	var->string = CopyString(value);
 	var->value = atof (var->string);
@@ -337,7 +337,7 @@ void Cvar_GetLatchedVars (void)
 	{
 		if (!var->latched_string)
 			continue;
-		Z_Free (var->string);
+		Z_Free (var->string, DBG_FFL);
 		var->string = var->latched_string;
 		var->latched_string = NULL;
 		var->value = atof(var->string);

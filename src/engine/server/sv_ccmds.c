@@ -809,15 +809,10 @@ void SV_Status_f (void)
 	if (sv_cheats->value)
 		Com_Printf("Cheats are allowed.\n");
 
-	if (developer->value || sv_cheats->value)
-		Com_Printf("\n");
-
-
 	Com_Printf("Hostname  : %s\n", Cvar_VariableString("hostname"));
 	Com_Printf("Map       : %s\n", sv.mapname);
-	Com_Printf("Game dir  : %s\n\n", FS_Gamedir());
-
-	Com_Printf("Clients   : %i / %i\n", numplayers, svs.max_clients);
+	Com_Printf("Game dir  : %s\n", FS_Gamedir());
+	Com_Printf("Players   : %i / %i\n", numplayers, svs.max_clients);
 	Com_Printf("Entities  : %i / %i\n", sv.num_edicts, sv.max_edicts);
 
 

@@ -90,6 +90,7 @@ void Sys_Quit (void)
 		FreeConsole ();
 #endif
 
+	Z_FreeAll();
 	exit (0);
 }
 

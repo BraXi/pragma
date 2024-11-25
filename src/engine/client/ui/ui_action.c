@@ -59,7 +59,7 @@ void UI_AddAction(const char* cmd_name, xcommand_t function, scr_func_t progfunc
 		return;
 	}
 
-	cmd = Z_Malloc(sizeof(ui_action_t));
+	cmd = Z_TagMalloc(sizeof(ui_action_t), TAG_NONE, DBG_FFL);
 	cmd->name = cmd_name;
 
 	cmd->function = function;
@@ -79,7 +79,7 @@ void UI_RemoveActions()
 {
 	for (int i = 0; i < ui_actions_count; i++)
 	{
-		Z_Free(ui_actions[i]);
+		Z_Free(ui_actions[i], DBG_FFL);
 		ui_actions[i] = NULL;
 	}
 	ui_actions_count = 0;

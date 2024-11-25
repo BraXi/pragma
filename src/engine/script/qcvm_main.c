@@ -519,7 +519,7 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 //	if (qcvm[progsType] != NULL)
 //		Com_Error(ERR_FATAL, "Tried to create second instance of %s script VM\n", Scr_GetScriptName(progsType));
 
-	qcvm[vmType] = Z_Malloc(sizeof(qcvm_t));
+	qcvm[vmType] = Z_TagMalloc(sizeof(qcvm_t), TAG_NONE, DBG_FFL);
 	if (qcvm == NULL)
 		Com_Error(ERR_FATAL, "Couldn't allocate %s VM.\n", Scr_GetScriptName(vmType));
 
@@ -535,7 +535,7 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 	Scr_LoadProgram(vm, vmDefs[vmType].filename);
 
 	// allocate entities
-	vm->entities = (vm_entity_t*)Z_TagMalloc((vm->num_entities * vm->entity_size), (TAG_QCVM_MEMORY + vm->progsType));
+	vm->entities = (vm_entity_t*)Z_TagMalloc((vm->num_entities * vm->entity_size), (TAG_QCVM_MEMORY + vm->progsType), DBG_FFL);
 
 	// open devlog
 	Scr_OpenLogFileForVM(vm);
@@ -559,7 +559,7 @@ void Scr_CreateScriptVM(vmType_t vmType, unsigned int numEntities, size_t entity
 		Com_Printf("            Globals: %i\n", progs->numGlobals);
 		Com_Printf("      Entity fields: %i\n", progs->numFieldDefs);
 		Com_Printf("     Strings length: %i\n", progs->numstrings);
-		Com_Printf(" Allocated entities: %i, %i bytes\n", vm->num_entities, vm->num_entities * Scr_GetEntitySize());
+		Com_Printf(" Allocated entities: %i, %i kb\n", vm->num_entities, (vm->num_entities * Scr_GetEntitySize())/1024);
 		Com_Printf("        Entity size: %i bytes\n", Scr_GetEntitySize());
 		Com_Printf("\n");
 		Com_Printf("       Programs CRC: %i\n", vm->crc);
@@ -597,7 +597,7 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 	//	Z_Free(vm->entities);
 
 	if (vm->progs)
-		Z_Free(vm->progs);
+		Z_Free(vm->progs, DBG_FFL);
 
 	if (vm->logfile)
 	{
@@ -611,7 +611,7 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 		Cmd_RemoveClientGameCommands();
 	}
 
-	Z_Free(vm);
+	Z_Free(vm, DBG_FFL);
 	qcvm[vmtype] = NULL;
 
 	Scr_BindVM(VM_NONE);
@@ -792,7 +792,7 @@ void Scr_Shutdown()
 
 	if (scr_builtins)
 	{
-		Z_Free(scr_builtins);
+		Z_Free(scr_builtins, DBG_FFL);
 		scr_builtins = NULL;
 		Com_DPrintf(DP_SCRIPT, "Freed script VM builtins...\n");
 	}

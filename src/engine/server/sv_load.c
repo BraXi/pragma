@@ -233,9 +233,9 @@ static qboolean SV_FileExists(const char* name, qboolean crash)
 	if (fileLen == -1)
 	{
 		if (crash)
-			Com_Error(ERR_DROP, "'%s' not found", name);
+			Com_Error(ERR_DROP, "File '%s' not found.\n", name);
 		else
-			Com_Printf("WARNING: '%s' not found\n", name);
+			Com_Printf("Warning: File '%s' not found.\n", name);
 
 		return false;
 	}
@@ -302,14 +302,14 @@ void SV_FreeModels()
 	svmodel_t* mod;
 
 	if(sv.numModels)
-		Com_Printf("Freeing %i models (server)...\n", sv.numModels);
+		Com_Printf("Server has freed %i cached models.\n", sv.numModels);
 
 	for (int i = 0; i < MAX_MODELS; i++)
 	{
 		mod = &sv.models[i];
 		if (mod->extradata)
 		{
-			Com_Printf("server freed: %s\n", mod->name);
+			//Com_Printf("server freed: %s\n", mod->name);
 			Hunk_Free(mod->extradata);
 		}
 		memset(&sv.models[i], 0, sizeof(svmodel_t));

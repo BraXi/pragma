@@ -25,7 +25,7 @@ SV_FreeDevTools
 void SV_FreeDevTools()
 {
 	if (sv_debugPrimitives)
-		Z_Free(sv_debugPrimitives);
+		Z_Free(sv_debugPrimitives, DBG_FFL);
 	sv_debugPrimitives = NULL;
 }
 
@@ -41,7 +41,7 @@ void SV_InitDevTools()
 
 	SV_FreeDevTools();
 
-	sv_debugPrimitives = Z_Malloc(sizeof(debugprimitive_t) * MAX_DEBUG_PRIMITIVES);
+	sv_debugPrimitives = Z_TagMalloc(sizeof(debugprimitive_t) * MAX_DEBUG_PRIMITIVES, TAG_NONE, DBG_FFL);
 }
 
 /*

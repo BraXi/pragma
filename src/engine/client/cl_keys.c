@@ -509,13 +509,13 @@ void Key_SetBinding (int keynum, char *binding)
 	// free old bindings
 	if (keybindings[keynum])
 	{
-		Z_Free (keybindings[keynum]);
+		Z_Free (keybindings[keynum], DBG_FFL);
 		keybindings[keynum] = NULL;
 	}
 			
 	// allocate memory for new binding
 	l = (int)strlen(binding);
-	new = Z_Malloc (l+1);
+	new = Z_TagMalloc (l+1, TAG_NONE, DBG_FFL);
 	strcpy (new, binding);
 	new[l] = 0;
 	keybindings[keynum] = new;	

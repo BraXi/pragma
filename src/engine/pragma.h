@@ -60,6 +60,11 @@ extern qboolean print_time;
 	#define	CPUSTRING	"NON-x86/x64"
 #endif
 
+#define STRINGIFY2(x)   #x
+#define STRINGIFY(x)    STRINGIFY2(x)
+
+// debug FILE::FUNCTION:LINE
+#define DBG_FFL __FILE__ "::" __FUNCTION__ ":" STRINGIFY(__LINE__)
 //============================================================================
 
 #include "../common/crc.h"
@@ -79,7 +84,9 @@ extern qboolean print_time;
 //============================================================================
 typedef enum memtag_s
 {
+	// !! If this is changed, update memTagNames[] in pragma.c !!
 	TAG_NONE,
+	TAG_RENDERER,
 	TAG_FX,
 	TAG_NAV_NODES,
 
@@ -241,10 +248,11 @@ extern	int		time_after_game;
 extern	int		time_before_ref;
 extern	int		time_after_ref;
 
-void Z_Free (void *ptr);
-void *Z_Malloc (int size);			// returns 0 filled memory
-void *Z_TagMalloc (int size, memtag_t tag);
+void Z_Free (void *ptr, const char *call_from);
+void *Z_Malloc (int size, const char* callFrom);			// returns 0 filled memory
+void *Z_TagMalloc (int size, memtag_t tag, const char *callFrom);
 void Z_FreeTags (memtag_t tag);
+void Z_FreeAll();
 
 char* COM_NewString(char* string, memtag_t memtag);
 qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f);

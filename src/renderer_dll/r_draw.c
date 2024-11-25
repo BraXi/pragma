@@ -72,7 +72,7 @@ rfont_t *R_LoadFont( const char *name, qboolean filtered )
 	char	fullname[MAX_QPATH];
 	rfont_t* f;
 
-	f = ri.MemAlloc(sizeof(rfont_t));
+	f = ri.MemAlloc(sizeof(rfont_t), DBG_FFL);
 	if (!f)
 	{
 		ri.Error(ERR_FATAL, "Cannot allocate font %s\n", name);

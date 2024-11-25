@@ -1161,19 +1161,19 @@ void SV_Shutdown (char *finalmsg, qboolean reconnect)
 	//
 	if (svs.gclients)
 	{
-		Z_Free(svs.gclients);
+		Z_Free(svs.gclients, DBG_FFL);
 		svs.gclients = NULL;
 	}
 
 	if (svs.clients)
 	{
-		Z_Free(svs.clients);
+		Z_Free(svs.clients, DBG_FFL);
 		svs.clients = NULL;
 	}
 
 	if (svs.client_entities)
 	{
-		Z_Free(svs.client_entities);
+		Z_Free(svs.client_entities, DBG_FFL);
 		svs.client_entities = NULL;
 	}
 

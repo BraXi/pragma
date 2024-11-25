@@ -171,7 +171,7 @@ void Nav_Init()
 {
 	if (Nav_IsInitialized())
 	{
-		Z_Free(nav.waypoints);
+		Z_Free(nav.waypoints, DBG_FFL);
 		nav.waypoints = NULL;
 	}
 
@@ -180,9 +180,9 @@ void Nav_Init()
 	memset(openNodes, 0, sizeof(openNodes));
 	memset(closedNodes, 0, sizeof(closedNodes));
 	memset(&nav, 0, sizeof(nav));
-
+	
 	nav.waypoints_count = 0;
-	nav.waypoints = Z_Malloc(MAX_WAYPOINTS * sizeof(waypoint_t));
+	nav.waypoints = Z_TagMalloc(MAX_WAYPOINTS * sizeof(waypoint_t), TAG_NONE, DBG_FFL); //MEMLEAK
 
 	for (int i = 0; i < MAX_WAYPOINTS; i++)
 	{
@@ -206,12 +206,11 @@ void Nav_Shutdown()
 	memset(openNodes, 0, sizeof(openNodes));
 	memset(closedNodes, 0, sizeof(closedNodes));
 	memset(&nav, 0, sizeof(nav));
-
 	nav.waypoints_count = 0;
 
 	if (nav.waypoints != NULL)
 	{
-		Z_Free(nav.waypoints);
+		Z_Free(nav.waypoints, DBG_FFL);
 		nav.waypoints = NULL;
 	}
 
@@ -418,7 +417,7 @@ Nav_AllocNode
 */
 static pathnode_t* Nav_AllocNode()
 {
-	pathnode_t* n = Z_TagMalloc(sizeof(pathnode_t), TAG_NAV_NODES);
+	pathnode_t* n = Z_TagMalloc(sizeof(pathnode_t), TAG_NAV_NODES, DBG_FFL);
 	n->wpIdx = NO_WAYPOINT;
 	return  n;
 }

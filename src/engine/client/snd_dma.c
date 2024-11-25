@@ -175,7 +175,7 @@ void S_Shutdown(void)
 		if (!sfx->name[0])
 			continue;
 		if (sfx->cache)
-			Z_Free (sfx->cache);
+			Z_Free (sfx->cache, DBG_FFL);
 		memset (sfx, 0, sizeof(*sfx));
 	}
 
@@ -260,7 +260,7 @@ sfx_t *S_AliasName (char *aliasname, char *truename)
 	char	*s;
 	int		i;
 
-	s = Z_Malloc (MAX_QPATH);
+	s = Z_TagMalloc (MAX_QPATH, TAG_NONE, DBG_FFL);
 	strcpy (s, truename);
 
 	// find a free sfx
@@ -342,7 +342,7 @@ void S_EndRegistration (void)
 			//Com_Printf("Freed: %s\n", sfx->name);
 			// don't need this sound
 			if (sfx->cache)	// it is possible to have a leftover
-				Z_Free (sfx->cache);	// from a server that didn't finish loading
+				Z_Free (sfx->cache, DBG_FFL);	// from a server that didn't finish loading
 			memset (sfx, 0, sizeof(*sfx));
 		}
 		else

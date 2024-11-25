@@ -289,8 +289,8 @@ qboolean NET_GetPacket (netsrc_t sock, netadr_t *netFrom, sizebuf_t *netmessage)
 			if (err == WSAEWOULDBLOCK)
 				return false;
 
-			if (developer->value)
-				Com_Printf( "NET_GetPacket: %s\n", NET_ErrorString());
+			//if (developer->value)
+			//	Com_Printf( "NET_GetPacket: %s\n", NET_ErrorString());
 
 			return false;
 		}

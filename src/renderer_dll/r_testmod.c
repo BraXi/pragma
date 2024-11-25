@@ -402,7 +402,7 @@ static void CalcInverseMatrixForModel(model_t* pModel)
 	}
 
 	numbones = Mod_GetNumBones(pModel);
-	pModel->inverseBoneMatrix = invBoneMatrix = ri.MemAlloc(sizeof(mat4_t) * numbones);
+	pModel->inverseBoneMatrix = invBoneMatrix = ri.MemAlloc(sizeof(mat4_t) * numbones, DBG_FFL);
 
 	for (i = 0; i < numbones; i++)
 		Mat4MakeIdentity(invBoneMatrix[i]);

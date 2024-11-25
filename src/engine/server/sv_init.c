@@ -209,9 +209,9 @@ void SV_SpawnServer(char *mapname, char *spawnpoint, server_state_t serverstate,
 
 	if (!svs.clients)
 	{
-		svs.clients = Z_Malloc(sizeof(client_t) * sv_maxclients->value);
+		svs.clients = Z_TagMalloc(sizeof(client_t) * sv_maxclients->value, TAG_NONE, DBG_FFL);
 		svs.num_client_entities = sv_maxclients->value * UPDATE_BACKUP * 64;
-		svs.client_entities = Z_Malloc(sizeof(entity_state_t) * svs.num_client_entities);
+		svs.client_entities = Z_TagMalloc(sizeof(entity_state_t) * svs.num_client_entities, TAG_NONE, DBG_FFL);
 	}
 	
 	// force all clients to reconnect
@@ -441,9 +441,9 @@ void SV_InitGame (void)
 		Cvar_FullSet("sv_maxentities", va("%i", MAX_GENTITIES), CVAR_LATCH, NULL);
 
 	svs.spawncount = rand();
-	svs.clients = Z_Malloc (sizeof(client_t)*sv_maxclients->value);
+	svs.clients = Z_TagMalloc(sizeof(client_t)*sv_maxclients->value, TAG_NONE, DBG_FFL);
 	svs.num_client_entities = sv_maxclients->value*UPDATE_BACKUP*64;
-	svs.client_entities = Z_Malloc (sizeof(entity_state_t)*svs.num_client_entities);
+	svs.client_entities = Z_TagMalloc(sizeof(entity_state_t)*svs.num_client_entities, TAG_NONE, DBG_FFL);
 
 	// init network stuff
 	NET_Config ( (sv_maxclients->value > 1) );
@@ -465,7 +465,7 @@ void SV_InitGame (void)
 
 	// initialize all clients for this game
 	svs.max_clients = sv_maxclients->value;
-	svs.gclients = Z_Malloc(svs.max_clients * sizeof(gclient_t));
+	svs.gclients = Z_TagMalloc(svs.max_clients * sizeof(gclient_t), TAG_NONE, DBG_FFL);
 
 	sv.num_edicts = svs.max_clients + 1; // first 'free' entity is after world and client reserved slots
 
