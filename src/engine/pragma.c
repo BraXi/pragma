@@ -16,6 +16,10 @@ See the attached GNU General Public License v2 for more details.
 
 #define MAX_NUM_ARGVS	50
 
+#ifndef DEDICATED_ONLY
+void UI_Shutdown();
+#endif
+
 qboolean print_time; // so the dedicated server can print time
 
 int		com_argc;
@@ -876,20 +880,32 @@ Z_FreeAll
 Frees ALL ZONE MEMORY, called only when PRAGMA is shutting down completly.
 ========================
 */
-void Z_FreeAll()
+void Z_FreeAll(qboolean writeLog)
 {
 	zhead_t* z, * next;
-	FILE* log;
+	FILE* log = NULL;
 	int count, i;
 	size_t total_bytes, per_tag_bytes[NUM_MEMORY_TAGS];
 	char msg[2048];
 
-	log = fopen("pragma_mem_onexit.csv", "w");
-
-	if (log)
+	if (writeLog)
 	{
-		fprintf(log, "MemTag,Size_In_Bytes,Time_Allocated,Allocated_In,\n");
+		log = fopen("pragma_mem_onexit.csv", "w");
+
+		if (log)
+		{
+			fprintf(log, "MemTag,Size_In_Bytes,Time_Allocated,Allocated_In,\n");
+		}
+		else
+		{
+#if defined(WIN32) && !defined(DEDICATED_ONLY)
+			MessageBox(0, "Failed to open memory log at exit for writing.", "PRAGMA - Warning!", MB_ICONWARNING);
+#else
+			Com_Printf("Failed to open memory log at exit for writing.");
+#endif
+		}
 	}
+
 
 	count = 0;
 	total_bytes = 0;
@@ -911,6 +927,11 @@ void Z_FreeAll()
 	if (log)
 		fclose(log);
 
+#ifdef ZONE_ENABLE_LOG
+	if (z_logfile)
+		fclose(z_logfile);
+#endif
+
 	if (count)
 	{
 		char *a = va("Freed remaining %i kb of memory in %i memory blocks.\n\n", total_bytes / 1024, count);
@@ -929,12 +950,11 @@ void Z_FreeAll()
 
 		Com_Printf(msg);
 
-#ifdef _WIN32
-		MessageBox(0, msg, "PRAGMA - Memory Warning!", MB_ICONWARNING);
+#if defined(_WIN32) && !defined(DEDICATED_ONLY)
+		MessageBox(0, msg, "PRAGMA - Memory use on exit", MB_ICONWARNING);
 		OutputDebugString(msg);
 #endif
-	}
-	
+	}	
 }
 
 /*
@@ -1551,6 +1571,17 @@ Qcommon_Shutdown
 */
 void Qcommon_Shutdown (void)
 {
+	qboolean writeMemLog;
+
+	writeMemLog = (Cvar_VariableValue("mem_exitlog") > 0); // done here right before cvars are nuked
+
+#ifndef DEDICATED_ONLY
+	UI_Shutdown();
+#endif
+
 	Z_FreeTags(TAG_CMDSYS); // free commands and cvars
 	Z_FreeTags(TAG_FILESYSTEM); // free remaining open files and pack structures
+	Z_FreeTags(TAG_QCVM_MEMORY); // free builtin functions used by QCVMs
+
+	Z_FreeAll(writeMemLog);
 }

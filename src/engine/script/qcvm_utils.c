@@ -25,7 +25,7 @@ void Scr_DefineBuiltin(void (*function)(void), pb_t type, char* fname, char* qcs
 
 	if (scr_numBuiltins == 0)
 	{
-		scr_builtins = Z_TagMalloc(sizeof(builtin_t) * SCRIPTVM_MAXBUILTINS, TAG_NONE, DBG_FFL);
+		scr_builtins = Z_TagMalloc(sizeof(builtin_t) * SCRIPTVM_MAXBUILTINS, TAG_QCVM_MEMORY, DBG_FFL);
 	}
 
 	if (scr_numBuiltins == (SCRIPTVM_MAXBUILTINS - 1))

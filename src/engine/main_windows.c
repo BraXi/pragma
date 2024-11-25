@@ -89,9 +89,7 @@ void Sys_Quit (void)
 	if (dedicated && dedicated->value)
 		FreeConsole ();
 #endif
-
-	Z_FreeAll();
-	exit (0);
+	exit(0);
 }
 
 

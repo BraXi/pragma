@@ -96,7 +96,7 @@ typedef enum memtag_s
 	TAG_CLIENT_GAME,
 	TAG_GUI,
 
-	TAG_QCVM_MEMORY, // dummy, used to offset
+	TAG_QCVM_MEMORY, // builtins
 	
 	TAG_QCVM1,
 	TAG_QCVM2,
@@ -254,7 +254,7 @@ void Z_Free (void *ptr, const char *call_from);
 void *Z_Malloc (int size, const char* callFrom);			// returns 0 filled memory
 void *Z_TagMalloc (int size, memtag_t tag, const char *callFrom);
 void Z_FreeTags (memtag_t tag);
-void Z_FreeAll();
+void Z_FreeAll(qboolean writeLog);
 
 char* COM_NewString(char* string, memtag_t memtag);
 qboolean COM_ParseField(char* key, char* value, byte* basePtr, parsefield_t* f, memtag_t tag);
