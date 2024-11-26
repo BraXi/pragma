@@ -526,6 +526,7 @@ void CL_AddEntities()
 	CL_CalcViewValues();
 
 	CL_AddPacketEntities(&cl.frame);
+
 	CG_BuildSolidEntitiesList();
 
 	CG_AddEntities();

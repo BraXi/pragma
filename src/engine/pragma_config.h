@@ -17,6 +17,13 @@ See the attached GNU General Public License v2 for more details.
 
 #pragma once
 
+#ifdef _DEBUG
+// Log all zone memory allocations and frees to CSV file
+//#define ZONE_ENABLE_LOG 1
+
+// Use `set mem_exitlog 1` to print statistics on exit, ZONE_ENABLE_LOG doesn't have to be compiled for it
+#endif
+
 // what renderer DLL to use by default
 #define DEFAULT_RENDERER "gl2"
 

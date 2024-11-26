@@ -63,8 +63,13 @@ extern qboolean print_time;
 #define STRINGIFY2(x)   #x
 #define STRINGIFY(x)    STRINGIFY2(x)
 
+#ifdef ZONE_ENABLE_LOG
 // debug FILE::FUNCTION:LINE
 #define DBG_FFL __FILE__ "::" __FUNCTION__ ":" STRINGIFY(__LINE__)
+#else
+#define DBG_FFL __FILE__ ""
+#endif
+
 //============================================================================
 
 #include "../common/crc.h"

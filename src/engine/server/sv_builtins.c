@@ -10,6 +10,24 @@ See the attached GNU General Public License v2 for more details.
 
 #include "server.h"
 
+void SV_AddDebugLine(vec3_t p1, vec3_t p2, vec3_t color, float thickness, float drawtime, qboolean depthtested);
+void SV_AddDebugPoint(vec3_t p1, vec3_t color, float thickness, float drawtime, qboolean depthtested);
+void SV_AddDebugBox(vec3_t pos, vec3_t p1, vec3_t p2, vec3_t color, float thickness, float drawtime, qboolean depthtested);
+void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, const char* text);
+
+int Nav_AddPathNode(float x, float y, float z);
+qboolean Nav_AddPathNodeLink(int nodeId, int linkTo);
+int Nav_GetNearestNode(vec3_t origin);
+int Nav_SearchPath(int startWaypoint, int goalWaypoint);
+void Nav_GetNodePos(int num, float* x, float* y, float* z);
+int Nav_GetNodesCount();
+int Nav_GetNodeLinkCount(int node);
+int Nav_GetNodeLink(int node, int link);
+
+qboolean SV_CheckBottom(gentity_t* actor);
+qboolean SV_MoveToGoal(gentity_t* actor, gentity_t* goal, float dist);
+qboolean SV_WalkMove(gentity_t* actor, float yaw, float dist);
+
 // =================================================================================
 
 #define BUILTIN_NOT_UNUSED(pEnt) \
@@ -48,7 +66,7 @@ void PFSV_AngleVectors(void)
 index precache_model(string)
 =================
 */
-void PFSV_precache_model(void)
+static void PFSV_precache_model(void)
 {
 	const char* name = Scr_GetParmString(0);
 	CheckEmptyString(name);
@@ -60,7 +78,7 @@ void PFSV_precache_model(void)
 index precache_sound(string)
 =================
 */
-void PFSV_precache_sound(void)
+static void PFSV_precache_sound(void)
 {
 	const char* name = Scr_GetParmString(0);
 	CheckEmptyString(name);
@@ -72,7 +90,7 @@ void PFSV_precache_sound(void)
 index precache_image(string)
 =================
 */
-void PFSV_precache_image(void)
+static void PFSV_precache_image(void)
 {
 	const char* name = Scr_GetParmString(0);
 	CheckEmptyString(name);
@@ -88,7 +106,7 @@ Spawns a general purpose game entity
 entity spawn()
 =================
 */
-void PFSV_spawn(void)
+static void PFSV_spawn(void)
 {
 	gentity_t* ent;
 
@@ -110,7 +128,7 @@ Spawns en effect runner entity
 entity spawnfx(string sEffectName, [optional]vector vOrigin, [optional]vector vAngles)
 =================
 */
-void PFSV_spawneffect(void)
+static void PFSV_spawneffect(void)
 {
 #if 0
 	const char *effectname;
@@ -166,7 +184,7 @@ PFSV_playeffect
 void playfx(entity eEffectEntity, float bContinueEffect)
 =================
 */
-void PFSV_playeffect(void)
+static void PFSV_playeffect(void)
 {
 //	gentity_t* fxEnt;
 //	fxEnt = Scr_GetParmEntity(0);
@@ -180,7 +198,7 @@ PFSV_playloopedeffect
 void playloopedfx(entity eEffectEntity)
 =================
 */
-void PFSV_playloopedeffect(void)
+static void PFSV_playloopedeffect(void)
 {
 //	gentity_t* fxEnt;
 //	fxEnt = Scr_GetParmEntity(0);
@@ -194,7 +212,7 @@ PFSV_pauseeffect
 void pausefx(entity eEffectEntity)
 =================
 */
-void PFSV_pauseeffect(void)
+static void PFSV_pauseeffect(void)
 {
 //	gentity_t* fxEnt;
 //	fxEnt = Scr_GetParmEntity(0);
@@ -208,7 +226,7 @@ PFSV_remove
 remove(entity)
 =================
 */
-void PFSV_remove(void)
+static void PFSV_remove(void)
 {
 	gentity_t* ent;
 
@@ -229,13 +247,11 @@ void PFSV_remove(void)
 /*
 =================
 PFSV_getent
-
 returns entity by its index, if entity is not in use returns world
-
 entity getent(float)
 =================
 */
-void PFSV_getent(void)
+static void PFSV_getent(void)
 {
 	gentity_t* ent;
 	int entnum;
@@ -260,14 +276,12 @@ void PFSV_getent(void)
 /*
 =================
 PFSV_nextent
-
 finds next active entity, returns world if no entity found
 entity nextent(entity previousEnt)
-
 entity firstplayer = nextent(world);
 =================
 */
-void PFSV_nextent(void)
+static void PFSV_nextent(void)
 {
 	gentity_t* ent;
 	int entnum;
@@ -292,13 +306,11 @@ retent:
 /*
 =================
 PFSV_find
-
 entity find(entity start, .string field, string match);
-
 not implemented, ugh I forgot
 =================
 */
-void PFSV_find(void)
+static void PFSV_find(void)
 {
 	Scr_ReturnEntity(sv.edicts);
 }
@@ -307,14 +319,12 @@ void PFSV_find(void)
 /*
 =================
 findradius
-
 Returns entities that have origins within a spherical area, their solidity doesn't matter.
-
 entity findradius(entity from, origin, radius);
 entity entityInRadius = findradius(entityInRadius, self.origin, 128);
 =================
 */
-void PFSV_findradius(void)
+static void PFSV_findradius(void)
 {
 	gentity_t* from; 
 	float *org;
@@ -353,15 +363,12 @@ void PFSV_findradius(void)
 /*
 =================
 PFSV_entnum
-
 returns entity's index
-
 float entnum(entity ent)
-
 float num = entnum(self);
 =================
 */
-void PFSV_getEntNum(void)
+static void PFSV_getEntNum(void)
 {
 	Scr_ReturnFloat( NUM_FOR_EDICT(Scr_GetParmEntity(0)) );
 }
@@ -372,17 +379,14 @@ void PFSV_getEntNum(void)
 /*
 =================
 PF_setorigin
-
 This is the only valid way to move an object without using the physics of the world (setting velocity and waiting).  
 Directly changing origin will not set internal links correctly, so clipping would be messed up.  
 This should be called when an object is spawned, and then only if it is teleported.
-
 void setorigin(entity ent, vector origin)
-
 setorigin(player, spawnpoint.origin);
 =================
 */
-void PFSV_setorigin(void)
+static void PFSV_setorigin(void)
 {
 	gentity_t	*ent;
 	float		*org;
@@ -397,16 +401,14 @@ void PFSV_setorigin(void)
 /*
 =================
 PF_setangles
-
 Sets entity angles properly within [0-360] degrees in any direction, makes sure bmodels 
 never have invaild YAW. When used on a player it will also change its view angles.
 Solid bmodels will automaticaly relink
-
 void setangles(entity ent, vector newangles)
 setangles(monster, '0 0 0');
 =================
 */
-void PFSV_setangles(void)
+static void PFSV_setangles(void)
 {
 	gentity_t* ent;
 	float* angles;
@@ -457,12 +459,11 @@ void PFSV_setangles(void)
 =================
 PFSV_setmodel
 Sets entity model without affecting bbox size.
-
 void setmodel(entity ent, string modelname)
 setmodel(player, "models/characters/paula.md3");
 =================
 */
-void PFSV_setmodel(void)
+static void PFSV_setmodel(void)
 {
 	gentity_t* ent;
 	const char* name;
@@ -481,12 +482,11 @@ void PFSV_setmodel(void)
 =================
 PFSV_setbrushmodel
 Sets inline model for an entity, update its mins/maxs derived from model and relink.
-
 void setbrushmodel(entity ent, string inlinemodelnumber)
 setbrushmodel(pusher, "*2");
 =================
 */
-void PFSV_setbrushmodel(void)
+static void PFSV_setbrushmodel(void)
 {
 	gentity_t* ent;
 	const char* name;
@@ -512,7 +512,7 @@ void setsize(entity ent, vector mins, vector maxs)
 setsize(player, '-16 16 0', '16 16 56');
 =================
 */
-void PFSV_setsize(void)
+static void PFSV_setsize(void)
 {
 	gentity_t* ent;
 	float* mins, * maxs;
@@ -544,14 +544,12 @@ void PFSV_setsize(void)
 /*
 =================
 PFSV_linkentity
-
 Links entity to the interaction links, should be called when 
 entities bbox or solidity changes (setmodel and setsize do this)
-
 void linkentity(entity ent)
 =================
 */
-void PFSV_linkentity(void)
+static void PFSV_linkentity(void)
 {
 	gentity_t* ent;
 	ent = Scr_GetParmEntity(0);
@@ -565,14 +563,12 @@ void PFSV_linkentity(void)
 /*
 =================
 PFSV_unlinkentity
-
 unlink entity from world, unlinked solid entity 
 will not be collidable unless linked again.
-
 void linkentity(entity ent)
 =================
 */
-void PFSV_unlinkentity(void)
+static void PFSV_unlinkentity(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 
@@ -585,14 +581,12 @@ void PFSV_unlinkentity(void)
 /*
 =================
 PFSV_attach
-
 Attach a model to an entity
-
 void attach(entity ent, string tagname, string modelname)
 attach(self, "tag_head", "models/heads/test.md3");
 =================
 */
-void PFSV_attach(void)
+static void PFSV_attach(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 	const char *tagname = Scr_GetParmString(1);
@@ -607,14 +601,12 @@ void PFSV_attach(void)
 /*
 =================
 PFSV_detach
-
 Detach model from entity
-
 void detach(entity ent, string modelname)
 detach(self, "models/heads/test.md3");
 =================
 */
-void PFSV_detach(void)
+static void PFSV_detach(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 	const char* model = Scr_GetParmString(1);
@@ -628,14 +620,12 @@ void PFSV_detach(void)
 /*
 =================
 PFSV_detachall
-
 Detach all models from entity
-
 void detachall(entity ent)
 detachall(self);
 =================
 */
-void PFSV_detachall(void)
+static void PFSV_detachall(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 
@@ -648,15 +638,13 @@ void PFSV_detachall(void)
 /*
 =================
 PFSV_hidepart
-
 Hides part of a model, surfaceName is the name of surface to hide.
 Note: calling setmodel() will unhide all parts.
-
 void hidepart(entity ent, string surfaceName)
 hidepart(self, "head");
 =================
 */
-void PFSV_hidepart(void)
+static void PFSV_hidepart(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 	const char* part = Scr_GetParmString(1);
@@ -670,15 +658,13 @@ void PFSV_hidepart(void)
 /*
 =================
 PFSV_showpart
-
 Shows previously hidden part of a model, surfaceName is the name of surface to show.
 Note: calling setmodel() will unhide all parts.
-
 void showpart(entity ent, string surfaceName)
 showpart(self, "head");
 =================
 */
-void PFSV_showpart(void)
+static void PFSV_showpart(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 	const char* part = Scr_GetParmString(1);
@@ -692,15 +678,13 @@ void PFSV_showpart(void)
 /*
 =================
 PFSV_showallparts
-
 Shows all parts of a model which might have been previously hidden.
 Note: calling setmodel() will also unhide all parts.
-
 float showallparts(entity ent)
 showallpart(self);
 =================
 */
-void PFSV_showallparts(void)
+static void PFSV_showallparts(void)
 {
 	gentity_t* ent;
 	ent = Scr_GetParmEntity(0);
@@ -718,42 +702,46 @@ PFSV_PointContents
 float contents = pointcontents(vector point)
 =================
 */
-void PFSV_contents(void)
+static void PFSV_contents(void)
 {
 	float* point = Scr_GetParmVector(0);
 	Scr_ReturnFloat( SV_PointContents(point) );
 }
 
-
-static void CopyTraceToProgs(trace_t trace)
+/*
+=================
+SV_TraceToProgs
+copies trace results to progs
+=================
+*/
+static void SV_TraceToProgs(trace_t *tr)
 {
 	// set globals in progs
-	sv.script_globals->trace_allsolid = trace.allsolid;
-	sv.script_globals->trace_startsolid = trace.startsolid;
-	sv.script_globals->trace_fraction = trace.fraction;
-	sv.script_globals->trace_planedist = trace.plane.dist;
-	VectorCopy(trace.plane.normal, sv.script_globals->trace_normal);
-	VectorCopy(trace.endpos, sv.script_globals->trace_endpos);
-	sv.script_globals->trace_entity = (trace.ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(trace.ent));
-	sv.script_globals->trace_entitynum = (trace.ent == NULL ? ENTITYNUM_NULL: trace.ent->s.number);
-	sv.script_globals->trace_contents = trace.contents;
-	sv.script_globals->trace_flags = trace.surfaceFlags;
+	sv.script_globals->trace_allsolid = tr->allsolid;
+	sv.script_globals->trace_startsolid = tr->startsolid;
+	sv.script_globals->trace_fraction = tr->fraction;
+	sv.script_globals->trace_planedist = tr->plane.dist;
+	VectorCopy(tr->plane.normal, sv.script_globals->trace_normal);
+	VectorCopy(tr->endpos, sv.script_globals->trace_endpos);
+	sv.script_globals->trace_entity = (tr->ent == NULL ? GENT_TO_PROG(sv.edicts) : GENT_TO_PROG(tr->ent));
+	sv.script_globals->trace_entitynum = (tr->ent == NULL ? ENTITYNUM_NULL: tr->ent->s.number);
+	sv.script_globals->trace_contents = tr->contents;
+	sv.script_globals->trace_flags = tr->surfaceFlags;
+	//sv.script_globals->trace_material = trace.material;
 }
 
 /*
 =================
 PFSV_traceline
-
-Moves the given mins/maxs volume through the world from start to end.
+Moves the given line through the world from start to end.
 ignoreEnt and entities owned by ignoreEnt are explicitly not checked.
 
 void traceline(vector start, vector end, entity ignoreEnt, int contentmask)
-
 traceline(self.origin, self.origin - '0 0 256', self, MASK_PLAYERSOLID);
 setorigin(self, trace_endpos);
 =================
 */
-void PFSV_traceline(void)
+static void PFSV_traceline(void)
 {
 	trace_t		trace;
 	float		*start, *end;
@@ -769,23 +757,21 @@ void PFSV_traceline(void)
 		ignoreEnt = NULL;
 
 	trace = SV_Trace(start, vec3_origin, vec3_origin, end, ignoreEnt, contentmask, false);
-	CopyTraceToProgs(trace);
+	SV_TraceToProgs(&trace);
 }
 
 /*
 =================
 PFSV_tracebox
-
-Moves the given mins/maxs volume through the world from start to end.
+Moves the given mins/maxs box through the world from start to end.
 ignoreEnt and entities owned by ignoreEnt are explicitly not checked.
 
 void tracebox(vector start, vector end, vector mins, vector maxs, entity ignoreEnt, int contentmask)
-
 tracebox(self.origin, self.origin - '0 0 256', self.mins, self.maxs, self, MASK_PLAYERSOLID);
 setorigin(self, trace_endpos);
 =================
 */
-void PFSV_tracebox(void)
+static void PFSV_tracebox(void)
 {
 	trace_t		trace;
 	float* start, * end, * min, * max;
@@ -802,13 +788,40 @@ void PFSV_tracebox(void)
 	if (ignoreEnt == sv.edicts)
 		ignoreEnt = NULL;
 
-	// FIXME CAPSULE HACK TO NOT CHANGE QC API!!!
-	if(contentmask == MASK_PLAYERSOLID)
-		trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask, true);
-	else
-		trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask, false);
+	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask, false);
+	SV_TraceToProgs(&trace);
+}
 
-	CopyTraceToProgs(trace);
+/*
+=================
+PFSV_tracecapsule
+Moves the given capsule through the world from start to end.
+ignoreEnt and entities owned by ignoreEnt are explicitly not checked.
+
+void tracecapsule(vector start, vector end, vector mins, vector maxs, entity ignoreEnt, int contentmask)
+tracecapsule(self.origin, self.origin - '0 0 256', self.mins, self.maxs, self, MASK_PLAYERSOLID);
+setorigin(self, trace_endpos);
+=================
+*/
+static void PFSV_tracecapsule(void)
+{
+	trace_t		trace;
+	float* start, * end, * min, * max;
+	gentity_t* ignoreEnt;
+	int			contentmask;
+
+	start = Scr_GetParmVector(0);
+	end = Scr_GetParmVector(1);
+	min = Scr_GetParmVector(2);
+	max = Scr_GetParmVector(3);
+	ignoreEnt = Scr_GetParmEntity(4);
+	contentmask = Scr_GetParmInt(5);
+
+	if (ignoreEnt == sv.edicts)
+		ignoreEnt = NULL;
+
+	trace = SV_Trace(start, min, max, end, ignoreEnt, contentmask, true);
+	SV_TraceToProgs(&trace);
 }
 
 // =================================================================================
@@ -816,22 +829,17 @@ void PFSV_tracebox(void)
 /*
 =================
 PFSV_sound
-
 void playsound(vector pos, entity ent, float channel, string soundFileName, float volume, float attenuation, float timeOffset)
-
 Each entity can have eight independant sound sources, like voice, weapon, feet, etc.
 If (channel & 8), the sound will be sent to everyone, not just things in the PHS.
 Channel 0 (CHAN_AUTO) is an auto-allocate channel, the others override anything already running on that entity/channel pair.
 An attenuation of 0 (ATTN_NONE) will play full volume everywhere in the level. Larger attenuations will drop off (max ATTN_STATIC)
 Timeofs can range from 0.0 to 0.255 to cause sounds to be started later in the frame than they normally would.
 If origin is [0,0,0], the origin is determined from the entity origin or the midpoint of the entity box for bmodels.
-
-FIXME: if entity isn't in PHS, they must be forced to be sent or have the origin explicitly sent.
-
 playsound(vec3_origin, player, CHAN_WEAPON, "weapons/noammoclick.wav", 0.5, ATTN_NORM, 0);
 =================
 */
-void PFSV_sound(void)
+static void PFSV_sound(void)
 {
 	gentity_t* ent;
 	int channel, sound_num;
@@ -864,7 +872,7 @@ void stopsounds(entity ent)
 Cancel all sounds that are currently playing from this entity including looping sound.
 =================
 */
-void PFSV_stopsounds(void)
+static void PFSV_stopsounds(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 	BUILTIN_NOT_UNUSED(ent);
@@ -878,7 +886,7 @@ void PFSV_stopsounds(void)
 SetAreaPortalState(area1, area2, isopen)
 ==============
 */
-void PFSV_SetAreaPortalState(void)
+static void PFSV_SetAreaPortalState(void)
 {
 	// FIXME: Q3BSP
 	// the builtin was: SetAreaPortalState(float portal, bool open)
@@ -890,7 +898,7 @@ void PFSV_SetAreaPortalState(void)
 float AreasConnected(area1,area2)
 ==============
 */
-void PFSV_AreasConnected(void)
+static void PFSV_AreasConnected(void)
 {
 	Scr_ReturnFloat( CM_AreasConnected((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1)) );
 }
@@ -898,14 +906,12 @@ void PFSV_AreasConnected(void)
 /*
 =================
 PFSV_PointsInPVS
-
 float PointsInPVS(vector p1, vector p2, float checkAreaPortals)
 Returns true when point p2 is within PVS of p1, if checkAreaPortals=false it ignores area portals
-
 float canPotentialySeeEachOther = PointsInPVS(player.origin, monster.origin, true);
 =================
 */
-void PFSV_PointsInPVS(void)
+static void PFSV_PointsInPVS(void)
 {
 	float	*p1, *p2;
 	qboolean checkAreaPortals;
@@ -928,13 +934,11 @@ void PFSV_PointsInPVS(void)
 =================
 PFSV_Configstring
 Sets the server's configstring and sends update to all clients
-
 void configstring(float csindex, string value)
-
 configstring(CS_SKY, "cloudynight");
 =================
 */
-void PFSV_configstring(void)
+static void PFSV_configstring(void)
 {
 	int	index = (int)Scr_GetParmFloat(0);
 	const char *val = Scr_GetParmString(1);
@@ -946,14 +950,12 @@ void PFSV_configstring(void)
 /*
 =================
 PFSV_lightstyle
-
 Sets the lightstyle animation string where 'a' is total darkness, 'm' is fullbright, 'z' is double bright
-
 void lightstyle(float lightStyleIndex, string lightStyle)
 lightstyle(0, "aamm");
 =================
 */
-void PFSV_lightstyle(void)
+static void PFSV_lightstyle(void)
 {
 	int style = (int)Scr_GetParmFloat(0);
 	const char *val = Scr_GetParmString(1);
@@ -1007,7 +1009,7 @@ void unicast(entity who, float isReliable)
 unicast(player, true);
 ===============
 */
-void PFSV_Unicast(void)
+static void PFSV_Unicast(void)
 {
 	gentity_t *ent = Scr_GetParmEntity(0);
 	qboolean reliable = (Scr_GetParmFloat(1) > 0.0f) ? true : false;
@@ -1033,7 +1035,7 @@ MULTICAST_PVS_R		same as MULTICAST_PVS but reliable
 multicast(monster.origin, MULTICAST_PVS);
 ===============
 */
-void PFSV_Multicast(void)
+static void PFSV_Multicast(void)
 {
 	float* pos = Scr_GetParmVector(0);
 	multicast_t sendTo = (int)Scr_GetParmFloat(1);
@@ -1070,7 +1072,7 @@ void stuffcmd(entity who, string text, ...)
 stuffcmd(player, "echo redirecting to another server; wait 10; disconnect; wait 1; connect 192.168.0.1:27000");
 ===============
 */
-void PFSV_stuffcmd(void)
+static void PFSV_stuffcmd(void)
 {
 	gentity_t	*ent;
 	const char	*cmd;
@@ -1107,7 +1109,7 @@ void cprint(entity who, float printlevel, string text, ...)
 cprint(player, PRINT_HIGH, "Picked up big pack of ammo!");
 ===============
 */
-void PFSV_sprint(void)
+static void PFSV_sprint(void)
 {
 	gentity_t	*ent;
 	const char	*msg;
@@ -1129,14 +1131,12 @@ void PFSV_sprint(void)
 /*
 ===============
 PFSV_bprint
-
 Print message to a all clients
-
 void bprint(float printlevel, string text, ...)
 bprint(PRINT_CHAT, "This string is printed to chat for everyone");
 ===============
 */
-void PFSV_bprint(void)
+static void PFSV_bprint(void)
 {
 	SV_BroadcastPrintf(Scr_GetParmFloat(0), "%s", Scr_VarString(1));
 }
@@ -1144,16 +1144,13 @@ void PFSV_bprint(void)
 /*
 ===============
 PFSV_centerprint
-
 Center print message to a single client, if entity is world broadcast to everyone
-
 void centerprint(entity who, string text, ...)
-
 centerprint(player, "hello", " world!");
 centerprint(world, "hello", " world!"); // center printed to everyone on the server
 ===============
 */
-void PFSV_centerprint(void)
+static void PFSV_centerprint(void)
 {
 	gentity_t	*ent;
 	const char	*msg;
@@ -1185,12 +1182,11 @@ void PFSV_centerprint(void)
 /*
 ===============
 PFSV_isplayer
-
 returns true if entity is player
 float isplayer(entity)
 ===============
 */
-void PFSV_isplayer(void)
+static void PFSV_isplayer(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 	Scr_ReturnFloat(ent->client == NULL ? 0 : 1);
@@ -1203,7 +1199,7 @@ Returns client ping in miliseconds
 float getping(entity player)
 ===============
 */
-void PFSV_getping(void)
+static void PFSV_getping(void)
 {
 	gentity_t* ent = Scr_GetParmEntity(0);
 
@@ -1229,15 +1225,13 @@ enum
 /*
 ===============
 PFSV_setvieweffect
-
 sets view effect for a player
-
 void setvieweffect(entity ent, float effect, ...);
 setvieweffect(self, FX_BLUR, 3.0);
 setvieweffect(self, FX_BLEND, '0.5 0.1 0.1', 0.3);
 ===============
 */
-void PFSV_setvieweffect(void)
+static void PFSV_setvieweffect(void)
 {
 	gentity_t* ent;
 	gclient_t* cl;
@@ -1303,13 +1297,11 @@ void PFSV_setvieweffect(void)
 /*
 ===============
 PFSV_clearvieweffects
-
 clear all view effects
-
 TODO: figure out more network efficient way
 ===============
 */
-void PFSV_clearvieweffects(void)
+static void PFSV_clearvieweffects(void)
 {
 	gentity_t* ent;
 	ent = Scr_GetParmEntity(0);
@@ -1328,7 +1320,7 @@ void saveclientfield(entity player, float index, float val)
 saveclientfield(self, PS_HEALTH, self.health);
 ===============
 */
-void PFSV_saveclientfield(void)
+static void PFSV_saveclientfield(void)
 {
 	gentity_t* ent;
 	gclient_t* cl;
@@ -1352,14 +1344,12 @@ void PFSV_saveclientfield(void)
 /*
 ===============
 PFSV_loadclientfield
-
 Returns value from persistent client data slot.
-
 float loadclientfield(entity player, float index)
 self.health = loadclientfield(self, PS_HEALTH);
 ===============
 */
-void PFSV_loadclientfield(void)
+static void PFSV_loadclientfield(void)
 {
 	gentity_t* ent;
 	gclient_t* cl;
@@ -1384,12 +1374,11 @@ void PFSV_loadclientfield(void)
 ===============
 PFSV_saveglobal
 Saves value into persistent level data slot for keeping values between map changes.
-
 void saveglobal(float index, float val)
 saveglobal(LP_TOTAL_KILLED_INFECTED, g_stats_killed_infected);
 ===============
 */
-void PFSV_saveglobal(void)
+static void PFSV_saveglobal(void)
 {
 	int idx;
 	idx = Scr_GetParmFloat(0);
@@ -1406,12 +1395,11 @@ void PFSV_saveglobal(void)
 ===============
 PFSV_loadglobal
 Saves value into persistent level data slot for keeping values between map changes.
-
 float loadglobal(float index)
 g_stats_killed_infected = loadglobal(LP_TOTAL_KILLED_INFECTED);
 ===============
 */
-void PFSV_loadglobal(void)
+static void PFSV_loadglobal(void)
 {
 	int idx;
 
@@ -1428,17 +1416,14 @@ void PFSV_loadglobal(void)
 /*
 ===============
 PFSV_changemap
-
 float changemap(string nextmap, float savepers)
-
 Starts a new map, set savepers to true to keep persistent client/globals 
 fields across levels. Returns true if the bsp 'maps/[nextmap].bsp' exists on server.
-
 float bMapExists = changemap("c0e1", true); // this will carry over all client and level persistant data to another map
 float bMapExists = changemap("c0e1", false); // and this will clear all persistant data...
 ===============
 */
-void PFSV_changemap(void)
+static void PFSV_changemap(void)
 {
 	const char *nextmap;
 	char expanded[MAX_QPATH];
@@ -1473,12 +1458,11 @@ void PFSV_changemap(void)
 ===============
 PFSV_kickclient
 Kick client out from server
-
 void kickclient(entity player, string reason)
 kickclient(player, "inactivity"); // "player was kicked from server due to inactivity."
 ===============
 */
-void PFSV_kickclient(void)
+static void PFSV_kickclient(void)
 {
 	gentity_t* ent;
 	const char* reason;
@@ -1499,13 +1483,11 @@ void PFSV_kickclient(void)
 /*
 ===============
 PFSV_getclientname
-
 string getclientname(entity player)
-
 returns the name of a player
 ===============
 */
-void PFSV_getclientname(void)
+static void PFSV_getclientname(void)
 {
 	gentity_t* ent;
 
@@ -1518,11 +1500,10 @@ void PFSV_getclientname(void)
 /*
 ===============
 PFSV_saveglobal
-
 void saveglobal(float index, float val)
 ===============
 */
-void PFSV_setstat(void)
+static void PFSV_setstat(void)
 {
 	gentity_t* ent;
 	gclient_t* cl;
@@ -1544,14 +1525,11 @@ void PFSV_setstat(void)
 /*
 =================
 PFSV_checkbottom
-
 Returns false if any part of the bottom of the entity is off an edge that is not a staircase.
-
 float isonground = checkbottom(self);
 =================
 */
-extern qboolean SV_CheckBottom(gentity_t* actor);
-void PFSV_checkbottom(void)
+static void PFSV_checkbottom(void)
 {
 	gentity_t* ent;
 
@@ -1576,8 +1554,7 @@ updates entity's goal_entity to a new goal entity
 float closetoEnemy = movetogoal(self, self.goal_entity, 15);
 =================
 */
-extern qboolean SV_MoveToGoal(gentity_t* actor, gentity_t* goal, float dist);
-void PFSV_movetogoal(void)
+static void PFSV_movetogoal(void)
 {
 	gentity_t	*actor, *goal;
 	float		movedist, result;
@@ -1616,8 +1593,7 @@ possible, no move is done, false is returned
 float moved = walkmove(self, self.ideal_yaw, 15);
 =================
 */
-extern qboolean SV_WalkMove(gentity_t* actor, float yaw, float dist);
-void PFSV_walkmove(void)
+static void PFSV_walkmove(void)
 {
 	gentity_t	*actor;
 	float		movedist, yaw, result;
@@ -1650,7 +1626,7 @@ check for that yourself, it was: if((isplayer(ent) || (ent.svflags & SVF_MONSTER
 float numTouchedEntities = touchentities(self, 0); // touch triggers
 =================
 */
-void PFSV_touchentities(void)
+static void PFSV_touchentities(void)
 {
 	gentity_t* ent;
 	int areatype, numtouched;
@@ -1692,8 +1668,7 @@ For listen servers only the host will see the lines.
 drawline(self.origin, self.goal_entity.origin, '1 0 0', 1, true, g_frameTime);
 =================
 */
-extern void SV_AddDebugLine(vec3_t p1, vec3_t p2, vec3_t color, float thickness, float drawtime, qboolean depthtested);
-void PFSV_drawline(void)
+static void PFSV_drawline(void)
 {
 	float	*p1, *p2, *color;
 	float	thickness, drawtime;
@@ -1727,8 +1702,7 @@ For listen servers only the host will see the point.
 drawpoint(self.origin, '1 0 0', 1, false, g_frameTime);
 =================
 */
-extern void SV_AddDebugPoint(vec3_t p1, vec3_t color, float thickness, float drawtime, qboolean depthtested);
-void PFSV_drawpoint(void)
+static void PFSV_drawpoint(void)
 {
 	float	*p1, *color;
 	float	thickness, drawtime;
@@ -1761,8 +1735,7 @@ For listen servers only the host will see the box.
 drawbox(self.origin, self.mins, self.maxs, '1 0 0', 1, false, g_frameTime);
 =================
 */
-extern void SV_AddDebugBox(vec3_t pos, vec3_t p1, vec3_t p2, vec3_t color, float thickness, float drawtime, qboolean depthtested);
-void PFSV_drawbox(void)
+static void PFSV_drawbox(void)
 {
 	float	*origin, *p1, *p2, *color;
 	float	thickness, drawtime;
@@ -1797,8 +1770,7 @@ For listen servers only the host will see the lines.
 drawtext(self.origin, '1 1 1', 2.0, false, 0.1, self.classname);
 =================
 */
-void SV_AddDebugString(vec3_t pos, vec3_t color, float fontSize, float drawtime, qboolean depthtested, const char* text);
-void PFSV_drawstring(void)
+static void PFSV_drawstring(void)
 {
 	float	*pos, *color;
 	float	fontsize, drawtime;
@@ -1827,28 +1799,23 @@ void PFSV_drawstring(void)
 /*
 =================
 PFSV_nav_addpathnode
-
 void nav_addpathnode(vector pos)
 =================
 */
-extern int Nav_AddPathNode(float x, float y, float z);
-void PFSV_nav_addpathnode(void)
+static void PFSV_nav_addpathnode(void)
 {
 	float* pos = Scr_GetParmVector(0);
 	int num = Nav_AddPathNode(pos[0], pos[1], pos[2]);
 	Scr_ReturnFloat(num);
-	printf("nav_addpathnode %i\n", num);
 }
 
 /*
 =================
 PFSV_nav_linkpathnode
-
 void nav_linkpathnode(float node, float linkto)
 =================
 */
-extern qboolean Nav_AddPathNodeLink(int nodeId, int linkTo);
-void PFSV_nav_linkpathnode(void)
+static void PFSV_nav_linkpathnode(void)
 {
 	Nav_AddPathNodeLink((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1));
 }
@@ -1857,12 +1824,10 @@ void PFSV_nav_linkpathnode(void)
 /*
 =================
 PFSV_nav_getnearestnode
-
 float node = nav_getnearestnode(vector pos)
 =================
 */
-int Nav_GetNearestNode(vec3_t origin);
-void PFSV_nav_getnearestnode(void)
+static void PFSV_nav_getnearestnode(void)
 {
 	vec3_t v;
 	float* pos = Scr_GetParmVector(0);
@@ -1873,12 +1838,10 @@ void PFSV_nav_getnearestnode(void)
 /*
 =================
 PFSV_nav_searchpath
-
 float nextnode = nav_searchpath(float start, float end)
 =================
 */
-int Nav_SearchPath(int startWaypoint, int goalWaypoint);
-void PFSV_nav_searchpath(void)
+static void PFSV_nav_searchpath(void)
 {
 	float n;
 	n = Nav_SearchPath((int)Scr_GetParmFloat(0), (int)Scr_GetParmFloat(1));
@@ -1888,12 +1851,10 @@ void PFSV_nav_searchpath(void)
 /*
 =================
 PFSV_nav_addpathnode
-
 vector nav_getnodepos(float n)
 =================
 */
-extern void Nav_GetNodePos(int num, float* x, float* y, float* z);
-void PFSV_nav_getnodepos(void)
+static void PFSV_nav_getnodepos(void)
 {
 	vec3_t v;
 	Nav_GetNodePos(Scr_GetParmFloat(0), &v[0], &v[1], &v[2]);
@@ -1909,8 +1870,7 @@ float nav_getnodescount()
 Returns the number of navigation nodes loaded by engine
 =================
 */
-extern int Nav_GetNodesCount();
-void PFSV_nav_getnodescount(void)
+static void PFSV_nav_getnodescount(void)
 {
 	Scr_ReturnFloat( Nav_GetNodesCount() );
 }
@@ -1923,8 +1883,8 @@ float nav_getnodelinkcount(float nodeIndex)
 Returns the links count of a given node
 =================
 */
-extern int Nav_GetNodeLinkCount(int node);
-void PFSV_nav_getnodelinkcount(void)
+
+static void PFSV_nav_getnodelinkcount(void)
 {
 	int num = Nav_GetNodeLinkCount(Scr_GetParmFloat(0));
 	Scr_ReturnFloat( num );
@@ -1938,8 +1898,7 @@ float nav_getnodelink(float nodeIndex, float linkIndex)
 Returns index to a node which its linked to
 =================
 */
-extern int Nav_GetNodeLink(int node, int link);
-void PFSV_nav_getnodelink(void)
+static void PFSV_nav_getnodelink(void)
 {
 	Scr_ReturnFloat( Nav_GetNodeLink(Scr_GetParmFloat(0), Scr_GetParmFloat(1)) );
 }
@@ -1955,7 +1914,7 @@ Returns the number of animation frames in md3
 float numanimframes = getframescount(self.modelindex);
 =================
 */
-void PFSV_getframescount(void)
+static void PFSV_getframescount(void)
 {
 	int index = (int)Scr_GetParmFloat(0);
 	svmodel_t* mod = SV_ModelForNum(index);
@@ -1979,7 +1938,7 @@ float mdl = precache_model("models/mutant.md3");
 float numtags = gettagscount(mdl);
 =================
 */
-void PFSV_gettagscount(void)
+static void PFSV_gettagscount(void)
 {
 	int index = (int)Scr_GetParmFloat(0);
 	svmodel_t* mod = SV_ModelForNum(index);
@@ -2003,7 +1962,7 @@ Returns true if tag exists on entity's model
 float has_flash = tagexists(self, "tag_flash");
 =================
 */
-void PFSV_tagexists(void)
+static void PFSV_tagexists(void)
 {
 	gentity_t* ent;
 	const char* tagName;
@@ -2043,7 +2002,7 @@ If entity's model has no tags or is not MD3, entity origin will be returned.
 vector head_ = gettagorigin(self, "tag_head");
 =================
 */
-void PFSV_gettagorigin(void)
+static void PFSV_gettagorigin(void)
 {
 	gentity_t *ent;
 	const char *tagName;
@@ -2090,7 +2049,7 @@ If entity's model has no tags or is not MD3, entity angles will be returned.
 vector looking_at = gettagangles(self, "tag_head");
 =================
 */
-void PFSV_gettagangles(void)
+static void PFSV_gettagangles(void)
 {
 	gentity_t* ent;
 	const char* tagName;
@@ -2132,7 +2091,11 @@ void PFSV_gettagangles(void)
 }
 
 
-static void PFSV_none(void) { Scr_RunError("BUILTIN WAS REMOVED\n"); }
+static void PFSV_none(void) 
+{ 
+	Scr_RunError("Bad builtin function.\n"); 
+}
+
 /*
 =================
 SV_InitScriptBuiltins
@@ -2186,6 +2149,7 @@ void SV_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFSV_contents, PF_SV, "pointcontents", "float(vector vPos)");
 	Scr_DefineBuiltin(PFSV_traceline, PF_SV, "traceline", "void(vector vStartPos, vector vEndPos, entity eIgnoreEntity, int iContentMask)");
 	Scr_DefineBuiltin(PFSV_tracebox, PF_SV, "tracebox", "void(vector vStartPos, vector vEndPos, vector vBoxMins, vector vBoxMaxs, entity eIgnoreEntity, int iContentMask)");
+	Scr_DefineBuiltin(PFSV_tracecapsule, PF_SV, "tracecapsule", "void(vector vStartPos, vector vEndPos, vector vCapsuleMins, vector vCapsuleMaxs, entity eIgnoreEntity, int iContentMask)");
 	Scr_DefineBuiltin(PFSV_touchentities, PF_SV, "touchentities", "float(entity eEntity, float fAreaType)");
 	Scr_DefineBuiltin(PFSV_checkbottom, PF_SV, "checkbottom", "float(entity eEntity)");
 	Scr_DefineBuiltin(PFSV_movetogoal, PF_SV, "movetogoal", "float(entity eEntity, entity eGoalEntity, float fStepMoveDistance)");

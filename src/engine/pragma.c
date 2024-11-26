@@ -759,7 +759,6 @@ just cleared malloc with counters now...
 ==============================================================================
 */
 
-#define ZONE_ENABLE_LOG 1
 #define	Z_MAGIC		0x1d1d
 
 typedef struct zhead_s
@@ -775,8 +774,8 @@ typedef struct zhead_s
 	const char	*from;		// where it's been allocated
 } zhead_t;
 
-static const char* memTagNames[] = { "NO_TAG", "CMDSYS", "FILESYSTEM", "RENDERER", "FX", "NAV_NODES", "SERVER_GAME", "CLIENT_GAME", "GUI", "QCVM_MEMORY", "QCVM1", "QCVM2", "QCVM3" };
-
+// !!! memTagNames MUST MATCH MEMTAG_T !!!
+static const char* memTagNames[] = { "NO_TAG", "CMDSYS", "FILESYSTEM", "RENDERER", "FX", "NAV_NODES", "SERVER_GAME", "CLIENT_GAME", "GUI", "QCVM_MEMORY", "QCVM1", "QCVM2", "QCVM3" }; 
 
 static zhead_t		z_chain;
 static size_t		z_count, z_bytes;
@@ -794,7 +793,7 @@ void Z_OpenLog()
 	if (!z_logfile)
 		return;
 
-	fprintf(z_logfile, "Opened memory log at %s,,,,,,,\n", GetTimeStamp(true));
+	//fprintf(z_logfile, "Opened memory log at %s,,,,,,,\n", GetTimeStamp(true));
 	fprintf(z_logfile, "Operation,At_Time,Block_Id,Size_Bytes,MemTag,AllocTime,Where,\n");
 }
 #endif /*ZONE_ENABLE_LOG*/
@@ -898,7 +897,7 @@ void Z_FreeAll(qboolean writeLog)
 		}
 		else
 		{
-#if defined(WIN32) && !defined(DEDICATED_ONLY)
+#if defined(_WIN32) && !defined(DEDICATED_ONLY)
 			MessageBox(0, "Failed to open memory log at exit for writing.", "PRAGMA - Warning!", MB_ICONWARNING);
 #else
 			Com_Printf("Failed to open memory log at exit for writing.");
@@ -950,8 +949,11 @@ void Z_FreeAll(qboolean writeLog)
 		Com_Printf(msg);
 
 #if defined(_WIN32) && !defined(DEDICATED_ONLY)
-		MessageBox(0, msg, "PRAGMA - Memory use on exit", MB_ICONWARNING);
-		OutputDebugString(msg);
+		if (writeLog)
+		{
+			MessageBox(0, msg, "PRAGMA - Memory use on exit", MB_ICONWARNING);
+			OutputDebugString(msg);
+		}
 #endif
 	}	
 }

@@ -48,24 +48,34 @@ typedef struct localEntity_s
 
 } localEntity_t;
 
+//
+// cg_main.c
+//
+
+int CG_AssetIndex(cgAssetType_t type, const char* name, qboolean allowLoad);
+
 
 //
 // cg_dlights.c
 //
+
 void CG_ClearDynamicLights();
 cdlight_t* CG_AllocDynamicLight(int key);
 void CL_NewDynamicPointLight(int key, float x, float y, float z, float radius, float time);
 void CL_NewDynamicSpotLight(int key, float x, float y, float z, vec3_t dir, float radius, float cutoff, float time);
 
+
 //
 // cg_lightstyles.c
 //
+
 void CG_ClearLightStyles();
 
 
 //
 // cg_particles.c
 //
+
 void CG_ClearParticles();
 qboolean CG_NumFreeParticlesInPool(unsigned int count);
 cparticle_t* CG_ParticleFromPool();
@@ -76,21 +86,23 @@ void CG_ParseParticleEffectCommand();
 //
 // cg_fx.c
 // 
+
 void FX_AddAlphaStage(cparticle_t* part, float time, float value);
 void FX_AddSizeStage(cparticle_t* part, float time, float width, float height);
 void FX_AddColorStage(cparticle_t* part, float time, float r, float g, float b);
 void FX_AddVelocityStage(cparticle_t* part, float time, float x, float y, float z);
 void FX_AddTextureStage(cparticle_t* part, float time, struct image_s* pTexture);
-
 cparticle_t* FX_CreateParticle(const vec3_t origin);
 cparticle_t* FX_CreateOrientedParticle(const vec3_t origin, const vec3_t angles);
-
 prTime_t CG_GetEffectsTime();
+
 
 //
 // cg_world.c
 //
+
 trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum, qboolean bUseCapsule);
+trace_t CG_TraceLine(vec3_t start, vec3_t end, int contentsMask, int ignoreEntNum);
 int CG_PointContents(vec3_t point);
 
 

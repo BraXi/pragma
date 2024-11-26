@@ -64,15 +64,16 @@ void V_ClearScene (void)
 V_AddEntity
 =====================
 */
-void V_AddEntity(rentity_t* ent)
+qboolean V_AddEntity(rentity_t* ent)
 {
 	if (r_numentities >= MAX_VISIBLE_ENTITIES)
 	{
-		Com_DPrintf(DP_REND, "V_AddEntity: r_numentities >= MAX_VISIBLE_ENTITIES\n");
-		return;
+		Com_DPrintf(DP_REND, "V_AddEntity: MAX_VISIBLE_ENTITIES\n");
+		return false;
 	}
 //	ent->index = r_numentities;
 	r_entities[r_numentities++] = *ent;
+	return true;
 }
 
 
@@ -81,14 +82,15 @@ void V_AddEntity(rentity_t* ent)
 V_AddDebugPrimitive
 =====================
 */
-void V_AddDebugPrimitive(debugprimitive_t *obj)
+qboolean V_AddDebugPrimitive(debugprimitive_t *obj)
 {
 	if (r_numdebugprimitives >= MAX_DEBUG_PRIMITIVES)
 	{
-		Com_DPrintf(DP_REND, "V_AddDebugPrimitive: r_numdebugprimitives >= MAX_DEBUG_PRIMITIVES\n");
-		return;
+		Com_DPrintf(DP_REND, "V_AddDebugPrimitive: MAX_DEBUG_PRIMITIVES\n");
+		return false;
 	}
 	r_debugprimitives[r_numdebugprimitives++] = *obj;
+	return true;
 }
 
 /*
@@ -96,14 +98,14 @@ void V_AddDebugPrimitive(debugprimitive_t *obj)
 V_AddParticle
 =====================
 */
-void V_AddParticle(int flags, vec3_t org, vec3_t up, vec3_t right, vec3_t color, float alpha, vec2_t size, struct image_s *tex)
+qboolean V_AddParticle(int flags, vec3_t org, vec3_t up, vec3_t right, vec3_t color, float alpha, vec2_t size, struct image_s *tex)
 {
 	particle_t	*p;
 
 	if (r_numparticles >= MAX_PARTICLES)
 	{
-		Com_DPrintf(DP_REND, "V_AddParticle: r_numparticles >= MAX_PARTICLES\n");
-		return;
+		Com_DPrintf(DP_REND, "V_AddParticle: MAX_PARTICLES\n");
+		return false;
 	}
 
 	p = &r_particles[r_numparticles++];
@@ -119,6 +121,7 @@ void V_AddParticle(int flags, vec3_t org, vec3_t up, vec3_t right, vec3_t color,
 	Vector2Copy(size, p->size);
 	p->alpha = alpha;
 	p->material = tex;
+	return true;
 }
 
 /*
@@ -126,14 +129,14 @@ void V_AddParticle(int flags, vec3_t org, vec3_t up, vec3_t right, vec3_t color,
 V_AddPointLight
 =====================
 */
-void V_AddPointLight(vec3_t org, float intensity, float r, float g, float b)
+qboolean V_AddPointLight(vec3_t org, float intensity, float r, float g, float b)
 {
 	dlight_t	*dl;
 
 	if (r_numdlights >= MAX_DLIGHTS)
 	{
-		Com_DPrintf(DP_REND, "V_AddPointLight: r_numdlights >= MAX_DLIGHTS\n");
-		return;
+		Com_DPrintf(DP_REND, "V_AddPointLight: MAX_DLIGHTS\n");
+		return false;
 	}
 
 	dl = &r_dlights[r_numdlights++];
@@ -142,6 +145,7 @@ void V_AddPointLight(vec3_t org, float intensity, float r, float g, float b)
 	VectorCopy (org, dl->origin);
 	dl->intensity = intensity;
 	VectorSet(dl->color, r, g, b);
+	return true;
 }
 
 /*
@@ -149,14 +153,14 @@ void V_AddPointLight(vec3_t org, float intensity, float r, float g, float b)
 V_AddSpotLight
 =====================
 */
-void V_AddSpotLight(vec3_t org, vec3_t dir, float intensity, float cutoff, float r, float g, float b)
+qboolean V_AddSpotLight(vec3_t org, vec3_t dir, float intensity, float cutoff, float r, float g, float b)
 {
 	dlight_t* dl;
 
 	if (r_numdlights >= MAX_DLIGHTS)
 	{
-		Com_DPrintf(DP_REND, "V_AddSpotLight: r_numdlights >= MAX_DLIGHTS\n");
-		return;
+		Com_DPrintf(DP_REND, "V_AddSpotLight: MAX_DLIGHTS\n");
+		return false;
 	}
 
 	dl = &r_dlights[r_numdlights++];
@@ -167,6 +171,8 @@ void V_AddSpotLight(vec3_t org, vec3_t dir, float intensity, float cutoff, float
 	dl->intensity = intensity;
 	dl->cutoff = cutoff;
 	VectorSet(dl->color, r, g, b);
+
+	return true;
 }
 
 
@@ -664,9 +670,9 @@ V_Viewpos_f
 */
 void V_Viewpos_f (void)
 {
-	Com_Printf ("(%i %i %i) : yaw %i\n", (int)cl.refdef.view.origin[0],
+	Com_Printf ("Camera at [%i %i %i] : pitch %i yaw %i\n", (int)cl.refdef.view.origin[0],
 		(int)cl.refdef.view.origin[1], (int)cl.refdef.view.origin[2], 
-		(int)cl.refdef.view.angles[YAW]);
+		(int)cl.refdef.view.angles[PITCH], (int)cl.refdef.view.angles[YAW]);
 }
 
 /*

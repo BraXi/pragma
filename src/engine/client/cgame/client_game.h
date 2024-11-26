@@ -8,9 +8,25 @@ Copyright (C) 1997-2001 Id Software, Inc.
 See the attached GNU General Public License v2 for more details.
 */
 
+// cgame is the ugliest code i ever wrote, needs serious refactoring, some time, some day...
+
 #pragma once
 
 #define MAX_CLIENT_ENTITIES		2048
+
+typedef enum
+{
+	ASSET_MODEL,
+	ASSET_IMAGE,
+	ASSET_SOUND
+} cgAssetType_t;
+
+typedef struct
+{
+	char name[MAX_QPATH];
+	void* ptr;
+} cgAssetEntry_t;
+
 //
 // all loaded media by cgame
 //
@@ -26,7 +42,10 @@ typedef struct
 	struct model_s* mod_v_flashlight;
 	struct model_s* mod_w_muzzleflash;
 
-//	struct model_s* impact_small;
+	unsigned int numImages, numSounds, numModels;
+	cgAssetEntry_t	image_list[MAX_IMAGES];
+	cgAssetEntry_t  sound_list[MAX_SOUNDS];
+	cgAssetEntry_t  model_list[MAX_MODELS];
 } cgMedia_t;
 
 typedef struct

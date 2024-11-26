@@ -170,14 +170,18 @@ static int SV_FindOrCreateAssetIndex(const char* name, int start, int max, const
 	//  return early if asset has been indexed
 	//
 	for (index = 1; index < max && sv.configstrings[start + index][0]; index++)
+	{
 		if (!strcmp(sv.configstrings[start + index], name))
 			return index;
+	}
 
 	//
 	// load asset
 	//
-	if (index == max)
+	if (index >= max)
+	{
 		SV_Error("Hit limit of %i assets (%s)", max, func);
+	}
 
 	//warn of late precaches or crash depending on sv_nolateloading
 	if (sv.state == ss_game)

@@ -43,77 +43,63 @@ void PFCG_AngleVectors(void)
 	AngleVectors(Scr_GetParmVector(0), cg.script_globals->v_forward, cg.script_globals->v_right, cg.script_globals->v_up);
 }
 
-static int CG_ModelIndex(char* name/*, qboolean fromServer*/)
-{
-	int index;
-
-	if (!name || !name[0])
-		return 0;
-
-	for (index = 1; index < MAX_MODELS && cl.configstrings[CS_MODELS + index][0]; index++)
-		if (!strcmp(cl.configstrings[CS_MODELS + index], name))
-			return index;
-
-	// Fixme: BMODELS-LOVE
-}
 
 /*
 =================
-PFCG_modelindex
-
-Returns true if MD3/SMDL model was loaded, false otherwise.
-
+PFCG_precache_model
+Find or load model and return its index.
 float precache_model(string filename)
+float index = precache_model("models/dev/player.md3");
 =================
 */
-static void PFCG_modelindex(void)
+static void PFCG_precache_model(void)
 {
-	float loaded;
-	const char* filename = Scr_GetParmString(0);
-	CheckEmptyString(filename);
+	const char *name;
+	int index;
 
-	loaded = (re.RegisterModel(filename) != NULL ? 1.0f : 0.0f);
-	Scr_ReturnFloat(loaded);
+	name = Scr_GetParmString(0);
+	CheckEmptyString(name);
+	index = CG_AssetIndex(ASSET_MODEL, name, true);
+	Scr_ReturnFloat(index);
 }
 
 /*
 =================
 PFCG_precache_sound
-
 Returns true if sound was loaded, false otherwise.
 File must be in 'sound/' directory.
-
 float precache_sound(string filename)
+float index = precache_sound("impacts/ricochet.wav");
 =================
 */
 static void PFCG_precache_sound(void)
 {
-	float loaded;
-	const char* filename = Scr_GetParmString(0);
-	CheckEmptyString(filename);
+	const char* name;
+	int index;
 
-	loaded = (CG_FindOrRegisterSound(filename) != NULL ? 1.0f : 0.0f);
-	Scr_ReturnFloat(loaded);
+	name = Scr_GetParmString(0);
+	CheckEmptyString(name);
+	index = CG_AssetIndex(ASSET_SOUND, name, true);
+	Scr_ReturnFloat(index);
 }
 
 /*
 =================
 PFCG_precache_image
-
 Returns true if image was loaded, false otherwise.
 File must be in 'gfx/' directory.
-
 float precache_image(string filename)
 =================
 */
 void PFCG_precache_image(void)
 {
-	float loaded;
-	const char* filename = Scr_GetParmString(0);
-	CheckEmptyString(filename);
+	const char* name;
+	int index;
 
-	loaded = (re.RegisterPic(filename) != NULL ? 1.0f : 0.0f);
-	Scr_ReturnFloat(loaded);
+	name = Scr_GetParmString(0);
+	CheckEmptyString(name);
+	index = CG_AssetIndex(ASSET_IMAGE, name, true);
+	Scr_ReturnFloat(index);
 }
 
 /*
@@ -193,51 +179,105 @@ static void PFCG_pointcontents(void)
 
 /*
 =================
-PFCG_trace
-
-Moves the given mins/maxs volume through the world from start to end.
-ignoreEntNum is explicitly not checked. contentmask is the collision contents mask
-
-trace(vector start, vector minS, vector maxS, vector end, float ignoreEnt, int contentmask)
+CG_TraceToProgs
 =================
 */
-static void PFCG_trace(void)
+static void CG_TraceToProgs(const trace_t *tr)
+{
+	cg.script_globals->trace_allsolid = tr->allsolid;
+	cg.script_globals->trace_startsolid = tr->startsolid;
+	cg.script_globals->trace_fraction = tr->fraction;
+	cg.script_globals->trace_planedist = tr->plane.dist;
+
+	VectorCopy(tr->plane.normal, cg.script_globals->trace_normal);
+	VectorCopy(tr->endpos, cg.script_globals->trace_endpos);
+
+	cg.script_globals->trace_entitynum = tr->entityNum;
+	cg.script_globals->trace_contents = tr->contents;
+	cg.script_globals->trace_flags = tr->surfaceFlags;
+
+	// FIXME: CLIENT QCVM
+	//cg.script_globals->trace_entity = ENT_TO_VM(cg.localEntities); 
+	//cg.script_globals->trace_material = Scr_SetTempString(trace.surface->name);
+}
+
+/*
+=================
+PFCG_traceline
+Moves the given ray through the world from start to end.
+ignoreEntNum is explicitly not checked. contentmask is the collision contents mask
+traceline(vector start, vector end, float ignoreEnt, int contentmask)
+=================
+*/
+static void PFCG_traceline(void)
 {
 	trace_t		trace;
-	float		*start, *end, *min, *max;
+	float		*start, *end;
 	int			ignoreEntNum;
 	int			contentmask;
 
 	start = Scr_GetParmVector(0);
-	min = Scr_GetParmVector(1);
-	max = Scr_GetParmVector(2);
-	end = Scr_GetParmVector(3);
+	end = Scr_GetParmVector(1);
 
-	ignoreEntNum = Scr_GetParmFloat(4); //cl.playernum + 1;
+	ignoreEntNum = Scr_GetParmFloat(2);
+	contentmask = Scr_GetParmInt(3);
+
+	trace = CG_TraceLine(start,end, contentmask, ignoreEntNum);
+	CG_TraceToProgs(&trace);
+}
+
+/*
+=================
+PFCG_tracebox
+Moves the given mins/maxs box through the world from start to end.
+ignoreEntNum is explicitly not checked. contentmask is the collision contents mask
+tracebox(vector vStartPos, vector vEndPos, vector vBoxMins, vector vBoxMaxs, float fIgnoreEntNum, int iContentMask)
+=================
+*/
+static void PFCG_tracebox(void)
+{
+	trace_t		trace;
+	float		*start, *end, *mins, *maxs;
+	int			ignoreEntNum;
+	int			contentmask;
+
+	start = Scr_GetParmVector(0);
+	end = Scr_GetParmVector(1);
+	mins = Scr_GetParmVector(2);
+	maxs = Scr_GetParmVector(3);
+
+	ignoreEntNum = Scr_GetParmFloat(4);
 	contentmask = Scr_GetParmInt(5);
 
-	// FIXME CAPSULE HACK TO NOT CHANGE QC API!!!
-	if (contentmask == MASK_PLAYERSOLID)
-		trace = CG_Trace(start, min, max, end, contentmask, ignoreEntNum, true);
-	else
-		trace = CG_Trace(start, min, max, end, contentmask, ignoreEntNum, false);
+	trace = CG_Trace(start, mins, maxs, end, contentmask, ignoreEntNum, false);
+	CG_TraceToProgs(&trace);
+}
 
-	
+/*
+=================
+PFCG_tracecapsule
+Moves the given capsule through the world from start to end.
+ignoreEntNum is explicitly not checked. contentmask is the collision contents mask
+tracecapsule(vector vStartPos, vector vEndPos, vector vCapsuleMins, vector vCapsuleMaxs, float fIgnoreEntNum, int iContentMask)
+=================
+*/
+static void PFCG_tracecapsule(void)
+{
+	trace_t		trace;
+	float		*start, *end, *mins, *maxs;
+	int			ignoreEntNum;
+	int			contentmask;
 
-	// set globals in progs
-	cg.script_globals->trace_allsolid = trace.allsolid;
-	cg.script_globals->trace_startsolid = trace.startsolid;
-	cg.script_globals->trace_fraction = trace.fraction;
-	cg.script_globals->trace_planedist = trace.plane.dist;
-	VectorCopy(trace.plane.normal, cg.script_globals->trace_normal);
-	VectorCopy(trace.endpos, cg.script_globals->trace_endpos);
-//	cg.script_globals->trace_entity = ENT_TO_VM(cg.localEntities); // FIXME
-	cg.script_globals->trace_entitynum = trace.entityNum;
-	cg.script_globals->trace_contents = trace.contents;
-	cg.script_globals->trace_flags = trace.surfaceFlags;
+	start = Scr_GetParmVector(0);
+	end = Scr_GetParmVector(1);
+	mins = Scr_GetParmVector(2);
+	maxs = Scr_GetParmVector(3);
 
-	//cg.script_globals->trace_material = Scr_SetTempString(trace.surface->name);
+	ignoreEntNum = Scr_GetParmFloat(4);
+	contentmask = Scr_GetParmInt(5);
 
+	trace = CG_Trace(start, mins, maxs, end, contentmask, ignoreEntNum, true);
+	CG_TraceToProgs(&trace);
 }
 
 // read network packets
@@ -255,7 +295,6 @@ static void PFCG_MSG_ReadString(void)	{ char *str = MSG_ReadString(&net_message)
 /*
 =================
 PFCG_drawstring
-
 drawstring( vector xy_align, float fontSize, vector color, float alpha, string text, ... );
 =================
 */
@@ -287,7 +326,6 @@ static void PFCG_drawstring(void)
 /*
 =================
 PFCG_drawimage
-
 drawimage( float x, float y, float w, float h, vector color, float alpha, string imagename );
 =================
 */
@@ -317,7 +355,6 @@ static void PFCG_drawimage(void)
 /*
 =================
 PFCG_drawfill
-
 drawfill( float x, float y, float w, float h, vector color, float alpha );
 =================
 */
@@ -345,9 +382,7 @@ static void PFCG_drawfill(void)
 /*
 =================
 PFCG_localsound
-
 plays 2D sound for local client with no attenuation
-
 void localsound( string filename, float volume );
 =================
 */
@@ -370,14 +405,10 @@ void PFCG_localsound(void)
 /*
 =================
 PFCG_playsound
-
 plays sound for local client
-
 if origin is vec3_origin, the sound will be dynamically 
 sourced from the entity to which index was specifiednum
-
 void playsound( vector pos, float entNum, string fileName, float channel, float volume, float attenuation, float timeOffset );
-
 playsound( vec3_origin, localplayernum+1, "player/pain1.wav", CHAN_BODY, 1.0, ATTN_NORM, 0.0 );
 =================
 */
@@ -413,11 +444,8 @@ static void PFCG_playsound(void)
 /*
 =================
 PFCG_addcommand
-
 addcommand( string cmdname, void() function )
-
 register console command, all cg commands are removed when dropped from server and during map changes
-
 addcommand( "respawn", cmd_respawn );
 =================
 */
@@ -430,9 +458,7 @@ static void PFCG_addcommand(void)
 /*
 =================
 PFCG_getbindkey
-
 string getbindkey( string bind )
-
 returns the key name for bind
 =================
 */
@@ -495,7 +521,196 @@ void PFCG_setmodel(void)
 	}
 }
 
-#endif /*not DEDICATED_ONLY*/
+/*
+=================
+PFCG_drawmodel
+drawmodel(float fModelIndex, vector vOrigin, vector vAngles, vector fFrameInfo, int iRenderFlags, float fModelScale, vector vColor, float fAlpha)
+=================
+*/
+void PFCG_drawmodel(void)
+{
+	int modelindex;
+	float *frameinfo;
+	qboolean added;
+
+	rentity_t rent;
+
+	added = false;
+
+	if (!CG_CanDrawCall())
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+
+	memset(&rent, 0, sizeof(rent));
+
+	modelindex = Scr_GetParmFloat(0);
+	if (modelindex < 0 || modelindex >= cgMedia.numModels)
+	{
+		modelindex = 0;
+	}
+	rent.model = cgMedia.model_list[modelindex].ptr;
+
+	VectorCopy(Scr_GetParmVector(1), rent.origin);
+	VectorCopy(Scr_GetParmVector(2), rent.angles);
+	AnglesToAxis(rent.angles, rent.axis);
+
+	frameinfo = Scr_GetParmVector(3);
+	rent.oldframe = frameinfo[0];
+	rent.frame = frameinfo[1];
+	rent.animbacklerp = frameinfo[2];
+	rent.renderfx = Scr_GetParmInt(4);
+	
+	rent.scale = Scr_GetParmFloat(5);
+	if (rent.scale <= 0.0f)
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+
+	VectorCopy(Scr_GetParmVector(6), rent.renderColor);
+
+	rent.alpha = Scr_GetParmFloat(7);
+	if (rent.alpha <= 0.0f)
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+
+	if (rent.scale != 1.0f)
+		rent.renderfx |= RF_SCALE;
+
+	if (rent.renderColor[0] != 1.0f && rent.renderColor[1] != 1.0f && rent.renderColor[2] != 1.0f)
+		rent.renderfx |= RF_COLOR;
+
+	//if (rent.oldframe == rent.frame && rent.animbacklerp == 0.0f)
+	//	rent.renderfx |= RF_NOANIMLERP;
+
+	if (rent.alpha != 1.0f)
+		rent.renderfx |= RF_TRANSLUCENT;
+
+
+
+	added = V_AddEntity(&rent);
+	Scr_ReturnFloat(added ? 1.0f : 0.0f);
+}
+
+/*
+=================
+PFCG_drawparticle
+drawparticle(float fImageIndex, vector vOrigin, vector vUp, vector vRight, vector vColor,  float fAlpha, float fWidth, float fHeight, float iFlags)
+=================
+*/
+void PFCG_drawparticle(void)
+{
+	int imageindex;
+	float* origin, * up, * right, * color;
+	float alpha;
+	int flags;
+	vec2_t size;
+
+	qboolean added;
+
+	if (!CG_CanDrawCall())
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+
+	imageindex = Scr_GetParmFloat(0);
+	if (imageindex < 0 || imageindex >= cgMedia.numImages)
+	{
+		imageindex = 0;
+	}
+
+	origin = Scr_GetParmVector(1);
+	up = Scr_GetParmVector(2);
+	right = Scr_GetParmVector(3);
+	color = Scr_GetParmVector(4);
+
+	alpha = Scr_GetParmFloat(5);
+	if (alpha <= 0.0f)
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+
+	size[0] = Scr_GetParmFloat(6);
+	size[1] = Scr_GetParmFloat(7);
+	if (size[0] <= 0.0f || size[1] <= 0.0f)
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+
+	if (VectorCompare(up, vec3_origin) && VectorCompare(right, vec3_origin))
+		flags = 0;
+	else
+		flags = 1;
+
+	added = V_AddParticle(flags, origin, up, right, color, alpha, size, cgMedia.image_list[imageindex].ptr);
+	Scr_ReturnFloat(added ? 1.0f : 0.0f);
+}
+
+/*
+=================
+PFCG_addpointlight
+pointlight(vector vOrigin, float intensity, vector vColor)
+=================
+*/
+void PFCG_addpointlight(void)
+{
+	float* origin, *color;
+	float intensity;
+	
+	qboolean added;
+
+#if 1
+	if (!CG_CanDrawCall())
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+#endif
+	origin = Scr_GetParmVector(0);
+	intensity = Scr_GetParmFloat(1);
+	color = Scr_GetParmVector(2);
+
+	added = V_AddPointLight(origin, intensity, color[0], color[1], color[2]);
+	Scr_ReturnFloat(added ? 1.0f : 0.0f);
+}
+
+
+/*
+=================
+PFCG_addspotlight
+spotlight(vector vOrigin, vector vDirection, float fCutOff, float intensity, vector vColor)
+=================
+*/
+void PFCG_addspotlight(void)
+{
+	float *origin, *direction, *color;
+	float cutoff, intensity;
+	qboolean added;
+
+	if (!CG_CanDrawCall())
+	{
+		Scr_ReturnFloat(0.0f);
+		return;
+	}
+
+	origin = Scr_GetParmVector(0);
+	direction = Scr_GetParmVector(1);
+	cutoff = Scr_GetParmFloat(2);
+	intensity = Scr_GetParmFloat(3);
+	color = Scr_GetParmVector(4);
+	
+	added = V_AddSpotLight(origin, direction, intensity, cutoff, color[0], color[1], color[2]);
+	Scr_ReturnFloat(added ? 1.0f : 0.0f);
+}
+
+#endif /*DEDICATED_ONLY*/
 
 /*
 =================
@@ -510,13 +725,15 @@ void CG_InitScriptBuiltins()
 	CG_StubScriptBuiltins();
 #else
 	// precache
-	Scr_DefineBuiltin(PFCG_modelindex, PF_CL, "precache_model", "float(string sModelName)");
+	Scr_DefineBuiltin(PFCG_precache_model, PF_CL, "precache_model", "float(string sModelName)");
 	Scr_DefineBuiltin(PFCG_precache_sound, PF_CL, "precache_sound", "float(string sSoundName)");
 	Scr_DefineBuiltin(PFCG_precache_image, PF_CL, "precache_image", "float(string sImageName)");
 
 	// collision
 	Scr_DefineBuiltin(PFCG_pointcontents, PF_CL, "pointcontents", "float(vector vPos)");
-	Scr_DefineBuiltin(PFCG_trace, PF_CL, "trace", "void(vector vStartPos, vector vBoxMins, vector vBoxMaxs, vector vEndPos, float fIgnoreEntNum, int iContentMask)");
+	Scr_DefineBuiltin(PFCG_traceline, PF_CL, "traceline", "void(vector vStartPos, vector vEndPos, float fIgnoreEntNum, int iContentMask)");
+	Scr_DefineBuiltin(PFCG_tracebox, PF_CL, "tracebox", "void(vector vStartPos, vector vEndPos, vector vBoxMins, vector vBoxMaxs, float fIgnoreEntNum, int iContentMask)");
+	Scr_DefineBuiltin(PFCG_tracecapsule, PF_CL, "tracecapsule", "void(vector vStartPos, vector vEndPos, vector vCapsuleMins, vector vCapsuleMaxs, float fIgnoreEntNum, int iContentMask)");
 
 	// config strings and stats
 	Scr_DefineBuiltin(PFCG_getconfigstring, PF_CL, "getconfigstring", "string(int fIndex)");
@@ -536,10 +753,16 @@ void CG_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_MSG_ReadDir, PF_CL, "MSG_ReadDir", "vector()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadString, PF_CL, "MSG_ReadString", "string()");
 
-	// drawing
+	// ui draw
 	Scr_DefineBuiltin(PFCG_drawstring, PF_CL, "drawstring", "void(vector vXYAlign, float fScale, vector vColor, float fAlpka, string sText, ...)");
 	Scr_DefineBuiltin(PFCG_drawimage, PF_CL, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string sImageName)");
 	Scr_DefineBuiltin(PFCG_drawfill, PF_CL, "drawfill", "void(float x, float y, float fWidth, float fHeight, vector vColor, float fAlpha)");
+	
+	// scene draw
+	Scr_DefineBuiltin(PFCG_drawmodel, PF_CL, "drawmodel", "float(float fModelIndex, vector vOrigin, vector vAngles, vector fFrameInfo, int iRenderFlags, float fModelScale, vector vColor, float fAlpha)");
+	Scr_DefineBuiltin(PFCG_drawparticle, PF_CL, "drawparticle", "float(float fImageIndex, vector vOrigin, vector vUp, vector vRight, vector vColor,  float fAlpha, float fWidth, float fHeight)");
+	Scr_DefineBuiltin(PFCG_addpointlight, PF_CL, "addpointlight", "float(vector vOrigin, float intensity, vector vColor)");
+	Scr_DefineBuiltin(PFCG_addspotlight, PF_CL, "addspotlight", "float(vector vOrigin, vector vDirection, float fCutOff, float intensity, vector vColor)");
 
 	// sound
 	Scr_DefineBuiltin(PFCG_localsound, PF_CL, "localsound", "void(string sSoundName, float fVolume)");
@@ -549,34 +772,38 @@ void CG_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_addcommand, PF_CL, "addcommand", "void(string sCmdName, void() fnCmdFunction)");
 	Scr_DefineBuiltin(PFCG_getbindkey, PF_CL, "getbindkey", "string(string sCmdName)");
 
-	// visual
-//	Scr_DefineBuiltin(PFCG_setmodel, PF_CL, "setmodel", "void(entity e, string m)");
 #endif
 }
-
-
 
 #ifdef DEDICATED_ONLY
 static void PFCG_none(void)
 {
-	Com_Error(ERR_FATAL, "client game qc builtin invoked in dedicated server!\n");
+	Com_Error(ERR_FATAL, "Client Game QC builtin invoked in dedicated server!\n");
 }
 
+/*
+=================
+CG_StubScriptBuiltins
+Stubs client game builtins for dedicated only servers
+=================
+*/
 void CG_StubScriptBuiltins()
 {
 	// precache
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_model", "float(string fn)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_sound", "float(string fn)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_image", "float(string fn)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_model", "float(string sModelName)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_sound", "float(string sSoundName)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "precache_image", "float(string sImageName)");
 
 	// collision
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "pointcontents", "float(vector v)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "trace", "void(vector s, vector bmins, vector bmaxs, vector e, float ie, int cm)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "pointcontents", "float(vector vPos)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "traceline", "void(vector vStartPos, vector vEndPos, float fIgnoreEntNum, int iContentMask)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "tracebox", "void(vector vStartPos, vector vEndPos, vector vBoxMins, vector vBoxMaxs, float fIgnoreEntNum, int iContentMask)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "tracecapsule", "void(vector vStartPos, vector vEndPos, vector vCapsuleMins, vector vCapsuleMaxs, float fIgnoreEntNum, int iContentMask)");
 
 	// config strings and stats
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "getconfigstring", "string(int idx)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "getstat", "float(float idx)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "getclientname", "string(int idx)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "getconfigstring", "string(int fIndex)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "getstat", "float(float fIndex)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "getclientname", "string(int fClientNum)");
 
 	// message reading
 	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadChar", "float()");
@@ -591,17 +818,23 @@ void CG_StubScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadDir", "vector()");
 	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadString", "string()");
 
-	// drawing
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawstring", "void(vector xya, float fs, vector c, float a, string s1, ...)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string img)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawfill", "void(float x, float y, float w, float h, vector c, float a)");
+	// ui draw
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawstring", "void(vector vXYAlign, float fScale, vector vColor, float fAlpka, string sText, ...)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawimage", "void(float x, float y, float w, float h, vector c, float a, string sImageName)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawfill", "void(float x, float y, float fWidth, float fHeight, vector vColor, float fAlpha)");
+
+	// scene draw
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawmodel", "float(float fModelIndex, vector vOrigin, vector vAngles, vector fFrameInfo, int iRenderFlags, float fModelScale, vector vColor, float fAlpha)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawparticle", "float(float fImageIndex, vector vOrigin, vector vUp, vector vRight, vector vColor,  float fAlpha, float fWidth, float fHeight)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "addpointlight", "float(vector vOrigin, float intensity, vector vColor)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "addspotlight", "float(vector vOrigin, vector vDirection, float fCutOff, float intensity, vector vColor)");
 
 	// sound
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "localsound", "void(string s, float v)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "playsound", "void(vector v, float en, string snd, float ch, float vol, float att, float tofs)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "localsound", "void(string sSoundName, float fVolume)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "playsound", "void(vector vPos, float fEntNum, string sSoundName, float fChannel, float fVolume, float fAttenuation, float fTimeOffset)");
 
 	// commands
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "addcommand", "void(string cn, void() f)");
-	Scr_DefineBuiltin(PFCG_none, PF_CL, "getbindkey", "string(string bind)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "addcommand", "void(string sCmdName, void() fnCmdFunction)");
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "getbindkey", "string(string sCmdName)");
 }
 #endif

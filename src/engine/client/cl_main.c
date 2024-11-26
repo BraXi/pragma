@@ -1180,18 +1180,19 @@ void CL_InitLocal (void)
 	// the only thing this does is allow command completion to work
 	// all unknown commands are automatically forwarded to the server
 
-	Cmd_AddCommand ("kill", NULL);
-	Cmd_AddCommand ("use", NULL);
-	Cmd_AddCommand ("reload", NULL);
-	Cmd_AddCommand ("melee", NULL);
-	Cmd_AddCommand ("say", NULL);
-	Cmd_AddCommand ("say_team", NULL);
-	Cmd_AddCommand ("info", NULL);
+	Cmd_AddCommand("kill", NULL);
+	Cmd_AddCommand("use", NULL);
+	Cmd_AddCommand("reload", NULL);
+	Cmd_AddCommand("melee", NULL);
+	Cmd_AddCommand("say", NULL);
+	Cmd_AddCommand("say_team", NULL);
+	Cmd_AddCommand("info", NULL);
 
-	Cmd_AddCommand ("give", NULL);
-	Cmd_AddCommand ("god", NULL);
-	Cmd_AddCommand ("notarget", NULL);
-	Cmd_AddCommand ("noclip", NULL);
+	Cmd_AddCommand("give", NULL);
+	Cmd_AddCommand("god", NULL);
+	Cmd_AddCommand("notarget", NULL);
+	Cmd_AddCommand("noclip", NULL);
+	Cmd_AddCommand("viewpos", NULL);
 }
 
 

@@ -26,8 +26,8 @@ QUAKE (PRAGMA) FILESYSTEM, YAY
 
 typedef struct
 {
-	char	name[MAX_QPATH];
-	int		filepos, filelen;
+	char		name[MAX_QPATH];
+	int32_t		filepos, filelen;
 } packfile_t;
 
 typedef struct pack_s
@@ -131,27 +131,6 @@ void FS_FCloseFile (FILE *f)
 	fclose (f);
 }
 
-
-// RAFAEL
-/*
-	Developer_searchpath
-*/
-int	Developer_searchpath ()
-{
-	searchpath_t	*search;
-	for (search = fs_searchpaths ; search ; search = search->next)
-	{
-		if (strstr (search->filename, "xatrix"))
-			return 1;
-
-		if (strstr (search->filename, "rogue"))
-			return 2;
-	}
-	return (0);
-
-}
-
-
 /*
 ===========
 FS_FOpenFile
@@ -202,10 +181,11 @@ int FS_FOpenFile (const char *filename, FILE **file)
 			pak = search->pack;
 			for (i=0 ; i<pak->numfiles ; i++)
 				if (!Q_strcasecmp (pak->files[i].name, filename))
-				{	// found it!
+				{	
+					// found it!
 					file_from_pak = 1;
 					Com_DPrintf (DP_FS,"PackFile: %s : %s\n",pak->filename, filename);
-				// open a new file on the pakfile
+					// open a new file on the pakfile
 					*file = fopen (pak->filename, "rb");
 					if (!*file)
 						Com_Error (ERR_FATAL, "Couldn't reopen %s", pak->filename);	
@@ -412,7 +392,7 @@ int FS_LoadTextFile(const char* filename, char** buffer)
 	//
 	// load file
 	//
-	len = FS_LoadFile(filename, (void**)&raw);
+	len = FS_LoadFile(filename, &raw);
 	if (!len || len == -1)
 	{
 		if (buffer)
@@ -636,6 +616,8 @@ void FS_SetGamedir (const char *dir)
 			FS_AddGameDirectory (va("%s/%s", fs_cddir->string, dir) );
 		FS_AddGameDirectory (va("%s/%s", fs_basedir->string, dir) );
 	}
+
+	// FIXME: SHOULD RELOAD GUI AND CLIENT GAME HERE TOO!
 }
 
 

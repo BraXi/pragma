@@ -201,6 +201,11 @@ trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int content
 	return trace;
 }
 
+trace_t CG_TraceLine(vec3_t start, vec3_t end, int contentsMask, int ignoreEntNum)
+{
+	return CG_Trace(start, NULL, NULL, end, contentsMask, ignoreEntNum, false);
+}
+
 /*
 ====================
 CG_PointContents

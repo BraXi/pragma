@@ -20,6 +20,129 @@ static qboolean cg_allow_drawcalls;
 
 /*
 =================
+CG_AssetIndex
+Find or load an asset (model, image, sound) and return its index.
+=================
+*/
+int CG_AssetIndex(cgAssetType_t type, const char* name, qboolean allowLoad)
+{
+	unsigned int index, count, max;
+	cgAssetEntry_t* list, *asset;
+
+	if (!name || !name[0])
+		return 0;
+
+	if (strlen(name) >= MAX_QPATH-1) // cause null termination
+	{
+		//Com_Error(ERR_DROP, __FUNCTION__": Name '%s' is too long.\n", name);
+		Com_Printf(__FUNCTION__": Name '%s' is too long.\n", name);
+		return 0;
+	}
+
+	count = max = 0;
+	list = NULL;
+
+	switch (type)
+	{
+	case ASSET_MODEL:
+		max = MAX_MODELS;
+		count = cgMedia.numModels;
+		list = cgMedia.model_list;
+		break;
+	case ASSET_IMAGE:
+		max = MAX_IMAGES;
+		count = cgMedia.numImages;
+		list = cgMedia.image_list;
+		break;
+	case ASSET_SOUND:
+		max = MAX_SOUNDS;
+		count = cgMedia.numSounds;
+		list = cgMedia.sound_list;
+		break;
+	default:
+		Com_Error(ERR_DROP, __FUNCTION__": Wrong cgAssetType %i\n", type);
+		//return 0;
+		break;
+	}
+
+	// search in existing entries
+	for (index = 1; index < count; index++)
+	{
+		asset = &list[index];
+		if (!strcmp(asset->name, name))
+		{
+			return index; // found cached
+		}
+	}
+
+	if (index >= max)
+	{
+		//Com_Error(ERR_DROP, __FUNCTION__": Hit limit of max assets of type %i\n", type);
+		Com_Printf(__FUNCTION__": Hit limit of max assets of type %i\n", type);
+		return 0;
+	}
+
+	if (!allowLoad)
+	{
+		return 0; // since we are not allowed to load it, just return the missing/default asset
+	}
+
+	// Create new entry, name it and load asset
+	asset = &list[index];
+	strncpy(asset->name, name, MAX_QPATH);
+
+	switch (type)
+	{
+	case ASSET_MODEL:
+		asset->ptr = re.RegisterModel(name);
+		cgMedia.numModels ++;
+		break;
+	case ASSET_IMAGE:
+		asset->ptr = re.RegisterPic(name);
+		cgMedia.numImages ++;
+		break;
+	case ASSET_SOUND:
+		asset->ptr = S_RegisterSound(name);
+		cgMedia.numSounds ++;
+		break;
+	}
+
+	return index;
+}
+
+/*
+=================
+CG_LoadAsset
+Same as CG_AssetIndex, but returns raw pointer to data.
+=================
+*/
+void *CG_LoadAsset(cgAssetType_t type, const char* name)
+{
+	int index;
+
+	index = CG_AssetIndex(type, name, true);
+
+	switch (type)
+	{
+	case ASSET_MODEL:
+		return cgMedia.model_list[index].ptr;
+		break;
+	case ASSET_IMAGE:
+		return cgMedia.image_list[index].ptr;
+		break;
+	case ASSET_SOUND:
+		return cgMedia.sound_list[index].ptr;
+		break;
+	default:
+		Com_Error(ERR_DROP, __FUNCTION__": Wrong cgAssetType %i\n", type);
+		//return NULL;
+		break;
+	}
+	return NULL;
+}
+
+/*
+=================
 CG_RegisterSounds
 
 This is the only right place to load audio.
@@ -29,17 +152,30 @@ Called before entering a new level, and when sound system is restarting
 void CG_RegisterSounds()
 {
 	int i;
-
-	for( i = 0; i < 3; i++)
-		cgMedia.sfx_ricochet[i] = S_RegisterSound(va("impacts/ricochet_%i.wav", i));
+	cgAssetEntry_t* asset;
 
 	for (i = 0; i < 3; i++)
-		cgMedia.sfx_footsteps[i] = S_RegisterSound(va("footsteps/generic_%i.wav", i));
+	{
+		cgMedia.sfx_ricochet[i] = CG_LoadAsset(ASSET_SOUND, va("impacts/ricochet_%i.wav", i));
+	}
 
+	for (i = 0; i < 3; i++)
+	{
+		cgMedia.sfx_footsteps[i] = CG_LoadAsset(ASSET_SOUND, va("footsteps/generic_%i.wav", i));
+	}
 
-	cgMedia.sfx_explosion[0] = S_RegisterSound("explosions/med_1.wav");
-	cgMedia.sfx_explosion[1] = cgMedia.sfx_explosion[0];
-	cgMedia.sfx_explosion[2] = cgMedia.sfx_explosion[0];
+	cgMedia.sfx_explosion[0] = CG_LoadAsset(ASSET_SOUND, "explosions/med_1.wav");
+	cgMedia.sfx_explosion[1] = CG_LoadAsset(ASSET_SOUND, "explosions/med_1.wav");
+	cgMedia.sfx_explosion[2] = CG_LoadAsset(ASSET_SOUND, "explosions/med_1.wav");
+
+	// reload all client game sounds
+	for (i = 0; i < cgMedia.numSounds; i++)
+	{
+		asset = &cgMedia.sound_list[i];
+		if (asset->name[0] == 0)
+			continue;
+		asset->ptr = S_RegisterSound(asset->name);
+	}
 }
 
 /*
@@ -52,11 +188,11 @@ Called before entering a new level, and when renderer is restarting
 */
 void CG_RegisterMedia()
 {
-	cgMedia.mod_v_muzzleflash = re.RegisterModel("models/fx/muzzleflash_view.md3");
-	cgMedia.mod_w_muzzleflash = re.RegisterModel("models/fx/muzzleflash_world.md3");
+	cgMedia.mod_v_muzzleflash = CG_LoadAsset(ASSET_MODEL, "models/fx/muzzleflash_view.md3");
+	cgMedia.mod_w_muzzleflash = CG_LoadAsset(ASSET_MODEL, "models/fx/muzzleflash_world.md3");
 
-	cgMedia.mod_v_flashlight = re.RegisterModel("models/fx/flashlight_view.md3");
-	cgMedia.mod_w_flashlight = re.RegisterModel("models/fx/flashlight_world.md3");
+	cgMedia.mod_v_flashlight = CG_LoadAsset(ASSET_MODEL, "models/fx/flashlight_view.md3");
+	cgMedia.mod_w_flashlight = CG_LoadAsset(ASSET_MODEL, "models/fx/flashlight_world.md3");
 
 //	cgMedia.impact_small = re.RegisterModel("models/fx/impact_small.md3"); // unused 
 }
@@ -102,6 +238,8 @@ void CL_ShutdownClientGame()
 	// free the map but not when server is running
 //	if(Cvar_VariableValue("cm_flushmap") && !Com_ServerState())
 //		CM_ClearMap();
+
+	Com_Printf("------ Client Game Closed ------\n");
 }
 
 /*
@@ -148,6 +286,8 @@ void CG_InitClientGame()
 {
 	Com_Printf("------- Client Game Init -------\n");
 
+	memset(&cgMedia, 0, sizeof(cgMedia));
+
 	Scr_CreateScriptVM(VM_CLGAME, MAX_CLIENT_ENTITIES, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
 	Scr_BindVM(VM_CLGAME); // so we can get proper entity size and ptrs
 
@@ -157,7 +297,7 @@ void CG_InitClientGame()
 	cg.localEntities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
 	cg.script_globals = Scr_GetGlobals();
 
-	Com_Printf("Spawned client game programs.\n");
+	Com_Printf("------- Client Game Init Complete -------\n");
 }
 
 /*
@@ -171,7 +311,6 @@ static qboolean CG_IsActive()
 {
 	return (cg.qcvm_active == true);
 }
-
 
 /*
 ===============
@@ -258,6 +397,22 @@ void CG_DrawGUI()
 }
 
 /*
+===============
+CG_DrawScene
+This calls progs function CG_DrawScene and allows rendering via builtins
+===============
+*/
+void CG_DrawScene()
+{
+	if (CG_IsActive() == false || cls.state != CS_ACTIVE)
+		return;
+
+	cg_allow_drawcalls = true;
+	Scr_Execute(VM_CLGAME, cg.script_globals->CG_DrawScene, __FUNCTION__);
+	cg_allow_drawcalls = false;
+}
+
+/*
 ====================
 CG_CanDrawCall
 
@@ -274,8 +429,6 @@ qboolean CG_CanDrawCall()
 		return false; // no drawing outside of draw phase
 	return true;
 }
-
-
 
 
 /*
@@ -312,4 +465,6 @@ void CG_AddEntities()
 	CG_SimulateAndAddParticles();
 	CG_AddDynamicLights();
 	CG_AddLightStyles();
+
+	CG_DrawScene();
 }

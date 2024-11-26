@@ -489,11 +489,11 @@ extern struct model_s *gun_model;
 
 void V_Init (void);
 void V_RenderView( float stereo_separation );
-void V_AddEntity (rentity_t *ent);
-void V_AddDebugPrimitive(debugprimitive_t *obj);
-void V_AddParticle(int flags, vec3_t org, vec3_t up, vec3_t right, vec3_t color, float alpha, vec2_t size, struct image_s* tex);
-void V_AddPointLight(vec3_t org, float intensity, float r, float g, float b);
-void V_AddSpotLight(vec3_t org, vec3_t dir, float intensity, float cutoff, float r, float g, float b);
+qboolean V_AddEntity (rentity_t *ent);
+qboolean V_AddDebugPrimitive(debugprimitive_t *obj);
+qboolean V_AddParticle(int flags, vec3_t org, vec3_t up, vec3_t right, vec3_t color, float alpha, vec2_t size, struct image_s* tex);
+qboolean V_AddPointLight(vec3_t org, float intensity, float r, float g, float b);
+qboolean V_AddSpotLight(vec3_t org, vec3_t dir, float intensity, float cutoff, float r, float g, float b);
 void V_AddLightStyle (int style, float r, float g, float b);
 
 //
