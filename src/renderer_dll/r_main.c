@@ -189,6 +189,9 @@ void R_DrawEntities(void)
 	if (!r_drawentities->value)
 		return;
 
+	qboolean third_person;
+
+	third_person = (qboolean)(r_newrefdef.view.flags & RDF_THIRDPERSON);
 	
 	// draw opaque entities first
 	gl_state.bDrawingTransparents = false;
@@ -200,6 +203,16 @@ void R_DrawEntities(void)
 		if ((r_pCurrentEntity->renderfx & RF_TRANSLUCENT))
 		{
 			continue; // reject entities with transparency effect early
+		}
+
+		if (third_person && (r_pCurrentEntity->renderfx & RF_VIEW_MODEL))
+		{
+			continue; // don't draw first person models if not looking through eyes
+		}
+
+		if (!third_person && (r_pCurrentEntity->renderfx & RF_VIEWERMODEL))
+		{
+			continue; // don't draw third person models if looking through eyes
 		}
 
 		if (gl_state.bShadowMapPass)
@@ -220,6 +233,16 @@ void R_DrawEntities(void)
 	{
 		r_pCurrentEntity = &r_newrefdef.entities[(r_newrefdef.num_entities-1)-i];
 		r_pCurrentModel = r_pCurrentEntity->model;
+
+		if (third_person && (r_pCurrentEntity->renderfx & RF_VIEW_MODEL))
+		{
+			continue; // don't draw first person models if not looking through eyes
+		}
+
+		if (!third_person && (r_pCurrentEntity->renderfx & RF_VIEWERMODEL))
+		{
+			continue; // don't draw third person models if looking through eyes
+		}
 
 		if (gl_state.bShadowMapPass)
 		{

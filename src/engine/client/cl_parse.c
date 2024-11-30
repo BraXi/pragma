@@ -718,8 +718,8 @@ void CL_DeltaEntity(frame_t* frame, int newnum, entity_state_t* old, int bits)
 	entity_state_t* state;
 
 	ent = CL_GetEntity(newnum);
-
 	state = &cl_parse_entities[cl.parse_entities & (MAX_PARSE_ENTITIES - 1)];
+
 	cl.parse_entities++;
 	frame->num_entities++;
 
@@ -736,8 +736,10 @@ void CL_DeltaEntity(frame_t* frame, int newnum, entity_state_t* old, int bits)
 	}
 
 	if (ent->serverframe != cl.frame.serverframe - 1)
-	{	// wasn't in last update, so initialize some things
+	{	
+		// wasn't in last update, so initialize some things
 		ent->trailcount = 1024;		// for diminishing rocket / grenade trails
+
 		// duplicate the current state so lerping doesn't hurt anything
 		ent->prev = *state;
 		if (state->event == EV_TELEPORT_OTHER)

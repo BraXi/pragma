@@ -123,8 +123,11 @@ typedef struct cl_entvars_s
 
 
 	int32_t			modelindex;
+
+	// bounds are extracted from entity_state
 	vec3_t			mins;
 	vec3_t			maxs;
+
 	float			scale;
 	vec3_t			color;
 } cl_entvars_t;

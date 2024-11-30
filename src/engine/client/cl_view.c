@@ -645,7 +645,7 @@ void V_RenderView(float stereo_separation)
 
 		cl.refdef.lightstyles = r_lightstyles;
 
-		cl.refdef.view.flags = cl.frame.playerstate.rdflags;
+		//cl.refdef.view.flags = cl.frame.playerstate.rdflags;
 
 		// sort entities for better cache locality
         //qsort( cl.refdef.entities, cl.refdef.num_entities, sizeof( cl.refdef.entities[0] ), (int (*)(const void *, const void *))entitycmpfnc );

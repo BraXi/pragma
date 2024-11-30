@@ -98,6 +98,9 @@ void CG_AddViewMuzzleFlash(rentity_t* refent, player_state_t* ps)
 	vec3_t out_angles;
 	int tag;
 
+	if (cl.refdef.view.flags & RDF_THIRDPERSON)
+		return;
+
 	if (!refent->model || cl.muzzleflash >= FX_WEAPON_MUZZLEFLASHES)
 		return;
 
@@ -141,6 +144,9 @@ void CG_AddViewFlashLight(rentity_t* parentEnt, player_state_t* ps)
 	rentity_t ent;
 	//vec3_t out_angles;
 	int tag;
+
+	if (cl.refdef.view.flags & RDF_THIRDPERSON)
+		return;
 
 	if (!ps->stats[STAT_HEALTH] || cl_testlights->value)
 		return;

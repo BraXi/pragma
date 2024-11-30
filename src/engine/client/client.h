@@ -73,8 +73,8 @@ typedef struct
 
 	animstate_t	anim;
 
-	// for solidity, extracted from entity_state
-	vec3_t		mins, maxs;
+	
+	//vec3_t		mins, maxs;
 
 	// local entities
 	int			number;
@@ -193,21 +193,6 @@ typedef enum
 	CS_ACTIVE			// game views should be displayed
 } connstate_t;
 
-#if 0
-// download type
-typedef enum 
-{
-	dl_none,
-	dl_sound,
-	dl_pic,
-	dl_map,
-	dl_maptexture,
-	dl_model,
-	dl_modeltexture,
-	dl_skytexture,
-	dl_md5anim
-} dltype_t;		
-#endif
 
 typedef enum {key_game, key_console, key_message, key_menu} keydest_t;
 

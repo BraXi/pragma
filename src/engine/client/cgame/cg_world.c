@@ -13,7 +13,7 @@ See the attached GNU General Public License v2 for more details.
 
 #define CAPSULE_BROKEN 1
 
-static int cg_numSolidEntities;
+int cg_numSolidEntities;
 static clentity_t* cg_solidEntities[MAX_PARSE_ENTITIES];
 
 /*
@@ -60,7 +60,7 @@ void CG_BuildSolidEntitiesList()
 		}
 
 		// other entities use bounding boxes or capsules
-		MSG_UnpackSolid32(state->packedSolid, ent->mins, ent->maxs);
+		MSG_UnpackSolid32(state->packedSolid, ent->v.mins, ent->v.maxs);
 
 	}
 
@@ -102,7 +102,7 @@ static clipHandle_t CG_ClipHandleForEntity(clentity_t* ent)
 		capsule = 0;
 
 	// create a temp hull from bounding box sizes
-	return CM_TempBoxModel(ent->mins, ent->maxs, capsule);
+	return CM_TempBoxModel(ent->v.mins, ent->v.maxs, capsule);
 }
 
 /*

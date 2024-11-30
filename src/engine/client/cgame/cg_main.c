@@ -18,6 +18,8 @@ void CG_SpawnEntities(char* mapname, char* entities);
 
 static qboolean cg_allow_drawcalls;
 
+extern int cg_numSolidEntities;
+
 /*
 =================
 CG_AssetIndex
@@ -232,6 +234,8 @@ void CL_ShutdownClientGame()
 	cg_allow_drawcalls = false;
 	cg.qcvm_active = false;
 
+	cg_numSolidEntities = 0;
+
 	Z_FreeTags(TAG_CLIENT_GAME);
 	Scr_FreeScriptVM(VM_CLGAME); // also removes client side entities
 
@@ -310,6 +314,8 @@ void CG_InitClientGame()
 	cg.script_globals = Scr_GetGlobals();
 
 	CG_CreateConstStrings();
+
+	cg_numSolidEntities = 0;
 
 	Com_Printf("------- Client Game Init Complete -------\n");
 }
@@ -506,10 +512,10 @@ void CG_CalcViewValues()
 
 	Scr_BindVM(VM_CLGAME);
 	Scr_Execute(VM_CLGAME, cg.script_globals->CalcViewValues, __FUNCTION__);
-	fromscript = (Scr_GetReturnFloat() >= 1.0f);
+	fromscript = Scr_GetReturnFloat();
 
 	// did we modify camera parms? if so pass it to C code back
-	if (fromscript)
+	if (fromscript >= 1.0f)
 	{
 		VectorCopy(g->cam_origin, cl.refdef.view.origin);
 		VectorCopy(g->cam_angles, cl.refdef.view.angles);
@@ -519,6 +525,9 @@ void CG_CalcViewValues()
 		VectorCopy(cl.v_forward, g->cam_forward);
 		VectorCopy(cl.v_right, g->cam_right);
 		VectorCopy(cl.v_up, g->cam_up);
+
+		if (fromscript >= 2.0f)
+			cl.refdef.view.flags |= RDF_THIRDPERSON;
 	}
 }
 
