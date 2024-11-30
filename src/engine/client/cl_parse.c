@@ -1139,14 +1139,14 @@ void CL_ParseFrame(void)
 	cmd = MSG_ReadByte(&net_message);
 	SHOWNET(svc_strings[cmd]);
 	if (cmd != SVC_PLAYERINFO)
-		Com_Error(ERR_DROP, "CL_ParseFrame: not playerinfo");
+		Com_Error(ERR_DROP, __FUNCTION__": not player state");
 	CL_ParsePlayerstate(old, &cl.frame);
 
 	// read packet entities
 	cmd = MSG_ReadByte(&net_message);
 	SHOWNET(svc_strings[cmd]);
 	if (cmd != SVC_PACKET_ENTITIES)
-		Com_Error(ERR_DROP, "CL_ParseFrame: not packetentities");
+		Com_Error(ERR_DROP, __FUNCTION__": not packet entities");
 	CL_ParsePacketEntities(old, &cl.frame);
 
 	// save the frame off in the backup array for later delta comparisons

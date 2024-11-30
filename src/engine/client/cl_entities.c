@@ -12,7 +12,9 @@ See the attached GNU General Public License v2 for more details.
 
 #include "client.h"
 
-static char* etypes[] = { "ET_GENERAL", "ET_PLAYER","ET_PATHNODE", "ET_ACTOR" };
+static char* etypes[] = { "ET_GENERAL", "ET_PLAYER", "ET_PATHNODE", "ET_ACTOR" };
+
+void CG_CalcViewValues();
 
 void CG_AddFlashLightToEntity(clentity_t* cent, rentity_t* refent);
 void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops);
@@ -376,6 +378,75 @@ void CL_AddPacketEntities(frame_t* frame)
 
 void CG_AddFirstPersonBodyModel(const clentity_t* ent, const player_state_t* ps);
 
+/*
+===============
+CL_CalcViewPVS
+Finds out in which PVS camera is.
+===============
+*/
+static void CL_CalcViewPVS()
+{
+	cl.refdef.view.leafnum = CM_PointLeafnum(cl.refdef.view.origin);
+	cl.refdef.view.cluster = CM_LeafCluster(cl.refdef.view.leafnum);
+	cl.refdef.view.area = CM_LeafArea(cl.refdef.view.leafnum);
+	cl.refdef.view.areamask = CM_ClusterPVS(cl.refdef.view.cluster);
+
+	// the line below would instead use PVS server told us
+	//cl.refdef.view.areamask = cl.refdef.areabits; 
+}
+
+/*
+===============
+CL_InViewPVS
+Returns true if point is within PVS of camera.
+===============
+*/
+qboolean CL_InViewPVS(const vec3_t point, qboolean bCheckAreaPortals)
+{
+	int leafnum, cluster;
+	int area2;
+
+	if (!cl.refdef.view.areamask || cl.refdef.view.areamask == NULL)
+	{
+		CL_CalcViewPVS(); // called before CL_CalcViewValues
+	}
+
+	leafnum = CM_PointLeafnum(point);
+	cluster = CM_LeafCluster(leafnum);
+	area2 = CM_LeafArea(leafnum);
+
+	if (cl.refdef.view.areamask && (!(cl.refdef.view.areamask[cluster >> 3] & (1 << (cluster & 7)))))
+		return false;
+
+	if (bCheckAreaPortals && !CM_AreasConnected(cl.refdef.view.area, area2))
+		return false;
+
+	return true;
+}
+
+/*
+===============
+CL_CoordsInPVS
+Returns true if origin or two bbox corners are within the same PVS as camera.
+===============
+*/
+qboolean CL_CoordsInPVS(const vec3_t origin, const vec3_t mins, const vec3_t maxs, qboolean bCheckAreaPortals)
+{
+	vec3_t pos;
+
+	if (CL_InViewPVS(origin, bCheckAreaPortals))
+		return true;
+
+	VectorAdd(origin, maxs, pos);
+	if (CL_InViewPVS(pos, bCheckAreaPortals))
+		return true;
+
+	VectorAdd(origin, mins, pos);
+	if (CL_InViewPVS(pos, bCheckAreaPortals))
+		return true;
+
+	return false;
+}
 
 /*
 ===============
@@ -419,7 +490,7 @@ void CL_CalcViewValues()
 	if ((cl_predict->value) && !(cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
 	{	
 		// use predicted values
-		backlerp = 1.0 - lerp;
+		backlerp = 1.0f - lerp;
 		for(i = 0; i < 3; i++)
 		{
 			cl.refdef.view.origin[i] = cl.predicted_origin[i] + ops->viewoffset[i] 
@@ -439,7 +510,6 @@ void CL_CalcViewValues()
 			cl.refdef.view.origin[i] = ops->pmove.origin[i] + ops->viewoffset[i] + lerp * (ps->pmove.origin[i] + ps->viewoffset[i] - (ops->pmove.origin[i] + ops->viewoffset[i]));
 	}
 
-
 	//
 	// calculate the view angles
 	//
@@ -452,15 +522,14 @@ void CL_CalcViewValues()
 	}
 	else
 	{	
-		for(i = 0; i < 3; i++) // just use interpolated values
+		// just use interpolated values
+		for(i = 0; i < 3; i++) 
 			cl.refdef.view.angles[i] = LerpAngle(ops->viewangles[i], ps->viewangles[i], lerp);
 	}
 
 
 	for(i = 0; i < 3; i++)
 		cl.refdef.view.angles[i] += LerpAngle(ops->kick_angles[i], ps->kick_angles[i], lerp);
-
-	AngleVectors(cl.refdef.view.angles, cl.v_forward, cl.v_right, cl.v_up);
 
 	// interpolate field of view
 	cl.refdef.view.fov_x = ops->fov + lerp * (ps->fov - ops->fov);
@@ -479,6 +548,14 @@ void CL_CalcViewValues()
 	cl.refdef.view.fx.inverse = ps->fx.inverse;
 	cl.refdef.view.fx.intensity = ops->fx.intensity + lerp * (ps->fx.intensity - ops->fx.intensity);
 	cl.refdef.view.fx.noise = ops->fx.noise + lerp * (ps->fx.noise - ops->fx.noise);
+
+	AngleVectors(cl.refdef.view.angles, cl.v_forward, cl.v_right, cl.v_up);
+
+	// See if client progs want to override view.
+	CG_CalcViewValues();
+
+	// for fast "is point in pvs" check
+	CL_CalcViewPVS();
 
 	//
 	// add view models
@@ -526,9 +603,7 @@ void CL_AddEntities()
 	CL_CalcViewValues();
 
 	CL_AddPacketEntities(&cl.frame);
-
 	CG_BuildSolidEntitiesList();
-
 	CG_AddEntities();
 }
 

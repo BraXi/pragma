@@ -335,21 +335,20 @@ void CG_BeginGame()
 /*
 ===============
 CG_ParseCommandFromServer
-
 Handles incomming 'SVC_CGCMD [command (byte)] [...]' commands from server
 ===============
 */
 void CG_ParseCommandFromServer()
 {
-	float cmd;
+	int cmd;
 
 	if (CG_IsActive() == false)
 		return;
 
-	cmd = (float)MSG_ReadByte(&net_message);
+	cmd = MSG_ReadByte(&net_message);
 
 	Scr_BindVM(VM_CLGAME);
-	Scr_AddFloat(0, cmd);
+	Scr_AddFloat(0, (float)cmd);
 	Scr_Execute(VM_CLGAME, cg.script_globals->CG_ParseCommandFromServer, __FUNCTION__);
 	Scr_BindVM(VM_NONE);
 }
@@ -358,7 +357,6 @@ void CG_ParseCommandFromServer()
 /*
 ===============
 CG_Frame
-
 This calls progs function CG_Frame at the beginning of each client frame
 ===============
 */
@@ -449,6 +447,52 @@ struct sfx_t* CG_FindOrRegisterSound(const char *filename)
 	}
 	return sfx;
 }
+
+
+/*
+===============
+CG_CalcViewValues
+Allows client game progs modify camera parms. This is called before entities are added to scene.
+===============
+*/
+void CG_CalcViewValues()
+{
+	cl_globalvars_t* g;
+	qboolean fromscript;
+
+	if (CG_IsActive() == false || cls.state != CS_ACTIVE)
+		return;
+
+	g = cg.script_globals;
+
+	// copy current camera parms to vm
+	VectorCopy(cl.refdef.view.origin, g->cam_origin);
+	VectorCopy(cl.refdef.view.angles, g->cam_angles);
+	g->cam_fov = cl.refdef.view.fov_x;
+
+	VectorCopy(cl.v_forward, g->cam_forward);
+	VectorCopy(cl.v_right, g->cam_right);
+	VectorCopy(cl.v_up, g->cam_up);
+
+	Scr_BindVM(VM_CLGAME);
+	Scr_Execute(VM_CLGAME, cg.script_globals->CalcViewValues, __FUNCTION__);
+	fromscript = (Scr_GetReturnFloat() >= 1.0f);
+
+	// did we modify camera parms? if so pass it to C code back
+	if (fromscript)
+	{
+		VectorCopy(g->cam_origin, cl.refdef.view.origin);
+		VectorCopy(g->cam_angles, cl.refdef.view.angles);
+		cl.refdef.view.fov_x = g->cam_fov;
+
+		AngleVectors(cl.refdef.view.angles, cl.v_forward, cl.v_right, cl.v_up);
+		VectorCopy(cl.v_forward, g->cam_forward);
+		VectorCopy(cl.v_right, g->cam_right);
+		VectorCopy(cl.v_up, g->cam_up);
+	}
+}
+
+
 
 /*
 =================

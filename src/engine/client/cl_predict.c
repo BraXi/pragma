@@ -144,8 +144,15 @@ void CL_PredictMovement (void)
 	int			i;
 	int			step;
 	int			oldz;
+	cl_globalvars_t* cgGlobals = NULL;
 
 	vec3_t inmove, inangles;
+
+	// make sure qc knows our number for trace function
+	if (cg.qcvm_active)
+	{
+		cg.script_globals->localplayernum = cl.playernum;
+	}
 
 	if (cls.state != CS_ACTIVE)
 		return;
@@ -154,8 +161,9 @@ void CL_PredictMovement (void)
 		return;
 
 	if (!cl_predict->value || (cl.frame.playerstate.pmove.pm_flags & PMF_NO_PREDICTION))
-	{	// just set angles
-		for (i=0 ; i<3 ; i++)
+	{	
+		// just set angles
+		for (i = 0; i < 3; i++)
 		{
 			cl.predicted_angles[i] = cl.viewangles[i] + SHORT2ANGLE(cl.frame.playerstate.pmove.delta_angles[i]);
 		}
@@ -169,7 +177,9 @@ void CL_PredictMovement (void)
 	if (current - ack >= CMD_BACKUP)
 	{
 		if (cl_showmiss->value)
-			Com_Printf ("exceeded CMD_BACKUP\n");
+		{
+			Com_Printf(__FUNCTION__": Too far out of date\n");
+		}
 		return;	
 	}
 
@@ -179,8 +189,6 @@ void CL_PredictMovement (void)
 	//
 	memset (&pm, 0, sizeof(pm));
 	pm.s = cl.frame.playerstate.pmove;
-
-	cl_globalvars_t* cgGlobals = NULL;
 
 	if (cg.qcvm_active && cg.localEntities)
 	{
@@ -230,7 +238,7 @@ void CL_PredictMovement (void)
 			//
 			// call cgame's pmove
 			//	
-			Scr_BindVM(VM_CLGAME); // always bing qcvm here, or some weird things may happen when on loopback servers
+			Scr_BindVM(VM_CLGAME); // always bind qcvm here, or some weird things may happen when on loopback servers
 			Scr_AddVector(0, inmove);
 			Scr_AddVector(1, inangles);
 			Scr_AddFloat(2, (float)cmd->buttons);
@@ -244,7 +252,7 @@ void CL_PredictMovement (void)
 			pm.s.gravity = cgGlobals->pm_state_gravity;
 			pm.s.pm_flags = cgGlobals->pm_state_pm_flags;
 			pm.s.pm_time = cgGlobals->pm_state_pm_time;
-			pm.viewheight = cg.script_globals->cam_viewoffset[2];
+			//pm.viewheight = cg.script_globals->cam_viewoffset[2];
 
 			for (i = 0; i < 3; i++)
 			{
@@ -258,7 +266,7 @@ void CL_PredictMovement (void)
 				pm.mins[i] = cgGlobals->pm_state_mins[i];
 				pm.maxs[i] = cgGlobals->pm_state_maxs[i];
 
-				pm.viewangles[i] = cg.script_globals->cam_viewangles[i];
+				pm.viewangles[i] = cg.script_globals->pm_state_viewangles[i];
 			}
 		}
 		// save for debug checking

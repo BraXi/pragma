@@ -138,6 +138,11 @@ typedef struct rdCamParams_s
 	float	fov_x, fov_y;
 	int		flags;			// RDF_UNDERWATER, etc
 
+	int		leafnum;
+	int		cluster;
+	int		area;
+	byte	*areamask;
+
 	float	flashlight_angles[3];
 	rdViewFX_t fx;
 }rdCamParams_t;

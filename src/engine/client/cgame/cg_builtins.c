@@ -22,6 +22,8 @@ extern void UI_DrawString(int x, int y, UI_AlignX alignx, char* string);
 extern struct sfx_t* CG_FindOrRegisterSound(const char* filename);
 
 trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int contentsMask, int ignoreEntNum, qboolean useCapsule);
+qboolean CL_InViewPVS(const vec3_t point, qboolean bCheckAreaPortals);
+//qboolean CL_CoordsInPVS(const vec3_t origin, const vec3_t mins, const vec3_t maxs, qboolean bCheckAreaPortals);
 
 static void CheckEmptyString(const char* s) // definitely need to make it a shared code...
 {
@@ -710,6 +712,25 @@ void PFCG_addspotlight(void)
 	Scr_ReturnFloat(added ? 1.0f : 0.0f);
 }
 
+/*
+=================
+PFCG_inviewpvs
+float inviewpvs(vector vPoint, float bCheckAreaPortals)
+Returns true if a point is within PVS of camera.
+=================
+*/
+void PFCG_inviewpvs(void)
+{
+	float* point;
+	qboolean checkAP, inpvs;
+
+	point = Scr_GetParmVector(0);
+	checkAP = (qboolean)(Scr_GetParmFloat(1) >= 1.0f);
+
+	inpvs = CL_InViewPVS(point, checkAP);
+	Scr_ReturnFloat(inpvs ? 1.0f : 0.0f);
+}
+
 #endif /*DEDICATED_ONLY*/
 
 /*
@@ -752,6 +773,9 @@ void CG_InitScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_MSG_ReadAngle16, PF_CL, "MSG_ReadAngle16", "float()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadDir, PF_CL, "MSG_ReadDir", "vector()");
 	Scr_DefineBuiltin(PFCG_MSG_ReadString, PF_CL, "MSG_ReadString", "string()");
+
+	// visibility
+	Scr_DefineBuiltin(PFCG_inviewpvs, PF_CL, "inviewpvs", "float(vector vPoint, float bCheckAreaPortals)");
 
 	// ui draw
 	Scr_DefineBuiltin(PFCG_drawstring, PF_CL, "drawstring", "void(vector vXYAlign, float fScale, vector vColor, float fAlpka, string sText, ...)");
@@ -817,6 +841,9 @@ void CG_StubScriptBuiltins()
 	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadAngle16", "float()");
 	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadDir", "vector()");
 	Scr_DefineBuiltin(PFCG_none, PF_CL, "MSG_ReadString", "string()");
+
+	// visibility
+	Scr_DefineBuiltin(PFCG_none, PF_CL, "inviewpvs", "float(vector vPoint, float bCheckAreaPortals)");
 
 	// ui draw
 	Scr_DefineBuiltin(PFCG_none, PF_CL, "drawstring", "void(vector vXYAlign, float fScale, vector vColor, float fAlpka, string sText, ...)");

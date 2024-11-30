@@ -373,7 +373,7 @@ typedef struct
 	usercmd_t		cmd;
 
 	vec3_t		viewangles;			// clamped
-	float		viewheight;
+	//float		viewheight;
 
 	vec3_t		mins, maxs;			// bounding box size
 } pmove_t;

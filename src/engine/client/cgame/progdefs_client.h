@@ -25,24 +25,30 @@ typedef struct cl_globalvars_s
 {
 	int32_t	pad[28];
 
-	float			frametime; // seconds since last frame
-	int32_t			time; // this is the time value that the client is rendering at. always <= realtime between oldframe and frame
-	int32_t			realtime; // always increasing, no clamping
+	// seconds since previous frame
+	float			frametime; 
+
+	// this is the time value that the client is rendering at. always <= realtime between oldframe and frame
+	int32_t			time;
+
+	// always increasing, no clamping
+	int32_t			realtime;
 
 	int32_t			vid_width;
 	int32_t			vid_height;
 
-	float			localplayernum; // packetentity number of local player
+	// entity number of a local player
+	float			localplayernum;
 
 	scr_entity_t	self;
 	scr_entity_t	other;
 
-	// makevectors()
+	// set by makevectors()
 	vec3_t			v_forward;
 	vec3_t			v_up;
 	vec3_t			v_right;
 
-	// trace*() functions
+	// set by trace*() functions
 	float			trace_allsolid;
 	float			trace_startsolid;
 	float			trace_fraction;
@@ -55,6 +61,7 @@ typedef struct cl_globalvars_s
 	float			trace_entitynum;
 	scr_string_t	trace_material;
 
+	// player movement vars for prediction
 	float			pm_state_pm_type;		// byte pmtype_t
 	vec3_t			pm_state_origin;		// floats
 	vec3_t			pm_state_velocity;		// floats
@@ -64,16 +71,40 @@ typedef struct cl_globalvars_s
 	float			pm_state_pm_flags;		// byte [0-255]
 	float			pm_state_pm_time;		// byte [0-255]
 	vec3_t			pm_state_delta_angles;	// shorts, use ANGLE2SHORT/SHORT2ANGLE
+	vec3_t			pm_state_viewangles;	// view angles for locked views (cinematics, intermissions, dead..)
 
-	vec3_t			cam_viewangles;			// current camera angles
-	vec3_t			cam_viewoffset;			// current camera position
+	// camera params - by default C sets these, CalcViewValues() can override
+	vec3_t			cam_origin;
+	vec3_t			cam_angles;
+	float			cam_fov;
+	vec3_t			cam_forward;			// derived from cam_angles
+	vec3_t			cam_up;					// derived from cam_angles
+	vec3_t			cam_right;				// derived from cam_angles
 
+	// Called when client progs are first initialized, every time
+	// client begins connecting to server, and at every map change.
 	scr_func_t		CG_Main;
+
+	// Called once a client frame
 	scr_func_t		CG_Frame;
+
+	// 2D drawing can be done in this function.
 	scr_func_t		CG_DrawGUI;
+
+	// 3D drawing can be done in this function.
 	scr_func_t		CG_DrawScene;
-	scr_func_t		CG_PlayerMove;			// CG_PlayerMove(vector cmdMove, vector cmdAngles, float cmdMsec)
-	scr_func_t		CG_ParseCommandFromServer;		// CG_ParseCommandFromServer(float cmd) // cmd is byte 0-255 limited
+
+	// CG_PlayerMove(vector cmdMove, vector cmdAngles, float cmdMsec)
+	scr_func_t		CG_PlayerMove;
+
+	// CG_ParseCommandFromServer(float cmd) // cmd is byte 0-255 limited
+	scr_func_t		CG_ParseCommandFromServer;
+
+	// Allows client game progs modify camera parms. This is called before entities are added to scene.
+	scr_func_t		CalcViewValues; 
+
+	// Called when the client finalizes connection process and is put in game.
+	//scr_func_t		BeginGame;
 } cl_globalvars_t;
 
 
