@@ -212,8 +212,8 @@ void CG_AddFlashLightToEntity(clentity_t *cent, rentity_t* parentEnt)
 	if (!(cent->current.effects & EF_FLASHLIGHT))
 		return;
 
-	if (cent->current.number == cl.playernum + 1)
-		return; // dont draw world effect for local player
+	if ( !(cl.refdef.view.flags & RDF_THIRDPERSON) && cent->current.number == cl.playernum + 1)
+		return; // draw only when not looking through eyes
 
 	if (cent->current.modelindex != 0 && parentEnt->model)
 	{

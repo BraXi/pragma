@@ -340,26 +340,7 @@ void CL_AddPacketEntities(frame_t* frame)
 		CL_EntityAnimation(clent, state, &rent);
 		CL_EntityPositionAndRotation(clent, state, &rent);
 
-		// special case for local player entity, otherwise camera would be inside of a player model
-		if (state->number == cl.playernum + 1)
-		{
-#if 0
-			// draw own model, better to draw it not here, but at the end of frame so it sticks to view
-			rent.angles[0] = rent.angles[2] = 0;
-			//vec3_t forward;
-			//AngleVectors(rent.angles, forward, NULL, NULL);
-			//VectorMA(rent.origin, -10, forward, rent.origin);
-#else
-			rent.renderfx |= RF_VIEWERMODEL;	// only draw from mirrors
-			//continue;
-#endif
-		}
-
-
-//		rent.skinnum = state->skinnum;
 		rent.model = CL_GetDrawModel(state->modelindex);
-//		rent.renderfx = state->renderFlags; // set later on
-
 
 		//
 		// if entity has no model just skip at this point
