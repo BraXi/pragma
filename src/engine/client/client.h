@@ -307,7 +307,7 @@ typedef struct muzzleflash_s
 } muzzleflash_t;
 
 
-extern	clentity_t	cl_entities[MAX_GENTITIES];
+//extern	clentity_t	cl_entities[MAX_GENTITIES];
 
 
 // the cl_parse_entities must be large enough to hold UPDATE_BACKUP frames of

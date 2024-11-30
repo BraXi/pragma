@@ -61,7 +61,7 @@ cvar_t* cl_showfps;
 client_static_t	cls;
 client_state_t	cl;
 
-clentity_t		cl_entities[MAX_GENTITIES];
+//clentity_t		cl_entities[MAX_GENTITIES];
 
 entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES]; // entity states in current frame_t
 
@@ -138,9 +138,9 @@ void CL_Record_f (void)
 	char	name[MAX_OSPATH];
 	byte	buf_data[MAX_MSGLEN];
 	sizebuf_t	buf;
-	int		i;
-	int		len;
-	entity_state_t	*ent;
+	int		i, len;
+	clentity_t		*ent;
+	entity_state_t	*ent_state;
 	entity_state_t	nullstate;
 
 	if (Cmd_Argc() != 2)
@@ -166,7 +166,7 @@ void CL_Record_f (void)
 	//
 	Com_sprintf (name, sizeof(name), "%s/demos/%s.pdm", FS_Gamedir(), Cmd_Argv(1));
 
-	Com_Printf ("Recording demo to %s.\n", name);
+	Com_Printf ("Recording demo to: %s\n", name);
 	FS_CreatePath (name);
 	cls.demofile = fopen (name, "wb");
 	if (!cls.demofile)
@@ -200,7 +200,8 @@ void CL_Record_f (void)
 		if (cl.configstrings[i][0])
 		{
 			if (buf.cursize + strlen (cl.configstrings[i]) + 32 > buf.maxsize)
-			{	// write it out
+			{	
+				// write it out
 				len = LittleLong (buf.cursize);
 				fwrite (&len, 4, 1, cls.demofile);
 				fwrite (buf.data, buf.cursize, 1, cls.demofile);
@@ -218,12 +219,15 @@ void CL_Record_f (void)
 	memset (&nullstate, 0, sizeof(nullstate));
 	for(i = 0; i < MAX_GENTITIES; i++)
 	{
-		ent = &cl_entities[i].baseline;
-		if (ent->modelindex == 0)
+		ent = CL_GetEntity(i);
+		ent_state = &ent->baseline;
+
+		if (ent_state->modelindex == 0)
 			continue;
 
 		if (buf.cursize + 64 > buf.maxsize)
-		{	// write it out
+		{	
+			// write it out
 			len = LittleLong (buf.cursize);
 			fwrite (&len, 4, 1, cls.demofile);
 			fwrite (buf.data, buf.cursize, 1, cls.demofile);
@@ -231,7 +235,7 @@ void CL_Record_f (void)
 		}
 
 		MSG_WriteByte (&buf, SVC_SPAWNBASELINE);		
-		MSG_WriteDeltaEntity (&nullstate, &cl_entities[i].baseline, &buf, true, true);
+		MSG_WriteDeltaEntity (&nullstate, ent_state, &buf, true, true);
 	}
 
 	MSG_WriteByte (&buf, SVC_STUFFTEXT);
@@ -537,9 +541,9 @@ void CL_ClearState ()
 
 	// FIXME this should restart GUI progs
 
-// wipe the entire cl structure
+	// wipe the entire cl structure
 	memset (&cl, 0, sizeof(cl));
-	memset (&cl_entities, 0, sizeof(cl_entities));
+	//memset (&cl_entities, 0, sizeof(cl_entities));
 
 	SZ_Clear (&cls.netchan.message);
 
@@ -1034,7 +1038,7 @@ void CL_PrintEnts_f(void)
 	{
 		num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
 		//ent = &cl_parse_entities[num];
-		ent = &cl_entities[i];
+		ent = CL_GetEntity(i);
 
 		Com_Printf("\n--- ENTITY %i (%i) ---\n", i, num);
 

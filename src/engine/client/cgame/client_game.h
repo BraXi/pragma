@@ -12,7 +12,10 @@ See the attached GNU General Public License v2 for more details.
 
 #pragma once
 
-#define MAX_CLIENT_ENTITIES		2048
+#define MAX_LOCAL_ENTS			2048 // number of local entities
+#define MAX_CLIENT_ENTITIES		(MAX_GENTITIES + MAX_LOCAL_ENTS)
+
+
 
 typedef enum
 {
@@ -68,8 +71,8 @@ typedef struct
 	cl_globalvars_t		*script_globals;	// qcvm globals
 
 	struct clentity_t	*entities;			// both game and local entitie
-	int			maxLocalEntities;		// max allowed local entities
-	int			localEntitySize;		// retrieved from progs
+	int			maxEntities;		// max allowed local entities
+	int			entity_size;		// retrieved from progs
 	int			numLocalEntities;		// increases towards MAX_CLENTITIES
 
 	client_strings_t cstr;

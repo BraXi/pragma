@@ -538,9 +538,9 @@ enum
 // All muzzle flashes really should be converted to events...
 typedef enum
 {
-	EV_NONE,
-	EV_TELEPORT,		// causes entity to teleport instantly to origin
-	EV_TELEPORT_OTHER
+	EV_NONE = 0,
+	EV_TELEPORT = 254,		// causes entity to teleport instantly to origin
+	EV_TELEPORT_OTHER = 255
 } entity_event_t;
 
 typedef struct ent_model_s
@@ -585,10 +585,6 @@ typedef struct entity_state_s
 	byte		event;			// impulse events -- muzzle flashes, footsteps, go out for a single frame, they are automatically cleared each frame
 
 	int			packedSolid;	// entity's bounding box
-
-	// not networked
-	int			animSpeed; // 1000 / animFps = msec
-	float		animLerp;
 } entity_state_t;
 //==============================================
 

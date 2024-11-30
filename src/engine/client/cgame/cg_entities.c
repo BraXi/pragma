@@ -37,8 +37,15 @@ extern qboolean Scr_ParseEpair(void* base, ddef_t* key, char* s, int memtag); //
 
 */
 
+/*
+=================
+CG_IsNetworkedEntity
+False if this is local entity, true if its networked.
+=================
+*/
 qboolean CG_IsNetworkedEntity(const clentity_t* ent)
 {
+	Scr_BindVM(VM_CLGAME);
 	if (NUM_FOR_ENT(ent) >= MAX_GENTITIES)
 		return false;
 	return true;
@@ -57,28 +64,30 @@ void CG_FreeLocalEntity(clentity_t* self)
 		return;
 	}
 
-	Scr_BindVM(VM_CLGAME);
-
 	if (CG_IsNetworkedEntity(self))
 	{
 		Com_Error(ERR_DROP, __FUNCTION__": tried to remove networked entity\n");
 		return;
 	}
 
+	if (!self->inuse)
+		return;
+
+#if 0
+	// FIXME: CLIENT PROGS
 	// remove references of self, other
 	if (self != cg.entities)
 	{
 		// dereference self and other globals in script if they're us
 		if (VM_TO_ENT(cg.script_globals->self) == self)
-			cg.script_globals->self = ENT_TO_VM(cg.entities);
+			cg.script_globals->self = ENT_TO_VM(cg.entities); 
 
 		if (VM_TO_ENT(cg.script_globals->self) == self)
 			cg.script_globals->other = ENT_TO_VM(cg.entities);
 	}
+#endif
 
-
-	if (self && self->inuse)
-		cg.numLocalEntities--;
+	cg.numLocalEntities--;
 
 	memset(self, 0, Scr_GetEntitySize());
 	self->v.classname = cg.cstr.free;
@@ -115,14 +124,14 @@ clentity_t* CG_SpawnLocalEntity()
 	clentity_t* ent = NULL;
 	int		entnum;
 
-	if (cg.numLocalEntities == cg.maxLocalEntities)
+	if (cg.numLocalEntities == cg.maxEntities)
 	{
 		Com_DPrintf(DP_CGAME, "%s: no free local entities\n", __FUNCTION__);
 		return NULL;
 	}
 
 	// find first free entity
-	for (entnum = 0; entnum < cg.maxLocalEntities; entnum++)
+	for (entnum = 0; entnum < cg.maxEntities; entnum++)
 	{
 		ent = ENT_FOR_NUM(MAX_GENTITIES + entnum);
 		if (!ent->inuse)

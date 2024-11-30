@@ -250,7 +250,7 @@ void FX_StartFXAttachedToEntity(int effectIndex, int entityIndex, char *tagName)
 	if (fxlength <= 0)
 		return;
 
-	cent = &cl_entities[entityIndex];
+	cent = CL_GetEntity(entityIndex);
 	if (cent->current.modelindex == 0)
 	{
 		Com_Printf("WARNING: entity  %i has no model (%s)\n", entityIndex, __FUNCTION__);

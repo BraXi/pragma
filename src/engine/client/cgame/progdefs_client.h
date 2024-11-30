@@ -109,6 +109,7 @@ typedef struct cl_globalvars_s
 	//scr_func_t		BeginGame;
 
 	// Called when an entity in latest server frame has an event.
+	// Self is the entity on which event should fire
 	scr_func_t		EntityEvent;
 } cl_globalvars_t;
 
@@ -116,20 +117,16 @@ typedef struct cl_globalvars_s
 typedef struct cl_entvars_s
 {
 	scr_string_t	classname;
-
 	scr_string_t	model;
-	int32_t			modelindex;
-
-	vec3_t			mins;
-	vec3_t			maxs;
-
 	vec3_t			origin;
 	vec3_t			angles;
 
+
+	int32_t			modelindex;
+	vec3_t			mins;
+	vec3_t			maxs;
 	float			scale;
 	vec3_t			color;
-
-	float			fullbright;
 } cl_entvars_t;
 
 #endif /*_PRAGMA_PROGDEFS_CLIENT_H_*/

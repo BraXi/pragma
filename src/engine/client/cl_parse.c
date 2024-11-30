@@ -158,18 +158,21 @@ void CL_ParseServerData (void)
 CL_ParseBaseline
 ==================
 */
-void CL_ParseBaseline (void)
+void CL_ParseBaseline(void)
 {
-	entity_state_t	*es;
-	unsigned int bits; // was int
-	int				newnum;
+	unsigned int	bits; // was int
+	int				ent_number;
 	entity_state_t	nullstate;
 
-	memset (&nullstate, 0, sizeof(nullstate));
+	clentity_t		*ent;
+	entity_state_t	*ent_state;
 
-	newnum = CL_ParseEntityBits (&bits);
-	es = &cl_entities[newnum].baseline;
-	CL_ParseDelta (&nullstate, es, newnum, bits);
+	memset(&nullstate, 0, sizeof(nullstate));
+
+	ent_number = CL_ParseEntityBits(&bits);
+	ent = CL_GetEntity(ent_number);
+	ent_state = &ent->baseline;
+	CL_ParseDelta (&nullstate, ent_state, ent_number, bits);
 }
 
 
@@ -714,7 +717,7 @@ void CL_DeltaEntity(frame_t* frame, int newnum, entity_state_t* old, int bits)
 	clentity_t* ent;
 	entity_state_t* state;
 
-	ent = &cl_entities[newnum];
+	ent = CL_GetEntity(newnum);
 
 	state = &cl_parse_entities[cl.parse_entities & (MAX_PARSE_ENTITIES - 1)];
 	cl.parse_entities++;
@@ -771,6 +774,7 @@ void CL_ParsePacketEntities(frame_t* oldframe, frame_t* newframe)
 	unsigned int	bits;
 	entity_state_t* oldstate = NULL;
 	int			oldindex, oldnum;
+	clentity_t		* entity;
 
 	newframe->parse_entities = cl.parse_entities;
 	newframe->num_entities = 0;
@@ -870,7 +874,8 @@ void CL_ParsePacketEntities(frame_t* oldframe, frame_t* newframe)
 			if (cl_shownet->value == 3)
 				Com_Printf("   baseline: %i\n", newnum);
 
-			CL_DeltaEntity(newframe, newnum, &cl_entities[newnum].baseline, bits);
+			entity = CL_GetEntity(newnum);
+			CL_DeltaEntity(newframe, newnum, &entity->baseline, bits);
 			continue;
 		}
 

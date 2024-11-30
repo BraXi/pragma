@@ -357,6 +357,7 @@
     <ClInclude Include="collision\cm_public.h">
       <Filter>CollisonModel</Filter>
     </ClInclude>
+    <ClInclude Include="progs.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="pragma.rc" />

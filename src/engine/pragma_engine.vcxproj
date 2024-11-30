@@ -60,6 +60,7 @@
     <ClInclude Include="..\common\mathlib.h" />
     <ClInclude Include="..\common\shared.h" />
     <ClInclude Include="pragma_config.h" />
+    <ClInclude Include="progs.h" />
     <ClInclude Include="protocol.h" />
     <ClInclude Include="script\progdefs_server.h" />
     <ClInclude Include="script\progdefs_ui.h" />

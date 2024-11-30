@@ -233,7 +233,7 @@ void CL_ShutdownClientGame()
 	cg.qcvm_active = false;
 
 	Z_FreeTags(TAG_CLIENT_GAME);
-	Scr_FreeScriptVM(VM_CLGAME);
+	Scr_FreeScriptVM(VM_CLGAME); // also removes client side entities
 
 	// free the old map but not when server is running
 //	if(Cvar_VariableValue("cm_flushmap") && !Com_ServerState())
@@ -304,8 +304,8 @@ void CG_InitClientGame()
 	Scr_BindVM(VM_CLGAME); // so we can get proper entity size and ptrs
 
 	cg.qcvm_active = true;
-	cg.maxLocalEntities = MAX_CLIENT_ENTITIES;
-	cg.localEntitySize = Scr_GetEntitySize();
+	cg.maxEntities = MAX_CLIENT_ENTITIES;
+	cg.entity_size = Scr_GetEntitySize();
 	cg.entities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
 	cg.script_globals = Scr_GetGlobals();
 

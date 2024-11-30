@@ -12,6 +12,8 @@ See the attached GNU General Public License v2 for more details.
 #include "../pragma.h"
 #include "qcvm_private.h"
 
+#include "../progs.h"
+
 cvar_t* vm_runaway;
 
 qcvm_t* qcvm[NUM_SCRIPT_VMS];
@@ -26,9 +28,9 @@ const qcvmdef_t vmDefs[NUM_SCRIPT_VMS] =
 
 	{VM_NONE, NULL, 0, "shared"}, // dummy for shared builtins
 
-	{VM_SVGAME, "progs/server.dat", 43253, "server"},
-	{VM_CLGAME, "progs/client.dat", 55267, "client"},
-	{VM_GUI, "progs/gui.dat", 0, "gui"}
+	{VM_SVGAME, SVGAME_FILE, SVGAME_CRC, "server"},
+	{VM_CLGAME, CLGAME_FILE, CLGAME_CRC, "client"},
+	{VM_GUI, GUI_FILE, GUI_CRC, "gui"}
 };
 
 void Cmd_PrintVMEntity_f(void);

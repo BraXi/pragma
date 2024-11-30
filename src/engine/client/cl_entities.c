@@ -20,7 +20,10 @@ void CG_AddFlashLightToEntity(clentity_t* cent, rentity_t* refent);
 void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops);
 void CG_PartFX_DiminishingTrail(vec3_t start, vec3_t end, clentity_t* old, int flags);
 
-
+int CL_EntityLimit()
+{
+	return MAX_GENTITIES + MAX_LOCAL_ENTS;
+}
 /*
 =====================
 CL_GetEntity
@@ -29,13 +32,23 @@ Returns client entity for index.
 */
 clentity_t* CL_GetEntity(int index)
 {
-	if (index < 0 || index >= MAX_GENTITIES)
+	if (!cg.entities)
+	{
+		Com_Error(ERR_DROP, __FUNCTION__": !cg.entities\n", index);
+		return NULL;
+	}
+
+	if (index < 0 || index >= CL_EntityLimit())
 	{
 		Com_Error(ERR_DROP, __FUNCTION__": Bad entity index %i\n", index);
 		return NULL;
 	}
 
-	return &cl_entities[index];
+	Scr_BindVM(VM_CLGAME);
+	return ENT_FOR_NUM(index);
+
+	// client qcvm doesnt have to be bound for this:
+	//return ((vm_entity_t*)Scr_GetEntityPtr() + (Scr_GetEntitySize() * index));
 }
 
 
