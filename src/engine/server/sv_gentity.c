@@ -240,20 +240,13 @@ void SV_CallSpawnForEntity(gentity_t* ent)
 	const char	*classname;
 	scr_func_t	spawnfunc;
 
-	static char spawnFuncName[64];
-	
 	classname = Scr_GetString(ent->v.classname);
 
-	if (strlen(classname) > 60)
-	{
-		Com_DPrintf(DP_SV, "Classname '%s' is too long.\n", classname);
-		return;
-	}
 
 	// check if someone is trying to spawn world...
 	if( NUM_FOR_ENT(ent) > 0 && EDICT_NUM(0)->inuse && stricmp(classname, "worldspawn") == 0 )
 	{
-		Com_Error(ERR_DROP, "Tried to spawn second instance of world.\n", classname);
+		Com_Error(ERR_DROP, "Tried to spawn second instance of world.\n");
 		return;
 	}
 
@@ -273,8 +266,7 @@ void SV_CallSpawnForEntity(gentity_t* ent)
 	}
 
 	// find spawn fuction in progs
-	sprintf(spawnFuncName, "SP_%s", classname);
-	spawnfunc = Scr_FindFunctionIndex(spawnFuncName);
+	spawnfunc = Scr_FindFunctionIndex(va("SP_%s", classname));
 	if (spawnfunc == -1 && ent != sv.edicts)
 	{
 		//Com_DPrintf(DP_SV, "Unknown entity: '%s'\n", classname);

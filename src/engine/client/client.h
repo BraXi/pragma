@@ -520,7 +520,7 @@ void CG_PartFX_RocketTrail (vec3_t start, vec3_t end, clentity_t *old);
 //
 // cg_events.c
 //
-void CG_EntityEvent(entity_state_t *ent);
+void CG_EntityEvent(clentity_t *ent);
 
 
 //
