@@ -67,9 +67,6 @@
     <ClCompile Include="client\cgame\cg_entities.c">
       <Filter>Client\Client Game</Filter>
     </ClCompile>
-    <ClCompile Include="client\cgame\cg_events.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
     <ClCompile Include="client\cgame\cg_flash.c">
       <Filter>Client\Client Game</Filter>
     </ClCompile>
@@ -89,9 +86,6 @@
       <Filter>Client\Client Game</Filter>
     </ClCompile>
     <ClCompile Include="client\cgame\cg_temp_entities.c">
-      <Filter>Client\Client Game</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cgame\cg_tempents.c">
       <Filter>Client\Client Game</Filter>
     </ClCompile>
     <ClCompile Include="client\cgame\cg_weapon.c">

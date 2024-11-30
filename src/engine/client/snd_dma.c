@@ -427,9 +427,9 @@ Used for spatializing channels and autosounds
 */
 void S_SpatializeOrigin (vec3_t origin, float master_vol, float dist_mult, int *left_vol, int *right_vol)
 {
-    vec_t		dot;
-    vec_t		dist;
-    vec_t		lscale, rscale, scale;
+    float		dot;
+	float		dist;
+	float		lscale, rscale, scale;
     vec3_t		source_vec;
 
 	if (cls.state != CS_ACTIVE)
@@ -450,23 +450,24 @@ void S_SpatializeOrigin (vec3_t origin, float master_vol, float dist_mult, int *
 	dot = DotProduct(listener_right, source_vec);
 
 	if (dma.channels == 1 || !dist_mult)
-	{ // no attenuation = no spatialization
+	{ 
+		// no attenuation = no spatialization
 		rscale = 1.0;
 		lscale = 1.0;
 	}
 	else
 	{
-		rscale = 0.5 * (1.0 + dot);
-		lscale = 0.5*(1.0 - dot);
+		rscale = 0.5f * (1.0f + dot);
+		lscale = 0.5f * (1.0f - dot);
 	}
 
 	// add in distance effect
-	scale = (1.0 - dist) * rscale;
+	scale = (1.0f - dist) * rscale;
 	*right_vol = (int) (master_vol * scale);
 	if (*right_vol < 0)
 		*right_vol = 0;
 
-	scale = (1.0 - dist) * lscale;
+	scale = (1.0f - dist) * lscale;
 	*left_vol = (int) (master_vol * scale);
 	if (*left_vol < 0)
 		*left_vol = 0;
@@ -494,7 +495,9 @@ void S_Spatialize(channel_t *ch)
 		VectorCopy (ch->origin, origin);
 	}
 	else
-		CL_GetEntitySoundOrigin (ch->entnum, origin);
+	{
+		CL_GetEntitySoundOrigin(ch->entnum, origin);
+	}
 
 	S_SpatializeOrigin (origin, ch->master_vol, ch->dist_mult, &ch->leftvol, &ch->rightvol);
 }           

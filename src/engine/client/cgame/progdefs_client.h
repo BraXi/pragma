@@ -95,16 +95,21 @@ typedef struct cl_globalvars_s
 	scr_func_t		CG_DrawScene;
 
 	// CG_PlayerMove(vector cmdMove, vector cmdAngles, float cmdMsec)
-	scr_func_t		CG_PlayerMove;
+	scr_func_t		CG_PlayerMove;  // void(vector cmdMove, vector cmdAngles, float inButtons, float cmdMsec) CG_PlayerMove;
 
-	// CG_ParseCommandFromServer(float cmd) // cmd is byte 0-255 limited
+	// CG_ParseCommandFromServer(float cmd) 
+	// cmd is byte 0-255 limited
 	scr_func_t		CG_ParseCommandFromServer;
 
 	// Allows client game progs modify camera parms. This is called before entities are added to scene.
-	scr_func_t		CalcViewValues; 
+	// Should return true to override params set by C code.
+	scr_func_t		CalcViewValues; // float() CalcViewValues;
 
 	// Called when the client finalizes connection process and is put in game.
 	//scr_func_t		BeginGame;
+
+	// Called when an entity in latest server frame has an event.
+	scr_func_t		EntityEvent;
 } cl_globalvars_t;
 
 

@@ -48,6 +48,15 @@ typedef struct
 	cgAssetEntry_t  model_list[MAX_MODELS];
 } cgMedia_t;
 
+typedef struct client_strings_s
+{
+	scr_string_t free;
+	scr_string_t no_class;
+	scr_string_t player;
+	scr_string_t disconnected;
+	scr_string_t worldspawn;
+} client_strings_t;
+
 typedef struct
 {
 	unsigned int		time;
@@ -58,10 +67,12 @@ typedef struct
 	qboolean	qcvm_active;
 	cl_globalvars_t		*script_globals;	// qcvm globals
 
-	struct clentity_t	*localEntities;			// local (not broadcasted) entities allocated by qcvm
-	int			maxLocalEntities;		// number of progs allocated entities
+	struct clentity_t	*entities;			// both game and local entitie
+	int			maxLocalEntities;		// max allowed local entities
 	int			localEntitySize;		// retrieved from progs
-	int			numActiveLocalEnts;		// increases towards MAX_CLENTITIES
+	int			numLocalEntities;		// increases towards MAX_CLENTITIES
+
+	client_strings_t cstr;
 } cg_t;
 
 extern cg_t cg;

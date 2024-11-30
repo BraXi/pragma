@@ -632,6 +632,11 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			c->_float = !a->function;
 			break;
 		case OP_NOT_ENT: // not entity
+			if (vm->progsType == VM_CLGAME)
+			{
+				c->_float = (VM_TO_ENT(a->edict) == ENT_FOR_NUM(MAX_GENTITIES));
+				break;
+			}
 			c->_float = (VM_TO_ENT(a->edict) == vm->entities);
 			break;
 
@@ -651,7 +656,7 @@ void Scr_Execute(vmType_t vmtype, scr_func_t fnum, char* callFromFuncName)
 			c->_float = !strcmp(str_a, str_b);
 			break;
 
-		case OP_EQ_E: // equal int
+		case OP_EQ_E: // equal int or equal entity
 			c->_float = a->_int == b->_int;
 			break;
 

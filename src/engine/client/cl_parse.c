@@ -727,9 +727,7 @@ void CL_DeltaEntity(frame_t* frame, int newnum, entity_state_t* old, int bits)
 		|| abs(state->origin[0] - ent->current.origin[0]) > 512
 		|| abs(state->origin[1] - ent->current.origin[1]) > 512
 		|| abs(state->origin[2] - ent->current.origin[2]) > 512
-		|| state->event == EV_PLAYER_TELEPORT
-		|| state->event == EV_OTHER_TELEPORT
-		)
+		|| state->event == EV_TELEPORT )
 	{
 		ent->serverframe = -99;
 	}
@@ -739,7 +737,7 @@ void CL_DeltaEntity(frame_t* frame, int newnum, entity_state_t* old, int bits)
 		ent->trailcount = 1024;		// for diminishing rocket / grenade trails
 		// duplicate the current state so lerping doesn't hurt anything
 		ent->prev = *state;
-		if (state->event == EV_OTHER_TELEPORT)
+		if (state->event == EV_TELEPORT_OTHER)
 		{
 			VectorCopy(state->origin, ent->prev.origin);
 			VectorCopy(state->origin, ent->lerp_origin);

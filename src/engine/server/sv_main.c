@@ -745,8 +745,10 @@ void SV_PrepWorldFrame (void)
 	for (i = 0; i < sv.max_edicts; i++, ent++)
 	{
 		ent = EDICT_NUM(i);
+
 		// events only last for a single message
 		ent->s.event = 0;
+		ent->v.event = 0;
 	}
 }
 

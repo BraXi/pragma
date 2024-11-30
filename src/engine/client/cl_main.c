@@ -68,16 +68,13 @@ entity_state_t	cl_parse_entities[MAX_PARSE_ENTITIES]; // entity states in curren
 extern void CL_Precache_f(void); //cl_download.c
 
 
-//======================================================================
-
 /*
 =====================
-Com_IsClientActive
-
+CL_IsClientActive
 Returns true if game views should be displayed and client is fully connected to server
 =====================
 */
-qboolean Con_IsClientActive()
+qboolean CL_IsClientActive()
 {
 	return cls.state == CS_ACTIVE;
 }

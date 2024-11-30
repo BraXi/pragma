@@ -584,8 +584,10 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 	if (!vm)
 		return;
 
-	if(vm->progsType != VM_NONE)
+	if (vm->progsType != VM_NONE)
+	{
 		Z_FreeTags(TAG_QCVM_MEMORY + vm->progsType);
+	}
 
 	if (vm->strTable.stringTable != NULL)
 	{
@@ -597,7 +599,9 @@ void Scr_FreeScriptVM(vmType_t vmtype)
 	//	Z_Free(vm->entities);
 
 	if (vm->progs)
+	{
 		Z_Free(vm->progs, DBG_FFL);
+	}
 
 	if (vm->logfile)
 	{

@@ -35,19 +35,6 @@ typedef struct
 	float	cutoff;
 } cdlight_t;
 
-typedef struct localEntity_s
-{
-	struct localEntity_s* prev, * next;
-
-//	float			lifeRate;			// 1.0 / (endTime - startTime)
-
-	vec3_t			origin;
-	vec3_t			angles;
-
-	rentity_t		refEntity;
-
-} localEntity_t;
-
 //
 // cg_main.c
 //
@@ -110,7 +97,7 @@ int CG_PointContents(vec3_t point);
 // cg_localents.c
 //
 //void CG_InitLocalEntities();
-//void CG_FreeEntity(localEntity_t* le);
+//void CG_FreeLocalEntity(localEntity_t* le);
 //localEntity_t* CG_AllocLocalEntity();
 
 

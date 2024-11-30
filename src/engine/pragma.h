@@ -326,6 +326,6 @@ void SV_Error(const char* error_str, ...);
 qboolean Com_IsServerActive();
 
 #ifndef DEDICATED_ONLY
-qboolean Con_IsClientActive();
+qboolean CL_IsClientActive();
 #endif
 

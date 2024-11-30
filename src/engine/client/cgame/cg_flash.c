@@ -45,7 +45,7 @@ void CG_ParseMuzzleFlashMessage(void)
 	if (entity_num < 1 || entity_num >= MAX_GENTITIES)
 		Com_Error(ERR_DROP, __FUNCTION__": bad entity");
 
-	cent = &cl_entities[entity_num];
+	cent = CL_GetEntity(entity_num);
 	effectNum = MSG_ReadByte(&net_message);
 
 	dlight = CG_AllocDynamicLight(entity_num);
@@ -145,7 +145,7 @@ void CG_AddViewFlashLight(rentity_t* parentEnt, player_state_t* ps)
 	if (!ps->stats[STAT_HEALTH] || cl_testlights->value)
 		return;
 
-	cent = &cl_entities[cl.playernum + 1];
+	cent = CL_GetEntity(cl.playernum + 1);
 	if (!(cent->current.effects & EF_FLASHLIGHT))
 		return;
 

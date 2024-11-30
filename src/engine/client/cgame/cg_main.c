@@ -235,7 +235,7 @@ void CL_ShutdownClientGame()
 	Z_FreeTags(TAG_CLIENT_GAME);
 	Scr_FreeScriptVM(VM_CLGAME);
 
-	// free the map but not when server is running
+	// free the old map but not when server is running
 //	if(Cvar_VariableValue("cm_flushmap") && !Com_ServerState())
 //		CM_ClearMap();
 
@@ -245,7 +245,6 @@ void CL_ShutdownClientGame()
 /*
 ===============
 CG_UpdateScriptGlobals
-
 Bind cgame vm and update globals
 ===============
 */
@@ -269,23 +268,36 @@ static void CG_UpdateScriptGlobals()
 
 	g->localplayernum = cl.playernum;
 
-	//g->self = g->other = ENT_TO_VM(cg.localEntities);  //test
+	//g->self = g->other = ENT_TO_VM(cg.entities);  //test
 }
 
+/*
+================
+CG_CreateConstStrings
+Create constant strings which are frequently used in C code for progs
+================
+*/
+static void CG_CreateConstStrings()
+{
+	cg.cstr.free = Scr_NewString("free"); // when ent is freed
+	cg.cstr.no_class = Scr_NewString("no_class"); // when ent is spawned
+	cg.cstr.player = Scr_NewString("player");
+	cg.cstr.disconnected = Scr_NewString("disconnected"); // when player disconnects
+	cg.cstr.worldspawn = Scr_NewString("worldspawn");
+}
 
 /*
 ===============
 CG_InitClientGame
-
-Called when engine is starting, connection to server is established, or it is changing to a different game (mod) directory.
-Create client game instance of progs vm and allocate entities for it
-
+Client game is loaded when client connects to server, and unloaded at disconnect.
+It is also re initialized every level change.
 ===============
 */
 void CG_InitClientGame()
 {
 	Com_Printf("------- Client Game Init -------\n");
 
+	// zero cgMedia, they're all unloaded at end of registration anyway
 	memset(&cgMedia, 0, sizeof(cgMedia));
 
 	Scr_CreateScriptVM(VM_CLGAME, MAX_CLIENT_ENTITIES, (sizeof(clentity_t) - sizeof(cl_entvars_t)), offsetof(clentity_t, v));
@@ -294,8 +306,10 @@ void CG_InitClientGame()
 	cg.qcvm_active = true;
 	cg.maxLocalEntities = MAX_CLIENT_ENTITIES;
 	cg.localEntitySize = Scr_GetEntitySize();
-	cg.localEntities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
+	cg.entities = ((clentity_t*)((byte*)Scr_GetEntityPtr()));
 	cg.script_globals = Scr_GetGlobals();
+
+	CG_CreateConstStrings();
 
 	Com_Printf("------- Client Game Init Complete -------\n");
 }
@@ -341,10 +355,10 @@ Handles incomming 'SVC_CGCMD [command (byte)] [...]' commands from server
 void CG_ParseCommandFromServer()
 {
 	int cmd;
-
 	if (CG_IsActive() == false)
 		return;
 
+	CG_UpdateScriptGlobals();
 	cmd = MSG_ReadByte(&net_message);
 
 	Scr_BindVM(VM_CLGAME);
@@ -353,6 +367,22 @@ void CG_ParseCommandFromServer()
 	Scr_BindVM(VM_NONE);
 }
 
+/*
+==============
+CG_EntityEvent
+An entity has event, so call it.
+==============
+*/
+void CG_EntityEvent(clentity_t* ent)
+{
+	if (CG_IsActive() == false)
+		return;
+
+	CG_UpdateScriptGlobals();
+	cg.script_globals->self = ENT_TO_VM(ent);
+	Scr_Execute(VM_CLGAME, cg.script_globals->EntityEvent, __FUNCTION__);
+	Scr_BindVM(VM_NONE);
+}
 
 /*
 ===============

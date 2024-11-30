@@ -539,13 +539,8 @@ enum
 typedef enum
 {
 	EV_NONE,
-	EV_ITEM_RESPAWN,
-	EV_FOOTSTEP,
-	EV_FALLSHORT,
-	EV_FALL,
-	EV_FALLFAR,
-	EV_PLAYER_TELEPORT,
-	EV_OTHER_TELEPORT
+	EV_TELEPORT,		// causes entity to teleport instantly to origin
+	EV_TELEPORT_OTHER
 } entity_event_t;
 
 typedef struct ent_model_s

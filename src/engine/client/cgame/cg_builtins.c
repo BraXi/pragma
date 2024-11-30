@@ -199,7 +199,7 @@ static void CG_TraceToProgs(const trace_t *tr)
 	cg.script_globals->trace_flags = tr->surfaceFlags;
 
 	// FIXME: CLIENT QCVM
-	//cg.script_globals->trace_entity = ENT_TO_VM(cg.localEntities); 
+	//cg.script_globals->trace_entity = ENT_TO_VM(cg.entities); 
 	//cg.script_globals->trace_material = Scr_SetTempString(trace.surface->name);
 }
 
@@ -493,7 +493,7 @@ void PFCG_setmodel(void)
 	if (!ent->inuse)
 		return;
 
-	if (ent == cg.localEntities) // don't change world
+	if (ent == cg.entities) // don't change world
 	{
 		//Com_DPrintf(DP_CGAME, "setmodel(): cannot change world model\n");
 		Com_Printf("setmodel(): cannot change world model\n");

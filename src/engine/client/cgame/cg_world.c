@@ -41,7 +41,7 @@ void CG_BuildSolidEntitiesList()
 
 		num = (cl.frame.parse_entities + i) & (MAX_PARSE_ENTITIES - 1);
 		state = &cl_parse_entities[num];
-		ent = &cl_entities[state->number];
+		ent = CL_GetEntity(state->number);
 
 		if (!ent->current.packedSolid)
 		{
@@ -192,7 +192,7 @@ trace_t CG_Trace(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, int content
 	if (trace.fraction == 0.0f)
 	{
 		// blocked by world
-		trace.clent = cg.localEntities; // FIXME: revisit when qcvm gets entity access
+		trace.clent = cg.entities; // FIXME: revisit when qcvm gets entity access
 		return trace;
 	}
 

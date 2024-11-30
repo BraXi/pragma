@@ -20,6 +20,25 @@ void CG_AddFlashLightToEntity(clentity_t* cent, rentity_t* refent);
 void CG_AddViewWeapon(player_state_t* ps, player_state_t* ops);
 void CG_PartFX_DiminishingTrail(vec3_t start, vec3_t end, clentity_t* old, int flags);
 
+
+/*
+=====================
+CL_GetEntity
+Returns client entity for index.
+=====================
+*/
+clentity_t* CL_GetEntity(int index)
+{
+	if (index < 0 || index >= MAX_GENTITIES)
+	{
+		Com_Error(ERR_DROP, __FUNCTION__": Bad entity index %i\n", index);
+		return NULL;
+	}
+
+	return &cl_entities[index];
+}
+
+
 /*
 ==========================================================================
 
@@ -291,7 +310,7 @@ void CL_AddPacketEntities(frame_t* frame)
 	for (entnum = 0; entnum < frame->num_entities; entnum++)
 	{
 		state = &cl_parse_entities[(frame->parse_entities + entnum) & (MAX_PARSE_ENTITIES - 1)];
-		clent = &cl_entities[(int)state->number];
+		clent = CL_GetEntity(state->number);
 
 		effects = state->effects;
 		renderfx = state->renderFlags;
@@ -481,7 +500,7 @@ void CL_CalcViewValues()
 		|| abs(ops->pmove.origin[2] - ps->pmove.origin[2]) > 256.0)
 		ops = ps;		// don't interpolate
 
-	ent = &cl_entities[cl.playernum+1];
+	ent = CL_GetEntity(cl.playernum+1);
 	lerp = cl.lerpfrac;
 
 	//
@@ -614,14 +633,11 @@ CL_GetEntitySoundOrigin
 Called to get the sound spatialization origin
 ===============
 */
-void CL_GetEntitySoundOrigin (int ent, vec3_t org)
+void CL_GetEntitySoundOrigin(int entity_index, vec3_t org)
 {
-	clentity_t	*old;
-
-	if (ent < 0 || ent >= MAX_GENTITIES)
-		Com_Error (ERR_DROP, "CL_GetEntitySoundOrigin: bad ent");
-	old = &cl_entities[ent];
-	VectorCopy (old->lerp_origin, org);
+	clentity_t	*ent;
+	ent = CL_GetEntity(entity_index);
+	VectorCopy (ent->lerp_origin, org);
 
 	// FIXME: bmodel issues...
 }
@@ -642,7 +658,9 @@ void CL_FireEntityEvents(frame_t* frame)
 		ent_num = (frame->parse_entities + pnum) & (MAX_PARSE_ENTITIES - 1);
 		ent_state = &cl_parse_entities[ent_num];
 
-		if (ent_state->event)
-			CG_EntityEvent(ent_state);
+		if (!ent_state->event)
+			continue;
+
+		CG_EntityEvent(CL_GetEntity(ent_state->number));
 	}
 }

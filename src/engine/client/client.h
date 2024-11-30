@@ -79,6 +79,7 @@ typedef struct
 	// local entities
 	int			number;
 	qboolean	inuse;
+
 	cl_entvars_t v;
 } clentity_t;
 
@@ -413,6 +414,7 @@ void CG_LightStyleFromConfigString (int i);
 void CG_RunDynamicLights (void);
 void CG_RunLightStyles (void);
 
+clentity_t* CL_GetEntity(int index);
 void CL_AddEntities();
 void CG_AddDynamicLights (void);
 void CG_AddTempEntities (void);
