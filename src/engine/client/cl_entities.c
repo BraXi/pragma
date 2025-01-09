@@ -286,6 +286,7 @@ static inline void CL_EntityAddParticleTrails(clentity_t* clent, entity_state_t*
 	else if (effects & EF_GRENADE)
 	{
 		CG_PartFX_DiminishingTrail(clent->lerp_origin, refent->origin, clent, effects);
+		//V_AddPointLight(refent->origin, 128, 1.000000, 0.670588, 0.027451);
 	}
 }
 
@@ -492,7 +493,7 @@ void CL_CalcViewValues()
 	i = (cl.frame.serverframe - 1) & UPDATE_MASK;
 	oldframe = &cl.frames[i];
 	if (oldframe->serverframe != cl.frame.serverframe-1 || !oldframe->valid)
-		oldframe = &cl.frame; // previous frame was dropped or involid
+		oldframe = &cl.frame; // previous frame was dropped or invalid
 	ops = &oldframe->playerstate;
 
 	// see if the player entity was teleported this frame

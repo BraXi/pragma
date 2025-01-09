@@ -344,7 +344,7 @@ void CG_PartFX_DiminishingTrail (vec3_t start, vec3_t end, clentity_t *old, int 
 	VectorSubtract (end, start, vec);
 	len = VectorNormalize (vec);
 
-	dec = 0.5;
+	dec = 8;
 	VectorScale (vec, dec, vec);
 
 	if (old->trailcount > 900)
@@ -379,6 +379,9 @@ void CG_PartFX_DiminishingTrail (vec3_t start, vec3_t end, clentity_t *old, int 
 
 			VectorClear (p->acceleration);
 			p->time = cl.time;
+
+			p->tex = re.RegisterSkin("gfx/fx/smoke_puff.tga");
+			p->size[0] = p->size[1] = 10;
 
 			if (flags & EF_GIB)
 			{

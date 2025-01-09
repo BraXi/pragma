@@ -248,7 +248,7 @@ static void PFSV_remove(void)
 =================
 PFSV_getent
 returns entity by its index, if entity is not in use returns world
-entity getent(float)
+entity getent(float entity_index)
 =================
 */
 static void PFSV_getent(void)
@@ -289,7 +289,7 @@ static void PFSV_nextent(void)
 	entnum = NUM_FOR_EDICT( Scr_GetParmEntity(0) ) + 1;// start from next entity
 	ent = sv.edicts; //world
 
-	if (entnum >= sv.max_edicts-1)
+	if (entnum >= sv.max_edicts-1) // FIXME: potential bug?
 		goto retent;
 	
 	for(; entnum < sv.max_edicts; entnum++ )
@@ -431,8 +431,9 @@ static void PFSV_setangles(void)
 			ent->v.angles[i] = anglemod(ent->v.angles[i]); // shall clients set their roll too? or leave it to qc :P
 	}
 	
+	
 	// bmodels are special
-	if (CM_NumInlineModels() > ent->v.modelindex)
+	if(SV_IsBrushModel(ent->v.modelindex)) //if (CM_NumInlineModels() > ent->v.modelindex)
 	{
 		// inline models should always have their YAW set properly
 		if(ent->v.angles[YAW] == 0.0f)

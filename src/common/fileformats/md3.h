@@ -37,7 +37,7 @@ MOD_ALIAS is MD3
 
 // limits
 #define	MD3_MAX_TRIANGLES	8192	// per surface
-#define MD3_MAX_VERTS		4096	// per surface
+#define MD3_MAX_VERTS		4096*2	// per surface
 #define MD3_MAX_SHADERS		256		// per model
 #define MD3_MAX_FRAMES		1024	// per model
 #define	MD3_MAX_SURFACES	8		// per model

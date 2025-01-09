@@ -309,9 +309,10 @@ typedef enum
 	PM_NORMAL,		// can accelerate and turn
 	PM_NOCLIP,		// fly move, no clipping to world
 	PM_SPECTATOR,	// fly move, clip to world
+	//PM_LINKED,		// can not move, is linked to another entity
 	PM_DEAD,		// no acceleration or turning
 	PM_GIB,			// no acceleration or turning, diferent bbox size
-	PM_FREEZE		// cannot move and may hover above ground
+	PM_FREEZE		// no physics, origin and view are server controlled, used for cameras and intermissions
 } pmtype_t;
 
 #define	PMF_ON_GROUND		(1 << 2)
